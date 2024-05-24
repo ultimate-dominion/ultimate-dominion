@@ -1,3 +1,5 @@
+import '@fontsource/ibm-plex-mono';
+
 import { extendTheme } from '@chakra-ui/react';
 import { css } from '@emotion/react';
 
@@ -21,13 +23,39 @@ const Button = {
     solid: {
       bg: 'black',
       color: 'white',
-      p: 6,
+      px: 10,
+      py: 6,
       _hover: {
         bg: 'rgba(0, 0, 0, 0.8)',
       },
       _active: {
         bg: 'rgba(0, 0, 0, 0.7)',
       },
+    },
+  },
+};
+
+const Heading = {
+  defaultProps: {
+    variant: 'primary',
+  },
+  variants: {
+    primary: {
+      fontSize: '24px',
+    },
+  },
+};
+
+const Text = {
+  sizes: {
+    xs: {
+      fontSize: '12px',
+    },
+    sm: {
+      fontSize: '14px',
+    },
+    md: {
+      fontSize: '16px',
     },
   },
 };
@@ -44,5 +72,7 @@ export const theme = extendTheme({
   },
   components: {
     Button,
+    Heading,
+    Text,
   },
 });
