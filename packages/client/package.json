@@ -13,6 +13,10 @@
     "test": "tsc --noEmit"
   },
   "dependencies": {
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@fontsource/ibm-plex-mono": "^5.0.13",
     "@latticexyz/common": "2.0.11",
     "@latticexyz/dev-tools": "2.0.11",
     "@latticexyz/react": "2.0.11",
@@ -21,11 +25,15 @@
     "@latticexyz/store-sync": "2.0.11",
     "@latticexyz/utils": "2.0.11",
     "@latticexyz/world": "2.0.11",
+    "@rainbow-me/rainbowkit": "^2.1.1",
+    "@tanstack/react-query": "^5.37.1",
     "contracts": "workspace:*",
+    "framer-motion": "^11.2.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rxjs": "7.5.5",
-    "viem": "2.9.20"
+    "viem": "2.9.20",
+    "wagmi": "^2.9.6"
   },
   "devDependencies": {
     "@types/react": "18.2.22",
