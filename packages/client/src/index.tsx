@@ -5,6 +5,7 @@ import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import '@fontsource/ibm-plex-mono/600.css';
 import '@fontsource/ibm-plex-mono/700.css';
+import '@rainbow-me/rainbowkit/styles.css';
 
 import { ChakraProvider } from '@chakra-ui/react';
 import { Global } from '@emotion/react';
@@ -12,6 +13,7 @@ import mudConfig from 'contracts/mud.config';
 import { createRoot } from 'react-dom/client';
 
 import { App } from './App';
+import { Web3Provider } from './contexts/Web3Provider';
 import { setup } from './mud/setup';
 import { MUDProvider } from './MUDContext';
 import { globalStyles, theme } from './utils/theme';
@@ -25,9 +27,11 @@ setup().then(async result => {
   root.render(
     <ChakraProvider resetCSS theme={theme}>
       <Global styles={globalStyles} />
-      <MUDProvider value={result}>
-        <App />
-      </MUDProvider>
+      <Web3Provider>
+        <MUDProvider value={result}>
+          <App />
+        </MUDProvider>
+      </Web3Provider>
     </ChakraProvider>,
   );
 

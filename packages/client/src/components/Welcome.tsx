@@ -1,6 +1,17 @@
-import { Button, Container, Heading, Text, VStack } from '@chakra-ui/react';
+import {
+  Button,
+  Container,
+  Heading,
+  Text,
+  useDisclosure,
+  VStack,
+} from '@chakra-ui/react';
+
+import { ConnectWalletModal } from './ConnectWalletModal';
 
 export const Welcome = (): JSX.Element => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   return (
     <Container maxW="800px">
       <VStack
@@ -32,8 +43,9 @@ export const Welcome = (): JSX.Element => {
             your path through the darkness.
           </Text>
         </VStack>
-        <Button>Play</Button>
+        <Button onClick={onOpen}>Play</Button>
       </VStack>
+      <ConnectWalletModal isOpen={isOpen} onClose={onClose} />
     </Container>
   );
 };
