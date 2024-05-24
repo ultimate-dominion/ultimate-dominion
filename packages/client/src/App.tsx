@@ -1,3 +1,4 @@
+import { Button, Text, VStack } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
 
@@ -12,11 +13,11 @@ export const App = (): JSX.Element => {
   const counter = useComponentValue(Counter, singletonEntity);
 
   return (
-    <>
-      <div>
+    <VStack mt={4}>
+      <Text>
         Counter: <span>{counter?.value ?? '??'}</span>
-      </div>
-      <button
+      </Text>
+      <Button
         type="button"
         onClick={async event => {
           event.preventDefault();
@@ -25,7 +26,7 @@ export const App = (): JSX.Element => {
         }}
       >
         Increment
-      </button>
-    </>
+      </Button>
+    </VStack>
   );
 };
