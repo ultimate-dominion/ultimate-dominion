@@ -1,8 +1,9 @@
-import { useComponentValue } from "@latticexyz/react";
-import { useMUD } from "./MUDContext";
-import { singletonEntity } from "@latticexyz/store-sync/recs";
+import { useComponentValue } from '@latticexyz/react';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
 
-export const App = () => {
+import { useMUD } from './MUDContext';
+
+export const App = (): JSX.Element => {
   const {
     components: { Counter },
     systemCalls: { increment },
@@ -13,13 +14,14 @@ export const App = () => {
   return (
     <>
       <div>
-        Counter: <span>{counter?.value ?? "??"}</span>
+        Counter: <span>{counter?.value ?? '??'}</span>
       </div>
       <button
         type="button"
-        onClick={async (event) => {
+        onClick={async event => {
           event.preventDefault();
-          console.log("new counter value:", await increment());
+          // eslint-disable-next-line no-console
+          console.log('new counter value:', await increment());
         }}
       >
         Increment

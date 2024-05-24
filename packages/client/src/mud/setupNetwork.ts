@@ -4,25 +4,12 @@
  * This line imports the functions we need from it.
  */
 import {
-  createPublicClient,
-  fallback,
-  webSocket,
-  http,
-  createWalletClient,
-  Hex,
-  ClientConfig,
-  getContract,
-} from "viem";
-import { encodeEntity, syncToRecs } from "@latticexyz/store-sync/recs";
-
-import { getNetworkConfig } from "./getNetworkConfig";
-import { world } from "./world";
-import IWorldAbi from "contracts/out/IWorld.sol/IWorld.abi.json";
-import { createBurnerAccount, transportObserver, ContractWrite } from "@latticexyz/common";
-import { transactionQueue, writeObserver } from "@latticexyz/common/actions";
-
-import { Subject, share } from "rxjs";
-
+  ContractWrite,
+  createBurnerAccount,
+  transportObserver,
+} from '@latticexyz/common';
+import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
+import { encodeEntity, syncToRecs } from '@latticexyz/store-sync/recs';
 /*
  * Import our MUD config, which includes strong types for
  * our tables and other config options. We use this to generate
@@ -31,10 +18,26 @@ import { Subject, share } from "rxjs";
  * See https://mud.dev/templates/typescript/contracts#mudconfigts
  * for the source of this information.
  */
-import mudConfig from "contracts/mud.config";
+import mudConfig from 'contracts/mud.config';
+import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
+import { share, Subject } from 'rxjs';
+import {
+  ClientConfig,
+  createPublicClient,
+  createWalletClient,
+  fallback,
+  getContract,
+  Hex,
+  http,
+  webSocket,
+} from 'viem';
+
+import { getNetworkConfig } from './getNetworkConfig';
+import { world } from './world';
 
 export type SetupNetworkResult = Awaited<ReturnType<typeof setupNetwork>>;
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export async function setupNetwork() {
   const networkConfig = await getNetworkConfig();
 
@@ -66,7 +69,7 @@ export async function setupNetwork() {
     account: burnerAccount,
   })
     .extend(transactionQueue())
-    .extend(writeObserver({ onWrite: (write) => write$.next(write) }));
+    .extend(writeObserver({ onWrite: write => write$.next(write) }));
 
   /*
    * Create an object for communicating with the deployed World.
@@ -83,18 +86,22 @@ export async function setupNetwork() {
    * to the viem publicClient to make RPC calls to fetch MUD
    * events from the chain.
    */
-  const { components, latestBlock$, storedBlockLogs$, waitForTransaction } = await syncToRecs({
-    world,
-    config: mudConfig,
-    address: networkConfig.worldAddress as Hex,
-    publicClient,
-    startBlock: BigInt(networkConfig.initialBlockNumber),
-  });
+  const { components, latestBlock$, storedBlockLogs$, waitForTransaction } =
+    await syncToRecs({
+      world,
+      config: mudConfig,
+      address: networkConfig.worldAddress as Hex,
+      publicClient,
+      startBlock: BigInt(networkConfig.initialBlockNumber),
+    });
 
   return {
     world,
     components,
-    playerEntity: encodeEntity({ address: "address" }, { address: burnerWalletClient.account.address }),
+    playerEntity: encodeEntity(
+      { address: 'address' },
+      { address: burnerWalletClient.account.address },
+    ),
     publicClient,
     walletClient: burnerWalletClient,
     latestBlock$,

@@ -3,13 +3,15 @@
  * for changes in the World state (using the System contracts).
  */
 
-import { getComponentValue } from "@latticexyz/recs";
-import { ClientComponents } from "./createClientComponents";
-import { SetupNetworkResult } from "./setupNetwork";
-import { singletonEntity } from "@latticexyz/store-sync/recs";
+import { getComponentValue } from '@latticexyz/recs';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
+
+import { ClientComponents } from './createClientComponents';
+import { SetupNetworkResult } from './setupNetwork';
 
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSystemCalls(
   /*
    * The parameter list informs TypeScript that:

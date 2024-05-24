@@ -8,6 +8,8 @@
     "dev:contracts": "pnpm --filter 'contracts' dev",
     "foundry:up": "curl -L https://foundry.paradigm.xyz | bash && bash $HOME/.foundry/bin/foundryup",
     "mud:up": "pnpm mud set-version --tag main && pnpm install",
+    "format:client": "pnpm --filter 'client' run format",
+    "lint:client": "pnpm --filter 'client' run lint",
     "prepare": "(forge --version || pnpm foundry:up)",
     "test": "pnpm recursive run test"
   },
@@ -19,7 +21,7 @@
     "eslint": "8.57.0",
     "mprocs": "^0.6.4",
     "rimraf": "^3.0.2",
-    "typescript": "5.4.2"
+    "typescript": "5.3.3"
   },
   "engines": {
     "node": "^18",
