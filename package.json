@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm recursive run build",
+    "build:client": "pnpm --filter 'client' run build",
     "dev": "mprocs",
     "dev:client": "pnpm --filter 'client' run dev",
     "dev:contracts": "pnpm --filter 'contracts' dev",
@@ -10,7 +11,6 @@
     "mud:up": "pnpm mud set-version --tag main && pnpm install",
     "format:client": "pnpm --filter 'client' run format",
     "lint:client": "pnpm --filter 'client' run lint",
-    "prepare": "(forge --version || pnpm foundry:up)",
     "test": "pnpm recursive run test"
   },
   "devDependencies": {

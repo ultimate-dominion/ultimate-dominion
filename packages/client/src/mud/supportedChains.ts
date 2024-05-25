@@ -10,15 +10,41 @@
  *
  */
 
-import {
-  garnet,
-  MUDChain,
-  mudFoundry,
-  redstone,
-} from '@latticexyz/common/chains';
+import { MUDChain, mudFoundry } from '@latticexyz/common/chains';
+
+export const baseSepolia = {
+  name: 'Base Sepolia',
+  id: 84532,
+  network: 'Base Sepolia',
+  nativeCurrency: { decimals: 18, name: 'Ether', symbol: 'ETH' },
+  rpcUrls: {
+    default: {
+      http: [import.meta.env.VITE_HTTPS_RPC_URL],
+      webSocket: [import.meta.env.VITE_WS_RPC_URL],
+    },
+    public: {
+      http: [import.meta.env.VITE_HTTPS_RPC_URL],
+      webSocket: [import.meta.env.VITE_WS_RPC_URL],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Base Sepolia',
+      url: 'https://sepolia-explorer.base.org',
+    },
+  },
+};
+
+const getSupportedChains = () => {
+  if (import.meta.env.DEV) {
+    return [mudFoundry];
+  }
+
+  return [baseSepolia];
+};
 
 /*
  * See https://mud.dev/tutorials/minimal/deploy#run-the-user-interface
  * for instructions on how to add networks.
  */
-export const supportedChains: MUDChain[] = [mudFoundry, redstone, garnet];
+export const supportedChains: MUDChain[] = getSupportedChains();
