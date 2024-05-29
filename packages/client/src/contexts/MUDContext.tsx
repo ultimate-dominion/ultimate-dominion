@@ -1,3 +1,4 @@
+import { encodeEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -17,9 +18,10 @@ import {
 } from '../lib/mud/setup';
 
 const MUDContext = createContext<{
-  burner: Burner | null;
   burnerBalance: string;
   components: ComponentsResult;
+  delegatorAddress: string | null;
+  delegatorEntity: string | null;
   network: NetworkResult;
   setBurnerWithCleanup: (burner: Burner) => () => void;
   systemCalls: SystemCallsResult;
@@ -78,11 +80,12 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
 
   const value = useMemo(() => {
     if (!setupResult) return null;
-    if (!burner) {
+    if (!(burner && burner.delegatorAddress)) {
       return {
-        burner,
         burnerBalance,
         components: setupResult.components,
+        delegatorAddress: null,
+        delegatorEntity: null,
         network: setupResult.network,
         setBurnerWithCleanup,
         systemCalls: setupResult.systemCalls,
@@ -90,11 +93,15 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
     }
 
     return {
-      network: burner.network,
-      components: burner.components,
-      systemCalls: burner.systemCalls,
-      burner,
       burnerBalance,
+      components: burner.components,
+      delegatorAddress: burner.delegatorAddress,
+      delegatorEntity: encodeEntity(
+        { address: 'address' },
+        { address: burner.delegatorAddress },
+      ),
+      network: burner.network,
+      systemCalls: burner.systemCalls,
       setBurnerWithCleanup,
     };
   }, [burner, burnerBalance, setBurnerWithCleanup, setupResult]);
@@ -105,9 +112,10 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
 };
 
 export const useMUD = (): {
-  burner: Burner | null;
   burnerBalance: string;
   components: ComponentsResult;
+  delegatorAddress: string | null;
+  delegatorEntity: string | null;
   network: NetworkResult;
   setBurnerWithCleanup: (burner: Burner) => () => void;
   systemCalls: SystemCallsResult;
