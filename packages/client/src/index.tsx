@@ -28,7 +28,7 @@ setup().then(async result => {
     <ChakraProvider resetCSS theme={theme}>
       <Global styles={globalStyles} />
       <Web3Provider>
-        <MUDProvider value={result}>
+        <MUDProvider setupResult={result}>
           <App />
         </MUDProvider>
       </Web3Provider>

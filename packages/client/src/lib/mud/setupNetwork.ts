@@ -3,11 +3,7 @@
  * (https://viem.sh/docs/getting-started.html).
  * This line imports the functions we need from it.
  */
-import {
-  ContractWrite,
-  createBurnerAccount,
-  transportObserver,
-} from '@latticexyz/common';
+import { ContractWrite, createBurnerAccount } from '@latticexyz/common';
 import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
 import { encodeEntity, syncToRecs } from '@latticexyz/store-sync/recs';
 /*
@@ -21,17 +17,9 @@ import { encodeEntity, syncToRecs } from '@latticexyz/store-sync/recs';
 import mudConfig from 'contracts/mud.config';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import { share, Subject } from 'rxjs';
-import {
-  ClientConfig,
-  createPublicClient,
-  createWalletClient,
-  fallback,
-  getContract,
-  Hex,
-  http,
-  webSocket,
-} from 'viem';
+import { createPublicClient, createWalletClient, getContract, Hex } from 'viem';
 
+import { createViemClientConfig } from './createViemClientConfig';
 import { getNetworkConfig } from './getNetworkConfig';
 import { world } from './world';
 
@@ -41,16 +29,7 @@ export type SetupNetworkResult = Awaited<ReturnType<typeof setupNetwork>>;
 export async function setupNetwork() {
   const networkConfig = await getNetworkConfig();
 
-  /*
-   * Create a viem public (read only) client
-   * (https://viem.sh/docs/clients/public.html)
-   */
-  const clientOptions = {
-    chain: networkConfig.chain,
-    transport: transportObserver(fallback([webSocket(), http()])),
-    pollingInterval: 1000,
-  } as const satisfies ClientConfig;
-
+  const clientOptions = createViemClientConfig(networkConfig.chain);
   const publicClient = createPublicClient(clientOptions);
 
   /*
@@ -96,17 +75,17 @@ export async function setupNetwork() {
     });
 
   return {
-    world,
     components,
+    latestBlock$,
     playerEntity: encodeEntity(
       { address: 'address' },
       { address: burnerWalletClient.account.address },
     ),
     publicClient,
-    walletClient: burnerWalletClient,
-    latestBlock$,
     storedBlockLogs$,
     waitForTransaction,
+    walletClient: burnerWalletClient,
+    world,
     worldContract,
     write$: write$.asObservable().pipe(share()),
   };
