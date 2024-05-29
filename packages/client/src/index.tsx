@@ -14,7 +14,7 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from './App';
 import { Web3Provider } from './contexts/Web3Provider';
-import { setup } from './mud/setup';
+import { setup } from './lib/mud/setup';
 import { MUDProvider } from './MUDContext';
 import { globalStyles, theme } from './utils/theme';
 
