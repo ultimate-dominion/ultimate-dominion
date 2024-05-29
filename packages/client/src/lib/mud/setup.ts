@@ -6,7 +6,9 @@ import { createClientComponents } from './createClientComponents';
 import { createSystemCalls } from './createSystemCalls';
 import { setupNetwork } from './setupNetwork';
 
-export type SetupResult = Awaited<ReturnType<typeof setup>>;
+export type NetworkResult = Awaited<ReturnType<typeof setupNetwork>>;
+export type ComponentsResult = ReturnType<typeof createClientComponents>;
+export type SystemCallsResult = ReturnType<typeof createSystemCalls>;
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export async function setup() {

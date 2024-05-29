@@ -13,9 +13,9 @@ import mudConfig from 'contracts/mud.config';
 import { createRoot } from 'react-dom/client';
 
 import { App } from './App';
+import { MUDProvider } from './contexts/MUDContext';
 import { Web3Provider } from './contexts/Web3Provider';
-import { setup } from './mud/setup';
-import { MUDProvider } from './MUDContext';
+import { setup } from './lib/mud/setup';
 import { globalStyles, theme } from './utils/theme';
 
 const rootElement = document.getElementById('react-root');
@@ -28,7 +28,7 @@ setup().then(async result => {
     <ChakraProvider resetCSS theme={theme}>
       <Global styles={globalStyles} />
       <Web3Provider>
-        <MUDProvider value={result}>
+        <MUDProvider setupResult={result}>
           <App />
         </MUDProvider>
       </Web3Provider>
