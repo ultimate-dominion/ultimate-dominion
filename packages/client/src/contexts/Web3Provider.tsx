@@ -9,10 +9,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createConfig, http, WagmiProvider } from 'wagmi';
 
-import {
-  SUPPORTED_CHAINS,
-  WALLET_CONNECT_PROJECT_ID,
-} from '../lib/web3/constants';
+import { SUPPORTED_CHAINS, WALLET_CONNECT_PROJECT_ID } from '../lib/web3';
 
 const { wallets } = getDefaultWallets();
 

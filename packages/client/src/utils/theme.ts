@@ -25,11 +25,17 @@ const Button = {
       color: 'white',
       px: 10,
       py: 6,
+      _active: {
+        bg: 'rgba(0, 0, 0, 1)',
+      },
       _hover: {
         bg: 'rgba(0, 0, 0, 0.8)',
       },
-      _active: {
-        bg: 'rgba(0, 0, 0, 0.7)',
+      _loading: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _hover: {
+          bg: 'rgba(0, 0, 0, 0.8)',
+        },
       },
     },
   },
