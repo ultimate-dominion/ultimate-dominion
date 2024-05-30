@@ -16,7 +16,7 @@ export const Header = (): JSX.Element => {
 
   return (
     <Box padding={'10px'}>
-      <Menu>
+      <Menu placement="top-end">
         <MenuButton as={Box} textAlign={'right'} backgroundColor={'lightgray'}>
           <Heading as={'h1'} margin={'10px'}>
             Ultimate Dominion
