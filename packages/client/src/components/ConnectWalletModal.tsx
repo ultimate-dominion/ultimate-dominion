@@ -9,14 +9,12 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useEffect, useMemo } from 'react';
-import type { Account, Chain, Hex, Transport, WalletClient } from 'viem';
-import { useAccount, useSwitchChain, useWalletClient } from 'wagmi';
+import { useMemo } from 'react';
+import { useAccount, useWalletClient } from 'wagmi';
 
 import { useMUD } from '../contexts/MUDContext';
-import { useDelegation } from '../hooks/useDelegation';
-import { type Burner, createBurner } from '../lib/mud/createBurner';
 import { ConnectWalletButton } from './ConnectWalletButton';
+import { DelegationButton } from './DelegationButton';
 
 export const ConnectWalletModal = ({
   isOpen,
@@ -36,6 +34,7 @@ export const ConnectWalletModal = ({
           <Button onClick={onClose}>Continue</Button>
           <DelegationButton
             externalWalletClient={externalWalletClient}
+            onClose={onClose}
             setBurner={setBurnerWithCleanup}
           />
         </VStack>
@@ -68,6 +67,7 @@ export const ConnectWalletModal = ({
           </VStack>
           <DelegationButton
             externalWalletClient={externalWalletClient}
+            onClose={onClose}
             setBurner={setBurnerWithCleanup}
           />
         </VStack>
@@ -101,56 +101,4 @@ export const ConnectWalletModal = ({
       </ModalContent>
     </Modal>
   );
-};
-
-export type SetBurnerProps = { setBurner: (burner: Burner) => () => void };
-
-const DelegationButton = ({
-  externalWalletClient,
-  setBurner,
-}: SetBurnerProps & {
-  externalWalletClient: WalletClient<Transport, Chain, Account>;
-}) => {
-  const { chains, switchChain } = useSwitchChain();
-  const { chainId } = useAccount();
-  const { status, setupDelegation } = useDelegation(externalWalletClient);
-
-  const wrongNetwork = useMemo(() => {
-    if (!chainId) return true;
-    const chainIds = chains.map(chain => chain.id);
-    return !chainIds.includes(chainId);
-  }, [chainId, chains]);
-
-  if (wrongNetwork) {
-    return (
-      <Button onClick={() => switchChain({ chainId: chains[0].id })}>
-        Wrong Network
-      </Button>
-    );
-  }
-
-  if (status === 'delegated') {
-    return (
-      <SetBurner
-        externalWalletAccountAddress={externalWalletClient.account.address}
-        setBurner={setBurner}
-      />
-    );
-  }
-
-  return <Button onClick={setupDelegation}>Delegate</Button>;
-};
-
-const SetBurner = ({
-  externalWalletAccountAddress,
-  setBurner,
-}: SetBurnerProps & { externalWalletAccountAddress: Hex }) => {
-  const { network } = useMUD();
-
-  useEffect(
-    () => setBurner(createBurner(network, externalWalletAccountAddress)),
-    [externalWalletAccountAddress, network, setBurner],
-  );
-
-  return null;
 };
