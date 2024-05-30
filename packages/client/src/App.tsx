@@ -1,5 +1,11 @@
-import { Welcome } from './components/Welcome';
+import AppRoutes from './Routes';
 
-export const App = (): JSX.Element => {
-  return <Welcome />;
+export const App: React.FC = () => {
+  return (
+    <div className="App">
+      <AppRoutes />
+    </div>
+  );
 };
+
+export default App;
