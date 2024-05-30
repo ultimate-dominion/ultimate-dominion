@@ -1,10 +1,11 @@
-import { Button, useToast } from '@chakra-ui/react';
+import { Button } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 import type { Account, Chain, Hex, Transport, WalletClient } from 'viem';
 import { useAccount, useSwitchChain } from 'wagmi';
 
 import { useMUD } from '../contexts/MUDContext';
 import { useDelegation } from '../hooks/useDelegation';
+import { useToast } from '../hooks/useToast';
 import { type Burner, createBurner } from '../lib/mud/createBurner';
 import { getChainNameFromId, isSupportedChain } from '../lib/web3';
 
@@ -21,7 +22,7 @@ export const DelegationButton = ({
   const { chains, switchChain } = useSwitchChain();
   const { chainId } = useAccount();
   const { status, setupDelegation } = useDelegation(externalWalletClient);
-  const toast = useToast();
+  const { renderError, renderSuccess } = useToast();
 
   const [isDelegating, setIsDelegating] = useState(false);
 
@@ -34,30 +35,17 @@ export const DelegationButton = ({
       setIsDelegating(true);
       await setupDelegation();
 
-      toast({
-        title: 'Delegation successful',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
+      renderSuccess('Delegation successful');
 
       if (onClose) {
         onClose();
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(error);
-
-      toast({
-        title: 'Delegation failed',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      renderError(error, 'Failed to delegate');
     } finally {
       setIsDelegating(false);
     }
-  }, [onClose, setupDelegation, toast]);
+  }, [onClose, renderError, renderSuccess, setupDelegation]);
 
   if (!isSupportedChain(chainId)) {
     return (
