@@ -7,7 +7,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 
-import { ConnectWalletModal } from './ConnectWalletModal';
+import { ConnectWalletModal } from '../components/ConnectWalletModal';
 
 export const Welcome = (): JSX.Element => {
   const { isOpen, onOpen, onClose } = useDisclosure();

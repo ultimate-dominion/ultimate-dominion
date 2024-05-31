@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 import { CharacterCreation } from './components/CharacterCreation';
-import { Welcome } from './components/Welcome';
-import { World } from './components/World';
+import { Welcome } from './pages/Welcome';
+import { World } from './pages/World';
 
 const AppRoutes: React.FC = () => {
   return (
