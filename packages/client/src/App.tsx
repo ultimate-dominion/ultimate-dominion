@@ -1,5 +1,7 @@
-import { Welcome } from './components/Welcome';
+import AppRoutes from './Routes';
 
-export const App = (): JSX.Element => {
-  return <Welcome />;
+export const App: React.FC = () => {
+  return <AppRoutes />;
 };
+
+export default App;
