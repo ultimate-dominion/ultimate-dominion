@@ -1,38 +1,95 @@
-import { Container, Heading, Text, VStack } from '@chakra-ui/react';
+import {
+  Avatar,
+  Box,
+  Button,
+  ButtonGroup,
+  Card,
+  CardBody,
+  Center,
+  Container,
+  Flex,
+  Heading,
+  Input,
+  Link,
+  Stack,
+  Text,
+  Textarea,
+  VStack,
+} from '@chakra-ui/react';
 
 export const CharacterCreation = (): JSX.Element => {
   return (
-    <Container maxW="800px">
-      <VStack
-        justifyContent="center"
-        mb={10}
-        mt={{ base: 20, sm: 32 }}
-        spacing={{ base: 12, sm: 20 }}
-      >
-        <Heading px={4} textAlign="center">
-          Character Creation
-        </Heading>
-        <VStack spacing={6} textAlign="center">
-          <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
-            As you awaken, your eyes flutter open to the stark, eerie ambiance
-            of a dimly lit cave. Confusion clouds your mind; the cold, hard
-            ground beneath you offers no comfort. Glimpses of blood and bruises
-            on your body only deepen the mystery, painting a silent story of
-            unseen struggles.
-          </Text>
-          <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
-            Where are you? How did you end up here?
-          </Text>
-          <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
-            The shadows around you hold secrets, whispering tales of survival
-            and discovery. Gathering your strength, you rise, the weight of
-            uncertainty heavy on your shoulders yet igniting a spark of
-            determination within. With a deep breath, you take your first step
-            into the unknown, embarking on a journey where every choice carves
-            your path through the darkness.
-          </Text>
-        </VStack>
-      </VStack>
-    </Container>
+    <Box>
+      <Stack direction={['column', 'row']} justifyContent="center">
+        <Container border="2px solid" margin="10px" padding="20px" width="50%">
+          <VStack>
+            <Flex height="100%" width="100%">
+              <Center margin="10px auto" width="40%">
+                <Avatar size="lg"></Avatar>
+              </Center>
+              <Box alignContent="left" margin="10px auto" width="60%">
+                <Stack spacing={3}>
+                  <Input placeholder="Outline" variant="outline" />
+                  <Input placeholder="Outline" variant="outline" />
+                </Stack>
+              </Box>
+            </Flex>
+          </VStack>
+          <VStack>
+            <Box width="100%">
+              <Textarea placeholder="Here is a sample placeholder" />
+            </Box>
+          </VStack>
+        </Container>
+        <Container border="2px solid" margin="10px" padding="20px" width="50%">
+          <VStack textAlign="left">
+            <Heading textAlign="left" width="100%">
+              Choose your Character
+            </Heading>
+            <ButtonGroup spacing="6" variant="outline">
+              <Button>Warrior</Button>
+              <Button>Mage</Button>
+              <Button>Rogue</Button>
+            </ButtonGroup>
+          </VStack>
+          <Stack direction="row" w="full">
+            <Heading textAlign="left">Stats</Heading>
+            <Button size="sm" variant="outline">
+              Roll Stats
+            </Button>
+            <Text>$Gold</Text>
+            <Text>00,00</Text>
+          </Stack>
+          <Stack direction="row">
+            <Stack direction="column">
+              <Stack direction="row">
+                <Text width="50%">HP - Hit</Text>
+                <Text align="right">1</Text>
+              </Stack>
+              <Stack direction="row">
+                <Text width="50%">STR - Strength</Text>
+                <Text align="right">2</Text>
+              </Stack>
+              <Stack direction="row">
+                <Text width="50%">AGI - Agility</Text>
+                <Text align="right">3</Text>
+              </Stack>
+              <Stack direction="row">
+                <Text width="50%">INT - Intelligence</Text>
+                <Text align="right">4</Text>
+              </Stack>
+            </Stack>
+            <Stack direction="column" w="50%">
+              <Text>Items - 1</Text>
+              <Card>
+                <CardBody>A Card</CardBody>
+              </Card>
+              <Link>Auction House ▶</Link>
+            </Stack>
+          </Stack>
+          <Button width="100%">Wake Up</Button>
+        </Container>
+      </Stack>
+    </Box>
   );
 };
