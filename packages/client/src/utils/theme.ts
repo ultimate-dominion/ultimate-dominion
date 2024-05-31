@@ -4,11 +4,17 @@ import { extendTheme } from '@chakra-ui/react';
 import { css } from '@emotion/react';
 
 export const globalStyles = css`
+  html,
+  #react-root,
+  #react-root:first-child {
+    height: 100%;
+  }
   body {
     background: #fff;
     color: #000;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 1rem;
+    height: 100%;
   }
 `;
 

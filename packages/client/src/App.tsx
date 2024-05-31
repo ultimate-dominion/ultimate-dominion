@@ -6,9 +6,10 @@ import { Welcome } from './components/Welcome';
 
 export const App = (): JSX.Element => {
   return (
-    <Box>
+    <Box h="100vh">
       <Header></Header>
       <Welcome />
+      <Box h="50px"></Box>
       <Footer></Footer>
     </Box>
   );
