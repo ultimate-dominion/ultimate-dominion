@@ -1,3 +1,4 @@
+import { useComponentValue } from '@latticexyz/react';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
@@ -8,9 +9,11 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { formatEther } from 'viem';
+import { Address, formatEther, Hex } from 'viem';
+import { useWalletClient } from 'wagmi';
 
-import { type Burner } from '../lib/mud/createBurner';
+import { type Burner, createBurner } from '../lib/mud/createBurner';
+import { isDelegated } from '../lib/mud/delegation';
 import {
   ComponentsResult,
   NetworkResult,
@@ -18,12 +21,12 @@ import {
 } from '../lib/mud/setup';
 
 const MUDContext = createContext<{
+  burnerAddress: Address;
   burnerBalance: string;
   components: ComponentsResult;
-  delegatorAddress: string | null;
+  delegatorAddress: Address | null;
   delegatorEntity: string | null;
   network: NetworkResult;
-  setBurnerWithCleanup: (burner: Burner) => () => void;
   systemCalls: SystemCallsResult;
 } | null>(null);
 
@@ -37,6 +40,8 @@ type Props = {
 };
 
 export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
+  const { data: externalWalletClient } = useWalletClient();
+
   const [burner, setBurner] = useState<Burner | null>(null);
   const [burnerBalance, setBurnerBalance] = useState<string>('0');
   const [components, setComponents] = useState<ComponentsResult | null>(null);
@@ -45,13 +50,26 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
     null,
   );
 
-  const setBurnerWithCleanup = useCallback((burner: Burner) => {
-    setBurner(burner);
+  const delegation = useComponentValue(
+    setupResult.components.UserDelegationControl,
+    externalWalletClient
+      ? encodeEntity(
+          { delegatee: 'address', delegator: 'address' },
+          {
+            delegatee: externalWalletClient.account.address,
+            delegator: setupResult.network.walletClient.account.address,
+          },
+        )
+      : undefined,
+  );
 
-    return () => {
-      setBurner(null);
-    };
-  }, []);
+  useEffect(() => {
+    if (!(delegation && externalWalletClient && network)) return;
+    if (burner) return;
+    if (isDelegated(delegation as { delegationControlId: Hex })) {
+      setBurner(createBurner(network, externalWalletClient.account.address));
+    }
+  }, [burner, delegation, externalWalletClient, network]);
 
   useEffect(() => {
     if (network && components && systemCalls) return;
@@ -82,17 +100,18 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
     if (!setupResult) return null;
     if (!(burner && burner.delegatorAddress)) {
       return {
+        burnerAddress: setupResult.network.walletClient.account.address,
         burnerBalance,
         components: setupResult.components,
         delegatorAddress: null,
         delegatorEntity: null,
         network: setupResult.network,
-        setBurnerWithCleanup,
         systemCalls: setupResult.systemCalls,
       };
     }
 
     return {
+      burnerAddress: burner.walletClient.account.address,
       burnerBalance,
       components: burner.components,
       delegatorAddress: burner.delegatorAddress,
@@ -102,9 +121,8 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
       ),
       network: burner.network,
       systemCalls: burner.systemCalls,
-      setBurnerWithCleanup,
     };
-  }, [burner, burnerBalance, setBurnerWithCleanup, setupResult]);
+  }, [burner, burnerBalance, setupResult]);
 
   // const currentValue = useContext(MUDContext);
   // if (currentValue) throw new Error('MUDProvider can only be used once');
@@ -112,12 +130,12 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
 };
 
 export const useMUD = (): {
+  burnerAddress: Address;
   burnerBalance: string;
   components: ComponentsResult;
-  delegatorAddress: string | null;
+  delegatorAddress: Address | null;
   delegatorEntity: string | null;
   network: NetworkResult;
-  setBurnerWithCleanup: (burner: Burner) => () => void;
   systemCalls: SystemCallsResult;
 } => {
   const value = useContext(MUDContext);

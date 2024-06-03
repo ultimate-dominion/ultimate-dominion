@@ -1,27 +1,25 @@
 import { Button } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
-import type { Account, Chain, Hex, Transport, WalletClient } from 'viem';
+import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { Account, Chain, Transport, WalletClient } from 'viem';
 import { useAccount, useSwitchChain } from 'wagmi';
 
 import { useMUD } from '../contexts/MUDContext';
-import { useDelegation } from '../hooks/useDelegation';
 import { useToast } from '../hooks/useToast';
-import { type Burner, createBurner } from '../lib/mud/createBurner';
+import { setupDelegation } from '../lib/mud/delegation';
 import { getChainNameFromId, isSupportedChain } from '../lib/web3';
-
-export type SetBurnerProps = { setBurner: (burner: Burner) => () => void };
 
 export const DelegationButton = ({
   externalWalletClient,
   onClose,
-  setBurner,
-}: SetBurnerProps & {
+}: {
   externalWalletClient: WalletClient<Transport, Chain, Account>;
   onClose?: () => void;
 }): JSX.Element => {
+  const navigate = useNavigate();
   const { chains, switchChain } = useSwitchChain();
   const { chainId } = useAccount();
-  const { status, setupDelegation } = useDelegation(externalWalletClient);
+  const { burnerAddress, network } = useMUD();
   const { renderError, renderSuccess } = useToast();
 
   const [isDelegating, setIsDelegating] = useState(false);
@@ -32,35 +30,40 @@ export const DelegationButton = ({
         throw new Error('Delegation setup function not available');
       }
 
+      if (!network) {
+        throw new Error('Network not available');
+      }
+
       setIsDelegating(true);
-      await setupDelegation();
+      await setupDelegation(network, externalWalletClient, burnerAddress);
 
       renderSuccess('Delegation successful');
 
       if (onClose) {
         onClose();
       }
+
+      navigate('/character-creation');
     } catch (error) {
       renderError(error, 'Failed to delegate');
     } finally {
       setIsDelegating(false);
     }
-  }, [onClose, renderError, renderSuccess, setupDelegation]);
+  }, [
+    burnerAddress,
+    externalWalletClient,
+    navigate,
+    network,
+    onClose,
+    renderError,
+    renderSuccess,
+  ]);
 
   if (!isSupportedChain(chainId)) {
     return (
       <Button onClick={() => switchChain({ chainId: chains[0].id })}>
         Switch to {getChainNameFromId(chains[0].id)}
       </Button>
-    );
-  }
-
-  if (status === 'delegated') {
-    return (
-      <SetBurner
-        externalWalletAccountAddress={externalWalletClient.account.address}
-        setBurner={setBurner}
-      />
     );
   }
 
@@ -73,18 +76,4 @@ export const DelegationButton = ({
       Delegate
     </Button>
   );
-};
-
-const SetBurner = ({
-  externalWalletAccountAddress,
-  setBurner,
-}: SetBurnerProps & { externalWalletAccountAddress: Hex }) => {
-  const { network } = useMUD();
-
-  useEffect(
-    () => setBurner(createBurner(network, externalWalletAccountAddress)),
-    [externalWalletAccountAddress, network, setBurner],
-  );
-
-  return null;
 };

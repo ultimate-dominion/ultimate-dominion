@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
-import { CharacterCreation } from './components/CharacterCreation';
+import { CharacterCreation } from './pages/CharacterCreation';
 import { Welcome } from './pages/Welcome';
 import { World } from './pages/World';
 
