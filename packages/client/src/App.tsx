@@ -1,4 +1,4 @@
-import { Box } from '@chakra-ui/react';
+import { Grid, GridItem } from '@chakra-ui/react';
 
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
@@ -6,11 +6,16 @@ import { Welcome } from './components/Welcome';
 
 export const App = (): JSX.Element => {
   return (
-    <Box h="100vh">
-      <Header></Header>
-      <Welcome />
-      <Box h="50px"></Box>
-      <Footer></Footer>
-    </Box>
+    <Grid minH="100vh" padding="10px" templateRows="repeat(6, 1fr)">
+      <GridItem as="header" rowSpan={1}>
+        <Header></Header>
+      </GridItem>
+      <GridItem rowSpan={4}>
+        <Welcome></Welcome>
+      </GridItem>
+      <GridItem position="relative" rowSpan={1}>
+        <Footer></Footer>
+      </GridItem>
+    </Grid>
   );
 };

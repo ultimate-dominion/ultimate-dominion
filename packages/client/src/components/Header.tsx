@@ -14,7 +14,7 @@ export const Header = (): JSX.Element => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <Box padding="10px">
+    <Box>
       <Stack backgroundColor="lightgray" direction="row" padding="10px">
         <Heading as="h1" margin="10px" w="50%">
           Ultimate Dominion
