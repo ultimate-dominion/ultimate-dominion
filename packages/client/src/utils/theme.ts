@@ -50,10 +50,13 @@ const Button = {
 
 const Heading = {
   defaultProps: {
-    variant: 'primary',
+    size: 'md',
   },
-  variants: {
-    primary: {
+  sizes: {
+    sm: {
+      fontSize: '18px',
+    },
+    md: {
       fontSize: '24px',
     },
   },
@@ -104,7 +107,8 @@ export const theme = extendTheme({
   },
   colors: {
     black: '#000',
-    grey: '#D1D1D1',
+    grey400: '#D1D1D1',
+    grey500: '#808080',
     white: '#fff',
   },
   components: {

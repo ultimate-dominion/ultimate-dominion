@@ -3,14 +3,14 @@ import {
   Box,
   Button,
   ButtonGroup,
-  Card,
-  CardBody,
   Center,
   Flex,
   FormControl,
   Heading,
+  HStack,
   Input,
   Link,
+  SimpleGrid,
   Stack,
   Text,
   Textarea,
@@ -30,8 +30,8 @@ export const CharacterCreation = (): JSX.Element => {
       px={12}
     >
       <Box border="2px solid" p={10} width="50%">
-        <VStack spacing={10}>
-          <Flex gap={10} w="100%">
+        <VStack spacing={8}>
+          <Flex gap={8} w="100%">
             <Center>
               <Avatar size="xl"></Avatar>
             </Center>
@@ -45,57 +45,81 @@ export const CharacterCreation = (): JSX.Element => {
             </VStack>
           </Flex>
           <FormControl isRequired>
-            <Textarea height="250px" placeholder="Bio" />
+            <Textarea height="350px" placeholder="Bio" />
           </FormControl>
         </VStack>
       </Box>
-      <Box border="2px solid" padding="20px" width="50%">
-        <VStack textAlign="left">
-          <Heading textAlign="left" width="100%">
+      <Box border="2px solid" p={10} width="50%">
+        <VStack alignItems="left" spacing={6}>
+          <Heading size="sm" textAlign="left">
             Choose your Character
           </Heading>
-          <ButtonGroup spacing="6" variant="outline">
-            <Button>Warrior</Button>
-            <Button>Mage</Button>
-            <Button>Rogue</Button>
+          <ButtonGroup justifyContent="space-between" variant="solid">
+            <Button size="sm" w="150px">
+              Warrior
+            </Button>
+            <Button size="sm" w="150px">
+              Mage
+            </Button>
+            <Button size="sm" w="150px">
+              Rogue
+            </Button>
           </ButtonGroup>
         </VStack>
-        <Stack direction="row" w="full">
-          <Heading textAlign="left">Stats</Heading>
-          <Button size="sm" variant="outline">
-            Roll Stats
-          </Button>
-          <Text>$Gold</Text>
-          <Text>00,00</Text>
-        </Stack>
-        <Stack direction="row">
-          <Stack direction="column">
-            <Stack direction="row">
-              <Text width="50%">HP - Hit</Text>
-              <Text align="right">1</Text>
-            </Stack>
-            <Stack direction="row">
-              <Text width="50%">STR - Strength</Text>
-              <Text align="right">2</Text>
-            </Stack>
-            <Stack direction="row">
-              <Text width="50%">AGI - Agility</Text>
-              <Text align="right">3</Text>
-            </Stack>
-            <Stack direction="row">
-              <Text width="50%">INT - Intelligence</Text>
-              <Text align="right">4</Text>
-            </Stack>
-          </Stack>
-          <Stack direction="column" w="50%">
-            <Text>Items - 1</Text>
-            <Card>
-              <CardBody>A Card</CardBody>
-            </Card>
-            <Link>Auction House ▶</Link>
-          </Stack>
-        </Stack>
-        <Button width="100%">Wake Up</Button>
+        <SimpleGrid columns={2} mt={20} spacing={16}>
+          <VStack spacing={8}>
+            <HStack justify="space-between" w="100%">
+              <Heading size="sm">Stats</Heading>
+              <Button size="sm">Roll Stats</Button>
+            </HStack>
+            <VStack w="100%">
+              <HStack justify="space-between" w="100%">
+                <Text>HP - Hit</Text>
+                <Text>1</Text>
+              </HStack>
+              <HStack justify="space-between" w="100%">
+                <Text>STR - Strength</Text>
+                <Text>2</Text>
+              </HStack>
+              <HStack justify="space-between" w="100%">
+                <Text>AGI - Agility</Text>
+                <Text>3</Text>
+              </HStack>
+              <HStack justify="space-between" w="100%">
+                <Text>INT - Intelligence</Text>
+                <Text>4</Text>
+              </HStack>
+            </VStack>
+          </VStack>
+          <VStack spacing={5}>
+            <HStack justify="space-between" w="100%">
+              <Heading size="sm">$Gold</Heading>
+              <Text>5</Text>
+            </HStack>
+            <HStack justify="space-between" w="100%">
+              <Heading size="sm">Items</Heading>
+              <Text>1</Text>
+            </HStack>
+            <HStack border="1px solid" borderColor="grey400" w="100%">
+              <Box bgColor="grey400" h="50px" w="50px" />
+              <Box>
+                <Text size="xs">Rusty Dagger</Text>
+                <Text size="xs">STR+1 AGI+3 INT+4</Text>
+              </Box>
+            </HStack>
+            <Link
+              alignSelf="end"
+              color="grey500"
+              fontSize="18px"
+              fontWeight={700}
+            >
+              Auction House ▶
+            </Link>
+          </VStack>
+        </SimpleGrid>
+        <Button mt={16} width="100%">
+          Wake Up
+        </Button>
       </Box>
     </Stack>
   );
