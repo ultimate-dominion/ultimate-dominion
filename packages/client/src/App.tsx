@@ -2,8 +2,6 @@ import { Grid, GridItem } from '@chakra-ui/react';
 
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
-import { Welcome } from './components/Welcome';
-        
 import AppRoutes from './Routes';
 
 export const App = (): JSX.Element => {
@@ -20,7 +18,6 @@ export const App = (): JSX.Element => {
       </GridItem>
     </Grid>
   );
-
 };
 
 export default App;
