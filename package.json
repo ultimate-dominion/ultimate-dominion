@@ -11,7 +11,8 @@
     "mud:up": "pnpm mud set-version --tag main && pnpm install",
     "format:client": "pnpm --filter 'client' run format",
     "lint:client": "pnpm --filter 'client' run lint",
-    "test": "pnpm recursive run test"
+    "test": "pnpm --filter client run lint",
+    "prepare": "(forge --version || pnpm foundry:up) && husky"
   },
   "devDependencies": {
     "@latticexyz/cli": "2.0.11",
@@ -19,6 +20,7 @@
     "@typescript-eslint/eslint-plugin": "7.1.1",
     "@typescript-eslint/parser": "7.1.1",
     "eslint": "8.57.0",
+    "husky": "^9.0.11",
     "mprocs": "^0.6.4",
     "rimraf": "^3.0.2",
     "typescript": "5.3.3"

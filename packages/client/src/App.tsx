@@ -3,6 +3,8 @@ import { Grid, GridItem } from '@chakra-ui/react';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { Welcome } from './components/Welcome';
+        
+import AppRoutes from './Routes';
 
 export const App = (): JSX.Element => {
   return (
@@ -11,11 +13,14 @@ export const App = (): JSX.Element => {
         <Header></Header>
       </GridItem>
       <GridItem rowSpan={4}>
-        <Welcome></Welcome>
+        <AppRoutes />
       </GridItem>
       <GridItem position="relative" rowSpan={1}>
         <Footer></Footer>
       </GridItem>
     </Grid>
   );
+
 };
+
+export default App;
