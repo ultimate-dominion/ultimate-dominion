@@ -19,12 +19,19 @@ const Button = {
   defaultProps: {
     variant: 'solid',
   },
+  sizes: {
+    sm: {
+      p: 5,
+    },
+    md: {
+      px: 10,
+      py: 6,
+    },
+  },
   variants: {
     solid: {
       bg: 'black',
       color: 'white',
-      px: 10,
-      py: 6,
       _active: {
         bg: 'rgba(0, 0, 0, 1)',
       },
@@ -52,6 +59,19 @@ const Heading = {
   },
 };
 
+const Input = {
+  variants: {
+    outline: {
+      field: {
+        border: '2px solid',
+        borderColor: 'grey',
+        borderRadius: '5px',
+        py: 5,
+      },
+    },
+  },
+};
+
 const Text = {
   sizes: {
     xs: {
@@ -66,6 +86,16 @@ const Text = {
   },
 };
 
+const Textarea = {
+  variants: {
+    outline: {
+      border: '2px solid',
+      borderColor: 'grey',
+      borderRadius: '5px',
+    },
+  },
+};
+
 export const theme = extendTheme({
   config: { initialColorMode: 'light', useSystemColorMode: false },
   fonts: {
@@ -74,11 +104,14 @@ export const theme = extendTheme({
   },
   colors: {
     black: '#000',
+    grey: '#D1D1D1',
     white: '#fff',
   },
   components: {
     Button,
     Heading,
+    Input,
     Text,
+    Textarea,
   },
 });

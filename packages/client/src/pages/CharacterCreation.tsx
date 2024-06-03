@@ -7,6 +7,7 @@ import {
   CardBody,
   Center,
   Flex,
+  FormControl,
   Heading,
   Input,
   Link,
@@ -19,30 +20,33 @@ import {
 export const CharacterCreation = (): JSX.Element => {
   return (
     <Stack
+      as="form"
       direction={['column', 'row']}
       gap={6}
       justifyContent="center"
+      maxW="1800px"
+      mx="auto"
       my={20}
       px={12}
     >
-      <Box border="2px solid" padding="20px" width="50%">
-        <VStack>
-          <Flex height="100%" width="100%">
-            <Center margin="10px auto" width="40%">
-              <Avatar size="lg"></Avatar>
+      <Box border="2px solid" p={10} width="50%">
+        <VStack spacing={10}>
+          <Flex gap={10} w="100%">
+            <Center>
+              <Avatar size="xl"></Avatar>
             </Center>
-            <Box alignContent="left" margin="10px auto" width="60%">
-              <Stack spacing={3}>
-                <Input placeholder="Outline" variant="outline" />
-                <Input placeholder="Outline" variant="outline" />
-              </Stack>
-            </Box>
+            <VStack w="100%">
+              <FormControl isRequired>
+                <Input placeholder="Name" />
+              </FormControl>
+              <Button alignSelf="start" size="sm" type="button">
+                Upload Avatar
+              </Button>
+            </VStack>
           </Flex>
-        </VStack>
-        <VStack>
-          <Box width="100%">
-            <Textarea placeholder="Here is a sample placeholder" />
-          </Box>
+          <FormControl isRequired>
+            <Textarea height="250px" placeholder="Bio" />
+          </FormControl>
         </VStack>
       </Box>
       <Box border="2px solid" padding="20px" width="50%">
