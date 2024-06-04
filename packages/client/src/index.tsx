@@ -9,10 +9,10 @@ import '@rainbow-me/rainbowkit/styles.css';
 
 import { ChakraProvider } from '@chakra-ui/react';
 import { Global } from '@emotion/react';
-import mudConfig from 'contracts/mud.config';
 import { createRoot } from 'react-dom/client';
 
 import { App } from './App';
+import { DevTools } from './components/DevTools';
 import { MUDProvider } from './contexts/MUDContext';
 import { Web3Provider } from './contexts/Web3Provider';
 import { setup } from './lib/mud/setup';
@@ -30,24 +30,9 @@ setup().then(async result => {
       <Web3Provider>
         <MUDProvider setupResult={result}>
           <App />
+          <DevTools />
         </MUDProvider>
       </Web3Provider>
     </ChakraProvider>,
   );
-
-  // https://vitejs.dev/guide/env-and-mode.html
-  if (import.meta.env.DEV) {
-    const { mount: mountDevTools } = await import('@latticexyz/dev-tools');
-    mountDevTools({
-      config: mudConfig,
-      publicClient: result.network.publicClient,
-      walletClient: result.network.walletClient,
-      latestBlock$: result.network.latestBlock$,
-      storedBlockLogs$: result.network.storedBlockLogs$,
-      worldAddress: result.network.worldContract.address,
-      worldAbi: result.network.worldContract.abi,
-      write$: result.network.write$,
-      recsWorld: result.network.world,
-    });
-  }
 });
