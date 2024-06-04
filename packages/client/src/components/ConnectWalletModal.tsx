@@ -25,7 +25,7 @@ export const ConnectWalletModal = ({
 }): JSX.Element => {
   const { data: externalWalletClient } = useWalletClient();
   const { isConnected, address } = useAccount();
-  const { delegatorAddress, setBurnerWithCleanup } = useMUD();
+  const { delegatorAddress } = useMUD();
 
   const bodyContent = useMemo(() => {
     if (externalWalletClient && delegatorAddress) {
@@ -35,7 +35,6 @@ export const ConnectWalletModal = ({
           <DelegationButton
             externalWalletClient={externalWalletClient}
             onClose={onClose}
-            setBurner={setBurnerWithCleanup}
           />
         </VStack>
       );
@@ -68,7 +67,6 @@ export const ConnectWalletModal = ({
           <DelegationButton
             externalWalletClient={externalWalletClient}
             onClose={onClose}
-            setBurner={setBurnerWithCleanup}
           />
         </VStack>
       );
@@ -80,14 +78,7 @@ export const ConnectWalletModal = ({
         <ConnectWalletButton />
       </VStack>
     );
-  }, [
-    address,
-    externalWalletClient,
-    delegatorAddress,
-    isConnected,
-    onClose,
-    setBurnerWithCleanup,
-  ]);
+  }, [address, externalWalletClient, delegatorAddress, isConnected, onClose]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>

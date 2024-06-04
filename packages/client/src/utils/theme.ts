@@ -19,17 +19,36 @@ const Button = {
   defaultProps: {
     variant: 'solid',
   },
-  variants: {
-    solid: {
-      bg: 'black',
-      color: 'white',
+  sizes: {
+    sm: {
+      p: 5,
+    },
+    md: {
       px: 10,
       py: 6,
+    },
+  },
+  variants: {
+    outline: {
+      border: '2px solid',
+      borderColor: 'grey500',
+    },
+    solid: {
+      bg: 'black',
+      border: '2px solid',
+      borderColor: 'black',
+      color: 'white',
       _active: {
         bg: 'rgba(0, 0, 0, 1)',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
       },
       _hover: {
         bg: 'rgba(0, 0, 0, 0.8)',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
       },
       _loading: {
         bg: 'rgba(0, 0, 0, 0.8)',
@@ -43,11 +62,27 @@ const Button = {
 
 const Heading = {
   defaultProps: {
-    variant: 'primary',
+    size: 'md',
   },
-  variants: {
-    primary: {
+  sizes: {
+    sm: {
+      fontSize: '18px',
+    },
+    md: {
       fontSize: '24px',
+    },
+  },
+};
+
+const Input = {
+  variants: {
+    outline: {
+      field: {
+        border: '2px solid',
+        borderColor: 'grey',
+        borderRadius: '5px',
+        py: 5,
+      },
     },
   },
 };
@@ -66,6 +101,16 @@ const Text = {
   },
 };
 
+const Textarea = {
+  variants: {
+    outline: {
+      border: '2px solid',
+      borderColor: 'grey',
+      borderRadius: '5px',
+    },
+  },
+};
+
 export const theme = extendTheme({
   config: { initialColorMode: 'light', useSystemColorMode: false },
   fonts: {
@@ -74,11 +119,16 @@ export const theme = extendTheme({
   },
   colors: {
     black: '#000',
+    grey300: '#E6E6E6',
+    grey400: '#D1D1D1',
+    grey500: '#808080',
     white: '#fff',
   },
   components: {
     Button,
     Heading,
+    Input,
     Text,
+    Textarea,
   },
 });

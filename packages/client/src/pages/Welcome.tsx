@@ -6,11 +6,27 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
+import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
+import { useMUD } from '../contexts/MUDContext';
 
 export const Welcome = (): JSX.Element => {
+  const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isConnected } = useAccount();
+  const { delegatorAddress } = useMUD();
+
+  const onPlay = useCallback(() => {
+    if (!(delegatorAddress && isConnected)) {
+      onOpen();
+      return;
+    }
+
+    navigate('character-creation');
+  }, [delegatorAddress, isConnected, navigate, onOpen]);
 
   return (
     <Container maxW="800px">
@@ -41,7 +57,7 @@ export const Welcome = (): JSX.Element => {
             your path through the darkness.
           </Text>
         </VStack>
-        <Button onClick={onOpen}>Play</Button>
+        <Button onClick={onPlay}>Play</Button>
       </VStack>
       <ConnectWalletModal isOpen={isOpen} onClose={onClose} />
     </Container>

@@ -1,4 +1,4 @@
-import { Box, Heading, Stack } from '@chakra-ui/react';
+import { Box, Heading } from '@chakra-ui/react';
 import { useLocation } from 'react-router-dom';
 
 const PAGES_WITHOUT_HEADER = ['/'];
@@ -11,12 +11,10 @@ export const Header = (): JSX.Element => {
   }
 
   return (
-    <Box>
-      <Stack backgroundColor="lightgray" direction="row" padding="10px">
-        <Heading as="h1" margin="10px" w="50%">
-          Ultimate Dominion
-        </Heading>
-      </Stack>
+    <Box as="header" bgColor="grey300" mt={8} padding="10px">
+      <Heading size={{ base: 'sm', sm: 'md' }} textAlign="right">
+        Ultimate Dominion
+      </Heading>
     </Box>
   );
 };
