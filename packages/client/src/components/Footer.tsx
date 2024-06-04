@@ -3,7 +3,7 @@ import { FaDiscord, FaTwitter } from 'react-icons/fa';
 
 export const Footer = (): JSX.Element => {
   return (
-    <HStack alignItems="center" h="150px">
+    <HStack alignItems="center" as="footer" h="150px">
       <Grid
         alignItems="center"
         templateColumns="repeat(4, 1fr)"

@@ -11,8 +11,10 @@ export const Header = (): JSX.Element => {
   }
 
   return (
-    <Box bgColor="grey300" mt={8} padding="10px">
-      <Heading textAlign="right">Ultimate Dominion</Heading>
+    <Box as="header" bgColor="grey300" mt={8} padding="10px">
+      <Heading size={{ base: 'sm', sm: 'md' }} textAlign="right">
+        Ultimate Dominion
+      </Heading>
     </Box>
   );
 };
