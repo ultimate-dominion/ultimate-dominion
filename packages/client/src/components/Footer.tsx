@@ -19,11 +19,11 @@ export const Footer = (): JSX.Element => {
               <Link
                 alignSelf="start"
                 borderBottom="2px solid"
-                borderColor="lightgrey"
+                borderColor="grey400"
                 fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
                 pb={1}
                 _hover={{
-                  borderColor: 'grey',
+                  borderColor: 'grey500',
                   textDecoration: 'none',
                 }}
               >
@@ -32,11 +32,11 @@ export const Footer = (): JSX.Element => {
               <Link
                 alignSelf="start"
                 borderBottom="2px solid"
-                borderColor="lightgrey"
+                borderColor="grey400"
                 fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
                 pb={1}
                 _hover={{
-                  borderColor: 'grey',
+                  borderColor: 'grey500',
                   textDecoration: 'none',
                 }}
               >
@@ -50,11 +50,11 @@ export const Footer = (): JSX.Element => {
               <Link
                 alignSelf="start"
                 borderBottom="2px solid"
-                borderColor="lightgrey"
+                borderColor="grey400"
                 fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
                 pb={1}
                 _hover={{
-                  borderColor: 'grey',
+                  borderColor: 'grey500',
                   textDecoration: 'none',
                 }}
               >
@@ -63,11 +63,11 @@ export const Footer = (): JSX.Element => {
               <Link
                 alignSelf="start"
                 borderBottom="2px solid"
-                borderColor="lightgrey"
+                borderColor="grey400"
                 fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
                 pb={1}
                 _hover={{
-                  borderColor: 'grey',
+                  borderColor: 'grey500',
                   textDecoration: 'none',
                 }}
               >

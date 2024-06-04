@@ -26,14 +26,13 @@ export const CharacterCreation = (): JSX.Element => {
       justifyContent="center"
       maxW="1800px"
       mx="auto"
-      my={20}
-      px={12}
+      my={4}
     >
       <Box border="2px solid" p={10} width="50%">
         <VStack spacing={8}>
           <Flex gap={8} w="100%">
             <Center>
-              <Avatar size="xl"></Avatar>
+              <Avatar size="xl" />
             </Center>
             <VStack w="100%">
               <FormControl isRequired>
