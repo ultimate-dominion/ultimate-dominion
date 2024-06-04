@@ -1,17 +1,14 @@
-import {
-  Box,
-  Button,
-  Center,
-  Divider,
-  Heading,
-  Stack,
-  useDisclosure,
-} from '@chakra-ui/react';
+import { Box, Heading, Stack } from '@chakra-ui/react';
+import { useLocation } from 'react-router-dom';
 
-import { ConnectWalletModal } from './ConnectWalletModal';
+const PAGES_WITHOUT_HEADER = ['/'];
 
 export const Header = (): JSX.Element => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { pathname } = useLocation();
+
+  if (PAGES_WITHOUT_HEADER.includes(pathname)) {
+    return <Box />;
+  }
 
   return (
     <Box>
@@ -19,15 +16,7 @@ export const Header = (): JSX.Element => {
         <Heading as="h1" margin="10px" w="50%">
           Ultimate Dominion
         </Heading>
-        <Divider opacity="0"></Divider>
-        <Center>
-          <Button margin="0px auto" onClick={onOpen} textAlign="right">
-            Connect
-          </Button>
-        </Center>
       </Stack>
-
-      <ConnectWalletModal isOpen={isOpen} onClose={onClose} />
     </Box>
   );
 };

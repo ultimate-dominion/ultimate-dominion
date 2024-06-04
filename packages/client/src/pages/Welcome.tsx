@@ -20,9 +20,7 @@ export const Welcome = (): JSX.Element => {
         mt={{ base: 20, sm: 32 }}
         spacing={{ base: 12, sm: 20 }}
       >
-        <Heading px={4} textAlign="center">
-          Welcome to Ultimate Dominion
-        </Heading>
+        <Heading textAlign="center">Welcome to Ultimate Dominion</Heading>
         <VStack spacing={6} textAlign="center">
           <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
             As you awaken, your eyes flutter open to the stark, eerie ambiance

@@ -9,7 +9,6 @@ export const globalStyles = css`
     color: #000;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 1rem;
-    height: 100%;
   }
 `;
 
