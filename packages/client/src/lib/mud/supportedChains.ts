@@ -37,7 +37,7 @@ export const baseSepolia = {
 
 const getSupportedChains = () => {
   if (import.meta.env.DEV) {
-    return [mudFoundry];
+    return [baseSepolia, mudFoundry];
   }
 
   return [baseSepolia];

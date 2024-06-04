@@ -15,7 +15,7 @@ export const CHAIN_ID_TO_LABEL: { [key: number]: string } = {
 
 const getSupportedChains = () => {
   if (import.meta.env.DEV) {
-    return [anvil] as const;
+    return [anvil, baseSepolia] as const;
   }
 
   return [baseSepolia] as const;
