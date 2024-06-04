@@ -94,11 +94,11 @@ export const CharacterCreation = (): JSX.Element => {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         renderSuccess('Character created!');
+        navigate('/world');
       } catch (e) {
         renderError(e, 'Failed to create character.');
       } finally {
         setIsCreating(false);
-        navigate('/world');
       }
     },
     [
