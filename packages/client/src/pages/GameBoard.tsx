@@ -1,8 +1,6 @@
 import { Grid, GridItem, Heading } from '@chakra-ui/react';
 
 export const GameBoard = (): JSX.Element => {
-  // Reset showError state when any of the form fields change
-
   return (
     <Grid
       gap={2}
