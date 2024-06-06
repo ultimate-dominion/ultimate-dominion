@@ -1,8 +1,13 @@
-import { Box, Grid, GridItem, Heading, HStack, Spacer } from '@chakra-ui/react';
+import { Grid, GridItem, Heading, VStack } from '@chakra-ui/react';
 
-import { Monsters } from '../components/TileDetails/Monsters';
-import { Players } from '../components/TileDetails/Players';
-import { SafeZone } from '../components/TileDetails/SafeZone';
+import { HealthPotion } from '../components/Stats/HealthPotion';
+import { Inventory } from '../components/Stats/Inventory';
+import { Level } from '../components/Stats/Level';
+import { Money } from '../components/Stats/Money';
+import { Navigation } from '../components/Stats/Navigation';
+import { Socials } from '../components/Stats/Socials';
+import { Stats } from '../components/Stats/Stats';
+import { TopBar } from '../components/Stats/TopBar';
 
 export const GameBoard = (): JSX.Element => {
   return (
@@ -14,14 +19,22 @@ export const GameBoard = (): JSX.Element => {
       templateRows={{ base: 'repeat(13, 1fr)', md: 'repeat(12, 1fr)' }}
     >
       <GridItem
-        background="powderblue"
         border="solid"
         colSpan={{ base: 2, md: 2 }}
         display={{ base: 'none', md: 'block' }}
         padding="5px"
         rowSpan={{ base: 12, md: 12 }}
       >
-        <Heading>StatsPanel</Heading>
+        <VStack>
+          <TopBar></TopBar>
+          <Stats></Stats>
+          <Level></Level>
+          <Money></Money>
+          <Inventory></Inventory>
+          <HealthPotion></HealthPotion>
+          <Navigation></Navigation>
+          <Socials></Socials>
+        </VStack>
       </GridItem>
       <GridItem
         border="solid"
