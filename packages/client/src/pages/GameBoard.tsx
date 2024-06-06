@@ -1,6 +1,9 @@
-import { Grid, GridItem, Heading } from '@chakra-ui/react';
+import { Box, Grid, GridItem, Heading, HStack, Spacer } from '@chakra-ui/react';
 
 import { StatsPanel } from '../components/StatsPanel';
+import { Monsters } from '../components/TileDetails/Monsters';
+import { Players } from '../components/TileDetails/Players';
+import { SafeZone } from '../components/TileDetails/SafeZone';
 
 export const GameBoard = (): JSX.Element => {
   return (
