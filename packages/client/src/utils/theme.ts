@@ -15,7 +15,6 @@ const Progress = {
   baseStyle: {
     track: {
       borderRadius: 5,
-
     },
     filledTrack: {
       bg: 'black',

@@ -1,4 +1,24 @@
-import { Grid, GridItem, Heading } from '@chakra-ui/react';
+import {
+  Box,
+  Grid,
+  GridItem,
+  Heading,
+  HStack,
+  Spacer,
+  VStack,
+} from '@chakra-ui/react';
+
+import { HealthPotion } from '../components/Stats/HealthPotion';
+import { Inventory } from '../components/Stats/Inventory';
+import { Level } from '../components/Stats/Level';
+import { Money } from '../components/Stats/Money';
+import { Navigation } from '../components/Stats/Navigation';
+import { Socials } from '../components/Stats/Socials';
+import { Stats } from '../components/Stats/Stats';
+import { TopBar } from '../components/Stats/TopBar';
+import { Monsters } from '../components/TileDetails/Monsters';
+import { Players } from '../components/TileDetails/Players';
+import { SafeZone } from '../components/TileDetails/SafeZone';
 
 export const GameBoard = (): JSX.Element => {
   return (
@@ -20,7 +40,6 @@ export const GameBoard = (): JSX.Element => {
         <Heading>StatsPanel</Heading>
       </GridItem>
       <GridItem
-        background="mintcream"
         border="solid"
         colSpan={{ base: 8, md: 4 }}
         colStart={{ base: 0, md: 0 }}
@@ -28,7 +47,15 @@ export const GameBoard = (): JSX.Element => {
         rowSpan={{ base: 4, md: 6 }}
         rowStart={{ base: 0, md: 0 }}
       >
-        <Heading>TileDetailsPanel</Heading>
+        <Box h="100%">
+          <HStack alignItems="start" h="100%">
+            <Monsters></Monsters>
+            <Spacer></Spacer>
+            <Players></Players>
+            <Spacer></Spacer>
+            <SafeZone></SafeZone>
+          </HStack>
+        </Box>
       </GridItem>
       <GridItem
         background="mintcream"
