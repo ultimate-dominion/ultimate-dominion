@@ -1,9 +1,7 @@
-import { Box, Grid, GridItem, Heading, HStack, Spacer } from '@chakra-ui/react';
+import { Grid, GridItem, Heading } from '@chakra-ui/react';
 
 import { StatsPanel } from '../components/StatsPanel';
-import { Monsters } from '../components/TileDetails/Monsters';
-import { Players } from '../components/TileDetails/Players';
-import { SafeZone } from '../components/TileDetails/SafeZone';
+import { TileDetailsPanel } from '../components/TileDetailsPanel';
 
 export const GameBoard = (): JSX.Element => {
   return (
@@ -32,15 +30,7 @@ export const GameBoard = (): JSX.Element => {
         rowSpan={{ base: 4, md: 6 }}
         rowStart={{ base: 0, md: 0 }}
       >
-        <Box h="100%">
-          <HStack alignItems="start" h="100%">
-            <Monsters></Monsters>
-            <Spacer></Spacer>
-            <Players></Players>
-            <Spacer></Spacer>
-            <SafeZone></SafeZone>
-          </HStack>
-        </Box>
+        <TileDetailsPanel />
       </GridItem>
       <GridItem
         background="mintcream"
