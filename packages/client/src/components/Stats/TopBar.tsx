@@ -3,7 +3,7 @@ import { IoIosArrowForward } from 'react-icons/io';
 
 export const TopBar = (): JSX.Element => {
   return (
-    <Flex padding="5px" w="100%" textAlign="center" alignItems="center">
+    <Flex alignItems="center" padding="5px" textAlign="center" w="100%">
       <Box>
         <Avatar size="sm"></Avatar>
       </Box>

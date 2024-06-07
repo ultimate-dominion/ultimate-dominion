@@ -12,7 +12,7 @@ export const Socials = (): JSX.Element => {
         <FaTwitter />
       </Link>
       <Spacer></Spacer>
-      <Link fontWeight={700}>T&C</Link>
+      <Link fontWeight="700">T&C</Link>
     </Stack>
   );
 };
