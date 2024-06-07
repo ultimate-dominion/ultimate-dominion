@@ -1,4 +1,4 @@
-import { Grid, GridItem, Heading, VStack } from '@chakra-ui/react';
+import { Grid, GridItem, Heading, Spacer, VStack } from '@chakra-ui/react';
 
 import { HealthPotion } from '../components/Stats/HealthPotion';
 import { Inventory } from '../components/Stats/Inventory';
@@ -25,14 +25,21 @@ export const GameBoard = (): JSX.Element => {
         padding="5px"
         rowSpan={{ base: 12, md: 12 }}
       >
-        <VStack>
+        <VStack h="100%">
           <TopBar></TopBar>
+          <Spacer></Spacer>
           <Stats></Stats>
+          <Spacer></Spacer>
           <Level></Level>
+          <Spacer></Spacer>
           <Money></Money>
+          <Spacer></Spacer>
           <Inventory></Inventory>
+          <Spacer></Spacer>
           <HealthPotion></HealthPotion>
+          <Spacer></Spacer>
           <Navigation></Navigation>
+          <Spacer></Spacer>
           <Socials></Socials>
         </VStack>
       </GridItem>

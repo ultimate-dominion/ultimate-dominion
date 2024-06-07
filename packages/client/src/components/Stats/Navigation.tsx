@@ -4,11 +4,11 @@ export const Navigation = (): JSX.Element => {
   return (
     <VStack align="baseline" padding="5px" w="100%">
       <Link
-        textAlign="left"
         borderBottom="2px solid"
         borderColor="grey400"
         fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
         pb={1}
+        textAlign="left"
         _hover={{
           borderColor: 'grey500',
           textDecoration: 'none',

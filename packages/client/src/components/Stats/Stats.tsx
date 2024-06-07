@@ -2,11 +2,11 @@ import { Box, Grid, GridItem, Text } from '@chakra-ui/react';
 
 export const Stats = (): JSX.Element => {
   return (
-    <Box w="100%" textAlign="left">
+    <Box textAlign="left" w="100%">
       <Grid
+        columnGap="5"
         padding="5px"
         templateColumns="repeat(2, 1fr)"
-        columnGap="5"
         width="75%"
       >
         <GridItem>
