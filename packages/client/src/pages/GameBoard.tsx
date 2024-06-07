@@ -26,21 +26,21 @@ export const GameBoard = (): JSX.Element => {
         rowSpan={{ base: 12, md: 12 }}
       >
         <VStack h="100%">
-          <TopBar></TopBar>
-          <Spacer></Spacer>
-          <Stats></Stats>
-          <Spacer></Spacer>
-          <Level></Level>
-          <Spacer></Spacer>
-          <Money></Money>
-          <Spacer></Spacer>
-          <Inventory></Inventory>
-          <Spacer></Spacer>
-          <HealthPotion></HealthPotion>
-          <Spacer></Spacer>
-          <Navigation></Navigation>
-          <Spacer></Spacer>
-          <Socials></Socials>
+          <TopBar />
+          <Spacer />
+          <Stats />
+          <Spacer />
+          <Level />
+          <Spacer />
+          <Money />
+          <Spacer />
+          <Inventory />
+          <Spacer />
+          <HealthPotion />
+          <Spacer />
+          <Navigation />
+          <Spacer />
+          <Socials />
         </VStack>
       </GridItem>
       <GridItem

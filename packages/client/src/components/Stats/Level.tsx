@@ -18,7 +18,7 @@ export const Level = (): JSX.Element => {
       <Progress value={percent} />
       <HStack>
         <Text fontSize="small">Level 1</Text>
-        <Spacer></Spacer>
+        <Spacer />
         <Text fontSize="small">Level 2</Text>
       </HStack>
     </Box>
