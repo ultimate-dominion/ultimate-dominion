@@ -3,6 +3,7 @@ import { Grid, GridItem, Heading } from '@chakra-ui/react';
 import { StatsPanel } from '../components/StatsPanel';
 import { TileDetailsPanel } from '../components/TileDetailsPanel';
 
+
 export const GameBoard = (): JSX.Element => {
   return (
     <Grid
