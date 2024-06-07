@@ -11,16 +11,7 @@ export const globalStyles = css`
     font-size: 1rem;
   }
 `;
-const Progress = {
-  baseStyle: {
-    track: {
-      borderRadius: 5,
-    },
-    filledTrack: {
-      bg: 'black',
-    },
-  },
-};
+
 const Button = {
   baseStyle: {
     borderRadius: 5,
@@ -95,7 +86,16 @@ const Input = {
     },
   },
 };
-
+const Progress = {
+  baseStyle: {
+    track: {
+      borderRadius: 5,
+    },
+    filledTrack: {
+      bg: 'black',
+    },
+  },
+};
 const Text = {
   sizes: {
     xs: {
@@ -106,6 +106,9 @@ const Text = {
     },
     md: {
       fontSize: '16px',
+    },
+    lg: {
+      fontSize: '18px',
     },
   },
 };

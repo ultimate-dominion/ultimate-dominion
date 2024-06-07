@@ -10,25 +10,33 @@ export const Stats = (): JSX.Element => {
         width="75%"
       >
         <GridItem>
-          <Text fontWeight="bold">HP</Text>
+          <Text fontWeight="bold" size="lg">
+            HP
+          </Text>
         </GridItem>
         <GridItem>
           <Text>1</Text>
         </GridItem>
         <GridItem>
-          <Text fontWeight="bold">STR</Text>
+          <Text fontWeight="bold" size="lg">
+            STR
+          </Text>
         </GridItem>
         <GridItem>
           <Text>3</Text>
         </GridItem>
         <GridItem>
-          <Text fontWeight="bold">AGI</Text>
+          <Text fontWeight="bold" size="lg">
+            AGI
+          </Text>
         </GridItem>
         <GridItem>
           <Text>4</Text>
         </GridItem>
         <GridItem>
-          <Text fontWeight="bold">INT</Text>
+          <Text fontWeight="bold" size="lg">
+            INT
+          </Text>
         </GridItem>
         <GridItem>
           <Text>5</Text>

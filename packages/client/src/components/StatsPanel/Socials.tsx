@@ -5,11 +5,11 @@ export const Socials = (): JSX.Element => {
   return (
     <Stack direction="row" padding="5px" w="100%">
       <Link>
-        <FaDiscord />
+        <FaDiscord size={20} />
       </Link>
       <Spacer />
       <Link>
-        <FaTwitter />
+        <FaTwitter size={20} />
       </Link>
       <Spacer />
       <Link fontWeight="700">T&C</Link>
