@@ -11,16 +11,7 @@ export const globalStyles = css`
     font-size: 1rem;
   }
 `;
-const Progress = {
-  baseStyle: {
-    track: {
-      borderRadius: 5,
-    },
-    filledTrack: {
-      bg: 'black',
-    },
-  },
-};
+
 const Button = {
   baseStyle: {
     borderRadius: 5,

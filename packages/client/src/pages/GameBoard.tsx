@@ -1,24 +1,4 @@
-import {
-  Box,
-  Grid,
-  GridItem,
-  Heading,
-  HStack,
-  Spacer,
-  VStack,
-} from '@chakra-ui/react';
-
-import { HealthPotion } from '../components/Stats/HealthPotion';
-import { Inventory } from '../components/Stats/Inventory';
-import { Level } from '../components/Stats/Level';
-import { Money } from '../components/Stats/Money';
-import { Navigation } from '../components/Stats/Navigation';
-import { Socials } from '../components/Stats/Socials';
-import { Stats } from '../components/Stats/Stats';
-import { TopBar } from '../components/Stats/TopBar';
-import { Monsters } from '../components/TileDetails/Monsters';
-import { Players } from '../components/TileDetails/Players';
-import { SafeZone } from '../components/TileDetails/SafeZone';
+import { Grid, GridItem, Heading } from '@chakra-ui/react';
 
 import { StatsPanel } from '../components/StatsPanel';
 
@@ -38,6 +18,7 @@ export const GameBoard = (): JSX.Element => {
         padding="5px"
         rowSpan={{ base: 12, md: 12 }}
       >
+        <StatsPanel />
         <StatsPanel />
       </GridItem>
       <GridItem
