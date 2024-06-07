@@ -7,11 +7,11 @@ export const Socials = (): JSX.Element => {
       <Link>
         <FaDiscord />
       </Link>
-      <Spacer></Spacer>
+      <Spacer />
       <Link>
         <FaTwitter />
       </Link>
-      <Spacer></Spacer>
+      <Spacer />
       <Link fontWeight="700">T&C</Link>
     </Stack>
   );

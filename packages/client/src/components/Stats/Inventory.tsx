@@ -6,22 +6,22 @@ export const Inventory = (): JSX.Element => {
       <VStack align="stretch" fontWeight="bold" spacing={2}>
         <HStack alignItems="start">
           <Heading>Active Items</Heading>
-          <Spacer></Spacer>
+          <Spacer />
           <Text>1/3</Text>
         </HStack>
         <HStack alignItems="start" fontSize="small" fontWeight="bold">
           <Text>Rusty Dagger</Text>
-          <Spacer></Spacer>
+          <Spacer />
           <Text>⁂</Text>
         </HStack>
         <HStack alignItems="start" fontSize="small">
           <Text>Empty Slot</Text>
-          <Spacer></Spacer>
+          <Spacer />
           <Text>+</Text>
         </HStack>
         <HStack alignItems="start" fontSize="small">
           <Text>Empty Slot</Text>
-          <Spacer></Spacer>
+          <Spacer />
           <Text>+</Text>
         </HStack>
       </VStack>
