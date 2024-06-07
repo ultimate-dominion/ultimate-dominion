@@ -12,17 +12,23 @@ export const Inventory = (): JSX.Element => {
         <HStack alignItems="center" fontSize="xs" fontWeight="bold">
           <Text>Rusty Dagger</Text>
           <Spacer />
-          <Button padding="0 2px" size="sm" variant="disabled">⁂</Button>
+          <Button padding="0 2px" size="sm" variant="disabled">
+            ⁂
+          </Button>
         </HStack>
         <HStack alignItems="center" fontSize="xs">
           <Text>Empty Slot</Text>
           <Spacer />
-          <Button padding="0 2px" size="sm" variant="ghost">+</Button>
+          <Button padding="0 2px" size="sm" variant="ghost">
+            +
+          </Button>
         </HStack>
         <HStack alignItems="center" fontSize="xs">
           <Text>Empty Slot</Text>
           <Spacer />
-          <Button padding="0 2px" size="sm" variant="ghost">+</Button>
+          <Button padding="0 2px" size="sm" variant="ghost">
+            +
+          </Button>
         </HStack>
       </VStack>
     </Box>
