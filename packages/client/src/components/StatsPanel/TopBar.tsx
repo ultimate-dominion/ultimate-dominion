@@ -5,10 +5,10 @@ export const TopBar = (): JSX.Element => {
   return (
     <Flex alignItems="center" padding="5px" textAlign="center" w="100%">
       <Box>
-        <Avatar size="sm" />
+        <Avatar size="md" />
       </Box>
       <Box w="100%">
-        <Text>0lffaa_08 ※</Text>
+        <Text fontWeight="700">0lffaa_08 ※</Text>
       </Box>
       <Box textAlign="right">
         <IoIosArrowForward />

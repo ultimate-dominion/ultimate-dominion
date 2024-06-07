@@ -1,13 +1,6 @@
-import { Grid, GridItem, Heading, Spacer, VStack } from '@chakra-ui/react';
+import { Grid, GridItem, Heading } from '@chakra-ui/react';
 
-import { HealthPotion } from '../components/Stats/HealthPotion';
-import { Inventory } from '../components/Stats/Inventory';
-import { Level } from '../components/Stats/Level';
-import { Money } from '../components/Stats/Money';
-import { Navigation } from '../components/Stats/Navigation';
-import { Socials } from '../components/Stats/Socials';
-import { Stats } from '../components/Stats/Stats';
-import { TopBar } from '../components/Stats/TopBar';
+import { StatsPanel } from '../components/StatsPanel';
 
 export const GameBoard = (): JSX.Element => {
   return (
@@ -25,23 +18,7 @@ export const GameBoard = (): JSX.Element => {
         padding="5px"
         rowSpan={{ base: 12, md: 12 }}
       >
-        <VStack h="100%">
-          <TopBar />
-          <Spacer />
-          <Stats />
-          <Spacer />
-          <Level />
-          <Spacer />
-          <Money />
-          <Spacer />
-          <Inventory />
-          <Spacer />
-          <HealthPotion />
-          <Spacer />
-          <Navigation />
-          <Spacer />
-          <Socials />
-        </VStack>
+        <StatsPanel />
       </GridItem>
       <GridItem
         background="mintcream"
