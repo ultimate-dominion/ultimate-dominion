@@ -1,28 +1,28 @@
-import { Box, Heading, HStack, Text, VStack } from '@chakra-ui/react';
+import { Box, HStack, Text, VStack } from '@chakra-ui/react';
 import { IoIosArrowForward } from 'react-icons/io';
 
 export const SafeZone = (): JSX.Element => {
   return (
     <Box>
-      <Heading>Safe Zone</Heading>
+      <Text size="lg">Safe Zone</Text>
       <VStack>
-        <HStack>
+        <HStack fontWeight="bold">
           <Text>Level 1</Text>
           <IoIosArrowForward />
         </HStack>
-        <HStack>
+        <HStack fontWeight="bold">
           <Text>Level 2</Text>
           <IoIosArrowForward />
         </HStack>
-        <HStack>
+        <HStack fontWeight="bold">
           <Text>Level 1</Text>
           <IoIosArrowForward />
         </HStack>
-        <HStack>
+        <HStack fontWeight="bold">
           <Text>Level 2</Text>
           <IoIosArrowForward />
         </HStack>
-        <HStack>
+        <HStack fontWeight="bold">
           <Text>Level 1</Text>
           <IoIosArrowForward />
         </HStack>

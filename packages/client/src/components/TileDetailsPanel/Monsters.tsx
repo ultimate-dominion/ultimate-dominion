@@ -1,26 +1,28 @@
-import { Box, Heading, HStack, Spacer, Text } from '@chakra-ui/react';
+import { Box, HStack, Spacer, Text } from '@chakra-ui/react';
 
 export const Monsters = (): JSX.Element => {
   return (
     <Box>
-      <Heading>Monsters</Heading>
+      <Text fontWeight="bold" size="lg">
+        Monsters
+      </Text>
       <Box>
-        <HStack>
+        <HStack padding="5px 10px">
           <Text color="yellow">Kobold</Text>
           <Spacer />
-          <Text>Level 2</Text>
+          <Text fontWeight="bold">Level 2</Text>
         </HStack>
         <Spacer />
-        <HStack>
+        <HStack bg="lightgray" padding="5px 10px">
           <Text color="green">Green Slime</Text>
           <Spacer />
-          <Text>Level 2</Text>
+          <Text fontWeight="bold">Level 2</Text>
         </HStack>
         <Spacer />
-        <HStack>
+        <HStack padding="5px 10px">
           <Text color="red">Cave Bandit</Text>
           <Spacer />
-          <Text>Level 2</Text>
+          <Text fontWeight="bold">Level 2</Text>
         </HStack>
       </Box>
     </Box>

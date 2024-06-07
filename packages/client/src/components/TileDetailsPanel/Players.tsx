@@ -1,9 +1,11 @@
-import { Box, Heading, Text, VStack } from '@chakra-ui/react';
+import { Box, Text, VStack } from '@chakra-ui/react';
 
 export const Players = (): JSX.Element => {
   return (
     <Box>
-      <Heading>Players</Heading>
+      <Text fontWeight="bold" size="lg">
+        Players
+      </Text>
       <VStack>
         <Text>Mon-o 🧙‍♂️</Text>
         <Text>GUATY 🎭</Text>
