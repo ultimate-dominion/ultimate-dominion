@@ -8,23 +8,23 @@ export const SafeZone = (): JSX.Element => {
       <VStack>
         <HStack>
           <Text>Level 1</Text>
-          <IoIosArrowForward></IoIosArrowForward>
+          <IoIosArrowForward />
         </HStack>
         <HStack>
           <Text>Level 2</Text>
-          <IoIosArrowForward></IoIosArrowForward>
+          <IoIosArrowForward />
         </HStack>
         <HStack>
           <Text>Level 1</Text>
-          <IoIosArrowForward></IoIosArrowForward>
+          <IoIosArrowForward />
         </HStack>
         <HStack>
           <Text>Level 2</Text>
-          <IoIosArrowForward></IoIosArrowForward>
+          <IoIosArrowForward />
         </HStack>
         <HStack>
           <Text>Level 1</Text>
-          <IoIosArrowForward></IoIosArrowForward>
+          <IoIosArrowForward />
         </HStack>
       </VStack>
     </Box>

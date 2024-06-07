@@ -7,21 +7,21 @@ export const Monsters = (): JSX.Element => {
       <Box>
         <HStack>
           <Text color="yellow">Kobold</Text>
-          <Spacer></Spacer>
+          <Spacer />
           <Text>Level 2</Text>
         </HStack>
-        <Spacer></Spacer>
+        <Spacer />
         <HStack>
           <Text color="green">Green Slime</Text>
-          <Spacer></Spacer>
+          <Spacer />
           <Text>Level 2</Text>
         </HStack>
-        <Spacer></Spacer>
+        <Spacer />
         <HStack>
           <Text color="red">Cave Bandit</Text>
-          <Spacer></Spacer>
+          <Spacer />
           <Text>Level 2</Text>
-        </HStack>{' '}
+        </HStack>
       </Box>
     </Box>
   );
