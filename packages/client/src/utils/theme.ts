@@ -86,7 +86,16 @@ const Input = {
     },
   },
 };
-
+const Progress = {
+  baseStyle: {
+    track: {
+      borderRadius: 5,
+    },
+    filledTrack: {
+      bg: 'black',
+    },
+  },
+};
 const Text = {
   sizes: {
     xs: {
@@ -97,6 +106,9 @@ const Text = {
     },
     md: {
       fontSize: '16px',
+    },
+    lg: {
+      fontSize: '18px',
     },
   },
 };
@@ -128,6 +140,7 @@ export const theme = extendTheme({
     Button,
     Heading,
     Input,
+    Progress,
     Text,
     Textarea,
   },

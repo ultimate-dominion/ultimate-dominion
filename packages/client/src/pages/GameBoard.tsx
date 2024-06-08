@@ -1,5 +1,7 @@
 import { Grid, GridItem, Heading } from '@chakra-ui/react';
 
+import { StatsPanel } from '../components/StatsPanel';
+
 export const GameBoard = (): JSX.Element => {
   return (
     <Grid
@@ -10,14 +12,13 @@ export const GameBoard = (): JSX.Element => {
       templateRows={{ base: 'repeat(13, 1fr)', md: 'repeat(12, 1fr)' }}
     >
       <GridItem
-        background="powderblue"
         border="solid"
         colSpan={{ base: 2, md: 2 }}
         display={{ base: 'none', md: 'block' }}
         padding="5px"
         rowSpan={{ base: 12, md: 12 }}
       >
-        <Heading>StatsPanel</Heading>
+        <StatsPanel />
       </GridItem>
       <GridItem
         background="mintcream"
