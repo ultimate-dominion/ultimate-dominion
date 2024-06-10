@@ -1,5 +1,13 @@
-import { Box, Button, HStack, Image, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
+import { BiSolidNavigation } from 'react-icons/bi';
+import {
+  IoIosArrowDropdownCircle,
+  IoIosArrowDropleftCircle,
+  IoIosArrowDroprightCircle,
+  IoIosArrowDropupCircle,
+} from 'react-icons/io';
+import { TbDirectionArrows } from 'react-icons/tb';
 
 const SAFE_ZONE_AREA = {
   topLeft: { x: 0, y: 4 },
@@ -74,32 +82,119 @@ export const MapPanel = (): JSX.Element => {
       </Box>
       <HStack justifyContent="space-between" w="100%">
         <HStack>
-          <Image
-            src="/icons/navigation.svg"
-            transform="rotate(45deg)"
-            w="20px"
-          />
+          <BiSolidNavigation />
           <Text fontWeight={700} size="sm">
             {position.x}, {position.y}
           </Text>
         </HStack>
         <Text size="xs">Dark Cave - 2,344 Players</Text>
       </HStack>
-      <VStack alignItems="center" h="100%" w="100%">
-        <Button colorScheme="blue" onClick={() => onMove('up')} size="sm">
-          ↑
-        </Button>
-        <HStack spacing={10}>
-          <Button colorScheme="blue" onClick={() => onMove('left')} size="sm">
-            ←
+      <VStack
+        alignItems="stretch"
+        h={175}
+        justifyContent="space-between"
+        mt={2}
+        pos="relative"
+        w={175}
+      >
+        <Box
+          border="2px solid black"
+          borderRadius="50%"
+          h={110}
+          pos="absolute"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+          w={110}
+          zIndex={-1}
+        />
+        <Box
+          bg="black"
+          h="2px"
+          left="50%"
+          pos="absolute"
+          top="50%"
+          transform="translate(-50%, 50%)"
+          w={85}
+          zIndex={-1}
+        />
+        <Box
+          bg="black"
+          h={85}
+          pos="absolute"
+          right="50%"
+          top="50%"
+          transform="translate(50%, -50%)"
+          w="2px"
+          zIndex={-1}
+        />
+        <Box
+          bg="white"
+          left="50%"
+          pos="absolute"
+          top="50%"
+          transform="translate(-50%, -45%)"
+        >
+          <TbDirectionArrows size={32} />
+        </Box>
+        <VStack spacing={0}>
+          <Text fontWeight={700} size="xs">
+            N
+          </Text>
+          <Button
+            bg="white"
+            borderRadius="50%"
+            p={0}
+            onClick={() => onMove('up')}
+            variant="ghost"
+          >
+            <IoIosArrowDropupCircle size={32} />
           </Button>
-          <Button colorScheme="blue" onClick={() => onMove('right')} size="sm">
-            →
-          </Button>
+        </VStack>
+        <HStack justifyContent="space-between" spacing={10}>
+          <HStack spacing={1}>
+            <Text fontWeight={700} size="xs">
+              W
+            </Text>
+            <Button
+              bg="white"
+              borderRadius="50%"
+              p={0}
+              onClick={() => onMove('left')}
+              variant="ghost"
+            >
+              <IoIosArrowDropleftCircle size={32} />
+            </Button>
+          </HStack>
+          <HStack spacing={1}>
+            <Button
+              bg="white"
+              borderRadius="50%"
+              p={0}
+              onClick={() => onMove('right')}
+              variant="ghost"
+            >
+              <IoIosArrowDroprightCircle size={32} />
+            </Button>
+            <Text fontWeight={700} size="xs">
+              E
+            </Text>
+          </HStack>
         </HStack>
-        <Button colorScheme="blue" onClick={() => onMove('down')} size="sm">
-          ↓
-        </Button>
+        <VStack spacing={0}>
+          <Button
+            bg="white"
+            borderRadius="50%"
+            p={0}
+            onClick={() => onMove('down')}
+            variant="ghost"
+          >
+            <IoIosArrowDropdownCircle size={32} />
+          </Button>
+          <Text fontWeight={700} size="xs">
+            S
+          </Text>
+        </VStack>
       </VStack>
     </VStack>
   );
