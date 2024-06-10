@@ -1,4 +1,4 @@
-import { Box, HStack, Spacer } from '@chakra-ui/react';
+import { Grid, GridItem } from '@chakra-ui/react';
 
 import { Monsters } from './Monsters';
 import { Players } from './Players';
@@ -6,14 +6,22 @@ import { SafeZone } from './SafeZone';
 
 export const TileDetailsPanel = (): JSX.Element => {
   return (
-    <Box h="100%">
-      <HStack alignItems="start" h="100%" p={3}>
+    <Grid
+      h="100%"
+      p={3}
+      templateRows="repeat(1, 1fr)"
+      templateColumns="repeat(3, 1fr)"
+      gap={5}
+    >
+      <GridItem colSpan={1}>
         <Monsters />
-        <Spacer />
+      </GridItem>
+      <GridItem colSpan={1}>
         <Players />
-        <Spacer />
+      </GridItem>
+      <GridItem colSpan={1}>
         <SafeZone />
-      </HStack>
-    </Box>
+      </GridItem>
+    </Grid>
   );
 };

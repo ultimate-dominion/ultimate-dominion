@@ -4,26 +4,28 @@ import { IoIosArrowForward } from 'react-icons/io';
 export const SafeZone = (): JSX.Element => {
   return (
     <Box>
-      <Text size="lg">Safe Zone</Text>
-      <VStack>
+      <Text p="10px" size="sm">
+        Safe Zone
+      </Text>
+      <VStack alignItems="start" mt={4} p="0 10px" gap={4}>
         <HStack fontWeight="bold">
-          <Text>Level 1</Text>
+          <Text size="sm">Level 1</Text>
           <IoIosArrowForward />
         </HStack>
         <HStack fontWeight="bold">
-          <Text>Level 2</Text>
+          <Text size="sm">Level 2</Text>
           <IoIosArrowForward />
         </HStack>
         <HStack fontWeight="bold">
-          <Text>Level 1</Text>
+          <Text size="sm">Level 1</Text>
           <IoIosArrowForward />
         </HStack>
         <HStack fontWeight="bold">
-          <Text>Level 2</Text>
+          <Text size="sm">Level 2</Text>
           <IoIosArrowForward />
         </HStack>
         <HStack fontWeight="bold">
-          <Text>Level 1</Text>
+          <Text size="sm">Level 1</Text>
           <IoIosArrowForward />
         </HStack>
       </VStack>
