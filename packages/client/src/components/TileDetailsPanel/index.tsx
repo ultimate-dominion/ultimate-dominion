@@ -6,7 +6,7 @@ import { SafeZone } from './SafeZone';
 
 export const TileDetailsPanel = (): JSX.Element => {
   return (
-    <Grid h="100%" p={3} templateColumns="repeat(4, 1fr)" gap={5}>
+    <Grid h="100%" templateColumns="repeat(4, 1fr)" gap={5}>
       <GridItem colSpan={2}>
         <Monsters />
       </GridItem>

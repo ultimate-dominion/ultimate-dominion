@@ -11,7 +11,7 @@ import { TopBar } from './TopBar';
 
 export const StatsPanel = (): JSX.Element => {
   return (
-    <VStack h="100%" p={3}>
+    <VStack h="100%">
       <TopBar />
       <Spacer />
       <Stats />
