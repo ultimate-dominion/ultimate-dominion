@@ -8,7 +8,7 @@ export const GameBoard = (): JSX.Element => {
     <Grid
       gap={2}
       minH="100vh"
-      padding="5px 0"
+      mt={4}
       templateColumns={{ base: 'repeat(8, 1fr)', md: 'repeat(8, 1fr)' }}
       templateRows={{ base: 'repeat(13, 1fr)', md: 'repeat(12, 1fr)' }}
     >
@@ -44,10 +44,8 @@ export const GameBoard = (): JSX.Element => {
         <Heading>ActionPanel</Heading>
       </GridItem>
       <GridItem
-        border="solid"
         colSpan={{ base: 8, md: 2 }}
         colStart={{ base: 0, md: 7 }}
-        padding="5px"
         rowSpan={{ base: 4, md: 8 }}
         rowStart={{ base: 9, md: 0 }}
       >
