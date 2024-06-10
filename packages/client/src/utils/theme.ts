@@ -131,9 +131,11 @@ export const theme = extendTheme({
   },
   colors: {
     black: '#000',
+    green: '#0BA789',
     grey300: '#E6E6E6',
     grey400: '#D1D1D1',
     grey500: '#808080',
+    red: '#F24725',
     white: '#fff',
     yellow: '#F9C712',
   },

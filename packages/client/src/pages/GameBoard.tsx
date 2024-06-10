@@ -2,6 +2,7 @@ import { Grid, GridItem, Heading } from '@chakra-ui/react';
 
 import { MapPanel } from '../components/MapPanel';
 import { StatsPanel } from '../components/StatsPanel';
+import { TileDetailsPanel } from '../components/TileDetailsPanel';
 
 export const GameBoard = (): JSX.Element => {
   return (
@@ -22,7 +23,6 @@ export const GameBoard = (): JSX.Element => {
         <StatsPanel />
       </GridItem>
       <GridItem
-        background="mintcream"
         border="solid"
         colSpan={{ base: 8, md: 4 }}
         colStart={{ base: 0, md: 0 }}
@@ -30,7 +30,7 @@ export const GameBoard = (): JSX.Element => {
         rowSpan={{ base: 4, md: 6 }}
         rowStart={{ base: 0, md: 0 }}
       >
-        <Heading>TileDetailsPanel</Heading>
+        <TileDetailsPanel />
       </GridItem>
       <GridItem
         background="mintcream"
