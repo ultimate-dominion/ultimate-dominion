@@ -135,6 +135,7 @@ export const theme = extendTheme({
     grey400: '#D1D1D1',
     grey500: '#808080',
     white: '#fff',
+    yellow: '#F9C712',
   },
   components: {
     Button,

@@ -1,5 +1,6 @@
 import { Grid, GridItem, Heading } from '@chakra-ui/react';
 
+import { MapPanel } from '../components/MapPanel';
 import { StatsPanel } from '../components/StatsPanel';
 
 export const GameBoard = (): JSX.Element => {
@@ -43,7 +44,6 @@ export const GameBoard = (): JSX.Element => {
         <Heading>ActionPanel</Heading>
       </GridItem>
       <GridItem
-        background="lavender"
         border="solid"
         colSpan={{ base: 8, md: 2 }}
         colStart={{ base: 0, md: 7 }}
@@ -51,7 +51,7 @@ export const GameBoard = (): JSX.Element => {
         rowSpan={{ base: 4, md: 8 }}
         rowStart={{ base: 9, md: 0 }}
       >
-        <Heading>MapPanel</Heading>
+        <MapPanel />
       </GridItem>
       <GridItem
         background="lavender"
