@@ -1,4 +1,4 @@
-import { Grid, GridItem, Heading } from '@chakra-ui/react';
+import { Grid, GridItem } from '@chakra-ui/react';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { MapPanel } from '../components/MapPanel';
@@ -9,10 +9,10 @@ export const GameBoard = (): JSX.Element => {
   return (
     <Grid
       gap={2}
-      h="calc(100vh - 100px)"
+      h={{ base: 'auto', lg: 'calc(100vh - 100px)' }}
       mt={4}
       templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
-      templateRows={{ base: 'repeat(16, 1fr)', lg: 'repeat(12, 1fr)' }}
+      templateRows={{ base: 'repeat(16, 50px)', lg: 'repeat(12, 1fr)' }}
     >
       <GridItem
         border="2px solid"
@@ -29,8 +29,8 @@ export const GameBoard = (): JSX.Element => {
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
         overflowY="auto"
-        p={4}
-        rowSpan={{ base: 4, lg: 6 }}
+        p={{ base: 2, lg: 4 }}
+        rowSpan={{ base: 5, lg: 6 }}
         rowStart={{ base: 0, lg: 0 }}
       >
         <TileDetailsPanel />
@@ -41,16 +41,16 @@ export const GameBoard = (): JSX.Element => {
         colStart={{ base: 0, lg: 5 }}
         overflowY="auto"
         p={4}
-        rowSpan={{ base: 4, lg: 6 }}
-        rowStart={{ base: 5, lg: 7 }}
+        rowSpan={{ base: 5, lg: 6 }}
+        rowStart={{ base: 6, lg: 7 }}
       >
         <ActionsPanel />
       </GridItem>
       <GridItem
         colSpan={{ base: 1, lg: 4 }}
         colStart={{ base: 0, lg: 13 }}
-        rowSpan={{ base: 4, lg: 8 }}
-        rowStart={{ base: 9, lg: 0 }}
+        rowSpan={{ base: 5, lg: 8 }}
+        rowStart={{ base: 11, lg: 0 }}
       >
         <MapPanel />
       </GridItem>
@@ -66,7 +66,7 @@ export const GameBoard = (): JSX.Element => {
       >
         <Heading>Chat</Heading>
       </GridItem> */}
-      <GridItem
+      {/* <GridItem
         background="plum"
         border="2px solid"
         colSpan={{ base: 1, lg: 0 }}
@@ -77,7 +77,7 @@ export const GameBoard = (): JSX.Element => {
         rowStart={{ base: 13, lg: 0 }}
       >
         <Heading>Tray</Heading>
-      </GridItem>
+      </GridItem> */}
     </Grid>
   );
 };

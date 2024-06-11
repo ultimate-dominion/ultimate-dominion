@@ -98,6 +98,15 @@ const Progress = {
 };
 const Text = {
   sizes: {
+    '4xs': {
+      fontSize: '6px',
+    },
+    '3xs': {
+      fontSize: '8px',
+    },
+    '2xs': {
+      fontSize: '10px',
+    },
     xs: {
       fontSize: '12px',
     },

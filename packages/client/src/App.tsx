@@ -11,7 +11,7 @@ export const App = (): JSX.Element => {
       <Grid
         maxW="1800px"
         minHeight="100vh"
-        px={{ base: 8, sm: 12, md: 20 }}
+        px={{ base: 2, sm: 12, md: 20 }}
         templateColumns="100%"
         templateRows="auto 1fr auto"
       >
