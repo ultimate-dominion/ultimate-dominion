@@ -77,9 +77,9 @@ export const MapPanel = (): JSX.Element => {
 
             return (
               <VStack
-                borderTop={hasSafeZoneTopBorder ? '3px solid' : '2px solid'}
+                borderTop={hasSafeZoneTopBorder ? '2px solid' : '2px solid'}
                 borderTopColor={hasSafeZoneTopBorder ? 'yellow' : 'black'}
-                borderRight={hasSafeZoneRightBorder ? '3px solid' : '2px solid'}
+                borderRight={hasSafeZoneRightBorder ? '2px solid' : '2px solid'}
                 borderRightColor={hasSafeZoneRightBorder ? 'yellow' : 'black'}
                 key={`map-tile${i}`}
               >

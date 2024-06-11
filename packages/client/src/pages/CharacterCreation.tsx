@@ -128,7 +128,6 @@ export const CharacterCreation = (): JSX.Element => {
         direction={{ base: 'column', lg: 'row' }}
         gap={{ base: 4, sm: 6 }}
         justifyContent="center"
-        maxW="1800px"
         mx="auto"
         my={4}
         onSubmit={onCreateCharacter}

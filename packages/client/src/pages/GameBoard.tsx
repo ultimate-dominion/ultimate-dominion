@@ -9,71 +9,72 @@ export const GameBoard = (): JSX.Element => {
   return (
     <Grid
       gap={2}
-      minH="100vh"
+      h="calc(100vh - 100px)"
       mt={4}
-      templateColumns={{ base: 'repeat(16, 1fr)', md: 'repeat(16, 1fr)' }}
-      templateRows={{ base: 'repeat(13, 1fr)', md: 'repeat(12, 1fr)' }}
+      templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
+      templateRows={{ base: 'repeat(16, 1fr)', lg: 'repeat(12, 1fr)' }}
     >
       <GridItem
         border="2px solid"
-        colSpan={{ base: 3, md: 4 }}
-        display={{ base: 'none', md: 'block' }}
+        colSpan={{ base: 1, lg: 4 }}
+        display={{ base: 'none', lg: 'block' }}
+        overflowY="auto"
         p={4}
-        rowSpan={{ base: 12, md: 12 }}
+        rowSpan={{ base: 12, lg: 12 }}
       >
         <StatsPanel />
       </GridItem>
       <GridItem
         border="2px solid"
-        colSpan={{ base: 10, md: 8 }}
-        colStart={{ base: 0, md: 5 }}
+        colSpan={{ base: 1, lg: 8 }}
+        colStart={{ base: 0, lg: 5 }}
+        overflowY="auto"
         p={4}
-        rowSpan={{ base: 4, md: 6 }}
-        rowStart={{ base: 0, md: 0 }}
+        rowSpan={{ base: 4, lg: 6 }}
+        rowStart={{ base: 0, lg: 0 }}
       >
         <TileDetailsPanel />
       </GridItem>
       <GridItem
         border="2px solid"
-        colSpan={{ base: 10, md: 8 }}
-        colStart={{ base: 0, md: 5 }}
-        maxH={450}
+        colSpan={{ base: 1, lg: 8 }}
+        colStart={{ base: 0, lg: 5 }}
         overflowY="auto"
         p={4}
-        rowSpan={{ base: 4, md: 6 }}
-        rowStart={{ base: 5, md: 7 }}
+        rowSpan={{ base: 4, lg: 6 }}
+        rowStart={{ base: 5, lg: 7 }}
       >
         <ActionsPanel />
       </GridItem>
       <GridItem
-        colSpan={{ base: 10, md: 4 }}
-        colStart={{ base: 0, md: 13 }}
-        rowSpan={{ base: 4, md: 8 }}
-        rowStart={{ base: 9, md: 0 }}
+        colSpan={{ base: 1, lg: 4 }}
+        colStart={{ base: 0, lg: 13 }}
+        rowSpan={{ base: 4, lg: 8 }}
+        rowStart={{ base: 9, lg: 0 }}
       >
         <MapPanel />
       </GridItem>
       {/* <GridItem
         background="lavender"
         border="2px solid"
-        colSpan={{ base: 0, md: 2 }}
-        colStart={{ base: 0, md: 7 }}
-        display={{ base: 'none', md: 'block' }}
+        colSpan={{ base: 0, lg: 2 }}
+        colStart={{ base: 0, lg: 7 }}
+        display={{ base: 'none', lg: 'block' }}
         p={4}
-        rowSpan={{ base: 0, md: 4 }}
-        rowStart={{ base: 0, md: 9 }}
+        rowSpan={{ base: 0, lg: 4 }}
+        rowStart={{ base: 0, lg: 9 }}
       >
         <Heading>Chat</Heading>
       </GridItem> */}
       <GridItem
         background="plum"
         border="2px solid"
-        colSpan={{ base: 8, md: 0 }}
-        colStart={{ base: 0, md: 0 }}
-        display={{ base: 'block', md: 'none' }}
+        colSpan={{ base: 1, lg: 0 }}
+        colStart={{ base: 0, lg: 0 }}
+        display={{ base: 'block', lg: 'none' }}
         padding="5px"
-        rowSpan={{ base: 1, md: 0 }}
-        rowStart={{ base: 13, md: 0 }}
+        rowSpan={{ base: 1, lg: 0 }}
+        rowStart={{ base: 13, lg: 0 }}
       >
         <Heading>Tray</Heading>
       </GridItem>
