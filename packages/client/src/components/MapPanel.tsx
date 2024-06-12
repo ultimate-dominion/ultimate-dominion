@@ -1,4 +1,4 @@
-import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { BiSolidNavigation } from 'react-icons/bi';
 import {
@@ -50,8 +50,8 @@ export const MapPanel = (): JSX.Element => {
   );
 
   return (
-    <VStack>
-      <Box w="100%">
+    <Stack alignItems="center" direction={{ base: 'row', lg: 'column' }}>
+      <Box w={{ base: '50%', lg: '100%' }} h={{ base: '150px', lg: '300px' }}>
         <Box
           border="2px solid black"
           borderRight="none"
@@ -88,7 +88,11 @@ export const MapPanel = (): JSX.Element => {
             );
           })}
         </Box>
-        <HStack justifyContent="space-between" w="100%">
+        <Stack
+          direction={{ base: 'column-reverse', xl: 'row' }}
+          justifyContent="space-between"
+          mt={{ base: 2, xl: 1 }}
+        >
           <HStack>
             <BiSolidNavigation />
             <Text fontWeight={700} size="sm">
@@ -96,21 +100,21 @@ export const MapPanel = (): JSX.Element => {
             </Text>
           </HStack>
           <Text size="xs">Dark Cave - 2,344 Players</Text>
-        </HStack>
+        </Stack>
       </Box>
       <NavigationCompass onMove={onMove} />
-    </VStack>
+    </Stack>
   );
 };
 
 const CharacterPiece = (): JSX.Element => (
   <Box
     bg="transparent"
-    border="8px solid"
-    borderColor="yellow"
+    border={{ base: '4px solid', lg: '8px solid' }}
+    borderColor={{ base: 'yellow', lg: 'yellow' }}
     borderRadius="50%"
-    h="28px"
-    w="28px"
+    h={{ base: '12px', lg: '28px' }}
+    w={{ base: '12px', lg: '28px' }}
   />
 );
 
@@ -124,7 +128,7 @@ const NavigationCompass = ({
       alignItems="stretch"
       h={175}
       justifyContent="space-between"
-      mt={2}
+      mt={{ base: 0, lg: 12, xl: 8 }}
       pos="relative"
       w={175}
     >
