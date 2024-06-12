@@ -10,19 +10,19 @@ export const Level = (): JSX.Element => {
       w="100%"
       fontSize="10px"
     >
-      <Text position="absolute" right={100 - percent - 2 + '%'} top="-10px">
+      <Text position="absolute" right={100 - percent - 2 + '%'} top="-15px">
         {percent}
       </Text>
       <Text
         display={percent > 90 ? 'none' : 'block'}
         position="absolute"
         right="0%"
-        top="-10px"
+        top="-15px"
       >
         100
       </Text>
-      <Progress value={percent} />
-      <HStack>
+      <Progress h={2} value={percent} />
+      <HStack mt={1}>
         <Text>Level 1</Text>
         <Spacer />
         <Text>Level 2</Text>

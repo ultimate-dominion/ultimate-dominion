@@ -50,8 +50,12 @@ export const MapPanel = (): JSX.Element => {
   );
 
   return (
-    <Stack alignItems="center" direction={{ base: 'row', lg: 'column' }}>
-      <Box w={{ base: '50%', lg: '100%' }} h={{ base: '150px', lg: '300px' }}>
+    <Stack
+      alignItems={{ base: 'start', lg: 'center' }}
+      direction={{ base: 'row', lg: 'column' }}
+      h="90%"
+    >
+      <Box w={{ base: '50%', lg: '100%' }} h={{ base: '100%', lg: '300px' }}>
         <Box
           border="2px solid black"
           borderRight="none"
@@ -59,6 +63,7 @@ export const MapPanel = (): JSX.Element => {
           display="grid"
           gridTemplateColumns="repeat(10, 1fr)"
           gridTemplateRows="repeat(10, 1fr)"
+          h="100%"
         >
           {[...Array(100)].map((_, i) => {
             const row = 9 - Math.floor(i / 10); // Reverse the row
@@ -81,6 +86,7 @@ export const MapPanel = (): JSX.Element => {
                 borderTopColor={hasSafeZoneTopBorder ? 'yellow' : 'black'}
                 borderRight={hasSafeZoneRightBorder ? '2px solid' : '2px solid'}
                 borderRightColor={hasSafeZoneRightBorder ? 'yellow' : 'black'}
+                justifyContent="center"
                 key={`map-tile${i}`}
               >
                 {currentTile && <CharacterPiece />}

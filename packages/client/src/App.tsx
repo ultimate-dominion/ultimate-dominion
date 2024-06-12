@@ -1,4 +1,4 @@
-import { Box, Grid, useBreakpointValue } from '@chakra-ui/react';
+import { Grid, useBreakpointValue } from '@chakra-ui/react';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 import { Footer } from './components/Footer';
@@ -6,7 +6,8 @@ import { Header } from './components/Header';
 import AppRoutes from './Routes';
 
 export const App = (): JSX.Element => {
-  const isMobile = useBreakpointValue({ base: true, lg: false });
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
+
   return (
     <Router>
       <Grid
@@ -18,11 +19,7 @@ export const App = (): JSX.Element => {
       >
         <Header />
         <AppRoutes />
-        {isMobile ? (
-          <Box as="header" bgColor="grey300" mb={8} h={8} />
-        ) : (
-          <Footer />
-        )}
+        {isDesktop && <Footer />}
       </Grid>
     </Router>
   );

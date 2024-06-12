@@ -1,4 +1,4 @@
-import { Spacer, VStack } from '@chakra-ui/react';
+import { useBreakpointValue, VStack } from '@chakra-ui/react';
 
 import { HealthPotion } from './HealthPotion';
 import { Inventory } from './Inventory';
@@ -10,23 +10,23 @@ import { Stats } from './Stats';
 import { TopBar } from './TopBar';
 
 export const StatsPanel = (): JSX.Element => {
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
+
   return (
-    <VStack h="100%">
+    <VStack h="100%" spacing={4}>
       <TopBar />
-      <Spacer />
       <Stats />
-      <Spacer />
       <Level />
-      <Spacer />
       <Money />
-      <Spacer />
       <Inventory />
-      <Spacer />
       <HealthPotion />
-      <Spacer />
-      <Navigation />
-      <Spacer />
-      <Socials />
+
+      {isDesktop && (
+        <>
+          <Navigation />
+          <Socials />
+        </>
+      )}
     </VStack>
   );
 };

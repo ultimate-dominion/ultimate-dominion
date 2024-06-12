@@ -1,4 +1,13 @@
-import { Grid, GridItem } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Grid,
+  GridItem,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  VStack,
+} from '@chakra-ui/react';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { MapPanel } from '../components/MapPanel';
@@ -54,30 +63,28 @@ export const GameBoard = (): JSX.Element => {
       >
         <MapPanel />
       </GridItem>
-      {/* <GridItem
-        background="lavender"
-        border="2px solid"
-        colSpan={{ base: 0, lg: 2 }}
-        colStart={{ base: 0, lg: 7 }}
-        display={{ base: 'none', lg: 'block' }}
-        p={4}
-        rowSpan={{ base: 0, lg: 4 }}
-        rowStart={{ base: 0, lg: 9 }}
-      >
-        <Heading>Chat</Heading>
-      </GridItem> */}
-      {/* <GridItem
-        background="plum"
-        border="2px solid"
-        colSpan={{ base: 1, lg: 0 }}
-        colStart={{ base: 0, lg: 0 }}
+      <Box
+        bottom={2}
         display={{ base: 'block', lg: 'none' }}
-        padding="5px"
-        rowSpan={{ base: 1, lg: 0 }}
-        rowStart={{ base: 13, lg: 0 }}
+        left="50%"
+        pos="fixed"
+        px={2}
+        transform="translateX(-50%)"
+        w="100%"
       >
-        <Heading>Tray</Heading>
-      </GridItem> */}
+        <Popover>
+          <PopoverTrigger>
+            <VStack>
+              <Button size="sm" w="100%">
+                Stats
+              </Button>
+            </VStack>
+          </PopoverTrigger>
+          <PopoverContent p={4}>
+            <StatsPanel />
+          </PopoverContent>
+        </Popover>
+      </Box>
     </Grid>
   );
 };
