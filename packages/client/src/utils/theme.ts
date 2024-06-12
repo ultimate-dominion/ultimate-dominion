@@ -86,6 +86,7 @@ const Input = {
     },
   },
 };
+
 const Progress = {
   baseStyle: {
     track: {
@@ -96,6 +97,7 @@ const Progress = {
     },
   },
 };
+
 const Text = {
   sizes: {
     '4xs': {

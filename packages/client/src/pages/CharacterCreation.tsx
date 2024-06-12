@@ -94,7 +94,7 @@ export const CharacterCreation = (): JSX.Element => {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         renderSuccess('Character created!');
-        navigate('/world');
+        navigate('/game-board');
       } catch (e) {
         renderError(e, 'Failed to create character.');
       } finally {
