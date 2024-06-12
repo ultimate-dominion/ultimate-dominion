@@ -28,7 +28,7 @@ export const Navigation = (): JSX.Element => {
       >
         Leader Board
       </Link>
-      <Link
+      {/* <Link
         borderBottom="2px solid"
         borderColor="grey400"
         fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
@@ -75,7 +75,7 @@ export const Navigation = (): JSX.Element => {
         }}
       >
         About
-      </Link>
+      </Link> */}
     </VStack>
   );
 };

@@ -1,4 +1,4 @@
-import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { BiSolidNavigation } from 'react-icons/bi';
 import {
@@ -50,8 +50,12 @@ export const MapPanel = (): JSX.Element => {
   );
 
   return (
-    <VStack>
-      <Box w="100%">
+    <Stack
+      alignItems={{ base: 'start', lg: 'center' }}
+      direction={{ base: 'row', lg: 'column' }}
+      h="90%"
+    >
+      <Box w={{ base: '50%', lg: '100%' }} h={{ base: '100%', lg: '300px' }}>
         <Box
           border="2px solid black"
           borderRight="none"
@@ -59,6 +63,7 @@ export const MapPanel = (): JSX.Element => {
           display="grid"
           gridTemplateColumns="repeat(10, 1fr)"
           gridTemplateRows="repeat(10, 1fr)"
+          h="100%"
         >
           {[...Array(100)].map((_, i) => {
             const row = 9 - Math.floor(i / 10); // Reverse the row
@@ -77,10 +82,11 @@ export const MapPanel = (): JSX.Element => {
 
             return (
               <VStack
-                borderTop={hasSafeZoneTopBorder ? '3px solid' : '2px solid'}
+                borderTop={hasSafeZoneTopBorder ? '2px solid' : '2px solid'}
                 borderTopColor={hasSafeZoneTopBorder ? 'yellow' : 'black'}
-                borderRight={hasSafeZoneRightBorder ? '3px solid' : '2px solid'}
+                borderRight={hasSafeZoneRightBorder ? '2px solid' : '2px solid'}
                 borderRightColor={hasSafeZoneRightBorder ? 'yellow' : 'black'}
+                justifyContent="center"
                 key={`map-tile${i}`}
               >
                 {currentTile && <CharacterPiece />}
@@ -88,7 +94,11 @@ export const MapPanel = (): JSX.Element => {
             );
           })}
         </Box>
-        <HStack justifyContent="space-between" w="100%">
+        <Stack
+          direction={{ base: 'column-reverse', xl: 'row' }}
+          justifyContent="space-between"
+          mt={{ base: 2, xl: 1 }}
+        >
           <HStack>
             <BiSolidNavigation />
             <Text fontWeight={700} size="sm">
@@ -96,126 +106,136 @@ export const MapPanel = (): JSX.Element => {
             </Text>
           </HStack>
           <Text size="xs">Dark Cave - 2,344 Players</Text>
-        </HStack>
+        </Stack>
       </Box>
-      <VStack
-        alignItems="stretch"
-        h={175}
-        justifyContent="space-between"
-        mt={2}
-        pos="relative"
-        w={175}
-      >
-        <Box
-          border="2px solid black"
-          borderRadius="50%"
-          h={110}
-          pos="absolute"
-          top="50%"
-          left="50%"
-          transform="translate(-50%, -50%)"
-          w={110}
-          zIndex={-1}
-        />
-        <Box
-          bg="black"
-          h="2px"
-          left="50%"
-          pos="absolute"
-          top="50%"
-          transform="translate(-50%, 50%)"
-          w={85}
-          zIndex={-1}
-        />
-        <Box
-          bg="black"
-          h={85}
-          pos="absolute"
-          right="50%"
-          top="50%"
-          transform="translate(50%, -50%)"
-          w="2px"
-          zIndex={-1}
-        />
-        <Box
-          bg="white"
-          left="50%"
-          pos="absolute"
-          top="50%"
-          transform="translate(-50%, -45%)"
-        >
-          <TbDirectionArrows size={32} />
-        </Box>
-        <VStack spacing={0}>
-          <Text fontWeight={700} size="xs">
-            N
-          </Text>
-          <Button
-            bg="white"
-            borderRadius="50%"
-            p={0}
-            onClick={() => onMove('up')}
-            variant="ghost"
-          >
-            <IoIosArrowDropupCircle size={32} />
-          </Button>
-        </VStack>
-        <HStack justifyContent="space-between" spacing={10}>
-          <HStack spacing={1}>
-            <Text fontWeight={700} size="xs">
-              W
-            </Text>
-            <Button
-              bg="white"
-              borderRadius="50%"
-              p={0}
-              onClick={() => onMove('left')}
-              variant="ghost"
-            >
-              <IoIosArrowDropleftCircle size={32} />
-            </Button>
-          </HStack>
-          <HStack spacing={1}>
-            <Button
-              bg="white"
-              borderRadius="50%"
-              p={0}
-              onClick={() => onMove('right')}
-              variant="ghost"
-            >
-              <IoIosArrowDroprightCircle size={32} />
-            </Button>
-            <Text fontWeight={700} size="xs">
-              E
-            </Text>
-          </HStack>
-        </HStack>
-        <VStack spacing={0}>
-          <Button
-            bg="white"
-            borderRadius="50%"
-            p={0}
-            onClick={() => onMove('down')}
-            variant="ghost"
-          >
-            <IoIosArrowDropdownCircle size={32} />
-          </Button>
-          <Text fontWeight={700} size="xs">
-            S
-          </Text>
-        </VStack>
-      </VStack>
-    </VStack>
+      <NavigationCompass onMove={onMove} />
+    </Stack>
   );
 };
 
 const CharacterPiece = (): JSX.Element => (
   <Box
     bg="transparent"
-    border="8px solid"
-    borderColor="yellow"
+    border={{ base: '4px solid', lg: '8px solid' }}
+    borderColor={{ base: 'yellow', lg: 'yellow' }}
     borderRadius="50%"
-    h="28px"
-    w="28px"
+    h={{ base: '12px', lg: '26px' }}
+    w={{ base: '12px', lg: '26px' }}
   />
 );
+
+const NavigationCompass = ({
+  onMove,
+}: {
+  onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
+}): JSX.Element => {
+  return (
+    <VStack
+      alignItems="stretch"
+      h={175}
+      justifyContent="space-between"
+      mt={{ base: 0, lg: 12, xl: 8 }}
+      pos="relative"
+      w={175}
+    >
+      <Box
+        border="2px solid black"
+        borderRadius="50%"
+        h={110}
+        pos="absolute"
+        top="50%"
+        left="50%"
+        transform="translate(-50%, -50%)"
+        w={110}
+        zIndex={-1}
+      />
+      <Box
+        bg="black"
+        h="2px"
+        left="50%"
+        pos="absolute"
+        top="50%"
+        transform="translate(-50%, 50%)"
+        w={85}
+        zIndex={-1}
+      />
+      <Box
+        bg="black"
+        h={85}
+        pos="absolute"
+        right="50%"
+        top="50%"
+        transform="translate(50%, -50%)"
+        w="2px"
+        zIndex={-1}
+      />
+      <Box
+        bg="white"
+        left="50%"
+        pos="absolute"
+        top="50%"
+        transform="translate(-50%, -45%)"
+      >
+        <TbDirectionArrows size={32} />
+      </Box>
+      <VStack spacing={0}>
+        <Text fontWeight={700} size="xs">
+          N
+        </Text>
+        <Button
+          bg="white"
+          borderRadius="50%"
+          p={0}
+          onClick={() => onMove('up')}
+          variant="ghost"
+        >
+          <IoIosArrowDropupCircle size={32} />
+        </Button>
+      </VStack>
+      <HStack justifyContent="space-between" spacing={10}>
+        <HStack spacing={1}>
+          <Text fontWeight={700} size="xs">
+            W
+          </Text>
+          <Button
+            bg="white"
+            borderRadius="50%"
+            p={0}
+            onClick={() => onMove('left')}
+            variant="ghost"
+          >
+            <IoIosArrowDropleftCircle size={32} />
+          </Button>
+        </HStack>
+        <HStack spacing={1}>
+          <Button
+            bg="white"
+            borderRadius="50%"
+            p={0}
+            onClick={() => onMove('right')}
+            variant="ghost"
+          >
+            <IoIosArrowDroprightCircle size={32} />
+          </Button>
+          <Text fontWeight={700} size="xs">
+            E
+          </Text>
+        </HStack>
+      </HStack>
+      <VStack spacing={0}>
+        <Button
+          bg="white"
+          borderRadius="50%"
+          p={0}
+          onClick={() => onMove('down')}
+          variant="ghost"
+        >
+          <IoIosArrowDropdownCircle size={32} />
+        </Button>
+        <Text fontWeight={700} size="xs">
+          S
+        </Text>
+      </VStack>
+    </VStack>
+  );
+};

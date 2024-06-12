@@ -20,6 +20,9 @@ export const useToast = (): {
       description: getErrorMessage(error, defaultError),
       position: 'top',
       status: 'error',
+      containerStyle: {
+        bg: 'red',
+      },
     });
   };
 
@@ -28,6 +31,9 @@ export const useToast = (): {
       description: msg,
       position: 'top',
       status: 'warning',
+      containerStyle: {
+        bg: 'yellow',
+      },
     });
   };
 
@@ -36,6 +42,9 @@ export const useToast = (): {
       description: msg,
       position: 'top',
       status: 'success',
+      containerStyle: {
+        bg: 'green',
+      },
     });
   };
 

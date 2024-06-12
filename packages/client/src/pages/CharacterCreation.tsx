@@ -94,7 +94,7 @@ export const CharacterCreation = (): JSX.Element => {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         renderSuccess('Character created!');
-        navigate('/world');
+        navigate('/game-board');
       } catch (e) {
         renderError(e, 'Failed to create character.');
       } finally {
@@ -128,7 +128,6 @@ export const CharacterCreation = (): JSX.Element => {
         direction={{ base: 'column', lg: 'row' }}
         gap={{ base: 4, sm: 6 }}
         justifyContent="center"
-        maxW="1800px"
         mx="auto"
         my={4}
         onSubmit={onCreateCharacter}
