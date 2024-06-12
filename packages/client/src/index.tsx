@@ -30,7 +30,7 @@ setup().then(async result => {
       <Web3Provider>
         <MUDProvider setupResult={result}>
           <App />
-          <DevTools />
+          {import.meta.env.DEV && <DevTools />}
         </MUDProvider>
       </Web3Provider>
     </ChakraProvider>,
