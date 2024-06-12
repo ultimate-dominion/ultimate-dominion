@@ -119,8 +119,8 @@ const CharacterPiece = (): JSX.Element => (
     border={{ base: '4px solid', lg: '8px solid' }}
     borderColor={{ base: 'yellow', lg: 'yellow' }}
     borderRadius="50%"
-    h={{ base: '12px', lg: '28px' }}
-    w={{ base: '12px', lg: '28px' }}
+    h={{ base: '12px', lg: '26px' }}
+    w={{ base: '12px', lg: '26px' }}
   />
 );
 

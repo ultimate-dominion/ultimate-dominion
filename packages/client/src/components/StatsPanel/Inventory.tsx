@@ -12,7 +12,7 @@ export const Inventory = (): JSX.Element => {
         <HStack alignItems="center" fontSize="xs" fontWeight="bold">
           <Text>Rusty Dagger</Text>
           <Spacer />
-          <Button padding="0 2px" size="sm" variant="disabled">
+          <Button padding="0 2px" size="sm" variant="ghost">
             ⁂
           </Button>
         </HStack>

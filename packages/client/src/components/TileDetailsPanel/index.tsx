@@ -1,4 +1,12 @@
-import { Box, Grid, GridItem, HStack, Text } from '@chakra-ui/react';
+import {
+  Box,
+  Flex,
+  Grid,
+  GridItem,
+  HStack,
+  Text,
+  useBreakpointValue,
+} from '@chakra-ui/react';
 import { IoIosArrowForward } from 'react-icons/io';
 
 import { MONSTERS, PLAYERS } from './data';
@@ -62,10 +70,23 @@ const MonsterRow = ({ monster }: { monster: (typeof MONSTERS)[0] }) => {
 
   return (
     <HStack
+      as="button"
       bg={isFighting ? 'grey300' : 'transparent'}
+      border="1px solid transparent"
       h={ROW_HEIGHT}
       justifyContent="space-between"
       px={{ base: 1, sm: 2, md: 4 }}
+      transition="all 0.3s ease"
+      w="100%"
+      _active={{
+        bg: 'grey300',
+        border: '1px solid',
+        cursor: 'pointer',
+      }}
+      _hover={{
+        border: '1px solid',
+        cursor: 'pointer',
+      }}
     >
       <Text color={color} size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}>
         {name}
@@ -91,14 +112,24 @@ const PlayerRow = ({ player }: { player: (typeof PLAYERS)[0] }) => {
 };
 
 const PlayerLevelRow = ({ player }: { player: (typeof PLAYERS)[0] }) => {
+  const isMobile = useBreakpointValue({ base: true, md: false });
   const { level } = player;
 
   return (
-    <HStack fontWeight="bold" h={ROW_HEIGHT}>
-      <Text size={{ base: '4xs', sm: '3xs', md: 'xs', lg: 'sm' }}>
-        Level {level}
-      </Text>
-      <IoIosArrowForward />
+    <HStack h={ROW_HEIGHT}>
+      <Flex
+        alignItems="center"
+        as="button"
+        borderBottom="1px solid transparent"
+        fontWeight="bold"
+        gap={2}
+        _hover={{ borderBottom: '1px solid', cursor: 'pointer' }}
+      >
+        <Text size={{ base: '4xs', sm: '3xs', md: 'xs', lg: 'sm' }}>
+          Level {level}
+        </Text>
+        <IoIosArrowForward size={isMobile ? 10 : 20} />
+      </Flex>
     </HStack>
   );
 };

@@ -5,7 +5,7 @@ import { Inventory } from './Inventory';
 import { Level } from './Level';
 import { Money } from './Money';
 import { Navigation } from './Navigation';
-import { Socials } from './Socials';
+// import { Socials } from './Socials';
 import { Stats } from './Stats';
 import { TopBar } from './TopBar';
 
@@ -24,7 +24,7 @@ export const StatsPanel = (): JSX.Element => {
       {isDesktop && (
         <>
           <Navigation />
-          <Socials />
+          {/* <Socials /> */}
         </>
       )}
     </VStack>
