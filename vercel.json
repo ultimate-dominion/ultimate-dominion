@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/packages/client/dist/index.html"
+      "destination": "/dist/index.html"
     }
   ]
 }
