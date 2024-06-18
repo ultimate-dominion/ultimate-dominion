@@ -21,12 +21,7 @@ extra_output_files = [
   "evm.bytecode"
 ]
 fs_permissions = [{ access = "read", path = "./"}]
-
-[profile.garnet]
-eth_rpc_url = "https://rpc.garnetchain.com"
-
-[profile.redstone]
-eth_rpc_url = "https://rpc.redstonechain.com"
+libs = ["node_modules", "lib"]
 
 [profile.base-sepolia]
-eth_rpc_url = ""
+eth_rpc_url = "https://base-sepolia-rpc.publicnode.com"

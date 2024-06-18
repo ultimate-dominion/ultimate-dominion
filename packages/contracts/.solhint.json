@@ -2,11 +2,16 @@
   "extends": ["solhint:recommended", "mud"],
   "plugins": ["mud"],
   "rules": {
-    "compiler-version": ["error", ">=0.8.0"],
-    "avoid-low-level-calls": "off",
-    "no-inline-assembly": "off",
+    "compiler-version": ["off"],
+    "constructor-syntax": "warn",
+    "quotes": ["error", "single"],
     "func-visibility": ["warn", { "ignoreConstructors": true }],
+    "not-rely-on-time": "off",
+    "no-inline-assembly": "off",
     "no-empty-blocks": "off",
-    "no-complex-fallback": "off"
+    "private-vars-leading-underscore": ["warn", { "strict": false }],
+    "ordering": "warn",
+    "avoid-low-level-calls": "off",
+    "max-line-length": ["warn", 120]
   }
 }
