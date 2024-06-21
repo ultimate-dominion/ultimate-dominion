@@ -17,13 +17,10 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useEntityQuery } from '@latticexyz/react';
-import { getComponentValueStrict, HasValue } from '@latticexyz/recs';
-import { decodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
-import { hexToString } from 'viem';
 
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { CharacterClasses } from '../utils/types';
@@ -33,23 +30,10 @@ export const CharacterCreation = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const {
     burnerBalance,
-    components: { Characters },
     delegatorAddress,
     systemCalls: { mintCharacter },
   } = useMUD();
-
-  const character = useEntityQuery([
-    HasValue(Characters, {
-      owner: delegatorAddress ?? '0x0',
-    }),
-  ]).map(entity => {
-    const character = getComponentValueStrict(Characters, entity);
-    return {
-      ...character,
-      name: hexToString(character.name as `0x${string}`, { size: 32 }),
-      characterId: decodeEntity({ characterId: 'uint256' }, entity).characterId,
-    };
-  })[0];
+  const character = useCharacter();
 
   const [name, setName] = useState('');
   const [background, setBackground] = useState('');
@@ -135,113 +119,134 @@ export const CharacterCreation = (): JSX.Element => {
   }, []);
 
   return (
-    <Box>
-      <Stack
+    <Stack
+      direction={{ base: 'column', lg: 'row' }}
+      gap={{ base: 4, sm: 6 }}
+      justifyContent="center"
+      mx="auto"
+      my={4}
+      w="100%"
+    >
+      {character ? (
+        <Box border="2px solid" p={8} w={{ base: '100%', lg: '50%' }}>
+          <VStack h="100%" justifyContent="center" spacing={{ base: 4, md: 8 }}>
+            <Center>
+              <Avatar size={{ base: 'lg', sm: 'xl' }} src={character.image} />
+            </Center>
+            <Heading>{character.name}</Heading>
+            <Text>{character.description}</Text>
+          </VStack>
+        </Box>
+      ) : (
+        <Box
+          as="form"
+          onSubmit={onCreateCharacter}
+          w={{ base: '100%', lg: '50%' }}
+        >
+          <Box
+            border="2px solid"
+            h={{ base: 'auto', lg: '100%' }}
+            p={{ base: 4, sm: 10 }}
+            pos="relative"
+          >
+            <VStack spacing={8}>
+              <Stack
+                alignItems="start"
+                direction={{ base: 'column-reverse', sm: 'row' }}
+                gap={{ base: 4, sm: 8 }}
+                w="100%"
+              >
+                <Center>
+                  <Avatar
+                    size={{ base: 'lg', sm: 'xl' }}
+                    src={avatar ? URL.createObjectURL(avatar) : undefined}
+                  />
+                </Center>
+                <VStack w="100%">
+                  <FormControl isInvalid={showError && !name}>
+                    <Input
+                      onChange={e => setName(e.target.value)}
+                      placeholder="Name"
+                      type="text"
+                      value={name}
+                    />
+                    {showError && !name && (
+                      <FormHelperText color="red">
+                        Name is required
+                      </FormHelperText>
+                    )}
+                  </FormControl>
+                  <FormControl isInvalid={showError && !avatar}>
+                    <Input
+                      id="avatarInput"
+                      onChange={e => setAvatar(e.target.files?.[0] ?? null)}
+                      style={{ display: 'none' }}
+                      type="file"
+                    />
+                    <Button
+                      alignSelf="start"
+                      onClick={onUploadAvatar}
+                      size="sm"
+                      type="button"
+                    >
+                      Upload Avatar
+                    </Button>
+                    {showError && !avatar && (
+                      <FormHelperText color="red">
+                        Avatar is required
+                      </FormHelperText>
+                    )}
+                  </FormControl>
+                </VStack>
+              </Stack>
+              <FormControl isInvalid={showError && !background}>
+                <Textarea
+                  height={{ base: '200px', sm: '250px' }}
+                  onChange={e => setBackground(e.target.value)}
+                  placeholder="Bio"
+                  value={background}
+                />
+                {showError && !background && (
+                  <FormHelperText color="red">Bio is required</FormHelperText>
+                )}
+              </FormControl>
+            </VStack>
+            {!isSmallScreen && (
+              <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
+                <Button
+                  isLoading={isCreating}
+                  loadingText="Creating..."
+                  type="submit"
+                  width="100%"
+                >
+                  Create Character
+                </Button>
+              </Box>
+            )}
+          </Box>
+          {isSmallScreen && (
+            <Button
+              isLoading={isCreating}
+              loadingText="Creating..."
+              mt={2}
+              type="submit"
+              width="100%"
+            >
+              Create Character
+            </Button>
+          )}
+        </Box>
+      )}
+      <Box
         as="form"
-        direction={{ base: 'column', lg: 'row' }}
-        gap={{ base: 4, sm: 6 }}
-        justifyContent="center"
-        mx="auto"
-        my={4}
-        onSubmit={onCreateCharacter}
-        w="100%"
+        onSubmit={(e: React.FormEvent<HTMLDivElement>) => e.preventDefault()}
+        w={{ base: '100%', lg: '50%' }}
       >
         <Box
           border="2px solid"
+          h={{ base: 'auto', lg: '100%' }}
           p={{ base: 4, sm: 10 }}
           pos="relative"
-          width={{ base: '100%', lg: '50%' }}
-        >
-          <VStack spacing={8}>
-            <Stack
-              alignItems="start"
-              direction={{ base: 'column-reverse', sm: 'row' }}
-              gap={{ base: 4, sm: 8 }}
-              w="100%"
-            >
-              <Center>
-                <Avatar
-                  size={{ base: 'lg', sm: 'xl' }}
-                  src={avatar ? URL.createObjectURL(avatar) : undefined}
-                />
-              </Center>
-              <VStack w="100%">
-                <FormControl isInvalid={showError && !name}>
-                  <Input
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Name"
-                    type="text"
-                    value={name}
-                  />
-                  {showError && !name && (
-                    <FormHelperText color="red">
-                      Name is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-                <FormControl isInvalid={showError && !avatar}>
-                  <Input
-                    id="avatarInput"
-                    onChange={e => setAvatar(e.target.files?.[0] ?? null)}
-                    style={{ display: 'none' }}
-                    type="file"
-                  />
-                  <Button
-                    alignSelf="start"
-                    onClick={onUploadAvatar}
-                    size="sm"
-                    type="button"
-                  >
-                    Upload Avatar
-                  </Button>
-                  {showError && !avatar && (
-                    <FormHelperText color="red">
-                      Avatar is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </VStack>
-            </Stack>
-            <FormControl isInvalid={showError && !background}>
-              <Textarea
-                height={{ base: '200px', sm: '250px' }}
-                onChange={e => setBackground(e.target.value)}
-                placeholder="Bio"
-                value={background}
-              />
-              {showError && !background && (
-                <FormHelperText color="red">Bio is required</FormHelperText>
-              )}
-            </FormControl>
-          </VStack>
-          {!isSmallScreen && (
-            <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
-              <Button
-                isLoading={isCreating}
-                loadingText="Creating..."
-                type="submit"
-                width="100%"
-              >
-                Create Character
-              </Button>
-            </Box>
-          )}
-        </Box>
-        {isSmallScreen && (
-          <Button
-            isLoading={isCreating}
-            loadingText="Creating..."
-            type="submit"
-            width="100%"
-          >
-            Create Character
-          </Button>
-        )}
-        <Box
-          border="2px solid"
-          p={{ base: 4, sm: 10 }}
-          pos="relative"
-          width={{ base: '100%', lg: '50%' }}
         >
           <VStack alignItems="left" spacing={6}>
             <Heading size="sm" textAlign="left">
@@ -349,7 +354,7 @@ export const CharacterCreation = (): JSX.Element => {
           {!character && (
             <Box
               pos="absolute"
-              bg="rgba(0, 0, 0, 0.6)"
+              bg="rgba(0, 0, 0, 0.5)"
               h="100%"
               w="100%"
               top={0}
@@ -366,13 +371,14 @@ export const CharacterCreation = (): JSX.Element => {
             isDisabled={!character}
             isLoading={isCreating}
             loadingText="Creating..."
+            mt={2}
             type="submit"
             width="100%"
           >
             Wake Up
           </Button>
         )}
-      </Stack>
-    </Box>
+      </Box>
+    </Stack>
   );
 };

@@ -3,3 +3,9 @@ export enum CharacterClasses {
   Mage,
   Rogue,
 }
+
+export type Metadata = {
+  description: string;
+  image: string;
+  name: string;
+};
