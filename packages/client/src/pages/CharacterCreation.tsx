@@ -17,18 +17,39 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
+import { useEntityQuery } from '@latticexyz/react';
+import { getComponentValueStrict, HasValue } from '@latticexyz/recs';
+import { decodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { FaLock } from 'react-icons/fa';
+import { hexToString } from 'viem';
 
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { CharacterClasses } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
-  const navigate = useNavigate();
   const { renderSuccess, renderError } = useToast();
-  const isSmallScreen = useBreakpointValue({ base: true, md: false });
-  const { burnerBalance, delegatorAddress } = useMUD();
+  const isSmallScreen = useBreakpointValue({ base: true, lg: false });
+  const {
+    burnerBalance,
+    components: { Characters },
+    delegatorAddress,
+    systemCalls: { mintCharacter },
+  } = useMUD();
+
+  const character = useEntityQuery([
+    HasValue(Characters, {
+      owner: delegatorAddress ?? '0x0',
+    }),
+  ]).map(entity => {
+    const character = getComponentValueStrict(Characters, entity);
+    return {
+      ...character,
+      name: hexToString(character.name as `0x${string}`, { size: 32 }),
+      characterId: decodeEntity({ characterId: 'uint256' }, entity).characterId,
+    };
+  })[0];
 
   const [name, setName] = useState('');
   const [background, setBackground] = useState('');
@@ -80,21 +101,13 @@ export const CharacterCreation = (): JSX.Element => {
           throw new Error('Missing required fields.');
         }
 
-        // const character = await mintCharacter(
-        //   delegatorAddress,
-        //   characterClass,
-        //   name,
-        // );
+        const success = await mintCharacter(delegatorAddress, name);
 
-        // if (!character) {
-        //   throw new Error('Contract call failed');
-        // }
-
-        // Temporarily add a 2 second timeout to simulate the contract call
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        if (!success) {
+          throw new Error('Contract call failed');
+        }
 
         renderSuccess('Character created!');
-        navigate('/game-board');
       } catch (e) {
         renderError(e, 'Failed to create character.');
       } finally {
@@ -106,8 +119,8 @@ export const CharacterCreation = (): JSX.Element => {
       background,
       burnerBalance,
       delegatorAddress,
+      mintCharacter,
       name,
-      navigate,
       renderError,
       renderSuccess,
     ],
@@ -136,6 +149,7 @@ export const CharacterCreation = (): JSX.Element => {
         <Box
           border="2px solid"
           p={{ base: 4, sm: 10 }}
+          pos="relative"
           width={{ base: '100%', lg: '50%' }}
         >
           <VStack spacing={8}>
@@ -190,7 +204,7 @@ export const CharacterCreation = (): JSX.Element => {
             </Stack>
             <FormControl isInvalid={showError && !background}>
               <Textarea
-                height={{ base: '200px', sm: '350px' }}
+                height={{ base: '200px', sm: '250px' }}
                 onChange={e => setBackground(e.target.value)}
                 placeholder="Bio"
                 value={background}
@@ -200,10 +214,33 @@ export const CharacterCreation = (): JSX.Element => {
               )}
             </FormControl>
           </VStack>
+          {!isSmallScreen && (
+            <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
+              <Button
+                isLoading={isCreating}
+                loadingText="Creating..."
+                type="submit"
+                width="100%"
+              >
+                Create Character
+              </Button>
+            </Box>
+          )}
         </Box>
+        {isSmallScreen && (
+          <Button
+            isLoading={isCreating}
+            loadingText="Creating..."
+            type="submit"
+            width="100%"
+          >
+            Create Character
+          </Button>
+        )}
         <Box
           border="2px solid"
           p={{ base: 4, sm: 10 }}
+          pos="relative"
           width={{ base: '100%', lg: '50%' }}
         >
           <VStack alignItems="left" spacing={6}>
@@ -239,13 +276,14 @@ export const CharacterCreation = (): JSX.Element => {
           </VStack>
           <SimpleGrid
             columns={{ base: 1, xl: 2 }}
+            mb={{ base: 0, lg: 24 }}
             mt={{ base: 12, sm: 20 }}
             spacing={{ base: 12, sm: 16 }}
           >
             <VStack spacing={8}>
               <HStack justify="space-between" w="100%">
                 <Heading size="sm">Stats</Heading>
-                <Button onClick={onRollStats} size="sm">
+                <Button isDisabled={!character} onClick={onRollStats} size="sm">
                   Roll Stats
                 </Button>
               </HStack>
@@ -295,19 +333,37 @@ export const CharacterCreation = (): JSX.Element => {
             </VStack>
           </SimpleGrid>
           {!isSmallScreen && (
-            <Button
-              isLoading={isCreating}
-              loadingText="Creating..."
-              mt={16}
-              type="submit"
-              width="100%"
+            <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
+              <Button
+                isDisabled={!character}
+                isLoading={isCreating}
+                loadingText="Creating..."
+                mt={16}
+                type="submit"
+                width="100%"
+              >
+                Wake Up
+              </Button>
+            </Box>
+          )}
+          {!character && (
+            <Box
+              pos="absolute"
+              bg="rgba(0, 0, 0, 0.6)"
+              h="100%"
+              w="100%"
+              top={0}
+              left={0}
             >
-              Wake Up
-            </Button>
+              <Center h="100%">
+                <FaLock color="white" size="100px" />
+              </Center>
+            </Box>
           )}
         </Box>
         {isSmallScreen && (
           <Button
+            isDisabled={!character}
             isLoading={isCreating}
             loadingText="Creating..."
             type="submit"

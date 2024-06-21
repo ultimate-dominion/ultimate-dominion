@@ -42,7 +42,7 @@ contract CharacterSystem is System {
     characterToken = IERC721Mintable(UltimateDominionConfig.getCharacterToken());
   }
 
-  function mintCharacter(address account, Classes class, bytes32 name) public returns (uint256 characterId) {
+  function mintCharacter(address account, bytes32 name) public returns (uint256 characterId) {
     characterId = _incrementCharacterCounter();
     IWorld(_world()).call(
       _erc721SystemId(CHARACTERS_NAMESPACE),
@@ -50,16 +50,18 @@ contract CharacterSystem is System {
     );
 
     Characters.setOwner(characterId, account);
-    Characters.setClass(characterId, class);
 
     require(!NameExists.getValue(name), "Name already exists");
     NameExists.setValue(name, true);
     Characters.setName(characterId, name);
   }
 
-  function rollStats(bytes32 userRandomNumber, uint256 characterId) public payable {
+  function rollStats(bytes32 userRandomNumber, uint256 characterId, Classes class) public payable {
     require(!Characters.getLocked(characterId), "you have already accepted this character");
     require(_isOwner(characterId), "Not your Character.");
+
+    Characters.setClass(characterId, class);
+
     RngRequestType requestType = RngRequestType.CharacterStats;
     // use systemSwitch to call rng system
     SystemSwitch.call(abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, abi.encode(characterId))));

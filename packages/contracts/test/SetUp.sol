@@ -47,7 +47,7 @@ contract SetUp is Test {
     characterToken = IERC721Mintable(world.UD__getCharacterToken());
     vm.stopPrank();
     vm.prank(alice);
-    alicesCharacterId = world.UD__mintCharacter(alice, Classes.Rogue, bytes32("Steve"));
+    alicesCharacterId = world.UD__mintCharacter(alice, bytes32("Steve"));
 
     vm.startPrank(deployer);
     uint256[] memory amounts = new uint256[](1);

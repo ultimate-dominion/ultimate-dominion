@@ -196,11 +196,6 @@ declare const abi: [
         "internalType": "address"
       },
       {
-        "name": "class",
-        "type": "uint8",
-        "internalType": "enum Classes"
-      },
-      {
         "name": "name",
         "type": "bytes32",
         "internalType": "bytes32"
@@ -228,6 +223,11 @@ declare const abi: [
         "name": "characterId",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "class",
+        "type": "uint8",
+        "internalType": "enum Classes"
       }
     ],
     "outputs": [],

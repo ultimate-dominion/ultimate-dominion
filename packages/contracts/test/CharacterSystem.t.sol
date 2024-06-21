@@ -12,7 +12,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
     startGasReport("mints a character");
 
     vm.startPrank(alice);
-    alicesCharacterId = world.UD__mintCharacter(alice, Classes.Warrior, bytes32("Alan"));
+    alicesCharacterId = world.UD__mintCharacter(alice, bytes32("Alan"));
     assertEq(alicesCharacterId, 1);
     assertEq(characterToken.ownerOf(1), alice);
     assertEq(characterToken.balanceOf(alice), 2);
@@ -25,7 +25,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
 
     uint256 fees = entropy.getFee(address(1));
     vm.prank(alice);
-    world.UD__rollStats{ value: fees }(alicesRandomness, alicesCharacterId);
+    world.UD__rollStats{ value: fees }(alicesRandomness, alicesCharacterId, Classes.Warrior);
     vm.warp(block.number + 1);
     CharacterStatsData memory alicesCharacter = world.UD__getCharacterStats(alicesCharacterId);
     assertEq(uint8(world.UD__getClass(alicesCharacterId)), uint8(Classes.Rogue));
@@ -40,9 +40,9 @@ contract Test_CharacterSystem is SetUp, GasReporter {
   function test_RollStats_Revert_GameStarted() public {
     uint256 fees = entropy.getFee(address(1));
     vm.startPrank(alice);
-    world.UD__rollStats{ value: fees }(alicesRandomness, alicesCharacterId);
+    world.UD__rollStats{ value: fees }(alicesRandomness, alicesCharacterId, Classes.Warrior);
     world.UD__enterGame(alicesCharacterId);
     vm.expectRevert();
-    world.UD__rollStats{ value: fees }(alicesRandomness, alicesCharacterId);
+    world.UD__rollStats{ value: fees }(alicesRandomness, alicesCharacterId, Classes.Warrior);
   }
 }

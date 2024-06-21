@@ -6,10 +6,10 @@
   "scripts": {
     "build": "mud build",
     "clean": "forge clean && rimraf src/codegen",
-    "deploy:local": "pnpm run build && DEBUG=mud:* mud deploy",
+    "deploy:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337",
     "deploy:testnet": "pnpm run build && mud deploy --profile=lattice-testnet",
     "deploy:testnet-base": "DEBUG=mud:* mud deploy --profile=base-sepolia",
-    "dev": "pnpm mud dev-contracts",
+    "dev": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337",
     "lint": "pnpm run prettier && pnpm run solhint",
     "lint:fix": "pnpm run prettier && pnpm lint:sol-tests --fix  && yarn lint:sol-logic --fix",
     "lint:sol-logic": "solhint -c .solhint.json 'src/systems/**/*.sol' 'script/**/*.sol'",
