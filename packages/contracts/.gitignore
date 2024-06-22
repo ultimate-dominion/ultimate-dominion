@@ -5,6 +5,7 @@ node_modules/
 bindings/
 artifacts/
 broadcast/
+lib/
 
 # Ignore MUD deploy artifacts
 deploys/**/*.json
