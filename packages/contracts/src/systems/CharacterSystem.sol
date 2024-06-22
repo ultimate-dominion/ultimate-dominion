@@ -11,13 +11,13 @@ import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol
 import {TokenURI} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/TokenURI.sol";
 import {_tokenUriTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
 import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20System.sol";
-// import {IItemsSystem} from "@codegen/world/IItemsSystem.sol";
+import {IItemsSystem} from "@codegen/world/IItemsSystem.sol";
 import {Classes} from "@codegen/common.sol";
 import {Characters, CharactersData} from "@tables/Characters.sol";
 import {CharacterStats, CharacterStatsData} from "@tables/CharacterStats.sol";
 import {NameExists} from "@tables/NameExists.sol";
 import {Counters} from "@tables/Counters.sol";
-// import {IERC1155System} from "@erc1155/IERC1155System.sol";
+import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {IWorld} from "@world/IWorld.sol";
@@ -26,8 +26,8 @@ import {LibChunks} from "../libraries/LibChunks.sol";
 import "forge-std/console2.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
-import {_erc721SystemId} from "../utils.sol"; //, _erc1155SystemId, _itemsSystemId
-import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, WORLD_NAMESPACE} from "../../constants.sol"; //, ITEMS_NAMESPACE
+import {_erc721SystemId, _erc1155SystemId, _itemsSystemId} from "../utils.sol";
+import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, WORLD_NAMESPACE, ITEMS_NAMESPACE} from "../../constants.sol";
 
 contract CharacterSystem is System {
     function getName(uint256 characterId) public view returns (bytes32 _name) {
@@ -79,7 +79,7 @@ contract CharacterSystem is System {
 
         issueGold(characterId, 5 ether);
         // issue starterWeapon
-        // IWorld(_world()).UD__issueStarterItems(characterId, 0, 1);
+        IWorld(_world()).UD__issueStarterItems(characterId);
 
         Characters.setLocked(characterId, true);
     }

@@ -57,6 +57,14 @@ export default defineWorld({
       },
       key: ["itemId"],
     },
+    StarterItems: {
+      key: ["class"],
+      schema: {
+        class: "Classes",
+        itemIds: "uint256[]",
+        amounts: "uint256[]",
+      },
+    },
     /**
      * Stores players chosen names.
      */
@@ -93,6 +101,7 @@ export default defineWorld({
         characterToken: "address",
         entropy: "address",
         pythProvider: "address",
+        items: "address",
       },
     },
   },

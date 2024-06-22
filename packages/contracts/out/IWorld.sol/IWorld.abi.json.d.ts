@@ -1,6 +1,40 @@
 declare const abi: [
   {
     "type": "function",
+    "name": "UD__createItem",
+    "inputs": [
+      {
+        "name": "itemType",
+        "type": "uint8",
+        "internalType": "enum ItemType"
+      },
+      {
+        "name": "supply",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "itemMetadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "stats",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__enterGame",
     "inputs": [
       {
@@ -137,6 +171,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getItemsContract",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "_erc1155",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getName",
     "inputs": [
       {
@@ -185,6 +232,74 @@ declare const abi: [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getTotalSupply",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_supply",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getWeaponStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_weaponStats",
+        "type": "tuple",
+        "internalType": "struct WeaponStats",
+        "components": [
+          {
+            "name": "damage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "speed",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "classRestrictions",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__issueStarterItems",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -237,6 +352,47 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setStarterItems",
+    "inputs": [
+      {
+        "name": "class",
+        "type": "uint8",
+        "internalType": "enum Classes"
+      },
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "amounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setTokenUri",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "tokenUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",

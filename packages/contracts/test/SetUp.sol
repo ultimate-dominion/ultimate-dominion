@@ -9,6 +9,7 @@ import {getKeysWithValue} from "@latticexyz/world-modules/src/modules/keyswithva
 import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {IWorld} from "@codegen/world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
+import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {Characters, CharactersData, UltimateDominionConfig} from "@codegen/index.sol";
@@ -29,6 +30,7 @@ contract SetUp is Test {
 
     IERC20Mintable public goldToken;
     IERC721Mintable public characterToken;
+    IERC1155System public erc1155System;
 
     uint256 alicesCharacterId;
     bytes32 public alicesRandomness = bytes32(keccak256(abi.encode("alicesRestaurant")));
@@ -45,6 +47,7 @@ contract SetUp is Test {
         alice = getUser();
         goldToken = IERC20Mintable(world.UD__getGoldToken());
         characterToken = IERC721Mintable(world.UD__getCharacterToken());
+        erc1155System = IERC1155System(world.UD__getItemsContract());
         vm.stopPrank();
         vm.prank(alice);
         alicesCharacterId = world.UD__mintCharacter(alice, bytes32("Steve"), "setup_char_uri");

@@ -13,3 +13,11 @@ enum RngRequestType {
   Combat,
   WorldGeneration
 }
+
+enum ItemType {
+  Weapon,
+  Armor,
+  Potion,
+  Scroll,
+  Material
+}
