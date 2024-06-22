@@ -7,26 +7,30 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 
+// import { useNavigate } from 'react-router-dom';
+// import { useAccount } from 'wagmi';
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
-import { useMUD } from '../contexts/MUDContext';
+// import { useMUD } from '../contexts/MUDContext';
 
 export const Welcome = (): JSX.Element => {
-  const navigate = useNavigate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { isConnected } = useAccount();
-  const { delegatorAddress } = useMUD();
+  // const navigate = useNavigate();
+  const { isOpen, onClose } = useDisclosure();
+  // const { isConnected } = useAccount();
+  // const { delegatorAddress } = useMUD();
 
-  const onPlay = useCallback(() => {
-    if (!(delegatorAddress && isConnected)) {
-      onOpen();
-      return;
-    }
+  const onPlay = useCallback(async () => {
+    const data = await fetch('/api/hello').then(res => res.json());
+    // eslint-disable-next-line no-console
+    console.log(data);
+    // if (!(delegatorAddress && isConnected)) {
+    //   onOpen();
+    //   return;
+    // }
 
-    navigate('character-creation');
-  }, [delegatorAddress, isConnected, navigate, onOpen]);
+    // navigate('character-creation');
+    // }, [delegatorAddress, isConnected, navigate, onOpen]);
+  }, []);
 
   return (
     <Container maxW="800px">
