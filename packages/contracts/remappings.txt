@@ -4,6 +4,7 @@ forge-std/=node_modules/forge-std/src/
 @pythnetwork/=node_modules/@pythnetwork/entropy-sdk-solidity/
 @test/=test/
 @systems/=src/systems/
+@interfaces/=src/interfaces/
 @tables/=src/codegen/tables/
 @world/=src/codegen/world/
 @codegen/=src/codegen/

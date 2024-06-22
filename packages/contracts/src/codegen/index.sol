@@ -7,6 +7,8 @@ import { Admin } from "./tables/Admin.sol";
 import { Characters, CharactersData } from "./tables/Characters.sol";
 import { CharacterStats, CharacterStatsData } from "./tables/CharacterStats.sol";
 import { Counters } from "./tables/Counters.sol";
+import { Items, ItemsData } from "./tables/Items.sol";
+import { StarterItems, StarterItemsData } from "./tables/StarterItems.sol";
 import { Name } from "./tables/Name.sol";
 import { NameExists } from "./tables/NameExists.sol";
 import { RandomNumbers, RandomNumbersData } from "./tables/RandomNumbers.sol";
