@@ -71,6 +71,7 @@ export function createSystemCalls(
       const simulatedTx = await worldContract.simulate.UD__mintCharacter([
         account,
         nameHex,
+        '',
       ]);
 
       const characterId = simulatedTx.result;
@@ -78,6 +79,7 @@ export function createSystemCalls(
       const tx = await worldContract.write.UD__mintCharacter([
         account,
         nameHex,
+        '',
       ]);
 
       await waitForTransaction(tx);
