@@ -14,6 +14,7 @@ export default defineWorld({
       "Mage", // 2
     ],
     RngRequestType: ["CharacterStats", "Combat", "WorldGeneration"],
+    ItemType: ["Weapon", "Armor", "Potion", "Scroll", "Material"],
   },
   tables: {
     /**
@@ -47,6 +48,14 @@ export default defineWorld({
         counter: "uint256",
       },
       key: ["contractAddress"],
+    },
+    Items: {
+      schema: {
+        itemId: "uint256",
+        itemType: "ItemType",
+        stats: "bytes",
+      },
+      key: ["itemId"],
     },
     /**
      * Stores players chosen names.
