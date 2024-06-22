@@ -199,6 +199,11 @@ declare const abi: [
         "name": "name",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "tokenUri",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [

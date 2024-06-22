@@ -16,7 +16,11 @@ interface ICharacterSystem {
 
   function UD__getClass(uint256 characterId) external view returns (Classes _class);
 
-  function UD__mintCharacter(address account, bytes32 name) external returns (uint256 characterId);
+  function UD__mintCharacter(
+    address account,
+    bytes32 name,
+    string memory tokenUri
+  ) external returns (uint256 characterId);
 
   function UD__rollStats(bytes32 userRandomNumber, uint256 characterId, Classes class) external payable;
 
