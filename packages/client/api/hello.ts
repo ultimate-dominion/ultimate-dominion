@@ -1,5 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-
-export default function handler(_: NextApiRequest, res: NextApiResponse): void {
-  res.status(200).json({ message: 'Hello, world!' });
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-unused-vars
+export function GET(request: Request) {
+  return new Response(`Hello`);
 }

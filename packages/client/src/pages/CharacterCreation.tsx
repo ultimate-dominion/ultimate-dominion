@@ -110,12 +110,15 @@ export const CharacterCreation = (): JSX.Element => {
     ],
   );
 
-  const onRollStats = useCallback(() => {
+  const onRollStats = useCallback(async () => {
     // Temporarily set random values between 1 and 10
     setHealth(Math.floor(Math.random() * 10) + 1);
     setStrength(Math.floor(Math.random() * 10) + 1);
     setAgility(Math.floor(Math.random() * 10) + 1);
     setIntelligence(Math.floor(Math.random() * 10) + 1);
+    const data = await fetch('/api/hello').then(res => res.json());
+    // eslint-disable-next-line no-console
+    console.log(data);
   }, []);
 
   return (
