@@ -18,7 +18,7 @@ import {
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
-import {_erc1155SystemId, _characterSystemId} from "../utils.sol";
+import {_erc1155SystemId, _characterSystemId, _requireOwner} from "../utils.sol";
 import {ITEMS_NAMESPACE} from "../../constants.sol";
 import {WeaponStats} from "@interfaces/Structs.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
@@ -34,7 +34,7 @@ import {
 } from "@erc1155/utils.sol";
 import "forge-std/console2.sol";
 
-contract ItemsSystem is ERC1155System {
+contract ItemsSystem is System {
     function _items() internal view returns (IERC1155System items) {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
@@ -43,14 +43,13 @@ contract ItemsSystem is ERC1155System {
         public
         returns (uint256)
     {
-        requireOwner();
         uint256 itemId = _incrementItemsCounter();
         IWorld(_world()).call(
             _erc1155SystemId(ITEMS_NAMESPACE),
             abi.encodeWithSignature("mint(address,uint256,uint256,bytes)", address(this), itemId, supply, "")
         );
 
-        _setTokenUri(ITEMS_NAMESPACE, itemId, itemMetadataURI);
+        setTokenUri(itemId, itemMetadataURI);
         Items.set(itemId, itemType, stats);
 
         return itemId;
@@ -72,19 +71,15 @@ contract ItemsSystem is ERC1155System {
     }
 
     function setTokenUri(uint256 tokenId, string memory tokenUri) public {
-        requireOwner();
-        _setTokenUri(ITEMS_NAMESPACE, tokenId, tokenUri);
+        _requireOwner(address(this), _msgSender());
+        ERC1155URIStorage.setUri(_erc1155URIStorageTableId(ITEMS_NAMESPACE), tokenId, tokenUri);
     }
 
     function _incrementItemsCounter() internal returns (uint256) {
         address itemsContract = UltimateDominionConfig.getItems();
-        uint256 itemsCounter = Counters.getCounter(address(itemsContract));
-        Counters.setCounter(itemsContract, (itemsCounter + 1));
+        uint256 itemsCounter = Counters.getCounter(address(itemsContract)) + 1;
+        Counters.setCounter(itemsContract, (itemsCounter));
         return itemsCounter;
-    }
-
-    function requireOwner() internal view {
-        AccessControlLib.requireOwner(SystemRegistry.get(address(this)), _msgSender());
     }
 
     function getWeaponStats(uint256 itemId) public view returns (WeaponStats memory _weaponStats) {
@@ -94,7 +89,7 @@ contract ItemsSystem is ERC1155System {
     }
 
     function setStarterItems(Classes class, uint256[] memory itemIds, uint256[] memory amounts) public {
-        requireOwner();
+        _requireOwner(address(this), _msgSender());
         require(itemIds.length == amounts.length, "ITEMS: Length mismatch");
         StarterItems.set(class, itemIds, amounts);
     }

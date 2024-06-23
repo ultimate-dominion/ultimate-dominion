@@ -35,6 +35,35 @@
   },
   {
     "type": "function",
+    "name": "UD__createMob",
+    "inputs": [
+      {
+        "name": "mobType",
+        "type": "uint8",
+        "internalType": "enum MobType"
+      },
+      {
+        "name": "mobStats",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "mobMetadataUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__enterGame",
     "inputs": [
       {
@@ -81,6 +110,11 @@
             "name": "hitPoints",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "damageTaken",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "experience",

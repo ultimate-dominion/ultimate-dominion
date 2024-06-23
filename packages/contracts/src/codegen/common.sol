@@ -19,5 +19,23 @@ enum ItemType {
   Armor,
   Potion,
   Scroll,
-  Material
+  Material,
+  QuestItem
+}
+
+enum MobType {
+  Monster,
+  NPC
+}
+
+enum Alignment {
+  Loyalist,
+  Neutral,
+  Rebel,
+  Aggro
+}
+
+enum EncounterType {
+  PvP,
+  PvE
 }

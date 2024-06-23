@@ -14,7 +14,10 @@ export default defineWorld({
       "Mage", // 2
     ],
     RngRequestType: ["CharacterStats", "Combat", "WorldGeneration"],
-    ItemType: ["Weapon", "Armor", "Potion", "Scroll", "Material"],
+    ItemType: ["Weapon", "Armor", "Potion", "Scroll", "Material", "QuestItem"],
+    MobType: ["Monster", "NPC"],
+    Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
+    EncounterType: ["PvP", "PvE"],
   },
   tables: {
     /**
@@ -39,6 +42,7 @@ export default defineWorld({
         agility: "uint256",
         intelligence: "uint256",
         hitPoints: "uint256",
+        damageTaken: "int256",
         experience: "uint256",
       },
     },
@@ -56,6 +60,14 @@ export default defineWorld({
         stats: "bytes",
       },
       key: ["itemId"],
+    },
+    Mobs: {
+      schema: {
+        mobId: "uint256",
+        mobType: "MobType",
+        mobStats: "bytes",
+      },
+      key: ["mobId"],
     },
     StarterItems: {
       key: ["class"],
@@ -76,7 +88,26 @@ export default defineWorld({
         value: "bool",
       },
     },
-
+    CombatEncounter: {
+      schema: {
+        //keccak hash of (attackers, defenders, encounterType, startTime)
+        encounterId: "bytes32",
+        encounterType: "EncounterType",
+        // the starting timestamp
+        start: "uint256",
+        // timestamp of when combat ended.  0 if ongoing.
+        end: "uint256",
+        // the current turn.  starts at 0
+        currentTurn: "uint256",
+        // the max number of turns. default is 15 for pve
+        maxTurns: "uint256",
+        // array of monsterIds if pve playerIds if pvp
+        defenders: "uint256[]",
+        // array of playerIds
+        attackers: "uint256[]",
+      },
+      key: ["encounterId"],
+    },
     RandomNumbers: {
       key: ["sequenceNumber"],
       schema: {

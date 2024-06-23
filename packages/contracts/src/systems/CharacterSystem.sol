@@ -90,8 +90,8 @@ contract CharacterSystem is System {
 
     function _incrementCharacterCounter() internal returns (uint256) {
         address characterContract = UltimateDominionConfig.getCharacterToken();
-        uint256 characterCounter = Counters.getCounter(address(characterContract));
-        Counters.setCounter(characterContract, (characterCounter + 1));
+        uint256 characterCounter = Counters.getCounter(address(characterContract)) + 1;
+        Counters.setCounter(characterContract, (characterCounter));
         return characterCounter;
     }
 

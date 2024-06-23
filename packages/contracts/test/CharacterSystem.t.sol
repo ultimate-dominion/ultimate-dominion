@@ -13,7 +13,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
 
         vm.startPrank(alice);
         alicesCharacterId = world.UD__mintCharacter(alice, bytes32("Alan"), "test_Character_URI");
-        assertEq(alicesCharacterId, 1);
+        assertEq(alicesCharacterId, 2);
         assertEq(characterToken.ownerOf(1), alice);
         assertEq(characterToken.balanceOf(alice), 2);
         assertEq(
