@@ -22,6 +22,7 @@ import { MobType } from "./../common.sol";
 struct MobsData {
   MobType mobType;
   bytes mobStats;
+  string mobMetadata;
 }
 
 library Mobs {
@@ -29,12 +30,12 @@ library Mobs {
   ResourceId constant _tableId = ResourceId.wrap(0x746255440000000000000000000000004d6f6273000000000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0001010101000000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0001010201000000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (uint256)
   Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint8, bytes)
-  Schema constant _valueSchema = Schema.wrap(0x0001010100c40000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint8, bytes, string)
+  Schema constant _valueSchema = Schema.wrap(0x0001010200c4c500000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -50,9 +51,10 @@ library Mobs {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](2);
+    fieldNames = new string[](3);
     fieldNames[0] = "mobType";
     fieldNames[1] = "mobStats";
+    fieldNames[2] = "mobMetadata";
   }
 
   /**
@@ -274,6 +276,168 @@ library Mobs {
   }
 
   /**
+   * @notice Get mobMetadata.
+   */
+  function getMobMetadata(uint256 mobId) internal view returns (string memory mobMetadata) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 1);
+    return (string(_blob));
+  }
+
+  /**
+   * @notice Get mobMetadata.
+   */
+  function _getMobMetadata(uint256 mobId) internal view returns (string memory mobMetadata) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 1);
+    return (string(_blob));
+  }
+
+  /**
+   * @notice Set mobMetadata.
+   */
+  function setMobMetadata(uint256 mobId, string memory mobMetadata) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 1, bytes((mobMetadata)));
+  }
+
+  /**
+   * @notice Set mobMetadata.
+   */
+  function _setMobMetadata(uint256 mobId, string memory mobMetadata) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    StoreCore.setDynamicField(_tableId, _keyTuple, 1, bytes((mobMetadata)));
+  }
+
+  /**
+   * @notice Get the length of mobMetadata.
+   */
+  function lengthMobMetadata(uint256 mobId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get the length of mobMetadata.
+   */
+  function _lengthMobMetadata(uint256 mobId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get an item of mobMetadata.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function getItemMobMetadata(uint256 mobId, uint256 _index) internal view returns (string memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    unchecked {
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      return (string(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of mobMetadata.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function _getItemMobMetadata(uint256 mobId, uint256 _index) internal view returns (string memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    unchecked {
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      return (string(_blob));
+    }
+  }
+
+  /**
+   * @notice Push a slice to mobMetadata.
+   */
+  function pushMobMetadata(uint256 mobId, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+  }
+
+  /**
+   * @notice Push a slice to mobMetadata.
+   */
+  function _pushMobMetadata(uint256 mobId, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+  }
+
+  /**
+   * @notice Pop a slice from mobMetadata.
+   */
+  function popMobMetadata(uint256 mobId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+  }
+
+  /**
+   * @notice Pop a slice from mobMetadata.
+   */
+  function _popMobMetadata(uint256 mobId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+  }
+
+  /**
+   * @notice Update a slice of mobMetadata at `_index`.
+   */
+  function updateMobMetadata(uint256 mobId, uint256 _index, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update a slice of mobMetadata at `_index`.
+   */
+  function _updateMobMetadata(uint256 mobId, uint256 _index, string memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(mobId));
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
    * @notice Get the full data.
    */
   function get(uint256 mobId) internal view returns (MobsData memory _table) {
@@ -306,11 +470,11 @@ library Mobs {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(uint256 mobId, MobType mobType, bytes memory mobStats) internal {
+  function set(uint256 mobId, MobType mobType, bytes memory mobStats, string memory mobMetadata) internal {
     bytes memory _staticData = encodeStatic(mobType);
 
-    EncodedLengths _encodedLengths = encodeLengths(mobStats);
-    bytes memory _dynamicData = encodeDynamic(mobStats);
+    EncodedLengths _encodedLengths = encodeLengths(mobStats, mobMetadata);
+    bytes memory _dynamicData = encodeDynamic(mobStats, mobMetadata);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
@@ -321,11 +485,11 @@ library Mobs {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(uint256 mobId, MobType mobType, bytes memory mobStats) internal {
+  function _set(uint256 mobId, MobType mobType, bytes memory mobStats, string memory mobMetadata) internal {
     bytes memory _staticData = encodeStatic(mobType);
 
-    EncodedLengths _encodedLengths = encodeLengths(mobStats);
-    bytes memory _dynamicData = encodeDynamic(mobStats);
+    EncodedLengths _encodedLengths = encodeLengths(mobStats, mobMetadata);
+    bytes memory _dynamicData = encodeDynamic(mobStats, mobMetadata);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
@@ -339,8 +503,8 @@ library Mobs {
   function set(uint256 mobId, MobsData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.mobType);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.mobStats);
-    bytes memory _dynamicData = encodeDynamic(_table.mobStats);
+    EncodedLengths _encodedLengths = encodeLengths(_table.mobStats, _table.mobMetadata);
+    bytes memory _dynamicData = encodeDynamic(_table.mobStats, _table.mobMetadata);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
@@ -354,8 +518,8 @@ library Mobs {
   function _set(uint256 mobId, MobsData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.mobType);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.mobStats);
-    bytes memory _dynamicData = encodeDynamic(_table.mobStats);
+    EncodedLengths _encodedLengths = encodeLengths(_table.mobStats, _table.mobMetadata);
+    bytes memory _dynamicData = encodeDynamic(_table.mobStats, _table.mobMetadata);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
@@ -376,13 +540,19 @@ library Mobs {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (bytes memory mobStats) {
+  ) internal pure returns (bytes memory mobStats, string memory mobMetadata) {
     uint256 _start;
     uint256 _end;
     unchecked {
       _end = _encodedLengths.atIndex(0);
     }
     mobStats = (bytes(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+
+    _start = _end;
+    unchecked {
+      _end += _encodedLengths.atIndex(1);
+    }
+    mobMetadata = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
   }
 
   /**
@@ -398,7 +568,7 @@ library Mobs {
   ) internal pure returns (MobsData memory _table) {
     (_table.mobType) = decodeStatic(_staticData);
 
-    (_table.mobStats) = decodeDynamic(_encodedLengths, _dynamicData);
+    (_table.mobStats, _table.mobMetadata) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -433,10 +603,13 @@ library Mobs {
    * @notice Tightly pack dynamic data lengths using this table's schema.
    * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
-  function encodeLengths(bytes memory mobStats) internal pure returns (EncodedLengths _encodedLengths) {
+  function encodeLengths(
+    bytes memory mobStats,
+    string memory mobMetadata
+  ) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(bytes(mobStats).length);
+      _encodedLengths = EncodedLengthsLib.pack(bytes(mobStats).length, bytes(mobMetadata).length);
     }
   }
 
@@ -444,8 +617,8 @@ library Mobs {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(bytes memory mobStats) internal pure returns (bytes memory) {
-    return abi.encodePacked(bytes((mobStats)));
+  function encodeDynamic(bytes memory mobStats, string memory mobMetadata) internal pure returns (bytes memory) {
+    return abi.encodePacked(bytes((mobStats)), bytes((mobMetadata)));
   }
 
   /**
@@ -456,12 +629,13 @@ library Mobs {
    */
   function encode(
     MobType mobType,
-    bytes memory mobStats
+    bytes memory mobStats,
+    string memory mobMetadata
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(mobType);
 
-    EncodedLengths _encodedLengths = encodeLengths(mobStats);
-    bytes memory _dynamicData = encodeDynamic(mobStats);
+    EncodedLengths _encodedLengths = encodeLengths(mobStats, mobMetadata);
+    bytes memory _dynamicData = encodeDynamic(mobStats, mobMetadata);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

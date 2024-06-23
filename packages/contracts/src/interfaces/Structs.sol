@@ -10,9 +10,10 @@ struct WeaponStats {
 }
 
 struct MonsterStats {
+    // all stats (except level and exp) are to the 10,000s place.  so 10_000 == 1;
     // hit points
     uint256 hp;
-    // damage reduction % * 10 * 5 || 10000 = 1%
+    // damage reduction %
     uint256 armor;
     // monster level
     uint256 level;
@@ -22,6 +23,8 @@ struct MonsterStats {
     Classes class;
     // item ids of potential drops
     uint256[] inventory;
+    // the amount of experience this monster is worth
+    uint256 experience;
 }
 
 struct NPCStats {

@@ -66,6 +66,7 @@ export default defineWorld({
         mobId: "uint256",
         mobType: "MobType",
         mobStats: "bytes",
+        mobMetadata: "string",
       },
       key: ["mobId"],
     },
