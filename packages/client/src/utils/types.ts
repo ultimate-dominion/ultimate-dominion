@@ -1,3 +1,10 @@
+export type Character = Metadata & {
+  characterClass: CharacterClasses;
+  characterId: string;
+  locked: boolean;
+  owner: string;
+};
+
 export enum CharacterClasses {
   Warrior,
   Mage,

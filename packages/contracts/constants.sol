@@ -8,4 +8,4 @@ bytes14 constant WORLD_NAMESPACE = "UD";
 
 string constant ERC721_NAME = "UDCharacters";
 string constant ERC721_SYMBOL = "UDC";
-string constant TOKEN_URI = "Test-token-uri/";
+string constant TOKEN_URI = "ipfs://";

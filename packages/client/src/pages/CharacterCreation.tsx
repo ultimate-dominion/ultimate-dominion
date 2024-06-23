@@ -23,6 +23,8 @@ import { FaLock } from 'react-icons/fa';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useUploadFile } from '../hooks/useUploadFile';
+import { API_URL } from '../utils/constants';
 import { CharacterClasses } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
@@ -33,11 +35,17 @@ export const CharacterCreation = (): JSX.Element => {
     delegatorAddress,
     systemCalls: { mintCharacter },
   } = useMUD();
-  const character = useCharacter();
+  const { character, isRefreshing, refreshCharacter } = useCharacter();
+  const {
+    file: avatar,
+    setFile: setAvatar,
+    onUpload,
+    isUploading,
+    isUploaded,
+  } = useUploadFile({ fileName: 'characterAvatar' });
 
   const [name, setName] = useState('');
-  const [background, setBackground] = useState('');
-  const [avatar, setAvatar] = useState<File | null>(null);
+  const [description, setDescription] = useState('');
   const [characterClass, setCharacterClass] = useState<CharacterClasses>(
     CharacterClasses.Warrior,
   );
@@ -53,7 +61,7 @@ export const CharacterCreation = (): JSX.Element => {
   // Reset showError state when any of the form fields change
   useEffect(() => {
     setShowError(false);
-  }, [name, background, avatar, characterClass]);
+  }, [avatar, description, name]);
 
   const onUploadAvatar = useCallback(() => {
     const input = document.getElementById('avatarInput');
@@ -80,17 +88,55 @@ export const CharacterCreation = (): JSX.Element => {
           throw new Error('Burner not found.');
         }
 
-        if (!(name && background && avatar)) {
+        if (!(avatar && description && name)) {
           setShowError(true);
           throw new Error('Missing required fields.');
         }
 
-        const success = await mintCharacter(delegatorAddress, name);
+        const image = `ipfs://${await onUpload()}`;
+        if (!image)
+          throw new Error(
+            'Something went wrong uploading your character avatar',
+          );
+
+        const characterMetadata = {
+          name,
+          description,
+          image,
+        };
+
+        const res = await fetch(
+          `${API_URL}/api/uploadMetadata?name=characterMetadata.json`,
+          {
+            method: 'POST',
+            body: JSON.stringify(characterMetadata),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+        if (!res.ok)
+          throw new Error(
+            'Something went wrong uploading your character metadata',
+          );
+
+        const { cid: characterMetadataCid } = await res.json();
+        if (!characterMetadataCid)
+          throw new Error(
+            'Something went wrong uploading your character metadata',
+          );
+
+        const success = await mintCharacter(
+          delegatorAddress,
+          name,
+          characterMetadataCid,
+        );
 
         if (!success) {
           throw new Error('Contract call failed');
         }
 
+        refreshCharacter();
         renderSuccess('Character created!');
       } catch (e) {
         renderError(e, 'Failed to create character.');
@@ -100,11 +146,13 @@ export const CharacterCreation = (): JSX.Element => {
     },
     [
       avatar,
-      background,
       burnerBalance,
       delegatorAddress,
+      description,
       mintCharacter,
       name,
+      onUpload,
+      refreshCharacter,
       renderError,
       renderSuccess,
     ],
@@ -185,6 +233,9 @@ export const CharacterCreation = (): JSX.Element => {
                     />
                     <Button
                       alignSelf="start"
+                      isDisabled={isUploaded}
+                      isLoading={isUploading}
+                      loadingText="Uploading..."
                       onClick={onUploadAvatar}
                       size="sm"
                       type="button"
@@ -199,14 +250,14 @@ export const CharacterCreation = (): JSX.Element => {
                   </FormControl>
                 </VStack>
               </Stack>
-              <FormControl isInvalid={showError && !background}>
+              <FormControl isInvalid={showError && !description}>
                 <Textarea
                   height={{ base: '200px', sm: '250px' }}
-                  onChange={e => setBackground(e.target.value)}
+                  onChange={e => setDescription(e.target.value)}
                   placeholder="Bio"
-                  value={background}
+                  value={description}
                 />
-                {showError && !background && (
+                {showError && !description && (
                   <FormHelperText color="red">Bio is required</FormHelperText>
                 )}
               </FormControl>
@@ -226,7 +277,7 @@ export const CharacterCreation = (): JSX.Element => {
           </Box>
           {isSmallScreen && (
             <Button
-              isLoading={isCreating}
+              isLoading={isCreating || isRefreshing}
               loadingText="Creating..."
               mt={2}
               type="submit"

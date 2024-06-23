@@ -4,20 +4,24 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "NODE_ENV=development nodemon --watch api --exec 'ts-node -r dotenv/config local.ts'"
+    "dev": "NODE_ENV=development nodemon --watch api --ext ts --exec 'ts-node -r dotenv/config local.ts'"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@pinata/sdk": "^2.1.0",
     "@vercel/node": "^3.1.7",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "formidable": "^3.5.1",
+    "jimp": "^0.22.12",
     "vercel": "^34.2.7"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
-    "@types/node": "^18.15.11",
+    "@types/formidable": "^3.4.5",
+    "@types/node": "^18.19.33",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
     "typescript": "5.3.3"

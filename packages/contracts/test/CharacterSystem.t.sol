@@ -17,7 +17,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         assertEq(characterToken.ownerOf(1), alice);
         assertEq(characterToken.balanceOf(alice), 2);
         assertEq(
-            IERC721Metadata(address(characterToken)).tokenURI(alicesCharacterId), "Test-token-uri/test_Character_URI"
+            IERC721Metadata(address(characterToken)).tokenURI(alicesCharacterId), "ipfs://test_Character_URI"
         );
 
         endGasReport();
