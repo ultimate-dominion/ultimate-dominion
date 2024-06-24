@@ -85,7 +85,7 @@ export const CharacterCreation = (): JSX.Element => {
         }
 
         if (!delegatorAddress) {
-          throw new Error('Burner not found.');
+          throw new Error('Missing delegation.');
         }
 
         if (!(avatar && description && name)) {
@@ -252,7 +252,7 @@ export const CharacterCreation = (): JSX.Element => {
               </Stack>
               <FormControl isInvalid={showError && !description}>
                 <Textarea
-                  height={{ base: '200px', sm: '250px' }}
+                  height="200px"
                   onChange={e => setDescription(e.target.value)}
                   placeholder="Bio"
                   value={description}

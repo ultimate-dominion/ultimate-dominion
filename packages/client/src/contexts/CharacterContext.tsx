@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { getContract, hexToString } from 'viem';
 
+import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type { Character } from '../utils/types';
 import { useMUD } from './MUDContext';
@@ -38,6 +39,7 @@ export const CharacterProvider = ({
     delegatorAddress,
     network: { publicClient, worldContract },
   } = useMUD();
+  const { renderError } = useToast();
 
   const [characterDetails, setCharacterDetails] = useState<Character | null>(
     null,
@@ -46,9 +48,6 @@ export const CharacterProvider = ({
 
   const getCharacterData = useCallback(async () => {
     if (!(delegatorAddress && publicClient && worldContract)) return;
-
-    setIsRefreshing(true);
-
     const characterComponent = Array.from(
       runQuery([
         HasValue(Characters, {
@@ -118,8 +117,18 @@ export const CharacterProvider = ({
       owner,
       ...fetachedMetadata,
     });
-    setIsRefreshing(false);
   }, [Characters, delegatorAddress, publicClient, worldContract]);
+
+  const refreshCharacter = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await getCharacterData();
+    } catch (error) {
+      renderError('Error refreshing character');
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [getCharacterData, renderError]);
 
   useEffect(() => {
     if (!(delegatorAddress && publicClient && worldContract)) return;
@@ -131,7 +140,7 @@ export const CharacterProvider = ({
       value={{
         character: characterDetails,
         isRefreshing,
-        refreshCharacter: getCharacterData,
+        refreshCharacter,
       }}
     >
       {children}

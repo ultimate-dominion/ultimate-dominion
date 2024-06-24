@@ -5,10 +5,10 @@ import { uploadToPinata } from "../lib/fileStorage";
 const uploadMetadata = async (req: VercelRequest, res: VercelResponse) => {
   try {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-    if (req.method !== "POST") {
+    if (!(req.method === "POST" || req.method == "OPTIONS")) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 

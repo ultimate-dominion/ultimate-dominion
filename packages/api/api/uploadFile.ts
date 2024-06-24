@@ -16,9 +16,9 @@ export default async function uploadFile(
   res: VercelResponse
 ) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
 
-  if (req.method !== "POST") {
+  if (!(req.method === "POST" || req.method == "OPTIONS")) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 

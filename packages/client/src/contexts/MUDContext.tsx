@@ -20,7 +20,7 @@ import {
   SystemCallsResult,
 } from '../lib/mud/setup';
 
-const MUDContext = createContext<{
+type MUDContextType = {
   burnerAddress: Address;
   burnerBalance: string;
   components: ComponentsResult;
@@ -28,7 +28,9 @@ const MUDContext = createContext<{
   delegatorEntity: string | null;
   network: NetworkResult;
   systemCalls: SystemCallsResult;
-} | null>(null);
+};
+
+const MUDContext = createContext<MUDContextType | null>(null);
 
 type Props = {
   children: ReactNode;
@@ -129,15 +131,7 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
   return <MUDContext.Provider value={value}>{children}</MUDContext.Provider>;
 };
 
-export const useMUD = (): {
-  burnerAddress: Address;
-  burnerBalance: string;
-  components: ComponentsResult;
-  delegatorAddress: Address | null;
-  delegatorEntity: string | null;
-  network: NetworkResult;
-  systemCalls: SystemCallsResult;
-} => {
+export const useMUD = (): MUDContextType => {
   const value = useContext(MUDContext);
   if (!value) throw new Error('Must be used within a MUDProvider');
   return value;
