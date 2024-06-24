@@ -35,7 +35,7 @@ export const CharacterProvider = ({
   children,
 }: CharacterProviderProps): JSX.Element => {
   const {
-    components: { Characters },
+    components: { Characters, CharacterStats },
     delegatorAddress,
     network: { publicClient, worldContract },
   } = useMUD();
@@ -55,12 +55,21 @@ export const CharacterProvider = ({
         }),
       ]),
     ).map(entity => {
-      const character = getComponentValueStrict(Characters, entity);
+      const characterData = getComponentValueStrict(Characters, entity);
+      const characterStats = getComponentValueStrict(CharacterStats, entity);
       return {
-        ...character,
-        name: hexToString(character.name as `0x${string}`, { size: 32 }),
-        characterId: decodeEntity({ characterId: 'uint256' }, entity)
-          .characterId,
+        agility: characterStats.agility.toString(),
+        characterClass: characterData.class,
+        characterId: decodeEntity(
+          { characterId: 'uint256' },
+          entity,
+        ).characterId.toString(),
+        hitPoints: characterStats.hitPoints.toString(),
+        intelligence: characterStats.intelligence.toString(),
+        locked: characterData.locked,
+        name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
+        owner: characterData.owner,
+        strength: characterStats.strength.toString(),
       };
     })[0];
 
@@ -103,21 +112,17 @@ export const CharacterProvider = ({
       uriToHttp(metadataURI)[0],
     );
 
-    const {
-      class: characterClass,
-      characterId,
-      locked,
-      owner,
-    } = characterComponent;
-
     setCharacterDetails({
-      characterClass,
-      characterId: characterId.toString(),
-      locked,
-      owner,
+      ...characterComponent,
       ...fetachedMetadata,
     });
-  }, [Characters, delegatorAddress, publicClient, worldContract]);
+  }, [
+    Characters,
+    CharacterStats,
+    delegatorAddress,
+    publicClient,
+    worldContract,
+  ]);
 
   const refreshCharacter = useCallback(async () => {
     setIsRefreshing(true);

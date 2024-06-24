@@ -17,7 +17,7 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -33,7 +33,7 @@ export const CharacterCreation = (): JSX.Element => {
   const {
     burnerBalance,
     delegatorAddress,
-    systemCalls: { mintCharacter },
+    systemCalls: { mintCharacter, rollStats },
   } = useMUD();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
   const {
@@ -52,11 +52,7 @@ export const CharacterCreation = (): JSX.Element => {
 
   const [isCreating, setIsCreating] = useState(false);
   const [showError, setShowError] = useState(false);
-
-  const [health, setHealth] = useState(0);
-  const [strength, setStrength] = useState(0);
-  const [agility, setAgility] = useState(0);
-  const [intelligence, setIntelligence] = useState(0);
+  const [isRollingStats, setIsRollingStats] = useState(false);
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
@@ -158,13 +154,64 @@ export const CharacterCreation = (): JSX.Element => {
     ],
   );
 
-  const onRollStats = useCallback(() => {
-    // Temporarily set random values between 1 and 10
-    setHealth(Math.floor(Math.random() * 10) + 1);
-    setStrength(Math.floor(Math.random() * 10) + 1);
-    setAgility(Math.floor(Math.random() * 10) + 1);
-    setIntelligence(Math.floor(Math.random() * 10) + 1);
-  }, []);
+  const onRollStats = useCallback(async () => {
+    try {
+      setIsRollingStats(true);
+
+      if (burnerBalance === '0') {
+        throw new Error(
+          'Insufficient funds. Please top off your session account.',
+        );
+      }
+
+      if (!delegatorAddress) {
+        throw new Error('Missing delegation.');
+      }
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      const success = await rollStats(
+        BigInt(character.characterId),
+        characterClass,
+      );
+
+      if (!success) {
+        throw new Error('Contract call failed');
+      }
+
+      refreshCharacter();
+      renderSuccess('Stats rolled!');
+    } catch (e) {
+      renderError(e, 'Failed to roll stats.');
+    } finally {
+      setIsRollingStats(false);
+    }
+  }, [
+    burnerBalance,
+    character,
+    characterClass,
+    delegatorAddress,
+    refreshCharacter,
+    renderError,
+    renderSuccess,
+    rollStats,
+  ]);
+
+  const isDisabled = useMemo(() => {
+    return !character || isRollingStats;
+  }, [character, isRollingStats]);
+
+  const rolledOnce = useMemo(() => {
+    return character?.hitPoints !== '0';
+  }, [character]);
+
+  useEffect(() => {
+    if (character && rolledOnce) {
+      setCharacterClass(character.characterClass);
+    }
+  }, [character, rolledOnce]);
 
   return (
     <Stack
@@ -330,6 +377,17 @@ export const CharacterCreation = (): JSX.Element => {
               </Button>
             </ButtonGroup>
           </VStack>
+          {character &&
+            rolledOnce &&
+            characterClass !== character.characterClass && (
+              <Text color="red" fontSize="sm" mt={2}>
+                Your current class is{' '}
+                <Text as="span" fontWeight={700}>
+                  {CharacterClasses[character.characterClass]}
+                </Text>
+                . Re-roll stats to change class.
+              </Text>
+            )}
           <SimpleGrid
             columns={{ base: 1, xl: 2 }}
             mb={{ base: 0, lg: 24 }}
@@ -339,26 +397,32 @@ export const CharacterCreation = (): JSX.Element => {
             <VStack spacing={8}>
               <HStack justify="space-between" w="100%">
                 <Heading size="sm">Stats</Heading>
-                <Button isDisabled={!character} onClick={onRollStats} size="sm">
-                  Roll Stats
+                <Button
+                  isDisabled={isDisabled}
+                  isLoading={isRollingStats}
+                  loadingText="Rolling..."
+                  onClick={onRollStats}
+                  size="sm"
+                >
+                  {rolledOnce ? 'Re-roll' : 'Roll Stats'}
                 </Button>
               </HStack>
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
                   <Text>HP - Hit</Text>
-                  <Text>{health}</Text>
+                  <Text>{character?.hitPoints ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>STR - Strength</Text>
-                  <Text>{strength}</Text>
+                  <Text>{character?.strength ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>AGI - Agility</Text>
-                  <Text>{agility}</Text>
+                  <Text>{character?.agility ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>INT - Intelligence</Text>
-                  <Text>{intelligence}</Text>
+                  <Text>{character?.intelligence ?? '0'}</Text>
                 </HStack>
               </VStack>
             </VStack>
@@ -391,7 +455,7 @@ export const CharacterCreation = (): JSX.Element => {
           {!isSmallScreen && (
             <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
               <Button
-                isDisabled={!character}
+                isDisabled={isDisabled}
                 isLoading={isCreating}
                 loadingText="Creating..."
                 mt={16}
@@ -419,7 +483,7 @@ export const CharacterCreation = (): JSX.Element => {
         </Box>
         {isSmallScreen && (
           <Button
-            isDisabled={!character}
+            isDisabled={isDisabled}
             isLoading={isCreating}
             loadingText="Creating..."
             mt={2}
