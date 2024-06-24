@@ -19,6 +19,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -28,12 +29,13 @@ import { API_URL } from '../utils/constants';
 import { CharacterClasses } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
+  const navigate = useNavigate();
   const { renderSuccess, renderError } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const {
     burnerBalance,
     delegatorAddress,
-    systemCalls: { mintCharacter, rollStats },
+    systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
   const {
@@ -53,6 +55,7 @@ export const CharacterCreation = (): JSX.Element => {
   const [isCreating, setIsCreating] = useState(false);
   const [showError, setShowError] = useState(false);
   const [isRollingStats, setIsRollingStats] = useState(false);
+  const [isEnteringGame, setIsEnteringGame] = useState(false);
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
@@ -199,9 +202,32 @@ export const CharacterCreation = (): JSX.Element => {
     rollStats,
   ]);
 
+  const onEnterGame = useCallback(async () => {
+    try {
+      setIsEnteringGame(true);
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      const success = await enterGame(BigInt(character.characterId));
+
+      if (!success) {
+        throw new Error('Contract call failed');
+      }
+
+      renderSuccess('Your character has awakend!');
+      navigate('/game-board');
+    } catch (e) {
+      renderError(e, 'Failed to enter game.');
+    } finally {
+      setIsEnteringGame(false);
+    }
+  }, [character, enterGame, navigate, renderError, renderSuccess]);
+
   const isDisabled = useMemo(() => {
-    return !character || isRollingStats;
-  }, [character, isRollingStats]);
+    return !character || isCreating || isEnteringGame || isRollingStats;
+  }, [character, isCreating, isEnteringGame, isRollingStats]);
 
   const rolledOnce = useMemo(() => {
     return character?.hitPoints !== '0';
@@ -211,7 +237,11 @@ export const CharacterCreation = (): JSX.Element => {
     if (character && rolledOnce) {
       setCharacterClass(character.characterClass);
     }
-  }, [character, rolledOnce]);
+
+    if (character?.locked) {
+      navigate('/game-board');
+    }
+  }, [character, navigate, rolledOnce]);
 
   return (
     <Stack
@@ -456,10 +486,11 @@ export const CharacterCreation = (): JSX.Element => {
             <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
               <Button
                 isDisabled={isDisabled}
-                isLoading={isCreating}
-                loadingText="Creating..."
+                isLoading={isEnteringGame}
+                loadingText="Waking..."
+                onClick={onEnterGame}
                 mt={16}
-                type="submit"
+                type="button"
                 width="100%"
               >
                 Wake Up
@@ -484,10 +515,11 @@ export const CharacterCreation = (): JSX.Element => {
         {isSmallScreen && (
           <Button
             isDisabled={isDisabled}
-            isLoading={isCreating}
-            loadingText="Creating..."
+            isLoading={isEnteringGame}
+            loadingText="Waking..."
+            onClick={onEnterGame}
             mt={2}
-            type="submit"
+            type="button"
             width="100%"
           >
             Wake Up

@@ -1,4 +1,9 @@
-import { getComponentValueStrict, HasValue, runQuery } from '@latticexyz/recs';
+import {
+  getComponentValue,
+  getComponentValueStrict,
+  HasValue,
+  runQuery,
+} from '@latticexyz/recs';
 import { decodeEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
@@ -51,25 +56,25 @@ export const CharacterProvider = ({
     const characterComponent = Array.from(
       runQuery([
         HasValue(Characters, {
-          owner: delegatorAddress ?? '0x0',
+          owner: delegatorAddress,
         }),
       ]),
     ).map(entity => {
       const characterData = getComponentValueStrict(Characters, entity);
-      const characterStats = getComponentValueStrict(CharacterStats, entity);
+      const characterStats = getComponentValue(CharacterStats, entity);
       return {
-        agility: characterStats.agility.toString(),
+        agility: characterStats?.agility.toString() ?? '0',
         characterClass: characterData.class,
         characterId: decodeEntity(
           { characterId: 'uint256' },
           entity,
         ).characterId.toString(),
-        hitPoints: characterStats.hitPoints.toString(),
-        intelligence: characterStats.intelligence.toString(),
+        hitPoints: characterStats?.hitPoints.toString() ?? '0',
+        intelligence: characterStats?.intelligence.toString() ?? '0',
         locked: characterData.locked,
         name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
         owner: characterData.owner,
-        strength: characterStats.strength.toString(),
+        strength: characterStats?.strength.toString() ?? '0',
       };
     })[0];
 

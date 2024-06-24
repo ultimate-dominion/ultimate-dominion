@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 
 export const Welcome = (): JSX.Element => {
@@ -18,6 +19,7 @@ export const Welcome = (): JSX.Element => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { isConnected } = useAccount();
   const { delegatorAddress } = useMUD();
+  const { character } = useCharacter();
 
   const onPlay = useCallback(() => {
     if (!(delegatorAddress && isConnected)) {
@@ -25,8 +27,12 @@ export const Welcome = (): JSX.Element => {
       return;
     }
 
-    navigate('character-creation');
-  }, [delegatorAddress, isConnected, navigate, onOpen]);
+    if (character?.locked) {
+      navigate('/game-board');
+    } else {
+      navigate('/character-creation');
+    }
+  }, [character, delegatorAddress, isConnected, navigate, onOpen]);
 
   return (
     <Container maxW="800px">
