@@ -17,38 +17,51 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useUploadFile } from '../hooks/useUploadFile';
+import { API_URL } from '../utils/constants';
 import { CharacterClasses } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderSuccess, renderError } = useToast();
-  const isSmallScreen = useBreakpointValue({ base: true, md: false });
-  const { burnerBalance, delegatorAddress } = useMUD();
+  const isSmallScreen = useBreakpointValue({ base: true, lg: false });
+  const {
+    burnerBalance,
+    delegatorAddress,
+    isDelegationLoaded,
+    systemCalls: { enterGame, mintCharacter, rollStats },
+  } = useMUD();
+  const { character, isRefreshing, refreshCharacter } = useCharacter();
+  const {
+    file: avatar,
+    setFile: setAvatar,
+    onUpload,
+    isUploading,
+    isUploaded,
+  } = useUploadFile({ fileName: 'characterAvatar' });
 
   const [name, setName] = useState('');
-  const [background, setBackground] = useState('');
-  const [avatar, setAvatar] = useState<File | null>(null);
+  const [description, setDescription] = useState('');
   const [characterClass, setCharacterClass] = useState<CharacterClasses>(
     CharacterClasses.Warrior,
   );
 
   const [isCreating, setIsCreating] = useState(false);
   const [showError, setShowError] = useState(false);
-
-  const [health, setHealth] = useState(0);
-  const [strength, setStrength] = useState(0);
-  const [agility, setAgility] = useState(0);
-  const [intelligence, setIntelligence] = useState(0);
+  const [isRollingStats, setIsRollingStats] = useState(false);
+  const [isEnteringGame, setIsEnteringGame] = useState(false);
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
     setShowError(false);
-  }, [name, background, avatar, characterClass]);
+  }, [avatar, description, name]);
 
   const onUploadAvatar = useCallback(() => {
     const input = document.getElementById('avatarInput');
@@ -72,29 +85,61 @@ export const CharacterCreation = (): JSX.Element => {
         }
 
         if (!delegatorAddress) {
-          throw new Error('Burner not found.');
+          throw new Error('Missing delegation.');
         }
 
-        if (!(name && background && avatar)) {
+        if (!(avatar && description && name)) {
           setShowError(true);
           throw new Error('Missing required fields.');
         }
 
-        // const character = await mintCharacter(
-        //   delegatorAddress,
-        //   characterClass,
-        //   name,
-        // );
+        const avatarCid = await onUpload();
+        if (!avatarCid)
+          throw new Error(
+            'Something went wrong uploading your character avatar',
+          );
 
-        // if (!character) {
-        //   throw new Error('Contract call failed');
-        // }
+        const image = `ipfs://${avatarCid}`;
 
-        // Temporarily add a 2 second timeout to simulate the contract call
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        const characterMetadata = {
+          name,
+          description,
+          image,
+        };
 
+        const res = await fetch(
+          `${API_URL}/api/uploadMetadata?name=characterMetadata.json`,
+          {
+            method: 'POST',
+            body: JSON.stringify(characterMetadata),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+        if (!res.ok)
+          throw new Error(
+            'Something went wrong uploading your character metadata',
+          );
+
+        const { cid: characterMetadataCid } = await res.json();
+        if (!characterMetadataCid)
+          throw new Error(
+            'Something went wrong uploading your character metadata',
+          );
+
+        const success = await mintCharacter(
+          delegatorAddress,
+          name,
+          characterMetadataCid,
+        );
+
+        if (!success) {
+          throw new Error('Contract call failed');
+        }
+
+        refreshCharacter();
         renderSuccess('Character created!');
-        navigate('/game-board');
       } catch (e) {
         renderError(e, 'Failed to create character.');
       } finally {
@@ -103,108 +148,245 @@ export const CharacterCreation = (): JSX.Element => {
     },
     [
       avatar,
-      background,
       burnerBalance,
       delegatorAddress,
+      description,
+      mintCharacter,
       name,
-      navigate,
+      onUpload,
+      refreshCharacter,
       renderError,
       renderSuccess,
     ],
   );
 
-  const onRollStats = useCallback(() => {
-    // Temporarily set random values between 1 and 10
-    setHealth(Math.floor(Math.random() * 10) + 1);
-    setStrength(Math.floor(Math.random() * 10) + 1);
-    setAgility(Math.floor(Math.random() * 10) + 1);
-    setIntelligence(Math.floor(Math.random() * 10) + 1);
-  }, []);
+  const onRollStats = useCallback(async () => {
+    try {
+      setIsRollingStats(true);
+
+      if (burnerBalance === '0') {
+        throw new Error(
+          'Insufficient funds. Please top off your session account.',
+        );
+      }
+
+      if (!delegatorAddress) {
+        throw new Error('Missing delegation.');
+      }
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      const success = await rollStats(
+        BigInt(character.characterId),
+        characterClass,
+      );
+
+      if (!success) {
+        throw new Error('Contract call failed');
+      }
+
+      refreshCharacter();
+      renderSuccess('Stats rolled!');
+    } catch (e) {
+      renderError(e, 'Failed to roll stats.');
+    } finally {
+      setIsRollingStats(false);
+    }
+  }, [
+    burnerBalance,
+    character,
+    characterClass,
+    delegatorAddress,
+    refreshCharacter,
+    renderError,
+    renderSuccess,
+    rollStats,
+  ]);
+
+  const rolledOnce = useMemo(() => {
+    return character?.hitPoints !== '0';
+  }, [character]);
+
+  const onEnterGame = useCallback(async () => {
+    try {
+      setIsEnteringGame(true);
+
+      if (!rolledOnce) {
+        setShowError(true);
+        return;
+      }
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      const success = await enterGame(BigInt(character.characterId));
+
+      if (!success) {
+        throw new Error('Contract call failed');
+      }
+
+      renderSuccess('Your character has awakend!');
+      navigate('/game-board');
+    } catch (e) {
+      renderError(e, 'Failed to enter game.');
+    } finally {
+      setIsEnteringGame(false);
+    }
+  }, [character, enterGame, navigate, renderError, renderSuccess, rolledOnce]);
+
+  const isDisabled = useMemo(() => {
+    return !character || isCreating || isEnteringGame || isRollingStats;
+  }, [character, isCreating, isEnteringGame, isRollingStats]);
+
+  useEffect(() => {
+    if (character && rolledOnce) {
+      setCharacterClass(character.characterClass);
+    }
+
+    if (character?.locked) {
+      navigate('/game-board');
+    }
+
+    if (!delegatorAddress && isDelegationLoaded) {
+      navigate('/');
+    }
+  }, [character, delegatorAddress, isDelegationLoaded, navigate, rolledOnce]);
 
   return (
-    <Box>
-      <Stack
+    <Stack
+      direction={{ base: 'column', lg: 'row' }}
+      gap={{ base: 4, sm: 6 }}
+      justifyContent="center"
+      mx="auto"
+      my={4}
+      w="100%"
+    >
+      {character ? (
+        <Box border="2px solid" p={8} w={{ base: '100%', lg: '50%' }}>
+          <VStack h="100%" justifyContent="center" spacing={{ base: 4, md: 8 }}>
+            <Center>
+              <Avatar size={{ base: 'lg', sm: 'xl' }} src={character.image} />
+            </Center>
+            <Heading>{character.name}</Heading>
+            <Text>{character.description}</Text>
+          </VStack>
+        </Box>
+      ) : (
+        <Box
+          as="form"
+          onSubmit={onCreateCharacter}
+          w={{ base: '100%', lg: '50%' }}
+        >
+          <Box
+            border="2px solid"
+            h={{ base: 'auto', lg: '100%' }}
+            p={{ base: 4, sm: 10 }}
+            pos="relative"
+          >
+            <VStack spacing={8}>
+              <Stack
+                alignItems="start"
+                direction={{ base: 'column-reverse', sm: 'row' }}
+                gap={{ base: 4, sm: 8 }}
+                w="100%"
+              >
+                <Center>
+                  <Avatar
+                    size={{ base: 'lg', sm: 'xl' }}
+                    src={avatar ? URL.createObjectURL(avatar) : undefined}
+                  />
+                </Center>
+                <VStack w="100%">
+                  <FormControl isInvalid={showError && !name}>
+                    <Input
+                      onChange={e => setName(e.target.value)}
+                      placeholder="Name"
+                      type="text"
+                      value={name}
+                    />
+                    {showError && !name && (
+                      <FormHelperText color="red">
+                        Name is required
+                      </FormHelperText>
+                    )}
+                  </FormControl>
+                  <FormControl isInvalid={showError && !avatar}>
+                    <Input
+                      id="avatarInput"
+                      onChange={e => setAvatar(e.target.files?.[0] ?? null)}
+                      style={{ display: 'none' }}
+                      type="file"
+                    />
+                    <Button
+                      alignSelf="start"
+                      isDisabled={isUploaded}
+                      isLoading={isUploading}
+                      loadingText="Uploading..."
+                      onClick={onUploadAvatar}
+                      size="sm"
+                      type="button"
+                    >
+                      Upload Avatar
+                    </Button>
+                    {showError && !avatar && (
+                      <FormHelperText color="red">
+                        Avatar is required
+                      </FormHelperText>
+                    )}
+                  </FormControl>
+                </VStack>
+              </Stack>
+              <FormControl isInvalid={showError && !description}>
+                <Textarea
+                  height="200px"
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Bio"
+                  value={description}
+                />
+                {showError && !description && (
+                  <FormHelperText color="red">Bio is required</FormHelperText>
+                )}
+              </FormControl>
+            </VStack>
+            {!isSmallScreen && (
+              <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
+                <Button
+                  isLoading={isCreating}
+                  loadingText="Creating..."
+                  type="submit"
+                  width="100%"
+                >
+                  Create Character
+                </Button>
+              </Box>
+            )}
+          </Box>
+          {isSmallScreen && (
+            <Button
+              isLoading={isCreating || isRefreshing}
+              loadingText="Creating..."
+              mt={2}
+              type="submit"
+              width="100%"
+            >
+              Create Character
+            </Button>
+          )}
+        </Box>
+      )}
+      <Box
         as="form"
-        direction={{ base: 'column', lg: 'row' }}
-        gap={{ base: 4, sm: 6 }}
-        justifyContent="center"
-        mx="auto"
-        my={4}
-        onSubmit={onCreateCharacter}
-        w="100%"
+        onSubmit={(e: React.FormEvent<HTMLDivElement>) => e.preventDefault()}
+        w={{ base: '100%', lg: '50%' }}
       >
         <Box
           border="2px solid"
+          h={{ base: 'auto', lg: '100%' }}
           p={{ base: 4, sm: 10 }}
-          width={{ base: '100%', lg: '50%' }}
-        >
-          <VStack spacing={8}>
-            <Stack
-              alignItems="start"
-              direction={{ base: 'column-reverse', sm: 'row' }}
-              gap={{ base: 4, sm: 8 }}
-              w="100%"
-            >
-              <Center>
-                <Avatar
-                  size={{ base: 'lg', sm: 'xl' }}
-                  src={avatar ? URL.createObjectURL(avatar) : undefined}
-                />
-              </Center>
-              <VStack w="100%">
-                <FormControl isInvalid={showError && !name}>
-                  <Input
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Name"
-                    type="text"
-                    value={name}
-                  />
-                  {showError && !name && (
-                    <FormHelperText color="red">
-                      Name is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-                <FormControl isInvalid={showError && !avatar}>
-                  <Input
-                    id="avatarInput"
-                    onChange={e => setAvatar(e.target.files?.[0] ?? null)}
-                    style={{ display: 'none' }}
-                    type="file"
-                  />
-                  <Button
-                    alignSelf="start"
-                    onClick={onUploadAvatar}
-                    size="sm"
-                    type="button"
-                  >
-                    Upload Avatar
-                  </Button>
-                  {showError && !avatar && (
-                    <FormHelperText color="red">
-                      Avatar is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </VStack>
-            </Stack>
-            <FormControl isInvalid={showError && !background}>
-              <Textarea
-                height={{ base: '200px', sm: '350px' }}
-                onChange={e => setBackground(e.target.value)}
-                placeholder="Bio"
-                value={background}
-              />
-              {showError && !background && (
-                <FormHelperText color="red">Bio is required</FormHelperText>
-              )}
-            </FormControl>
-          </VStack>
-        </Box>
-        <Box
-          border="2px solid"
-          p={{ base: 4, sm: 10 }}
-          width={{ base: '100%', lg: '50%' }}
+          pos="relative"
         >
           <VStack alignItems="left" spacing={6}>
             <Heading size="sm" textAlign="left">
@@ -237,34 +419,52 @@ export const CharacterCreation = (): JSX.Element => {
               </Button>
             </ButtonGroup>
           </VStack>
+          {character &&
+            rolledOnce &&
+            characterClass !== character.characterClass && (
+              <Text color="red" fontSize="sm" mt={2}>
+                Your current class is{' '}
+                <Text as="span" fontWeight={700}>
+                  {CharacterClasses[character.characterClass]}
+                </Text>
+                . Re-roll stats to change class.
+              </Text>
+            )}
           <SimpleGrid
             columns={{ base: 1, xl: 2 }}
+            mb={{ base: 0, lg: 24 }}
             mt={{ base: 12, sm: 20 }}
             spacing={{ base: 12, sm: 16 }}
           >
             <VStack spacing={8}>
               <HStack justify="space-between" w="100%">
                 <Heading size="sm">Stats</Heading>
-                <Button onClick={onRollStats} size="sm">
-                  Roll Stats
+                <Button
+                  isDisabled={isDisabled}
+                  isLoading={isRollingStats}
+                  loadingText="Rolling..."
+                  onClick={onRollStats}
+                  size="sm"
+                >
+                  {rolledOnce ? 'Re-roll' : 'Roll Stats'}
                 </Button>
               </HStack>
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
                   <Text>HP - Hit</Text>
-                  <Text>{health}</Text>
+                  <Text>{character?.hitPoints ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>STR - Strength</Text>
-                  <Text>{strength}</Text>
+                  <Text>{character?.strength ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>AGI - Agility</Text>
-                  <Text>{agility}</Text>
+                  <Text>{character?.agility ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>INT - Intelligence</Text>
-                  <Text>{intelligence}</Text>
+                  <Text>{character?.intelligence ?? '0'}</Text>
                 </HStack>
               </VStack>
             </VStack>
@@ -295,28 +495,60 @@ export const CharacterCreation = (): JSX.Element => {
             </VStack>
           </SimpleGrid>
           {!isSmallScreen && (
+            <Box bottom={10} left={0} mt={16} pos="absolute" px={10} right={0}>
+              {showError && !rolledOnce && (
+                <Text color="red" fontSize="sm" mb={2} textAlign="center">
+                  You must roll stats at least once before entering the game.
+                </Text>
+              )}
+              <Button
+                isDisabled={isDisabled}
+                isLoading={isEnteringGame}
+                loadingText="Waking..."
+                onClick={onEnterGame}
+                type="button"
+                width="100%"
+              >
+                Wake Up
+              </Button>
+            </Box>
+          )}
+          {!character && (
+            <Box
+              pos="absolute"
+              bg="rgba(0, 0, 0, 0.5)"
+              h="100%"
+              w="100%"
+              top={0}
+              left={0}
+            >
+              <Center h="100%">
+                <FaLock color="white" size="100px" />
+              </Center>
+            </Box>
+          )}
+        </Box>
+        {isSmallScreen && (
+          <>
             <Button
-              isLoading={isCreating}
-              loadingText="Creating..."
-              mt={16}
-              type="submit"
+              isDisabled={isDisabled}
+              isLoading={isEnteringGame}
+              loadingText="Waking..."
+              onClick={onEnterGame}
+              mt={2}
+              type="button"
               width="100%"
             >
               Wake Up
             </Button>
-          )}
-        </Box>
-        {isSmallScreen && (
-          <Button
-            isLoading={isCreating}
-            loadingText="Creating..."
-            type="submit"
-            width="100%"
-          >
-            Wake Up
-          </Button>
+            {showError && !rolledOnce && (
+              <Text color="red" fontSize="sm" mt={2} textAlign="center">
+                You must roll stats at least once before entering the game.
+              </Text>
+            )}
+          </>
         )}
-      </Stack>
-    </Box>
+      </Box>
+    </Stack>
   );
 };

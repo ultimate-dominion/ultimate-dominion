@@ -3,9 +3,21 @@
  * for changes in the World state (using the System contracts).
  */
 
-import { getComponentValue } from '@latticexyz/recs';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
+// import { getComponentValue } from '@latticexyz/recs';
+// import { singletonEntity } from '@latticexyz/store-sync/recs';
 
+import { getComponentValue } from '@latticexyz/recs';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
+import {
+  Address,
+  getContract,
+  keccak256,
+  parseAbiItem,
+  stringToHex,
+  toBytes,
+} from 'viem';
+
+import { CharacterClasses } from '../../utils/types';
 import { ClientComponents } from './createClientComponents';
 import { SetupNetworkResult } from './setupNetwork';
 
@@ -32,22 +44,103 @@ export function createSystemCalls(
    *   syncToRecs
    *   (https://github.com/latticexyz/mud/blob/main/templates/react/packages/client/src/mud/setupNetwork.ts#L77-L83).
    */
-  { worldContract, waitForTransaction }: SetupNetworkResult,
-  { Counter }: ClientComponents,
+  { publicClient, waitForTransaction, worldContract }: SetupNetworkResult,
+  { Characters }: ClientComponents,
 ) {
-  const increment = async () => {
-    /*
-     * Because IncrementSystem
-     * (https://mud.dev/templates/typescript/contracts#incrementsystemsol)
-     * is in the root namespace, `.increment` can be called directly
-     * on the World contract.
-     */
-    const tx = await worldContract.write.app__increment();
-    await waitForTransaction(tx);
-    return getComponentValue(Counter, singletonEntity);
+  const enterGame = async (characterId: bigint) => {
+    try {
+      const tx = await worldContract.write.UD__enterGame([characterId]);
+
+      await waitForTransaction(tx);
+
+      const success = !!getComponentValue(
+        Characters,
+        encodeEntity({ characterId: 'uint256' }, { characterId }),
+      )?.locked;
+      return success;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const mintCharacter = async (account: Address, name: string, uri: string) => {
+    try {
+      const nameHex = stringToHex(name, { size: 32 });
+      const simulatedTx = await worldContract.simulate.UD__mintCharacter([
+        account,
+        nameHex,
+        uri,
+      ]);
+
+      const characterId = simulatedTx.result;
+
+      const tx = await worldContract.write.UD__mintCharacter([
+        account,
+        nameHex,
+        uri,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const sucess = !!getComponentValue(
+        Characters,
+        encodeEntity(
+          { characterId: 'uint256' },
+          { characterId: BigInt(characterId) },
+        ),
+      );
+
+      return sucess;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const rollStats = async (
+    characterId: bigint,
+    characterClass: CharacterClasses,
+  ) => {
+    try {
+      const entropyAddress = await worldContract.read.UD__getEntropy();
+      const providerAddress = await worldContract.read.UD__getPythProvider();
+
+      const entropyContract = getContract({
+        address: entropyAddress,
+        abi: [
+          parseAbiItem(
+            'function getFee(address provider) view returns (uint256)',
+          ),
+        ],
+        client: publicClient,
+      });
+
+      const fee = await entropyContract.read.getFee([providerAddress]);
+
+      const randomString = 'UltimateDominion';
+      const userRandomNumber = keccak256(toBytes(randomString));
+
+      const tx = await worldContract.write.UD__rollStats(
+        [userRandomNumber, characterId, characterClass],
+        {
+          value: fee,
+        },
+      );
+
+      await waitForTransaction(tx);
+
+      const success = !!getComponentValue(
+        Characters,
+        encodeEntity({ characterId: 'uint256' }, { characterId }),
+      );
+      return success;
+    } catch (e) {
+      return false;
+    }
   };
 
   return {
-    increment,
+    enterGame,
+    mintCharacter,
+    rollStats,
   };
 }

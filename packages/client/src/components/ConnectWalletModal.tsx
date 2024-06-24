@@ -1,5 +1,4 @@
 import {
-  Button,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -12,7 +11,6 @@ import {
 import { useMemo } from 'react';
 import { useAccount, useWalletClient } from 'wagmi';
 
-import { useMUD } from '../contexts/MUDContext';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { DelegationButton } from './DelegationButton';
 
@@ -25,21 +23,8 @@ export const ConnectWalletModal = ({
 }): JSX.Element => {
   const { data: externalWalletClient } = useWalletClient();
   const { isConnected, address } = useAccount();
-  const { delegatorAddress } = useMUD();
 
   const bodyContent = useMemo(() => {
-    if (externalWalletClient && delegatorAddress) {
-      return (
-        <VStack p={4} spacing={10}>
-          <Button onClick={onClose}>Continue</Button>
-          <DelegationButton
-            externalWalletClient={externalWalletClient}
-            onClose={onClose}
-          />
-        </VStack>
-      );
-    }
-
     if (address && externalWalletClient && isConnected) {
       return (
         <VStack p={4} spacing={10}>
@@ -78,7 +63,7 @@ export const ConnectWalletModal = ({
         <ConnectWalletButton />
       </VStack>
     );
-  }, [address, externalWalletClient, delegatorAddress, isConnected, onClose]);
+  }, [address, externalWalletClient, isConnected, onClose]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
