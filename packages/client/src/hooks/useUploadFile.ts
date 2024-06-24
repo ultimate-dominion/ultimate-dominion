@@ -45,6 +45,9 @@ export const useUploadFile = ({
         },
       );
       const { cid } = await response.json();
+      if (!cid) {
+        throw new Error('Error uploading file');
+      }
 
       setIsUploaded(true);
       return cid;

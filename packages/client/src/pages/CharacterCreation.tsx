@@ -35,6 +35,7 @@ export const CharacterCreation = (): JSX.Element => {
   const {
     burnerBalance,
     delegatorAddress,
+    isDelegationLoaded,
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
@@ -92,11 +93,13 @@ export const CharacterCreation = (): JSX.Element => {
           throw new Error('Missing required fields.');
         }
 
-        const image = `ipfs://${await onUpload()}`;
-        if (!image)
+        const avatarCid = await onUpload();
+        if (!avatarCid)
           throw new Error(
             'Something went wrong uploading your character avatar',
           );
+
+        const image = `ipfs://${avatarCid}`;
 
         const characterMetadata = {
           name,
@@ -202,9 +205,18 @@ export const CharacterCreation = (): JSX.Element => {
     rollStats,
   ]);
 
+  const rolledOnce = useMemo(() => {
+    return character?.hitPoints !== '0';
+  }, [character]);
+
   const onEnterGame = useCallback(async () => {
     try {
       setIsEnteringGame(true);
+
+      if (!rolledOnce) {
+        setShowError(true);
+        return;
+      }
 
       if (!character) {
         throw new Error('Character not found.');
@@ -223,15 +235,11 @@ export const CharacterCreation = (): JSX.Element => {
     } finally {
       setIsEnteringGame(false);
     }
-  }, [character, enterGame, navigate, renderError, renderSuccess]);
+  }, [character, enterGame, navigate, renderError, renderSuccess, rolledOnce]);
 
   const isDisabled = useMemo(() => {
     return !character || isCreating || isEnteringGame || isRollingStats;
   }, [character, isCreating, isEnteringGame, isRollingStats]);
-
-  const rolledOnce = useMemo(() => {
-    return character?.hitPoints !== '0';
-  }, [character]);
 
   useEffect(() => {
     if (character && rolledOnce) {
@@ -241,7 +249,11 @@ export const CharacterCreation = (): JSX.Element => {
     if (character?.locked) {
       navigate('/game-board');
     }
-  }, [character, navigate, rolledOnce]);
+
+    if (!delegatorAddress && isDelegationLoaded) {
+      navigate('/');
+    }
+  }, [character, delegatorAddress, isDelegationLoaded, navigate, rolledOnce]);
 
   return (
     <Stack
@@ -483,13 +495,17 @@ export const CharacterCreation = (): JSX.Element => {
             </VStack>
           </SimpleGrid>
           {!isSmallScreen && (
-            <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
+            <Box bottom={10} left={0} mt={16} pos="absolute" px={10} right={0}>
+              {showError && !rolledOnce && (
+                <Text color="red" fontSize="sm" mb={2} textAlign="center">
+                  You must roll stats at least once before entering the game.
+                </Text>
+              )}
               <Button
                 isDisabled={isDisabled}
                 isLoading={isEnteringGame}
                 loadingText="Waking..."
                 onClick={onEnterGame}
-                mt={16}
                 type="button"
                 width="100%"
               >
@@ -513,17 +529,24 @@ export const CharacterCreation = (): JSX.Element => {
           )}
         </Box>
         {isSmallScreen && (
-          <Button
-            isDisabled={isDisabled}
-            isLoading={isEnteringGame}
-            loadingText="Waking..."
-            onClick={onEnterGame}
-            mt={2}
-            type="button"
-            width="100%"
-          >
-            Wake Up
-          </Button>
+          <>
+            <Button
+              isDisabled={isDisabled}
+              isLoading={isEnteringGame}
+              loadingText="Waking..."
+              onClick={onEnterGame}
+              mt={2}
+              type="button"
+              width="100%"
+            >
+              Wake Up
+            </Button>
+            {showError && !rolledOnce && (
+              <Text color="red" fontSize="sm" mt={2} textAlign="center">
+                You must roll stats at least once before entering the game.
+              </Text>
+            )}
+          </>
         )}
       </Box>
     </Stack>
