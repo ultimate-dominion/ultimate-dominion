@@ -39,7 +39,7 @@ export const CharacterCreation = (): JSX.Element => {
     burnerBalance,
     components: { UltimateDominionConfig },
     delegatorAddress,
-    isDelegationLoaded,
+    isSynced,
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
@@ -259,10 +259,10 @@ export const CharacterCreation = (): JSX.Element => {
       navigate('/game-board');
     }
 
-    if (!delegatorAddress && isDelegationLoaded) {
+    if (!delegatorAddress && isSynced) {
       navigate('/');
     }
-  }, [character, delegatorAddress, isDelegationLoaded, navigate, rolledOnce]);
+  }, [character, delegatorAddress, isSynced, navigate, rolledOnce]);
 
   return (
     <Stack
