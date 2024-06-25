@@ -3,9 +3,10 @@ pragma solidity >=0.8.24;
 
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {RESOURCE_TABLE} from "@latticexyz/store/src/storeResourceTypes.sol";
-
+import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
+import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 
 bytes16 constant ERC20_SYSTEM_NAME = "ERC20System";
 bytes16 constant ERC721_SYSTEM_NAME = "ERC721System";
@@ -31,4 +32,8 @@ function _erc1155SystemId(bytes14 namespace) pure returns (ResourceId) {
 
 function _itemsSystemId(bytes14 namespace) pure returns (ResourceId) {
     return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: ITEMS_SYSTEM_NAME});
+}
+
+function _requireOwner(address callingSystem, address sender) view {
+    AccessControlLib.requireOwner(SystemRegistry.get(callingSystem), sender);
 }

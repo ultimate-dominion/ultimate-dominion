@@ -31,14 +31,15 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         startGasReport("creates an item");
 
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats = WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions});
+        WeaponStats memory weaponStats =
+            WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions, minLevel: 0});
         vm.startPrank(deployer);
         uint256 firstItemId =
-            world.UD__createItem(ItemType.Weapon, 10 ether, "test_Weapon_uri1/", abi.encode(weaponStats));
+            world.UD__createItem(ItemType.Weapon, 10 ether, abi.encode(weaponStats), "test_Weapon_uri1/");
         uint256 newItemId =
-            world.UD__createItem(ItemType.Weapon, 100 ether, "test_Weapon_uri/", abi.encode(weaponStats));
+            world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri/");
 
-        assertEq(newItemId, 2);
+        assertEq(newItemId, 3);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
@@ -51,17 +52,19 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_CreateItem_Revert_NotNamespaceOwner() public {
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats = WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions});
+        WeaponStats memory weaponStats =
+            WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions, minLevel: 0});
         vm.startPrank(alice);
         vm.expectRevert();
-        world.UD__createItem(ItemType.Weapon, 100 ether, "test_Weapon_uri1/", abi.encode(weaponStats));
+        world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri1/");
     }
 
     function test_GetTotalSupply() public {
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats = WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions});
+        WeaponStats memory weaponStats =
+            WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions, minLevel: 0});
         vm.startPrank(deployer);
-        uint256 id = world.UD__createItem(ItemType.Weapon, 100 ether, "test_Weapon_uri/", abi.encode(weaponStats));
+        uint256 id = world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri/");
         assertEq(world.UD__getTotalSupply(id), 100 ether);
     }
 
@@ -70,6 +73,18 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         vm.startPrank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
-        assertEq(erc1155System.balanceOf(address(alice), 0), 1);
+        assertEq(erc1155System.balanceOf(address(alice), 1), 1);
+    }
+
+    function test_equipItem() public {
+        uint256 fees = entropy.getFee(address(1));
+        vm.startPrank(alice);
+        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__enterGame(alicesCharacterId);
+        uint256[] memory itemsToEquip = new uint256[](1);
+        itemsToEquip[0] = 1;
+        world.UD__equipItems(alicesCharacterId, itemsToEquip);
+
+        assertTrue(world.UD__isEquipped(alicesCharacterId, 1));
     }
 }

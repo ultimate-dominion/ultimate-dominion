@@ -1,6 +1,30 @@
 declare const abi: [
   {
     "type": "function",
+    "name": "UD__checkRequirements",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__createItem",
     "inputs": [
       {
@@ -14,16 +38,138 @@ declare const abi: [
         "internalType": "uint256"
       },
       {
-        "name": "itemMetadataURI",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
         "name": "stats",
         "type": "bytes",
         "internalType": "bytes"
+      },
+      {
+        "name": "itemMetadataURI",
+        "type": "string",
+        "internalType": "string"
       }
     ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createItems",
+    "inputs": [
+      {
+        "name": "itemTypes",
+        "type": "uint8[]",
+        "internalType": "enum ItemType[]"
+      },
+      {
+        "name": "supply",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "stats",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      },
+      {
+        "name": "itemMetadataURIs",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createMatch",
+    "inputs": [
+      {
+        "name": "encounterType",
+        "type": "uint8",
+        "internalType": "enum EncounterType"
+      },
+      {
+        "name": "attackers",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "defenders",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createMob",
+    "inputs": [
+      {
+        "name": "mobType",
+        "type": "uint8",
+        "internalType": "enum MobType"
+      },
+      {
+        "name": "mobStats",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "mobMetadataUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createMobs",
+    "inputs": [
+      {
+        "name": "mobTypes",
+        "type": "uint8[]",
+        "internalType": "enum MobType[]"
+      },
+      {
+        "name": "stats",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      },
+      {
+        "name": "mobMetadataURIs",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createSkill",
+    "inputs": [],
     "outputs": [
       {
         "name": "",
@@ -41,6 +187,24 @@ declare const abi: [
         "name": "characterId",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__equipItems",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
       }
     ],
     "outputs": [],
@@ -83,6 +247,11 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
+            "name": "damageTaken",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
             "name": "experience",
             "type": "uint256",
             "internalType": "uint256"
@@ -120,6 +289,25 @@ declare const abi: [
         "name": "_class",
         "type": "uint8",
         "internalType": "enum Classes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getCurrentLevel",
+    "inputs": [
+      {
+        "name": "experience",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "currentLevel",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -184,6 +372,98 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getMob",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MobsData",
+        "components": [
+          {
+            "name": "mobType",
+            "type": "uint8",
+            "internalType": "enum MobType"
+          },
+          {
+            "name": "mobStats",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "mobMetadata",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMonsterStats",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MonsterStats",
+        "components": [
+          {
+            "name": "hp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "baseDamage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "inventory",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getName",
     "inputs": [
       {
@@ -197,6 +477,42 @@ declare const abi: [
         "name": "_name",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getNpcStats",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct NPCStats",
+        "components": [
+          {
+            "name": "name",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "storyPathIds",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "alignment",
+            "type": "uint8",
+            "internalType": "enum Alignment"
+          }
+        ]
       }
     ],
     "stateMutability": "view"
@@ -282,8 +598,37 @@ declare const abi: [
             "name": "classRestrictions",
             "type": "uint8[]",
             "internalType": "uint8[]"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isEquipped",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isEquipped",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
