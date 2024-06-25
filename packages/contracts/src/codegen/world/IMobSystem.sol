@@ -19,6 +19,8 @@ interface IMobSystem {
     string memory mobMetadataUri
   ) external returns (uint256);
 
+  function UD__createMobs(MobType[] memory mobTypes, bytes[] memory stats, string[] memory mobMetadataURIs) external;
+
   function UD__getNpcStats(uint256 mobId) external view returns (NPCStats memory);
 
   function UD__getMonsterStats(uint256 mobId) external view returns (MonsterStats memory);

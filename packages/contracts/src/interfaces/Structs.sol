@@ -39,3 +39,11 @@ struct QuestEntity {
     uint256 questId;
     uint256 currentStep;
 }
+
+struct PhysicalAttack {
+    uint256 baseDamage;
+    // 0 = once per round, 1 = 1 round cool down etc.
+    uint256 baseSpeed;
+    // number of hits, divides base damage 3 hits == baseDmg/3
+    uint256 numberOfHits;
+}

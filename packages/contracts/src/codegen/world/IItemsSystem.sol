@@ -15,9 +15,16 @@ interface IItemsSystem {
   function UD__createItem(
     ItemType itemType,
     uint256 supply,
-    string memory itemMetadataURI,
-    bytes memory stats
+    bytes memory stats,
+    string memory itemMetadataURI
   ) external returns (uint256);
+
+  function UD__createItems(
+    ItemType[] memory itemTypes,
+    uint256[] memory supply,
+    bytes[] memory stats,
+    string[] memory itemMetadataURIs
+  ) external;
 
   function UD__getTotalSupply(uint256 tokenId) external view returns (uint256 _supply);
 

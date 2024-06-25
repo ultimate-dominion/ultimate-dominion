@@ -14,14 +14,14 @@ declare const abi: [
         "internalType": "uint256"
       },
       {
-        "name": "itemMetadataURI",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
         "name": "stats",
         "type": "bytes",
         "internalType": "bytes"
+      },
+      {
+        "name": "itemMetadataURI",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [
@@ -29,6 +29,63 @@ declare const abi: [
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createItems",
+    "inputs": [
+      {
+        "name": "itemTypes",
+        "type": "uint8[]",
+        "internalType": "enum ItemType[]"
+      },
+      {
+        "name": "supply",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "stats",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      },
+      {
+        "name": "itemMetadataURIs",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createMatch",
+    "inputs": [
+      {
+        "name": "encounterType",
+        "type": "uint8",
+        "internalType": "enum EncounterType"
+      },
+      {
+        "name": "attackers",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "defenders",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "stateMutability": "nonpayable"
@@ -53,6 +110,42 @@ declare const abi: [
         "internalType": "string"
       }
     ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createMobs",
+    "inputs": [
+      {
+        "name": "mobTypes",
+        "type": "uint8[]",
+        "internalType": "enum MobType[]"
+      },
+      {
+        "name": "stats",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      },
+      {
+        "name": "mobMetadataURIs",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createSkill",
+    "inputs": [],
     "outputs": [
       {
         "name": "",

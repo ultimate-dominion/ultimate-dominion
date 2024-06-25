@@ -21,6 +21,14 @@ contract MobSystem is System {
         return mobId;
     }
 
+    function createMobs(MobType[] memory mobTypes, bytes[] memory stats, string[] memory mobMetadataURIs) public {
+        uint256 len = mobTypes.length;
+        require(mobMetadataURIs.length == len && stats.length == len, "MobS: Array length mismatch");
+        for (uint256 i; i < len; i++) {
+            createMob(mobTypes[i], stats[i], mobMetadataURIs[i]);
+        }
+    }
+
     function getNpcStats(uint256 mobId) public view returns (NPCStats memory) {
         MobsData memory mobData = Mobs.get(mobId);
         require(mobData.mobType == MobType.NPC, "MobSystem: Wrong Mob Type");

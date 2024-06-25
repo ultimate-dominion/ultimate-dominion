@@ -39,7 +39,7 @@ contract ItemsSystem is System {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
 
-    function createItem(ItemType itemType, uint256 supply, string memory itemMetadataURI, bytes memory stats)
+    function createItem(ItemType itemType, uint256 supply, bytes memory stats, string memory itemMetadataURI)
         public
         returns (uint256)
     {
@@ -53,6 +53,22 @@ contract ItemsSystem is System {
         Items.set(itemId, itemType, stats);
 
         return itemId;
+    }
+
+    function createItems(
+        ItemType[] memory itemTypes,
+        uint256[] memory supply,
+        bytes[] memory stats,
+        string[] memory itemMetadataURIs
+    ) public {
+        uint256 len = itemTypes.length;
+        require(
+            supply.length == len && itemMetadataURIs.length == len && stats.length == len,
+            "ITEMS: Array length mismatch"
+        );
+        for (uint256 i; i < len; i++) {
+            createItem(itemTypes[i], supply[i], stats[i], itemMetadataURIs[i]);
+        }
     }
 
     function getTotalSupply(uint256 tokenId) public view returns (uint256 _supply) {
@@ -92,6 +108,10 @@ contract ItemsSystem is System {
         _requireOwner(address(this), _msgSender());
         require(itemIds.length == amounts.length, "ITEMS: Length mismatch");
         StarterItems.set(class, itemIds, amounts);
+    }
+
+    function requireOwnerOf(uint256 itemId, address account) internal view returns (bool) {
+        return Owners.getBalance(_ownersTableId(ITEMS_NAMESPACE), account, itemId) > 0;
     }
 
     // function getArmourStats(uint256 itemId)public view returns(){}

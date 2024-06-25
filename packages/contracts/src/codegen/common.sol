@@ -39,3 +39,9 @@ enum EncounterType {
   PvP,
   PvE
 }
+
+enum SkillType {
+  PhysicalAttack,
+  MagicAttack,
+  StatusEffect
+}

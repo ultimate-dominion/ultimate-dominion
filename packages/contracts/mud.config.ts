@@ -14,10 +14,11 @@ export default defineWorld({
       "Mage", // 2
     ],
     RngRequestType: ["CharacterStats", "Combat", "WorldGeneration"],
-    ItemType: ["Weapon", "Armor", "Potion", "Scroll", "Material", "QuestItem"],
+    ItemType: ["Weapon", "Armor", "Potion", "Spell", "Material", "QuestItem"],
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
+    SkillType: ["PhysicalAttack", "MagicAttack", "StatusEffect"],
   },
   tables: {
     /**
@@ -44,6 +45,27 @@ export default defineWorld({
         hitPoints: "uint256",
         damageTaken: "int256",
         experience: "uint256",
+      },
+    },
+    MobStats: {
+      key: ["entityId"],
+      schema: {
+        entityId: "bytes32",
+        strength: "uint256",
+        agility: "uint256",
+        intelligence: "uint256",
+        hitPoints: "uint256",
+        damageTaken: "int256",
+        experience: "uint256",
+      },
+    },
+    CharacterEquipment: {
+      key: ["characterId"],
+      schema: {
+        characterId: "uint256",
+        equippedArmor: "uint256[]",
+        equippedWeapons: "uint256[]",
+        equippedSpells: "uint256[]",
       },
     },
     Counters: {
@@ -103,11 +125,21 @@ export default defineWorld({
         // the max number of turns. default is 15 for pve
         maxTurns: "uint256",
         // array of monsterIds if pve playerIds if pvp
-        defenders: "uint256[]",
+        defenders: "bytes32[]",
         // array of playerIds
         attackers: "uint256[]",
       },
       key: ["encounterId"],
+    },
+    MobEntity: {
+      key: ["mobEntityId"],
+      schema: {
+        mobEntityId: "bytes32",
+        remainingHp: "int256",
+        // by default this is bytes(0), if this mob is in an encounter it will be set,
+        // if the mob survives its encounter this will be set back to bytes(0)
+        encounterId: "bytes32",
+      },
     },
     RandomNumbers: {
       key: ["sequenceNumber"],

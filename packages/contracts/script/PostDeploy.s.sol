@@ -199,7 +199,7 @@ contract PostDeploy is Script {
         WeaponStats memory weaponStats = WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions});
 
         uint256 starterItemId =
-            world.UD__createItem(ItemType.Weapon, 10 ether, "starter-weapon-uri/", abi.encode(weaponStats));
+            world.UD__createItem(ItemType.Weapon, 10 ether, abi.encode(weaponStats), "starter-weapon-uri/");
         uint256[] memory itemIds = new uint256[](1);
         itemIds[0] = starterItemId;
         uint256[] memory amounts = new uint256[](1);
