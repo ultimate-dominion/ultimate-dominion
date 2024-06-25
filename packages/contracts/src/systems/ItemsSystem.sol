@@ -97,12 +97,12 @@ contract ItemsSystem is System {
         }
     }
 
-    function isEquipped(uint256 characterId, uint256 itemId) public view returns (bool isEquipped) {
+    function isEquipped(uint256 characterId, uint256 itemId) public view returns (bool _isEquipped) {
         ItemsData memory itemData = Items.get(itemId);
         if (uint8(itemData.itemType) == 0) {
             uint256[] memory equippedWeap = CharacterEquipment.getEquippedWeapons(characterId);
             for (uint256 i; i < equippedWeap.length;) {
-                if (equippedWeap[i] == itemId) isEquipped = true;
+                if (equippedWeap[i] == itemId) _isEquipped = true;
                 break;
                 {
                     i++;
@@ -152,6 +152,58 @@ contract ItemsSystem is System {
         }
     }
 
+    function unequipItem(uint256 characterId, uint256 itemId) public returns (bool success) {
+        address characterOwner = IWorld(_world()).UD__getOwner(characterId);
+        require(characterOwner == _msgSender(), "ITEMS: Not Character Owner");
+        uint8 itemType = uint8(getItemType(itemId));
+        if (itemType == 0) {
+            uint256[] memory sortedArray =
+                _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedWeapons(characterId));
+            if (sortedArray[sortedArray.length - 1] == itemId) {
+                CharacterEquipment.setEquippedWeapons(characterId, sortedArray);
+                CharacterEquipment.popEquippedWeapons(characterId);
+                success = true;
+            }
+        }
+        if (itemType == 1) {
+            uint256[] memory sortedArray = _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedArmor(characterId));
+            if (sortedArray[sortedArray.length - 1] == itemId) {
+                CharacterEquipment.setEquippedArmor(characterId, sortedArray);
+                CharacterEquipment.popEquippedArmor(characterId);
+                success = true;
+            }
+        }
+        if (itemType == 2) {
+            uint256[] memory sortedArray =
+                _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
+            if (sortedArray[sortedArray.length - 1] == itemId) {
+                CharacterEquipment.setEquippedSpells(characterId, sortedArray);
+                CharacterEquipment.popEquippedSpells(characterId);
+                success = true;
+            }
+        }
+    }
+
+    function _moveIdToEndOfArray(uint256 itemId, uint256[] memory array)
+        internal
+        returns (uint256[] memory sortedArray)
+    {
+        uint256[] memory arrayToBeSorted = array;
+        for (uint256 i = 0; i < arrayToBeSorted.length; i++) {
+            if (arrayToBeSorted[i] == itemId) {
+                for (uint256 j = i; j < arrayToBeSorted.length; j++) {
+                    if (j + 1 < arrayToBeSorted.length) {
+                        arrayToBeSorted[j] = arrayToBeSorted[j + 1];
+                    } else if (j + 1 >= arrayToBeSorted.length) {
+                        arrayToBeSorted[j] = itemId;
+                    }
+                }
+                break;
+            }
+        }
+        sortedArray = arrayToBeSorted;
+    }
+
     function getTotalSupply(uint256 tokenId) public view returns (uint256 _supply) {
         _supply = TotalSupply.getTotalSupply(_totalSupplyTableId(ITEMS_NAMESPACE), tokenId);
     }
@@ -170,6 +222,11 @@ contract ItemsSystem is System {
     function setTokenUri(uint256 tokenId, string memory tokenUri) public {
         _requireOwner(address(this), _msgSender());
         ERC1155URIStorage.setUri(_erc1155URIStorageTableId(ITEMS_NAMESPACE), tokenId, tokenUri);
+    }
+
+    function getItemType(uint256 itemId) public view returns (ItemType) {
+        ItemsData memory itemData = Items.get(itemId);
+        return itemData.itemType;
     }
 
     function _incrementItemsCounter() internal returns (uint256) {
