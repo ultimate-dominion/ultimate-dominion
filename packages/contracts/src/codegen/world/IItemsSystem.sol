@@ -28,6 +28,8 @@ interface IItemsSystem {
 
   function UD__equipItems(uint256 characterId, uint256[] memory itemIds) external;
 
+  function UD__isEquipped(uint256 characterId, uint256 itemId) external view returns (bool isEquipped);
+
   function UD__checkRequirements(uint256 characterId, uint256 itemId) external view returns (bool);
 
   function UD__getTotalSupply(uint256 tokenId) external view returns (uint256 _supply);

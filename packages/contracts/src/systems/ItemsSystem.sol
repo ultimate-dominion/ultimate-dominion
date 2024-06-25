@@ -16,7 +16,8 @@ import {
     Characters,
     CharactersData,
     CharacterStats,
-    CharacterStatsData
+    CharacterStatsData,
+    CharacterEquipment
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
@@ -39,6 +40,12 @@ import {
 import "forge-std/console2.sol";
 
 contract ItemsSystem is System {
+    modifier inGame(uint256 characterId) {
+        CharactersData memory charData = Characters.get(characterId);
+        require(charData.locked, "Character not in the Game");
+        _;
+    }
+
     function _items() internal view returns (IERC1155System items) {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
@@ -76,7 +83,7 @@ contract ItemsSystem is System {
         }
     }
 
-    function equipItems(uint256 characterId, uint256[] memory itemIds) public {
+    function equipItems(uint256 characterId, uint256[] memory itemIds) public inGame(characterId) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         require(characterOwner == _msgSender(), "ITEMS: Not Character Owner");
         uint256 itemId;
@@ -86,6 +93,21 @@ contract ItemsSystem is System {
             ItemsData memory itemData = Items.get(itemId);
             require(uint8(itemData.itemType) < 3, "ITEMS: Not an equippable Item");
             require(checkRequirements(characterId, itemId), "ITEMS: Requirements not met");
+            _equipItem(characterId, itemId, itemData.itemType);
+        }
+    }
+
+    function isEquipped(uint256 characterId, uint256 itemId) public view returns (bool isEquipped) {
+        ItemsData memory itemData = Items.get(itemId);
+        if (uint8(itemData.itemType) == 0) {
+            uint256[] memory equippedWeap = CharacterEquipment.getEquippedWeapons(characterId);
+            for (uint256 i; i < equippedWeap.length;) {
+                if (equippedWeap[i] == itemId) isEquipped = true;
+                break;
+                {
+                    i++;
+                }
+            }
         }
     }
 
@@ -96,12 +118,18 @@ contract ItemsSystem is System {
         bool canUse = true;
         if (uint8(itemData.itemType) == 0) {
             WeaponStats memory weaponStats = abi.decode(itemData.stats, (WeaponStats));
-            bool isLevel = IWorld(_world()).UD__getCurrentLevel(character.experience) <= weaponStats.minLevel;
+            bool isLevel = IWorld(_world()).UD__getCurrentLevel(character.experience) >= weaponStats.minLevel;
             bool isClass;
             if (weaponStats.classRestrictions.length > 0) {
-                for (uint256 i; i < weaponStats.classRestrictions.length; i++) {
+                for (uint256 i; i < weaponStats.classRestrictions.length;) {
                     if (uint8(characterData.class) == uint8(weaponStats.classRestrictions[i])) isClass = true;
+                    break;
+                    {
+                        i++;
+                    }
                 }
+            } else {
+                isClass = true;
             }
             if (!isLevel || !isClass) canUse = false;
         }
