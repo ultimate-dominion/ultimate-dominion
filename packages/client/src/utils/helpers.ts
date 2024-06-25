@@ -51,3 +51,6 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
   metadata.image = uriToHttp(metadata.image)[0] || '';
   return metadata;
 };
+
+export const shortenAddress = (address: string, length = 4): string =>
+  `${address.slice(0, length + 2)}...${address.slice(-length)}`;

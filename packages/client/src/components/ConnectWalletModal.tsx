@@ -11,6 +11,7 @@ import {
 import { useMemo } from 'react';
 import { useAccount, useWalletClient } from 'wagmi';
 
+import { shortenAddress } from '../utils/helpers';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { DelegationButton } from './DelegationButton';
 
@@ -32,9 +33,7 @@ export const ConnectWalletModal = ({
             <Text size="sm" textAlign="center">
               Connected account:
             </Text>
-            <Text textAlign="center">
-              {address.slice(0, 6)}...{address.slice(-4)}
-            </Text>
+            <Text textAlign="center">{shortenAddress(address)}</Text>
             <Text size="sm" textAlign="center">
               In order to play, you must delegate in-game power to a session
               account.
