@@ -646,6 +646,7 @@ declare const abi: [
     "outputs": [
       {
         "name": "_isEquipped",
+        "name": "_isEquipped",
         "type": "bool",
         "internalType": "bool"
       }
@@ -776,19 +777,6 @@ declare const abi: [
         "name": "tokenUri",
         "type": "string",
         "internalType": "string"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__spawn",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [],
