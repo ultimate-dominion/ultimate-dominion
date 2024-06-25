@@ -17,6 +17,8 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +28,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { API_URL } from '../utils/constants';
+import { shortenAddress } from '../utils/helpers';
 import { CharacterClasses } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
@@ -34,6 +37,7 @@ export const CharacterCreation = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const {
     burnerBalance,
+    components: { UltimateDominionConfig },
     delegatorAddress,
     isDelegationLoaded,
     systemCalls: { enterGame, mintCharacter, rollStats },
@@ -57,6 +61,11 @@ export const CharacterCreation = (): JSX.Element => {
   const [showError, setShowError] = useState(false);
   const [isRollingStats, setIsRollingStats] = useState(false);
   const [isEnteringGame, setIsEnteringGame] = useState(false);
+
+  const { characterToken } = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  ) ?? { characterToken: null };
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
@@ -264,14 +273,35 @@ export const CharacterCreation = (): JSX.Element => {
       my={4}
       w="100%"
     >
-      {character ? (
+      {character && characterToken ? (
         <Box border="2px solid" p={8} w={{ base: '100%', lg: '50%' }}>
           <VStack h="100%" justifyContent="center" spacing={{ base: 4, md: 8 }}>
             <Center>
               <Avatar size={{ base: 'lg', sm: 'xl' }} src={character.image} />
             </Center>
-            <Heading>{character.name}</Heading>
-            <Text>{character.description}</Text>
+            <HStack spacing={4}>
+              <Text fontSize={{ base: 'xs', md: 'sm' }}>
+                Address:{' '}
+                <Text as="span" fontWeight={700}>
+                  {shortenAddress(characterToken)}
+                </Text>
+              </Text>
+              <Text>|</Text>
+              <Text fontSize={{ base: 'xs', md: 'sm' }}>
+                ID:{' '}
+                <Text as="span" fontWeight={700}>
+                  {character.characterId}
+                </Text>
+              </Text>
+            </HStack>
+            <VStack>
+              <Heading>{character.name}</Heading>
+              <Text>{character.description}</Text>
+            </VStack>
+            <Text>
+              Class:{' '}
+              {rolledOnce ? CharacterClasses[character.characterClass] : 'None'}
+            </Text>
           </VStack>
         </Box>
       ) : (
