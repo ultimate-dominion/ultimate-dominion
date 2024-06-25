@@ -9,7 +9,7 @@ import {MockEntropy} from "@test/mocks/MockEntropy.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {UltimateDominionConfig} from "../src/codegen/index.sol";
+import {UltimateDominionConfig, Levels} from "@codegen/index.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
@@ -155,7 +155,7 @@ contract PostDeploy is Script {
         UltimateDominionConfig.setItems(address(items));
 
         _createStarterItems();
-
+        setLevels();
         vm.stopBroadcast();
     }
 
@@ -196,7 +196,8 @@ contract PostDeploy is Script {
 
     function _createStarterItems() internal {
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats = WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions});
+        WeaponStats memory weaponStats =
+            WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions, minLevel: 0});
 
         uint256 starterItemId =
             world.UD__createItem(ItemType.Weapon, 10 ether, abi.encode(weaponStats), "starter-weapon-uri/");
@@ -207,5 +208,27 @@ contract PostDeploy is Script {
         world.UD__setStarterItems(Classes.Rogue, itemIds, amounts);
         world.UD__setStarterItems(Classes.Warrior, itemIds, amounts);
         world.UD__setStarterItems(Classes.Mage, itemIds, amounts);
+    }
+
+    function setLevels() internal {
+        Levels.setExperience(1, 300);
+        Levels.setExperience(2, 900);
+        Levels.setExperience(3, 2700);
+        Levels.setExperience(4, 6500);
+        Levels.setExperience(5, 14000);
+        Levels.setExperience(6, 23000);
+        Levels.setExperience(7, 34000);
+        Levels.setExperience(8, 48000);
+        Levels.setExperience(9, 64000);
+        Levels.setExperience(10, 85000);
+        Levels.setExperience(11, 100000);
+        Levels.setExperience(12, 120000);
+        Levels.setExperience(13, 140000);
+        Levels.setExperience(14, 165000);
+        Levels.setExperience(15, 195000);
+        Levels.setExperience(16, 225000);
+        Levels.setExperience(17, 265000);
+        Levels.setExperience(18, 305000);
+        Levels.setExperience(19, 355000);
     }
 }

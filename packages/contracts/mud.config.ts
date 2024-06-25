@@ -14,7 +14,7 @@ export default defineWorld({
       "Mage", // 2
     ],
     RngRequestType: ["CharacterStats", "Combat", "WorldGeneration"],
-    ItemType: ["Weapon", "Armor", "Potion", "Spell", "Material", "QuestItem"],
+    ItemType: ["Weapon", "Armor", "Spell", "Potion", "Material", "QuestItem"],
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
@@ -56,6 +56,13 @@ export default defineWorld({
         intelligence: "uint256",
         hitPoints: "uint256",
         damageTaken: "int256",
+        experience: "uint256",
+      },
+    },
+    Levels: {
+      key: ["level"],
+      schema: {
+        level: "uint256",
         experience: "uint256",
       },
     },

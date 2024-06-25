@@ -17,8 +17,8 @@ enum RngRequestType {
 enum ItemType {
   Weapon,
   Armor,
+  Spell,
   Potion,
-  Scroll,
   Material,
   QuestItem
 }

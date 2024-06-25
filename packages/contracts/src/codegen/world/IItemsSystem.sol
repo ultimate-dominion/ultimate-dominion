@@ -26,6 +26,10 @@ interface IItemsSystem {
     string[] memory itemMetadataURIs
   ) external;
 
+  function UD__equipItems(uint256 characterId, uint256[] memory itemIds) external;
+
+  function UD__checkRequirements(uint256 characterId, uint256 itemId) external view returns (bool);
+
   function UD__getTotalSupply(uint256 tokenId) external view returns (uint256 _supply);
 
   function UD__issueStarterItems(uint256 characterId) external;

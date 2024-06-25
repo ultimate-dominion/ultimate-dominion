@@ -7,6 +7,7 @@ struct WeaponStats {
     uint256 damage;
     uint256 speed;
     uint8[] classRestrictions;
+    uint256 minLevel;
 }
 
 struct MonsterStats {

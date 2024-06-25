@@ -1,6 +1,30 @@
 declare const abi: [
   {
     "type": "function",
+    "name": "UD__checkRequirements",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__createItem",
     "inputs": [
       {
@@ -77,8 +101,8 @@ declare const abi: [
       },
       {
         "name": "defenders",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       }
     ],
     "outputs": [
@@ -170,6 +194,24 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__equipItems",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__getCharacterStats",
     "inputs": [
       {
@@ -247,6 +289,25 @@ declare const abi: [
         "name": "_class",
         "type": "uint8",
         "internalType": "enum Classes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getCurrentLevel",
+    "inputs": [
+      {
+        "name": "experience",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "currentLevel",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -537,6 +598,11 @@ declare const abi: [
             "name": "classRestrictions",
             "type": "uint8[]",
             "internalType": "uint8[]"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       }

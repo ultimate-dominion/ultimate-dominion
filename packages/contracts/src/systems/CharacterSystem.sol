@@ -2,7 +2,16 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {RandomNumbers} from "@codegen/index.sol";
+import {
+    RandomNumbers,
+    Levels,
+    NameExists,
+    Counters,
+    CharacterStats,
+    CharacterStatsData,
+    Characters,
+    CharactersData
+} from "@codegen/index.sol";
 import {RngRequestType} from "@codegen/common.sol";
 
 import {UltimateDominionConfig} from "@codegen/index.sol";
@@ -13,10 +22,6 @@ import {_tokenUriTableId} from "@latticexyz/world-modules/src/modules/erc721-pup
 import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20System.sol";
 import {IItemsSystem} from "@codegen/world/IItemsSystem.sol";
 import {Classes} from "@codegen/common.sol";
-import {Characters, CharactersData} from "@tables/Characters.sol";
-import {CharacterStats, CharacterStatsData} from "@tables/CharacterStats.sol";
-import {NameExists} from "@tables/NameExists.sol";
-import {Counters} from "@tables/Counters.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
@@ -82,6 +87,22 @@ contract CharacterSystem is System {
         IWorld(_world()).UD__issueStarterItems(characterId);
 
         Characters.setLocked(characterId, true);
+    }
+
+    function getCurrentLevel(uint256 experience) public view returns (uint256 currentLevel) {
+        if (experience >= Levels.get(19)) {
+            currentLevel = 20;
+        } else {
+            for (uint256 i; i < 20;) {
+                if (Levels.get(i) <= experience && Levels.get(i + 1) > experience) {
+                    currentLevel = i + 1;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        }
     }
 
     function _setTokenURI(uint256 tokenId, string memory tokenUri) internal {

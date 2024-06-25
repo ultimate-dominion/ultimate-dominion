@@ -13,7 +13,10 @@ import {
     Counters,
     StarterItems,
     StarterItemsData,
-    Characters
+    Characters,
+    CharactersData,
+    CharacterStats,
+    CharacterStatsData
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
@@ -22,6 +25,7 @@ import {_erc1155SystemId, _characterSystemId, _requireOwner} from "../utils.sol"
 import {ITEMS_NAMESPACE} from "../../constants.sol";
 import {WeaponStats} from "@interfaces/Structs.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
+import {Owners} from "@erc1155/tables/Owners.sol";
 import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
 import {ERC1155MetadataURI} from "@erc1155/tables/ERC1155MetadataURI.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
@@ -66,8 +70,57 @@ contract ItemsSystem is System {
             supply.length == len && itemMetadataURIs.length == len && stats.length == len,
             "ITEMS: Array length mismatch"
         );
+
         for (uint256 i; i < len; i++) {
             createItem(itemTypes[i], supply[i], stats[i], itemMetadataURIs[i]);
+        }
+    }
+
+    function equipItems(uint256 characterId, uint256[] memory itemIds) public {
+        address characterOwner = IWorld(_world()).UD__getOwner(characterId);
+        require(characterOwner == _msgSender(), "ITEMS: Not Character Owner");
+        uint256 itemId;
+        for (uint256 i; i < itemIds.length; i++) {
+            itemId = itemIds[i];
+            require(isItemOwner(itemId, _msgSender()), "ITEMS: Not Item Owner");
+            ItemsData memory itemData = Items.get(itemId);
+            require(uint8(itemData.itemType) < 3, "ITEMS: Not an equippable Item");
+            require(checkRequirements(characterId, itemId), "ITEMS: Requirements not met");
+        }
+    }
+
+    function checkRequirements(uint256 characterId, uint256 itemId) public view returns (bool) {
+        ItemsData memory itemData = Items.get(itemId);
+        CharacterStatsData memory character = CharacterStats.get(characterId);
+        CharactersData memory characterData = Characters.get(characterId);
+        bool canUse = true;
+        if (uint8(itemData.itemType) == 0) {
+            WeaponStats memory weaponStats = abi.decode(itemData.stats, (WeaponStats));
+            bool isLevel = IWorld(_world()).UD__getCurrentLevel(character.experience) <= weaponStats.minLevel;
+            bool isClass;
+            if (weaponStats.classRestrictions.length > 0) {
+                for (uint256 i; i < weaponStats.classRestrictions.length; i++) {
+                    if (uint8(characterData.class) == uint8(weaponStats.classRestrictions[i])) isClass = true;
+                }
+            }
+            if (!isLevel || !isClass) canUse = false;
+        }
+        // if(uint8(itemData.ItemType) == 1){check Armor requirements}
+        return canUse;
+    }
+
+    function _equipItem(uint256 characterId, uint256 itemId, ItemType itemType) internal {
+        if (uint8(itemType) == 0) {
+            require(CharacterEquipment.lengthEquippedWeapons(characterId) < 3, "ITEMS: Too many weapons equipped");
+            CharacterEquipment.pushEquippedWeapons(characterId, itemId);
+        }
+        if (uint8(itemType) == 1) {
+            require(CharacterEquipment.lengthEquippedArmor(characterId) < 3, "ITEMS: Too many weapons equipped");
+            CharacterEquipment.pushEquippedArmor(characterId, itemId);
+        }
+        if (uint8(itemType) == 2) {
+            require(CharacterEquipment.lengthEquippedSpells(characterId) < 3, "ITEMS: Too many weapons equipped");
+            CharacterEquipment.pushEquippedSpells(characterId, itemId);
         }
     }
 
@@ -110,7 +163,7 @@ contract ItemsSystem is System {
         StarterItems.set(class, itemIds, amounts);
     }
 
-    function requireOwnerOf(uint256 itemId, address account) internal view returns (bool) {
+    function isItemOwner(uint256 itemId, address account) internal view returns (bool) {
         return Owners.getBalance(_ownersTableId(ITEMS_NAMESPACE), account, itemId) > 0;
     }
 
