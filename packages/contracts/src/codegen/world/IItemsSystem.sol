@@ -28,15 +28,19 @@ interface IItemsSystem {
 
   function UD__equipItems(uint256 characterId, uint256[] memory itemIds) external;
 
-  function UD__isEquipped(uint256 characterId, uint256 itemId) external view returns (bool isEquipped);
+  function UD__isEquipped(uint256 characterId, uint256 itemId) external view returns (bool _isEquipped);
 
   function UD__checkRequirements(uint256 characterId, uint256 itemId) external view returns (bool);
+
+  function UD__unequipItem(uint256 characterId, uint256 itemId) external returns (bool success);
 
   function UD__getTotalSupply(uint256 tokenId) external view returns (uint256 _supply);
 
   function UD__issueStarterItems(uint256 characterId) external;
 
   function UD__setTokenUri(uint256 tokenId, string memory tokenUri) external;
+
+  function UD__getItemType(uint256 itemId) external view returns (ItemType);
 
   function UD__getWeaponStats(uint256 itemId) external view returns (WeaponStats memory _weaponStats);
 
