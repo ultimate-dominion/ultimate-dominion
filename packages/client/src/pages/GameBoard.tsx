@@ -20,18 +20,18 @@ import { useMUD } from '../contexts/MUDContext';
 
 export const GameBoard = (): JSX.Element => {
   const navigate = useNavigate();
-  const { delegatorAddress, isDelegationLoaded } = useMUD();
+  const { delegatorAddress, isSynced } = useMUD();
   const { character } = useCharacter();
 
   useEffect(() => {
-    if (isDelegationLoaded && !delegatorAddress) {
+    if (isSynced && !delegatorAddress) {
       navigate('/');
     }
 
     if (character?.locked) {
       navigate('/game-board');
     }
-  }, [character, delegatorAddress, isDelegationLoaded, navigate]);
+  }, [character, delegatorAddress, isSynced, navigate]);
 
   return (
     <Grid
