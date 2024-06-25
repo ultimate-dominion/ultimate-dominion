@@ -17,43 +17,51 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useUploadFile } from '../hooks/useUploadFile';
+import { API_URL } from '../utils/constants';
 import { CharacterClasses } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
+  const navigate = useNavigate();
   const { renderSuccess, renderError } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const {
     burnerBalance,
     delegatorAddress,
-    systemCalls: { mintCharacter },
+    isDelegationLoaded,
+    systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
-  const character = useCharacter();
+  const { character, isRefreshing, refreshCharacter } = useCharacter();
+  const {
+    file: avatar,
+    setFile: setAvatar,
+    onUpload,
+    isUploading,
+    isUploaded,
+  } = useUploadFile({ fileName: 'characterAvatar' });
 
   const [name, setName] = useState('');
-  const [background, setBackground] = useState('');
-  const [avatar, setAvatar] = useState<File | null>(null);
+  const [description, setDescription] = useState('');
   const [characterClass, setCharacterClass] = useState<CharacterClasses>(
     CharacterClasses.Warrior,
   );
 
   const [isCreating, setIsCreating] = useState(false);
   const [showError, setShowError] = useState(false);
-
-  const [health, setHealth] = useState(0);
-  const [strength, setStrength] = useState(0);
-  const [agility, setAgility] = useState(0);
-  const [intelligence, setIntelligence] = useState(0);
+  const [isRollingStats, setIsRollingStats] = useState(false);
+  const [isEnteringGame, setIsEnteringGame] = useState(false);
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
     setShowError(false);
-  }, [name, background, avatar, characterClass]);
+  }, [avatar, description, name]);
 
   const onUploadAvatar = useCallback(() => {
     const input = document.getElementById('avatarInput');
@@ -77,20 +85,60 @@ export const CharacterCreation = (): JSX.Element => {
         }
 
         if (!delegatorAddress) {
-          throw new Error('Burner not found.');
+          throw new Error('Missing delegation.');
         }
 
-        if (!(name && background && avatar)) {
+        if (!(avatar && description && name)) {
           setShowError(true);
           throw new Error('Missing required fields.');
         }
 
-        const success = await mintCharacter(delegatorAddress, name);
+        const avatarCid = await onUpload();
+        if (!avatarCid)
+          throw new Error(
+            'Something went wrong uploading your character avatar',
+          );
+
+        const image = `ipfs://${avatarCid}`;
+
+        const characterMetadata = {
+          name,
+          description,
+          image,
+        };
+
+        const res = await fetch(
+          `${API_URL}/api/uploadMetadata?name=characterMetadata.json`,
+          {
+            method: 'POST',
+            body: JSON.stringify(characterMetadata),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+        if (!res.ok)
+          throw new Error(
+            'Something went wrong uploading your character metadata',
+          );
+
+        const { cid: characterMetadataCid } = await res.json();
+        if (!characterMetadataCid)
+          throw new Error(
+            'Something went wrong uploading your character metadata',
+          );
+
+        const success = await mintCharacter(
+          delegatorAddress,
+          name,
+          characterMetadataCid,
+        );
 
         if (!success) {
           throw new Error('Contract call failed');
         }
 
+        refreshCharacter();
         renderSuccess('Character created!');
       } catch (e) {
         renderError(e, 'Failed to create character.');
@@ -100,26 +148,112 @@ export const CharacterCreation = (): JSX.Element => {
     },
     [
       avatar,
-      background,
       burnerBalance,
       delegatorAddress,
+      description,
       mintCharacter,
       name,
+      onUpload,
+      refreshCharacter,
       renderError,
       renderSuccess,
     ],
   );
 
   const onRollStats = useCallback(async () => {
-    // Temporarily set random values between 1 and 10
-    setHealth(Math.floor(Math.random() * 10) + 1);
-    setStrength(Math.floor(Math.random() * 10) + 1);
-    setAgility(Math.floor(Math.random() * 10) + 1);
-    setIntelligence(Math.floor(Math.random() * 10) + 1);
-    const data = await fetch('/api/hello').then(res => res.json());
-    // eslint-disable-next-line no-console
-    console.log(data);
-  }, []);
+    try {
+      setIsRollingStats(true);
+
+      if (burnerBalance === '0') {
+        throw new Error(
+          'Insufficient funds. Please top off your session account.',
+        );
+      }
+
+      if (!delegatorAddress) {
+        throw new Error('Missing delegation.');
+      }
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      const success = await rollStats(
+        BigInt(character.characterId),
+        characterClass,
+      );
+
+      if (!success) {
+        throw new Error('Contract call failed');
+      }
+
+      refreshCharacter();
+      renderSuccess('Stats rolled!');
+    } catch (e) {
+      renderError(e, 'Failed to roll stats.');
+    } finally {
+      setIsRollingStats(false);
+    }
+  }, [
+    burnerBalance,
+    character,
+    characterClass,
+    delegatorAddress,
+    refreshCharacter,
+    renderError,
+    renderSuccess,
+    rollStats,
+  ]);
+
+  const rolledOnce = useMemo(() => {
+    return character?.hitPoints !== '0';
+  }, [character]);
+
+  const onEnterGame = useCallback(async () => {
+    try {
+      setIsEnteringGame(true);
+
+      if (!rolledOnce) {
+        setShowError(true);
+        return;
+      }
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      const success = await enterGame(BigInt(character.characterId));
+
+      if (!success) {
+        throw new Error('Contract call failed');
+      }
+
+      renderSuccess('Your character has awakend!');
+      navigate('/game-board');
+    } catch (e) {
+      renderError(e, 'Failed to enter game.');
+    } finally {
+      setIsEnteringGame(false);
+    }
+  }, [character, enterGame, navigate, renderError, renderSuccess, rolledOnce]);
+
+  const isDisabled = useMemo(() => {
+    return !character || isCreating || isEnteringGame || isRollingStats;
+  }, [character, isCreating, isEnteringGame, isRollingStats]);
+
+  useEffect(() => {
+    if (character && rolledOnce) {
+      setCharacterClass(character.characterClass);
+    }
+
+    if (character?.locked) {
+      navigate('/game-board');
+    }
+
+    if (!delegatorAddress && isDelegationLoaded) {
+      navigate('/');
+    }
+  }, [character, delegatorAddress, isDelegationLoaded, navigate, rolledOnce]);
 
   return (
     <Stack
@@ -188,6 +322,9 @@ export const CharacterCreation = (): JSX.Element => {
                     />
                     <Button
                       alignSelf="start"
+                      isDisabled={isUploaded}
+                      isLoading={isUploading}
+                      loadingText="Uploading..."
                       onClick={onUploadAvatar}
                       size="sm"
                       type="button"
@@ -202,14 +339,14 @@ export const CharacterCreation = (): JSX.Element => {
                   </FormControl>
                 </VStack>
               </Stack>
-              <FormControl isInvalid={showError && !background}>
+              <FormControl isInvalid={showError && !description}>
                 <Textarea
-                  height={{ base: '200px', sm: '250px' }}
-                  onChange={e => setBackground(e.target.value)}
+                  height="200px"
+                  onChange={e => setDescription(e.target.value)}
                   placeholder="Bio"
-                  value={background}
+                  value={description}
                 />
-                {showError && !background && (
+                {showError && !description && (
                   <FormHelperText color="red">Bio is required</FormHelperText>
                 )}
               </FormControl>
@@ -229,7 +366,7 @@ export const CharacterCreation = (): JSX.Element => {
           </Box>
           {isSmallScreen && (
             <Button
-              isLoading={isCreating}
+              isLoading={isCreating || isRefreshing}
               loadingText="Creating..."
               mt={2}
               type="submit"
@@ -282,6 +419,17 @@ export const CharacterCreation = (): JSX.Element => {
               </Button>
             </ButtonGroup>
           </VStack>
+          {character &&
+            rolledOnce &&
+            characterClass !== character.characterClass && (
+              <Text color="red" fontSize="sm" mt={2}>
+                Your current class is{' '}
+                <Text as="span" fontWeight={700}>
+                  {CharacterClasses[character.characterClass]}
+                </Text>
+                . Re-roll stats to change class.
+              </Text>
+            )}
           <SimpleGrid
             columns={{ base: 1, xl: 2 }}
             mb={{ base: 0, lg: 24 }}
@@ -291,26 +439,32 @@ export const CharacterCreation = (): JSX.Element => {
             <VStack spacing={8}>
               <HStack justify="space-between" w="100%">
                 <Heading size="sm">Stats</Heading>
-                <Button isDisabled={!character} onClick={onRollStats} size="sm">
-                  Roll Stats
+                <Button
+                  isDisabled={isDisabled}
+                  isLoading={isRollingStats}
+                  loadingText="Rolling..."
+                  onClick={onRollStats}
+                  size="sm"
+                >
+                  {rolledOnce ? 'Re-roll' : 'Roll Stats'}
                 </Button>
               </HStack>
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
                   <Text>HP - Hit</Text>
-                  <Text>{health}</Text>
+                  <Text>{character?.hitPoints ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>STR - Strength</Text>
-                  <Text>{strength}</Text>
+                  <Text>{character?.strength ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>AGI - Agility</Text>
-                  <Text>{agility}</Text>
+                  <Text>{character?.agility ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>INT - Intelligence</Text>
-                  <Text>{intelligence}</Text>
+                  <Text>{character?.intelligence ?? '0'}</Text>
                 </HStack>
               </VStack>
             </VStack>
@@ -341,13 +495,18 @@ export const CharacterCreation = (): JSX.Element => {
             </VStack>
           </SimpleGrid>
           {!isSmallScreen && (
-            <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
+            <Box bottom={10} left={0} mt={16} pos="absolute" px={10} right={0}>
+              {showError && !rolledOnce && (
+                <Text color="red" fontSize="sm" mb={2} textAlign="center">
+                  You must roll stats at least once before entering the game.
+                </Text>
+              )}
               <Button
-                isDisabled={!character}
-                isLoading={isCreating}
-                loadingText="Creating..."
-                mt={16}
-                type="submit"
+                isDisabled={isDisabled}
+                isLoading={isEnteringGame}
+                loadingText="Waking..."
+                onClick={onEnterGame}
+                type="button"
                 width="100%"
               >
                 Wake Up
@@ -370,16 +529,24 @@ export const CharacterCreation = (): JSX.Element => {
           )}
         </Box>
         {isSmallScreen && (
-          <Button
-            isDisabled={!character}
-            isLoading={isCreating}
-            loadingText="Creating..."
-            mt={2}
-            type="submit"
-            width="100%"
-          >
-            Wake Up
-          </Button>
+          <>
+            <Button
+              isDisabled={isDisabled}
+              isLoading={isEnteringGame}
+              loadingText="Waking..."
+              onClick={onEnterGame}
+              mt={2}
+              type="button"
+              width="100%"
+            >
+              Wake Up
+            </Button>
+            {showError && !rolledOnce && (
+              <Text color="red" fontSize="sm" mt={2} textAlign="center">
+                You must roll stats at least once before entering the game.
+              </Text>
+            )}
+          </>
         )}
       </Box>
     </Stack>

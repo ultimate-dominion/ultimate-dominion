@@ -1,23 +1,36 @@
-import { useEntityQuery } from '@latticexyz/react';
-import { getComponentValueStrict, HasValue } from '@latticexyz/recs';
+import {
+  getComponentValue,
+  getComponentValueStrict,
+  HasValue,
+  runQuery,
+} from '@latticexyz/recs';
 import { decodeEntity } from '@latticexyz/store-sync/recs';
-import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
-import { hexToString } from 'viem';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { getContract, hexToString } from 'viem';
 
-import { CharacterClasses, type Metadata } from '../utils/types';
+import { useToast } from '../hooks/useToast';
+import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import type { Character } from '../utils/types';
 import { useMUD } from './MUDContext';
 
 type CharacterContextType = {
-  characterClass: CharacterClasses;
-  characterId: string;
-  description: string;
-  image: string;
-  locked: boolean;
-  name: string;
-  owner: string;
-} | null;
+  character: Character | null;
+  isRefreshing: boolean;
+  refreshCharacter: () => void;
+};
 
-const CharacterContext = createContext<CharacterContextType>(null);
+const CharacterContext = createContext<CharacterContextType>({
+  character: null,
+  isRefreshing: false,
+  refreshCharacter: () => {},
+});
 
 export type CharacterProviderProps = {
   children: ReactNode;
@@ -27,53 +40,119 @@ export const CharacterProvider = ({
   children,
 }: CharacterProviderProps): JSX.Element => {
   const {
-    components: { Characters },
+    components: { Characters, CharacterStats },
     delegatorAddress,
+    network: { publicClient, worldContract },
   } = useMUD();
+  const { renderError } = useToast();
 
-  const [metadata] = useState<Metadata | null>({
-    description: 'Slayer of Moloch!',
-    image:
-      'https://ipfs.io/ipfs/QmZPHxk9PfFPgMv1Q3KoaG7Mtxk52tySkd7rpG4Sv7GqFL',
-    name: 'Alice',
-  });
+  const [characterDetails, setCharacterDetails] = useState<Character | null>(
+    null,
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const characterComponent = useEntityQuery([
-    HasValue(Characters, {
-      owner: delegatorAddress ?? '0x0',
-    }),
-  ]).map(entity => {
-    const character = getComponentValueStrict(Characters, entity);
-    return {
-      ...character,
-      name: hexToString(character.name as `0x${string}`, { size: 32 }),
-      characterId: decodeEntity({ characterId: 'uint256' }, entity).characterId,
-    };
-  })[0];
+  const getCharacterData = useCallback(async () => {
+    if (!(delegatorAddress && publicClient && worldContract)) return;
+    const characterComponent = Array.from(
+      runQuery([
+        HasValue(Characters, {
+          owner: delegatorAddress,
+        }),
+      ]),
+    ).map(entity => {
+      const characterData = getComponentValueStrict(Characters, entity);
+      const characterStats = getComponentValue(CharacterStats, entity);
+      return {
+        agility: characterStats?.agility.toString() ?? '0',
+        characterClass: characterData.class,
+        characterId: decodeEntity(
+          { characterId: 'uint256' },
+          entity,
+        ).characterId.toString(),
+        hitPoints: characterStats?.hitPoints.toString() ?? '0',
+        intelligence: characterStats?.intelligence.toString() ?? '0',
+        locked: characterData.locked,
+        name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
+        owner: characterData.owner,
+        strength: characterStats?.strength.toString() ?? '0',
+      };
+    })[0];
 
-  const value = useMemo(() => {
-    if (!(characterComponent && metadata)) {
-      return null;
+    if (!characterComponent) return;
+
+    const characterTokenAddress =
+      await worldContract.read.UD__getCharacterToken();
+
+    const erc721 = getContract({
+      address: characterTokenAddress,
+      abi: [
+        {
+          type: 'function',
+          name: 'tokenURI',
+          inputs: [
+            {
+              name: 'tokenId',
+              type: 'uint256',
+              internalType: 'uint256',
+            },
+          ],
+          outputs: [
+            {
+              name: '',
+              type: 'string',
+              internalType: 'string',
+            },
+          ],
+          stateMutability: 'view',
+        },
+      ],
+      client: publicClient,
+    });
+
+    const metadataURI = await erc721.read.tokenURI([
+      BigInt(characterComponent.characterId),
+    ]);
+
+    const fetachedMetadata = await fetchMetadataFromUri(
+      uriToHttp(metadataURI)[0],
+    );
+
+    setCharacterDetails({
+      ...characterComponent,
+      ...fetachedMetadata,
+    });
+  }, [
+    Characters,
+    CharacterStats,
+    delegatorAddress,
+    publicClient,
+    worldContract,
+  ]);
+
+  const refreshCharacter = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await getCharacterData();
+    } catch (error) {
+      renderError('Error refreshing character');
+    } finally {
+      setIsRefreshing(false);
     }
+  }, [getCharacterData, renderError]);
 
-    const {
-      class: characterClass,
-      characterId,
-      locked,
-      owner,
-    } = characterComponent;
-
-    return {
-      characterClass,
-      characterId: characterId.toString(),
-      locked,
-      owner,
-      ...metadata,
-    };
-  }, [characterComponent, metadata]);
+  useEffect(() => {
+    if (!(delegatorAddress && publicClient && worldContract)) return;
+    getCharacterData();
+  }, [delegatorAddress, getCharacterData, publicClient, worldContract]);
 
   return (
-    <CharacterContext.Provider value={value}>
+    <CharacterContext.Provider
+      value={{
+        character: characterDetails,
+        isRefreshing,
+        refreshCharacter,
+      }}
+    >
       {children}
     </CharacterContext.Provider>
   );
