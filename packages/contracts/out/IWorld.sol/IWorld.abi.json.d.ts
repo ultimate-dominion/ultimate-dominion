@@ -96,8 +96,8 @@ declare const abi: [
       },
       {
         "name": "attackers",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       },
       {
         "name": "defenders",
@@ -164,19 +164,6 @@ declare const abi: [
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__createSkill",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -551,6 +538,25 @@ declare const abi: [
         "name": "",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getPlayerEntityId",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "stateMutability": "view"

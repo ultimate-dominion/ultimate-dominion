@@ -11,12 +11,12 @@ contract Test_CharacterSystem is SetUp, GasReporter {
   function test_Mint() public {
     startGasReport("mints a character");
 
-    vm.startPrank(alice);
-    alicesCharacterId = world.UD__mintCharacter(alice, bytes32("Alan"), "test_Character_URI");
-    assertEq(alicesCharacterId, 2);
-    assertEq(characterToken.ownerOf(1), alice);
-    assertEq(characterToken.balanceOf(alice), 2);
-    assertEq(IERC721Metadata(address(characterToken)).tokenURI(alicesCharacterId), "ipfs://test_Character_URI");
+        vm.startPrank(alice);
+        alicesCharacterId = world.UD__mintCharacter(alice, bytes32("Alan"), "test_Character_URI");
+        assertEq(alicesCharacterId, 2);
+        assertEq(characterToken.ownerOf(1), alice);
+        assertEq(characterToken.balanceOf(alice), 2);
+        assertEq(IERC721Metadata(address(characterToken)).tokenURI(alicesCharacterId), "ipfs://test_Character_URI");
 
     endGasReport();
   }
@@ -64,6 +64,18 @@ contract Test_CharacterSystem is SetUp, GasReporter {
     world.UD__enterGame(alicesCharacterId);
     // assertEq(erc1155System.balanceOf(alice, 0), 1);
 
-    endGasReport();
-  }
+        endGasReport();
+    }
+
+    function test_getPlayerEntity() public {
+        uint256 fees = entropy.getFee(address(1));
+        vm.startPrank(alice);
+        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__enterGame(alicesCharacterId);
+
+        address ownerAddress = characterToken.ownerOf(alicesCharacterId);
+        bytes32 playerEntityId = bytes32(uint256(uint160(ownerAddress)) << 88 | alicesCharacterId);
+
+        assertEq(world.UD__getPlayerEntityId(alicesCharacterId), playerEntityId);
+    }
 }

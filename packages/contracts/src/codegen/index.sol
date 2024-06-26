@@ -21,4 +21,6 @@ import { NameExists } from "./tables/NameExists.sol";
 import { CombatEncounter, CombatEncounterData } from "./tables/CombatEncounter.sol";
 import { MobEntity, MobEntityData } from "./tables/MobEntity.sol";
 import { RandomNumbers, RandomNumbersData } from "./tables/RandomNumbers.sol";
+import { Position, PositionData } from "./tables/Position.sol";
+import { EntitiesAtPosition } from "./tables/EntitiesAtPosition.sol";
 import { UltimateDominionConfig, UltimateDominionConfigData } from "./tables/UltimateDominionConfig.sol";

@@ -162,7 +162,7 @@ export default defineWorld({
         // array of monsterIds if pve playerIds if pvp
         defenders: "bytes32[]",
         // array of playerIds
-        attackers: "uint256[]",
+        attackers: "bytes32[]",
       },
       key: ["encounterId"],
     },
@@ -182,6 +182,27 @@ export default defineWorld({
         sequenceNumber: "uint64",
         RequestType: "RngRequestType",
         arbitraryData: "bytes",
+      },
+    },
+    /**
+     * The position of an entity.
+     */
+    Position: {
+      key: ["matchEntity", "entity"],
+      schema: {
+        matchEntity: "bytes32",
+        entity: "bytes32",
+        x: "int32",
+        y: "int32",
+      },
+    },
+    EntitiesAtPosition: {
+      key: ["matchEntity", "x", "y"],
+      schema: {
+        matchEntity: "bytes32",
+        x: "int32",
+        y: "int32",
+        entities: "bytes32[]",
       },
     },
     /**

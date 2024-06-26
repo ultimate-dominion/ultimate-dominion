@@ -51,6 +51,11 @@ contract CharacterSystem is System {
         characterToken = IERC721Mintable(UltimateDominionConfig.getCharacterToken());
     }
 
+    function getPlayerEntityId(uint256 characterId) public view returns (bytes32) {
+        address ownerAddress = _characterToken().ownerOf(characterId);
+        return bytes32(uint256(uint160(ownerAddress)) << 88 | characterId);
+    }
+
     function mintCharacter(address account, bytes32 name, string memory tokenUri)
         public
         returns (uint256 characterId)
