@@ -784,6 +784,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__spawn",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__unequipItem",
     "inputs": [
       {
