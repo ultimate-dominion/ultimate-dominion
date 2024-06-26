@@ -13,9 +13,7 @@ import { EncounterType } from "@codegen/common.sol";
 interface ICombatSystem {
   function UD__createMatch(
     EncounterType encounterType,
-    uint256[] memory attackers,
+    bytes32[] memory attackers,
     bytes32[] memory defenders
   ) external returns (bytes32);
-
-  function UD__createSkill() external returns (uint256);
 }

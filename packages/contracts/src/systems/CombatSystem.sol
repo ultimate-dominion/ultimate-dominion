@@ -14,7 +14,7 @@ import {DEFAULT_MAX_TURNS} from "../../constants.sol";
 
 contract CombatSystem is System {
     // in pvp the attackers are always players and the defenders are always mobs since there is no aggro system
-    function createMatch(EncounterType encounterType, uint256[] memory attackers, bytes32[] memory defenders)
+    function createMatch(EncounterType encounterType, bytes32[] memory attackers, bytes32[] memory defenders)
         public
         returns (bytes32)
     {
@@ -32,6 +32,4 @@ contract CombatSystem is System {
         CombatEncounter.set(encounterId, combatData);
         return encounterId;
     }
-
-    function createSkill() public returns (uint256) {}
 }

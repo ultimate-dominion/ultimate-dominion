@@ -29,6 +29,8 @@ contract MobSystem is System {
         }
     }
 
+    // function spawnMob(uint256 mobId)
+
     function getNpcStats(uint256 mobId) public view returns (NPCStats memory) {
         MobsData memory mobData = Mobs.get(mobId);
         require(mobData.mobType == MobType.NPC, "MobSystem: Wrong Mob Type");

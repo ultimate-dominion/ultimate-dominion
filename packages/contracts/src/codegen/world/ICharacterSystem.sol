@@ -16,6 +16,8 @@ interface ICharacterSystem {
 
   function UD__getClass(uint256 characterId) external view returns (Classes _class);
 
+  function UD__getPlayerEntityId(uint256 characterId) external view returns (bytes32);
+
   function UD__mintCharacter(
     address account,
     bytes32 name,
