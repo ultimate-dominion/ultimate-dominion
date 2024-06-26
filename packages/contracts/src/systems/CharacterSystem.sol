@@ -53,42 +53,11 @@ contract CharacterSystem is System {
         characterToken = IERC721Mintable(UltimateDominionConfig.getCharacterToken());
     }
 
-    function getPlayerEntityId(uint256 characterTokenId) public view returns (bytes32 characterId) {
-        address ownerAddress = _characterToken().ownerOf(characterTokenId);
-        characterId = bytes32(uint256(uint160(ownerAddress)) << 96 | characterTokenId);
+    function getPlayerEntityId(uint256 characterId) public view returns (bytes32) {
+        address ownerAddress = _characterToken().ownerOf(characterId);
+        return bytes32(uint256(uint160(ownerAddress)) << 88 | characterId);
     }
 
-    function getCharacterTokenId(bytes32 characterId) public pure returns (uint256) {
-        return (uint256(uint96(uint256(characterId))));
-    }
-
-    /**
-     *  @dev extracts the character nft owner address from the character Id
-     */
-    function getOwnerAddress(bytes32 characterId) public pure returns (address) {
-        return address(uint160(uint256(characterId) >> 96));
-    }
-
-    function isValidCharacterId(bytes32 characterId) public view returns (bool) {
-        address ownerAddress = getOwnerAddress(characterId);
-        uint256 tokenId = getCharacterTokenId(characterId);
-        address ownerOf;
-        try _characterToken().ownerOf(tokenId) returns (address) {
-            ownerOf = _characterToken().ownerOf(tokenId);
-        } catch {}
-        return ownerOf == ownerAddress;
-    }
-
-    function isValidOwner(bytes32 characterId, address owner) public view returns (bool) {
-        return isValidCharacterId(characterId) && _characterToken().ownerOf(getCharacterTokenId(characterId)) == owner;
-    }
-
-    /**
-     * @param account the address of the account that will own the character
-     * @param name the keccack256 hash of the characters name to check for duplicates
-     * @param tokenUri the token uri to be set for the character token
-     * @return characterId the bytes32 character id combination of the owner address and the tokenId
-     */
     function mintCharacter(address account, bytes32 name, string memory tokenUri)
         public
         returns (bytes32 characterId)

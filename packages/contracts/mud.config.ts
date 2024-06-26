@@ -194,21 +194,20 @@ export default defineWorld({
      * The position of an entity.
      */
     Position: {
-      key: ["entity"],
-      codegen: {
-        dataStruct: false,
-      },
+      key: ["matchEntity", "entity"],
       schema: {
+        matchEntity: "bytes32",
         entity: "bytes32",
-        x: "uint16",
-        y: "uint16",
+        x: "int32",
+        y: "int32",
       },
     },
     EntitiesAtPosition: {
-      key: ["x", "y"],
+      key: ["matchEntity", "x", "y"],
       schema: {
-        x: "uint16",
-        y: "uint16",
+        matchEntity: "bytes32",
+        x: "int32",
+        y: "int32",
         entities: "bytes32[]",
       },
     },

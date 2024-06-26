@@ -17,39 +17,5 @@ interface ICombatSystem {
     EncounterType encounterType,
     bytes32[] memory attackers,
     bytes32[] memory defenders
-  ) external returns (bytes32 encounterId);
-
-  function UD__isValidPvE(
-    bytes32[] memory attackers,
-    bytes32[] memory defenders,
-    uint16 x,
-    uint16 y
-  ) external view returns (bool _isValidPvE);
-
-  function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) external payable;
-
-  function UD__isParticipant(bytes32 playerId, bytes32 encounterId) external view returns (bool _isParticipant);
-
-  function UD__isParticipant(
-    address account,
-    bytes32[] memory participants
-  ) external view returns (bool _isParticipant);
-
-  function UD__executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory actions) external;
-
-  function UD___calculatePhysicalAttack(
-    PhysicalAttackStats memory attackStats,
-    bytes32 attackerId,
-    bytes32 defenderId,
-    uint256 weaponId,
-    uint256 randomNumber
-  ) external returns (int256 damage, bool hit, bool crit);
-
-  function UD__getEncounter(bytes32 encounterId) external view returns (CombatEncounterData memory _encounterData);
-
-  function UD___calculateMagicAttack() external;
-
-  function UD__calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) external returns (uint256 dropAmount);
-
-  function UD__calculateItemDrop(uint256 randomNumber, uint256 itemId) external returns (bool);
+  ) external returns (bytes32);
 }

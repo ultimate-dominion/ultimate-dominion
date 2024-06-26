@@ -38,44 +38,7 @@ contract MobSystem is System {
         }
     }
 
-    function spawnMob(uint256 mobId, uint16 x, uint16 y) public returns (bytes32 entityId) {
-        _requireAccess(address(this), _msgSender());
-        require(Counters.getCounter(address(this), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
-        entityId = bytes32(abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), x, y));
-        MobsData memory stats = Mobs.get(mobId);
-        if (uint8(stats.mobType) == 0) {
-            MonsterStats memory monsterStats = abi.decode(stats.mobStats, (MonsterStats));
-
-            StatsData memory statsData = StatsData({
-                strength: monsterStats.strength,
-                agility: monsterStats.agility,
-                intelligence: monsterStats.intelligence,
-                baseHitPoints: monsterStats.hitPoints,
-                class: monsterStats.class,
-                currentHp: int256(monsterStats.hitPoints),
-                experience: monsterStats.experience,
-                level: monsterStats.level
-            });
-            Stats.set(entityId, statsData);
-        }
-
-        Position.set(entityId, x, y);
-        EntitiesAtPosition.pushEntities(x, y, entityId);
-        Spawned.set(entityId, true);
-    }
-
-    function getMobId(bytes32 entityId) public pure returns (uint256) {
-        return uint256(uint256(entityId) >> 224);
-    }
-
-    function getMobPosition(bytes32 entityId) public pure returns (uint16 x, uint16 y) {
-        y = uint16(uint256(entityId));
-        x = uint16(uint256(entityId) >> 16);
-    }
-
-    function getSpawnCounter(bytes32 entityId) public pure returns (uint256) {
-        return uint256(uint192(uint256(entityId) >> 32));
-    }
+    // function spawnMob(uint256 mobId)
 
     function getNpcStats(uint256 mobId) public view returns (NPCStats memory) {
         MobsData memory mobData = Mobs.get(mobId);

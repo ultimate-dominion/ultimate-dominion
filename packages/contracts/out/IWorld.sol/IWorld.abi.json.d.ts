@@ -412,115 +412,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__dropGold",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__dropItem",
-    "inputs": [
-      {
-        "name": "itemId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__dropItems",
-    "inputs": [
-      {
-        "name": "itemIds",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      },
-      {
-        "name": "amounts",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      },
-      {
-        "name": "characterIds",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__endTurn",
-    "inputs": [
-      {
-        "name": "encounterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "playerId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "actions",
-        "type": "tuple[]",
-        "internalType": "struct Action[]",
-        "components": [
-          {
-            "name": "attackerEntityId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "defenderEntityId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "payable"
-  },
-  {
-    "type": "function",
     "name": "UD__enterGame",
     "inputs": [
       {
@@ -1281,36 +1172,17 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getOwnerAddress",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
     "name": "UD__getPlayerEntityId",
     "inputs": [
       {
-        "name": "characterTokenId",
+        "name": "characterId",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
     "outputs": [
       {
-        "name": "characterId",
+        "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
       }
