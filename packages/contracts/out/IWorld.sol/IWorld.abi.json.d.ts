@@ -359,6 +359,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getItemType",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum ItemType"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getItemsContract",
     "inputs": [],
     "outputs": [
@@ -626,7 +645,7 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "isEquipped",
+        "name": "_isEquipped",
         "type": "bool",
         "internalType": "bool"
       }
@@ -737,6 +756,30 @@ declare const abi: [
       }
     ],
     "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__unequipItem",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
