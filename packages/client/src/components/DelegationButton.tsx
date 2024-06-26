@@ -19,7 +19,7 @@ export const DelegationButton = ({
   const navigate = useNavigate();
   const { chains, switchChain } = useSwitchChain();
   const { chainId } = useAccount();
-  const { burnerAddress, network } = useMUD();
+  const { burnerAddress, getBurner, network } = useMUD();
   const { renderError, renderSuccess } = useToast();
 
   const [isDelegating, setIsDelegating] = useState(false);
@@ -43,6 +43,7 @@ export const DelegationButton = ({
         onClose();
       }
 
+      getBurner();
       navigate('/character-creation');
     } catch (error) {
       renderError(error, 'Failed to delegate');
@@ -52,6 +53,7 @@ export const DelegationButton = ({
   }, [
     burnerAddress,
     externalWalletClient,
+    getBurner,
     navigate,
     network,
     onClose,

@@ -1,5 +1,6 @@
 import { useComponentValue } from '@latticexyz/react';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
+import { getComponentValue } from '@latticexyz/recs';
+import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -20,15 +21,19 @@ import {
   SystemCallsResult,
 } from '../lib/mud/setup';
 
-const MUDContext = createContext<{
+type MUDContextType = {
   burnerAddress: Address;
   burnerBalance: string;
   components: ComponentsResult;
   delegatorAddress: Address | null;
   delegatorEntity: string | null;
+  getBurner: () => void;
+  isSynced: boolean;
   network: NetworkResult;
   systemCalls: SystemCallsResult;
-} | null>(null);
+};
+
+const MUDContext = createContext<MUDContextType | null>(null);
 
 type Props = {
   children: ReactNode;
@@ -44,49 +49,50 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
 
   const [burner, setBurner] = useState<Burner | null>(null);
   const [burnerBalance, setBurnerBalance] = useState<string>('0');
-  const [components, setComponents] = useState<ComponentsResult | null>(null);
-  const [network, setNetwork] = useState<NetworkResult | null>(null);
-  const [systemCalls, setSystemCalls] = useState<SystemCallsResult | null>(
-    null,
+  const [isSynced, setIsSynced] = useState(false);
+
+  const syncProgress = useComponentValue(
+    setupResult.components.SyncProgress,
+    singletonEntity,
   );
 
-  const delegation = useComponentValue(
-    setupResult.components.UserDelegationControl,
-    externalWalletClient
-      ? encodeEntity(
-          { delegatee: 'address', delegator: 'address' },
-          {
-            delegatee: externalWalletClient.account.address,
-            delegator: setupResult.network.walletClient.account.address,
-          },
-        )
-      : undefined,
-  );
+  const getBurner = useCallback(async () => {
+    if (!(externalWalletClient && setupResult.network)) return;
 
-  useEffect(() => {
-    if (!(delegation && externalWalletClient && network)) return;
+    const delegation = getComponentValue(
+      setupResult.components.UserDelegationControl,
+      encodeEntity(
+        { delegatee: 'address', delegator: 'address' },
+        {
+          delegatee: externalWalletClient.account.address,
+          delegator: setupResult.network.walletClient.account.address,
+        },
+      ),
+    );
+
     if (burner) return;
     if (isDelegated(delegation as { delegationControlId: Hex })) {
-      setBurner(createBurner(network, externalWalletClient.account.address));
+      setBurner(
+        createBurner(setupResult.network, externalWalletClient.account.address),
+      );
     }
-  }, [burner, delegation, externalWalletClient, network]);
+    setIsSynced(true);
+  }, [burner, externalWalletClient, setupResult]);
 
   useEffect(() => {
-    if (network && components && systemCalls) return;
-    if (setupResult) {
-      setComponents(setupResult.components);
-      setNetwork(setupResult.network);
-      setSystemCalls(setupResult.systemCalls);
-    }
-  }, [components, network, setupResult, systemCalls]);
+    if (syncProgress?.step !== 'live') return;
+    if (isSynced) return;
+
+    getBurner();
+  }, [getBurner, isSynced, syncProgress]);
 
   const getBurnerBalance = useCallback(async () => {
-    if (!(burner && network)) return;
-    const balance = await network.publicClient.getBalance({
+    if (!(burner && setupResult.network)) return;
+    const balance = await setupResult.network.publicClient.getBalance({
       address: burner.walletClient.account.address,
     });
     setBurnerBalance(formatEther(balance));
-  }, [burner, network]);
+  }, [burner, setupResult.network]);
 
   useEffect(() => {
     if (!burner) return () => {};
@@ -105,6 +111,8 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
         components: setupResult.components,
         delegatorAddress: null,
         delegatorEntity: null,
+        getBurner,
+        isSynced,
         network: setupResult.network,
         systemCalls: setupResult.systemCalls,
       };
@@ -119,25 +127,19 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
         { address: 'address' },
         { address: burner.delegatorAddress },
       ),
+      getBurner,
+      isSynced,
       network: burner.network,
       systemCalls: burner.systemCalls,
     };
-  }, [burner, burnerBalance, setupResult]);
+  }, [burner, burnerBalance, getBurner, isSynced, setupResult]);
 
   // const currentValue = useContext(MUDContext);
   // if (currentValue) throw new Error('MUDProvider can only be used once');
   return <MUDContext.Provider value={value}>{children}</MUDContext.Provider>;
 };
 
-export const useMUD = (): {
-  burnerAddress: Address;
-  burnerBalance: string;
-  components: ComponentsResult;
-  delegatorAddress: Address | null;
-  delegatorEntity: string | null;
-  network: NetworkResult;
-  systemCalls: SystemCallsResult;
-} => {
+export const useMUD = (): MUDContextType => {
   const value = useContext(MUDContext);
   if (!value) throw new Error('Must be used within a MUDProvider');
   return value;

@@ -59,19 +59,17 @@ export function createSystemCalls(
       )?.locked;
       return success;
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e);
       return false;
     }
   };
 
-  const mintCharacter = async (account: Address, name: string) => {
+  const mintCharacter = async (account: Address, name: string, uri: string) => {
     try {
       const nameHex = stringToHex(name, { size: 32 });
       const simulatedTx = await worldContract.simulate.UD__mintCharacter([
         account,
         nameHex,
-        '',
+        uri,
       ]);
 
       const characterId = simulatedTx.result;
@@ -79,7 +77,7 @@ export function createSystemCalls(
       const tx = await worldContract.write.UD__mintCharacter([
         account,
         nameHex,
-        '',
+        uri,
       ]);
 
       await waitForTransaction(tx);
@@ -94,8 +92,6 @@ export function createSystemCalls(
 
       return sucess;
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e);
       return false;
     }
   };
@@ -138,8 +134,6 @@ export function createSystemCalls(
       );
       return success;
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e);
       return false;
     }
   };

@@ -8,13 +8,31 @@ import {
   PopoverTrigger,
   VStack,
 } from '@chakra-ui/react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { MapPanel } from '../components/MapPanel';
 import { StatsPanel } from '../components/StatsPanel';
 import { TileDetailsPanel } from '../components/TileDetailsPanel';
+import { useCharacter } from '../contexts/CharacterContext';
+import { useMUD } from '../contexts/MUDContext';
 
 export const GameBoard = (): JSX.Element => {
+  const navigate = useNavigate();
+  const { delegatorAddress, isSynced } = useMUD();
+  const { character } = useCharacter();
+
+  useEffect(() => {
+    if (isSynced && !delegatorAddress) {
+      navigate('/');
+    }
+
+    if (character?.locked) {
+      navigate('/game-board');
+    }
+  }, [character, delegatorAddress, isSynced, navigate]);
+
   return (
     <Grid
       gap={2}
