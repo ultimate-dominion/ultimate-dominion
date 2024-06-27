@@ -33,8 +33,8 @@ library Characters {
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0036040014012001000000000000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of (uint256)
-  Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (bytes32)
+  Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
   // Hex-encoded value schema of (address, uint8, bytes32, bool)
   Schema constant _valueSchema = Schema.wrap(0x0036040061005f60000000000000000000000000000000000000000000000000);
 
@@ -76,9 +76,9 @@ library Characters {
   /**
    * @notice Get owner.
    */
-  function getOwner(uint256 characterId) internal view returns (address owner) {
+  function getOwner(bytes32 characterId) internal view returns (address owner) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (address(bytes20(_blob)));
@@ -87,9 +87,9 @@ library Characters {
   /**
    * @notice Get owner.
    */
-  function _getOwner(uint256 characterId) internal view returns (address owner) {
+  function _getOwner(bytes32 characterId) internal view returns (address owner) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (address(bytes20(_blob)));
@@ -98,9 +98,9 @@ library Characters {
   /**
    * @notice Set owner.
    */
-  function setOwner(uint256 characterId, address owner) internal {
+  function setOwner(bytes32 characterId, address owner) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((owner)), _fieldLayout);
   }
@@ -108,9 +108,9 @@ library Characters {
   /**
    * @notice Set owner.
    */
-  function _setOwner(uint256 characterId, address owner) internal {
+  function _setOwner(bytes32 characterId, address owner) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((owner)), _fieldLayout);
   }
@@ -118,9 +118,9 @@ library Characters {
   /**
    * @notice Get class.
    */
-  function getClass(uint256 characterId) internal view returns (Classes class) {
+  function getClass(bytes32 characterId) internal view returns (Classes class) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return Classes(uint8(bytes1(_blob)));
@@ -129,9 +129,9 @@ library Characters {
   /**
    * @notice Get class.
    */
-  function _getClass(uint256 characterId) internal view returns (Classes class) {
+  function _getClass(bytes32 characterId) internal view returns (Classes class) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return Classes(uint8(bytes1(_blob)));
@@ -140,9 +140,9 @@ library Characters {
   /**
    * @notice Set class.
    */
-  function setClass(uint256 characterId, Classes class) internal {
+  function setClass(bytes32 characterId, Classes class) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked(uint8(class)), _fieldLayout);
   }
@@ -150,9 +150,9 @@ library Characters {
   /**
    * @notice Set class.
    */
-  function _setClass(uint256 characterId, Classes class) internal {
+  function _setClass(bytes32 characterId, Classes class) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked(uint8(class)), _fieldLayout);
   }
@@ -160,9 +160,9 @@ library Characters {
   /**
    * @notice Get name.
    */
-  function getName(uint256 characterId) internal view returns (bytes32 name) {
+  function getName(bytes32 characterId) internal view returns (bytes32 name) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (bytes32(_blob));
@@ -171,9 +171,9 @@ library Characters {
   /**
    * @notice Get name.
    */
-  function _getName(uint256 characterId) internal view returns (bytes32 name) {
+  function _getName(bytes32 characterId) internal view returns (bytes32 name) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (bytes32(_blob));
@@ -182,9 +182,9 @@ library Characters {
   /**
    * @notice Set name.
    */
-  function setName(uint256 characterId, bytes32 name) internal {
+  function setName(bytes32 characterId, bytes32 name) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((name)), _fieldLayout);
   }
@@ -192,9 +192,9 @@ library Characters {
   /**
    * @notice Set name.
    */
-  function _setName(uint256 characterId, bytes32 name) internal {
+  function _setName(bytes32 characterId, bytes32 name) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((name)), _fieldLayout);
   }
@@ -202,9 +202,9 @@ library Characters {
   /**
    * @notice Get locked.
    */
-  function getLocked(uint256 characterId) internal view returns (bool locked) {
+  function getLocked(bytes32 characterId) internal view returns (bool locked) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (_toBool(uint8(bytes1(_blob))));
@@ -213,9 +213,9 @@ library Characters {
   /**
    * @notice Get locked.
    */
-  function _getLocked(uint256 characterId) internal view returns (bool locked) {
+  function _getLocked(bytes32 characterId) internal view returns (bool locked) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (_toBool(uint8(bytes1(_blob))));
@@ -224,9 +224,9 @@ library Characters {
   /**
    * @notice Set locked.
    */
-  function setLocked(uint256 characterId, bool locked) internal {
+  function setLocked(bytes32 characterId, bool locked) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((locked)), _fieldLayout);
   }
@@ -234,9 +234,9 @@ library Characters {
   /**
    * @notice Set locked.
    */
-  function _setLocked(uint256 characterId, bool locked) internal {
+  function _setLocked(bytes32 characterId, bool locked) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((locked)), _fieldLayout);
   }
@@ -244,9 +244,9 @@ library Characters {
   /**
    * @notice Get the full data.
    */
-  function get(uint256 characterId) internal view returns (CharactersData memory _table) {
+  function get(bytes32 characterId) internal view returns (CharactersData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreSwitch.getRecord(
       _tableId,
@@ -259,9 +259,9 @@ library Characters {
   /**
    * @notice Get the full data.
    */
-  function _get(uint256 characterId) internal view returns (CharactersData memory _table) {
+  function _get(bytes32 characterId) internal view returns (CharactersData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreCore.getRecord(
       _tableId,
@@ -274,14 +274,14 @@ library Characters {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(uint256 characterId, address owner, Classes class, bytes32 name, bool locked) internal {
+  function set(bytes32 characterId, address owner, Classes class, bytes32 name, bool locked) internal {
     bytes memory _staticData = encodeStatic(owner, class, name, locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -289,14 +289,14 @@ library Characters {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(uint256 characterId, address owner, Classes class, bytes32 name, bool locked) internal {
+  function _set(bytes32 characterId, address owner, Classes class, bytes32 name, bool locked) internal {
     bytes memory _staticData = encodeStatic(owner, class, name, locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -304,14 +304,14 @@ library Characters {
   /**
    * @notice Set the full data using the data struct.
    */
-  function set(uint256 characterId, CharactersData memory _table) internal {
+  function set(bytes32 characterId, CharactersData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.owner, _table.class, _table.name, _table.locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -319,14 +319,14 @@ library Characters {
   /**
    * @notice Set the full data using the data struct.
    */
-  function _set(uint256 characterId, CharactersData memory _table) internal {
+  function _set(bytes32 characterId, CharactersData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.owner, _table.class, _table.name, _table.locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -363,9 +363,9 @@ library Characters {
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(uint256 characterId) internal {
+  function deleteRecord(bytes32 characterId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -373,9 +373,9 @@ library Characters {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(uint256 characterId) internal {
+  function _deleteRecord(bytes32 characterId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -411,9 +411,9 @@ library Characters {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(uint256 characterId) internal pure returns (bytes32[] memory) {
+  function encodeKeyTuple(bytes32 characterId) internal pure returns (bytes32[] memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = characterId;
 
     return _keyTuple;
   }

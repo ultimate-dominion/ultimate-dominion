@@ -5,8 +5,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "itemId",
@@ -172,8 +172,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [],
@@ -185,8 +185,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "itemIds",
@@ -203,8 +203,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -263,12 +263,31 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getCharacterTokenId",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getClass",
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -318,8 +337,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -474,8 +493,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -529,8 +548,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -547,14 +566,14 @@ declare const abi: [
     "name": "UD__getPlayerEntityId",
     "inputs": [
       {
-        "name": "characterId",
+        "name": "characterTokenId",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -640,8 +659,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "itemId",
@@ -664,8 +683,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [],
@@ -694,8 +713,8 @@ declare const abi: [
     "outputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "stateMutability": "nonpayable"
@@ -711,8 +730,8 @@ declare const abi: [
       },
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "class",
@@ -770,8 +789,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "itemId",

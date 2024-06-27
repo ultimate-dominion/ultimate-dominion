@@ -40,7 +40,7 @@ import {
 import "forge-std/console2.sol";
 
 contract ItemsSystem is System {
-    modifier inGame(uint256 characterId) {
+    modifier inGame(bytes32 characterId) {
         CharactersData memory charData = Characters.get(characterId);
         require(charData.locked, "Character not in the Game");
         _;
@@ -83,7 +83,7 @@ contract ItemsSystem is System {
         }
     }
 
-    function equipItems(uint256 characterId, uint256[] memory itemIds) public inGame(characterId) {
+    function equipItems(bytes32 characterId, uint256[] memory itemIds) public inGame(characterId) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         require(characterOwner == _msgSender(), "ITEMS: Not Character Owner");
         uint256 itemId;
@@ -97,7 +97,7 @@ contract ItemsSystem is System {
         }
     }
 
-    function isEquipped(uint256 characterId, uint256 itemId) public view returns (bool _isEquipped) {
+    function isEquipped(bytes32 characterId, uint256 itemId) public view returns (bool _isEquipped) {
         ItemsData memory itemData = Items.get(itemId);
         if (uint8(itemData.itemType) == 0) {
             uint256[] memory equippedWeap = CharacterEquipment.getEquippedWeapons(characterId);
@@ -111,7 +111,7 @@ contract ItemsSystem is System {
         }
     }
 
-    function checkRequirements(uint256 characterId, uint256 itemId) public view returns (bool) {
+    function checkRequirements(bytes32 characterId, uint256 itemId) public view returns (bool) {
         ItemsData memory itemData = Items.get(itemId);
         CharacterStatsData memory character = CharacterStats.get(characterId);
         CharactersData memory characterData = Characters.get(characterId);
@@ -137,7 +137,7 @@ contract ItemsSystem is System {
         return canUse;
     }
 
-    function _equipItem(uint256 characterId, uint256 itemId, ItemType itemType) internal {
+    function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         if (uint8(itemType) == 0) {
             require(CharacterEquipment.lengthEquippedWeapons(characterId) < 3, "ITEMS: Too many weapons equipped");
             CharacterEquipment.pushEquippedWeapons(characterId, itemId);
@@ -152,7 +152,7 @@ contract ItemsSystem is System {
         }
     }
 
-    function unequipItem(uint256 characterId, uint256 itemId) public returns (bool success) {
+    function unequipItem(bytes32 characterId, uint256 itemId) public returns (bool success) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         require(characterOwner == _msgSender(), "ITEMS: Not Character Owner");
         uint8 itemType = uint8(getItemType(itemId));
@@ -208,7 +208,7 @@ contract ItemsSystem is System {
         _supply = TotalSupply.getTotalSupply(_totalSupplyTableId(ITEMS_NAMESPACE), tokenId);
     }
 
-    function issueStarterItems(uint256 characterId) public {
+    function issueStarterItems(bytes32 characterId) public {
         require(_msgSender() == Systems.getSystem(_characterSystemId("UD")), "ITEMS: Invalid System");
         StarterItemsData memory starterItems = StarterItems.get(Characters.getClass(characterId));
 

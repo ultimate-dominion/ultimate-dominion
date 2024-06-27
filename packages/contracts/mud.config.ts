@@ -28,8 +28,8 @@ export default defineWorld({
     Characters: {
       key: ["characterId"],
       schema: {
+        characterId: "bytes32",
         owner: "address",
-        characterId: "uint256",
         class: "Classes",
         name: "bytes32",
         locked: "bool",
@@ -38,7 +38,7 @@ export default defineWorld({
     CharacterStats: {
       key: ["characterId"],
       schema: {
-        characterId: "uint256",
+        characterId: "bytes32",
         strength: "uint256",
         agility: "uint256",
         intelligence: "uint256",
@@ -69,7 +69,7 @@ export default defineWorld({
     CharacterEquipment: {
       key: ["characterId"],
       schema: {
-        characterId: "uint256",
+        characterId: "bytes32",
         equippedArmor: "uint256[]",
         equippedWeapons: "uint256[]",
         equippedSpells: "uint256[]",

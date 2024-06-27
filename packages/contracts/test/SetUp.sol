@@ -23,6 +23,7 @@ contract SetUp is Test {
 
     address deployer = vm.addr(vm.envUint("PRIVATE_KEY"));
     address payable public alice;
+    address payable public bob;
     uint256 public userNonce = 0;
     IWorld public world;
     address public worldAddress;
@@ -32,7 +33,8 @@ contract SetUp is Test {
     IERC721Mintable public characterToken;
     IERC1155System public erc1155System;
 
-    uint256 alicesCharacterId;
+    bytes32 alicesCharacterId;
+    bytes32 bobCharacterId;
     bytes32 public alicesRandomness = bytes32(keccak256(abi.encode("alicesRestaurant")));
 
     function setUp() public virtual {
@@ -45,18 +47,21 @@ contract SetUp is Test {
         world = IWorld(worldAddress);
         entropy = IEntropy(world.UD__getEntropy());
         alice = getUser();
+        bob = getUser();
         goldToken = IERC20Mintable(world.UD__getGoldToken());
         characterToken = IERC721Mintable(world.UD__getCharacterToken());
         erc1155System = IERC1155System(world.UD__getItemsContract());
         vm.stopPrank();
         vm.prank(alice);
         alicesCharacterId = world.UD__mintCharacter(alice, bytes32("Steve"), "setup_char_uri");
-
-        vm.startPrank(deployer);
-        uint256[] memory amounts = new uint256[](1);
-        amounts[0] = 1;
+        vm.startPrank(bob);
+        bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
+        uint256 fees = entropy.getFee(address(1));
+        world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Rogue);
+        world.UD__enterGame(bobCharacterId);
         vm.stopPrank();
         vm.label(alice, "alice");
+        vm.label(bob, "bob");
         vm.label(worldAddress, "world");
         vm.label(world.UD__getCharacterToken(), "character token");
     }
