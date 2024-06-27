@@ -25,8 +25,8 @@ import {
     ITEMS_NAMESPACE
 } from "../constants.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
-import {LibChunks} from "../src/libraries/LibChunks.sol";
 import {_mobSystemId} from "../src/utils.sol";
+import "forge-std/console2.sol";
 /**
  * // all stats (except level and exp) are to the 10,000s place.  so 10_000 == 1;
  *     // hit points
@@ -46,8 +46,6 @@ import {_mobSystemId} from "../src/utils.sol";
  */
 
 contract Test_MobSystem is SetUp, GasReporter {
-    using LibChunks for uint256;
-
     function setUp() public override {
         super.setUp();
         vm.prank(deployer);

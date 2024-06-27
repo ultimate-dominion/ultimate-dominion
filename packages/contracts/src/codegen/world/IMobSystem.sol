@@ -20,11 +20,11 @@ interface IMobSystem {
 
   function UD__spawnMob(uint256 mobId, PositionData memory positionData) external returns (bytes32 entityId);
 
-  function UD__getMobId(bytes32 entityId) external view returns (uint256);
+  function UD__getMobId(bytes32 entityId) external pure returns (uint256);
 
-  function UD__getMobPosition(bytes32 entityId) external view returns (uint16 x, uint16 y);
+  function UD__getMobPosition(bytes32 entityId) external pure returns (uint16 x, uint16 y);
 
-  function UD__getSpawnCounter(bytes32 entityId) external view returns (uint256);
+  function UD__getSpawnCounter(bytes32 entityId) external pure returns (uint256);
 
   function UD__getNpcStats(uint256 mobId) external view returns (NPCStats memory);
 
