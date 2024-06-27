@@ -45,6 +45,7 @@ export default defineWorld({
         hitPoints: "uint256",
         damageTaken: "int256",
         experience: "uint256",
+        level: "uint256",
       },
     },
     MapConfig: {

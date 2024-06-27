@@ -32,7 +32,11 @@ interface IMobSystem {
 
   function UD__getNpcStats(uint256 mobId) external view returns (NPCStats memory);
 
+  function UD__getNpcStats(bytes32 entityId) external view returns (NPCStats memory);
+
   function UD__getMonsterStats(uint256 mobId) external view returns (MonsterStats memory);
+
+  function UD__getMonsterStats(bytes32 entityId) external view returns (MonsterStats memory);
 
   function UD__getMob(uint256 mobId) external view returns (MobsData memory);
 }
