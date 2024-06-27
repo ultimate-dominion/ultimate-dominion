@@ -12,27 +12,29 @@ import { CharacterStatsData } from "@codegen/index.sol";
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface ICharacterSystem {
-  function UD__getName(uint256 characterId) external view returns (bytes32 _name);
+  function UD__getName(bytes32 characterId) external view returns (bytes32 _name);
 
-  function UD__getClass(uint256 characterId) external view returns (Classes _class);
+  function UD__getClass(bytes32 characterId) external view returns (Classes _class);
 
-  function UD__getPlayerEntityId(uint256 characterId) external view returns (bytes32);
+  function UD__getPlayerEntityId(uint256 characterTokenId) external view returns (bytes32 characterId);
+
+  function UD__getCharacterTokenId(bytes32 characterId) external view returns (uint256);
 
   function UD__mintCharacter(
     address account,
     bytes32 name,
     string memory tokenUri
-  ) external returns (uint256 characterId);
+  ) external returns (bytes32 characterId);
 
-  function UD__rollStats(bytes32 userRandomNumber, uint256 characterId, Classes class) external payable;
+  function UD__rollStats(bytes32 userRandomNumber, bytes32 characterId, Classes class) external payable;
 
-  function UD__enterGame(uint256 characterId) external;
+  function UD__enterGame(bytes32 characterId) external;
 
   function UD__getCurrentLevel(uint256 experience) external view returns (uint256 currentLevel);
 
-  function UD__getOwner(uint256 characterId) external view returns (address);
+  function UD__getOwner(bytes32 characterId) external view returns (address);
 
-  function UD__getExperience(uint256 characterId) external view returns (uint256);
+  function UD__getExperience(bytes32 characterId) external view returns (uint256);
 
-  function UD__getCharacterStats(uint256 characterId) external view returns (CharacterStatsData memory);
+  function UD__getCharacterStats(bytes32 characterId) external view returns (CharacterStatsData memory);
 }
