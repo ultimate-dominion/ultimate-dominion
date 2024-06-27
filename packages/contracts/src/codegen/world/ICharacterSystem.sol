@@ -18,9 +18,9 @@ interface ICharacterSystem {
 
   function UD__getPlayerEntityId(uint256 characterTokenId) external view returns (bytes32 characterId);
 
-  function UD__getCharacterTokenId(bytes32 characterId) external view returns (uint256);
+  function UD__getCharacterTokenId(bytes32 characterId) external pure returns (uint256);
 
-  function UD__getOwnerAddress(bytes32 characterId) external view returns (address);
+  function UD__getOwnerAddress(bytes32 characterId) external pure returns (address);
 
   function UD__mintCharacter(
     address account,

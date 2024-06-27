@@ -7,7 +7,7 @@ import {RngRequestType, MobType, Alignment} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
 import {Mobs, MobsData} from "@tables/Mobs.sol";
 import {MonsterStats, NPCStats} from "@interfaces/Structs.sol";
-import {_requireOwner} from "../utils.sol";
+import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 
 contract MobSystem is System {
@@ -36,6 +36,7 @@ contract MobSystem is System {
     }
 
     function spawnMob(uint256 mobId, PositionData memory positionData) public returns (bytes32 entityId) {
+        _requireAccess(address(this), _msgSender());
         require(Counters.getCounter(address(this), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
         entityId = bytes32(
             abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), positionData.x, positionData.y)
@@ -44,16 +45,16 @@ contract MobSystem is System {
         EntitiesAtPosition.pushEntities(positionData.x, positionData.y, entityId);
     }
 
-    function getMobId(bytes32 entityId) public view returns (uint256) {
+    function getMobId(bytes32 entityId) public pure returns (uint256) {
         return uint256(uint256(entityId) >> 224);
     }
 
-    function getMobPosition(bytes32 entityId) public view returns (uint16 x, uint16 y) {
+    function getMobPosition(bytes32 entityId) public pure returns (uint16 x, uint16 y) {
         y = uint16(uint256(entityId));
         x = uint16(uint256(entityId) >> 16);
     }
 
-    function getSpawnCounter(bytes32 entityId) public view returns (uint256) {
+    function getSpawnCounter(bytes32 entityId) public pure returns (uint256) {
         return uint256(uint192(uint256(entityId) >> 32));
     }
 

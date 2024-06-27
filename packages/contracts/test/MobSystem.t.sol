@@ -25,7 +25,7 @@ import {
     ITEMS_NAMESPACE
 } from "../constants.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
-
+import {_mobSystemId} from "../src/utils.sol";
 import "forge-std/console2.sol";
 /**
  * // all stats (except level and exp) are to the 10,000s place.  so 10_000 == 1;
@@ -46,6 +46,12 @@ import "forge-std/console2.sol";
  */
 
 contract Test_MobSystem is SetUp, GasReporter {
+    function setUp() public override {
+        super.setUp();
+        vm.prank(deployer);
+        world.grantAccess(_mobSystemId("UD"), address(this));
+    }
+
     function test_createMob() public {
         vm.startPrank(deployer);
         uint256[] memory _inventory = new uint256[](1);
