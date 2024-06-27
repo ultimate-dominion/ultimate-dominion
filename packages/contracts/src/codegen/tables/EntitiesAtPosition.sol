@@ -23,8 +23,8 @@ library EntitiesAtPosition {
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0000000100000000000000000000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of (bytes32, int32, int32)
-  Schema constant _keySchema = Schema.wrap(0x002803005f232300000000000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (uint16, uint16)
+  Schema constant _keySchema = Schema.wrap(0x0004020001010000000000000000000000000000000000000000000000000000);
   // Hex-encoded value schema of (bytes32[])
   Schema constant _valueSchema = Schema.wrap(0x00000001c1000000000000000000000000000000000000000000000000000000);
 
@@ -33,10 +33,9 @@ library EntitiesAtPosition {
    * @return keyNames An array of strings with the names of key fields.
    */
   function getKeyNames() internal pure returns (string[] memory keyNames) {
-    keyNames = new string[](3);
-    keyNames[0] = "matchEntity";
-    keyNames[1] = "x";
-    keyNames[2] = "y";
+    keyNames = new string[](2);
+    keyNames[0] = "x";
+    keyNames[1] = "y";
   }
 
   /**
@@ -65,11 +64,10 @@ library EntitiesAtPosition {
   /**
    * @notice Get entities.
    */
-  function getEntities(bytes32 matchEntity, int32 x, int32 y) internal view returns (bytes32[] memory entities) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function getEntities(uint16 x, uint16 y) internal view returns (bytes32[] memory entities) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 0);
     return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
@@ -78,11 +76,10 @@ library EntitiesAtPosition {
   /**
    * @notice Get entities.
    */
-  function _getEntities(bytes32 matchEntity, int32 x, int32 y) internal view returns (bytes32[] memory entities) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _getEntities(uint16 x, uint16 y) internal view returns (bytes32[] memory entities) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 0);
     return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
@@ -91,11 +88,10 @@ library EntitiesAtPosition {
   /**
    * @notice Get entities.
    */
-  function get(bytes32 matchEntity, int32 x, int32 y) internal view returns (bytes32[] memory entities) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function get(uint16 x, uint16 y) internal view returns (bytes32[] memory entities) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 0);
     return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
@@ -104,11 +100,10 @@ library EntitiesAtPosition {
   /**
    * @notice Get entities.
    */
-  function _get(bytes32 matchEntity, int32 x, int32 y) internal view returns (bytes32[] memory entities) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _get(uint16 x, uint16 y) internal view returns (bytes32[] memory entities) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 0);
     return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
@@ -117,11 +112,10 @@ library EntitiesAtPosition {
   /**
    * @notice Set entities.
    */
-  function setEntities(bytes32 matchEntity, int32 x, int32 y, bytes32[] memory entities) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function setEntities(uint16 x, uint16 y, bytes32[] memory entities) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((entities)));
   }
@@ -129,11 +123,10 @@ library EntitiesAtPosition {
   /**
    * @notice Set entities.
    */
-  function _setEntities(bytes32 matchEntity, int32 x, int32 y, bytes32[] memory entities) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _setEntities(uint16 x, uint16 y, bytes32[] memory entities) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreCore.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((entities)));
   }
@@ -141,11 +134,10 @@ library EntitiesAtPosition {
   /**
    * @notice Set entities.
    */
-  function set(bytes32 matchEntity, int32 x, int32 y, bytes32[] memory entities) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function set(uint16 x, uint16 y, bytes32[] memory entities) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((entities)));
   }
@@ -153,11 +145,10 @@ library EntitiesAtPosition {
   /**
    * @notice Set entities.
    */
-  function _set(bytes32 matchEntity, int32 x, int32 y, bytes32[] memory entities) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _set(uint16 x, uint16 y, bytes32[] memory entities) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreCore.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((entities)));
   }
@@ -165,11 +156,10 @@ library EntitiesAtPosition {
   /**
    * @notice Get the length of entities.
    */
-  function lengthEntities(bytes32 matchEntity, int32 x, int32 y) internal view returns (uint256) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function lengthEntities(uint16 x, uint16 y) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 0);
     unchecked {
@@ -180,11 +170,10 @@ library EntitiesAtPosition {
   /**
    * @notice Get the length of entities.
    */
-  function _lengthEntities(bytes32 matchEntity, int32 x, int32 y) internal view returns (uint256) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _lengthEntities(uint16 x, uint16 y) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 0);
     unchecked {
@@ -195,11 +184,10 @@ library EntitiesAtPosition {
   /**
    * @notice Get the length of entities.
    */
-  function length(bytes32 matchEntity, int32 x, int32 y) internal view returns (uint256) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function length(uint16 x, uint16 y) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 0);
     unchecked {
@@ -210,11 +198,10 @@ library EntitiesAtPosition {
   /**
    * @notice Get the length of entities.
    */
-  function _length(bytes32 matchEntity, int32 x, int32 y) internal view returns (uint256) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _length(uint16 x, uint16 y) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 0);
     unchecked {
@@ -226,11 +213,10 @@ library EntitiesAtPosition {
    * @notice Get an item of entities.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function getItemEntities(bytes32 matchEntity, int32 x, int32 y, uint256 _index) internal view returns (bytes32) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function getItemEntities(uint16 x, uint16 y, uint256 _index) internal view returns (bytes32) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     unchecked {
       bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 32, (_index + 1) * 32);
@@ -242,11 +228,10 @@ library EntitiesAtPosition {
    * @notice Get an item of entities.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function _getItemEntities(bytes32 matchEntity, int32 x, int32 y, uint256 _index) internal view returns (bytes32) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _getItemEntities(uint16 x, uint16 y, uint256 _index) internal view returns (bytes32) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     unchecked {
       bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 32, (_index + 1) * 32);
@@ -258,11 +243,10 @@ library EntitiesAtPosition {
    * @notice Get an item of entities.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function getItem(bytes32 matchEntity, int32 x, int32 y, uint256 _index) internal view returns (bytes32) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function getItem(uint16 x, uint16 y, uint256 _index) internal view returns (bytes32) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     unchecked {
       bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 32, (_index + 1) * 32);
@@ -274,11 +258,10 @@ library EntitiesAtPosition {
    * @notice Get an item of entities.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function _getItem(bytes32 matchEntity, int32 x, int32 y, uint256 _index) internal view returns (bytes32) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _getItem(uint16 x, uint16 y, uint256 _index) internal view returns (bytes32) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     unchecked {
       bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 32, (_index + 1) * 32);
@@ -289,11 +272,10 @@ library EntitiesAtPosition {
   /**
    * @notice Push an element to entities.
    */
-  function pushEntities(bytes32 matchEntity, int32 x, int32 y, bytes32 _element) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function pushEntities(uint16 x, uint16 y, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 0, abi.encodePacked((_element)));
   }
@@ -301,11 +283,10 @@ library EntitiesAtPosition {
   /**
    * @notice Push an element to entities.
    */
-  function _pushEntities(bytes32 matchEntity, int32 x, int32 y, bytes32 _element) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _pushEntities(uint16 x, uint16 y, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreCore.pushToDynamicField(_tableId, _keyTuple, 0, abi.encodePacked((_element)));
   }
@@ -313,11 +294,10 @@ library EntitiesAtPosition {
   /**
    * @notice Push an element to entities.
    */
-  function push(bytes32 matchEntity, int32 x, int32 y, bytes32 _element) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function push(uint16 x, uint16 y, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 0, abi.encodePacked((_element)));
   }
@@ -325,11 +305,10 @@ library EntitiesAtPosition {
   /**
    * @notice Push an element to entities.
    */
-  function _push(bytes32 matchEntity, int32 x, int32 y, bytes32 _element) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _push(uint16 x, uint16 y, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreCore.pushToDynamicField(_tableId, _keyTuple, 0, abi.encodePacked((_element)));
   }
@@ -337,11 +316,10 @@ library EntitiesAtPosition {
   /**
    * @notice Pop an element from entities.
    */
-  function popEntities(bytes32 matchEntity, int32 x, int32 y) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function popEntities(uint16 x, uint16 y) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 0, 32);
   }
@@ -349,11 +327,10 @@ library EntitiesAtPosition {
   /**
    * @notice Pop an element from entities.
    */
-  function _popEntities(bytes32 matchEntity, int32 x, int32 y) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _popEntities(uint16 x, uint16 y) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreCore.popFromDynamicField(_tableId, _keyTuple, 0, 32);
   }
@@ -361,11 +338,10 @@ library EntitiesAtPosition {
   /**
    * @notice Pop an element from entities.
    */
-  function pop(bytes32 matchEntity, int32 x, int32 y) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function pop(uint16 x, uint16 y) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 0, 32);
   }
@@ -373,11 +349,10 @@ library EntitiesAtPosition {
   /**
    * @notice Pop an element from entities.
    */
-  function _pop(bytes32 matchEntity, int32 x, int32 y) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _pop(uint16 x, uint16 y) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreCore.popFromDynamicField(_tableId, _keyTuple, 0, 32);
   }
@@ -385,11 +360,10 @@ library EntitiesAtPosition {
   /**
    * @notice Update an element of entities at `_index`.
    */
-  function updateEntities(bytes32 matchEntity, int32 x, int32 y, uint256 _index, bytes32 _element) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function updateEntities(uint16 x, uint16 y, uint256 _index, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     unchecked {
       bytes memory _encoded = abi.encodePacked((_element));
@@ -400,11 +374,10 @@ library EntitiesAtPosition {
   /**
    * @notice Update an element of entities at `_index`.
    */
-  function _updateEntities(bytes32 matchEntity, int32 x, int32 y, uint256 _index, bytes32 _element) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _updateEntities(uint16 x, uint16 y, uint256 _index, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     unchecked {
       bytes memory _encoded = abi.encodePacked((_element));
@@ -415,11 +388,10 @@ library EntitiesAtPosition {
   /**
    * @notice Update an element of entities at `_index`.
    */
-  function update(bytes32 matchEntity, int32 x, int32 y, uint256 _index, bytes32 _element) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function update(uint16 x, uint16 y, uint256 _index, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     unchecked {
       bytes memory _encoded = abi.encodePacked((_element));
@@ -430,11 +402,10 @@ library EntitiesAtPosition {
   /**
    * @notice Update an element of entities at `_index`.
    */
-  function _update(bytes32 matchEntity, int32 x, int32 y, uint256 _index, bytes32 _element) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _update(uint16 x, uint16 y, uint256 _index, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     unchecked {
       bytes memory _encoded = abi.encodePacked((_element));
@@ -445,11 +416,10 @@ library EntitiesAtPosition {
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(bytes32 matchEntity, int32 x, int32 y) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function deleteRecord(uint16 x, uint16 y) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -457,11 +427,10 @@ library EntitiesAtPosition {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(bytes32 matchEntity, int32 x, int32 y) internal {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function _deleteRecord(uint16 x, uint16 y) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -502,11 +471,10 @@ library EntitiesAtPosition {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(bytes32 matchEntity, int32 x, int32 y) internal pure returns (bytes32[] memory) {
-    bytes32[] memory _keyTuple = new bytes32[](3);
-    _keyTuple[0] = matchEntity;
-    _keyTuple[1] = bytes32(uint256(int256(x)));
-    _keyTuple[2] = bytes32(uint256(int256(y)));
+  function encodeKeyTuple(uint16 x, uint16 y) internal pure returns (bytes32[] memory) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
+    _keyTuple[0] = bytes32(uint256(x));
+    _keyTuple[1] = bytes32(uint256(y));
 
     return _keyTuple;
   }

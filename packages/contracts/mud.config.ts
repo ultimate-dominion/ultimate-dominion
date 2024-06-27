@@ -78,9 +78,10 @@ export default defineWorld({
     Counters: {
       schema: {
         contractAddress: "address",
+        mobId: "uint256",
         counter: "uint256",
       },
-      key: ["contractAddress"],
+      key: ["contractAddress", "mobId"],
     },
     Items: {
       schema: {
@@ -160,20 +161,18 @@ export default defineWorld({
      * The position of an entity.
      */
     Position: {
-      key: ["matchEntity", "entity"],
+      key: ["entity"],
       schema: {
-        matchEntity: "bytes32",
         entity: "bytes32",
-        x: "int32",
-        y: "int32",
+        x: "uint16",
+        y: "uint16",
       },
     },
     EntitiesAtPosition: {
-      key: ["matchEntity", "x", "y"],
+      key: ["x", "y"],
       schema: {
-        matchEntity: "bytes32",
-        x: "int32",
-        y: "int32",
+        x: "uint16",
+        y: "uint16",
         entities: "bytes32[]",
       },
     },

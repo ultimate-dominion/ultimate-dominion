@@ -231,8 +231,8 @@ contract ItemsSystem is System {
 
     function _incrementItemsCounter() internal returns (uint256) {
         address itemsContract = UltimateDominionConfig.getItems();
-        uint256 itemsCounter = Counters.getCounter(address(itemsContract)) + 1;
-        Counters.setCounter(itemsContract, (itemsCounter));
+        uint256 itemsCounter = Counters.getCounter(address(itemsContract), 0) + 1;
+        Counters.setCounter(itemsContract, 0, (itemsCounter));
         return itemsCounter;
     }
 

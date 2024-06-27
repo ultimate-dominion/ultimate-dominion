@@ -433,6 +433,49 @@
   },
   {
     "type": "function",
+    "name": "UD__getMobId",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMobPosition",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getMonsterStats",
     "inputs": [
       {
@@ -589,6 +632,25 @@
         "name": "_provider",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getSpawnCounter",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -781,6 +843,42 @@
       }
     ],
     "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__spawnMob",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "positionData",
+        "type": "tuple",
+        "internalType": "struct PositionData",
+        "components": [
+          {
+            "name": "x",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "y",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
