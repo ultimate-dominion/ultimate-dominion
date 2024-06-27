@@ -36,8 +36,8 @@ library CharacterEquipment {
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (int256, int256, int256, int256, uint256, uint256[], uint256[], bytes32[])
-  Schema constant _valueSchema = Schema.wrap(0x00a005033f3f3f3f1f8181c10000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint256[], uint256[], uint256[])
+  Schema constant _valueSchema = Schema.wrap(0x0000000381818100000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -615,7 +615,7 @@ library CharacterEquipment {
   /**
    * @notice Get equippedSpells.
    */
-  function getEquippedSpells(bytes32 characterId) internal view returns (bytes32[] memory equippedSpells) {
+  function getEquippedSpells(bytes32 characterId) internal view returns (uint256[] memory equippedSpells) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -626,7 +626,7 @@ library CharacterEquipment {
   /**
    * @notice Get equippedSpells.
    */
-  function _getEquippedSpells(bytes32 characterId) internal view returns (bytes32[] memory equippedSpells) {
+  function _getEquippedSpells(bytes32 characterId) internal view returns (uint256[] memory equippedSpells) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -637,7 +637,7 @@ library CharacterEquipment {
   /**
    * @notice Set equippedSpells.
    */
-  function setEquippedSpells(bytes32 characterId, bytes32[] memory equippedSpells) internal {
+  function setEquippedSpells(bytes32 characterId, uint256[] memory equippedSpells) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -647,7 +647,7 @@ library CharacterEquipment {
   /**
    * @notice Set equippedSpells.
    */
-  function _setEquippedSpells(bytes32 characterId, bytes32[] memory equippedSpells) internal {
+  function _setEquippedSpells(bytes32 characterId, uint256[] memory equippedSpells) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -684,7 +684,7 @@ library CharacterEquipment {
    * @notice Get an item of equippedSpells.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function getItemEquippedSpells(bytes32 characterId, uint256 _index) internal view returns (bytes32) {
+  function getItemEquippedSpells(bytes32 characterId, uint256 _index) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -698,7 +698,7 @@ library CharacterEquipment {
    * @notice Get an item of equippedSpells.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function _getItemEquippedSpells(bytes32 characterId, uint256 _index) internal view returns (bytes32) {
+  function _getItemEquippedSpells(bytes32 characterId, uint256 _index) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -711,7 +711,7 @@ library CharacterEquipment {
   /**
    * @notice Push an element to equippedSpells.
    */
-  function pushEquippedSpells(bytes32 characterId, bytes32 _element) internal {
+  function pushEquippedSpells(bytes32 characterId, uint256 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -721,7 +721,7 @@ library CharacterEquipment {
   /**
    * @notice Push an element to equippedSpells.
    */
-  function _pushEquippedSpells(bytes32 characterId, bytes32 _element) internal {
+  function _pushEquippedSpells(bytes32 characterId, uint256 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -751,7 +751,7 @@ library CharacterEquipment {
   /**
    * @notice Update an element of equippedSpells at `_index`.
    */
-  function updateEquippedSpells(bytes32 characterId, uint256 _index, bytes32 _element) internal {
+  function updateEquippedSpells(bytes32 characterId, uint256 _index, uint256 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -764,7 +764,7 @@ library CharacterEquipment {
   /**
    * @notice Update an element of equippedSpells at `_index`.
    */
-  function _updateEquippedSpells(bytes32 characterId, uint256 _index, bytes32 _element) internal {
+  function _updateEquippedSpells(bytes32 characterId, uint256 _index, uint256 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -809,11 +809,6 @@ library CharacterEquipment {
    */
   function set(
     bytes32 characterId,
-    int256 strBonus,
-    int256 agiBonus,
-    int256 intBonus,
-    int256 hpBonus,
-    uint256 armor,
     uint256[] memory equippedArmor,
     uint256[] memory equippedWeapons,
     bytes32[] memory equippedSpells
@@ -834,11 +829,6 @@ library CharacterEquipment {
    */
   function _set(
     bytes32 characterId,
-    int256 strBonus,
-    int256 agiBonus,
-    int256 intBonus,
-    int256 hpBonus,
-    uint256 armor,
     uint256[] memory equippedArmor,
     uint256[] memory equippedWeapons,
     bytes32[] memory equippedSpells
@@ -858,14 +848,7 @@ library CharacterEquipment {
    * @notice Set the full data using the data struct.
    */
   function set(bytes32 characterId, CharacterEquipmentData memory _table) internal {
-    bytes memory _staticData = encodeStatic(
-      _table.strBonus,
-      _table.agiBonus,
-      _table.intBonus,
-      _table.hpBonus,
-      _table.armor
-    );
-
+    bytes memory _staticData;
     EncodedLengths _encodedLengths = encodeLengths(_table.equippedArmor, _table.equippedWeapons, _table.equippedSpells);
     bytes memory _dynamicData = encodeDynamic(_table.equippedArmor, _table.equippedWeapons, _table.equippedSpells);
 
@@ -879,14 +862,7 @@ library CharacterEquipment {
    * @notice Set the full data using the data struct.
    */
   function _set(bytes32 characterId, CharacterEquipmentData memory _table) internal {
-    bytes memory _staticData = encodeStatic(
-      _table.strBonus,
-      _table.agiBonus,
-      _table.intBonus,
-      _table.hpBonus,
-      _table.armor
-    );
-
+    bytes memory _staticData;
     EncodedLengths _encodedLengths = encodeLengths(_table.equippedArmor, _table.equippedWeapons, _table.equippedSpells);
     bytes memory _dynamicData = encodeDynamic(_table.equippedArmor, _table.equippedWeapons, _table.equippedSpells);
 

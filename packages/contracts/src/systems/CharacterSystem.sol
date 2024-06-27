@@ -42,7 +42,7 @@ contract CharacterSystem is System {
     }
 
     function getClass(bytes32 characterId) public view returns (Classes _class) {
-        _class = Stats.getClass(characterId);
+        _class = Characters.getClass(characterId);
     }
 
     function _goldToken() internal view returns (IERC20System goldToken) {
@@ -53,17 +53,27 @@ contract CharacterSystem is System {
         characterToken = IERC721Mintable(UltimateDominionConfig.getCharacterToken());
     }
 
-    function getPlayerEntityId(uint256 characterId) public view returns (bytes32) {
-        address ownerAddress = _characterToken().ownerOf(characterId);
-        return bytes32(uint256(uint160(ownerAddress)) << 88 | characterId);
+    function getPlayerEntityId(uint256 characterTokenId) public view returns (bytes32 characterId) {
+        address ownerAddress = _characterToken().ownerOf(characterTokenId);
+        characterId = bytes32(uint256(uint160(ownerAddress)) << 88 | characterTokenId);
     }
+
+    function getCharacterTokenId(bytes32 characterId) public view returns (uint256) {
+        return (uint256(uint88(uint256(characterId))));
+    }
+    /**
+     * @param account the address of the account that will own the character
+     * @param name the keccack256 hash of the characters name to check for duplicates
+     * @param tokenUri the token uri to be set for the character token
+     * @return characterId the bytes32 character id combination of the owner address and the tokenId
+     */
 
     function mintCharacter(address account, bytes32 name, string memory tokenUri)
         public
         returns (bytes32 characterId)
     {
         uint256 characterTokenId = _incrementCharacterCounter();
-        require(characterTokenId < type(uint96).max, "CHARACATERS: Max characters reached");
+        require(characterTokenId < type(uint88).max, "CHARACATERS: Max characters reached");
         IWorld(_world()).call(
             _erc721SystemId(CHARACTERS_NAMESPACE), abi.encodeCall(IERC721Mintable.mint, (account, characterTokenId))
         );
@@ -77,7 +87,7 @@ contract CharacterSystem is System {
     }
 
     function rollStats(bytes32 userRandomNumber, bytes32 characterId, Classes class) public payable {
-        require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
+        require(!Characters.getLocked(characterId), "you have already accepted this character");
         require(_isOwner(characterId), "Not your Character.");
         RngRequestType requestType = RngRequestType.CharacterStats;
         Stats.setClass(characterId, class);
@@ -135,18 +145,26 @@ contract CharacterSystem is System {
     }
 
     function _isOwner(bytes32 characterId) internal view returns (bool) {
-        return _msgSender() == _characterToken().ownerOf(getCharacterTokenId(characterId));
+        return _msgSender() == Characters.getOwner(characterId);
     }
 
     function getOwner(bytes32 characterId) public view returns (address) {
         return Characters.getOwner(characterId);
     }
 
-    function getExperience(bytes32 characterId) public view returns (uint256) {
-        return Stats.getExperience(characterId);
+    function issueGold(bytes32 characterId, uint256 amount) internal {
+        _gold().mint(getOwner(characterId), amount);
     }
 
-    function getStats(bytes32 characterId) public view returns (StatsData memory) {
-        return Stats.get(characterId);
+    function _charactersNamespace() internal returns (ResourceId) {
+        return WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
+    }
+
+    function getExperience(bytes32 characterId) public view returns (uint256) {
+        return CharacterStats.getExperience(characterId);
+    }
+
+    function getCharacterStats(bytes32 characterId) public view returns (CharacterStatsData memory) {
+        return CharacterStats.get(characterId);
     }
 }

@@ -153,48 +153,6 @@ declare const abi: [
         "internalType": "bytes32"
       },
       {
-        "name": "actionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__calculateGoldDrop",
-    "inputs": [
-      {
-        "name": "mobLevel",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "dropAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__calculateItemDrop",
-    "inputs": [
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "itemId",
         "type": "uint256",
         "internalType": "uint256"
@@ -425,24 +383,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__equipAction",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "actionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "UD__equipItems",
     "inputs": [
       {
@@ -464,54 +404,9 @@ declare const abi: [
     "name": "UD__executeCombat",
     "inputs": [
       {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "encounterId",
+        "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
-      },
-      {
-        "name": "actions",
-        "type": "tuple[]",
-        "internalType": "struct Action[]",
-        "components": [
-          {
-            "name": "attackerEntityId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "defenderEntityId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__getArmorStats",
-    "inputs": [
-      {
-        "name": "itemId",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -590,7 +485,7 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -1175,14 +1070,14 @@ declare const abi: [
     "name": "UD__getPlayerEntityId",
     "inputs": [
       {
-        "name": "characterId",
+        "name": "characterTokenId",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
       }

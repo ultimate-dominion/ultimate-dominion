@@ -32,8 +32,8 @@ library Characters {
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint256, address, bytes32, bool)
-  Schema constant _valueSchema = Schema.wrap(0x005504001f615f60000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (address, uint8, bytes32, bool)
+  Schema constant _valueSchema = Schema.wrap(0x0036040061005f60000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -73,7 +73,7 @@ library Characters {
   /**
    * @notice Get tokenId.
    */
-  function getTokenId(bytes32 characterId) internal view returns (uint256 tokenId) {
+  function getOwner(bytes32 characterId) internal view returns (address owner) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -151,7 +151,49 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((owner)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((owner)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get class.
+   */
+  function getClass(bytes32 characterId) internal view returns (Classes class) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    return Classes(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Get class.
+   */
+  function _getClass(bytes32 characterId) internal view returns (Classes class) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    return Classes(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Set class.
+   */
+  function setClass(bytes32 characterId, Classes class) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked(uint8(class)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set class.
+   */
+  function _setClass(bytes32 characterId, Classes class) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked(uint8(class)), _fieldLayout);
   }
 
   /**
@@ -271,8 +313,8 @@ library Characters {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(bytes32 characterId, uint256 tokenId, address owner, bytes32 name, bool locked) internal {
-    bytes memory _staticData = encodeStatic(tokenId, owner, name, locked);
+  function set(bytes32 characterId, address owner, Classes class, bytes32 name, bool locked) internal {
+    bytes memory _staticData = encodeStatic(owner, class, name, locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -286,8 +328,8 @@ library Characters {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(bytes32 characterId, uint256 tokenId, address owner, bytes32 name, bool locked) internal {
-    bytes memory _staticData = encodeStatic(tokenId, owner, name, locked);
+  function _set(bytes32 characterId, address owner, Classes class, bytes32 name, bool locked) internal {
+    bytes memory _staticData = encodeStatic(owner, class, name, locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -302,7 +344,7 @@ library Characters {
    * @notice Set the full data using the data struct.
    */
   function set(bytes32 characterId, CharactersData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.tokenId, _table.owner, _table.name, _table.locked);
+    bytes memory _staticData = encodeStatic(_table.owner, _table.class, _table.name, _table.locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -317,7 +359,7 @@ library Characters {
    * @notice Set the full data using the data struct.
    */
   function _set(bytes32 characterId, CharactersData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.tokenId, _table.owner, _table.name, _table.locked);
+    bytes memory _staticData = encodeStatic(_table.owner, _table.class, _table.name, _table.locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

@@ -91,13 +91,16 @@ contract SetUp is Test {
 
         vm.prank(alice);
         alicesCharacterId = world.UD__mintCharacter(alice, bytes32("Steve"), "setup_char_uri");
-
         vm.startPrank(bob);
         bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
         uint256 fees = entropy.getFee(address(1));
         world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Rogue);
         world.UD__enterGame(bobCharacterId);
         vm.stopPrank();
+        vm.label(alice, "alice");
+        vm.label(bob, "bob");
+        vm.label(worldAddress, "world");
+        vm.label(world.UD__getCharacterToken(), "character token");
     }
 
     function getUser() internal returns (address payable) {

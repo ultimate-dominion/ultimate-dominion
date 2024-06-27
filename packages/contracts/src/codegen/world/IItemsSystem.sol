@@ -28,9 +28,17 @@ interface IItemsSystem {
     string[] memory itemMetadataURIs
   ) external;
 
+  function UD__equipItems(bytes32 characterId, uint256[] memory itemIds) external;
+
+  function UD__isEquipped(bytes32 characterId, uint256 itemId) external view returns (bool _isEquipped);
+
+  function UD__checkRequirements(bytes32 characterId, uint256 itemId) external view returns (bool);
+
+  function UD__unequipItem(bytes32 characterId, uint256 itemId) external returns (bool success);
+
   function UD__getTotalSupply(uint256 tokenId) external view returns (uint256 _supply);
 
-  function UD__getStarterItems(Classes class) external view returns (StarterItemsData memory data);
+  function UD__issueStarterItems(bytes32 characterId) external;
 
   function UD__setTokenUri(uint256 tokenId, string memory tokenUri) external;
 
