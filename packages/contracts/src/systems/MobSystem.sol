@@ -64,7 +64,24 @@ contract MobSystem is System {
         return npcStats;
     }
 
+    function getNpcStats(bytes32 entityId) public view returns (NPCStats memory) {
+        uint256 mobId = getMobId(entityId);
+        MobsData memory mobData = Mobs.get(mobId);
+        require(mobData.mobType == MobType.NPC, "MOB SYSTEM: Wrong Mob Type");
+        NPCStats memory npcStats = abi.decode(mobData.mobStats, (NPCStats));
+        return npcStats;
+    }
+
     function getMonsterStats(uint256 mobId) public view returns (MonsterStats memory) {
+        MobsData memory mobData = Mobs.get(mobId);
+        require(mobData.mobType == MobType.Monster, "MOB SYSTEM: Wrong Mob Type");
+
+        MonsterStats memory monsterStats = abi.decode(mobData.mobStats, (MonsterStats));
+        return monsterStats;
+    }
+
+    function getMonsterStats(bytes32 entityId) public view returns (MonsterStats memory) {
+        uint256 mobId = getMobId(entityId);
         MobsData memory mobData = Mobs.get(mobId);
         require(mobData.mobType == MobType.Monster, "MOB SYSTEM: Wrong Mob Type");
 
