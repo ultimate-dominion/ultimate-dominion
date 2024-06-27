@@ -23,8 +23,8 @@ library Counters {
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0020010020000000000000000000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of (address)
-  Schema constant _keySchema = Schema.wrap(0x0014010061000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (address, uint256)
+  Schema constant _keySchema = Schema.wrap(0x00340200611f0000000000000000000000000000000000000000000000000000);
   // Hex-encoded value schema of (uint256)
   Schema constant _valueSchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
 
@@ -33,8 +33,9 @@ library Counters {
    * @return keyNames An array of strings with the names of key fields.
    */
   function getKeyNames() internal pure returns (string[] memory keyNames) {
-    keyNames = new string[](1);
+    keyNames = new string[](2);
     keyNames[0] = "contractAddress";
+    keyNames[1] = "mobId";
   }
 
   /**
@@ -63,9 +64,10 @@ library Counters {
   /**
    * @notice Get counter.
    */
-  function getCounter(address contractAddress) internal view returns (uint256 counter) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function getCounter(address contractAddress, uint256 mobId) internal view returns (uint256 counter) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -74,9 +76,10 @@ library Counters {
   /**
    * @notice Get counter.
    */
-  function _getCounter(address contractAddress) internal view returns (uint256 counter) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function _getCounter(address contractAddress, uint256 mobId) internal view returns (uint256 counter) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -85,9 +88,10 @@ library Counters {
   /**
    * @notice Get counter.
    */
-  function get(address contractAddress) internal view returns (uint256 counter) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function get(address contractAddress, uint256 mobId) internal view returns (uint256 counter) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -96,9 +100,10 @@ library Counters {
   /**
    * @notice Get counter.
    */
-  function _get(address contractAddress) internal view returns (uint256 counter) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function _get(address contractAddress, uint256 mobId) internal view returns (uint256 counter) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -107,9 +112,10 @@ library Counters {
   /**
    * @notice Set counter.
    */
-  function setCounter(address contractAddress, uint256 counter) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function setCounter(address contractAddress, uint256 mobId, uint256 counter) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
   }
@@ -117,9 +123,10 @@ library Counters {
   /**
    * @notice Set counter.
    */
-  function _setCounter(address contractAddress, uint256 counter) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function _setCounter(address contractAddress, uint256 mobId, uint256 counter) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
   }
@@ -127,9 +134,10 @@ library Counters {
   /**
    * @notice Set counter.
    */
-  function set(address contractAddress, uint256 counter) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function set(address contractAddress, uint256 mobId, uint256 counter) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
   }
@@ -137,9 +145,10 @@ library Counters {
   /**
    * @notice Set counter.
    */
-  function _set(address contractAddress, uint256 counter) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function _set(address contractAddress, uint256 mobId, uint256 counter) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
   }
@@ -147,9 +156,10 @@ library Counters {
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(address contractAddress) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function deleteRecord(address contractAddress, uint256 mobId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -157,9 +167,10 @@ library Counters {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(address contractAddress) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function _deleteRecord(address contractAddress, uint256 mobId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -190,9 +201,10 @@ library Counters {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(address contractAddress) internal pure returns (bytes32[] memory) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
+  function encodeKeyTuple(address contractAddress, uint256 mobId) internal pure returns (bytes32[] memory) {
+    bytes32[] memory _keyTuple = new bytes32[](2);
     _keyTuple[0] = bytes32(uint256(uint160(contractAddress)));
+    _keyTuple[1] = bytes32(uint256(mobId));
 
     return _keyTuple;
   }

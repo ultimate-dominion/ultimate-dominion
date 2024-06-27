@@ -4,7 +4,7 @@ import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, MobType} from "@codegen/common.sol";
 import {CharacterStatsData} from "@tables/CharacterStats.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {UltimateDominionConfig, PositionData} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
@@ -63,9 +63,37 @@ contract Test_MobSystem is SetUp, GasReporter {
         uint256 newMobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), "test_monster_uri");
 
         MobsData memory newMob = world.UD__getMob(newMobId);
-        assertEq(newMobId, 1);
+        assertEq(newMobId, 2);
         assertEq(uint8(newMob.mobType), uint8(MobType.Monster));
         assertEq(newMob.mobStats, abi.encode(newMonster));
         assertEq(newMob.mobMetadata, "test_monster_uri");
+    }
+
+    function test_getEntityId() public {
+        PositionData memory posDat = PositionData({x: 1, y: 2});
+        bytes32 entityId = bytes32(abi.encodePacked(uint32(starterMobId), uint192(1), posDat.x, posDat.y));
+
+        assertEq(world.UD__spawnMob(1, posDat), entityId);
+    }
+
+    function test_getMobId() public {
+        PositionData memory posDat = PositionData({x: 1, y: 2});
+        bytes32 entityId = world.UD__spawnMob(starterMobId, posDat);
+
+        assertEq(world.UD__getMobId(entityId), starterMobId);
+    }
+
+    function test_getMobPosition() public {
+        PositionData memory posDat = PositionData({x: 1, y: 2});
+        bytes32 entityId = world.UD__spawnMob(starterMobId, posDat);
+        (uint16 x, uint16 y) = world.UD__getMobPosition(entityId);
+        assertEq(x, 1);
+        assertEq(y, 2);
+    }
+
+    function test_getSpawnCounter() public {
+        PositionData memory posDat = PositionData({x: 1, y: 2});
+        bytes32 entityId = world.UD__spawnMob(starterMobId, posDat);
+        assertEq(world.UD__getSpawnCounter(entityId), 1);
     }
 }

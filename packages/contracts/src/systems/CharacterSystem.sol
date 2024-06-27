@@ -85,7 +85,7 @@ contract CharacterSystem is System {
     }
 
     function rollStats(bytes32 userRandomNumber, bytes32 characterId, Classes class) public payable {
-        require(!Characters.getLocked(characterId), "you have already accepted this character");
+        require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
         require(_isOwner(characterId), "Not your Character.");
         RngRequestType requestType = RngRequestType.CharacterStats;
         Characters.setClass(characterId, class);
@@ -126,8 +126,8 @@ contract CharacterSystem is System {
 
     function _incrementCharacterCounter() internal returns (uint256) {
         address characterContract = UltimateDominionConfig.getCharacterToken();
-        uint256 characterCounter = Counters.getCounter(address(characterContract)) + 1;
-        Counters.setCounter(characterContract, (characterCounter));
+        uint256 characterCounter = Counters.getCounter(address(characterContract), 0) + 1;
+        Counters.setCounter(characterContract, 0, (characterCounter));
         return characterCounter;
     }
 
