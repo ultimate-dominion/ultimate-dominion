@@ -6,6 +6,9 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
+import { SyncStep } from '@latticexyz/store-sync';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
@@ -18,8 +21,13 @@ export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { isConnected } = useAccount();
-  const { delegatorAddress } = useMUD();
+  const {
+    components: { SyncProgress },
+    delegatorAddress,
+  } = useMUD();
   const { character } = useCharacter();
+
+  const syncProgress = useComponentValue(SyncProgress, singletonEntity);
 
   const onPlay = useCallback(() => {
     if (!(delegatorAddress && isConnected)) {
@@ -63,7 +71,14 @@ export const Welcome = (): JSX.Element => {
             your path through the darkness.
           </Text>
         </VStack>
-        <Button onClick={onPlay}>Play</Button>
+
+        {syncProgress && syncProgress.step !== SyncStep.LIVE ? (
+          <Text>
+            {syncProgress.message} {Math.round(syncProgress.percentage)}%
+          </Text>
+        ) : (
+          <Button onClick={onPlay}>Play</Button>
+        )}
       </VStack>
       <ConnectWalletModal isOpen={isOpen} onClose={onClose} />
     </Container>
