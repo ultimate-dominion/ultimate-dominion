@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {RandomNumbers, Position, EntitiesAtPosition, MatchEntity, MobsByLevel} from "@codegen/index.sol";
+import {RandomNumbers, Position, PositionData, EntitiesAtPosition} from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
 import {Mobs, MobsData} from "@tables/Mobs.sol";
@@ -14,19 +14,16 @@ contract MobSystem is System {
     /**
      *  @dev this creates a mob template that can be spawned into the world at any tile location
      *  @param mobType the type of mob this is Monster or NPC for now
-     *  @param stats the encoded bytes struct of the stats of this particular mob encode MonsterStats for a monster and NPCStats for an npc
+     *  @param mobStats the encoded bytes struct of the stats of this particular mob encode MonsterStats for a monster and NPCStats for an npc
      *  @param mobMetadataUri the uri for an associated metadata for the mob
      *  @return mobId, the identifier for this mob template
      */
-    function createMob(MobType mobType, bytes memory stats, string memory mobMetadataUri) public returns (uint256) {
+    function createMob(MobType mobType, bytes memory mobStats, string memory mobMetadataUri) public returns (uint256) {
         _requireOwner(address(this), _msgSender());
         uint256 mobId = _incrementMobId();
         require(mobId < type(uint32).max, "MOB SYSTEM: Max Monster types reached");
-        Mobs.set(mobId, mobType, stats, mobMetadataUri);
-        if (uint8(mobType) == 0) {
-            MonsterStats memory newMob = abi.decode(stats, (MonsterStats));
-            MobsByLevel.pushMobIds(newMob.level, mobId);
-        }
+        Mobs.set(mobId, mobType, mobStats, mobMetadataUri);
+
         return mobId;
     }
 
@@ -38,17 +35,29 @@ contract MobSystem is System {
         }
     }
 
-    // function spawnMob(uint256 mobId)
-
-    function getNpcStats(uint256 mobId) public view returns (NPCStats memory) {
-        MobsData memory mobData = Mobs.get(mobId);
-        require(mobData.mobType == MobType.NPC, "MOB SYSTEM: Wrong Mob Type");
-        NPCStats memory npcStats = abi.decode(mobData.mobStats, (NPCStats));
-        return npcStats;
+    function spawnMob(uint256 mobId, PositionData memory positionData) public returns (bytes32 entityId) {
+        require(Counters.getCounter(address(this), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
+        entityId = bytes32(
+            abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), positionData.x, positionData.y)
+        );
+        Position.set(entityId, positionData);
+        EntitiesAtPosition.pushEntities(positionData.x, positionData.y, entityId);
     }
 
-    function getNpcStats(bytes32 entityId) public view returns (NPCStats memory) {
-        uint256 mobId = getMobId(entityId);
+    function getMobId(bytes32 entityId) public view returns (uint256) {
+        return uint256(uint256(entityId) >> 224);
+    }
+
+    function getMobPosition(bytes32 entityId) public view returns (uint16 x, uint16 y) {
+        y = uint16(uint256(entityId));
+        x = uint16(uint256(entityId) >> 16);
+    }
+
+    function getSpawnCounter(bytes32 entityId) public view returns (uint256) {
+        return uint256(uint192(uint256(entityId) >> 32));
+    }
+
+    function getNpcStats(uint256 mobId) public view returns (NPCStats memory) {
         MobsData memory mobData = Mobs.get(mobId);
         require(mobData.mobType == MobType.NPC, "MOB SYSTEM: Wrong Mob Type");
         NPCStats memory npcStats = abi.decode(mobData.mobStats, (NPCStats));

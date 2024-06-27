@@ -87,7 +87,7 @@ contract CharacterSystem is System {
     }
 
     function rollStats(bytes32 userRandomNumber, bytes32 characterId, Classes class) public payable {
-        require(!Characters.getLocked(characterId), "you have already accepted this character");
+        require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
         require(_isOwner(characterId), "Not your Character.");
         RngRequestType requestType = RngRequestType.CharacterStats;
         Stats.setClass(characterId, class);

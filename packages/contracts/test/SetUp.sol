@@ -13,9 +13,8 @@ import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {Characters, CharactersData, UltimateDominionConfig} from "@codegen/index.sol";
-import {Classes, MobType, ItemType, ActionType} from "@codegen/common.sol";
-import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
-import {WeaponStats, MonsterStats, ArmorStats, PhysicalAttackStats} from "@interfaces/Structs.sol";
+import {Classes, MobType} from "@codegen/common.sol";
+import {WeaponStats, MonsterStats} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_NAMESPACE} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {System} from "@latticexyz/world/src/System.sol";
@@ -30,6 +29,7 @@ contract SetUp is Test {
     IWorld public world;
     address public worldAddress;
     IEntropy public entropy;
+    uint256 starterMobId;
 
     IERC20Mintable public goldToken;
     IERC721Mintable public characterToken;
@@ -58,45 +58,30 @@ contract SetUp is Test {
 
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;
-        // create a starter armor
-        uint8[] memory classRestrictions = new uint8[](0);
-        ArmorStats memory newArmor = ArmorStats({
-            armorModifier: 1,
-            classRestrictions: classRestrictions,
-            minLevel: 0,
-            strModifier: 1,
-            agiModifier: 2,
-            intModifier: 3,
-            hitPointModifier: 4
+
+        MonsterStats memory newMonster = MonsterStats({
+            hp: 10000,
+            armor: 10000,
+            level: 1,
+            experience: 10000,
+            baseDamage: 10000,
+            class: Classes.Warrior,
+            inventory: _inventory
         });
+        starterMobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), "test_monster_uri");
 
-        PhysicalAttackStats memory basicAttack = PhysicalAttackStats({
-            bonusDamage: 0,
-            armorPenetration: 0,
-            attackModifierBonus: 0,
-            critChanceBonus: 0,
-            classRestrictions: classRestrictions
-        });
-        basicAttackId = world.UD__createAction(ActionType.PhysicalAttack, abi.encode(basicAttack));
-
-        vm.label(alice, "alice");
-        vm.label(bob, "bob");
-        vm.label(worldAddress, "world");
-        vm.label(world.UD__getCharacterToken(), "character token");
-
-        newArmorId = world.UD__createItem(ItemType.Armor, 10 ether, 100000000, abi.encode(newArmor), "setup_armor_uri");
-
-        world.grantAccess(_lootManagerSystemId("UD"), address(this));
         vm.stopPrank();
 
         vm.prank(alice);
         alicesCharacterId = world.UD__mintCharacter(alice, bytes32("Steve"), "setup_char_uri");
+
         vm.startPrank(bob);
         bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
         uint256 fees = entropy.getFee(address(1));
         world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Rogue);
         world.UD__enterGame(bobCharacterId);
         vm.stopPrank();
+
         vm.label(alice, "alice");
         vm.label(bob, "bob");
         vm.label(worldAddress, "world");

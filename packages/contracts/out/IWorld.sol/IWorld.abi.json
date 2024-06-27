@@ -797,7 +797,7 @@
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -821,7 +821,7 @@
         "internalType": "uint16"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -1112,98 +1112,6 @@
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "UD__getStarterItems",
-    "inputs": [
-      {
-        "name": "class",
-        "type": "uint8",
-        "internalType": "enum Classes"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "data",
-        "type": "tuple",
-        "internalType": "struct StarterItemsData",
-        "components": [
-          {
-            "name": "itemIds",
-            "type": "uint256[]",
-            "internalType": "uint256[]"
-          },
-          {
-            "name": "amounts",
-            "type": "uint256[]",
-            "internalType": "uint256[]"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__getStats",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct StatsData",
-        "components": [
-          {
-            "name": "strength",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "agility",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "class",
-            "type": "uint8",
-            "internalType": "enum Classes"
-          },
-          {
-            "name": "intelligence",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "baseHitPoints",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "currentHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "experience",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
       }
     ],
     "stateMutability": "view"
@@ -1640,15 +1548,38 @@
   },
   {
     "type": "function",
-    "name": "UD__spawn",
+    "name": "UD__spawnMob",
     "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "positionData",
+        "type": "tuple",
+        "internalType": "struct PositionData",
+        "components": [
+          {
+            "name": "x",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "y",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
+      }
+    ],
+    "outputs": [
       {
         "name": "entityId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
     ],
-    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
