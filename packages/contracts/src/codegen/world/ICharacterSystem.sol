@@ -20,6 +20,8 @@ interface ICharacterSystem {
 
   function UD__getCharacterTokenId(bytes32 characterId) external view returns (uint256);
 
+  function UD__getOwnerAddress(bytes32 characterId) external view returns (address);
+
   function UD__mintCharacter(
     address account,
     bytes32 name,

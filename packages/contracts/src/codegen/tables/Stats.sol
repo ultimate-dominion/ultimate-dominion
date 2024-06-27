@@ -35,12 +35,12 @@ library Stats {
   ResourceId constant _tableId = ResourceId.wrap(0x7462554400000000000000000000000053746174730000000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x00e1080020200120202020200000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x00e0070020202020202020000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint256, uint256, uint256, uint256, int256, uint256)
-  Schema constant _valueSchema = Schema.wrap(0x00c006001f1f1f1f3f1f00000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint256, uint256, uint256, uint256, int256, uint256, uint256)
+  Schema constant _valueSchema = Schema.wrap(0x00e007001f1f1f1f3f1f1f000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -56,15 +56,14 @@ library Stats {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](8);
+    fieldNames = new string[](7);
     fieldNames[0] = "strength";
     fieldNames[1] = "agility";
-    fieldNames[2] = "class";
-    fieldNames[3] = "intelligence";
-    fieldNames[4] = "baseHitPoints";
-    fieldNames[5] = "currentHp";
-    fieldNames[6] = "experience";
-    fieldNames[7] = "level";
+    fieldNames[2] = "intelligence";
+    fieldNames[3] = "hitPoints";
+    fieldNames[4] = "damageTaken";
+    fieldNames[5] = "experience";
+    fieldNames[6] = "level";
   }
 
   /**
@@ -480,6 +479,48 @@ library Stats {
   }
 
   /**
+   * @notice Get level.
+   */
+  function getLevel(bytes32 characterId) internal view returns (uint256 level) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get level.
+   */
+  function _getLevel(bytes32 characterId) internal view returns (uint256 level) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set level.
+   */
+  function setLevel(bytes32 characterId, uint256 level) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((level)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set level.
+   */
+  function _setLevel(bytes32 characterId, uint256 level) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((level)), _fieldLayout);
+  }
+
+  /**
    * @notice Get the full data.
    */
   function get(bytes32 characterId) internal view returns (CharacterStatsData memory _table) {
@@ -518,21 +559,12 @@ library Stats {
     uint256 agility,
     Classes class,
     uint256 intelligence,
-    uint256 baseHitPoints,
-    int256 currentHp,
+    uint256 hitPoints,
+    int256 damageTaken,
     uint256 experience,
     uint256 level
   ) internal {
-    bytes memory _staticData = encodeStatic(
-      strength,
-      agility,
-      class,
-      intelligence,
-      baseHitPoints,
-      currentHp,
-      experience,
-      level
-    );
+    bytes memory _staticData = encodeStatic(strength, agility, intelligence, hitPoints, damageTaken, experience, level);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -552,21 +584,12 @@ library Stats {
     uint256 agility,
     Classes class,
     uint256 intelligence,
-    uint256 baseHitPoints,
-    int256 currentHp,
+    uint256 hitPoints,
+    int256 damageTaken,
     uint256 experience,
     uint256 level
   ) internal {
-    bytes memory _staticData = encodeStatic(
-      strength,
-      agility,
-      class,
-      intelligence,
-      baseHitPoints,
-      currentHp,
-      experience,
-      level
-    );
+    bytes memory _staticData = encodeStatic(strength, agility, intelligence, hitPoints, damageTaken, experience, level);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -586,8 +609,8 @@ library Stats {
       _table.agility,
       _table.class,
       _table.intelligence,
-      _table.baseHitPoints,
-      _table.currentHp,
+      _table.hitPoints,
+      _table.damageTaken,
       _table.experience,
       _table.level
     );
@@ -610,8 +633,8 @@ library Stats {
       _table.agility,
       _table.class,
       _table.intelligence,
-      _table.baseHitPoints,
-      _table.currentHp,
+      _table.hitPoints,
+      _table.damageTaken,
       _table.experience,
       _table.level
     );
@@ -638,8 +661,8 @@ library Stats {
       uint256 agility,
       Classes class,
       uint256 intelligence,
-      uint256 baseHitPoints,
-      int256 currentHp,
+      uint256 hitPoints,
+      int256 damageTaken,
       uint256 experience,
       uint256 level
     )
@@ -654,11 +677,9 @@ library Stats {
 
     baseHitPoints = (uint256(Bytes.getBytes32(_blob, 97)));
 
-    currentHp = (int256(uint256(Bytes.getBytes32(_blob, 129))));
+    experience = (uint256(Bytes.getBytes32(_blob, 160)));
 
-    experience = (uint256(Bytes.getBytes32(_blob, 161)));
-
-    level = (uint256(Bytes.getBytes32(_blob, 193)));
+    level = (uint256(Bytes.getBytes32(_blob, 192)));
   }
 
   /**
@@ -677,8 +698,8 @@ library Stats {
       _table.agility,
       _table.class,
       _table.intelligence,
-      _table.baseHitPoints,
-      _table.currentHp,
+      _table.hitPoints,
+      _table.damageTaken,
       _table.experience,
       _table.level
     ) = decodeStatic(_staticData);
@@ -713,12 +734,12 @@ library Stats {
     uint256 agility,
     Classes class,
     uint256 intelligence,
-    uint256 baseHitPoints,
-    int256 currentHp,
+    uint256 hitPoints,
+    int256 damageTaken,
     uint256 experience,
     uint256 level
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(strength, agility, class, intelligence, baseHitPoints, currentHp, experience, level);
+    return abi.encodePacked(strength, agility, intelligence, hitPoints, damageTaken, experience, level);
   }
 
   /**
@@ -732,21 +753,12 @@ library Stats {
     uint256 agility,
     Classes class,
     uint256 intelligence,
-    uint256 baseHitPoints,
-    int256 currentHp,
+    uint256 hitPoints,
+    int256 damageTaken,
     uint256 experience,
     uint256 level
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(
-      strength,
-      agility,
-      class,
-      intelligence,
-      baseHitPoints,
-      currentHp,
-      experience,
-      level
-    );
+    bytes memory _staticData = encodeStatic(strength, agility, intelligence, hitPoints, damageTaken, experience, level);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

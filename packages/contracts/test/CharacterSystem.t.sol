@@ -81,12 +81,15 @@ contract Test_CharacterSystem is SetUp, GasReporter {
 
     function test_getPlayerEntity() public {
         address ownerAddress = characterToken.ownerOf(2);
-        bytes32 playerEntityId = bytes32(uint256(uint160(ownerAddress)) << 88 | 2);
-
+        bytes32 playerEntityId = bytes32(uint256(uint160(ownerAddress)) << 96 | 2);
         assertEq(world.UD__getPlayerEntityId(2), playerEntityId);
     }
 
     function test_getTokenIdFromCharId() public {
         assertEq(world.UD__getCharacterTokenId(bobCharacterId), uint256(uint88(uint256(bobCharacterId))));
+    }
+
+    function test_getOwnerId() public {
+        assertEq(world.UD__getOwnerAddress(bobCharacterId), bob);
     }
 }

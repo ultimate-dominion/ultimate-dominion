@@ -426,29 +426,9 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "classRestrictions",
-            "type": "uint8[]",
-            "internalType": "uint8[]"
-          },
-          {
-            "name": "hitPointModifier",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "intModifier",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "minLevel",
+            "name": "level",
             "type": "uint256",
             "internalType": "uint256"
-          },
-          {
-            "name": "strModifier",
-            "type": "int256",
-            "internalType": "int256"
           }
         ]
       }
@@ -957,6 +937,62 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getMonsterStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MonsterStats",
+        "components": [
+          {
+            "name": "hp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "baseDamage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "inventory",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getName",
     "inputs": [
       {
@@ -1048,7 +1084,62 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getNpcStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct NPCStats",
+        "components": [
+          {
+            "name": "name",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "storyPathIds",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "alignment",
+            "type": "uint8",
+            "internalType": "enum Alignment"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getOwner",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getOwnerAddress",
     "inputs": [
       {
         "name": "characterId",

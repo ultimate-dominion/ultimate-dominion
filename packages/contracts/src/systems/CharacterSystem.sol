@@ -55,25 +55,32 @@ contract CharacterSystem is System {
 
     function getPlayerEntityId(uint256 characterTokenId) public view returns (bytes32 characterId) {
         address ownerAddress = _characterToken().ownerOf(characterTokenId);
-        characterId = bytes32(uint256(uint160(ownerAddress)) << 88 | characterTokenId);
+        characterId = bytes32(uint256(uint160(ownerAddress)) << 96 | characterTokenId);
     }
 
     function getCharacterTokenId(bytes32 characterId) public view returns (uint256) {
-        return (uint256(uint88(uint256(characterId))));
+        return (uint256(uint96(uint256(characterId))));
     }
+
+    /**
+     *  @dev extracts the character nft owner address from the character Id
+     */
+    function getOwnerAddress(bytes32 characterId) public view returns (address) {
+        return address(uint160(uint256(characterId) >> 96));
+    }
+
     /**
      * @param account the address of the account that will own the character
      * @param name the keccack256 hash of the characters name to check for duplicates
      * @param tokenUri the token uri to be set for the character token
      * @return characterId the bytes32 character id combination of the owner address and the tokenId
      */
-
     function mintCharacter(address account, bytes32 name, string memory tokenUri)
         public
         returns (bytes32 characterId)
     {
         uint256 characterTokenId = _incrementCharacterCounter();
-        require(characterTokenId < type(uint88).max, "CHARACATERS: Max characters reached");
+        require(characterTokenId < type(uint96).max, "CHARACATERS: Max characters reached");
         IWorld(_world()).call(
             _erc721SystemId(CHARACTERS_NAMESPACE), abi.encodeCall(IERC721Mintable.mint, (account, characterTokenId))
         );

@@ -34,8 +34,6 @@ interface IMobSystem {
 
   function UD__getMonsterStats(bytes32 entityId) external view returns (MonsterStats memory);
 
-  function UD__isValidMob(bytes32 entityId) external view returns (bool);
-
   function UD__getMob(uint256 mobId) external view returns (MobsData memory);
 
   function UD__getMob(bytes32 entityId) external view returns (MobsData memory);
