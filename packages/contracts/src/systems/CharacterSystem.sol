@@ -56,14 +56,14 @@ contract CharacterSystem is System {
         characterId = bytes32(uint256(uint160(ownerAddress)) << 96 | characterTokenId);
     }
 
-    function getCharacterTokenId(bytes32 characterId) public view returns (uint256) {
+    function getCharacterTokenId(bytes32 characterId) public pure returns (uint256) {
         return (uint256(uint96(uint256(characterId))));
     }
 
     /**
      *  @dev extracts the character nft owner address from the character Id
      */
-    function getOwnerAddress(bytes32 characterId) public view returns (address) {
+    function getOwnerAddress(bytes32 characterId) public pure returns (address) {
         return address(uint160(uint256(characterId) >> 96));
     }
 

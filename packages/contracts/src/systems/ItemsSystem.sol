@@ -102,8 +102,10 @@ contract ItemsSystem is System {
         if (uint8(itemData.itemType) == 0) {
             uint256[] memory equippedWeap = CharacterEquipment.getEquippedWeapons(characterId);
             for (uint256 i; i < equippedWeap.length;) {
-                if (equippedWeap[i] == itemId) _isEquipped = true;
-                break;
+                if (equippedWeap[i] == itemId) {
+                    _isEquipped = true;
+                    break;
+                }
                 {
                     i++;
                 }
@@ -122,8 +124,10 @@ contract ItemsSystem is System {
             bool isClass;
             if (weaponStats.classRestrictions.length > 0) {
                 for (uint256 i; i < weaponStats.classRestrictions.length;) {
-                    if (uint8(characterData.class) == uint8(weaponStats.classRestrictions[i])) isClass = true;
-                    break;
+                    if (uint8(characterData.class) == uint8(weaponStats.classRestrictions[i])) {
+                        isClass = true;
+                        break;
+                    }
                     {
                         i++;
                     }
