@@ -1,5 +1,6 @@
 import { useComponentValue } from '@latticexyz/react';
 import { getComponentValue } from '@latticexyz/recs';
+import { SyncStep } from '@latticexyz/store-sync';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
@@ -80,7 +81,7 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
   }, [burner, externalWalletClient, setupResult]);
 
   useEffect(() => {
-    if (syncProgress?.step !== 'live') return;
+    if (syncProgress?.step !== SyncStep.LIVE) return;
     if (isSynced) return;
 
     getBurner();
