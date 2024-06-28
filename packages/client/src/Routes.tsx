@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 
+import { Character } from './pages/Character';
 import { CharacterCreation } from './pages/CharacterCreation';
 import { GameBoard } from './pages/GameBoard';
 import { Welcome } from './pages/Welcome';
@@ -10,6 +11,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/" element={<Welcome />} />
       <Route path="/character-creation" element={<CharacterCreation />} />
       <Route path="/game-board" element={<GameBoard />} />
+      <Route path="/character/:characterId" element={<Character />} />
     </Routes>
   );
 };
