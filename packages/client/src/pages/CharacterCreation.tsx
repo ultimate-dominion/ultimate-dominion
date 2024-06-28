@@ -432,20 +432,20 @@ export const CharacterCreation = (): JSX.Element => {
                 Warrior
               </Button>
               <Button
-                onClick={() => setCharacterClass(CharacterClasses.Mage)}
+                onClick={() => setCharacterClass(CharacterClasses.Rogue)}
                 size="sm"
                 variant={characterClass === 1 ? 'solid' : 'outline'}
                 w="150px"
               >
-                Mage
+                Rogue
               </Button>
               <Button
-                onClick={() => setCharacterClass(CharacterClasses.Rogue)}
+                onClick={() => setCharacterClass(CharacterClasses.Mage)}
                 size="sm"
                 variant={characterClass === 2 ? 'solid' : 'outline'}
                 w="150px"
               >
-                Rogue
+                Mage
               </Button>
             </ButtonGroup>
           </VStack>

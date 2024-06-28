@@ -696,6 +696,29 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__move",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "x",
+        "type": "uint32",
+        "internalType": "uint32"
+      },
+      {
+        "name": "y",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__rollStats",
     "inputs": [
       {
@@ -753,6 +776,19 @@ declare const abi: [
         "name": "tokenUri",
         "type": "string",
         "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__spawn",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],

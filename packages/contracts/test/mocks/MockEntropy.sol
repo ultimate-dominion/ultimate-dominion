@@ -33,7 +33,7 @@ contract MockEntropy is IEntropy {
   ) external payable returns (uint64 assignedSequenceNumber) {
     // require(msg.value == mockFee, 'more fees please');
     assignedSequenceNumber = uint64(1234567);
-    bytes32 randomNumber = bytes32(keccak256(abi.encode("random number")));
+    bytes32 randomNumber = keccak256(abi.encode(block.number));
     IEntropyConsumer(msg.sender)._entropyCallback(assignedSequenceNumber, address(1), randomNumber);
     return assignedSequenceNumber;
   }

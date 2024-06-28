@@ -11,8 +11,8 @@ export type Character = Metadata & {
 
 export enum CharacterClasses {
   Warrior,
-  Mage,
   Rogue,
+  Mage,
 }
 
 export type Metadata = {
