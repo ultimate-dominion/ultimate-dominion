@@ -1,5 +1,7 @@
 out/*
 !out/IWorld.sol
+!out/CharacterSystem.sol
+!out/MapSystem.sol
 cache/
 node_modules/
 bindings/
