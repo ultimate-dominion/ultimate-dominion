@@ -8,6 +8,7 @@
 
 import { getComponentValue } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
+import { uuid } from '@latticexyz/utils';
 import {
   Address,
   getContract,
@@ -45,7 +46,7 @@ export function createSystemCalls(
    *   (https://github.com/latticexyz/mud/blob/main/templates/react/packages/client/src/mud/setupNetwork.ts#L77-L83).
    */
   { publicClient, waitForTransaction, worldContract }: SetupNetworkResult,
-  { Characters }: ClientComponents,
+  { Characters, Position, Spawned }: ClientComponents,
 ) {
   const enterGame = async (characterId: bigint) => {
     try {
@@ -96,6 +97,28 @@ export function createSystemCalls(
     }
   };
 
+  const move = async (characterId: bigint, x: number, y: number) => {
+    const positionId = uuid();
+    Position.addOverride(positionId, {
+      entity: encodeEntity({ characterId: 'uint256' }, { characterId }),
+      value: { x, y },
+    });
+
+    try {
+      const tx = await worldContract.write.UD__move([characterId, x, y]);
+      await waitForTransaction(tx);
+
+      return getComponentValue(
+        Position,
+        encodeEntity({ characterId: 'uint256' }, { characterId }),
+      );
+    } catch (e) {
+      return null;
+    } finally {
+      Position.removeOverride(positionId);
+    }
+  };
+
   const rollStats = async (
     characterId: bigint,
     characterClass: CharacterClasses,
@@ -138,9 +161,28 @@ export function createSystemCalls(
     }
   };
 
+  const spawn = async (characterId: bigint) => {
+    try {
+      const tx = await worldContract.write.UD__spawn([characterId]);
+
+      await waitForTransaction(tx);
+
+      const success = !!getComponentValue(
+        Spawned,
+        encodeEntity({ characterId: 'uint256' }, { characterId }),
+      )?.spawned;
+
+      return success;
+    } catch (e) {
+      return false;
+    }
+  };
+
   return {
     enterGame,
     mintCharacter,
+    move,
     rollStats,
+    spawn,
   };
 }

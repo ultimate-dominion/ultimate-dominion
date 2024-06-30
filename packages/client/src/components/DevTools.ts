@@ -1,11 +1,22 @@
 import mudConfig from 'contracts/mud.config';
-import { useEffect } from 'react';
+import characterSystemAbi from 'contracts/out/CharacterSystem.sol/CharacterSystem.abi.json';
+import mapSystemAbi from 'contracts/out/MapSystem.sol/MapSystem.abi.json';
+import { useEffect, useMemo } from 'react';
 
 import { useMUD } from '../contexts/MUDContext';
 
 // Displays dev-tools connected to the burner wallet
 export function DevTools(): null {
-  const { network } = useMUD();
+  const { delegatorAddress, network } = useMUD();
+
+  const allAbi = useMemo(
+    () => [
+      ...network.worldContract.abi,
+      ...characterSystemAbi,
+      ...mapSystemAbi,
+    ],
+    [network.worldContract.abi],
+  );
 
   useEffect(() => {
     let unmount: (() => void) | undefined;
@@ -19,7 +30,7 @@ export function DevTools(): null {
           latestBlock$: network.latestBlock$,
           storedBlockLogs$: network.storedBlockLogs$,
           worldAddress: network.worldContract.address,
-          worldAbi: network.worldContract.abi,
+          worldAbi: allAbi,
           write$: network.write$,
           recsWorld: network.world,
         }),
@@ -33,7 +44,7 @@ export function DevTools(): null {
         unmount();
       }
     };
-  }, [network]);
+  }, [allAbi, delegatorAddress, network]);
 
   return null;
 }

@@ -1,7 +1,6 @@
 import { type ContractWrite } from '@latticexyz/common';
 import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
-import { getComponentValue } from '@latticexyz/recs';
-import {} from '@latticexyz/store-sync';
+import { getComponentValue, overridableComponent } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { callFrom } from '@latticexyz/world/internal';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
@@ -85,18 +84,23 @@ export function createBurner(
     client: { public: network.publicClient, wallet: walletClient },
   });
 
-  const components = {
+  const burnerComponents = {
     ...network.components,
-    // Position: overridableComponent(network.components.Position),
+    Position: overridableComponent(network.components.Position),
   };
 
   return {
-    components,
+    components: burnerComponents,
     delegatorAddress,
     delegatorEntity: delegatorAddress
       ? encodeEntity({ address: 'address' }, { address: delegatorAddress })
       : undefined,
-    network,
+    network: {
+      ...network,
+      walletClient,
+      worldContract,
+      write$: write$.asObservable().pipe(share()),
+    },
     playerEntity: encodeEntity(
       { address: 'address' },
       { address: walletClient.account.address },
@@ -106,7 +110,7 @@ export function createBurner(
         ...network,
         worldContract: worldContract,
       },
-      components,
+      burnerComponents,
     ),
     walletClient,
     worldContract,
