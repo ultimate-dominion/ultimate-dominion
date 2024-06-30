@@ -94,6 +94,11 @@ contract MobSystem is System {
         return Mobs.get(mobId);
     }
 
+    function getMob(bytes32 entityId) public view returns (MobsData memory) {
+        uint256 mobId = getMobId(entityId);
+        return Mobs.get(mobId);
+    }
+
     function _incrementMobId() internal returns (uint256) {
         uint256 mobId = Counters.getCounter(address(this), 0) + 1;
         Counters.setCounter(address(this), 0, (mobId));
