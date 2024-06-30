@@ -1,7 +1,9 @@
 export type Character = Metadata & {
   agility: string;
+  experience: string;
   characterClass: CharacterClasses;
   characterId: string;
+  goldBalance: string;
   hitPoints: string;
   intelligence: string;
   locked: boolean;
