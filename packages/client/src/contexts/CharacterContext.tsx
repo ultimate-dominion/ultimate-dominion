@@ -13,7 +13,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { getContract, hexToString } from 'viem';
+import { formatEther, getContract, hexToString } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
@@ -64,6 +64,7 @@ export const CharacterProvider = ({
       const characterStats = getComponentValue(CharacterStats, entity);
       return {
         agility: characterStats?.agility.toString() ?? '0',
+        experience: characterStats?.experience.toString() ?? '0',
         characterClass: characterData.class,
         characterId: decodeEntity(
           { characterId: 'uint256' },
@@ -83,7 +84,7 @@ export const CharacterProvider = ({
     const characterTokenAddress =
       await worldContract.read.UD__getCharacterToken();
 
-    const erc721 = getContract({
+    const characterToken = getContract({
       address: characterTokenAddress,
       abi: [
         {
@@ -109,7 +110,7 @@ export const CharacterProvider = ({
       client: publicClient,
     });
 
-    const metadataURI = await erc721.read.tokenURI([
+    const metadataURI = await characterToken.read.tokenURI([
       BigInt(characterComponent.characterId),
     ]);
 
@@ -117,9 +118,40 @@ export const CharacterProvider = ({
       uriToHttp(metadataURI)[0],
     );
 
+    const goldTokenAddress = await worldContract.read.UD__getGoldToken();
+
+    const goldToken = getContract({
+      address: goldTokenAddress,
+      abi: [
+        {
+          type: 'function',
+          name: 'balanceOf',
+          inputs: [
+            {
+              name: 'account',
+              type: 'address',
+              internalType: 'address',
+            },
+          ],
+          outputs: [
+            {
+              name: '',
+              type: 'uint256',
+              internalType: 'uint256',
+            },
+          ],
+          stateMutability: 'view',
+        },
+      ],
+      client: publicClient,
+    });
+
+    const goldBalance = await goldToken.read.balanceOf([delegatorAddress]);
+
     setCharacterDetails({
       ...characterComponent,
       ...fetachedMetadata,
+      goldBalance: formatEther(BigInt(goldBalance)).toString(),
     });
   }, [
     Characters,
