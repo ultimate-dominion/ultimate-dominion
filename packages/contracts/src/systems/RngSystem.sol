@@ -3,8 +3,8 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {RandomNumbers} from "@codegen/index.sol";
-import {CharacterStats} from "@codegen/index.sol";
-import {RngRequestType} from "@codegen/common.sol";
+import {Characters, CharacterStats} from "@codegen/index.sol";
+import {Classes, RngRequestType} from "@codegen/common.sol";
 import {UltimateDominionConfig} from "../codegen/index.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
@@ -78,11 +78,52 @@ contract RngSystem is System, IEntropyConsumer {
         }
     }
 
-    function _storeCharacterStats(uint256 randomNumber, bytes32 characterId) internal {
+    function _storeCharacterStats(uint256 randomNumber, uint256 characterId) internal {
         uint64[] memory chunks = randomNumber.get4Chunks();
-        CharacterStats.setStrength(characterId, (uint256((uint256(chunks[0]) % uint256(9)) + 1)));
-        CharacterStats.setAgility(characterId, (uint256((uint256(chunks[1]) % uint256(9)) + 1)));
-        CharacterStats.setIntelligence(characterId, (uint256((uint256(chunks[2]) % uint256(9)) + 1)));
-        CharacterStats.setHitPoints(characterId, (uint256((uint256(chunks[3]) % uint256(9)) + 1)));
+
+        Classes characterClass = Characters.getClass(characterId);
+
+        uint256 strength = (chunks[0] % 8) + 3; // Range [3, 10]
+        uint256 agility = (chunks[1] % 8) + 3; // Range [3, 10]
+
+        // Calculate intelligence to ensure total is 19
+        uint256 intelligence = 19 - strength - agility;
+
+        // Ensure intelligence is within the range [3, 10]
+        if (intelligence < 3) {
+            uint256 deficit = 3 - intelligence;
+            intelligence = 3;
+
+            if (strength > agility) {
+                strength -= deficit;
+            } else {
+                agility -= deficit;
+            }
+        } else if (intelligence > 10) {
+            uint256 excess = intelligence - 10;
+            intelligence = 10;
+
+            if (strength < agility) {
+                strength += excess;
+            } else {
+                agility += excess;
+            }
+        }
+
+        // Class-based adjustments; should total to 21
+        if (characterClass == Classes.Warrior) {
+            strength += 2;
+            CharacterStats.setHitPoints(characterId, uint256(10));
+        } else if (characterClass == Classes.Rogue) {
+            agility += 2;
+            CharacterStats.setHitPoints(characterId, uint256(6));
+        } else if (characterClass == Classes.Mage) {
+            intelligence += 2;
+            CharacterStats.setHitPoints(characterId, uint256(8));
+        }
+
+        CharacterStats.setStrength(characterId, strength);
+        CharacterStats.setAgility(characterId, agility);
+        CharacterStats.setIntelligence(characterId, intelligence);
     }
 }

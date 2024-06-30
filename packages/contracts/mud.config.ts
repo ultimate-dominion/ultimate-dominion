@@ -48,6 +48,34 @@ export default defineWorld({
         level: "uint256",
       },
     },
+    MapConfig: {
+      key: [],
+      schema: {
+        height: "uint32",
+        width: "uint32",
+      },
+      codegen: {
+        dataStruct: false,
+      },
+    },
+    Position: {
+      key: ["characterId"],
+      schema: {
+        characterId: "uint256",
+        x: "uint32",
+        y: "uint32",
+      },
+      codegen: {
+        dataStruct: false,
+      },
+    },
+    Spawned: {
+      key: ["characterId"],
+      schema: {
+        characterId: "uint256",
+        spawned: "bool",
+      },
+    },
     MobStats: {
       key: ["entityId"],
       schema: {
