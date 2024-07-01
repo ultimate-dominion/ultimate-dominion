@@ -1,4 +1,6 @@
 import { Box, Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useState } from 'react';
 import { BiSolidNavigation } from 'react-icons/bi';
 import {
@@ -9,44 +11,138 @@ import {
 } from 'react-icons/io';
 import { TbDirectionArrows } from 'react-icons/tb';
 
+import { useCharacter } from '../contexts/CharacterContext';
+import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
+
 const SAFE_ZONE_AREA = {
   topLeft: { x: 0, y: 4 },
   bottomRight: { x: 4, y: 0 },
 };
 
 export const MapPanel = (): JSX.Element => {
-  const [position, setPosition] = useState<{ x: number; y: number }>({
-    x: 0,
-    y: 0,
-  });
+  const { renderError, renderSuccess } = useToast();
+  const {
+    burnerBalance,
+    components: { Position, Spawned },
+    delegatorAddress,
+    systemCalls: { move, spawn },
+  } = useMUD();
+  const { character } = useCharacter();
+
+  const [isSpawning, setIsSpawning] = useState(false);
+
+  const position = useComponentValue(
+    Position,
+    encodeEntity(
+      { characterId: 'uint256' },
+      { characterId: BigInt(character?.characterId ?? 0) },
+    ),
+  );
+
+  const isSpawned = !!useComponentValue(
+    Spawned,
+    encodeEntity(
+      { characterId: 'uint256' },
+      { characterId: BigInt(character?.characterId ?? 0) },
+    ),
+  )?.spawned;
+
+  const onSpawn = useCallback(async () => {
+    try {
+      setIsSpawning(true);
+
+      if (burnerBalance === '0') {
+        throw new Error(
+          'Insufficient funds. Please top off your session account.',
+        );
+      }
+
+      if (!delegatorAddress) {
+        throw new Error('Missing delegation.');
+      }
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      const success = await spawn(BigInt(character.characterId));
+
+      if (!success) {
+        throw new Error('Contract call failed');
+      }
+
+      renderSuccess('Spawned!');
+    } catch (e) {
+      renderError(e, 'Failed to roll stats.');
+    } finally {
+      setIsSpawning(false);
+    }
+  }, [
+    burnerBalance,
+    character,
+    delegatorAddress,
+    renderError,
+    renderSuccess,
+    spawn,
+  ]);
 
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
-      if (
-        (direction === 'up' && position.y === 9) ||
-        (direction === 'down' && position.y === 0) ||
-        (direction === 'left' && position.x === 0) ||
-        (direction === 'right' && position.x === 9)
-      ) {
-        return;
-      }
+      try {
+        if (!delegatorAddress) {
+          throw new Error('Burner not found');
+        }
 
-      setPosition(prevPosition => {
+        if (!position) {
+          throw new Error('Position not found');
+        }
+
+        if (!character) {
+          throw new Error('Character not found');
+        }
+
+        const { x, y } = position;
+
+        if (
+          (direction === 'up' && position.y === 9) ||
+          (direction === 'down' && position.y === 0) ||
+          (direction === 'left' && position.x === 0) ||
+          (direction === 'right' && position.x === 9)
+        ) {
+          return;
+        }
+
+        let newX = x;
+        let newY = y;
+
         switch (direction) {
           case 'up':
-            return { x: prevPosition.x, y: prevPosition.y + 1 };
+            newY = y + 1;
+            break;
           case 'down':
-            return { x: prevPosition.x, y: prevPosition.y - 1 };
+            newY = y - 1;
+            break;
           case 'left':
-            return { x: prevPosition.x - 1, y: prevPosition.y };
+            newX = x - 1;
+            break;
           case 'right':
-            return { x: prevPosition.x + 1, y: prevPosition.y };
+            newX = x + 1;
+            break;
           default:
-            return prevPosition;
+            break;
         }
-      });
+
+        const success = await move(BigInt(character.characterId), newX, newY);
+
+        if (!success) {
+          throw new Error('Contract call failed');
+        }
+      } catch (e) {
+        renderError(e, 'Failed to move.');
+      }
     },
-    [position],
+    [character, delegatorAddress, move, position, renderError],
   );
 
   return (
@@ -68,7 +164,7 @@ export const MapPanel = (): JSX.Element => {
           {[...Array(100)].map((_, i) => {
             const row = 9 - Math.floor(i / 10); // Reverse the row
             const col = i % 10;
-            const currentTile = position.x === col && position.y === row;
+            const currentTile = position?.x === col && position?.y === row;
 
             const hasSafeZoneTopBorder =
               row === SAFE_ZONE_AREA.topLeft.y &&
@@ -89,7 +185,7 @@ export const MapPanel = (): JSX.Element => {
                 justifyContent="center"
                 key={`map-tile${i}`}
               >
-                {currentTile && <CharacterPiece />}
+                {currentTile && isSpawned && <CharacterPiece />}
               </VStack>
             );
           })}
@@ -99,16 +195,30 @@ export const MapPanel = (): JSX.Element => {
           justifyContent="space-between"
           mt={{ base: 2, xl: 1 }}
         >
-          <HStack>
-            <BiSolidNavigation />
-            <Text fontWeight={700} size="sm">
-              {position.x}, {position.y}
-            </Text>
-          </HStack>
+          {isSpawned && position && (
+            <HStack>
+              <BiSolidNavigation />
+              <Text fontWeight={700} size="sm">
+                {position.x}, {position.y}
+              </Text>
+            </HStack>
+          )}
           <Text size="xs">Dark Cave - 2,344 Players</Text>
         </Stack>
       </Box>
-      <NavigationCompass onMove={onMove} />
+      {isSpawned ? (
+        <NavigationCompass onMove={onMove} />
+      ) : (
+        <Button
+          isLoading={isSpawning}
+          loadingText="Spawning..."
+          mt={{ base: 0, lg: 8 }}
+          onClick={onSpawn}
+          size="sm"
+        >
+          Spawn
+        </Button>
+      )}
     </Stack>
   );
 };
