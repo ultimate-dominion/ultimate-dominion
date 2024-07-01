@@ -58,11 +58,13 @@ contract SetUp is Test {
         _inventory[0] = 1;
 
         MonsterStats memory newMonster = MonsterStats({
-            hp: 10000,
-            armor: 10000,
+            hitPoints: 10,
+            armor: 1,
+            strength: 1,
+            agility: 1,
+            intelligence: 1,
             level: 1,
-            experience: 10000,
-            baseDamage: 10000,
+            experience: 10,
             class: Classes.Warrior,
             inventory: _inventory
         });

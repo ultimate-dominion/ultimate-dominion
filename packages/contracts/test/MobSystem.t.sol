@@ -2,9 +2,9 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, MobType} from "@codegen/common.sol";
-import {CharacterStatsData} from "@tables/CharacterStats.sol";
+import {StatsData} from "@tables/Stats.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
-import {UltimateDominionConfig, PositionData} from "@codegen/index.sol";
+import {UltimateDominionConfig} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
@@ -58,11 +58,13 @@ contract Test_MobSystem is SetUp, GasReporter {
         _inventory[0] = 1;
 
         MonsterStats memory newMonster = MonsterStats({
-            hp: 10000,
-            armor: 10000,
+            hitPoints: 10,
+            armor: 1,
+            strength: 1,
+            agility: 1,
+            intelligence: 1,
             level: 1,
-            experience: 10000,
-            baseDamage: 10000,
+            experience: 10,
             class: Classes.Warrior,
             inventory: _inventory
         });
@@ -76,30 +78,26 @@ contract Test_MobSystem is SetUp, GasReporter {
     }
 
     function test_getEntityId() public {
-        PositionData memory posDat = PositionData({x: 1, y: 2});
-        bytes32 entityId = bytes32(abi.encodePacked(uint32(starterMobId), uint192(1), posDat.x, posDat.y));
+        bytes32 entityId = bytes32(abi.encodePacked(uint32(starterMobId), uint192(1), uint16(1), uint16(2)));
 
-        assertEq(world.UD__spawnMob(1, posDat), entityId);
+        assertEq(world.UD__spawnMob(1, 1, 2), entityId);
     }
 
     function test_getMobId() public {
-        PositionData memory posDat = PositionData({x: 1, y: 2});
-        bytes32 entityId = world.UD__spawnMob(starterMobId, posDat);
+        bytes32 entityId = world.UD__spawnMob(starterMobId, 1, 2);
 
         assertEq(world.UD__getMobId(entityId), starterMobId);
     }
 
     function test_getMobPosition() public {
-        PositionData memory posDat = PositionData({x: 1, y: 2});
-        bytes32 entityId = world.UD__spawnMob(starterMobId, posDat);
+        bytes32 entityId = world.UD__spawnMob(starterMobId, 1, 2);
         (uint16 x, uint16 y) = world.UD__getMobPosition(entityId);
         assertEq(x, 1);
         assertEq(y, 2);
     }
 
     function test_getSpawnCounter() public {
-        PositionData memory posDat = PositionData({x: 1, y: 2});
-        bytes32 entityId = world.UD__spawnMob(starterMobId, posDat);
+        bytes32 entityId = world.UD__spawnMob(starterMobId, 1, 2);
         assertEq(world.UD__getSpawnCounter(entityId), 1);
     }
 }

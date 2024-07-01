@@ -1,3093 +1,3409 @@
 declare const abi: [
   {
-    type: "function";
-    name: "UD__checkRequirements";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-      {
-        name: "itemId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "bool";
-        internalType: "bool";
-      },
-    ];
-    stateMutability: "view";
+    "type": "function",
+    "name": "UD___calculateMagicAttack",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "UD__createItem";
-    inputs: [
+    "type": "function",
+    "name": "UD___calculatePhysicalAttack",
+    "inputs": [
       {
-        name: "itemType";
-        type: "uint8";
-        internalType: "enum ItemType";
-      },
-      {
-        name: "supply";
-        type: "uint256";
-        internalType: "uint256";
-      },
-      {
-        name: "stats";
-        type: "bytes";
-        internalType: "bytes";
-      },
-      {
-        name: "itemMetadataURI";
-        type: "string";
-        internalType: "string";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__createItems";
-    inputs: [
-      {
-        name: "itemTypes";
-        type: "uint8[]";
-        internalType: "enum ItemType[]";
-      },
-      {
-        name: "supply";
-        type: "uint256[]";
-        internalType: "uint256[]";
-      },
-      {
-        name: "stats";
-        type: "bytes[]";
-        internalType: "bytes[]";
-      },
-      {
-        name: "itemMetadataURIs";
-        type: "string[]";
-        internalType: "string[]";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__createMatch";
-    inputs: [
-      {
-        name: "encounterType";
-        type: "uint8";
-        internalType: "enum EncounterType";
-      },
-      {
-        name: "attackers";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "defenders";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__createMob";
-    inputs: [
-      {
-        name: "mobType";
-        type: "uint8";
-        internalType: "enum MobType";
-      },
-      {
-        name: "mobStats";
-        type: "bytes";
-        internalType: "bytes";
-      },
-      {
-        name: "mobMetadataUri";
-        type: "string";
-        internalType: "string";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__createMobs";
-    inputs: [
-      {
-        name: "mobTypes";
-        type: "uint8[]";
-        internalType: "enum MobType[]";
-      },
-      {
-        name: "stats";
-        type: "bytes[]";
-        internalType: "bytes[]";
-      },
-      {
-        name: "mobMetadataURIs";
-        type: "string[]";
-        internalType: "string[]";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__enterGame";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__equipItems";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-      {
-        name: "itemIds";
-        type: "uint256[]";
-        internalType: "uint256[]";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__getCharacterStats";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "tuple";
-        internalType: "struct CharacterStatsData";
-        components: [
+        "name": "attackStats",
+        "type": "tuple",
+        "internalType": "struct PhysicalAttackStats",
+        "components": [
           {
-            name: "strength";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "bonusDamage",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "agility";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "requiredItems",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
           },
           {
-            name: "intelligence";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "armorPenetration",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "name": "attackerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "defenderId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "weaponId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "damage",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__applyEquipmentBonuses",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "modifiedStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "hitPoints";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "agility",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "damageTaken";
-            type: "int256";
-            internalType: "int256";
+            "name": "intelligence",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "experience";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "maxHitPoints",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "level";
-            type: "uint256";
-            internalType: "uint256";
-          },
-        ];
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getCharacterToken";
-    inputs: [];
-    outputs: [
-      {
-        name: "_characterToken";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getCharacterTokenId";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "pure";
-  },
-  {
-    type: "function";
-    name: "UD__getClass";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "_class";
-        type: "uint8";
-        internalType: "enum Classes";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getCurrentLevel";
-    inputs: [
-      {
-        name: "experience";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "currentLevel";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getEntropy";
-    inputs: [];
-    outputs: [
-      {
-        name: "_entropy";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getExperience";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getGoldToken";
-    inputs: [];
-    outputs: [
-      {
-        name: "_goldToken";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getItemType";
-    inputs: [
-      {
-        name: "itemId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "uint8";
-        internalType: "enum ItemType";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getItemsContract";
-    inputs: [];
-    outputs: [
-      {
-        name: "_erc1155";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getMob";
-    inputs: [
-      {
-        name: "mobId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "tuple";
-        internalType: "struct MobsData";
-        components: [
-          {
-            name: "mobType";
-            type: "uint8";
-            internalType: "enum MobType";
+            "name": "currentDamage",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            name: "mobStats";
-            type: "bytes";
-            internalType: "bytes";
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "mobMetadata";
-            type: "string";
-            internalType: "string";
-          },
-        ];
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getMobId";
-    inputs: [
-      {
-        name: "entityId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "pure";
-  },
-  {
-    type: "function";
-    name: "UD__getMobPosition";
-    inputs: [
-      {
-        name: "entityId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "x";
-        type: "uint16";
-        internalType: "uint16";
-      },
-      {
-        name: "y";
-        type: "uint16";
-        internalType: "uint16";
-      },
-    ];
-    stateMutability: "pure";
-  },
-  {
-    type: "function";
-    name: "UD__getMonsterStats";
-    inputs: [
-      {
-        name: "mobId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "tuple";
-        internalType: "struct MonsterStats";
-        components: [
-          {
-            name: "hp";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "armor";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__checkRequirements",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__createItem",
+    "inputs": [
+      {
+        "name": "itemType",
+        "type": "uint8",
+        "internalType": "enum ItemType"
+      },
+      {
+        "name": "supply",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "stats",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "itemMetadataURI",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createItems",
+    "inputs": [
+      {
+        "name": "itemTypes",
+        "type": "uint8[]",
+        "internalType": "enum ItemType[]"
+      },
+      {
+        "name": "supply",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "stats",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      },
+      {
+        "name": "itemMetadataURIs",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createMatch",
+    "inputs": [
+      {
+        "name": "encounterType",
+        "type": "uint8",
+        "internalType": "enum EncounterType"
+      },
+      {
+        "name": "attackers",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "defenders",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createMob",
+    "inputs": [
+      {
+        "name": "mobType",
+        "type": "uint8",
+        "internalType": "enum MobType"
+      },
+      {
+        "name": "stats",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "mobMetadataUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createMobs",
+    "inputs": [
+      {
+        "name": "mobTypes",
+        "type": "uint8[]",
+        "internalType": "enum MobType[]"
+      },
+      {
+        "name": "stats",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      },
+      {
+        "name": "mobMetadataURIs",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createSkill",
+    "inputs": [
+      {
+        "name": "skillType",
+        "type": "uint8",
+        "internalType": "enum SkillType"
+      },
+      {
+        "name": "skillStats",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "skillId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__endTurn",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "moves",
+        "type": "tuple[]",
+        "internalType": "struct CombatMove[]",
+        "components": [
+          {
+            "name": "attackerEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
           },
           {
-            name: "level";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "defenderEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
           },
           {
-            name: "baseDamage";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "skillId",
+            "type": "bytes32",
+            "internalType": "bytes32"
           },
           {
-            name: "class";
-            type: "uint8";
-            internalType: "enum Classes";
+            "name": "weaponId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__enterGame",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__equipItems",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__executeCombat",
+    "inputs": [
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "moves",
+        "type": "tuple[]",
+        "internalType": "struct CombatMove[]",
+        "components": [
+          {
+            "name": "attackerEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
           },
           {
-            name: "inventory";
-            type: "uint256[]";
-            internalType: "uint256[]";
+            "name": "defenderEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
           },
           {
-            name: "experience";
-            type: "uint256";
-            internalType: "uint256";
-          },
-        ];
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getMonsterStats";
-    inputs: [
-      {
-        name: "entityId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "tuple";
-        internalType: "struct MonsterStats";
-        components: [
-          {
-            name: "hp";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "skillId",
+            "type": "bytes32",
+            "internalType": "bytes32"
           },
           {
-            name: "armor";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "weaponId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__getArmorStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_ArmorStats",
+        "type": "tuple",
+        "internalType": "struct ArmorStats",
+        "components": [
+          {
+            "name": "armorModifier",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "level";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "classRestrictions",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
           },
           {
-            name: "baseDamage";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "class";
-            type: "uint8";
-            internalType: "enum Classes";
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            name: "inventory";
-            type: "uint256[]";
-            internalType: "uint256[]";
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            name: "experience";
-            type: "uint256";
-            internalType: "uint256";
-          },
-        ];
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getName";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "_name";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getNpcStats";
-    inputs: [
-      {
-        name: "mobId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "tuple";
-        internalType: "struct NPCStats";
-        components: [
-          {
-            name: "name";
-            type: "string";
-            internalType: "string";
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            name: "storyPathIds";
-            type: "uint256[]";
-            internalType: "uint256[]";
+            "name": "hitPointModifier",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getCharacterToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "_characterToken",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getCharacterTokenId",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getClass",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_class",
+        "type": "uint8",
+        "internalType": "enum Classes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getCurrentLevel",
+    "inputs": [
+      {
+        "name": "experience",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "currentLevel",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEntropy",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "_entropy",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getExperience",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getGoldToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "_goldToken",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getItemType",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum ItemType"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getItemsContract",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "_erc1155",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMob",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MobsData",
+        "components": [
+          {
+            "name": "mobType",
+            "type": "uint8",
+            "internalType": "enum MobType"
           },
           {
-            name: "alignment";
-            type: "uint8";
-            internalType: "enum Alignment";
-          },
-        ];
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getNpcStats";
-    inputs: [
-      {
-        name: "entityId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "tuple";
-        internalType: "struct NPCStats";
-        components: [
-          {
-            name: "name";
-            type: "string";
-            internalType: "string";
+            "name": "mobStats",
+            "type": "bytes",
+            "internalType": "bytes"
           },
           {
-            name: "storyPathIds";
-            type: "uint256[]";
-            internalType: "uint256[]";
+            "name": "mobMetadata",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMob",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MobsData",
+        "components": [
+          {
+            "name": "mobType",
+            "type": "uint8",
+            "internalType": "enum MobType"
           },
           {
-            name: "alignment";
-            type: "uint8";
-            internalType: "enum Alignment";
-          },
-        ];
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getOwner";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getOwnerAddress";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    stateMutability: "pure";
-  },
-  {
-    type: "function";
-    name: "UD__getPlayerEntityId";
-    inputs: [
-      {
-        name: "characterTokenId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getPythProvider";
-    inputs: [];
-    outputs: [
-      {
-        name: "_provider";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getSpawnCounter";
-    inputs: [
-      {
-        name: "entityId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "pure";
-  },
-  {
-    type: "function";
-    name: "UD__getTotalSupply";
-    inputs: [
-      {
-        name: "tokenId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "_supply";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__getWeaponStats";
-    inputs: [
-      {
-        name: "itemId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "_weaponStats";
-        type: "tuple";
-        internalType: "struct WeaponStats";
-        components: [
-          {
-            name: "damage";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "mobStats",
+            "type": "bytes",
+            "internalType": "bytes"
           },
           {
-            name: "speed";
-            type: "uint256";
-            internalType: "uint256";
+            "name": "mobMetadata",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMobId",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMobPosition",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMonsterStats",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MonsterStats",
+        "components": [
+          {
+            "name": "hitPoints",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "classRestrictions";
-            type: "uint8[]";
-            internalType: "uint8[]";
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "minLevel";
-            type: "uint256";
-            internalType: "uint256";
-          },
-        ];
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__isEquipped";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-      {
-        name: "itemId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "_isEquipped";
-        type: "bool";
-        internalType: "bool";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "UD__issueStarterItems";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__mintCharacter";
-    inputs: [
-      {
-        name: "account";
-        type: "address";
-        internalType: "address";
-      },
-      {
-        name: "name";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-      {
-        name: "tokenUri";
-        type: "string";
-        internalType: "string";
-      },
-    ];
-    outputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__move";
-    inputs: [
-      {
-        name: "characterId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__move";
-    inputs: [
-      {
-        name: "characterId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-      {
-        name: "x";
-        type: "uint32";
-        internalType: "uint32";
-      },
-      {
-        name: "y";
-        type: "uint32";
-        internalType: "uint32";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__rollStats";
-    inputs: [
-      {
-        name: "userRandomNumber";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-      {
-        name: "class";
-        type: "uint8";
-        internalType: "enum Classes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "payable";
-  },
-  {
-    type: "function";
-    name: "UD__setStarterItems";
-    inputs: [
-      {
-        name: "class";
-        type: "uint8";
-        internalType: "enum Classes";
-      },
-      {
-        name: "itemIds";
-        type: "uint256[]";
-        internalType: "uint256[]";
-      },
-      {
-        name: "amounts";
-        type: "uint256[]";
-        internalType: "uint256[]";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__setTokenUri";
-    inputs: [
-      {
-        name: "tokenId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-      {
-        name: "tokenUri";
-        type: "string";
-        internalType: "string";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__spawn";
-    inputs: [
-      {
-        name: "characterId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__unequipItem";
-    inputs: [
-      {
-        name: "characterId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__spawnMob";
-    inputs: [
-      {
-        name: "mobId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-      {
-        name: "positionData";
-        type: "tuple";
-        internalType: "struct PositionData";
-        components: [
-          {
-            name: "x";
-            type: "uint16";
-            internalType: "uint16";
+            "name": "strength",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "y";
-            type: "uint16";
-            internalType: "uint16";
-          },
-        ];
-      },
-    ];
-    outputs: [
-      {
-        name: "entityId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "UD__unequipItem";
-    inputs: [
-      {
-        name: "characterId";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-      {
-        name: "itemId";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "success";
-        type: "bool";
-        internalType: "bool";
-      },
-    ];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "batchCall";
-    inputs: [
-      {
-        name: "systemCalls";
-        type: "tuple[]";
-        internalType: "struct SystemCallData[]";
-        components: [
-          {
-            name: "systemId";
-            type: "bytes32";
-            internalType: "ResourceId";
+            "name": "agility",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "callData";
-            type: "bytes";
-            internalType: "bytes";
-          },
-        ];
-      },
-    ];
-    outputs: [
-      {
-        name: "returnDatas";
-        type: "bytes[]";
-        internalType: "bytes[]";
-      },
-    ];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "batchCallFrom";
-    inputs: [
-      {
-        name: "systemCalls";
-        type: "tuple[]";
-        internalType: "struct SystemCallFromData[]";
-        components: [
-          {
-            name: "from";
-            type: "address";
-            internalType: "address";
+            "name": "intelligence",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "systemId";
-            type: "bytes32";
-            internalType: "ResourceId";
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "callData";
-            type: "bytes";
-            internalType: "bytes";
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
           },
-        ];
-      },
-    ];
-    outputs: [
-      {
-        name: "returnDatas";
-        type: "bytes[]";
-        internalType: "bytes[]";
-      },
-    ];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "call";
-    inputs: [
-      {
-        name: "systemId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "callData";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    stateMutability: "payable";
-  },
-  {
-    type: "function";
-    name: "callFrom";
-    inputs: [
-      {
-        name: "delegator";
-        type: "address";
-        internalType: "address";
-      },
-      {
-        name: "systemId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "callData";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    stateMutability: "payable";
-  },
-  {
-    type: "function";
-    name: "creator";
-    inputs: [];
-    outputs: [
-      {
-        name: "";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "deleteRecord";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "getDynamicField";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "dynamicFieldIndex";
-        type: "uint8";
-        internalType: "uint8";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getDynamicFieldLength";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "dynamicFieldIndex";
-        type: "uint8";
-        internalType: "uint8";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getDynamicFieldSlice";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "dynamicFieldIndex";
-        type: "uint8";
-        internalType: "uint8";
-      },
-      {
-        name: "start";
-        type: "uint256";
-        internalType: "uint256";
-      },
-      {
-        name: "end";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [
-      {
-        name: "data";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getField";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "fieldIndex";
-        type: "uint8";
-        internalType: "uint8";
-      },
-      {
-        name: "fieldLayout";
-        type: "bytes32";
-        internalType: "FieldLayout";
-      },
-    ];
-    outputs: [
-      {
-        name: "data";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getField";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "fieldIndex";
-        type: "uint8";
-        internalType: "uint8";
-      },
-    ];
-    outputs: [
-      {
-        name: "data";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getFieldLayout";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-    ];
-    outputs: [
-      {
-        name: "fieldLayout";
-        type: "bytes32";
-        internalType: "FieldLayout";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getFieldLength";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "fieldIndex";
-        type: "uint8";
-        internalType: "uint8";
-      },
-      {
-        name: "fieldLayout";
-        type: "bytes32";
-        internalType: "FieldLayout";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getFieldLength";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "fieldIndex";
-        type: "uint8";
-        internalType: "uint8";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getKeySchema";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-    ];
-    outputs: [
-      {
-        name: "keySchema";
-        type: "bytes32";
-        internalType: "Schema";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getRecord";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "fieldLayout";
-        type: "bytes32";
-        internalType: "FieldLayout";
-      },
-    ];
-    outputs: [
-      {
-        name: "staticData";
-        type: "bytes";
-        internalType: "bytes";
-      },
-      {
-        name: "encodedLengths";
-        type: "bytes32";
-        internalType: "EncodedLengths";
-      },
-      {
-        name: "dynamicData";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getRecord";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-    ];
-    outputs: [
-      {
-        name: "staticData";
-        type: "bytes";
-        internalType: "bytes";
-      },
-      {
-        name: "encodedLengths";
-        type: "bytes32";
-        internalType: "EncodedLengths";
-      },
-      {
-        name: "dynamicData";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getStaticField";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "fieldIndex";
-        type: "uint8";
-        internalType: "uint8";
-      },
-      {
-        name: "fieldLayout";
-        type: "bytes32";
-        internalType: "FieldLayout";
-      },
-    ];
-    outputs: [
-      {
-        name: "";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "getValueSchema";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-    ];
-    outputs: [
-      {
-        name: "valueSchema";
-        type: "bytes32";
-        internalType: "Schema";
-      },
-    ];
-    stateMutability: "view";
-  },
-  {
-    type: "function";
-    name: "grantAccess";
-    inputs: [
-      {
-        name: "resourceId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "grantee";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "initialize";
-    inputs: [
-      {
-        name: "initModule";
-        type: "address";
-        internalType: "contract IModule";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "installModule";
-    inputs: [
-      {
-        name: "module";
-        type: "address";
-        internalType: "contract IModule";
-      },
-      {
-        name: "encodedArgs";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "installRootModule";
-    inputs: [
-      {
-        name: "module";
-        type: "address";
-        internalType: "contract IModule";
-      },
-      {
-        name: "encodedArgs";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "popFromDynamicField";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "dynamicFieldIndex";
-        type: "uint8";
-        internalType: "uint8";
-      },
-      {
-        name: "byteLengthToPop";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "pushToDynamicField";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
-      },
-      {
-        name: "dynamicFieldIndex";
-        type: "uint8";
-        internalType: "uint8";
-      },
-      {
-        name: "dataToPush";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "registerDelegation";
-    inputs: [
-      {
-        name: "delegatee";
-        type: "address";
-        internalType: "address";
-      },
-      {
-        name: "delegationControlId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "initCallData";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "registerFunctionSelector";
-    inputs: [
-      {
-        name: "systemId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "systemFunctionSignature";
-        type: "string";
-        internalType: "string";
-      },
-    ];
-    outputs: [
-      {
-        name: "worldFunctionSelector";
-        type: "bytes4";
-        internalType: "bytes4";
-      },
-    ];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "registerNamespace";
-    inputs: [
-      {
-        name: "namespaceId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "registerNamespaceDelegation";
-    inputs: [
-      {
-        name: "namespaceId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "delegationControlId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "initCallData";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "registerRootFunctionSelector";
-    inputs: [
-      {
-        name: "systemId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "worldFunctionSignature";
-        type: "string";
-        internalType: "string";
-      },
-      {
-        name: "systemFunctionSignature";
-        type: "string";
-        internalType: "string";
-      },
-    ];
-    outputs: [
-      {
-        name: "worldFunctionSelector";
-        type: "bytes4";
-        internalType: "bytes4";
-      },
-    ];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "registerStoreHook";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "hookAddress";
-        type: "address";
-        internalType: "contract IStoreHook";
-      },
-      {
-        name: "enabledHooksBitmap";
-        type: "uint8";
-        internalType: "uint8";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "registerSystem";
-    inputs: [
-      {
-        name: "systemId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "system";
-        type: "address";
-        internalType: "contract System";
-      },
-      {
-        name: "publicAccess";
-        type: "bool";
-        internalType: "bool";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "registerSystemHook";
-    inputs: [
-      {
-        name: "systemId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "hookAddress";
-        type: "address";
-        internalType: "contract ISystemHook";
-      },
-      {
-        name: "enabledHooksBitmap";
-        type: "uint8";
-        internalType: "uint8";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "registerTable";
-    inputs: [
-      {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-      {
-        name: "fieldLayout";
-        type: "bytes32";
-        internalType: "FieldLayout";
-      },
-      {
-        name: "keySchema";
-        type: "bytes32";
-        internalType: "Schema";
-      },
-      {
-        name: "valueSchema";
-        type: "bytes32";
-        internalType: "Schema";
-      },
-      {
-        name: "keyNames";
-        type: "string[]";
-        internalType: "string[]";
-      },
-      {
-        name: "fieldNames";
-        type: "string[]";
-        internalType: "string[]";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
-  },
-  {
-    type: "function";
-    name: "renounceOwnership";
-    inputs: [
-      {
-        name: "namespaceId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+          {
+            "name": "inventory",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMonsterStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MonsterStats",
+        "components": [
+          {
+            "name": "hitPoints",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strength",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "agility",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "intelligence",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "inventory",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getName",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_name",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getNpcStats",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct NPCStats",
+        "components": [
+          {
+            "name": "name",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "storyPathIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "alignment",
+            "type": "uint8",
+            "internalType": "enum Alignment"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getNpcStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct NPCStats",
+        "components": [
+          {
+            "name": "name",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "storyPathIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "alignment",
+            "type": "uint8",
+            "internalType": "enum Alignment"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getOwner",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getOwnerAddress",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getPlayerEntityId",
+    "inputs": [
+      {
+        "name": "characterTokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getPythProvider",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "_provider",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getSpawnCounter",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getStats",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "agility",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "intelligence",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxHitPoints",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "currentDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getTotalSupply",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_supply",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getWeaponStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_weaponStats",
+        "type": "tuple",
+        "internalType": "struct WeaponStats",
+        "components": [
+          {
+            "name": "minDamage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxDamage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "classRestrictions",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isEquipped",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isEquipped",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__issueStarterItems",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__mintCharacter",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "name",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tokenUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__move",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__rollStats",
+    "inputs": [
+      {
+        "name": "userRandomNumber",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "class",
+        "type": "uint8",
+        "internalType": "enum Classes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setStarterItems",
+    "inputs": [
+      {
+        "name": "class",
+        "type": "uint8",
+        "internalType": "enum Classes"
+      },
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "amounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setTokenUri",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "tokenUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__spawn",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__spawnMob",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__unequipItem",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "batchCall",
+    "inputs": [
+      {
+        "name": "systemCalls",
+        "type": "tuple[]",
+        "internalType": "struct SystemCallData[]",
+        "components": [
+          {
+            "name": "systemId",
+            "type": "bytes32",
+            "internalType": "ResourceId"
+          },
+          {
+            "name": "callData",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "returnDatas",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "batchCallFrom",
+    "inputs": [
+      {
+        "name": "systemCalls",
+        "type": "tuple[]",
+        "internalType": "struct SystemCallFromData[]",
+        "components": [
+          {
+            "name": "from",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "systemId",
+            "type": "bytes32",
+            "internalType": "ResourceId"
+          },
+          {
+            "name": "callData",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "returnDatas",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "call",
+    "inputs": [
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "callData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "callFrom",
+    "inputs": [
+      {
+        "name": "delegator",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "callData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "creator",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "deleteRecord",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getDynamicField",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "dynamicFieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getDynamicFieldLength",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "dynamicFieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getDynamicFieldSlice",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "dynamicFieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "start",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "end",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getField",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "fieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "fieldLayout",
+        "type": "bytes32",
+        "internalType": "FieldLayout"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getField",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "fieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getFieldLayout",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "fieldLayout",
+        "type": "bytes32",
+        "internalType": "FieldLayout"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getFieldLength",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "fieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "fieldLayout",
+        "type": "bytes32",
+        "internalType": "FieldLayout"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getFieldLength",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "fieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getKeySchema",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "keySchema",
+        "type": "bytes32",
+        "internalType": "Schema"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRecord",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "fieldLayout",
+        "type": "bytes32",
+        "internalType": "FieldLayout"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "staticData",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "internalType": "EncodedLengths"
+      },
+      {
+        "name": "dynamicData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRecord",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "staticData",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "internalType": "EncodedLengths"
+      },
+      {
+        "name": "dynamicData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getStaticField",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "fieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "fieldLayout",
+        "type": "bytes32",
+        "internalType": "FieldLayout"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getValueSchema",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "valueSchema",
+        "type": "bytes32",
+        "internalType": "Schema"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "grantAccess",
+    "inputs": [
+      {
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "grantee",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "initialize",
+    "inputs": [
+      {
+        "name": "initModule",
+        "type": "address",
+        "internalType": "contract IModule"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "installModule",
+    "inputs": [
+      {
+        "name": "module",
+        "type": "address",
+        "internalType": "contract IModule"
+      },
+      {
+        "name": "encodedArgs",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "installRootModule",
+    "inputs": [
+      {
+        "name": "module",
+        "type": "address",
+        "internalType": "contract IModule"
+      },
+      {
+        "name": "encodedArgs",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "popFromDynamicField",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "dynamicFieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "byteLengthToPop",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "pushToDynamicField",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "dynamicFieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "dataToPush",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerDelegation",
+    "inputs": [
+      {
+        "name": "delegatee",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "delegationControlId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "initCallData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerFunctionSelector",
+    "inputs": [
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "systemFunctionSignature",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "worldFunctionSelector",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerNamespace",
+    "inputs": [
+      {
+        "name": "namespaceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerNamespaceDelegation",
+    "inputs": [
+      {
+        "name": "namespaceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "delegationControlId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "initCallData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerRootFunctionSelector",
+    "inputs": [
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "worldFunctionSignature",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "systemFunctionSignature",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "worldFunctionSelector",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerStoreHook",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "hookAddress",
+        "type": "address",
+        "internalType": "contract IStoreHook"
+      },
+      {
+        "name": "enabledHooksBitmap",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerSystem",
+    "inputs": [
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "system",
+        "type": "address",
+        "internalType": "contract System"
+      },
+      {
+        "name": "publicAccess",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerSystemHook",
+    "inputs": [
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "hookAddress",
+        "type": "address",
+        "internalType": "contract ISystemHook"
+      },
+      {
+        "name": "enabledHooksBitmap",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerTable",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "fieldLayout",
+        "type": "bytes32",
+        "internalType": "FieldLayout"
+      },
+      {
+        "name": "keySchema",
+        "type": "bytes32",
+        "internalType": "Schema"
+      },
+      {
+        "name": "valueSchema",
+        "type": "bytes32",
+        "internalType": "Schema"
+      },
+      {
+        "name": "keyNames",
+        "type": "string[]",
+        "internalType": "string[]"
+      },
+      {
+        "name": "fieldNames",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "renounceOwnership",
+    "inputs": [
+      {
+        "name": "namespaceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "revokeAccess";
-    inputs: [
-      {
-        name: "resourceId";
-        type: "bytes32";
-        internalType: "ResourceId";
+    "type": "function",
+    "name": "revokeAccess",
+    "inputs": [
+      {
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "grantee";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "grantee",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "setDynamicField";
-    inputs: [
+    "type": "function",
+    "name": "setDynamicField",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       },
       {
-        name: "dynamicFieldIndex";
-        type: "uint8";
-        internalType: "uint8";
+        "name": "dynamicFieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
       },
       {
-        name: "data";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "setField";
-    inputs: [
+    "type": "function",
+    "name": "setField",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       },
       {
-        name: "fieldIndex";
-        type: "uint8";
-        internalType: "uint8";
+        "name": "fieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
       },
       {
-        name: "data";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "setField";
-    inputs: [
+    "type": "function",
+    "name": "setField",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       },
       {
-        name: "fieldIndex";
-        type: "uint8";
-        internalType: "uint8";
+        "name": "fieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
       },
       {
-        name: "data";
-        type: "bytes";
-        internalType: "bytes";
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
       },
       {
-        name: "fieldLayout";
-        type: "bytes32";
-        internalType: "FieldLayout";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "fieldLayout",
+        "type": "bytes32",
+        "internalType": "FieldLayout"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "setRecord";
-    inputs: [
+    "type": "function",
+    "name": "setRecord",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       },
       {
-        name: "staticData";
-        type: "bytes";
-        internalType: "bytes";
+        "name": "staticData",
+        "type": "bytes",
+        "internalType": "bytes"
       },
       {
-        name: "encodedLengths";
-        type: "bytes32";
-        internalType: "EncodedLengths";
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "internalType": "EncodedLengths"
       },
       {
-        name: "dynamicData";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "dynamicData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "setStaticField";
-    inputs: [
+    "type": "function",
+    "name": "setStaticField",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       },
       {
-        name: "fieldIndex";
-        type: "uint8";
-        internalType: "uint8";
+        "name": "fieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
       },
       {
-        name: "data";
-        type: "bytes";
-        internalType: "bytes";
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
       },
       {
-        name: "fieldLayout";
-        type: "bytes32";
-        internalType: "FieldLayout";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "fieldLayout",
+        "type": "bytes32",
+        "internalType": "FieldLayout"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "spliceDynamicData";
-    inputs: [
+    "type": "function",
+    "name": "spliceDynamicData",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       },
       {
-        name: "dynamicFieldIndex";
-        type: "uint8";
-        internalType: "uint8";
+        "name": "dynamicFieldIndex",
+        "type": "uint8",
+        "internalType": "uint8"
       },
       {
-        name: "startWithinField";
-        type: "uint40";
-        internalType: "uint40";
+        "name": "startWithinField",
+        "type": "uint40",
+        "internalType": "uint40"
       },
       {
-        name: "deleteCount";
-        type: "uint40";
-        internalType: "uint40";
+        "name": "deleteCount",
+        "type": "uint40",
+        "internalType": "uint40"
       },
       {
-        name: "data";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "spliceStaticData";
-    inputs: [
+    "type": "function",
+    "name": "spliceStaticData",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        internalType: "bytes32[]";
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       },
       {
-        name: "start";
-        type: "uint48";
-        internalType: "uint48";
+        "name": "start",
+        "type": "uint48",
+        "internalType": "uint48"
       },
       {
-        name: "data";
-        type: "bytes";
-        internalType: "bytes";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "storeVersion";
-    inputs: [];
-    outputs: [
+    "type": "function",
+    "name": "storeVersion",
+    "inputs": [],
+    "outputs": [
       {
-        name: "version";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    stateMutability: "view";
+        "name": "version",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
-    type: "function";
-    name: "transferBalanceToAddress";
-    inputs: [
+    "type": "function",
+    "name": "transferBalanceToAddress",
+    "inputs": [
       {
-        name: "fromNamespaceId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "fromNamespaceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "toAddress";
-        type: "address";
-        internalType: "address";
+        "name": "toAddress",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        name: "amount";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "transferBalanceToNamespace";
-    inputs: [
+    "type": "function",
+    "name": "transferBalanceToNamespace",
+    "inputs": [
       {
-        name: "fromNamespaceId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "fromNamespaceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "toNamespaceId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "toNamespaceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "amount";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "transferOwnership";
-    inputs: [
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
       {
-        name: "namespaceId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "namespaceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "newOwner";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "unregisterDelegation";
-    inputs: [
+    "type": "function",
+    "name": "unregisterDelegation",
+    "inputs": [
       {
-        name: "delegatee";
-        type: "address";
-        internalType: "address";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "delegatee",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "unregisterNamespaceDelegation";
-    inputs: [
+    "type": "function",
+    "name": "unregisterNamespaceDelegation",
+    "inputs": [
       {
-        name: "namespaceId";
-        type: "bytes32";
-        internalType: "ResourceId";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "namespaceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "unregisterStoreHook";
-    inputs: [
+    "type": "function",
+    "name": "unregisterStoreHook",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "hookAddress";
-        type: "address";
-        internalType: "contract IStoreHook";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "hookAddress",
+        "type": "address",
+        "internalType": "contract IStoreHook"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "unregisterSystemHook";
-    inputs: [
+    "type": "function",
+    "name": "unregisterSystemHook",
+    "inputs": [
       {
-        name: "systemId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "hookAddress";
-        type: "address";
-        internalType: "contract ISystemHook";
-      },
-    ];
-    outputs: [];
-    stateMutability: "nonpayable";
+        "name": "hookAddress",
+        "type": "address",
+        "internalType": "contract ISystemHook"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function";
-    name: "worldVersion";
-    inputs: [];
-    outputs: [
+    "type": "function",
+    "name": "worldVersion",
+    "inputs": [],
+    "outputs": [
       {
-        name: "";
-        type: "bytes32";
-        internalType: "bytes32";
-      },
-    ];
-    stateMutability: "view";
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
-    type: "event";
-    name: "HelloStore";
-    inputs: [
+    "type": "event",
+    "name": "HelloStore",
+    "inputs": [
       {
-        name: "storeVersion";
-        type: "bytes32";
-        indexed: true;
-        internalType: "bytes32";
-      },
-    ];
-    anonymous: false;
+        "name": "storeVersion",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
   },
   {
-    type: "event";
-    name: "HelloWorld";
-    inputs: [
+    "type": "event",
+    "name": "HelloWorld",
+    "inputs": [
       {
-        name: "worldVersion";
-        type: "bytes32";
-        indexed: true;
-        internalType: "bytes32";
-      },
-    ];
-    anonymous: false;
+        "name": "worldVersion",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
   },
   {
-    type: "event";
-    name: "Store_DeleteRecord";
-    inputs: [
+    "type": "event",
+    "name": "Store_DeleteRecord",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        indexed: true;
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        indexed: false;
-        internalType: "bytes32[]";
-      },
-    ];
-    anonymous: false;
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      }
+    ],
+    "anonymous": false
   },
   {
-    type: "event";
-    name: "Store_SetRecord";
-    inputs: [
+    "type": "event",
+    "name": "Store_SetRecord",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        indexed: true;
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        indexed: false;
-        internalType: "bytes32[]";
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
       },
       {
-        name: "staticData";
-        type: "bytes";
-        indexed: false;
-        internalType: "bytes";
+        "name": "staticData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
       },
       {
-        name: "encodedLengths";
-        type: "bytes32";
-        indexed: false;
-        internalType: "EncodedLengths";
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "EncodedLengths"
       },
       {
-        name: "dynamicData";
-        type: "bytes";
-        indexed: false;
-        internalType: "bytes";
-      },
-    ];
-    anonymous: false;
+        "name": "dynamicData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
   },
   {
-    type: "event";
-    name: "Store_SpliceDynamicData";
-    inputs: [
+    "type": "event",
+    "name": "Store_SpliceDynamicData",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        indexed: true;
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        indexed: false;
-        internalType: "bytes32[]";
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
       },
       {
-        name: "dynamicFieldIndex";
-        type: "uint8";
-        indexed: false;
-        internalType: "uint8";
+        "name": "dynamicFieldIndex",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
       },
       {
-        name: "start";
-        type: "uint48";
-        indexed: false;
-        internalType: "uint48";
+        "name": "start",
+        "type": "uint48",
+        "indexed": false,
+        "internalType": "uint48"
       },
       {
-        name: "deleteCount";
-        type: "uint40";
-        indexed: false;
-        internalType: "uint40";
+        "name": "deleteCount",
+        "type": "uint40",
+        "indexed": false,
+        "internalType": "uint40"
       },
       {
-        name: "encodedLengths";
-        type: "bytes32";
-        indexed: false;
-        internalType: "EncodedLengths";
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "EncodedLengths"
       },
       {
-        name: "data";
-        type: "bytes";
-        indexed: false;
-        internalType: "bytes";
-      },
-    ];
-    anonymous: false;
+        "name": "data",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
   },
   {
-    type: "event";
-    name: "Store_SpliceStaticData";
-    inputs: [
+    "type": "event",
+    "name": "Store_SpliceStaticData",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        indexed: true;
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
       },
       {
-        name: "keyTuple";
-        type: "bytes32[]";
-        indexed: false;
-        internalType: "bytes32[]";
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
       },
       {
-        name: "start";
-        type: "uint48";
-        indexed: false;
-        internalType: "uint48";
+        "name": "start",
+        "type": "uint48",
+        "indexed": false,
+        "internalType": "uint48"
       },
       {
-        name: "data";
-        type: "bytes";
-        indexed: false;
-        internalType: "bytes";
-      },
-    ];
-    anonymous: false;
+        "name": "data",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
   },
   {
-    type: "error";
-    name: "EncodedLengths_InvalidLength";
-    inputs: [
+    "type": "error",
+    "name": "EncodedLengths_InvalidLength",
+    "inputs": [
       {
-        name: "length";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "FieldLayout_Empty";
-    inputs: [];
+    "type": "error",
+    "name": "FieldLayout_Empty",
+    "inputs": []
   },
   {
-    type: "error";
-    name: "FieldLayout_InvalidStaticDataLength";
-    inputs: [
+    "type": "error",
+    "name": "FieldLayout_InvalidStaticDataLength",
+    "inputs": [
       {
-        name: "staticDataLength";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "staticDataLength",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "computedStaticDataLength";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "computedStaticDataLength",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "FieldLayout_StaticLengthDoesNotFitInAWord";
-    inputs: [
+    "type": "error",
+    "name": "FieldLayout_StaticLengthDoesNotFitInAWord",
+    "inputs": [
       {
-        name: "index";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "FieldLayout_StaticLengthIsNotZero";
-    inputs: [
+    "type": "error",
+    "name": "FieldLayout_StaticLengthIsNotZero",
+    "inputs": [
       {
-        name: "index";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "FieldLayout_StaticLengthIsZero";
-    inputs: [
+    "type": "error",
+    "name": "FieldLayout_StaticLengthIsZero",
+    "inputs": [
       {
-        name: "index";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "FieldLayout_TooManyDynamicFields";
-    inputs: [
+    "type": "error",
+    "name": "FieldLayout_TooManyDynamicFields",
+    "inputs": [
       {
-        name: "numFields";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "numFields",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "maxFields";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "maxFields",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "FieldLayout_TooManyFields";
-    inputs: [
+    "type": "error",
+    "name": "FieldLayout_TooManyFields",
+    "inputs": [
       {
-        name: "numFields";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "numFields",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "maxFields";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "maxFields",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Module_AlreadyInstalled";
-    inputs: [];
+    "type": "error",
+    "name": "Module_AlreadyInstalled",
+    "inputs": []
   },
   {
-    type: "error";
-    name: "Module_MissingDependency";
-    inputs: [
+    "type": "error",
+    "name": "Module_MissingDependency",
+    "inputs": [
       {
-        name: "dependency";
-        type: "address";
-        internalType: "address";
-      },
-    ];
+        "name": "dependency",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Module_NonRootInstallNotSupported";
-    inputs: [];
+    "type": "error",
+    "name": "Module_NonRootInstallNotSupported",
+    "inputs": []
   },
   {
-    type: "error";
-    name: "Module_RootInstallNotSupported";
-    inputs: [];
+    "type": "error",
+    "name": "Module_RootInstallNotSupported",
+    "inputs": []
   },
   {
-    type: "error";
-    name: "Schema_InvalidLength";
-    inputs: [
+    "type": "error",
+    "name": "Schema_InvalidLength",
+    "inputs": [
       {
-        name: "length";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Schema_StaticTypeAfterDynamicType";
-    inputs: [];
+    "type": "error",
+    "name": "Schema_StaticTypeAfterDynamicType",
+    "inputs": []
   },
   {
-    type: "error";
-    name: "Slice_OutOfBounds";
-    inputs: [
+    "type": "error",
+    "name": "Slice_OutOfBounds",
+    "inputs": [
       {
-        name: "data";
-        type: "bytes";
-        internalType: "bytes";
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
       },
       {
-        name: "start";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "start",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "end";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "end",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_IndexOutOfBounds";
-    inputs: [
+    "type": "error",
+    "name": "Store_IndexOutOfBounds",
+    "inputs": [
       {
-        name: "length";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "accessedIndex";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "accessedIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_InvalidBounds";
-    inputs: [
+    "type": "error",
+    "name": "Store_InvalidBounds",
+    "inputs": [
       {
-        name: "start";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "start",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "end";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "end",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_InvalidFieldNamesLength";
-    inputs: [
+    "type": "error",
+    "name": "Store_InvalidFieldNamesLength",
+    "inputs": [
       {
-        name: "expected";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "received";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "received",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_InvalidKeyNamesLength";
-    inputs: [
+    "type": "error",
+    "name": "Store_InvalidKeyNamesLength",
+    "inputs": [
       {
-        name: "expected";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "received";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "received",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_InvalidResourceType";
-    inputs: [
+    "type": "error",
+    "name": "Store_InvalidResourceType",
+    "inputs": [
       {
-        name: "expected";
-        type: "bytes2";
-        internalType: "bytes2";
+        "name": "expected",
+        "type": "bytes2",
+        "internalType": "bytes2"
       },
       {
-        name: "resourceId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "resourceIdString";
-        type: "string";
-        internalType: "string";
-      },
-    ];
+        "name": "resourceIdString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_InvalidSplice";
-    inputs: [
+    "type": "error",
+    "name": "Store_InvalidSplice",
+    "inputs": [
       {
-        name: "startWithinField";
-        type: "uint40";
-        internalType: "uint40";
+        "name": "startWithinField",
+        "type": "uint40",
+        "internalType": "uint40"
       },
       {
-        name: "deleteCount";
-        type: "uint40";
-        internalType: "uint40";
+        "name": "deleteCount",
+        "type": "uint40",
+        "internalType": "uint40"
       },
       {
-        name: "fieldLength";
-        type: "uint40";
-        internalType: "uint40";
-      },
-    ];
+        "name": "fieldLength",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_InvalidStaticDataLength";
-    inputs: [
+    "type": "error",
+    "name": "Store_InvalidStaticDataLength",
+    "inputs": [
       {
-        name: "expected";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "received";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "received",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_InvalidValueSchemaDynamicLength";
-    inputs: [
+    "type": "error",
+    "name": "Store_InvalidValueSchemaDynamicLength",
+    "inputs": [
       {
-        name: "expected";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "received";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "received",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_InvalidValueSchemaLength";
-    inputs: [
+    "type": "error",
+    "name": "Store_InvalidValueSchemaLength",
+    "inputs": [
       {
-        name: "expected";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "received";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "received",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_InvalidValueSchemaStaticLength";
-    inputs: [
+    "type": "error",
+    "name": "Store_InvalidValueSchemaStaticLength",
+    "inputs": [
       {
-        name: "expected";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "received";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "received",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_TableAlreadyExists";
-    inputs: [
+    "type": "error",
+    "name": "Store_TableAlreadyExists",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "tableIdString";
-        type: "string";
-        internalType: "string";
-      },
-    ];
+        "name": "tableIdString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "Store_TableNotFound";
-    inputs: [
+    "type": "error",
+    "name": "Store_TableNotFound",
+    "inputs": [
       {
-        name: "tableId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "tableId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "tableIdString";
-        type: "string";
-        internalType: "string";
-      },
-    ];
+        "name": "tableIdString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_AccessDenied";
-    inputs: [
+    "type": "error",
+    "name": "World_AccessDenied",
+    "inputs": [
       {
-        name: "resource";
-        type: "string";
-        internalType: "string";
+        "name": "resource",
+        "type": "string",
+        "internalType": "string"
       },
       {
-        name: "caller";
-        type: "address";
-        internalType: "address";
-      },
-    ];
+        "name": "caller",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_AlreadyInitialized";
-    inputs: [];
+    "type": "error",
+    "name": "World_AlreadyInitialized",
+    "inputs": []
   },
   {
-    type: "error";
-    name: "World_CallbackNotAllowed";
-    inputs: [
+    "type": "error",
+    "name": "World_CallbackNotAllowed",
+    "inputs": [
       {
-        name: "functionSelector";
-        type: "bytes4";
-        internalType: "bytes4";
-      },
-    ];
+        "name": "functionSelector",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_DelegationNotFound";
-    inputs: [
+    "type": "error",
+    "name": "World_DelegationNotFound",
+    "inputs": [
       {
-        name: "delegator";
-        type: "address";
-        internalType: "address";
+        "name": "delegator",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        name: "delegatee";
-        type: "address";
-        internalType: "address";
-      },
-    ];
+        "name": "delegatee",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_FunctionSelectorAlreadyExists";
-    inputs: [
+    "type": "error",
+    "name": "World_FunctionSelectorAlreadyExists",
+    "inputs": [
       {
-        name: "functionSelector";
-        type: "bytes4";
-        internalType: "bytes4";
-      },
-    ];
+        "name": "functionSelector",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_FunctionSelectorNotFound";
-    inputs: [
+    "type": "error",
+    "name": "World_FunctionSelectorNotFound",
+    "inputs": [
       {
-        name: "functionSelector";
-        type: "bytes4";
-        internalType: "bytes4";
-      },
-    ];
+        "name": "functionSelector",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_InsufficientBalance";
-    inputs: [
+    "type": "error",
+    "name": "World_InsufficientBalance",
+    "inputs": [
       {
-        name: "balance";
-        type: "uint256";
-        internalType: "uint256";
+        "name": "balance",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        name: "amount";
-        type: "uint256";
-        internalType: "uint256";
-      },
-    ];
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_InterfaceNotSupported";
-    inputs: [
+    "type": "error",
+    "name": "World_InterfaceNotSupported",
+    "inputs": [
       {
-        name: "contractAddress";
-        type: "address";
-        internalType: "address";
+        "name": "contractAddress",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        name: "interfaceId";
-        type: "bytes4";
-        internalType: "bytes4";
-      },
-    ];
+        "name": "interfaceId",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_InvalidNamespace";
-    inputs: [
+    "type": "error",
+    "name": "World_InvalidNamespace",
+    "inputs": [
       {
-        name: "namespace";
-        type: "bytes14";
-        internalType: "bytes14";
-      },
-    ];
+        "name": "namespace",
+        "type": "bytes14",
+        "internalType": "bytes14"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_InvalidResourceId";
-    inputs: [
+    "type": "error",
+    "name": "World_InvalidResourceId",
+    "inputs": [
       {
-        name: "resourceId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "resourceIdString";
-        type: "string";
-        internalType: "string";
-      },
-    ];
+        "name": "resourceIdString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_InvalidResourceType";
-    inputs: [
+    "type": "error",
+    "name": "World_InvalidResourceType",
+    "inputs": [
       {
-        name: "expected";
-        type: "bytes2";
-        internalType: "bytes2";
+        "name": "expected",
+        "type": "bytes2",
+        "internalType": "bytes2"
       },
       {
-        name: "resourceId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "resourceIdString";
-        type: "string";
-        internalType: "string";
-      },
-    ];
+        "name": "resourceIdString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_ResourceAlreadyExists";
-    inputs: [
+    "type": "error",
+    "name": "World_ResourceAlreadyExists",
+    "inputs": [
       {
-        name: "resourceId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "resourceIdString";
-        type: "string";
-        internalType: "string";
-      },
-    ];
+        "name": "resourceIdString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_ResourceNotFound";
-    inputs: [
+    "type": "error",
+    "name": "World_ResourceNotFound",
+    "inputs": [
       {
-        name: "resourceId";
-        type: "bytes32";
-        internalType: "ResourceId";
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
       },
       {
-        name: "resourceIdString";
-        type: "string";
-        internalType: "string";
-      },
-    ];
+        "name": "resourceIdString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_SystemAlreadyExists";
-    inputs: [
+    "type": "error",
+    "name": "World_SystemAlreadyExists",
+    "inputs": [
       {
-        name: "system";
-        type: "address";
-        internalType: "address";
-      },
-    ];
+        "name": "system",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
   },
   {
-    type: "error";
-    name: "World_UnlimitedDelegationNotAllowed";
-    inputs: [];
-  },
-];
-export default abi;
+    "type": "error",
+    "name": "World_UnlimitedDelegationNotAllowed",
+    "inputs": []
+  }
+]; export default abi;

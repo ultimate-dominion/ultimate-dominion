@@ -41,7 +41,17 @@ enum EncounterType {
 }
 
 enum SkillType {
+  Temporary,
   PhysicalAttack,
   MagicAttack,
   StatusEffect
+}
+
+enum StatusEffects {
+  ToHitModifier,
+  DoT,
+  HitPointMod,
+  ArmorMod,
+  WeaponMod,
+  Stun
 }

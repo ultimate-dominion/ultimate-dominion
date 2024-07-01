@@ -9,7 +9,7 @@ pragma solidity >=0.8.24;
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IMapSystem {
-  function UD__move(uint256 characterId, uint32 x, uint32 y) external;
+  function UD__move(bytes32 entityId, uint16 x, uint16 y) external;
 
-  function UD__spawn(uint256 characterId) external;
+  function UD__spawn(bytes32 entityId) external;
 }

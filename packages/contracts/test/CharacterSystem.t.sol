@@ -2,7 +2,7 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes} from "../src/codegen/common.sol";
-import {CharacterStatsData} from "../src/codegen/tables/CharacterStats.sol";
+import {StatsData} from "../src/codegen/tables/Stats.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
 import {IERC721Metadata} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Metadata.sol";
 import "forge-std/console2.sol";
@@ -28,11 +28,11 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         vm.prank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         vm.warp(block.number + 1);
-        CharacterStatsData memory alicesCharacter = world.UD__getCharacterStats(alicesCharacterId);
+        StatsData memory alicesCharacter = world.UD__getStats(alicesCharacterId);
         assertEq(uint8(world.UD__getClass(alicesCharacterId)), uint8(Classes.Rogue));
-        assertEq(alicesCharacter.strength, 2);
-        assertEq(alicesCharacter.agility, 7);
-        assertEq(alicesCharacter.hitPoints, 3);
+        assertEq(alicesCharacter.strength, 9);
+        assertEq(alicesCharacter.agility, 8);
+        assertEq(alicesCharacter.maxHitPoints, 6);
         assertEq(alicesCharacter.intelligence, 4);
 
         endGasReport();

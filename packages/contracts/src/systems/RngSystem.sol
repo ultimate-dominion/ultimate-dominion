@@ -3,11 +3,13 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {RandomNumbers} from "@codegen/index.sol";
-import {Characters, CharacterStats} from "@codegen/index.sol";
+import {Characters, Stats} from "@codegen/index.sol";
 import {Classes, RngRequestType} from "@codegen/common.sol";
 import {UltimateDominionConfig} from "../codegen/index.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
+import {CombatMove} from "@interfaces/Structs.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
+import {IWorld} from "@world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import "forge-std/console2.sol";
 
@@ -32,13 +34,17 @@ contract RngSystem is System, IEntropyConsumer {
         provider = UltimateDominionConfig.getPythProvider();
     }
 
-    function getRng(bytes32 userRandomNumber, RngRequestType requestType, bytes memory data) public payable {
+    function getRng(bytes32 userRandomNumber, RngRequestType requestType, bytes memory data)
+        public
+        payable
+        returns (uint64 sequenceNumber)
+    {
         uint128 requestFee = _entropy().getFee(_provider());
         // check if the user has sent enough fees
         // if (_msgValue() < requestFee) revert('not enough fees');
 
         // NOTE: required for testing, since callback is coming before data is stored
-        /////////////// TODO: remove or comment out for mainnet deployment //////
+        /////////////// TODO: remove for mainnet deployment //////
         if (block.chainid == 31337) {
             (, bytes memory returnData) = address(_entropy()).staticcall(
                 abi.encodeWithSelector(IEntropy.request.selector, _provider(), userRandomNumber, false)
@@ -50,7 +56,7 @@ contract RngSystem is System, IEntropyConsumer {
         /////////////////////////////////////////
 
         // pay the fees and request a random number from entropy
-        uint64 sequenceNumber = _entropy().requestWithCallback{value: requestFee}(_provider(), userRandomNumber);
+        sequenceNumber = _entropy().requestWithCallback{value: requestFee}(_provider(), userRandomNumber);
         // RandomNumbers.set(sequenceNumber, requestType, data);
         RandomNumbers.setArbitraryData(sequenceNumber, data);
         RandomNumbers.setRequestType(sequenceNumber, requestType);
@@ -74,11 +80,19 @@ contract RngSystem is System, IEntropyConsumer {
 
         if (uint8(requestType) == uint8(0)) {
             bytes32 characterId = abi.decode(_data, (bytes32));
-            _storeCharacterStats(randomNumber, characterId);
+            _storeStats(randomNumber, characterId);
+        }
+        if (uint8(requestType) == uint8(1)) {
+            (bytes32 encounterId, CombatMove[] memory moves) = abi.decode(_data, (bytes32, CombatMove[]));
+            _executeCombat(randomNumber, encounterId, moves);
         }
     }
 
-    function _storeCharacterStats(uint256 randomNumber, uint256 characterId) internal {
+    function _executeCombat(uint256 randomNumber, bytes32 encounterId, CombatMove[] memory moves) internal {
+        IWorld(_world()).UD__executeCombat(randomNumber, encounterId, moves);
+    }
+
+    function _storeStats(uint256 randomNumber, bytes32 characterId) internal {
         uint64[] memory chunks = randomNumber.get4Chunks();
 
         Classes characterClass = Characters.getClass(characterId);
@@ -113,17 +127,17 @@ contract RngSystem is System, IEntropyConsumer {
         // Class-based adjustments; should total to 21
         if (characterClass == Classes.Warrior) {
             strength += 2;
-            CharacterStats.setHitPoints(characterId, uint256(10));
+            Stats.setMaxHitPoints(characterId, uint256(10));
         } else if (characterClass == Classes.Rogue) {
             agility += 2;
-            CharacterStats.setHitPoints(characterId, uint256(6));
+            Stats.setMaxHitPoints(characterId, uint256(6));
         } else if (characterClass == Classes.Mage) {
             intelligence += 2;
-            CharacterStats.setHitPoints(characterId, uint256(8));
+            Stats.setMaxHitPoints(characterId, uint256(8));
         }
 
-        CharacterStats.setStrength(characterId, strength);
-        CharacterStats.setAgility(characterId, agility);
-        CharacterStats.setIntelligence(characterId, intelligence);
+        Stats.setStrength(characterId, strength);
+        Stats.setAgility(characterId, agility);
+        Stats.setIntelligence(characterId, intelligence);
     }
 }

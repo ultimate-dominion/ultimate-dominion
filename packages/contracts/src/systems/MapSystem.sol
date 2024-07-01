@@ -1,39 +1,39 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
-import { System } from "@latticexyz/world/src/System.sol";
-import { Characters, MapConfig, Position, Spawned } from "../codegen/index.sol";
+import {System} from "@latticexyz/world/src/System.sol";
+import {Characters, MapConfig, Position, Spawned} from "../codegen/index.sol";
 
 contract MapSystem is System {
-  function move(uint256 characterId, uint32 x, uint32 y) public {
-    address owner = Characters.getOwner(characterId);
-    require(_msgSender() == owner, "Only the owner can move a character");
+    function move(bytes32 entityId, uint16 x, uint16 y) public {
+        address owner = Characters.getOwner(entityId);
+        require(_msgSender() == owner, "Only the owner can move a character");
 
-    require(Spawned.getSpawned(characterId), "Character not spawned");
+        require(Spawned.getSpawned(entityId), "Character not spawned");
 
-    (uint32 currentX, uint32 currentY) = Position.get(characterId);
-    (uint32 height, uint32 width) = MapConfig.get();
+        (uint16 currentX, uint16 currentY) = Position.get(entityId);
+        (uint16 height, uint16 width) = MapConfig.get();
 
-    require(x < width, "X out of bounds");
-    require(y < height, "Y out of bounds");
-    require(distance(currentX, currentY, x, y) == 1, "Can only move 1 tile at a time");
+        require(x < width, "X out of bounds");
+        require(y < height, "Y out of bounds");
+        require(distance(currentX, currentY, x, y) == 1, "Can only move 1 tile at a time");
 
-    Position.set(characterId, x, y);
-  }
+        Position.set(entityId, x, y);
+    }
 
-  function spawn(uint256 characterId) public {
-    address owner = Characters.getOwner(characterId);
-    require(_msgSender() == owner, "Only the owner can spawn a character");
+    function spawn(bytes32 entityId) public {
+        address owner = Characters.getOwner(entityId);
+        require(_msgSender() == owner, "Only the owner can spawn a character");
 
-    require(!Spawned.getSpawned(characterId), "Character already spawned");
+        require(!Spawned.getSpawned(entityId), "Character already spawned");
 
-    Position.set(characterId, 0, 0);
-    Spawned.setSpawned(characterId, true);
-  }
+        Position.set(entityId, 0, 0);
+        Spawned.setSpawned(entityId, true);
+    }
 
-  function distance(uint32 fromX, uint32 fromY, uint32 toX, uint32 toY) internal pure returns (uint32) {
-    uint32 deltaX = fromX > toX ? fromX - toX : toX - fromX;
-    uint32 deltaY = fromY > toY ? fromY - toY : toY - fromY;
-    return deltaX + deltaY;
-  }
+    function distance(uint16 fromX, uint16 fromY, uint16 toX, uint16 toY) internal pure returns (uint16) {
+        uint16 deltaX = fromX > toX ? fromX - toX : toX - fromX;
+        uint16 deltaY = fromY > toY ? fromY - toY : toY - fromY;
+        return deltaX + deltaY;
+    }
 }
