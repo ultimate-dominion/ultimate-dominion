@@ -11,19 +11,23 @@ import {
 import { FaStarAndCrescent } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
-import { useCharacter } from '../../contexts/CharacterContext';
-
-export const Profile = (): JSX.Element => {
-  const { character } = useCharacter();
-
+export const Profile = ({
+  name,
+  description,
+  image,
+}: {
+  name: string;
+  description: string;
+  image: string;
+}): JSX.Element => {
   return (
-    <Box>
+    <Box height="100%" position="relative">
       <VStack>
         <HStack w="100%">
           <Center>
-            <Avatar size={{ base: 'xl', sm: 'xl' }} />
+            <Avatar src={image} size={{ base: 'xl', sm: 'xl' }} />
             <Heading size={{ base: 'lg', sm: 'lg' }} margin="0px 20px">
-              {character?.name || 'Name'}
+              {name || 'Name'}
             </Heading>
           </Center>
           <Spacer></Spacer>
@@ -32,14 +36,15 @@ export const Profile = (): JSX.Element => {
           </Center>
         </HStack>
         <Spacer></Spacer>
-        <Box>
-          <Text size="sm">
-            {character?.description ||
+        <Box w="100%" mt={3}>
+          <Text as="p" size="sm" textAlign="left" overflow="hidden">
+            {description ||
               `Emerges as a mystical warrior, my very presence an interplay of shadow
             and light. My armor, adorned with luminescent runes and forged from
-            the rarest ores.`}
+            the rarest ores.
+            `}
           </Text>
-          <Box textAlign="right">
+          <Box position="absolute" bottom="0" right="0" textAlign="right">
             <Link to="/">Edit Bio</Link>
           </Box>
         </Box>

@@ -1,27 +1,43 @@
 import { Grid, GridItem, Heading } from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
+import { useParams } from 'react-router-dom';
+import { Address, hexToString } from 'viem';
 
-// import { useComponentValue, useEntityQuery } from '@latticexyz/react';
-// import { getComponentValueStrict, Has, HasValue, runQuery } from '@latticexyz/recs';
-// import { useParams } from 'react-router-dom';
 import { CharacterCard } from '../components/Character/Card/CharacterCard';
 import { Misc } from '../components/Character/Misc';
 import { Profile } from '../components/Character/Profile';
 import { Stats } from '../components/Character/Stats';
-// import { useCharacter } from '../contexts/CharacterContext';
-// import { useMUD } from '../contexts/MUDContext';
+import { useCharacter } from '../contexts/CharacterContext';
+import { useMUD } from '../contexts/MUDContext';
 
 export const Character = (): JSX.Element => {
-  // const { characterId } = useParams();
+  const { characterId } = useParams();
+  const {
+    components: { Characters, CharacterStats },
+  } = useMUD();
 
-  // const {
-  //   components: { Characters,  },
-  // } = useMUD();
+  const { character: player } = useCharacter();
 
-  // const { character: player } = useCharacter();
-  // const isSelf = player?.characterId == characterId;
-  // const c = useEntityQuery([
-  //   HasValue(Characters, { characterId: 1 }),
+  const character = useComponentValue(
+    Characters,
+    encodeEntity(
+      { characterId: 'uint256' },
+      { characterId: BigInt(characterId!) },
+    ),
+  );
+  const stats = useComponentValue(
+    CharacterStats,
+    encodeEntity(
+      { characterId: 'uint256' },
+      { characterId: BigInt(characterId!) },
+    ),
+  );
+
+  // const goldToken = useEntityQuery([
+  //   HasValue(UltimateDominionConfig, { locked: true }),
   // ]);
+  const gold = 2000;
 
   return (
     <Grid
@@ -45,7 +61,11 @@ export const Character = (): JSX.Element => {
         padding="10px"
         rowStart={{ sm: 1, base: 1 }}
       >
-        <Profile></Profile>
+        <Profile
+          name={hexToString(character?.name as Address) as string}
+          description={player?.description as string}
+          image={player?.image as string}
+        ></Profile>
       </GridItem>
       <GridItem
         border="solid"
@@ -54,7 +74,12 @@ export const Character = (): JSX.Element => {
         padding="10px"
         rowStart={{ sm: 1, base: 2 }}
       >
-        <Stats hp={0} str={0} agi={0} int={0}></Stats>
+        <Stats
+          hp={Number(stats?.hitPoints.toString())}
+          str={Number(stats?.strength.toString())}
+          agi={Number(stats?.agility.toString())}
+          int={Number(stats?.intelligence.toString())}
+        ></Stats>
       </GridItem>
       <GridItem
         border="solid"
@@ -63,7 +88,11 @@ export const Character = (): JSX.Element => {
         rowStart={{ sm: 1, base: 3 }}
         padding="10px"
       >
-        <Misc></Misc>
+        <Misc
+          experience={Number(stats?.experience.toString())}
+          max={100}
+          gold={gold}
+        ></Misc>
       </GridItem>
       <GridItem
         colSpan={{ sm: 3, base: 1 }}
@@ -71,6 +100,12 @@ export const Character = (): JSX.Element => {
         rowSpan={{ sm: 1, base: 1 }}
         rowStart={{ sm: 2, base: 4 }}
       >
+        {/* Equiptment:
+        {JSON.stringify(
+          equiptment,
+          (key, value) =>
+            typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
+        )} */}
         <Heading>Items 30 - 3/3 Active</Heading>
         <Grid
           templateColumns={{
