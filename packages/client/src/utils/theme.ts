@@ -87,6 +87,30 @@ const Input = {
   },
 };
 
+const Modal = {
+  defaultProps: {
+    scrollBehavior: 'inside',
+  },
+  baseStyle: {
+    dialogContainer: {
+      overflow: 'hidden',
+    },
+    dialog: {
+      maxH: { base: '100%', md: 'calc(100% - 7.5rem)' },
+      minW: { base: '100%', md: '500px' },
+      maxW: { base: '100%', md: '500px' },
+    },
+    body: {
+      overflow: 'auto',
+    },
+    footer: {
+      borderTop: '1px solid',
+      display: 'flex',
+      justifyContent: 'center',
+    },
+  },
+};
+
 const Progress = {
   baseStyle: {
     track: {
@@ -154,6 +178,7 @@ export const theme = extendTheme({
     Button,
     Heading,
     Input,
+    Modal,
     Progress,
     Text,
     Textarea,

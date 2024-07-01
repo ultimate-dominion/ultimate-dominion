@@ -10,7 +10,9 @@
  *
  */
 
-import { MUDChain, mudFoundry } from '@latticexyz/common/chains';
+import { MUDChain } from '@latticexyz/common/chains';
+
+import { DEFAULT_CHAIN_ID, POSSIBLE_SUPPORTED_CHAINS } from '../web3';
 
 export const baseSepolia = {
   name: 'Base Sepolia',
@@ -37,7 +39,9 @@ export const baseSepolia = {
 
 const getSupportedChains = () => {
   if (import.meta.env.DEV) {
-    return [baseSepolia, mudFoundry];
+    return POSSIBLE_SUPPORTED_CHAINS.filter(
+      chain => chain.id === DEFAULT_CHAIN_ID,
+    );
   }
 
   return [baseSepolia];
