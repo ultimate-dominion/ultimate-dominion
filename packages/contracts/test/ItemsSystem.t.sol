@@ -2,7 +2,7 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType} from "@codegen/common.sol";
-import {CharacterStatsData} from "@tables/CharacterStats.sol";
+import {StatsData} from "@tables/Stats.sol";
 import "forge-std/console2.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
@@ -32,7 +32,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
         uint8[] memory restrictions = new uint8[](0);
         WeaponStats memory weaponStats =
-            WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions, minLevel: 0});
+            WeaponStats({minDamage: 1, maxDamage: 4, classRestrictions: restrictions, minLevel: 0});
         vm.startPrank(deployer);
         uint256 firstItemId =
             world.UD__createItem(ItemType.Weapon, 10 ether, abi.encode(weaponStats), "test_Weapon_uri1/");
@@ -53,7 +53,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     function test_CreateItem_Revert_NotNamespaceOwner() public {
         uint8[] memory restrictions = new uint8[](0);
         WeaponStats memory weaponStats =
-            WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions, minLevel: 0});
+            WeaponStats({minDamage: 1, maxDamage: 4, classRestrictions: restrictions, minLevel: 0});
         vm.startPrank(alice);
         vm.expectRevert();
         world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri1/");
@@ -62,7 +62,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     function test_GetTotalSupply() public {
         uint8[] memory restrictions = new uint8[](0);
         WeaponStats memory weaponStats =
-            WeaponStats({damage: 1, speed: 2, classRestrictions: restrictions, minLevel: 0});
+            WeaponStats({minDamage: 1, maxDamage: 4, classRestrictions: restrictions, minLevel: 0});
         vm.startPrank(deployer);
         uint256 id = world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri/");
         assertEq(world.UD__getTotalSupply(id), 100 ether);

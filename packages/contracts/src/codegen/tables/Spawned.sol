@@ -23,8 +23,8 @@ library Spawned {
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0001010001000000000000000000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of (uint256)
-  Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (bytes32)
+  Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
   // Hex-encoded value schema of (bool)
   Schema constant _valueSchema = Schema.wrap(0x0001010060000000000000000000000000000000000000000000000000000000);
 
@@ -34,7 +34,7 @@ library Spawned {
    */
   function getKeyNames() internal pure returns (string[] memory keyNames) {
     keyNames = new string[](1);
-    keyNames[0] = "characterId";
+    keyNames[0] = "entityId";
   }
 
   /**
@@ -63,9 +63,9 @@ library Spawned {
   /**
    * @notice Get spawned.
    */
-  function getSpawned(uint256 characterId) internal view returns (bool spawned) {
+  function getSpawned(bytes32 entityId) internal view returns (bool spawned) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (_toBool(uint8(bytes1(_blob))));
@@ -74,9 +74,9 @@ library Spawned {
   /**
    * @notice Get spawned.
    */
-  function _getSpawned(uint256 characterId) internal view returns (bool spawned) {
+  function _getSpawned(bytes32 entityId) internal view returns (bool spawned) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (_toBool(uint8(bytes1(_blob))));
@@ -85,9 +85,9 @@ library Spawned {
   /**
    * @notice Get spawned.
    */
-  function get(uint256 characterId) internal view returns (bool spawned) {
+  function get(bytes32 entityId) internal view returns (bool spawned) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (_toBool(uint8(bytes1(_blob))));
@@ -96,9 +96,9 @@ library Spawned {
   /**
    * @notice Get spawned.
    */
-  function _get(uint256 characterId) internal view returns (bool spawned) {
+  function _get(bytes32 entityId) internal view returns (bool spawned) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (_toBool(uint8(bytes1(_blob))));
@@ -107,9 +107,9 @@ library Spawned {
   /**
    * @notice Set spawned.
    */
-  function setSpawned(uint256 characterId, bool spawned) internal {
+  function setSpawned(bytes32 entityId, bool spawned) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((spawned)), _fieldLayout);
   }
@@ -117,9 +117,9 @@ library Spawned {
   /**
    * @notice Set spawned.
    */
-  function _setSpawned(uint256 characterId, bool spawned) internal {
+  function _setSpawned(bytes32 entityId, bool spawned) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((spawned)), _fieldLayout);
   }
@@ -127,9 +127,9 @@ library Spawned {
   /**
    * @notice Set spawned.
    */
-  function set(uint256 characterId, bool spawned) internal {
+  function set(bytes32 entityId, bool spawned) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((spawned)), _fieldLayout);
   }
@@ -137,9 +137,9 @@ library Spawned {
   /**
    * @notice Set spawned.
    */
-  function _set(uint256 characterId, bool spawned) internal {
+  function _set(bytes32 entityId, bool spawned) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((spawned)), _fieldLayout);
   }
@@ -147,9 +147,9 @@ library Spawned {
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(uint256 characterId) internal {
+  function deleteRecord(bytes32 entityId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -157,9 +157,9 @@ library Spawned {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(uint256 characterId) internal {
+  function _deleteRecord(bytes32 entityId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -190,9 +190,9 @@ library Spawned {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(uint256 characterId) internal pure returns (bytes32[] memory) {
+  function encodeKeyTuple(bytes32 entityId) internal pure returns (bytes32[] memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     return _keyTuple;
   }

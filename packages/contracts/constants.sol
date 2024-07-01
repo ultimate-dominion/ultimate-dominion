@@ -11,3 +11,6 @@ string constant ERC721_SYMBOL = "UDC";
 string constant TOKEN_URI = "ipfs://";
 
 uint256 constant DEFAULT_MAX_TURNS = 15;
+uint256 constant TO_HIT_MODIFIER = 10_000;
+uint256 constant DEFENSE_MODIFIER = 10_000;
+uint256 constant ATTACK_MODIFIER = 10_000;
