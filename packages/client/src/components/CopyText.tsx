@@ -1,4 +1,4 @@
-import { Text, Tooltip } from '@chakra-ui/react';
+import { Button, Tooltip } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 
 export const CopyText = ({
@@ -22,9 +22,9 @@ export const CopyText = ({
       label={isCopied ? 'Copied!' : text}
       placement="top"
     >
-      <Text cursor="pointer" onClick={onCopy}>
+      <Button onClick={onCopy} variant="unstyled">
         {children}
-      </Text>
+      </Button>
     </Tooltip>
   );
 };

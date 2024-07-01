@@ -25,6 +25,7 @@ import {
 type MUDContextType = {
   burnerAddress: Address;
   burnerBalance: string;
+  burnerBalanceFetched: boolean;
   components: ComponentsResult;
   delegatorAddress: Address | null;
   delegatorEntity: string | null;
@@ -50,6 +51,8 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
 
   const [burner, setBurner] = useState<Burner | null>(null);
   const [burnerBalance, setBurnerBalance] = useState<string>('0');
+  const [burnerBalanceFetched, setBurnerBalanceFetched] = useState(false);
+
   const [isSynced, setIsSynced] = useState(false);
 
   const syncProgress = useComponentValue(
@@ -93,6 +96,7 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
       address: burner.walletClient.account.address,
     });
     setBurnerBalance(formatEther(balance));
+    setBurnerBalanceFetched(true);
   }, [burner, setupResult.network]);
 
   useEffect(() => {
@@ -109,6 +113,7 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
       return {
         burnerAddress: setupResult.network.walletClient.account.address,
         burnerBalance,
+        burnerBalanceFetched,
         components: setupResult.components,
         delegatorAddress: null,
         delegatorEntity: null,
@@ -122,6 +127,7 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
     return {
       burnerAddress: burner.walletClient.account.address,
       burnerBalance,
+      burnerBalanceFetched,
       components: burner.components,
       delegatorAddress: burner.delegatorAddress,
       delegatorEntity: encodeEntity(
@@ -133,7 +139,14 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
       network: burner.network,
       systemCalls: burner.systemCalls,
     };
-  }, [burner, burnerBalance, getBurner, isSynced, setupResult]);
+  }, [
+    burner,
+    burnerBalance,
+    burnerBalanceFetched,
+    getBurner,
+    isSynced,
+    setupResult,
+  ]);
 
   // const currentValue = useContext(MUDContext);
   // if (currentValue) throw new Error('MUDProvider can only be used once');

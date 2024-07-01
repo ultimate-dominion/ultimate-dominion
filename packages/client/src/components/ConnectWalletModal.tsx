@@ -26,9 +26,7 @@ export const ConnectWalletModal = ({
 }): JSX.Element => {
   const { data: externalWalletClient } = useWalletClient();
   const { isConnected, address } = useAccount();
-  const {
-    network: { walletClient },
-  } = useMUD();
+  const { burnerAddress } = useMUD();
 
   const bodyContent = useMemo(() => {
     if (address && externalWalletClient && isConnected) {
@@ -53,10 +51,8 @@ export const ConnectWalletModal = ({
             <Text size="sm" textAlign="center">
               Your session account:
             </Text>
-            <CopyText text={walletClient.account.address}>
-              <Text textAlign="center">
-                {shortenAddress(walletClient.account.address)}
-              </Text>
+            <CopyText text={burnerAddress}>
+              <Text textAlign="center">{shortenAddress(burnerAddress)}</Text>
             </CopyText>
             <Text fontWeight={700} size="sm" textAlign="center">
               Do not deposit any funds into this account that you are not
@@ -77,7 +73,7 @@ export const ConnectWalletModal = ({
         <ConnectWalletButton />
       </VStack>
     );
-  }, [address, externalWalletClient, isConnected, onClose, walletClient]);
+  }, [address, burnerAddress, externalWalletClient, isConnected, onClose]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
