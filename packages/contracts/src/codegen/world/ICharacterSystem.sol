@@ -38,5 +38,5 @@ interface ICharacterSystem {
 
   function UD__getExperience(bytes32 characterId) external view returns (uint256);
 
-  function UD__getCharacterStats(bytes32 characterId) external view returns (CharacterStatsData memory);
+  function UD__getStats(bytes32 characterId) external view returns (StatsData memory);
 }

@@ -11,9 +11,9 @@ import {
     StatsData,
     Characters,
     CharactersData,
-    Actions
+    Skills
 } from "@codegen/index.sol";
-import {RngRequestType, ActionType} from "@codegen/common.sol";
+import {RngRequestType, SkillType} from "@codegen/common.sol";
 
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
@@ -168,10 +168,10 @@ contract CharacterSystem is System {
     }
 
     function getExperience(bytes32 characterId) public view returns (uint256) {
-        return CharacterStats.getExperience(characterId);
+        return Stats.getExperience(characterId);
     }
 
-    function getCharacterStats(bytes32 characterId) public view returns (CharacterStatsData memory) {
-        return CharacterStats.get(characterId);
+    function getStats(bytes32 characterId) public view returns (StatsData memory) {
+        return Stats.get(characterId);
     }
 }

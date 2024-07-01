@@ -4,7 +4,8 @@ pragma solidity >=0.8.24;
 import {ItemType, Classes, Alignment} from "@codegen/common.sol";
 
 struct WeaponStats {
-    int256 agiModifier;
+    uint256 minDamage;
+    uint256 maxDamage;
     uint8[] classRestrictions;
     int256 hitPointModifier;
     int256 intModifier;
@@ -46,11 +47,29 @@ struct ArmorStats {
     int256 strModifier;
 }
 
+struct ArmorStats {
+    uint256 armorModifier;
+    uint8[] classRestrictions;
+    uint256 minLevel;
+    int256 strModifier;
+    int256 agiModifier;
+    int256 intModifier;
+    int256 hitPointModifier;
+}
+
 struct MonsterStats {
-    //base to hit number for this mob for physical attacks = agility * physicalAttackConversion
-    uint256 agility;
+    // hit points
+    uint256 hitPoints;
     // damage reduction: subtracted from total damage
     uint256 armor;
+    // base damage = strength * damangeConversion
+    uint256 strength;
+    //base to hit number for this mob for physical attacks = agility * physicalAttackConversion
+    uint256 agility;
+    // base to hit modifier for magical Attacks = inteligence * magicDefenseConversion
+    uint256 intelligence;
+    // monster level
+    uint256 level;
     // monster's class
     Classes class;
     // the amount of experience this monster is worth
@@ -100,6 +119,31 @@ struct Action {
     bytes32 attackerEntityId;
     bytes32 defenderEntityId;
     bytes32 actionId;
+    uint256 weaponId;
+}
+
+struct MagicAttackStats {
+    // additional damage on top of item damage
+    uint256 bonusDamage;
+    // list of items that can deal this attack
+    uint256[] requiredItems;
+    // base armor penetration
+    uint256 armorPenetration;
+}
+
+struct PhysicalAttackStats {
+    // additional damage on top of item damage
+    uint256 bonusDamage;
+    // list of items that can deal this attack
+    uint256[] requiredItems;
+    // base armor penetration
+    uint256 armorPenetration;
+}
+
+struct CombatMove {
+    bytes32 attackerEntityId;
+    bytes32 defenderEntityId;
+    bytes32 skillId;
     uint256 weaponId;
 }
 

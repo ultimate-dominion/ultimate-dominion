@@ -17,14 +17,13 @@ import {
     CharactersData,
     Stats,
     StatsData,
-    CharacterEquipment,
-    CharacterEquipmentData
+    CharacterEquipment
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
-import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess, _lootManagerSystemId} from "../utils.sol";
-import {ITEMS_NAMESPACE, WORLD_NAMESPACE} from "../../constants.sol";
+import {_erc1155SystemId, _characterSystemId, _requireOwner} from "../utils.sol";
+import {ITEMS_NAMESPACE} from "../../constants.sol";
 import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
@@ -132,7 +131,7 @@ contract ItemsSystem is System {
 
     function checkRequirements(bytes32 characterId, uint256 itemId) public view returns (bool) {
         ItemsData memory itemData = Items.get(itemId);
-        CharacterStatsData memory character = CharacterStats.get(characterId);
+        StatsData memory character = Stats.get(characterId);
         CharactersData memory characterData = Characters.get(characterId);
         bool canUse = true;
         if (uint8(itemData.itemType) == 0) {
@@ -166,10 +165,31 @@ contract ItemsSystem is System {
         if (uint8(itemType) == 1) {
             require(CharacterEquipment.lengthEquippedArmor(characterId) < 3, "ITEMS: Too many weapons equipped");
             CharacterEquipment.pushEquippedArmor(characterId, itemId);
+            uint256[] memory equippedArmor = CharacterEquipment.getEquippedArmor(characterId);
+            uint256 totalArmor;
+            int256 totalStrModifiers;
+            int256 totalAgiModifiers;
+            int256 totalIntModifiers;
+            int256 totalHPModifiers;
+            ArmorStats memory armorStats;
+            for (uint256 i; i < equippedArmor.length; i++) {
+                armorStats = getArmorStats(equippedArmor[i]);
+                totalArmor += armorStats.armorModifier;
+                totalStrModifiers += armorStats.strModifier;
+                totalAgiModifiers += armorStats.agiModifier;
+                totalIntModifiers += armorStats.intModifier;
+                totalHPModifiers += armorStats.hitPointModifier;
+            }
+            CharacterEquipment.setStrBonus(characterId, totalStrModifiers);
+            CharacterEquipment.setAgiBonus(characterId, totalAgiModifiers);
+            CharacterEquipment.setIntBonus(characterId, totalIntModifiers);
+            CharacterEquipment.setHpBonus(characterId, totalHPModifiers);
+            Stats.setArmor(characterId, totalArmor);
         }
+
         if (uint8(itemType) == 2) {
-            require(CharacterEquipment.lengthEquippedSpells(characterId) < 3, "ITEMS: Too many weapons equipped");
-            CharacterEquipment.pushEquippedSpells(characterId, itemId);
+            // require(CharacterEquipment.lengthEquippedSpells(characterId) < 3, "ITEMS: Too many weapons equipped");
+            // CharacterEquipment.pushEquippedSpells(characterId, itemId);
         }
     }
 
@@ -195,13 +215,13 @@ contract ItemsSystem is System {
             }
         }
         if (itemType == 2) {
-            uint256[] memory sortedArray =
-                _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
-            if (sortedArray[sortedArray.length - 1] == itemId) {
-                CharacterEquipment.setEquippedSpells(characterId, sortedArray);
-                CharacterEquipment.popEquippedSpells(characterId);
-                success = true;
-            }
+            // uint256[] memory sortedArray =
+            //     _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
+            // if (sortedArray[sortedArray.length - 1] == itemId) {
+            //     CharacterEquipment.setEquippedSpells(characterId, sortedArray);
+            //     CharacterEquipment.popEquippedSpells(characterId);
+            //     success = true;
+            // }
         }
     }
 
@@ -262,6 +282,12 @@ contract ItemsSystem is System {
         uint256 itemsCounter = Counters.getCounter(address(itemsContract), 0) + 1;
         Counters.setCounter(itemsContract, 0, (itemsCounter));
         return itemsCounter;
+    }
+
+    function getArmorStats(uint256 itemId) public view returns (ArmorStats memory _ArmorStats) {
+        ItemsData memory _data = Items.get(itemId);
+        require(_data.itemType == ItemType.Armor, "ITEMS: Not a  Armor");
+        _ArmorStats = abi.decode(_data.stats, (ArmorStats));
     }
 
     function setStarterItems(Classes class, uint256[] memory itemIds, uint256[] memory amounts) public {

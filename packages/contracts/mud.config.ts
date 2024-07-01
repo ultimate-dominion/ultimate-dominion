@@ -18,7 +18,7 @@ export default defineWorld({
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
-    ActionType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
+    SkillType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
     StatusEffects: ["ToHitModifier", "DoT", "HitPointMod", "ArmorMod", "WeaponMod", "Stun"],
   },
   tables: {
@@ -39,15 +39,15 @@ export default defineWorld({
     Stats: {
       key: ["entityId"],
       schema: {
-        characterId: "bytes32",
+        entityId: "bytes32",
         strength: "uint256",
         agility: "uint256",
-        class: "Classes",
         intelligence: "uint256",
-        baseHitPoints: "uint256",
-        currentHp: "int256",
+        maxHitPoints: "uint256",
+        currentDamage: "int256",
         experience: "uint256",
         level: "uint256",
+        armor: "uint256",
       },
     },
     MapConfig: {
@@ -68,20 +68,13 @@ export default defineWorld({
       },
     },
     Mobs: {
-      key: ["mobId"],
       schema: {
         mobId: "uint256",
         mobType: "MobType",
         mobStats: "bytes",
         mobMetadata: "string",
       },
-    },
-    MobsByLevel: {
-      key: ["level"],
-      schema: {
-        level: "uint256",
-        mobIds: "uint256[]",
-      },
+      key: ["mobId"],
     },
     Levels: {
       key: ["level"],
@@ -94,9 +87,14 @@ export default defineWorld({
       key: ["characterId"],
       schema: {
         characterId: "bytes32",
+        strBonus: "int256",
+        agiBonus: "int256",
+        intBonus: "int256",
+        hpBonus: "int256",
         equippedArmor: "uint256[]",
         equippedWeapons: "uint256[]",
         equippedSpells: "bytes32[]",
+        equippedSkills: "bytes32[]",
       },
     },
     Counters: {
@@ -117,13 +115,13 @@ export default defineWorld({
       },
       key: ["itemId"],
     },
-    Actions: {
+    Skills: {
       schema: {
-        actionId: "bytes32",
-        actionType: "ActionType",
-        actionStats: "bytes",
+        skillId: "bytes32",
+        skillType: "SkillType",
+        skillStats: "bytes",
       },
-      key: ["actionId"],
+      key: ["skillId"],
     },
 
     StarterItems: {
@@ -190,6 +188,9 @@ export default defineWorld({
      */
     Position: {
       key: ["entity"],
+      codegen: {
+        dataStruct: false,
+      },
       schema: {
         entity: "bytes32",
         x: "uint16",

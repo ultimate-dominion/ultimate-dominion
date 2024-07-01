@@ -3,7 +3,7 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType} from "@codegen/common.sol";
-import {StatsData, StarterItemsData} from "@codegen/index.sol";
+import {StatsData} from "@tables/Stats.sol";
 import "forge-std/console2.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
@@ -39,16 +39,8 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         startGasReport("creates an item");
 
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats = WeaponStats({
-            agiModifier: 0,
-            classRestrictions: restrictions,
-            hitPointModifier: 0,
-            intModifier: 0,
-            maxDamage: 4,
-            minDamage: 1,
-            minLevel: 0,
-            strModifier: 0
-        });
+        WeaponStats memory weaponStats =
+            WeaponStats({minDamage: 1, maxDamage: 4, classRestrictions: restrictions, minLevel: 0});
         vm.startPrank(deployer);
         uint256 firstItemId =
             world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
@@ -68,16 +60,8 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_CreateItem_Revert_NotNamespaceOwner() public {
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats = WeaponStats({
-            agiModifier: 0,
-            classRestrictions: restrictions,
-            hitPointModifier: 0,
-            intModifier: 0,
-            maxDamage: 4,
-            minDamage: 1,
-            minLevel: 0,
-            strModifier: 0
-        });
+        WeaponStats memory weaponStats =
+            WeaponStats({minDamage: 1, maxDamage: 4, classRestrictions: restrictions, minLevel: 0});
         vm.startPrank(alice);
         vm.expectRevert();
         world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
@@ -85,16 +69,8 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_GetTotalSupply() public {
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats = WeaponStats({
-            agiModifier: 0,
-            classRestrictions: restrictions,
-            hitPointModifier: 0,
-            intModifier: 0,
-            maxDamage: 4,
-            minDamage: 1,
-            minLevel: 0,
-            strModifier: 0
-        });
+        WeaponStats memory weaponStats =
+            WeaponStats({minDamage: 1, maxDamage: 4, classRestrictions: restrictions, minLevel: 0});
         vm.startPrank(deployer);
         uint256 id =
             world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri/");

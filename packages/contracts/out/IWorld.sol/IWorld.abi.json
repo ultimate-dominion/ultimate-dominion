@@ -17,28 +17,18 @@
         "components": [
           {
             "name": "bonusDamage",
-            "type": "int256",
-            "internalType": "int256"
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "requiredItems",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
           },
           {
             "name": "armorPenetration",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "attackModifierBonus",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "critChanceBonus",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "classRestrictions",
-            "type": "uint8[]",
-            "internalType": "uint8[]"
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       },
@@ -66,18 +56,8 @@
     "outputs": [
       {
         "name": "damage",
-        "type": "int256",
-        "internalType": "int256"
-      },
-      {
-        "name": "hit",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "crit",
-        "type": "bool",
-        "internalType": "bool"
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
@@ -96,37 +76,37 @@
       {
         "name": "modifiedStats",
         "type": "tuple",
-        "internalType": "struct AdjustedCombatStats",
+        "internalType": "struct StatsData",
         "components": [
           {
-            "name": "adjustedStrength",
+            "name": "strength",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "adjustedAgility",
+            "name": "agility",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "adjustedIntelligence",
+            "name": "intelligence",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "adjustedArmor",
+            "name": "maxHitPoints",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "adjustedMaxHp",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "currentHp",
+            "name": "currentDamage",
             "type": "int256",
             "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
             "name": "level",
@@ -134,7 +114,7 @@
             "internalType": "uint256"
           },
           {
-            "name": "class",
+            "name": "armor",
             "type": "uint256",
             "internalType": "uint256"
           }
@@ -145,7 +125,7 @@
   },
   {
     "type": "function",
-    "name": "UD__assignActionToCharacter",
+    "name": "UD__checkRequirements",
     "inputs": [
       {
         "name": "characterId",
@@ -370,6 +350,70 @@
   },
   {
     "type": "function",
+    "name": "UD__createSkill",
+    "inputs": [
+      {
+        "name": "skillType",
+        "type": "uint8",
+        "internalType": "enum SkillType"
+      },
+      {
+        "name": "skillStats",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "skillId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__endTurn",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "moves",
+        "type": "tuple[]",
+        "internalType": "struct CombatMove[]",
+        "components": [
+          {
+            "name": "attackerEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "defenderEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "skillId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "weaponId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__enterGame",
     "inputs": [
       {
@@ -404,9 +448,54 @@
     "name": "UD__executeCombat",
     "inputs": [
       {
-        "name": "characterId",
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "encounterId",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "moves",
+        "type": "tuple[]",
+        "internalType": "struct CombatMove[]",
+        "components": [
+          {
+            "name": "attackerEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "defenderEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "skillId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "weaponId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__getArmorStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -416,19 +505,39 @@
         "internalType": "struct ArmorStats",
         "components": [
           {
-            "name": "agiModifier",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
             "name": "armorModifier",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "level",
+            "name": "classRestrictions",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
+          },
+          {
+            "name": "minLevel",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hitPointModifier",
+            "type": "int256",
+            "internalType": "int256"
           }
         ]
       }
@@ -729,6 +838,42 @@
     "name": "UD__getMob",
     "inputs": [
       {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MobsData",
+        "components": [
+          {
+            "name": "mobType",
+            "type": "uint8",
+            "internalType": "enum MobType"
+          },
+          {
+            "name": "mobStats",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "mobMetadata",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMob",
+    "inputs": [
+      {
         "name": "mobId",
         "type": "uint256",
         "internalType": "uint256"
@@ -820,12 +965,32 @@
         "internalType": "struct MonsterStats",
         "components": [
           {
-            "name": "agility",
+            "name": "hitPoints",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
             "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strength",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "agility",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "intelligence",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -886,7 +1051,7 @@
         "internalType": "struct MonsterStats",
         "components": [
           {
-            "name": "agility",
+            "name": "hitPoints",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -896,17 +1061,12 @@
             "internalType": "uint256"
           },
           {
-            "name": "class",
-            "type": "uint8",
-            "internalType": "enum Classes"
-          },
-          {
-            "name": "experience",
+            "name": "strength",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "hitPoints",
+            "name": "agility",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -916,58 +1076,7 @@
             "internalType": "uint256"
           },
           {
-            "name": "inventory",
-            "type": "uint256[]",
-            "internalType": "uint256[]"
-          },
-          {
             "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "strength",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__getMonsterStats",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct MonsterStats",
-        "components": [
-          {
-            "name": "hp",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "armor",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "baseDamage",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -1084,42 +1193,6 @@
   },
   {
     "type": "function",
-    "name": "UD__getNpcStats",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct NPCStats",
-        "components": [
-          {
-            "name": "name",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "storyPathIds",
-            "type": "uint256[]",
-            "internalType": "uint256[]"
-          },
-          {
-            "name": "alignment",
-            "type": "uint8",
-            "internalType": "enum Alignment"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__getOwner",
     "inputs": [
       {
@@ -1209,6 +1282,67 @@
   },
   {
     "type": "function",
+    "name": "UD__getStats",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "agility",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "intelligence",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxHitPoints",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "currentDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getTotalSupply",
     "inputs": [
       {
@@ -1243,9 +1377,14 @@
         "internalType": "struct WeaponStats",
         "components": [
           {
-            "name": "agiModifier",
-            "type": "int256",
-            "internalType": "int256"
+            "name": "minDamage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxDamage",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
             "name": "classRestrictions",
@@ -1639,6 +1778,19 @@
   },
   {
     "type": "function",
+    "name": "UD__spawn",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__spawnMob",
     "inputs": [
       {
@@ -1647,21 +1799,14 @@
         "internalType": "uint256"
       },
       {
-        "name": "positionData",
-        "type": "tuple",
-        "internalType": "struct PositionData",
-        "components": [
-          {
-            "name": "x",
-            "type": "uint16",
-            "internalType": "uint16"
-          },
-          {
-            "name": "y",
-            "type": "uint16",
-            "internalType": "uint16"
-          }
-        ]
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "outputs": [
