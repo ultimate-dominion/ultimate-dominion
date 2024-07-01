@@ -62,6 +62,7 @@ export const CharacterProvider = ({
     ).map(entity => {
       const characterData = getComponentValueStrict(Characters, entity);
       const characterStats = getComponentValue(CharacterStats, entity);
+
       return {
         agility: characterStats?.agility.toString() ?? '0',
         experience: characterStats?.experience.toString() ?? '0',

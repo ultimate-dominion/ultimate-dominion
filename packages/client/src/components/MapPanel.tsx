@@ -212,7 +212,7 @@ export const MapPanel = (): JSX.Element => {
         <Button
           isLoading={isSpawning}
           loadingText="Spawning..."
-          mt={8}
+          mt={{ base: 0, lg: 8 }}
           onClick={onSpawn}
           size="sm"
         >
