@@ -7,7 +7,7 @@ import {Characters, Stats} from "@codegen/index.sol";
 import {Classes, RngRequestType} from "@codegen/common.sol";
 import {UltimateDominionConfig} from "../codegen/index.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
-import {CombatMove} from "@interfaces/Structs.sol";
+import {Action} from "@interfaces/Structs.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
@@ -83,12 +83,12 @@ contract RngSystem is System, IEntropyConsumer {
             _storeStats(randomNumber, characterId);
         }
         if (uint8(requestType) == uint8(1)) {
-            (bytes32 encounterId, CombatMove[] memory moves) = abi.decode(_data, (bytes32, CombatMove[]));
+            (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
             _executeCombat(randomNumber, encounterId, moves);
         }
     }
 
-    function _executeCombat(uint256 randomNumber, bytes32 encounterId, CombatMove[] memory moves) internal {
+    function _executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
         IWorld(_world()).UD__executeCombat(randomNumber, encounterId, moves);
     }
 

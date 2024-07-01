@@ -18,7 +18,7 @@ import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common
 import {Counters} from "@tables/Counters.sol";
 import {Mobs, MobsData} from "@tables/Mobs.sol";
 import {CombatEncounter, CombatEncounterData} from "@tables/CombatEncounter.sol";
-import {MonsterStats, WeaponStats, NPCStats, CombatMove, PhysicalAttackStats} from "@interfaces/Structs.sol";
+import {MonsterStats, WeaponStats, NPCStats, Action, PhysicalAttackStats} from "@interfaces/Structs.sol";
 import {_requireOwner} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -54,43 +54,43 @@ contract CombatSystem is System {
     }
     /**
      * @param encounterId the bytes32 id of the encounter
-     * @param moves for a pve encounter player moves are calculated first and the mobs.
+     * @param actions : for a pve encounter player actions are calculated first and the mobs.
      */
 
-    function endTurn(bytes32 encounterId, CombatMove[] memory moves) public {
+    function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) public {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(encounterData.currentTurn < encounterData.maxTurns, "this encounter is over");
-
-        _queueActions(encounterId, moves);
+        // TODO ensure that the msg.sender is one of the attackers in this encounter
+        _queueActions(encounterId, actions);
     }
 
-    function executeCombat(uint256 randomNumber, bytes32 encounterId, CombatMove[] memory moves) public {
+    function executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory actions) public {
         // ensure this is an authorised call
         // _requireAccess(address(this), _msgSender());
 
         //get encounter data
 
-        for (uint256 i; i < moves.length; i++) {
-            CombatMove memory currentMove = moves[i];
+        for (uint256 i; i < actions.length; i++) {
+            Action memory currentAction = actions[i];
 
-            _executeAttack(
+            _executeAction(
                 encounterId,
-                currentMove.skillId,
-                currentMove.attackerEntityId,
-                currentMove.defenderEntityId,
-                currentMove.weaponId,
+                currentAction.skillId,
+                currentAction.attackerEntityId,
+                currentAction.defenderEntityId,
+                currentAction.weaponId,
                 randomNumber
             );
         }
     }
 
-    function _queueActions(bytes32 encounterId, CombatMove[] memory moves) internal {
+    function _queueActions(bytes32 encounterId, Action[] memory actions) internal {
         SystemSwitch.call(
-            abi.encodeCall(IRngSystem.getRng, (encounterId, RngRequestType.Combat, abi.encode(encounterId, moves)))
+            abi.encodeCall(IRngSystem.getRng, (encounterId, RngRequestType.Combat, abi.encode(encounterId, actions)))
         );
     }
 
-    function _executeAttack(
+    function _executeAction(
         bytes32 matchEntity,
         bytes32 skillId,
         bytes32 attackerId,

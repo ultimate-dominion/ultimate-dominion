@@ -17,7 +17,8 @@ import {
     CharactersData,
     Stats,
     StatsData,
-    CharacterEquipment
+    CharacterEquipment,
+    CharacterEquipmentData
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";

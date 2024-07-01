@@ -52,7 +52,7 @@ struct PhysicalAttackStats {
     uint256 critChanceBonus;
 }
 
-struct CombatMove {
+struct Action {
     bytes32 attackerEntityId;
     bytes32 defenderEntityId;
     bytes32 skillId;

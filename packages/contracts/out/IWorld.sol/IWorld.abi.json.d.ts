@@ -21,12 +21,17 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "requiredItems",
-            "type": "uint256[]",
-            "internalType": "uint256[]"
+            "name": "armorPenetration",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            "name": "armorPenetration",
+            "name": "attackModifierBonus",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "critChanceBonus",
             "type": "uint256",
             "internalType": "uint256"
           }
@@ -430,9 +435,14 @@ declare const abi: [
         "internalType": "bytes32"
       },
       {
-        "name": "moves",
+        "name": "playerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actions",
         "type": "tuple[]",
-        "internalType": "struct CombatMove[]",
+        "internalType": "struct Action[]",
         "components": [
           {
             "name": "attackerEntityId",
@@ -526,9 +536,9 @@ declare const abi: [
         "internalType": "bytes32"
       },
       {
-        "name": "moves",
+        "name": "actions",
         "type": "tuple[]",
-        "internalType": "struct CombatMove[]",
+        "internalType": "struct Action[]",
         "components": [
           {
             "name": "attackerEntityId",
