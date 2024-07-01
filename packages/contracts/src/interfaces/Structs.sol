@@ -44,10 +44,12 @@ struct MonsterStats {
 struct PhysicalAttackStats {
     // additional damage on top of item damage
     uint256 bonusDamage;
-    // list of items that can deal this attack
-    uint256[] requiredItems;
     // base armor penetration
     uint256 armorPenetration;
+    //bonus chance to hit
+    uint256 attackModifierBonus;
+    // crit chance
+    uint256 critChanceBonus;
 }
 
 struct CombatMove {

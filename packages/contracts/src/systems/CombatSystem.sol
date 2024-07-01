@@ -117,9 +117,9 @@ contract CombatSystem is System {
         uint256 randomNumber
     ) public returns (uint256 damage) {
         // get attacker
-        StatsData memory attacker = applyEquipmentBonuses(attackerId);
+        StatsData memory attacker = IWorld(_world()).UD__applyEquipmentBonuses(attackerId);
         //get defender
-        StatsData memory defender = applyEquipmentBonuses(defenderId);
+        StatsData memory defender = IWorld(_world()).UD__applyEquipmentBonuses(defenderId);
         // get weapon stats
         WeaponStats memory weapon = IWorld(_world()).UD__getWeaponStats(weaponId);
         if (_calculatePhysicalAttackModifier(randomNumber, attacker.agility, defender.agility)) {
@@ -137,33 +137,6 @@ contract CombatSystem is System {
         returns (bool attackLands)
     {
         attackLands = (attackRoll + (attackerAgi * TO_HIT_MODIFIER)) >= (defenderAgi * DEFENSE_MODIFIER);
-    }
-
-    function applyEquipmentBonuses(bytes32 entityId) public view returns (StatsData memory modifiedStats) {
-        StatsData memory entityStats = Stats.get(entityId);
-        CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
-        //TODO add over/underflowProtection
-        entityStats.strength = uint256(
-            int256(entityStats.strength) + equipmentStats.strBonus >= 0
-                ? int256(entityStats.strength) + equipmentStats.strBonus
-                : int256(1)
-        );
-        entityStats.agility = uint256(
-            int256(entityStats.agility) + equipmentStats.agiBonus >= 0
-                ? int256(entityStats.agility) + equipmentStats.agiBonus
-                : int256(1)
-        );
-        entityStats.intelligence = uint256(
-            int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
-                ? int256(entityStats.intelligence) + equipmentStats.intBonus
-                : int256(1)
-        );
-        entityStats.maxHitPoints = uint256(
-            int256(entityStats.maxHitPoints) + equipmentStats.hpBonus >= 0
-                ? int256(entityStats.maxHitPoints) + equipmentStats.hpBonus
-                : int256(0)
-        );
-        return entityStats;
     }
 
     function _calculateMagicAttack() public {}

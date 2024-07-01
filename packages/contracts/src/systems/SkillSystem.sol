@@ -21,8 +21,8 @@ import {DEFAULT_MAX_TURNS} from "../../constants.sol";
 
 contract SkillSystem is System {
     function createSkill(SkillType skillType, bytes memory skillStats) public returns (bytes32 skillId) {
-        _requireAccess(address(this), _msgSender());
-        skillId = keccak256(abi.encode(skillStats));
+        _requireOwner(address(this), _msgSender());
+        skillId = keccak256(skillStats);
         require(
             Skills.getSkillStats(skillId).length == 0 && uint8(Skills.getSkillType(skillId)) == uint8(0),
             "Skill already exists"
