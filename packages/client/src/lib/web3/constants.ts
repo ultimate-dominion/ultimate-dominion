@@ -13,9 +13,17 @@ export const CHAIN_ID_TO_LABEL: { [key: number]: string } = {
   [baseSepolia.id]: 'Base Sepolia',
 };
 
-const getSupportedChains = () => {
+const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, anvil];
+
+export const DEFAULT_CHAIN_ID = import.meta.env.VITE_CHAIN_ID
+  ? Number(import.meta.env.VITE_CHAIN_ID)
+  : 31337;
+
+const getSupportedChains = (): readonly [Chain, ...Chain[]] => {
   if (import.meta.env.DEV) {
-    return [anvil, baseSepolia] as const;
+    return POSSIBLE_SUPPORTED_CHAINS.filter(
+      chain => chain.id === DEFAULT_CHAIN_ID,
+    ) as unknown as [Chain];
   }
 
   return [baseSepolia] as const;
