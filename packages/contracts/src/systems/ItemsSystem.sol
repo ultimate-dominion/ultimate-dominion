@@ -22,7 +22,7 @@ import {
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
-import {_erc1155SystemId, _characterSystemId, _requireOwner} from "../utils.sol";
+import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess} from "../utils.sol";
 import {ITEMS_NAMESPACE} from "../../constants.sol";
 import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
@@ -40,12 +40,6 @@ import {
 import "forge-std/console2.sol";
 
 contract ItemsSystem is System {
-    modifier inGame(bytes32 characterId) {
-        CharactersData memory charData = Characters.get(characterId);
-        require(charData.locked, "Character not in the Game");
-        _;
-    }
-
     function _items() internal view returns (IERC1155System items) {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
@@ -287,6 +281,14 @@ contract ItemsSystem is System {
         }
     }
 
+    function dropItems(uint256[] memory itemIds, uint256[] memory amounts, bytes32[] memory characterIds) public {
+        _requireAccess(address(this), _msgSender());
+        for (uint256 i; i < itemIds.length; i++) {
+            address to = IWorld(_world()).UD__getOwner(characterIds[i]);
+            _items().transferFrom(address(this), to, itemIds[i], amounts[i]);
+        }
+    }
+
     function setTokenUri(uint256 tokenId, string memory tokenUri) public {
         _requireOwner(address(this), _msgSender());
         ERC1155URIStorage.setUri(_erc1155URIStorageTableId(ITEMS_NAMESPACE), tokenId, tokenUri);
@@ -302,19 +304,6 @@ contract ItemsSystem is System {
         uint256 itemsCounter = Counters.getCounter(address(itemsContract), 0) + 1;
         Counters.setCounter(itemsContract, 0, (itemsCounter));
         return itemsCounter;
-    }
-
-    function _incrementItemsCounter() internal returns (uint256) {
-        address itemsContract = UltimateDominionConfig.getItems();
-        uint256 itemsCounter = Counters.getCounter(address(itemsContract), 0) + 1;
-        Counters.setCounter(itemsContract, 0, (itemsCounter));
-        return itemsCounter;
-    }
-
-    function getArmorStats(uint256 itemId) public view returns (ArmorStats memory _ArmorStats) {
-        ItemsData memory _data = Items.get(itemId);
-        require(_data.itemType == ItemType.Armor, "ITEMS: Not a  Armor");
-        _ArmorStats = abi.decode(_data.stats, (ArmorStats));
     }
 
     function setStarterItems(Classes class, uint256[] memory itemIds, uint256[] memory amounts) public {

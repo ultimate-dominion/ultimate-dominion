@@ -38,7 +38,6 @@ import {
     _operatorApprovalTableId,
     _ownersTableId
 } from "@erc1155/utils.sol";
-import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import "forge-std/console2.sol";
 
 contract EquipmentSystem is System {
@@ -76,37 +75,21 @@ contract EquipmentSystem is System {
                     i++;
                 }
             }
-        } else if (uint8(itemData.itemType) == 1) {
-            uint256[] memory equippedArmor = CharacterEquipment.getEquippedArmor(characterId);
-            for (uint256 i; i < equippedArmor.length;) {
-                if (equippedArmor[i] == itemId) {
-                    _isEquipped = true;
-                    break;
-                }
-                {
-                    i++;
-                }
-            }
-        } else if (uint8(itemData.itemType) == 2) {
-            // spells
-        } else {
-            revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
     }
 
-    function checkRequirements(bytes32 characterId, uint256 itemId) public view returns (bool canUse) {
+    function checkRequirements(bytes32 characterId, uint256 itemId) public view returns (bool) {
         ItemsData memory itemData = Items.get(itemId);
         StatsData memory character = Stats.get(characterId);
-
-        canUse = true;
-
+        CharactersData memory characterData = Characters.get(characterId);
+        bool canUse = true;
         if (uint8(itemData.itemType) == 0) {
             WeaponStats memory weaponStats = abi.decode(itemData.stats, (WeaponStats));
-            bool isLevel = character.level >= weaponStats.minLevel;
+            bool isLevel = IWorld(_world()).UD__getCurrentLevel(character.experience) >= weaponStats.minLevel;
             bool isClass;
             if (weaponStats.classRestrictions.length > 0) {
                 for (uint256 i; i < weaponStats.classRestrictions.length;) {
-                    if (uint8(character.class) == uint8(weaponStats.classRestrictions[i])) {
+                    if (uint8(characterData.class) == uint8(weaponStats.classRestrictions[i])) {
                         isClass = true;
                         break;
                     }
@@ -121,11 +104,11 @@ contract EquipmentSystem is System {
         }
         if (uint8(itemData.itemType) == 1) {
             ArmorStats memory armorStats = abi.decode(itemData.stats, (ArmorStats));
-            bool isLevel = character.level >= armorStats.minLevel;
+            bool isLevel = IWorld(_world()).UD__getCurrentLevel(character.experience) >= armorStats.minLevel;
             bool isClass;
             if (armorStats.classRestrictions.length > 0) {
                 for (uint256 i; i < armorStats.classRestrictions.length;) {
-                    if (uint8(character.class) == uint8(armorStats.classRestrictions[i])) {
+                    if (uint8(characterData.class) == uint8(armorStats.classRestrictions[i])) {
                         isClass = true;
                         break;
                     }
@@ -142,7 +125,6 @@ contract EquipmentSystem is System {
     }
 
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
-        require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
         if (uint8(itemType) == 0) {
             require(CharacterEquipment.lengthEquippedWeapons(characterId) < 3, "ITEMS: Too many weapons equipped");
             CharacterEquipment.pushEquippedWeapons(characterId, itemId);
@@ -168,52 +150,45 @@ contract EquipmentSystem is System {
         int256 totalHPModifiers;
         ArmorStats memory armorStats;
         WeaponStats memory weaponStats;
-        if (equippedArmor.length > 0) {
-            for (uint256 i; i < equippedArmor.length; i++) {
-                armorStats = getArmorStats(equippedArmor[i]);
-                totalArmor += armorStats.armorModifier;
-                totalStrModifiers += armorStats.strModifier;
-                totalAgiModifiers += armorStats.agiModifier;
-                totalIntModifiers += armorStats.intModifier;
-                totalHPModifiers += armorStats.hitPointModifier;
-            }
-        }
-        if (equippedWeapons.length > 0) {
-            for (uint256 i; i < equippedWeapons.length; i++) {
-                weaponStats = getWeaponStats(equippedWeapons[i]);
-                totalStrModifiers += weaponStats.strModifier;
-                totalAgiModifiers += weaponStats.agiModifier;
-                totalIntModifiers += weaponStats.intModifier;
-                totalHPModifiers += weaponStats.hitPointModifier;
-            }
+        for (uint256 i; i < equippedArmor.length; i++) {
+            armorStats = getArmorStats(equippedArmor[i]);
+            weaponStats = getWeaponStats(equippedWeapons[i]);
+            totalArmor += armorStats.armorModifier;
+            totalStrModifiers += (armorStats.strModifier + weaponStats.strModifier);
+            totalAgiModifiers += (armorStats.agiModifier + weaponStats.agiModifier);
+            totalIntModifiers += (armorStats.intModifier + weaponStats.intModifier);
+            totalHPModifiers += (armorStats.hitPointModifier + weaponStats.hitPointModifier);
         }
         CharacterEquipment.setStrBonus(characterId, totalStrModifiers);
         CharacterEquipment.setAgiBonus(characterId, totalAgiModifiers);
         CharacterEquipment.setIntBonus(characterId, totalIntModifiers);
         CharacterEquipment.setHpBonus(characterId, totalHPModifiers);
-        CharacterEquipment.setArmor(characterId, totalArmor);
+        Stats.setArmor(characterId, totalArmor);
     }
 
     function unequipItem(bytes32 characterId, uint256 itemId) public inGame(characterId) returns (bool success) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         require(characterOwner == _msgSender(), "ITEMS: Not Character Owner");
         uint8 itemType = uint8(IWorld(_world()).UD__getItemType(itemId));
-        if (itemType == uint8(0)) {
-            uint256[] memory sortedArray = _swapToEndOfArray(itemId, CharacterEquipment.getEquippedWeapons(characterId));
+        if (itemType == 0) {
+            uint256[] memory sortedArray =
+                _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedWeapons(characterId));
             if (sortedArray[sortedArray.length - 1] == itemId) {
                 CharacterEquipment.setEquippedWeapons(characterId, sortedArray);
                 CharacterEquipment.popEquippedWeapons(characterId);
 
                 success = true;
             }
-        } else if (itemType == uint8(1)) {
-            uint256[] memory sortedArray = _swapToEndOfArray(itemId, CharacterEquipment.getEquippedArmor(characterId));
+        }
+        if (itemType == 1) {
+            uint256[] memory sortedArray = _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedArmor(characterId));
             if (sortedArray[sortedArray.length - 1] == itemId) {
                 CharacterEquipment.setEquippedArmor(characterId, sortedArray);
                 CharacterEquipment.popEquippedArmor(characterId);
                 success = true;
             }
-        } else if (itemType == uint8(2)) {
+        }
+        if (itemType == 2) {
             // uint256[] memory sortedArray =
             //     _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
             // if (sortedArray[sortedArray.length - 1] == itemId) {
@@ -221,45 +196,39 @@ contract EquipmentSystem is System {
             //     CharacterEquipment.popEquippedSpells(characterId);
             //     success = true;
             // }
-        } else {
-            revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
         _setEquipmentBonuses(characterId);
     }
 
-    function applyEquipmentBonuses(bytes32 entityId) public view returns (AdjustedCombatStats memory modifiedStats) {
+    function applyEquipmentBonuses(bytes32 entityId) public view returns (StatsData memory modifiedStats) {
         StatsData memory entityStats = Stats.get(entityId);
-        AdjustedCombatStats memory combatStats;
-
         CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
         //TODO add over/underflowProtection
-        combatStats.adjustedStrength = uint256(
+        entityStats.strength = uint256(
             int256(entityStats.strength) + equipmentStats.strBonus >= 0
                 ? int256(entityStats.strength) + equipmentStats.strBonus
-                : int256(0)
-        );
-        combatStats.adjustedAgility = uint256(
-            int256(entityStats.agility) + equipmentStats.agiBonus >= 0
-                ? int256(entityStats.agility) + equipmentStats.agiBonus
-                : int256(0)
-        );
-        combatStats.adjustedIntelligence = uint256(
-            int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
-                ? int256(entityStats.intelligence) + equipmentStats.intBonus
-                : int256(0)
-        );
-        combatStats.adjustedMaxHp = uint256(
-            int256(entityStats.baseHitPoints) + equipmentStats.hpBonus >= 0
-                ? int256(entityStats.baseHitPoints) + equipmentStats.hpBonus
                 : int256(1)
         );
-        combatStats.currentHp = entityStats.currentHp;
-        return combatStats;
+        entityStats.agility = uint256(
+            int256(entityStats.agility) + equipmentStats.agiBonus >= 0
+                ? int256(entityStats.agility) + equipmentStats.agiBonus
+                : int256(1)
+        );
+        entityStats.intelligence = uint256(
+            int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
+                ? int256(entityStats.intelligence) + equipmentStats.intBonus
+                : int256(1)
+        );
+        entityStats.maxHitPoints = uint256(
+            int256(entityStats.maxHitPoints) + equipmentStats.hpBonus >= 0
+                ? int256(entityStats.maxHitPoints) + equipmentStats.hpBonus
+                : int256(0)
+        );
+        return entityStats;
     }
 
     function _moveIdToEndOfArray(uint256 itemId, uint256[] memory array)
         internal
-        pure
         returns (uint256[] memory sortedArray)
     {
         uint256[] memory arrayToBeSorted = array;
@@ -276,29 +245,6 @@ contract EquipmentSystem is System {
             }
         }
         sortedArray = arrayToBeSorted;
-    }
-
-    function _swapToEndOfArray(uint256 itemId, uint256[] memory array)
-        internal
-        pure
-        returns (uint256[] memory swappedArray)
-    {
-        if (array.length > 1) {
-            for (uint256 i; i < array.length;) {
-                if (array[i] == itemId) {
-                    uint256 last = array[array.length - 1];
-                    array[i] = last;
-                    array[array.length - 1] = itemId;
-                    swappedArray = array;
-                    break;
-                }
-                {
-                    i++;
-                }
-            }
-        } else {
-            swappedArray = array;
-        }
     }
 
     function getWeaponStats(uint256 itemId) public view returns (WeaponStats memory _weaponStats) {

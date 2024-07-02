@@ -13,8 +13,9 @@ import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {Characters, CharactersData, UltimateDominionConfig} from "@codegen/index.sol";
-import {Classes, MobType} from "@codegen/common.sol";
-import {WeaponStats, MonsterStats} from "@interfaces/Structs.sol";
+import {Classes, MobType, ItemType} from "@codegen/common.sol";
+import {_itemsSystemId} from "../src/utils.sol";
+import {WeaponStats, MonsterStats, ArmorStats} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_NAMESPACE} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {System} from "@latticexyz/world/src/System.sol";
@@ -39,6 +40,8 @@ contract SetUp is Test {
     bytes32 bobCharacterId;
     bytes32 public alicesRandomness = bytes32(keccak256(abi.encode("alicesRestaurant")));
     bytes32 basicAttackId;
+    uint256 newArmorId;
+
     uint256 newArmorId;
 
     function setUp() public virtual {
@@ -71,6 +74,21 @@ contract SetUp is Test {
             inventory: _inventory
         });
         starterMobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), "test_monster_uri");
+        // create a starter armor
+        uint8[] memory classRestrictions = new uint8[](0);
+        ArmorStats memory newArmor = ArmorStats({
+            armorModifier: 1,
+            classRestrictions: classRestrictions,
+            minLevel: 0,
+            strModifier: 1,
+            agiModifier: 2,
+            intModifier: 3,
+            hitPointModifier: 4
+        });
+
+        newArmorId = world.UD__createItem(ItemType.Armor, 10 ether, abi.encode(newArmor), "setup_armor_uri");
+
+        world.grantAccess(_itemsSystemId("UD"), address(this));
 
         vm.stopPrank();
 
