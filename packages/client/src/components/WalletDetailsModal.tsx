@@ -36,19 +36,32 @@ export const WalletDetailsModal = ({
   const { renderSuccess, renderError } = useToast();
   const { data: externalWalletClient } = useWalletClient();
   const { isConnected, address } = useAccount();
-  const { burnerAddress, burnerBalance } = useMUD();
+  const {
+    burnerAddress,
+    burnerBalance,
+    network: { walletClient },
+  } = useMUD();
   const { data: externalWalletBalance } = useBalance({
     address: externalWalletClient?.account.address,
   });
 
-  const [amount, setAmount] = useState<string>('0');
+  const [depositAmount, setDepositAmount] = useState<string>('0');
   const [isDepositing, setIsDepositing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [depositErrorMessage, setDepositErrorMessage] = useState<string | null>(
+    null,
+  );
+
+  const [withdrawAmount, setWithdrawAmount] = useState<string>('0');
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [withdrawErrorMessage, setWithdrawErrorMessage] = useState<
+    string | null
+  >(null);
 
   // Reset errorMessage state when any of the form fields change
   useEffect(() => {
-    setErrorMessage(null);
-  }, [amount]);
+    setDepositErrorMessage(null);
+    setWithdrawErrorMessage(null);
+  }, [depositAmount, withdrawAmount]);
 
   const onDeposit = useCallback(async () => {
     try {
@@ -58,22 +71,22 @@ export const WalletDetailsModal = ({
         throw new Error('No external wallet client found');
       }
 
-      if (!amount || parseEther(amount) <= 0) {
-        setErrorMessage('Amount must be greater than 0');
+      if (!depositAmount || parseEther(depositAmount) <= 0) {
+        setDepositErrorMessage('Amount must be greater than 0');
         return;
       }
 
-      if (parseEther(amount) > externalWalletBalance.value) {
-        setErrorMessage('Insufficient funds in external wallet');
+      if (parseEther(depositAmount) > externalWalletBalance.value) {
+        setDepositErrorMessage('Insufficient funds in external wallet');
         return;
       }
 
       await externalWalletClient.sendTransaction({
         to: burnerAddress,
-        value: parseEther(amount),
+        value: parseEther(depositAmount),
       });
 
-      setAmount('0');
+      setDepositAmount('0');
       renderSuccess('Funds deposited successfully!');
     } catch (error) {
       renderError(error, 'Error depositing funds');
@@ -81,12 +94,47 @@ export const WalletDetailsModal = ({
       setIsDepositing(false);
     }
   }, [
-    amount,
     burnerAddress,
+    depositAmount,
     externalWalletBalance,
     externalWalletClient,
     renderError,
     renderSuccess,
+  ]);
+
+  const onWithdraw = useCallback(async () => {
+    try {
+      setIsWithdrawing(true);
+
+      if (!withdrawAmount || parseEther(withdrawAmount) <= 0) {
+        setWithdrawErrorMessage('Amount must be greater than 0');
+        return;
+      }
+
+      if (parseEther(withdrawAmount) > parseEther(burnerBalance)) {
+        setWithdrawErrorMessage('Insufficient funds in session wallet');
+        return;
+      }
+
+      await walletClient.sendTransaction({
+        to: address,
+        value: parseEther(withdrawAmount),
+      });
+
+      setWithdrawAmount('0');
+      renderSuccess('Funds withdrawn successfully!');
+    } catch (error) {
+      renderError(error, 'Error withdrawing funds');
+    } finally {
+      setIsWithdrawing(false);
+    }
+  }, [
+    address,
+    burnerBalance,
+    renderError,
+    renderSuccess,
+    walletClient,
+    withdrawAmount,
   ]);
 
   return (
@@ -132,21 +180,21 @@ export const WalletDetailsModal = ({
                   time.
                 </Text>
                 <HStack>
-                  <FormControl isInvalid={!!errorMessage}>
+                  <FormControl isInvalid={!!depositErrorMessage}>
                     <FormLabel fontSize="xs">
                       Deposit to session wallet
                     </FormLabel>
-                    {!!errorMessage && (
+                    {!!depositErrorMessage && (
                       <FormHelperText color="red" fontSize="xs" mb={2}>
-                        {errorMessage}
+                        {depositErrorMessage}
                       </FormHelperText>
                     )}
                     <Input
                       isDisabled={isDepositing}
-                      onChange={e => setAmount(e.target.value)}
+                      onChange={e => setDepositAmount(e.target.value)}
                       placeholder="Amount"
                       type="number"
-                      value={amount}
+                      value={depositAmount}
                     />
                   </FormControl>
                   <Button
@@ -156,6 +204,33 @@ export const WalletDetailsModal = ({
                     size="sm"
                   >
                     Deposit
+                  </Button>
+                </HStack>
+                <HStack>
+                  <FormControl isInvalid={!!withdrawErrorMessage}>
+                    <FormLabel fontSize="xs">
+                      Withdraw from session wallet
+                    </FormLabel>
+                    {!!withdrawErrorMessage && (
+                      <FormHelperText color="red" fontSize="xs" mb={2}>
+                        {withdrawErrorMessage}
+                      </FormHelperText>
+                    )}
+                    <Input
+                      isDisabled={isWithdrawing}
+                      onChange={e => setWithdrawAmount(e.target.value)}
+                      placeholder="Amount"
+                      type="number"
+                      value={withdrawAmount}
+                    />
+                  </FormControl>
+                  <Button
+                    alignSelf="end"
+                    isLoading={isWithdrawing}
+                    onClick={onWithdraw}
+                    size="sm"
+                  >
+                    Withdraw
                   </Button>
                 </HStack>
               </VStack>
