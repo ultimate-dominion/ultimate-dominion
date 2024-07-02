@@ -31,6 +31,7 @@ export const MapPanel = (): JSX.Element => {
   const { character } = useCharacter();
 
   const [isSpawning, setIsSpawning] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
 
   const position = useComponentValue(
     Position,
@@ -90,6 +91,8 @@ export const MapPanel = (): JSX.Element => {
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
       try {
+        setIsMoving(true);
+
         if (!delegatorAddress) {
           throw new Error('Burner not found');
         }
@@ -140,6 +143,8 @@ export const MapPanel = (): JSX.Element => {
         }
       } catch (e) {
         renderError(e, 'Failed to move.');
+      } finally {
+        setIsMoving(false);
       }
     },
     [character, delegatorAddress, move, position, renderError],
@@ -207,7 +212,7 @@ export const MapPanel = (): JSX.Element => {
         </Stack>
       </Box>
       {isSpawned ? (
-        <NavigationCompass onMove={onMove} />
+        <NavigationCompass isMoving={isMoving} onMove={onMove} />
       ) : (
         <Button
           isLoading={isSpawning}
@@ -235,8 +240,10 @@ const CharacterPiece = (): JSX.Element => (
 );
 
 const NavigationCompass = ({
+  isMoving,
   onMove,
 }: {
+  isMoving: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
 }): JSX.Element => {
   return (
@@ -295,6 +302,7 @@ const NavigationCompass = ({
         <Button
           bg="white"
           borderRadius="50%"
+          isDisabled={isMoving}
           p={0}
           onClick={() => onMove('up')}
           variant="ghost"
@@ -310,6 +318,7 @@ const NavigationCompass = ({
           <Button
             bg="white"
             borderRadius="50%"
+            isDisabled={isMoving}
             p={0}
             onClick={() => onMove('left')}
             variant="ghost"
@@ -321,6 +330,7 @@ const NavigationCompass = ({
           <Button
             bg="white"
             borderRadius="50%"
+            isDisabled={isMoving}
             p={0}
             onClick={() => onMove('right')}
             variant="ghost"
@@ -336,6 +346,7 @@ const NavigationCompass = ({
         <Button
           bg="white"
           borderRadius="50%"
+          isDisabled={isMoving}
           p={0}
           onClick={() => onMove('down')}
           variant="ghost"

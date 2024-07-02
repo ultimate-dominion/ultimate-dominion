@@ -28,7 +28,7 @@ export const StatsPanel = (): JSX.Element => {
   const {
     components: { Levels },
   } = useMUD();
-  const { character } = useCharacter();
+  const { character, characterStats } = useCharacter();
 
   const nextLevelXpRequirement = useComponentValue(
     Levels,
@@ -38,9 +38,9 @@ export const StatsPanel = (): JSX.Element => {
   const levelPercent = useMemo(() => {
     if (!nextLevelXpRequirement) return 0;
     return (
-      (100 * Number(character?.experience)) / Number(nextLevelXpRequirement)
+      (100 * Number(characterStats.experience)) / Number(nextLevelXpRequirement)
     );
-  }, [character?.experience, nextLevelXpRequirement]);
+  }, [characterStats.experience, nextLevelXpRequirement]);
 
   if (!character) {
     return (
@@ -50,16 +50,9 @@ export const StatsPanel = (): JSX.Element => {
     );
   }
 
-  const {
-    agility,
-    experience,
-    goldBalance,
-    hitPoints,
-    image,
-    intelligence,
-    name,
-    strength,
-  } = character;
+  const { goldBalance, image, name } = character;
+  const { agility, experience, hitPoints, intelligence, strength } =
+    characterStats;
 
   return (
     <VStack alignItems="start" h="100%" p={2} spacing={4}>
