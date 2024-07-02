@@ -200,8 +200,16 @@ contract PostDeploy is Script {
 
     function _createStarterItems() internal {
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats =
-            WeaponStats({minDamage: 1, maxDamage: 4, classRestrictions: restrictions, minLevel: 0});
+        WeaponStats memory weaponStats = WeaponStats({
+            minDamage: 1,
+            maxDamage: 4,
+            classRestrictions: restrictions,
+            minLevel: 0,
+            strModifier: 0,
+            agiModifier: 0,
+            intModifier: 0,
+            hitPointModifier: 0
+        });
 
         uint256 starterItemId =
             world.UD__createItem(ItemType.Weapon, 10 ether, abi.encode(weaponStats), "starter-weapon-uri/");

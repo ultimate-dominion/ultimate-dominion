@@ -39,8 +39,16 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         startGasReport("creates an item");
 
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats =
-            WeaponStats({minDamage: 1, maxDamage: 4, classRestrictions: restrictions, minLevel: 0});
+        WeaponStats memory weaponStats = WeaponStats({
+            minDamage: 1,
+            maxDamage: 4,
+            classRestrictions: restrictions,
+            minLevel: 0,
+            strModifier: 0,
+            agiModifier: 0,
+            intModifier: 0,
+            hitPointModifier: 0
+        });
         vm.startPrank(deployer);
         uint256 firstItemId =
             world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
@@ -60,8 +68,16 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_CreateItem_Revert_NotNamespaceOwner() public {
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats =
-            WeaponStats({minDamage: 1, maxDamage: 4, classRestrictions: restrictions, minLevel: 0});
+        WeaponStats memory weaponStats = WeaponStats({
+            minDamage: 1,
+            maxDamage: 4,
+            classRestrictions: restrictions,
+            minLevel: 0,
+            strModifier: 0,
+            agiModifier: 0,
+            intModifier: 0,
+            hitPointModifier: 0
+        });
         vm.startPrank(alice);
         vm.expectRevert();
         world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
@@ -69,8 +85,16 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_GetTotalSupply() public {
         uint8[] memory restrictions = new uint8[](0);
-        WeaponStats memory weaponStats =
-            WeaponStats({minDamage: 1, maxDamage: 4, classRestrictions: restrictions, minLevel: 0});
+        WeaponStats memory weaponStats = WeaponStats({
+            minDamage: 1,
+            maxDamage: 4,
+            classRestrictions: restrictions,
+            minLevel: 0,
+            strModifier: 0,
+            agiModifier: 0,
+            intModifier: 0,
+            hitPointModifier: 0
+        });
         vm.startPrank(deployer);
         uint256 id =
             world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri/");

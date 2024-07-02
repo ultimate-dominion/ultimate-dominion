@@ -13,38 +13,9 @@ struct WeaponStats {
     uint256 minDamage;
     uint256 minLevel;
     int256 strModifier;
-}
-
-struct WeaponTemplateDetails {
-    uint256 dropChance;
-    uint256 initialSupply;
-    string metadataUri;
-    string name;
-    WeaponStats stats;
-}
-
-struct ArmorTemplateDetails {
-    uint256 dropChance;
-    uint256 initialSupply;
-    string metadataUri;
-    string name;
-    ArmorStats stats;
-}
-
-struct StarterItems {
-    ArmorTemplateDetails[] armor;
-    string metadataUriPrefix;
-    WeaponTemplateDetails[] weapons;
-}
-
-struct ArmorStats {
     int256 agiModifier;
-    uint256 armorModifier;
-    uint8[] classRestrictions;
-    int256 hitPointModifier;
     int256 intModifier;
-    uint256 minLevel;
-    int256 strModifier;
+    int256 hitPointModifier;
 }
 
 struct ArmorStats {

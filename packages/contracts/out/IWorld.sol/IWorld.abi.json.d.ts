@@ -1903,6 +1903,21 @@ declare const abi: [
             "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
+          },
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hitPointModifier",
+            "type": "int256",
+            "internalType": "int256"
           }
         ]
       }
