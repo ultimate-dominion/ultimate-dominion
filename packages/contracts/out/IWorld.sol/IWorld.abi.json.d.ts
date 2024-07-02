@@ -1701,6 +1701,26 @@ declare const abi: [
             "name": "minLevel",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hitPointModifier",
+            "type": "int256",
+            "internalType": "int256"
           }
         ]
       }
