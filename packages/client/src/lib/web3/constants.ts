@@ -13,7 +13,7 @@ export const CHAIN_ID_TO_LABEL: { [key: number]: string } = {
   [baseSepolia.id]: 'Base Sepolia',
 };
 
-export const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, anvil];
+const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, anvil];
 
 export const DEFAULT_CHAIN_ID = import.meta.env.VITE_CHAIN_ID
   ? Number(import.meta.env.VITE_CHAIN_ID)
