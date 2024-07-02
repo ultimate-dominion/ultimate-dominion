@@ -38,6 +38,8 @@ import { IERC1155 } from "@erc1155/IERC1155.sol";
 import { registerERC1155 } from "@erc1155/registerERC1155.sol";
 import { _erc1155SystemId } from "@erc1155/utils.sol";
 
+import { Multicall3 } from "./Multicall3.sol";
+
 import "forge-std/console2.sol";
 
 struct ResourceIds {
@@ -70,7 +72,9 @@ contract PostDeploy is Script {
     vm.startBroadcast(deployerPrivateKey);
     if (block.chainid == 31337) {
       // Set entropy contracts
+      address multicall3 = address(new Multicall3());
       address mockEntropy = address(new MockEntropy());
+      UltimateDominionConfig.setMulticall(multicall3);
       UltimateDominionConfig.setEntropy(mockEntropy);
       UltimateDominionConfig.setPythProvider(address(1));
     } else if (block.chainid == 84532) {

@@ -1,6 +1,6 @@
 import { Box, Button, HStack, Spacer, Text, VStack } from '@chakra-ui/react';
 
-import { Level } from '../StatsPanel/Level';
+import { Level } from '../Level';
 
 export const Misc = ({
   experience,

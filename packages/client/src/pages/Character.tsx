@@ -2,7 +2,7 @@ import { Grid, GridItem, Heading } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useParams } from 'react-router-dom';
-import { Address, hexToString } from 'viem';
+import { Address, formatEther, hexToString } from 'viem';
 import { useReadContracts } from 'wagmi';
 
 import { CharacterCard } from '../components/Character/Card/CharacterCard';
@@ -19,22 +19,11 @@ export const Character = (): JSX.Element => {
 
   const { character: player } = useCharacter();
 
-  const character = useComponentValue(
-    Characters,
-    encodeEntity(
-      { characterId: 'uint256' },
-      { characterId: BigInt(characterId!) },
-    ),
-  );
-  const stats = useComponentValue(
-    CharacterStats,
-    encodeEntity(
-      { characterId: 'uint256' },
-      { characterId: BigInt(characterId!) },
-    ),
-  );
+  const { multicall } = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  ) ?? { multicall: null };
 
-  const owner = player?.owner;
   const { goldToken } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
@@ -61,6 +50,52 @@ export const Character = (): JSX.Element => {
       type: 'function',
     },
   ];
+  const multicallTest = useReadContracts({
+    contracts: [
+      {
+        address: goldToken as Address,
+        abi: ERC20ABI,
+        functionName: 'balanceOf',
+        args: [goldToken!],
+      },
+      {
+        address: goldToken as Address,
+        abi: ERC20ABI,
+        functionName: 'balanceOf',
+        args: [multicall!],
+      },
+    ],
+    multicallAddress: multicall! as Address,
+  });
+
+  const character = useComponentValue(
+    Characters,
+    encodeEntity(
+      { characterId: 'uint256' },
+      { characterId: BigInt(characterId!) },
+    ),
+  );
+  const stats = useComponentValue(
+    CharacterStats,
+    encodeEntity(
+      { characterId: 'uint256' },
+      { characterId: BigInt(characterId!) },
+    ),
+  );
+
+  const owner = player?.owner;
+
+  // const equiptment = useReadContracts({
+  //   contracts: [
+  //     {
+  //       address: goldToken as Address,
+  //       abi: ERC20ABI,
+  //       functionName: 'balanceOf',
+  //       args: [owner!],
+  //     },
+  //   ],
+  //   multicallAddress: '0xca11bde05977b3631167028862be2a173976ca11',
+  // });
   const gold = useReadContracts({
     contracts: [
       {
@@ -70,6 +105,7 @@ export const Character = (): JSX.Element => {
         args: [owner!],
       },
     ],
+    // multicallAddress: '0xca11bde05977b3631167028862be2a173976ca11',
   });
 
   return (
@@ -91,41 +127,43 @@ export const Character = (): JSX.Element => {
         border="solid"
         colSpan={{ sm: 1, base: 1 }}
         colStart={{ sm: 1, base: 1 }}
-        padding="10px"
+        padding={5}
         rowStart={{ sm: 1, base: 1 }}
       >
-        <Profile
+        {/* <Profile
           description={player?.description as string}
           image={player?.image as string}
           name={hexToString(character?.name as Address) as string}
-        />
+        /> */}
       </GridItem>
       <GridItem
         border="solid"
         colSpan={{ sm: 1, base: 1 }}
         colStart={{ sm: 2, base: 1 }}
-        padding="10px"
+        padding={5}
         rowStart={{ sm: 1, base: 2 }}
       >
-        <Stats
+        {/* <Stats
           agi={Number(stats?.agility.toString())}
           hp={Number(stats?.hitPoints.toString())}
           int={Number(stats?.intelligence.toString())}
           str={Number(stats?.strength.toString())}
-        />
+        /> */}
       </GridItem>
       <GridItem
         border="solid"
         colSpan={{ sm: 1, base: 1 }}
         colStart={{ sm: 3, base: 1 }}
         rowStart={{ sm: 1, base: 3 }}
-        padding="10px"
+        padding={5}
       >
-        <Misc
+        {/* <Misc
           experience={Number(stats?.experience.toString())}
-          gold={gold?.data?.[0]?.result || 0}
+          gold={
+            Number(formatEther(BigInt(gold?.data?.[0]?.result as number))) ?? 0
+          }
           max={100}
-        />
+        /> */}
       </GridItem>
       <GridItem
         colSpan={{ sm: 3, base: 1 }}
@@ -133,13 +171,15 @@ export const Character = (): JSX.Element => {
         rowSpan={{ sm: 1, base: 1 }}
         rowStart={{ sm: 2, base: 4 }}
       >
-        {/* Equiptment:
-        {JSON.stringify(
-          equiptment,
-          (key, value) =>
-            typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
-        )} */}
         <Heading>Items 30 - 3/3 Active</Heading>
+        {console.log(
+          'MulticallTest' +
+            JSON.stringify(
+              multicallTest,
+              (key, value) =>
+                typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
+            ),
+        )}
         <Grid
           templateColumns={{
             base: 'repeat(1, 1fr)',

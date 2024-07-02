@@ -23,6 +23,7 @@ struct UltimateDominionConfigData {
   address entropy;
   address pythProvider;
   address items;
+  address multicall;
 }
 
 library UltimateDominionConfig {
@@ -30,12 +31,12 @@ library UltimateDominionConfig {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000556c74696d617465446f6d696e696f6e);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0065060001141414141400000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0079070001141414141414000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (bool, address, address, address, address, address)
-  Schema constant _valueSchema = Schema.wrap(0x0065060060616161616100000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bool, address, address, address, address, address, address)
+  Schema constant _valueSchema = Schema.wrap(0x0079070060616161616161000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -50,13 +51,14 @@ library UltimateDominionConfig {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](6);
+    fieldNames = new string[](7);
     fieldNames[0] = "locked";
     fieldNames[1] = "goldToken";
     fieldNames[2] = "characterToken";
     fieldNames[3] = "entropy";
     fieldNames[4] = "pythProvider";
     fieldNames[5] = "items";
+    fieldNames[6] = "multicall";
   }
 
   /**
@@ -302,6 +304,44 @@ library UltimateDominionConfig {
   }
 
   /**
+   * @notice Get multicall.
+   */
+  function getMulticall() internal view returns (address multicall) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Get multicall.
+   */
+  function _getMulticall() internal view returns (address multicall) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Set multicall.
+   */
+  function setMulticall(address multicall) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((multicall)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set multicall.
+   */
+  function _setMulticall(address multicall) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((multicall)), _fieldLayout);
+  }
+
+  /**
    * @notice Get the full data.
    */
   function get() internal view returns (UltimateDominionConfigData memory _table) {
@@ -338,9 +378,10 @@ library UltimateDominionConfig {
     address characterToken,
     address entropy,
     address pythProvider,
-    address items
+    address items,
+    address multicall
   ) internal {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items);
+    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items, multicall);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -359,9 +400,10 @@ library UltimateDominionConfig {
     address characterToken,
     address entropy,
     address pythProvider,
-    address items
+    address items,
+    address multicall
   ) internal {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items);
+    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items, multicall);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -381,7 +423,8 @@ library UltimateDominionConfig {
       _table.characterToken,
       _table.entropy,
       _table.pythProvider,
-      _table.items
+      _table.items,
+      _table.multicall
     );
 
     EncodedLengths _encodedLengths;
@@ -402,7 +445,8 @@ library UltimateDominionConfig {
       _table.characterToken,
       _table.entropy,
       _table.pythProvider,
-      _table.items
+      _table.items,
+      _table.multicall
     );
 
     EncodedLengths _encodedLengths;
@@ -427,7 +471,8 @@ library UltimateDominionConfig {
       address characterToken,
       address entropy,
       address pythProvider,
-      address items
+      address items,
+      address multicall
     )
   {
     locked = (_toBool(uint8(Bytes.getBytes1(_blob, 0))));
@@ -441,6 +486,8 @@ library UltimateDominionConfig {
     pythProvider = (address(Bytes.getBytes20(_blob, 61)));
 
     items = (address(Bytes.getBytes20(_blob, 81)));
+
+    multicall = (address(Bytes.getBytes20(_blob, 101)));
   }
 
   /**
@@ -460,7 +507,8 @@ library UltimateDominionConfig {
       _table.characterToken,
       _table.entropy,
       _table.pythProvider,
-      _table.items
+      _table.items,
+      _table.multicall
     ) = decodeStatic(_staticData);
   }
 
@@ -492,9 +540,10 @@ library UltimateDominionConfig {
     address characterToken,
     address entropy,
     address pythProvider,
-    address items
+    address items,
+    address multicall
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(locked, goldToken, characterToken, entropy, pythProvider, items);
+    return abi.encodePacked(locked, goldToken, characterToken, entropy, pythProvider, items, multicall);
   }
 
   /**
@@ -509,9 +558,10 @@ library UltimateDominionConfig {
     address characterToken,
     address entropy,
     address pythProvider,
-    address items
+    address items,
+    address multicall
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items);
+    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items, multicall);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

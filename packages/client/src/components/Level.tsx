@@ -9,13 +9,7 @@ export const Level = ({
 }): JSX.Element => {
   const percent = (experience / max) * 100;
   return (
-    <Box
-      marginTop="20px"
-      padding="5px"
-      position="relative"
-      w="100%"
-      fontSize="10px"
-    >
+    <Box mt="20px" padding="5px" position="relative" w="100%" fontSize="10px">
       <Text position="absolute" right={100 - percent - 2 + '%'} top="-15px">
         {experience}
       </Text>

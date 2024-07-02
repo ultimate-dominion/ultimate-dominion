@@ -32,9 +32,8 @@ const AppRoutes: React.FC = () => {
     <Routes>
       <Route path="/" element={<Welcome />} />
       <Route path="/character-creation" element={<CharacterCreation />} />
-      <Route path="/character/:characterId" element={<Character />} />
       <Route path="/game-board" element={<GameBoard />} />
-      <Route path="/character/:characterId" element={<Character />} />
+      <Route path="/characters/:characterId" element={<Character />} />
     </Routes>
   );
 };
