@@ -8,6 +8,10 @@ struct WeaponStats {
     uint256 maxDamage;
     uint8[] classRestrictions;
     uint256 minLevel;
+    int256 strModifier;
+    int256 agiModifier;
+    int256 intModifier;
+    int256 hitPointModifier;
 }
 
 struct ArmorStats {
