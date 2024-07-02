@@ -26,15 +26,15 @@ export const Misc = ({
           <Spacer />
           <Text fontWeight="bold">Level 1</Text>
         </HStack>
-        <Level experience={experience} max={max}></Level>
+        <Level experience={experience} max={max} />
       </Box>
 
-      <Spacer></Spacer>
-      <Box w="100%" alignSelf="start">
-        <Button w="100%" margin="5px 0">
+      <Spacer />
+      <Box alignSelf="start" w="100%">
+        <Button margin="5px 0" w="100%">
           Chat
         </Button>
-        <Button w="100%" margin="5px 0">
+        <Button margin="5px 0" w="100%">
           Leader Board
         </Button>
       </Box>

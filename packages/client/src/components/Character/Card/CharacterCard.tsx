@@ -14,23 +14,23 @@ import {
 import { CharacterCardItem } from './CharacterCardItem';
 
 export const CharacterCard = ({
-  name,
-  image,
-  icon,
-  disabled,
-  str,
   agi,
+  disabled,
+  icon,
+  image,
   int,
+  name,
+  str,
 }: {
-  name: string;
-  image: string;
-  icon: string;
-  disabled: boolean;
-  str: number;
   agi: number;
+  disabled: boolean;
+  icon: string;
+  image: string;
   int: number;
+  name: string;
+  str: number;
 }): JSX.Element => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onClose, onOpen } = useDisclosure();
 
   return (
     <Box>
@@ -41,13 +41,13 @@ export const CharacterCard = ({
           <ModalCloseButton />
           <ModalBody padding={4}>
             <CharacterCardItem
-              name={name}
-              image={image}
-              disabled={disabled}
-              str={str}
-              int={int}
               agi={agi}
+              disabled={disabled}
               icon={icon}
+              image={image}
+              int={int}
+              name={name}
+              str={str}
             ></CharacterCardItem>
           </ModalBody>
           <ModalFooter>
@@ -60,13 +60,13 @@ export const CharacterCard = ({
       </Modal>
       <Box onClick={onOpen}>
         <CharacterCardItem
-          name={name}
-          image={image}
-          disabled={disabled}
-          str={str}
-          int={int}
           agi={agi}
+          disabled={disabled}
           icon={icon}
+          image={image}
+          int={int}
+          name={name}
+          str={str}
         ></CharacterCardItem>
       </Box>
     </Box>

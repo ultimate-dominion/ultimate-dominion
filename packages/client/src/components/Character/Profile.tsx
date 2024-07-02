@@ -12,39 +12,39 @@ import { FaStarAndCrescent } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 export const Profile = ({
-  name,
   description,
   image,
+  name,
 }: {
-  name: string;
   description: string;
   image: string;
+  name: string;
 }): JSX.Element => {
   return (
     <Box height="100%" position="relative">
       <VStack>
         <HStack w="100%">
           <Center>
-            <Avatar src={image} size={{ base: 'xl', sm: 'xl' }} />
-            <Heading size={{ base: 'lg', sm: 'lg' }} margin="0px 20px">
+            <Avatar size={{ base: 'xl', sm: 'xl' }} src={image} />
+            <Heading margin="0px 20px" size={{ base: 'lg', sm: 'lg' }}>
               {name || 'Name'}
             </Heading>
           </Center>
-          <Spacer></Spacer>
+          <Spacer />
           <Center>
             <FaStarAndCrescent size={40}></FaStarAndCrescent>
           </Center>
         </HStack>
-        <Spacer></Spacer>
-        <Box w="100%" mt={3}>
-          <Text as="p" size="sm" textAlign="left" overflow="hidden">
+        <Spacer />
+        <Box mt={3} w="100%">
+          <Text as="p" overflow="hidden" size="sm" textAlign="left">
             {description ||
               `Emerges as a mystical warrior, my very presence an interplay of shadow
             and light. My armor, adorned with luminescent runes and forged from
             the rarest ores.
             `}
           </Text>
-          <Box position="absolute" bottom="0" right="0" textAlign="right">
+          <Box bottom="0" position="absolute" right="0" textAlign="right">
             <Link to="/">Edit Bio</Link>
           </Box>
         </Box>

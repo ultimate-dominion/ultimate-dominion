@@ -9,15 +9,15 @@ import {
 } from '@chakra-ui/react';
 
 export const Stats = ({
-  hp,
-  str,
   agi,
+  hp,
   int,
+  str,
 }: {
-  hp: number;
-  str: number;
   agi: number;
+  hp: number;
   int: number;
+  str: number;
 }): JSX.Element => {
   return (
     <Box>
@@ -27,7 +27,7 @@ export const Stats = ({
             <Text fontWeight="bold">My Stats</Text>
           </Box>
           <Spacer />
-          <Text fontWeight="bold"></Text>
+          {/* <Text fontWeight="bold"></Text> */}
         </HStack>
         <Box textAlign="left" w="100%">
           <Grid
