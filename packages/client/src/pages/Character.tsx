@@ -1,23 +1,20 @@
 import { Grid, GridItem, Heading } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
-import { useParams } from 'react-router-dom';
-import { Address, formatEther, hexToString } from 'viem';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
+// import { useParams } from 'react-router-dom';
+import { Address } from 'viem';
 import { useReadContracts } from 'wagmi';
 
 import { CharacterCard } from '../components/Character/Card/CharacterCard';
-import { Misc } from '../components/Character/Misc';
-import { Profile } from '../components/Character/Profile';
-import { Stats } from '../components/Character/Stats';
-import { useCharacter } from '../contexts/CharacterContext';
+// import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 export const Character = (): JSX.Element => {
-  const { characterId } = useParams();
+  // const { characterId } = useParams();
   const {
-    components: { Characters, CharacterStats, UltimateDominionConfig },
+    components: { UltimateDominionConfig },
   } = useMUD();
 
-  const { character: player } = useCharacter();
+  // const { character: player } = useCharacter();
 
   const { multicall } = useComponentValue(
     UltimateDominionConfig,
@@ -68,22 +65,22 @@ export const Character = (): JSX.Element => {
     multicallAddress: multicall! as Address,
   });
 
-  const character = useComponentValue(
-    Characters,
-    encodeEntity(
-      { characterId: 'uint256' },
-      { characterId: BigInt(characterId!) },
-    ),
-  );
-  const stats = useComponentValue(
-    CharacterStats,
-    encodeEntity(
-      { characterId: 'uint256' },
-      { characterId: BigInt(characterId!) },
-    ),
-  );
+  // const character = useComponentValue(
+  //   Characters,
+  //   encodeEntity(
+  //     { characterId: 'uint256' },
+  //     { characterId: BigInt(characterId!) },
+  //   ),
+  // );
+  // const stats = useComponentValue(
+  //   CharacterStats,
+  //   encodeEntity(
+  //     { characterId: 'uint256' },
+  //     { characterId: BigInt(characterId!) },
+  //   ),
+  // );
 
-  const owner = player?.owner;
+  // const owner = player?.owner;
 
   // const equiptment = useReadContracts({
   //   contracts: [
@@ -96,17 +93,6 @@ export const Character = (): JSX.Element => {
   //   ],
   //   multicallAddress: '0xca11bde05977b3631167028862be2a173976ca11',
   // });
-  const gold = useReadContracts({
-    contracts: [
-      {
-        address: goldToken as Address,
-        abi: ERC20ABI,
-        functionName: 'balanceOf',
-        args: [owner!],
-      },
-    ],
-    // multicallAddress: '0xca11bde05977b3631167028862be2a173976ca11',
-  });
 
   return (
     <Grid
@@ -172,14 +158,12 @@ export const Character = (): JSX.Element => {
         rowStart={{ sm: 2, base: 4 }}
       >
         <Heading>Items 30 - 3/3 Active</Heading>
-        {console.log(
-          'MulticallTest' +
-            JSON.stringify(
-              multicallTest,
-              (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
-            ),
-        )}
+        {'MulticallTest' +
+          JSON.stringify(
+            multicallTest,
+            (key, value) =>
+              typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
+          )}
         <Grid
           templateColumns={{
             base: 'repeat(1, 1fr)',
