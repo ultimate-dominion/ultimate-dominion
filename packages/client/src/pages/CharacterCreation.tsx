@@ -277,6 +277,17 @@ export const CharacterCreation = (): JSX.Element => {
     rolledOnce,
   ]);
 
+  const UploadedAvatar = useMemo(() => {
+    return (
+      <Center>
+        <Avatar
+          size={{ base: 'lg', sm: 'xl' }}
+          src={avatar ? URL.createObjectURL(avatar) : undefined}
+        />
+      </Center>
+    );
+  }, [avatar]);
+
   return (
     <Stack
       direction={{ base: 'column', lg: 'row' }}
@@ -336,12 +347,7 @@ export const CharacterCreation = (): JSX.Element => {
                 gap={{ base: 4, sm: 8 }}
                 w="100%"
               >
-                <Center>
-                  <Avatar
-                    size={{ base: 'lg', sm: 'xl' }}
-                    src={avatar ? URL.createObjectURL(avatar) : undefined}
-                  />
-                </Center>
+                {UploadedAvatar}
                 <VStack w="100%">
                   <FormControl isInvalid={showError && !name}>
                     <Input
