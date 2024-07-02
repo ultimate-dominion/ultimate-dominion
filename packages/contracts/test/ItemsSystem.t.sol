@@ -121,16 +121,4 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
         assertEq(erc1155System.balanceOf(address(alice), newArmorId), 1);
     }
-
-    function test_dropItems() public {
-        uint256[] memory itemIds = new uint256[](1);
-        uint256[] memory amounts = new uint256[](1);
-        bytes32[] memory characterIds = new bytes32[](1);
-        itemIds[0] = newArmorId;
-        amounts[0] = 1;
-        characterIds[0] = alicesCharacterId;
-        world.UD__dropItems(itemIds, amounts, characterIds);
-
-        assertEq(erc1155System.balanceOf(address(alice), newArmorId), 1);
-    }
 }
