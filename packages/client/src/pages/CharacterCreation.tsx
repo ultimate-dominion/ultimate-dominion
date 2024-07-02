@@ -22,6 +22,7 @@ import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { useWalletClient } from 'wagmi';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -35,6 +36,7 @@ export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderSuccess, renderError } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
+  const { data: externalWalletClient } = useWalletClient();
   const {
     burnerBalance,
     components: { UltimateDominionConfig },
@@ -259,10 +261,21 @@ export const CharacterCreation = (): JSX.Element => {
       navigate('/game-board');
     }
 
+    if (!externalWalletClient) {
+      navigate('/');
+    }
+
     if (!delegatorAddress && isSynced) {
       navigate('/');
     }
-  }, [character, delegatorAddress, isSynced, navigate, rolledOnce]);
+  }, [
+    character,
+    delegatorAddress,
+    externalWalletClient,
+    isSynced,
+    navigate,
+    rolledOnce,
+  ]);
 
   return (
     <Stack
