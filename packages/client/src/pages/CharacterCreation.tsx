@@ -320,7 +320,7 @@ export const CharacterCreation = (): JSX.Element => {
             </HStack>
             <VStack>
               <Heading>{character.name}</Heading>
-              <Text>{character.description}</Text>
+              <Text textAlign="center">{character.description}</Text>
             </VStack>
             <Text>
               Class:{' '}

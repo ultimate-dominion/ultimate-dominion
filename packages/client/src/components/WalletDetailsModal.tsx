@@ -43,23 +43,28 @@ export const WalletDetailsModal = ({
 
   const [amount, setAmount] = useState<string>('0');
   const [isDepositing, setIsDepositing] = useState(false);
-  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Reset showError state when any of the form fields change
+  // Reset errorMessage state when any of the form fields change
   useEffect(() => {
-    setShowError(false);
+    setErrorMessage(null);
   }, [amount]);
 
   const onDeposit = useCallback(async () => {
     try {
       setIsDepositing(true);
 
-      if (!externalWalletClient) {
+      if (!(externalWalletBalance && externalWalletClient)) {
         throw new Error('No external wallet client found');
       }
 
       if (!amount || parseEther(amount) <= 0) {
-        setShowError(true);
+        setErrorMessage('Amount must be greater than 0');
+        return;
+      }
+
+      if (parseEther(amount) > externalWalletBalance.value) {
+        setErrorMessage('Insufficient funds in external wallet');
         return;
       }
 
@@ -75,7 +80,14 @@ export const WalletDetailsModal = ({
     } finally {
       setIsDepositing(false);
     }
-  }, [amount, burnerAddress, externalWalletClient, renderError, renderSuccess]);
+  }, [
+    amount,
+    burnerAddress,
+    externalWalletBalance,
+    externalWalletClient,
+    renderError,
+    renderSuccess,
+  ]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -120,13 +132,13 @@ export const WalletDetailsModal = ({
                   time.
                 </Text>
                 <HStack>
-                  <FormControl isInvalid={showError}>
+                  <FormControl isInvalid={!!errorMessage}>
                     <FormLabel fontSize="xs">
                       Deposit to session wallet
                     </FormLabel>
-                    {showError && (
+                    {!!errorMessage && (
                       <FormHelperText color="red" fontSize="xs" mb={2}>
-                        Amount must be greater than 0
+                        {errorMessage}
                       </FormHelperText>
                     )}
                     <Input
