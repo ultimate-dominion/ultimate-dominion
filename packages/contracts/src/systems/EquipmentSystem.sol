@@ -76,6 +76,18 @@ contract EquipmentSystem is System {
                 }
             }
         }
+        if (uint8(itemData.itemType) == 1) {
+            uint256[] memory equippedArmor = CharacterEquipment.getEquippedArmor(characterId);
+            for (uint256 i; i < equippedArmor.length;) {
+                if (equippedArmor[i] == itemId) {
+                    _isEquipped = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        }
     }
 
     function checkRequirements(bytes32 characterId, uint256 itemId) public view returns (bool) {
@@ -150,14 +162,24 @@ contract EquipmentSystem is System {
         int256 totalHPModifiers;
         ArmorStats memory armorStats;
         WeaponStats memory weaponStats;
-        for (uint256 i; i < equippedArmor.length; i++) {
-            armorStats = getArmorStats(equippedArmor[i]);
-            weaponStats = getWeaponStats(equippedWeapons[i]);
-            totalArmor += armorStats.armorModifier;
-            totalStrModifiers += (armorStats.strModifier + weaponStats.strModifier);
-            totalAgiModifiers += (armorStats.agiModifier + weaponStats.agiModifier);
-            totalIntModifiers += (armorStats.intModifier + weaponStats.intModifier);
-            totalHPModifiers += (armorStats.hitPointModifier + weaponStats.hitPointModifier);
+        if (equippedArmor.length > 0) {
+            for (uint256 i; i < equippedArmor.length; i++) {
+                armorStats = getArmorStats(equippedArmor[i]);
+                totalArmor += armorStats.armorModifier;
+                totalStrModifiers += armorStats.strModifier;
+                totalAgiModifiers += armorStats.agiModifier;
+                totalIntModifiers += armorStats.intModifier;
+                totalHPModifiers += armorStats.hitPointModifier;
+            }
+        }
+        if (equippedWeapons.length > 0) {
+            for (uint256 i; i < equippedWeapons.length; i++) {
+                weaponStats = getWeaponStats(equippedWeapons[i]);
+                totalStrModifiers += weaponStats.strModifier;
+                totalAgiModifiers += weaponStats.agiModifier;
+                totalIntModifiers += weaponStats.intModifier;
+                totalHPModifiers += weaponStats.hitPointModifier;
+            }
         }
         CharacterEquipment.setStrBonus(characterId, totalStrModifiers);
         CharacterEquipment.setAgiBonus(characterId, totalAgiModifiers);
@@ -207,22 +229,22 @@ contract EquipmentSystem is System {
         entityStats.strength = uint256(
             int256(entityStats.strength) + equipmentStats.strBonus >= 0
                 ? int256(entityStats.strength) + equipmentStats.strBonus
-                : int256(1)
+                : int256(0)
         );
         entityStats.agility = uint256(
             int256(entityStats.agility) + equipmentStats.agiBonus >= 0
                 ? int256(entityStats.agility) + equipmentStats.agiBonus
-                : int256(1)
+                : int256(0)
         );
         entityStats.intelligence = uint256(
             int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
                 ? int256(entityStats.intelligence) + equipmentStats.intBonus
-                : int256(1)
+                : int256(0)
         );
         entityStats.maxHitPoints = uint256(
             int256(entityStats.maxHitPoints) + equipmentStats.hpBonus >= 0
                 ? int256(entityStats.maxHitPoints) + equipmentStats.hpBonus
-                : int256(0)
+                : int256(1)
         );
         return entityStats;
     }

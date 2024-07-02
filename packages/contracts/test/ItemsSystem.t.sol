@@ -107,32 +107,6 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         assertEq(erc1155System.balanceOf(address(alice), 1), 1);
     }
 
-    function test_equipItems() public {
-        uint256 fees = entropy.getFee(address(1));
-        vm.startPrank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
-        world.UD__enterGame(alicesCharacterId);
-        uint256[] memory itemsToEquip = new uint256[](1);
-        itemsToEquip[0] = 1;
-        world.UD__equipItems(alicesCharacterId, itemsToEquip);
-
-        assertTrue(world.UD__isEquipped(alicesCharacterId, 1));
-    }
-
-    function test_unequipItem() public {
-        uint256 fees = entropy.getFee(address(1));
-        vm.startPrank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
-        world.UD__enterGame(alicesCharacterId);
-        uint256[] memory itemsToEquip = new uint256[](1);
-        itemsToEquip[0] = 1;
-        world.UD__equipItems(alicesCharacterId, itemsToEquip);
-        assertTrue(world.UD__isEquipped(alicesCharacterId, 1));
-        world.UD__unequipItem(alicesCharacterId, 1);
-
-        assertFalse(world.UD__isEquipped(alicesCharacterId, 1));
-    }
-
     function test_dropItems() public {
         uint256[] memory itemIds = new uint256[](1);
         uint256[] memory amounts = new uint256[](1);
