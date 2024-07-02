@@ -22,6 +22,7 @@ import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { useWalletClient } from 'wagmi';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -35,6 +36,7 @@ export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderSuccess, renderError } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
+  const { data: externalWalletClient } = useWalletClient();
   const {
     burnerBalance,
     components: { UltimateDominionConfig },
@@ -42,7 +44,8 @@ export const CharacterCreation = (): JSX.Element => {
     isSynced,
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
-  const { character, isRefreshing, refreshCharacter } = useCharacter();
+  const { character, characterStats, isRefreshing, refreshCharacter } =
+    useCharacter();
   const {
     file: avatar,
     setFile: setAvatar,
@@ -215,8 +218,8 @@ export const CharacterCreation = (): JSX.Element => {
   ]);
 
   const rolledOnce = useMemo(() => {
-    return character?.hitPoints !== '0';
-  }, [character]);
+    return characterStats.hitPoints !== '0';
+  }, [characterStats]);
 
   const onEnterGame = useCallback(async () => {
     try {
@@ -259,10 +262,32 @@ export const CharacterCreation = (): JSX.Element => {
       navigate('/game-board');
     }
 
+    if (!externalWalletClient) {
+      navigate('/');
+    }
+
     if (!delegatorAddress && isSynced) {
       navigate('/');
     }
-  }, [character, delegatorAddress, isSynced, navigate, rolledOnce]);
+  }, [
+    character,
+    delegatorAddress,
+    externalWalletClient,
+    isSynced,
+    navigate,
+    rolledOnce,
+  ]);
+
+  const UploadedAvatar = useMemo(() => {
+    return (
+      <Center>
+        <Avatar
+          size={{ base: 'lg', sm: 'xl' }}
+          src={avatar ? URL.createObjectURL(avatar) : undefined}
+        />
+      </Center>
+    );
+  }, [avatar]);
 
   return (
     <Stack
@@ -296,7 +321,7 @@ export const CharacterCreation = (): JSX.Element => {
             </HStack>
             <VStack>
               <Heading>{character.name}</Heading>
-              <Text>{character.description}</Text>
+              <Text textAlign="center">{character.description}</Text>
             </VStack>
             <Text>
               Class:{' '}
@@ -323,12 +348,7 @@ export const CharacterCreation = (): JSX.Element => {
                 gap={{ base: 4, sm: 8 }}
                 w="100%"
               >
-                <Center>
-                  <Avatar
-                    size={{ base: 'lg', sm: 'xl' }}
-                    src={avatar ? URL.createObjectURL(avatar) : undefined}
-                  />
-                </Center>
+                {UploadedAvatar}
                 <VStack w="100%">
                   <FormControl isInvalid={showError && !name}>
                     <Input
@@ -482,19 +502,19 @@ export const CharacterCreation = (): JSX.Element => {
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
                   <Text>HP - Hit</Text>
-                  <Text>{character?.hitPoints ?? '0'}</Text>
+                  <Text>{characterStats.hitPoints ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>STR - Strength</Text>
-                  <Text>{character?.strength ?? '0'}</Text>
+                  <Text>{characterStats.strength ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>AGI - Agility</Text>
-                  <Text>{character?.agility ?? '0'}</Text>
+                  <Text>{characterStats.agility ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>INT - Intelligence</Text>
-                  <Text>{character?.intelligence ?? '0'}</Text>
+                  <Text>{characterStats.intelligence ?? '0'}</Text>
                 </HStack>
               </VStack>
             </VStack>

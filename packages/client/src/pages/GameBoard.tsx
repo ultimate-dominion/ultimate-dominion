@@ -10,6 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useWalletClient } from 'wagmi';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { MapPanel } from '../components/MapPanel';
@@ -19,11 +20,16 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 
 export const GameBoard = (): JSX.Element => {
+  const { data: externalWalletClient } = useWalletClient();
   const navigate = useNavigate();
   const { delegatorAddress, isSynced } = useMUD();
   const { character } = useCharacter();
 
   useEffect(() => {
+    if (!externalWalletClient) {
+      navigate('/');
+    }
+
     if (isSynced && !delegatorAddress) {
       navigate('/');
     }
@@ -31,7 +37,7 @@ export const GameBoard = (): JSX.Element => {
     if (character?.locked) {
       navigate('/game-board');
     }
-  }, [character, delegatorAddress, isSynced, navigate]);
+  }, [character, delegatorAddress, externalWalletClient, isSynced, navigate]);
 
   return (
     <Grid
