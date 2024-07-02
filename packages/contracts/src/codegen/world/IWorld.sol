@@ -7,6 +7,7 @@ import { IBaseWorld } from "@latticexyz/world/src/codegen/interfaces/IBaseWorld.
 
 import { ICharacterSystem } from "./ICharacterSystem.sol";
 import { ICombatSystem } from "./ICombatSystem.sol";
+import { IEquipmentSystem } from "./IEquipmentSystem.sol";
 import { IItemsSystem } from "./IItemsSystem.sol";
 import { IMapSystem } from "./IMapSystem.sol";
 import { IMobSystem } from "./IMobSystem.sol";
@@ -24,6 +25,7 @@ interface IWorld is
   IBaseWorld,
   ICharacterSystem,
   ICombatSystem,
+  IEquipmentSystem,
   IItemsSystem,
   IMapSystem,
   IMobSystem,

@@ -16,6 +16,7 @@ import {_erc1155SystemId} from "@erc1155/utils.sol";
 import {WeaponStats} from "@interfaces/Structs.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
+import {_itemsSystemId} from "../src/utils.sol";
 import {
     GOLD_NAMESPACE,
     CHARACTERS_NAMESPACE,
@@ -27,6 +28,12 @@ import {
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
 
 contract Test_ItemsSystem is SetUp, GasReporter {
+    function setUp() public virtual override {
+        super.setUp();
+        vm.prank(deployer);
+        world.grantAccess(_itemsSystemId("UD"), address(this));
+    }
+
     function test_CreateItem() public {
         startGasReport("creates an item");
 
@@ -47,7 +54,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         uint256 newItemId =
             world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri/");
 
-        assertEq(newItemId, 3);
+        assertEq(newItemId, 4);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
@@ -124,5 +131,17 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         world.UD__unequipItem(alicesCharacterId, 1);
 
         assertFalse(world.UD__isEquipped(alicesCharacterId, 1));
+    }
+
+    function test_dropItems() public {
+        uint256[] memory itemIds = new uint256[](1);
+        uint256[] memory amounts = new uint256[](1);
+        bytes32[] memory characterIds = new bytes32[](1);
+        itemIds[0] = newArmorId;
+        amounts[0] = 1;
+        characterIds[0] = alicesCharacterId;
+        world.UD__dropItems(itemIds, amounts, characterIds);
+
+        assertEq(erc1155System.balanceOf(address(alice), newArmorId), 1);
     }
 }
