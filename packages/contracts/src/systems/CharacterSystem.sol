@@ -7,12 +7,13 @@ import {
     Levels,
     NameExists,
     Counters,
-    CharacterStats,
-    CharacterStatsData,
+    Stats,
+    StatsData,
     Characters,
-    CharactersData
+    CharactersData,
+    Skills
 } from "@codegen/index.sol";
-import {RngRequestType} from "@codegen/common.sol";
+import {RngRequestType, SkillType} from "@codegen/common.sol";
 
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
@@ -35,11 +36,11 @@ import {_erc721SystemId, _erc1155SystemId, _itemsSystemId} from "../utils.sol";
 import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, WORLD_NAMESPACE, ITEMS_NAMESPACE} from "../../constants.sol";
 
 contract CharacterSystem is System {
-    function getName(uint256 characterId) public view returns (bytes32 _name) {
+    function getName(bytes32 characterId) public view returns (bytes32 _name) {
         _name = Characters.getName(characterId);
     }
 
-    function getClass(uint256 characterId) public view returns (Classes _class) {
+    function getClass(bytes32 characterId) public view returns (Classes _class) {
         _class = Characters.getClass(characterId);
     }
 
@@ -51,26 +52,48 @@ contract CharacterSystem is System {
         characterToken = IERC721Mintable(UltimateDominionConfig.getCharacterToken());
     }
 
+    function getPlayerEntityId(uint256 characterTokenId) public view returns (bytes32 characterId) {
+        address ownerAddress = _characterToken().ownerOf(characterTokenId);
+        characterId = bytes32(uint256(uint160(ownerAddress)) << 96 | characterTokenId);
+    }
+
+    function getCharacterTokenId(bytes32 characterId) public pure returns (uint256) {
+        return (uint256(uint96(uint256(characterId))));
+    }
+
+    /**
+     *  @dev extracts the character nft owner address from the character Id
+     */
+    function getOwnerAddress(bytes32 characterId) public pure returns (address) {
+        return address(uint160(uint256(characterId) >> 96));
+    }
+
+    /**
+     * @param account the address of the account that will own the character
+     * @param name the keccack256 hash of the characters name to check for duplicates
+     * @param tokenUri the token uri to be set for the character token
+     * @return characterId the bytes32 character id combination of the owner address and the tokenId
+     */
     function mintCharacter(address account, bytes32 name, string memory tokenUri)
         public
-        returns (uint256 characterId)
+        returns (bytes32 characterId)
     {
-        characterId = _incrementCharacterCounter();
-        // _characterToken().mint(account, characterId);
+        uint256 characterTokenId = _incrementCharacterCounter();
+        require(characterTokenId < type(uint96).max, "CHARACATERS: Max characters reached");
         IWorld(_world()).call(
-            _erc721SystemId(CHARACTERS_NAMESPACE), abi.encodeCall(IERC721Mintable.mint, (account, characterId))
+            _erc721SystemId(CHARACTERS_NAMESPACE), abi.encodeCall(IERC721Mintable.mint, (account, characterTokenId))
         );
-
+        characterId = getPlayerEntityId(characterTokenId);
         Characters.setOwner(characterId, account);
 
         require(!NameExists.getValue(name), "Name already exists");
         NameExists.setValue(name, true);
         Characters.setName(characterId, name);
-        _setTokenURI(characterId, tokenUri);
+        _setTokenURI(characterTokenId, tokenUri);
     }
 
-    function rollStats(bytes32 userRandomNumber, uint256 characterId, Classes class) public payable {
-        require(!Characters.getLocked(characterId), "you have already accepted this character");
+    function rollStats(bytes32 userRandomNumber, bytes32 characterId, Classes class) public payable {
+        require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
         require(_isOwner(characterId), "Not your Character.");
         RngRequestType requestType = RngRequestType.CharacterStats;
         Characters.setClass(characterId, class);
@@ -78,7 +101,7 @@ contract CharacterSystem is System {
         SystemSwitch.call(abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, abi.encode(characterId))));
     }
 
-    function enterGame(uint256 characterId) public {
+    function enterGame(bytes32 characterId) public {
         require(_isOwner(characterId), "not your character");
         require(!Characters.getLocked(characterId), "you have entered the game");
 
@@ -111,8 +134,8 @@ contract CharacterSystem is System {
 
     function _incrementCharacterCounter() internal returns (uint256) {
         address characterContract = UltimateDominionConfig.getCharacterToken();
-        uint256 characterCounter = Counters.getCounter(address(characterContract)) + 1;
-        Counters.setCounter(characterContract, (characterCounter));
+        uint256 characterCounter = Counters.getCounter(address(characterContract), 0) + 1;
+        Counters.setCounter(characterContract, 0, (characterCounter));
         return characterCounter;
     }
 
@@ -120,15 +143,15 @@ contract CharacterSystem is System {
         return IERC20System(UltimateDominionConfig.getGoldToken());
     }
 
-    function _isOwner(uint256 characterId) internal view returns (bool) {
+    function _isOwner(bytes32 characterId) internal view returns (bool) {
         return _msgSender() == Characters.getOwner(characterId);
     }
 
-    function getOwner(uint256 characterId) public view returns (address) {
+    function getOwner(bytes32 characterId) public view returns (address) {
         return Characters.getOwner(characterId);
     }
 
-    function issueGold(uint256 characterId, uint256 amount) internal {
+    function issueGold(bytes32 characterId, uint256 amount) internal {
         _gold().mint(getOwner(characterId), amount);
     }
 
@@ -136,11 +159,11 @@ contract CharacterSystem is System {
         return WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
     }
 
-    function getExperience(uint256 characterId) public view returns (uint256) {
-        return CharacterStats.getExperience(characterId);
+    function getExperience(bytes32 characterId) public view returns (uint256) {
+        return Stats.getExperience(characterId);
     }
 
-    function getCharacterStats(uint256 characterId) public view returns (CharacterStatsData memory) {
-        return CharacterStats.get(characterId);
+    function getStats(bytes32 characterId) public view returns (StatsData memory) {
+        return Stats.get(characterId);
     }
 }

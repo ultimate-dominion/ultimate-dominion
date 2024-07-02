@@ -16,26 +16,28 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-struct CharacterStatsData {
+struct StatsData {
   uint256 strength;
   uint256 agility;
   uint256 intelligence;
-  uint256 hitPoints;
-  int256 damageTaken;
+  uint256 maxHitPoints;
+  int256 currentDamage;
   uint256 experience;
+  uint256 level;
+  uint256 armor;
 }
 
-library CharacterStats {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "UD", name: "CharacterStats", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x7462554400000000000000000000000043686172616374657253746174730000);
+library Stats {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "UD", name: "Stats", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x7462554400000000000000000000000053746174730000000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x00c0060020202020202000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0100080020202020202020200000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of (uint256)
-  Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint256, uint256, uint256, uint256, int256, uint256)
-  Schema constant _valueSchema = Schema.wrap(0x00c006001f1f1f1f3f1f00000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (bytes32)
+  Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint256, uint256, uint256, uint256, int256, uint256, uint256, uint256)
+  Schema constant _valueSchema = Schema.wrap(0x010008001f1f1f1f3f1f1f1f0000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -43,7 +45,7 @@ library CharacterStats {
    */
   function getKeyNames() internal pure returns (string[] memory keyNames) {
     keyNames = new string[](1);
-    keyNames[0] = "characterId";
+    keyNames[0] = "entityId";
   }
 
   /**
@@ -51,13 +53,15 @@ library CharacterStats {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](6);
+    fieldNames = new string[](8);
     fieldNames[0] = "strength";
     fieldNames[1] = "agility";
     fieldNames[2] = "intelligence";
-    fieldNames[3] = "hitPoints";
-    fieldNames[4] = "damageTaken";
+    fieldNames[3] = "maxHitPoints";
+    fieldNames[4] = "currentDamage";
     fieldNames[5] = "experience";
+    fieldNames[6] = "level";
+    fieldNames[7] = "armor";
   }
 
   /**
@@ -77,9 +81,9 @@ library CharacterStats {
   /**
    * @notice Get strength.
    */
-  function getStrength(uint256 characterId) internal view returns (uint256 strength) {
+  function getStrength(bytes32 entityId) internal view returns (uint256 strength) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -88,9 +92,9 @@ library CharacterStats {
   /**
    * @notice Get strength.
    */
-  function _getStrength(uint256 characterId) internal view returns (uint256 strength) {
+  function _getStrength(bytes32 entityId) internal view returns (uint256 strength) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -99,9 +103,9 @@ library CharacterStats {
   /**
    * @notice Set strength.
    */
-  function setStrength(uint256 characterId, uint256 strength) internal {
+  function setStrength(bytes32 entityId, uint256 strength) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((strength)), _fieldLayout);
   }
@@ -109,9 +113,9 @@ library CharacterStats {
   /**
    * @notice Set strength.
    */
-  function _setStrength(uint256 characterId, uint256 strength) internal {
+  function _setStrength(bytes32 entityId, uint256 strength) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((strength)), _fieldLayout);
   }
@@ -119,9 +123,9 @@ library CharacterStats {
   /**
    * @notice Get agility.
    */
-  function getAgility(uint256 characterId) internal view returns (uint256 agility) {
+  function getAgility(bytes32 entityId) internal view returns (uint256 agility) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -130,9 +134,9 @@ library CharacterStats {
   /**
    * @notice Get agility.
    */
-  function _getAgility(uint256 characterId) internal view returns (uint256 agility) {
+  function _getAgility(bytes32 entityId) internal view returns (uint256 agility) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -141,9 +145,9 @@ library CharacterStats {
   /**
    * @notice Set agility.
    */
-  function setAgility(uint256 characterId, uint256 agility) internal {
+  function setAgility(bytes32 entityId, uint256 agility) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((agility)), _fieldLayout);
   }
@@ -151,9 +155,9 @@ library CharacterStats {
   /**
    * @notice Set agility.
    */
-  function _setAgility(uint256 characterId, uint256 agility) internal {
+  function _setAgility(bytes32 entityId, uint256 agility) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((agility)), _fieldLayout);
   }
@@ -161,9 +165,9 @@ library CharacterStats {
   /**
    * @notice Get intelligence.
    */
-  function getIntelligence(uint256 characterId) internal view returns (uint256 intelligence) {
+  function getIntelligence(bytes32 entityId) internal view returns (uint256 intelligence) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -172,9 +176,9 @@ library CharacterStats {
   /**
    * @notice Get intelligence.
    */
-  function _getIntelligence(uint256 characterId) internal view returns (uint256 intelligence) {
+  function _getIntelligence(bytes32 entityId) internal view returns (uint256 intelligence) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -183,9 +187,9 @@ library CharacterStats {
   /**
    * @notice Set intelligence.
    */
-  function setIntelligence(uint256 characterId, uint256 intelligence) internal {
+  function setIntelligence(bytes32 entityId, uint256 intelligence) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((intelligence)), _fieldLayout);
   }
@@ -193,103 +197,103 @@ library CharacterStats {
   /**
    * @notice Set intelligence.
    */
-  function _setIntelligence(uint256 characterId, uint256 intelligence) internal {
+  function _setIntelligence(bytes32 entityId, uint256 intelligence) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((intelligence)), _fieldLayout);
   }
 
   /**
-   * @notice Get hitPoints.
+   * @notice Get maxHitPoints.
    */
-  function getHitPoints(uint256 characterId) internal view returns (uint256 hitPoints) {
+  function getMaxHitPoints(bytes32 entityId) internal view returns (uint256 maxHitPoints) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Get hitPoints.
+   * @notice Get maxHitPoints.
    */
-  function _getHitPoints(uint256 characterId) internal view returns (uint256 hitPoints) {
+  function _getMaxHitPoints(bytes32 entityId) internal view returns (uint256 maxHitPoints) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Set hitPoints.
+   * @notice Set maxHitPoints.
    */
-  function setHitPoints(uint256 characterId, uint256 hitPoints) internal {
+  function setMaxHitPoints(bytes32 entityId, uint256 maxHitPoints) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((hitPoints)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((maxHitPoints)), _fieldLayout);
   }
 
   /**
-   * @notice Set hitPoints.
+   * @notice Set maxHitPoints.
    */
-  function _setHitPoints(uint256 characterId, uint256 hitPoints) internal {
+  function _setMaxHitPoints(bytes32 entityId, uint256 maxHitPoints) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((hitPoints)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((maxHitPoints)), _fieldLayout);
   }
 
   /**
-   * @notice Get damageTaken.
+   * @notice Get currentDamage.
    */
-  function getDamageTaken(uint256 characterId) internal view returns (int256 damageTaken) {
+  function getCurrentDamage(bytes32 entityId) internal view returns (int256 currentDamage) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
   /**
-   * @notice Get damageTaken.
+   * @notice Get currentDamage.
    */
-  function _getDamageTaken(uint256 characterId) internal view returns (int256 damageTaken) {
+  function _getCurrentDamage(bytes32 entityId) internal view returns (int256 currentDamage) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
   /**
-   * @notice Set damageTaken.
+   * @notice Set currentDamage.
    */
-  function setDamageTaken(uint256 characterId, int256 damageTaken) internal {
+  function setCurrentDamage(bytes32 entityId, int256 currentDamage) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((damageTaken)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((currentDamage)), _fieldLayout);
   }
 
   /**
-   * @notice Set damageTaken.
+   * @notice Set currentDamage.
    */
-  function _setDamageTaken(uint256 characterId, int256 damageTaken) internal {
+  function _setCurrentDamage(bytes32 entityId, int256 currentDamage) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((damageTaken)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((currentDamage)), _fieldLayout);
   }
 
   /**
    * @notice Get experience.
    */
-  function getExperience(uint256 characterId) internal view returns (uint256 experience) {
+  function getExperience(bytes32 entityId) internal view returns (uint256 experience) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -298,9 +302,9 @@ library CharacterStats {
   /**
    * @notice Get experience.
    */
-  function _getExperience(uint256 characterId) internal view returns (uint256 experience) {
+  function _getExperience(bytes32 entityId) internal view returns (uint256 experience) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -309,9 +313,9 @@ library CharacterStats {
   /**
    * @notice Set experience.
    */
-  function setExperience(uint256 characterId, uint256 experience) internal {
+  function setExperience(bytes32 entityId, uint256 experience) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((experience)), _fieldLayout);
   }
@@ -319,19 +323,103 @@ library CharacterStats {
   /**
    * @notice Set experience.
    */
-  function _setExperience(uint256 characterId, uint256 experience) internal {
+  function _setExperience(bytes32 entityId, uint256 experience) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((experience)), _fieldLayout);
   }
 
   /**
+   * @notice Get level.
+   */
+  function getLevel(bytes32 entityId) internal view returns (uint256 level) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get level.
+   */
+  function _getLevel(bytes32 entityId) internal view returns (uint256 level) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set level.
+   */
+  function setLevel(bytes32 entityId, uint256 level) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((level)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set level.
+   */
+  function _setLevel(bytes32 entityId, uint256 level) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((level)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get armor.
+   */
+  function getArmor(bytes32 entityId) internal view returns (uint256 armor) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get armor.
+   */
+  function _getArmor(bytes32 entityId) internal view returns (uint256 armor) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set armor.
+   */
+  function setArmor(bytes32 entityId, uint256 armor) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((armor)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set armor.
+   */
+  function _setArmor(bytes32 entityId, uint256 armor) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((armor)), _fieldLayout);
+  }
+
+  /**
    * @notice Get the full data.
    */
-  function get(uint256 characterId) internal view returns (CharacterStatsData memory _table) {
+  function get(bytes32 entityId) internal view returns (StatsData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreSwitch.getRecord(
       _tableId,
@@ -344,9 +432,9 @@ library CharacterStats {
   /**
    * @notice Get the full data.
    */
-  function _get(uint256 characterId) internal view returns (CharacterStatsData memory _table) {
+  function _get(bytes32 entityId) internal view returns (StatsData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreCore.getRecord(
       _tableId,
@@ -360,21 +448,32 @@ library CharacterStats {
    * @notice Set the full data using individual values.
    */
   function set(
-    uint256 characterId,
+    bytes32 entityId,
     uint256 strength,
     uint256 agility,
     uint256 intelligence,
-    uint256 hitPoints,
-    int256 damageTaken,
-    uint256 experience
+    uint256 maxHitPoints,
+    int256 currentDamage,
+    uint256 experience,
+    uint256 level,
+    uint256 armor
   ) internal {
-    bytes memory _staticData = encodeStatic(strength, agility, intelligence, hitPoints, damageTaken, experience);
+    bytes memory _staticData = encodeStatic(
+      strength,
+      agility,
+      intelligence,
+      maxHitPoints,
+      currentDamage,
+      experience,
+      level,
+      armor
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -383,21 +482,32 @@ library CharacterStats {
    * @notice Set the full data using individual values.
    */
   function _set(
-    uint256 characterId,
+    bytes32 entityId,
     uint256 strength,
     uint256 agility,
     uint256 intelligence,
-    uint256 hitPoints,
-    int256 damageTaken,
-    uint256 experience
+    uint256 maxHitPoints,
+    int256 currentDamage,
+    uint256 experience,
+    uint256 level,
+    uint256 armor
   ) internal {
-    bytes memory _staticData = encodeStatic(strength, agility, intelligence, hitPoints, damageTaken, experience);
+    bytes memory _staticData = encodeStatic(
+      strength,
+      agility,
+      intelligence,
+      maxHitPoints,
+      currentDamage,
+      experience,
+      level,
+      armor
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -405,21 +515,23 @@ library CharacterStats {
   /**
    * @notice Set the full data using the data struct.
    */
-  function set(uint256 characterId, CharacterStatsData memory _table) internal {
+  function set(bytes32 entityId, StatsData memory _table) internal {
     bytes memory _staticData = encodeStatic(
       _table.strength,
       _table.agility,
       _table.intelligence,
-      _table.hitPoints,
-      _table.damageTaken,
-      _table.experience
+      _table.maxHitPoints,
+      _table.currentDamage,
+      _table.experience,
+      _table.level,
+      _table.armor
     );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -427,21 +539,23 @@ library CharacterStats {
   /**
    * @notice Set the full data using the data struct.
    */
-  function _set(uint256 characterId, CharacterStatsData memory _table) internal {
+  function _set(bytes32 entityId, StatsData memory _table) internal {
     bytes memory _staticData = encodeStatic(
       _table.strength,
       _table.agility,
       _table.intelligence,
-      _table.hitPoints,
-      _table.damageTaken,
-      _table.experience
+      _table.maxHitPoints,
+      _table.currentDamage,
+      _table.experience,
+      _table.level,
+      _table.armor
     );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -458,9 +572,11 @@ library CharacterStats {
       uint256 strength,
       uint256 agility,
       uint256 intelligence,
-      uint256 hitPoints,
-      int256 damageTaken,
-      uint256 experience
+      uint256 maxHitPoints,
+      int256 currentDamage,
+      uint256 experience,
+      uint256 level,
+      uint256 armor
     )
   {
     strength = (uint256(Bytes.getBytes32(_blob, 0)));
@@ -469,11 +585,15 @@ library CharacterStats {
 
     intelligence = (uint256(Bytes.getBytes32(_blob, 64)));
 
-    hitPoints = (uint256(Bytes.getBytes32(_blob, 96)));
+    maxHitPoints = (uint256(Bytes.getBytes32(_blob, 96)));
 
-    damageTaken = (int256(uint256(Bytes.getBytes32(_blob, 128))));
+    currentDamage = (int256(uint256(Bytes.getBytes32(_blob, 128))));
 
     experience = (uint256(Bytes.getBytes32(_blob, 160)));
+
+    level = (uint256(Bytes.getBytes32(_blob, 192)));
+
+    armor = (uint256(Bytes.getBytes32(_blob, 224)));
   }
 
   /**
@@ -486,23 +606,25 @@ library CharacterStats {
     bytes memory _staticData,
     EncodedLengths,
     bytes memory
-  ) internal pure returns (CharacterStatsData memory _table) {
+  ) internal pure returns (StatsData memory _table) {
     (
       _table.strength,
       _table.agility,
       _table.intelligence,
-      _table.hitPoints,
-      _table.damageTaken,
-      _table.experience
+      _table.maxHitPoints,
+      _table.currentDamage,
+      _table.experience,
+      _table.level,
+      _table.armor
     ) = decodeStatic(_staticData);
   }
 
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(uint256 characterId) internal {
+  function deleteRecord(bytes32 entityId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -510,9 +632,9 @@ library CharacterStats {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(uint256 characterId) internal {
+  function _deleteRecord(bytes32 entityId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -525,11 +647,13 @@ library CharacterStats {
     uint256 strength,
     uint256 agility,
     uint256 intelligence,
-    uint256 hitPoints,
-    int256 damageTaken,
-    uint256 experience
+    uint256 maxHitPoints,
+    int256 currentDamage,
+    uint256 experience,
+    uint256 level,
+    uint256 armor
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(strength, agility, intelligence, hitPoints, damageTaken, experience);
+    return abi.encodePacked(strength, agility, intelligence, maxHitPoints, currentDamage, experience, level, armor);
   }
 
   /**
@@ -542,11 +666,22 @@ library CharacterStats {
     uint256 strength,
     uint256 agility,
     uint256 intelligence,
-    uint256 hitPoints,
-    int256 damageTaken,
-    uint256 experience
+    uint256 maxHitPoints,
+    int256 currentDamage,
+    uint256 experience,
+    uint256 level,
+    uint256 armor
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(strength, agility, intelligence, hitPoints, damageTaken, experience);
+    bytes memory _staticData = encodeStatic(
+      strength,
+      agility,
+      intelligence,
+      maxHitPoints,
+      currentDamage,
+      experience,
+      level,
+      armor
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -557,9 +692,9 @@ library CharacterStats {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(uint256 characterId) internal pure returns (bytes32[] memory) {
+  function encodeKeyTuple(bytes32 entityId) internal pure returns (bytes32[] memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(characterId));
+    _keyTuple[0] = entityId;
 
     return _keyTuple;
   }

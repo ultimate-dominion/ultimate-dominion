@@ -2,7 +2,7 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, MobType} from "@codegen/common.sol";
-import {CharacterStatsData} from "@tables/CharacterStats.sol";
+import {StatsData} from "@tables/Stats.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
@@ -25,7 +25,7 @@ import {
     ITEMS_NAMESPACE
 } from "../constants.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
-
+import {_mobSystemId} from "../src/utils.sol";
 import "forge-std/console2.sol";
 /**
  * // all stats (except level and exp) are to the 10,000s place.  so 10_000 == 1;
@@ -46,26 +46,58 @@ import "forge-std/console2.sol";
  */
 
 contract Test_MobSystem is SetUp, GasReporter {
+    function setUp() public override {
+        super.setUp();
+        vm.prank(deployer);
+        world.grantAccess(_mobSystemId("UD"), address(this));
+    }
+
     function test_createMob() public {
         vm.startPrank(deployer);
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;
 
         MonsterStats memory newMonster = MonsterStats({
-            hp: 10000,
-            armor: 10000,
+            hitPoints: 10,
+            armor: 1,
+            strength: 1,
+            agility: 1,
+            intelligence: 1,
             level: 1,
-            experience: 10000,
-            baseDamage: 10000,
+            experience: 10,
             class: Classes.Warrior,
             inventory: _inventory
         });
         uint256 newMobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), "test_monster_uri");
 
         MobsData memory newMob = world.UD__getMob(newMobId);
-        assertEq(newMobId, 1);
+        assertEq(newMobId, 2);
         assertEq(uint8(newMob.mobType), uint8(MobType.Monster));
         assertEq(newMob.mobStats, abi.encode(newMonster));
         assertEq(newMob.mobMetadata, "test_monster_uri");
+    }
+
+    function test_getEntityId() public {
+        bytes32 entityId = bytes32(abi.encodePacked(uint32(starterMobId), uint192(1), uint16(1), uint16(2)));
+
+        assertEq(world.UD__spawnMob(1, 1, 2), entityId);
+    }
+
+    function test_getMobId() public {
+        bytes32 entityId = world.UD__spawnMob(starterMobId, 1, 2);
+
+        assertEq(world.UD__getMobId(entityId), starterMobId);
+    }
+
+    function test_getMobPosition() public {
+        bytes32 entityId = world.UD__spawnMob(starterMobId, 1, 2);
+        (uint16 x, uint16 y) = world.UD__getMobPosition(entityId);
+        assertEq(x, 1);
+        assertEq(y, 2);
+    }
+
+    function test_getSpawnCounter() public {
+        bytes32 entityId = world.UD__spawnMob(starterMobId, 1, 2);
+        assertEq(world.UD__getSpawnCounter(entityId), 1);
     }
 }

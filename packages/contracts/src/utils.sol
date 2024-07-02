@@ -13,6 +13,7 @@ bytes16 constant ERC721_SYSTEM_NAME = "ERC721System";
 bytes16 constant ERC1155_SYSTEM_NAME = "ERC1155System";
 bytes16 constant CHARACTER_SYSTEM_NAME = "CharacterSystem";
 bytes16 constant ITEMS_SYSTEM_NAME = "ItemsSystem";
+bytes16 constant MOB_SYSTEM_NAME = "MobSystem";
 
 function _erc20SystemId(bytes14 namespace) pure returns (ResourceId) {
     return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: ERC20_SYSTEM_NAME});
@@ -34,6 +35,14 @@ function _itemsSystemId(bytes14 namespace) pure returns (ResourceId) {
     return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: ITEMS_SYSTEM_NAME});
 }
 
+function _mobSystemId(bytes14 namespace) pure returns (ResourceId) {
+    return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: MOB_SYSTEM_NAME});
+}
+
 function _requireOwner(address callingSystem, address sender) view {
     AccessControlLib.requireOwner(SystemRegistry.get(callingSystem), sender);
+}
+
+function _requireAccess(address callingSystem, address sender) view {
+    AccessControlLib.requireAccess(SystemRegistry.get(callingSystem), sender);
 }

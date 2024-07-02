@@ -1,12 +1,141 @@
 declare const abi: [
   {
     "type": "function",
+    "name": "UD___calculateMagicAttack",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD___calculatePhysicalAttack",
+    "inputs": [
+      {
+        "name": "attackStats",
+        "type": "tuple",
+        "internalType": "struct PhysicalAttackStats",
+        "components": [
+          {
+            "name": "bonusDamage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "armorPenetration",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "attackModifierBonus",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "critChanceBonus",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "name": "attackerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "defenderId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "weaponId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "damage",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__applyEquipmentBonuses",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "modifiedStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "agility",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "intelligence",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxHitPoints",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "currentDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__checkRequirements",
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "itemId",
@@ -96,8 +225,8 @@ declare const abi: [
       },
       {
         "name": "attackers",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       },
       {
         "name": "defenders",
@@ -124,7 +253,7 @@ declare const abi: [
         "internalType": "enum MobType"
       },
       {
-        "name": "mobStats",
+        "name": "stats",
         "type": "bytes",
         "internalType": "bytes"
       },
@@ -169,14 +298,93 @@ declare const abi: [
   {
     "type": "function",
     "name": "UD__createSkill",
-    "inputs": [],
-    "outputs": [
+    "inputs": [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "skillType",
+        "type": "uint8",
+        "internalType": "enum SkillType"
+      },
+      {
+        "name": "skillStats",
+        "type": "bytes",
+        "internalType": "bytes"
       }
     ],
+    "outputs": [
+      {
+        "name": "skillId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__dropItems",
+    "inputs": [
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "amounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "characterIds",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__endTurn",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "playerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actions",
+        "type": "tuple[]",
+        "internalType": "struct Action[]",
+        "components": [
+          {
+            "name": "attackerEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "defenderEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "skillId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "weaponId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -185,8 +393,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [],
@@ -198,8 +406,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "itemIds",
@@ -212,49 +420,99 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getCharacterStats",
+    "name": "UD__executeCombat",
     "inputs": [
       {
-        "name": "characterId",
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actions",
+        "type": "tuple[]",
+        "internalType": "struct Action[]",
+        "components": [
+          {
+            "name": "attackerEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "defenderEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "skillId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "weaponId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__getArmorStats",
+    "inputs": [
+      {
+        "name": "itemId",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "_ArmorStats",
         "type": "tuple",
-        "internalType": "struct CharacterStatsData",
+        "internalType": "struct ArmorStats",
         "components": [
           {
-            "name": "strength",
+            "name": "armorModifier",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "agility",
+            "name": "classRestrictions",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
+          },
+          {
+            "name": "minLevel",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "intelligence",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "hitPoints",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "damageTaken",
+            "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "experience",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hitPointModifier",
+            "type": "int256",
+            "internalType": "int256"
           }
         ]
       }
@@ -276,12 +534,31 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getCharacterTokenId",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "UD__getClass",
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -331,8 +608,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -394,6 +671,42 @@ declare const abi: [
     "name": "UD__getMob",
     "inputs": [
       {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MobsData",
+        "components": [
+          {
+            "name": "mobType",
+            "type": "uint8",
+            "internalType": "enum MobType"
+          },
+          {
+            "name": "mobStats",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "mobMetadata",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMob",
+    "inputs": [
+      {
         "name": "mobId",
         "type": "uint256",
         "internalType": "uint256"
@@ -427,6 +740,49 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getMobId",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMobPosition",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "UD__getMonsterStats",
     "inputs": [
       {
@@ -442,7 +798,7 @@ declare const abi: [
         "internalType": "struct MonsterStats",
         "components": [
           {
-            "name": "hp",
+            "name": "hitPoints",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -452,12 +808,88 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
+            "name": "strength",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "agility",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "intelligence",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "baseDamage",
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "inventory",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMonsterStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MonsterStats",
+        "components": [
+          {
+            "name": "hitPoints",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strength",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "agility",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "intelligence",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -487,8 +919,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -523,8 +955,44 @@ declare const abi: [
           },
           {
             "name": "storyPathIds",
-            "type": "uint256[]",
-            "internalType": "uint256[]"
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "alignment",
+            "type": "uint8",
+            "internalType": "enum Alignment"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getNpcStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct NPCStats",
+        "components": [
+          {
+            "name": "name",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "storyPathIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
           },
           {
             "name": "alignment",
@@ -542,8 +1010,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -557,6 +1025,44 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getOwnerAddress",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getPlayerEntityId",
+    "inputs": [
+      {
+        "name": "characterTokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getPythProvider",
     "inputs": [],
     "outputs": [
@@ -564,6 +1070,86 @@ declare const abi: [
         "name": "_provider",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getSpawnCounter",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getStats",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "agility",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "intelligence",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxHitPoints",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "currentDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
       }
     ],
     "stateMutability": "view"
@@ -604,12 +1190,12 @@ declare const abi: [
         "internalType": "struct WeaponStats",
         "components": [
           {
-            "name": "damage",
+            "name": "minDamage",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "speed",
+            "name": "maxDamage",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -622,6 +1208,26 @@ declare const abi: [
             "name": "minLevel",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hitPointModifier",
+            "type": "int256",
+            "internalType": "int256"
           }
         ]
       }
@@ -634,8 +1240,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "itemId",
@@ -654,12 +1260,36 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__isItemOwner",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__issueStarterItems",
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [],
@@ -688,8 +1318,8 @@ declare const abi: [
     "outputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "stateMutability": "nonpayable"
@@ -699,19 +1329,19 @@ declare const abi: [
     "name": "UD__move",
     "inputs": [
       {
-        "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "x",
-        "type": "uint32",
-        "internalType": "uint32"
+        "type": "uint16",
+        "internalType": "uint16"
       },
       {
         "name": "y",
-        "type": "uint32",
-        "internalType": "uint32"
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "outputs": [],
@@ -728,8 +1358,8 @@ declare const abi: [
       },
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "class",
@@ -786,12 +1416,41 @@ declare const abi: [
     "name": "UD__spawn",
     "inputs": [
       {
-        "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__spawnMob",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -800,8 +1459,8 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "itemId",

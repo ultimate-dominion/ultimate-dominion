@@ -4,22 +4,39 @@ pragma solidity >=0.8.24;
 import {ItemType, Classes, Alignment} from "@codegen/common.sol";
 
 struct WeaponStats {
-    uint256 damage;
-    uint256 speed;
+    uint256 minDamage;
+    uint256 maxDamage;
     uint8[] classRestrictions;
     uint256 minLevel;
+    int256 strModifier;
+    int256 agiModifier;
+    int256 intModifier;
+    int256 hitPointModifier;
+}
+
+struct ArmorStats {
+    uint256 armorModifier;
+    uint8[] classRestrictions;
+    uint256 minLevel;
+    int256 strModifier;
+    int256 agiModifier;
+    int256 intModifier;
+    int256 hitPointModifier;
 }
 
 struct MonsterStats {
-    // all stats (except level and exp) are to the 10,000s place.  so 10_000 == 1;
     // hit points
-    uint256 hp;
-    // damage reduction %
+    uint256 hitPoints;
+    // damage reduction: subtracted from total damage
     uint256 armor;
+    // base damage = strength * damangeConversion
+    uint256 strength;
+    //base to hit number for this mob for physical attacks = agility * physicalAttackConversion
+    uint256 agility;
+    // base to hit modifier for magical Attacks = inteligence * magicDefenseConversion
+    uint256 intelligence;
     // monster level
     uint256 level;
-    // base damage
-    uint256 baseDamage;
     // monster's class
     Classes class;
     // item ids of potential drops
@@ -28,9 +45,36 @@ struct MonsterStats {
     uint256 experience;
 }
 
+struct PhysicalAttackStats {
+    // additional damage on top of item damage
+    uint256 bonusDamage;
+    // base armor penetration
+    uint256 armorPenetration;
+    //bonus chance to hit
+    uint256 attackModifierBonus;
+    // crit chance
+    uint256 critChanceBonus;
+}
+
+struct Action {
+    bytes32 attackerEntityId;
+    bytes32 defenderEntityId;
+    bytes32 skillId;
+    uint256 weaponId;
+}
+
+struct MagicAttackStats {
+    // additional damage on top of item damage
+    uint256 bonusDamage;
+    // list of items that can deal this attack
+    uint256[] requiredItems;
+    // base armor penetration
+    uint256 armorPenetration;
+}
+
 struct NPCStats {
     string name;
-    uint256[] storyPathIds;
+    bytes32[] storyPathIds;
     Alignment alignment;
 }
 
@@ -39,12 +83,4 @@ struct QuestEntity {
     bytes32 entityId;
     uint256 questId;
     uint256 currentStep;
-}
-
-struct PhysicalAttack {
-    uint256 baseDamage;
-    // 0 = once per round, 1 = 1 round cool down etc.
-    uint256 baseSpeed;
-    // number of hits, divides base damage 3 hits == baseDmg/3
-    uint256 numberOfHits;
 }
