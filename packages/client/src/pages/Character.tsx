@@ -152,8 +152,8 @@ export const Character = (): JSX.Element => {
     ],
     multicallAddress: multicall as Address,
   });
+  const metadata = characterMetadata?.data?.[0].result;
   // const getCharacterData = useCallback(async () => {
-  //   const uri = characterMetadata?.data?.[0].result;
   //   if (uri) {
   //     const metadata = await fetchMetadataFromUri(uriToHttp(uri as string)[0]);
   //     console.log('Metadata: ' + metadata);
@@ -221,6 +221,7 @@ export const Character = (): JSX.Element => {
             <Profile
               description={character.description}
               image={character.image}
+              isPlayer={character.isPlayer}
               name={character.name}
             />
           </GridItem>
@@ -248,6 +249,7 @@ export const Character = (): JSX.Element => {
             <Misc
               experience={character.stats.exp}
               gold={character.gold}
+              isPlayer={character.isPlayer}
               max={100}
             />
           </GridItem>
@@ -365,6 +367,7 @@ export const Character = (): JSX.Element => {
                       icon={item.icon}
                       int={item.int}
                       image={item.image}
+                      isPlayer={character.isPlayer}
                       name={item.name}
                       str={item.str}
                     />

@@ -14,10 +14,12 @@ import { Link } from 'react-router-dom';
 export const Profile = ({
   description,
   image,
+  isPlayer,
   name,
 }: {
   description: string;
   image: string;
+  isPlayer: boolean;
   name: string;
 }): JSX.Element => {
   return (
@@ -40,9 +42,13 @@ export const Profile = ({
           <Text as="p" overflow="hidden" size="sm" textAlign="left">
             {description}
           </Text>
-          <Box bottom="0" position="absolute" right="0" textAlign="right">
-            <Link to="/">Edit Bio</Link>
-          </Box>
+          {isPlayer ? (
+            <Box bottom="0" position="absolute" right="0" textAlign="right">
+              <Link to="/">Edit Bio</Link>
+            </Box>
+          ) : (
+            ''
+          )}
         </Box>
       </VStack>
     </Box>

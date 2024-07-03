@@ -19,6 +19,7 @@ export const CharacterCard = ({
   icon,
   image,
   int,
+  isPlayer,
   name,
   str,
 }: {
@@ -27,6 +28,7 @@ export const CharacterCard = ({
   icon: string;
   image: string;
   int: number;
+  isPlayer: boolean;
   name: string;
   str: number;
 }): JSX.Element => {
@@ -37,7 +39,7 @@ export const CharacterCard = ({
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Equipt?</ModalHeader>
+          <ModalHeader>{isPlayer ? 'Equipt?' : 'Make an offer'}</ModalHeader>
           <ModalCloseButton />
           <ModalBody padding={4}>
             <CharacterCardItem

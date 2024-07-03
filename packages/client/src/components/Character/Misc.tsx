@@ -4,10 +4,12 @@ import { Level } from '../Level';
 
 export const Misc = ({
   experience,
+  isPlayer,
   max,
   gold,
 }: {
   experience: number;
+  isPlayer: boolean;
   max: number;
   gold: number;
 }): JSX.Element => {
@@ -32,7 +34,7 @@ export const Misc = ({
       <Spacer />
       <Box alignSelf="start" w="100%">
         <Button margin="5px 0" w="100%">
-          Chat
+          {isPlayer ? 'Auction House' : 'Chat'}
         </Button>
         <Button margin="5px 0" w="100%">
           Leader Board
