@@ -738,6 +738,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getCurrentItemsCounter",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getCurrentLevel",
     "inputs": [
     "type": "function",
