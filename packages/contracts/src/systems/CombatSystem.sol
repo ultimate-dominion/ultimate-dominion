@@ -23,6 +23,7 @@ import {_requireOwner} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS, TO_HIT_MODIFIER, DEFENSE_MODIFIER, ATTACK_MODIFIER} from "../../constants.sol";
+import "forge-std/console2.sol";
 
 contract CombatSystem is System {
     // in pve the attackers are always players and the defenders are always mobs since there is no aggro system
@@ -104,8 +105,11 @@ contract CombatSystem is System {
         //TODO figure out how many chunks to get and distribute those chunks
         //decode skill data according to type
         if (uint8(skillData.skillType) == 1) {
+            console2.log("physical Attack");
             PhysicalAttackStats memory attackStats = abi.decode(skillData.skillStats, (PhysicalAttackStats));
             uint256 damage = _calculatePhysicalAttack(attackStats, attackerId, defenderId, weaponId, randomNumber);
+            int256 defenderDamage = Stats.getCurrentDamage(defenderId) + int256(damage);
+            Stats.setCurrentDamage(defenderId, defenderDamage);
         }
     }
 

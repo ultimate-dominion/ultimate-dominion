@@ -2,7 +2,7 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, EncounterType} from "@codegen/common.sol";
-import {StatsData} from "@tables/Stats.sol";
+import {StatsData, Stats} from "@tables/Stats.sol";
 import "forge-std/console2.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
@@ -52,8 +52,10 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
         actions[0] =
-            Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, skillId: bytes32(0), weaponId: 1});
+            Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, skillId: basicAttackId, weaponId: 1});
         uint256 fees = entropy.getFee(address(1));
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
+
+        assertEq(Stats.get(entityId).currentDamage, 69999);
     }
 }
