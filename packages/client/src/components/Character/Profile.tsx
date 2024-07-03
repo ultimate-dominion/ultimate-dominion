@@ -38,11 +38,7 @@ export const Profile = ({
         <Spacer />
         <Box mt={3} w="100%">
           <Text as="p" overflow="hidden" size="sm" textAlign="left">
-            {description ||
-              `Emerges as a mystical warrior, my very presence an interplay of shadow
-            and light. My armor, adorned with luminescent runes and forged from
-            the rarest ores.
-            `}
+            {description}
           </Text>
           <Box bottom="0" position="absolute" right="0" textAlign="right">
             <Link to="/">Edit Bio</Link>
