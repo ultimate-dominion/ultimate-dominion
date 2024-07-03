@@ -78,9 +78,11 @@ contract PostDeploy is Script {
       UltimateDominionConfig.setEntropy(mockEntropy);
       UltimateDominionConfig.setPythProvider(address(1));
     } else if (block.chainid == 84532) {
+      UltimateDominionConfig.setMulticall(0xcA11bde05977b3631167028862bE2a173976CA11);
       UltimateDominionConfig.setEntropy(0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c);
       UltimateDominionConfig.setPythProvider(0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344);
     } else if (block.chainid == 8453) {
+      UltimateDominionConfig.setMulticall(0xcA11bde05977b3631167028862bE2a173976CA11);
       UltimateDominionConfig.setEntropy(0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb);
       UltimateDominionConfig.setPythProvider(0x52DeaA1c84233F7bb8C8A45baeDE41091c616506);
     }

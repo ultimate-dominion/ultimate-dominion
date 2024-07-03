@@ -9,9 +9,7 @@ import {
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
-// import {
-//   useCallback,
-// } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Address, formatEther, hexToString } from 'viem';
 import { useReadContracts } from 'wagmi';
@@ -22,7 +20,7 @@ import { Profile } from '../components/Character/Profile';
 import { Stats } from '../components/Character/Stats';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-// import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 
 export const Character = (): JSX.Element => {
   const character = {
@@ -153,13 +151,11 @@ export const Character = (): JSX.Element => {
     multicallAddress: multicall as Address,
   });
   const metadata = characterMetadata?.data?.[0].result;
-  // const getCharacterData = useCallback(async () => {
-  //   if (uri) {
-  //     const metadata = await fetchMetadataFromUri(uriToHttp(uri as string)[0]);
-  //     console.log('Metadata: ' + metadata);
-  //   }
+
+  // fetchMetadataFromUri(uriToHttp(metadata as string)[0]).then(data => {
+  //   character.description = data['description'];
+  //   character.image = data['image'];
   // });
-  // getCharacterData();
 
   character.gold =
     Number(
@@ -168,6 +164,23 @@ export const Character = (): JSX.Element => {
       ),
     ) ?? 0;
 
+  const [description, setDescription] = useState<string>();
+  const [image, setImage] = useState<string>();
+
+  useEffect(() => {
+    (async (): Promise<void> => {
+      if (metadata) {
+        const data = await fetchMetadataFromUri(
+          uriToHttp(metadata as string)[0],
+        );
+        setDescription(data['description'] || '');
+        setImage(data['image'] || '');
+      } else {
+        setDescription(character.description);
+        setImage(character.image);
+      }
+    })();
+  });
   return (
     <Box>
       {character.exists ? (
@@ -175,11 +188,17 @@ export const Character = (): JSX.Element => {
       ) : (
         <Grid>
           <GridItem>
-            <Center left="0" position="absolute" right="0" top="50%">
+            <Center
+              left="0"
+              position="absolute"
+              right="0"
+              top="50%"
+              zIndex={100}
+            >
               <Card
                 background="black"
                 color="white"
-                margin="0 auto"
+                margin={'0 auto'}
                 variant="filled"
               >
                 <CardBody>
@@ -203,34 +222,38 @@ export const Character = (): JSX.Element => {
             filter: character.exists ? 'blur(0px)' : 'blur(10px)',
           }}
           templateColumns={{
-            sm: 'repeat(3, 1fr)',
             base: 'repeat(1, 1fr)',
+            sm: 'repeat(1, 1fr)',
+            lg: 'repeat(3, 1fr)',
+            xl: 'repeat(3, 1fr)',
           }}
           templateRows={{
-            sm: 'repeat(2, 1fr)',
             base: 'repeat(4, 1fr)',
+            sm: 'repeat(4, 1fr)',
+            lg: 'repeat(2, 1fr)',
+            xl: 'repeat(2, 1fr)',
           }}
         >
           <GridItem
             border="solid"
-            colSpan={{ sm: 1, base: 1 }}
-            colStart={{ sm: 1, base: 1 }}
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             padding={5}
-            rowStart={{ sm: 1, base: 1 }}
+            rowStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
             <Profile
-              description={character.description}
-              image={character.image}
+              description={description!}
+              image={image!}
               isPlayer={character.isPlayer}
               name={character.name}
             />
           </GridItem>
           <GridItem
             border="solid"
-            colSpan={{ sm: 1, base: 1 }}
-            colStart={{ sm: 2, base: 1 }}
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
             padding={5}
-            rowStart={{ sm: 1, base: 2 }}
+            rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
             <Stats
               agi={character.stats.agi}
@@ -241,9 +264,9 @@ export const Character = (): JSX.Element => {
           </GridItem>
           <GridItem
             border="solid"
-            colSpan={{ sm: 1, base: 1 }}
-            colStart={{ sm: 3, base: 1 }}
-            rowStart={{ sm: 1, base: 3 }}
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+            rowStart={{ base: 3, sm: 3, md: 3, lg: 1, xl: 1 }}
             padding={5}
           >
             <Misc
@@ -254,12 +277,12 @@ export const Character = (): JSX.Element => {
             />
           </GridItem>
           <GridItem
-            colSpan={{ sm: 3, base: 1 }}
-            colStart={{ sm: 0, base: 1 }}
-            rowSpan={{ sm: 1, base: 1 }}
-            rowStart={{ sm: 2, base: 4 }}
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            rowSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            rowStart={{ base: 4, sm: 4, md: 4, lg: 2, xl: 2 }}
           >
-            <Heading>Items 30 - 3/3 Active</Heading>
+            <Heading>Items 30 - 3/3 Equipped</Heading>
             {/* {'CharacterMetadata' +
               JSON.stringify(
                 characterMetadata,
