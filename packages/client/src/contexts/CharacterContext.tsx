@@ -1,10 +1,6 @@
-import {
-  getComponentValue,
-  getComponentValueStrict,
-  HasValue,
-  runQuery,
-} from '@latticexyz/recs';
-import { decodeEntity } from '@latticexyz/store-sync/recs';
+import { useComponentValue } from '@latticexyz/react';
+import { getComponentValueStrict, HasValue, runQuery } from '@latticexyz/recs';
+import { decodeEntity, encodeEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -13,21 +9,29 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { getContract, hexToString } from 'viem';
+import { formatEther, getContract, hexToString } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import type { Character } from '../utils/types';
+import type { Character, CharacterStats } from '../utils/types';
 import { useMUD } from './MUDContext';
 
 type CharacterContextType = {
   character: Character | null;
+  characterStats: CharacterStats;
   isRefreshing: boolean;
   refreshCharacter: () => void;
 };
 
 const CharacterContext = createContext<CharacterContextType>({
   character: null,
+  characterStats: {
+    agility: '0',
+    experience: '0',
+    hitPoints: '0',
+    intelligence: '0',
+    strength: '0',
+  },
   isRefreshing: false,
   refreshCharacter: () => {},
 });
@@ -49,6 +53,16 @@ export const CharacterProvider = ({
   const [characterDetails, setCharacterDetails] = useState<Character | null>(
     null,
   );
+  const characterStats = useComponentValue(
+    CharacterStats,
+    characterDetails
+      ? encodeEntity(
+          { characterId: 'uint256' },
+          { characterId: BigInt(characterDetails.characterId) },
+        )
+      : undefined,
+  );
+
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const getCharacterData = useCallback(async () => {
@@ -61,20 +75,16 @@ export const CharacterProvider = ({
       ]),
     ).map(entity => {
       const characterData = getComponentValueStrict(Characters, entity);
-      const characterStats = getComponentValue(CharacterStats, entity);
+
       return {
-        agility: characterStats?.agility.toString() ?? '0',
         characterClass: characterData.class,
         characterId: decodeEntity(
           { characterId: 'uint256' },
           entity,
         ).characterId.toString(),
-        hitPoints: characterStats?.hitPoints.toString() ?? '0',
-        intelligence: characterStats?.intelligence.toString() ?? '0',
         locked: characterData.locked,
         name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
         owner: characterData.owner,
-        strength: characterStats?.strength.toString() ?? '0',
       };
     })[0];
 
@@ -83,7 +93,7 @@ export const CharacterProvider = ({
     const characterTokenAddress =
       await worldContract.read.UD__getCharacterToken();
 
-    const erc721 = getContract({
+    const characterToken = getContract({
       address: characterTokenAddress,
       abi: [
         {
@@ -109,7 +119,7 @@ export const CharacterProvider = ({
       client: publicClient,
     });
 
-    const metadataURI = await erc721.read.tokenURI([
+    const metadataURI = await characterToken.read.tokenURI([
       BigInt(characterComponent.characterId),
     ]);
 
@@ -117,17 +127,42 @@ export const CharacterProvider = ({
       uriToHttp(metadataURI)[0],
     );
 
+    const goldTokenAddress = await worldContract.read.UD__getGoldToken();
+
+    const goldToken = getContract({
+      address: goldTokenAddress,
+      abi: [
+        {
+          type: 'function',
+          name: 'balanceOf',
+          inputs: [
+            {
+              name: 'account',
+              type: 'address',
+              internalType: 'address',
+            },
+          ],
+          outputs: [
+            {
+              name: '',
+              type: 'uint256',
+              internalType: 'uint256',
+            },
+          ],
+          stateMutability: 'view',
+        },
+      ],
+      client: publicClient,
+    });
+
+    const goldBalance = await goldToken.read.balanceOf([delegatorAddress]);
+
     setCharacterDetails({
       ...characterComponent,
       ...fetachedMetadata,
+      goldBalance: formatEther(BigInt(goldBalance)).toString(),
     });
-  }, [
-    Characters,
-    CharacterStats,
-    delegatorAddress,
-    publicClient,
-    worldContract,
-  ]);
+  }, [Characters, delegatorAddress, publicClient, worldContract]);
 
   const refreshCharacter = useCallback(async () => {
     setIsRefreshing(true);
@@ -149,6 +184,13 @@ export const CharacterProvider = ({
     <CharacterContext.Provider
       value={{
         character: characterDetails,
+        characterStats: {
+          agility: characterStats?.agility.toString() ?? '0',
+          experience: characterStats?.experience.toString() ?? '0',
+          hitPoints: characterStats?.hitPoints.toString() ?? '0',
+          intelligence: characterStats?.intelligence.toString() ?? '0',
+          strength: characterStats?.strength.toString() ?? '0',
+        },
         isRefreshing,
         refreshCharacter,
       }}
