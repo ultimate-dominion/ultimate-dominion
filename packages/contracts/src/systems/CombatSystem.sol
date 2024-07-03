@@ -106,7 +106,6 @@ contract CombatSystem is System {
             PhysicalAttackStats memory attackStats = abi.decode(skillData.skillStats, (PhysicalAttackStats));
             uint256 damage = _calculatePhysicalAttack(attackStats, attackerId, defenderId, weaponId, randomNumber);
         }
-        //calculate damage
     }
 
     function _calculatePhysicalAttack(

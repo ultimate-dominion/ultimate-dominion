@@ -301,6 +301,11 @@ contract ItemsSystem is System {
 
     function getCurrentItemsCounter() public view returns (uint256) {
         address itemsContract = UltimateDominionConfig.getItems();
+        return Counters.getCounter(address(itemsContract), 0);
+    }
+
+    function _incrementItemsCounter() internal returns (uint256) {
+        address itemsContract = UltimateDominionConfig.getItems();
         uint256 itemsCounter = Counters.getCounter(address(itemsContract), 0) + 1;
         Counters.setCounter(itemsContract, 0, (itemsCounter));
         return itemsCounter;
