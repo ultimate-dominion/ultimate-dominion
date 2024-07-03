@@ -22,7 +22,7 @@ import { Profile } from '../components/Character/Profile';
 import { Stats } from '../components/Character/Stats';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+// import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 
 export const Character = (): JSX.Element => {
   const character = {
@@ -47,7 +47,7 @@ export const Character = (): JSX.Element => {
   const { characterId } = useParams();
   character.id = characterId || '';
   const {
-    components: { Characters, CharacterStats, UltimateDominionConfig},
+    components: { Characters, CharacterStats, UltimateDominionConfig },
   } = useMUD();
 
   const { character: player } = useCharacter();
