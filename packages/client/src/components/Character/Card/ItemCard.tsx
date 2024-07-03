@@ -24,7 +24,7 @@ import {
   FaStarAndCrescent,
 } from 'react-icons/fa';
 
-export const CharacterCardItem = ({
+export const ItemCard = ({
   agi,
   disabled,
   icon,

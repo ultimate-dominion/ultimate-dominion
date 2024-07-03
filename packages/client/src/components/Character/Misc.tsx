@@ -16,7 +16,7 @@ export const Misc = ({
   return (
     <VStack h="100%">
       <Box w="100%">
-        <HStack alignItems="start" padding="5px">
+        <HStack alignItems="start">
           <Box>
             <Text fontWeight="bold">
               {gold.toLocaleString('en', { useGrouping: true })} $GOLD
@@ -33,10 +33,10 @@ export const Misc = ({
 
       <Spacer />
       <Box alignSelf="start" w="100%">
-        <Button margin="5px 0" w="100%">
+        <Button m={'5px 0'} w="100%">
           {isPlayer ? 'Auction House' : 'Chat'}
         </Button>
-        <Button margin="5px 0" w="100%">
+        <Button m={'5px 0'} w="100%">
           Leader Board
         </Button>
       </Box>

@@ -11,7 +11,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 
-import { CharacterCardItem } from './CharacterCardItem';
+import { ItemCard } from './ItemCard';
 
 export const CharacterCard = ({
   agi,
@@ -42,7 +42,7 @@ export const CharacterCard = ({
           <ModalHeader>{isPlayer ? 'Equipt?' : 'Make an offer'}</ModalHeader>
           <ModalCloseButton />
           <ModalBody padding={4}>
-            <CharacterCardItem
+            <ItemCard
               agi={agi}
               disabled={disabled}
               icon={icon}
@@ -50,7 +50,7 @@ export const CharacterCard = ({
               int={int}
               name={name}
               str={str}
-            ></CharacterCardItem>
+            ></ItemCard>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={onClose}>
@@ -61,7 +61,7 @@ export const CharacterCard = ({
         </ModalContent>
       </Modal>
       <Box onClick={onOpen}>
-        <CharacterCardItem
+        <ItemCard
           agi={agi}
           disabled={disabled}
           icon={icon}
@@ -69,7 +69,7 @@ export const CharacterCard = ({
           int={int}
           name={name}
           str={str}
-        ></CharacterCardItem>
+        ></ItemCard>
       </Box>
     </Box>
   );

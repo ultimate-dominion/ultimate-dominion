@@ -33,10 +33,10 @@ export const Stats = ({
           <Grid
             columnGap="5"
             padding="5px"
-            templateColumns="repeat(2, 1fr)"
+            templateColumns="repeat(4, 1fr)"
             width="100%"
           >
-            <GridItem>
+            <GridItem colSpan={3}>
               <Text fontWeight="bold" size="lg"></Text>
             </GridItem>
             <GridItem>
@@ -48,9 +48,9 @@ export const Stats = ({
             <GridItem>
               <Text>Total</Text>
             </GridItem> */}
-            <GridItem>
+            <GridItem colSpan={3}>
               <Text fontWeight="bold" size="lg">
-                HP- HitPoints
+                HP - Hit
               </Text>
             </GridItem>
             <GridItem>
@@ -63,7 +63,7 @@ export const Stats = ({
               <Text>1</Text>
             </GridItem> */}
 
-            <GridItem>
+            <GridItem colSpan={3}>
               <Text fontWeight="bold" size="lg">
                 STR - Strength
               </Text>
@@ -78,7 +78,7 @@ export const Stats = ({
               <Text>1</Text>
             </GridItem> */}
 
-            <GridItem>
+            <GridItem colSpan={3}>
               <Text fontWeight="bold" size="lg">
                 AGI - Agility
               </Text>
@@ -93,7 +93,7 @@ export const Stats = ({
               <Text>1</Text>
             </GridItem> */}
 
-            <GridItem>
+            <GridItem colSpan={3}>
               <Text fontWeight="bold" size="lg">
                 INT - Intelligence
               </Text>

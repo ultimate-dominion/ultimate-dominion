@@ -238,7 +238,7 @@ export const Character = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            padding={5}
+            p={5}
             rowStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
             <Profile
@@ -252,7 +252,7 @@ export const Character = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
-            padding={5}
+            p={5}
             rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
             <Stats
@@ -267,7 +267,7 @@ export const Character = (): JSX.Element => {
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
             rowStart={{ base: 3, sm: 3, md: 3, lg: 1, xl: 1 }}
-            padding={5}
+            p={5}
           >
             <Misc
               experience={character.stats.exp}
