@@ -9,8 +9,9 @@ import {UltimateDominionConfig} from "../codegen/index.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
-import {IWorld} from "@world/IWorld.sol";
+import {IWorld, ICombatSystem} from "@world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
+import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import "forge-std/console2.sol";
 
 contract RngSystem is System, IEntropyConsumer {
@@ -89,7 +90,7 @@ contract RngSystem is System, IEntropyConsumer {
     }
 
     function _executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
-        IWorld(_world()).UD__executeCombat(randomNumber, encounterId, moves);
+        SystemSwitch.call(abi.encodeCall(ICombatSystem.UD__executeCombat, (randomNumber, encounterId, moves)));
     }
 
     function _storeStats(uint256 randomNumber, bytes32 characterId) internal {

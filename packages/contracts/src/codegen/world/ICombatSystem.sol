@@ -5,6 +5,7 @@ pragma solidity >=0.8.24;
 
 import { EncounterType } from "@codegen/common.sol";
 import { Action, PhysicalAttackStats } from "@interfaces/Structs.sol";
+import { CombatEncounterData } from "@tables/CombatEncounter.sol";
 
 /**
  * @title ICombatSystem
@@ -18,7 +19,7 @@ interface ICombatSystem {
     bytes32[] memory defenders
   ) external returns (bytes32);
 
-  function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) external;
+  function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) external payable;
 
   function UD__executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory actions) external;
 
@@ -29,6 +30,8 @@ interface ICombatSystem {
     uint256 weaponId,
     uint256 randomNumber
   ) external returns (uint256 damage);
+
+  function UD__getEncounter(bytes32 encounterId) external view returns (CombatEncounterData memory _encounterData);
 
   function UD___calculateMagicAttack() external;
 }
