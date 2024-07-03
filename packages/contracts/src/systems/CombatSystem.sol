@@ -52,13 +52,14 @@ contract CombatSystem is System {
 
         return encounterId;
     }
+
     /**
      * @param encounterId the bytes32 id of the encounter
      * @param moves for a pve encounter player moves are calculated first and the mobs.
      */
-
-    function endTurn(bytes32 encounterId, CombatMove[] memory moves) public {
+    function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) public payable {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        require(encounterData.start != 0, "this match does not exist");
         require(encounterData.currentTurn < encounterData.maxTurns, "this encounter is over");
 
         _queueActions(encounterId, moves);
@@ -129,6 +130,10 @@ contract CombatSystem is System {
         } else {
             damage = 0;
         }
+    }
+
+    function getEncounter(bytes32 encounterId) public view returns (CombatEncounterData memory _encounterData) {
+        return CombatEncounter.get(encounterId);
     }
 
     function _calculatePhysicalAttackModifier(uint256 attackRoll, uint256 attackerAgi, uint256 defenderAgi)

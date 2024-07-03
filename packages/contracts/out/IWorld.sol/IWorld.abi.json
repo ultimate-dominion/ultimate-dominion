@@ -433,7 +433,7 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -652,19 +652,6 @@
   },
   {
     "type": "function",
-    "name": "UD__getCurrentItemsCounter",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__getEncounter",
     "inputs": [
       {
@@ -715,30 +702,6 @@
             "internalType": "bytes32[]"
           }
         ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__getEntitiesAtPosition",
-    "inputs": [
-      {
-        "name": "x",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "y",
-        "type": "uint16",
-        "internalType": "uint16"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "entitiesAtPosition",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
       }
     ],
     "stateMutability": "view"

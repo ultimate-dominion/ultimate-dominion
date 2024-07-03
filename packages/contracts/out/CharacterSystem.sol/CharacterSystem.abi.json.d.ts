@@ -230,22 +230,17 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "class",
-            "type": "uint8",
-            "internalType": "enum Classes"
-          },
-          {
             "name": "intelligence",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "baseHitPoints",
+            "name": "maxHitPoints",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "currentHp",
+            "name": "currentDamage",
             "type": "int256",
             "internalType": "int256"
           },
@@ -258,51 +253,13 @@ declare const abi: [
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "armor",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "isValidCharacterId",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "isValidOwner",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
       }
     ],
     "stateMutability": "view"

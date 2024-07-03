@@ -481,7 +481,7 @@ declare const abi: [
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -775,19 +775,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getCurrentItemsCounter",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__getEncounter",
     "inputs": [
       {
@@ -838,30 +825,6 @@ declare const abi: [
             "internalType": "bytes32[]"
           }
         ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__getEntitiesAtPosition",
-    "inputs": [
-      {
-        "name": "x",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "y",
-        "type": "uint16",
-        "internalType": "uint16"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "entitiesAtPosition",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
       }
     ],
     "stateMutability": "view"

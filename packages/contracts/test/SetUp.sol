@@ -86,6 +86,11 @@ contract SetUp is Test {
             hitPointModifier: 4
         });
 
+        vm.label(alice, "alice");
+        vm.label(bob, "bob");
+        vm.label(worldAddress, "world");
+        vm.label(world.UD__getCharacterToken(), "character token");
+
         newArmorId = world.UD__createItem(ItemType.Armor, 10 ether, abi.encode(newArmor), "setup_armor_uri");
 
         world.grantAccess(_itemsSystemId("UD"), address(this));
@@ -101,11 +106,6 @@ contract SetUp is Test {
         world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Rogue);
         world.UD__enterGame(bobCharacterId);
         vm.stopPrank();
-
-        vm.label(alice, "alice");
-        vm.label(bob, "bob");
-        vm.label(worldAddress, "world");
-        vm.label(world.UD__getCharacterToken(), "character token");
     }
 
     function getUser() internal returns (address payable) {
