@@ -68,13 +68,13 @@ export default defineWorld({
       },
     },
     Mobs: {
+      key: ["mobId"],
       schema: {
         mobId: "uint256",
         mobType: "MobType",
         mobStats: "bytes",
         mobMetadata: "string",
       },
-      key: ["mobId"],
     },
     Levels: {
       key: ["level"],

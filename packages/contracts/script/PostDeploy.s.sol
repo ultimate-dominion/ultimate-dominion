@@ -30,8 +30,8 @@ import {
 } from "../constants.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
 import {BEFORE_CALL_SYSTEM} from "@latticexyz/world/src/systemHookTypes.sol";
-import {Classes, ItemType} from "@codegen/common.sol";
-import {WeaponStats} from "@interfaces/Structs.sol";
+import {Classes, ItemType, MobType} from "@codegen/common.sol";
+import {WeaponStats, MonsterStats} from "@interfaces/Structs.sol";
 import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {ERC20MetadataData} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/ERC20Metadata.sol";
 import {ERC20System} from "@latticexyz/world-modules/src/modules/erc20-puppet/ERC20System.sol";
@@ -159,6 +159,7 @@ contract PostDeploy is Script {
         UltimateDominionConfig.setItems(address(items));
 
         _createStarterItems();
+        _createMonsters();
         setLevels();
         vm.stopBroadcast();
     }
@@ -220,6 +221,25 @@ contract PostDeploy is Script {
         world.UD__setStarterItems(Classes.Rogue, itemIds, amounts);
         world.UD__setStarterItems(Classes.Warrior, itemIds, amounts);
         world.UD__setStarterItems(Classes.Mage, itemIds, amounts);
+    }
+
+    function _createMonsters() internal {
+        uint256[] memory _inventory = new uint256[](1);
+        _inventory[0] = 1;
+
+        MonsterStats memory newMonster = MonsterStats({
+            hitPoints: 10,
+            armor: 1,
+            strength: 1,
+            agility: 1,
+            intelligence: 1,
+            level: 1,
+            experience: 10,
+            class: Classes.Warrior,
+            inventory: _inventory
+        });
+
+        world.UD__createMob(MobType.Monster, abi.encode(newMonster), 'QmV76DPZxcf26Df56Ngw47V4Sh5Yz5FxKjZGb5bLPpyKhe');
     }
 
     function setLevels() internal {
