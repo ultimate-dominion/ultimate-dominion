@@ -14,6 +14,7 @@ bytes16 constant ERC1155_SYSTEM_NAME = "ERC1155System";
 bytes16 constant CHARACTER_SYSTEM_NAME = "CharacterSystem";
 bytes16 constant ITEMS_SYSTEM_NAME = "ItemsSystem";
 bytes16 constant MOB_SYSTEM_NAME = "MobSystem";
+bytes16 constant MAP_SYSTEM_NAME = "MapSystem";
 
 function _erc20SystemId(bytes14 namespace) pure returns (ResourceId) {
     return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: ERC20_SYSTEM_NAME});
@@ -37,6 +38,10 @@ function _itemsSystemId(bytes14 namespace) pure returns (ResourceId) {
 
 function _mobSystemId(bytes14 namespace) pure returns (ResourceId) {
     return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: MOB_SYSTEM_NAME});
+}
+
+function _mapSystemId(bytes14 namespace) pure returns (ResourceId) {
+    return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: MAP_SYSTEM_NAME});
 }
 
 function _requireOwner(address callingSystem, address sender) view {
