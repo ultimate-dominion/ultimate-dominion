@@ -6,7 +6,7 @@
 // import { getComponentValue } from '@latticexyz/recs';
 // import { singletonEntity } from '@latticexyz/store-sync/recs';
 
-import { getComponentValue } from '@latticexyz/recs';
+import { Entity, getComponentValue } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { uuid } from '@latticexyz/utils';
 import {
@@ -48,16 +48,15 @@ export function createSystemCalls(
   { publicClient, waitForTransaction, worldContract }: SetupNetworkResult,
   { Characters, Position, Spawned }: ClientComponents,
 ) {
-  const enterGame = async (characterId: bigint) => {
+  const enterGame = async (characterEntity: Entity) => {
     try {
-      const tx = await worldContract.write.UD__enterGame([characterId]);
+      const tx = await worldContract.write.UD__enterGame([
+        characterEntity.toString() as `0x${string}`,
+      ]);
 
       await waitForTransaction(tx);
 
-      const success = !!getComponentValue(
-        Characters,
-        encodeEntity({ characterId: 'uint256' }, { characterId }),
-      )?.locked;
+      const success = !!getComponentValue(Characters, characterEntity)?.locked;
       return success;
     } catch (e) {
       return false;
@@ -97,21 +96,22 @@ export function createSystemCalls(
     }
   };
 
-  const move = async (characterId: bigint, x: number, y: number) => {
+  const move = async (characterEntity: Entity, x: number, y: number) => {
     const positionId = uuid();
     Position.addOverride(positionId, {
-      entity: encodeEntity({ characterId: 'uint256' }, { characterId }),
+      entity: characterEntity,
       value: { x, y },
     });
 
     try {
-      const tx = await worldContract.write.UD__move([characterId, x, y]);
+      const tx = await worldContract.write.UD__move([
+        characterEntity.toString() as `0x${string}`,
+        x,
+        y,
+      ]);
       await waitForTransaction(tx);
 
-      return getComponentValue(
-        Position,
-        encodeEntity({ characterId: 'uint256' }, { characterId }),
-      );
+      return getComponentValue(Position, characterEntity);
     } catch (e) {
       return null;
     } finally {
@@ -120,7 +120,7 @@ export function createSystemCalls(
   };
 
   const rollStats = async (
-    characterId: bigint,
+    characterEntity: Entity,
     characterClass: CharacterClasses,
   ) => {
     try {
@@ -143,7 +143,11 @@ export function createSystemCalls(
       const userRandomNumber = keccak256(toBytes(randomString));
 
       const tx = await worldContract.write.UD__rollStats(
-        [userRandomNumber, characterId, characterClass],
+        [
+          userRandomNumber,
+          characterEntity.toString() as `0x${string}`,
+          characterClass,
+        ],
         {
           value: fee,
         },
@@ -151,26 +155,22 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const success = !!getComponentValue(
-        Characters,
-        encodeEntity({ characterId: 'uint256' }, { characterId }),
-      );
+      const success = !!getComponentValue(Characters, characterEntity);
       return success;
     } catch (e) {
       return false;
     }
   };
 
-  const spawn = async (characterId: bigint) => {
+  const spawn = async (characterEntity: Entity) => {
     try {
-      const tx = await worldContract.write.UD__spawn([characterId]);
+      const tx = await worldContract.write.UD__spawn([
+        characterEntity.toString() as `0x${string}`,
+      ]);
 
       await waitForTransaction(tx);
 
-      const success = !!getComponentValue(
-        Spawned,
-        encodeEntity({ characterId: 'uint256' }, { characterId }),
-      )?.spawned;
+      const success = !!getComponentValue(Spawned, characterEntity)?.spawned;
 
       return success;
     } catch (e) {

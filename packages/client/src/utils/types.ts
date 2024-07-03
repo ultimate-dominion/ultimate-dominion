@@ -1,16 +1,21 @@
-export type Character = Metadata & {
+import { Entity } from '@latticexyz/recs';
+
+export type Character = CharacterData & CharacterStats;
+
+export type CharacterData = Metadata & {
   characterClass: CharacterClasses;
-  characterId: string;
+  characterId: Entity;
   goldBalance: string;
   locked: boolean;
   owner: string;
+  tokenId: string;
 };
 
 export type CharacterStats = {
   agility: string;
   experience: string;
-  hitPoints: string;
   intelligence: string;
+  maxHitPoints: string;
   strength: string;
 };
 

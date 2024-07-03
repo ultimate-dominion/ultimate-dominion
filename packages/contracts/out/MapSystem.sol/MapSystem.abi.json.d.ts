@@ -43,19 +43,19 @@ declare const abi: [
     "name": "move",
     "inputs": [
       {
-        "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "x",
-        "type": "uint32",
-        "internalType": "uint32"
+        "type": "uint16",
+        "internalType": "uint16"
       },
       {
         "name": "y",
-        "type": "uint32",
-        "internalType": "uint32"
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "outputs": [],
@@ -66,9 +66,9 @@ declare const abi: [
     "name": "spawn",
     "inputs": [
       {
-        "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [],

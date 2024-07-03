@@ -14,10 +14,16 @@ import {
   Has,
   HasValue,
 } from '@latticexyz/recs';
-import { decodeEntity, encodeEntity } from '@latticexyz/store-sync/recs';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useEffect, useState } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
-import { formatEther, getContract, hexToString } from 'viem';
+import {
+  bytesToHex,
+  formatEther,
+  getContract,
+  hexToBytes,
+  hexToString,
+} from 'viem';
 
 import { useCharacter } from '../../contexts/CharacterContext';
 import { useMUD } from '../../contexts/MUDContext';
@@ -29,7 +35,7 @@ const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const TileDetailsPanel = (): JSX.Element => {
   const {
-    components: { Characters, CharacterStats, Position, Spawned },
+    components: { Characters, Stats, Position, Spawned },
     delegatorAddress,
     network: { publicClient, worldContract },
   } = useMUD();
@@ -48,7 +54,7 @@ export const TileDetailsPanel = (): JSX.Element => {
   const characterEntities = useEntityQuery([
     Has(Spawned),
     Has(Characters),
-    Has(CharacterStats),
+    Has(Stats),
     HasValue(Position, {
       x: characterPosition?.x,
       y: characterPosition?.y,
@@ -59,18 +65,14 @@ export const TileDetailsPanel = (): JSX.Element => {
     (async (): Promise<void> => {
       if (!(delegatorAddress && publicClient && worldContract)) return;
 
-      const characters = await Promise.all(
+      const characters: Character[] = await Promise.all(
         characterEntities.map(async (entity: Entity) => {
           const characterData = getComponentValueStrict(Characters, entity);
-          const characterStats = getComponentValueStrict(
-            CharacterStats,
-            entity,
-          );
+          const characterStats = getComponentValueStrict(Stats, entity);
 
-          const characterId = decodeEntity(
-            { characterId: 'uint256' },
-            entity,
-          ).characterId.toString();
+          const entityBytes = hexToBytes(entity.toString() as `0x${string}`);
+          const tokenBytes = entityBytes.slice(20);
+          const tokenId = BigInt(bytesToHex(tokenBytes)).toString();
 
           const characterTokenAddress =
             await worldContract.read.UD__getCharacterToken();
@@ -102,7 +104,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           });
 
           const metadataURI = await characterToken.read.tokenURI([
-            BigInt(characterId),
+            BigInt(tokenId),
           ]);
 
           const fetachedMetadata = await fetchMetadataFromUri(
@@ -143,20 +145,21 @@ export const TileDetailsPanel = (): JSX.Element => {
 
           return {
             ...fetachedMetadata,
-            goldBalance: formatEther(BigInt(goldBalance)).toString(),
             agility: characterStats?.agility.toString() ?? '0',
-            experience: characterStats?.experience.toString() ?? '0',
             characterClass: characterData.class,
-            characterId,
-            hitPoints: characterStats?.hitPoints.toString() ?? '0',
+            characterId: entity,
+            goldBalance: formatEther(BigInt(goldBalance)).toString(),
+            experience: characterStats?.experience.toString() ?? '0',
             intelligence: characterStats?.intelligence.toString() ?? '0',
+            maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
             locked: characterData.locked,
             name: hexToString(characterData.name as `0x${string}`, {
               size: 32,
             }),
             owner: characterData.owner,
             strength: characterStats?.strength.toString() ?? '0',
-          };
+            tokenId,
+          } as Character;
         }),
       );
 
@@ -167,11 +170,11 @@ export const TileDetailsPanel = (): JSX.Element => {
     characterEntities,
     characterPosition,
     Characters,
-    CharacterStats,
     delegatorAddress,
     Position,
     publicClient,
     Spawned,
+    Stats,
     worldContract,
   ]);
 
