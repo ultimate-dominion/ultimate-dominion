@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {RandomNumbers, Position, EntitiesAtPosition, MatchEntity} from "@codegen/index.sol";
+import {RandomNumbers, Position, EntitiesAtPosition, MatchEntity, MobsByLevel} from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
 import {Mobs, MobsData} from "@tables/Mobs.sol";
@@ -23,7 +23,10 @@ contract MobSystem is System {
         uint256 mobId = _incrementMobId();
         require(mobId < type(uint32).max, "MOB SYSTEM: Max Monster types reached");
         Mobs.set(mobId, mobType, stats, mobMetadataUri);
-
+        if (uint8(mobType) == 0) {
+            MonsterStats memory newMob = abi.decode(stats, (MonsterStats));
+            MobsByLevel.pushMobIds(newMob.level, mobId);
+        }
         return mobId;
     }
 

@@ -100,4 +100,8 @@ contract Test_MobSystem is SetUp, GasReporter {
         bytes32 entityId = world.UD__spawnMob(starterMobId, 1, 2);
         assertEq(world.UD__getSpawnCounter(entityId), 1);
     }
+
+    function test_spawnMonsterOnMove() public {
+        vm.prank(bob);
+    }
 }
