@@ -7,217 +7,148 @@ import {
   GridItem,
   Text,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
-import { useEffect, useState } from 'react';
+import { getComponentValueStrict } from '@latticexyz/recs';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Address, formatEther, hexToString } from 'viem';
-import { useReadContracts } from 'wagmi';
+import { formatEther, getContract, hexToString } from 'viem';
 
-import { ItemEquipModal } from '../components/Character/Card/ItemEquipModal';
+import { ItemCard } from '../components/Character/Card/ItemCard';
 import { Misc } from '../components/Character/Misc';
 import { Profile } from '../components/Character/Profile';
 import { Stats } from '../components/Character/Stats';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import type { Character, CharacterStats } from '../utils/types';
 
-export const Character = (): JSX.Element => {
-  const character = {
-    id: '',
-    isPlayer: false,
-    description:
-      'Emerges as a mystical warrior, my very presence an interplay of shadow and light. My armor, adorned with luminescent runes and forged from the rarest ores.',
-    name: 'Character',
-    image: '',
-    owner: '',
-    gold: 0,
-    exists: false,
-    stats: {
-      agi: 0,
-      exp: 0,
-      dmg: 0,
-      hp: 0,
-      int: 0,
-      str: 0,
-    },
-  };
+export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
-  character.id = characterId || '';
   const {
-    components: { Characters, CharacterStats, UltimateDominionConfig },
+    components: { Characters, CharacterStats },
+    network: { publicClient, worldContract },
   } = useMUD();
+  const { character: userCharacter } = useCharacter();
 
-  const { character: player } = useCharacter();
-  character.isPlayer = player?.characterId == character.id;
-
-  const { multicall } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { multicall: null };
-
-  const { characterToken } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { characterToken: null };
-
-  const { goldToken } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { goldToken: null };
-  const ERC721ABI = [
-    {
-      type: 'function',
-      name: 'tokenURI',
-      inputs: [
-        {
-          name: 'tokenId',
-          type: 'uint256',
-          internalType: 'uint256',
-        },
-      ],
-      outputs: [
-        {
-          name: '',
-          type: 'string',
-          internalType: 'string',
-        },
-      ],
-      stateMutability: 'view',
-    },
-  ];
-  const ERC20ABI = [
-    {
-      constant: true,
-      inputs: [
-        {
-          name: '_owner',
-          type: 'address',
-        },
-      ],
-      name: 'balanceOf',
-      outputs: [
-        {
-          name: 'balance',
-          type: 'uint256',
-        },
-      ],
-      payable: false,
-      stateMutability: 'view',
-      type: 'function',
-    },
-  ];
-  const characterInfo = useComponentValue(
-    Characters,
-    encodeEntity(
-      { characterId: 'uint256' },
-      { characterId: BigInt(characterId!) },
-    ),
-  );
-  character.exists = characterInfo ? true : false;
-  character.name = characterInfo
-    ? (hexToString(characterInfo?.name as Address) as string)
-    : character.name;
-  character.owner = characterInfo?.owner || character.owner;
-
-  const stats = useComponentValue(
-    CharacterStats,
-    encodeEntity(
-      { characterId: 'uint256' },
-      { characterId: BigInt(characterId!) },
-    ),
-  );
-  character.stats.agi = Number(stats?.agility.toString());
-  character.stats.dmg = Number(stats?.damageTaken.toString());
-  character.stats.exp = Number(stats?.experience.toString());
-  character.stats.hp = Number(stats?.hitPoints.toString());
-  character.stats.int = Number(stats?.intelligence.toString());
-  character.stats.str = Number(stats?.strength.toString());
-  const characterMetadata = useReadContracts({
-    contracts: [
-      {
-        address: characterToken as Address,
-        abi: ERC721ABI,
-        functionName: 'tokenURI',
-        args: [character.id],
-      },
-      {
-        address: goldToken as Address,
-        abi: ERC20ABI,
-        functionName: 'balanceOf',
-        args: [character.owner],
-      },
-    ],
-    multicallAddress: multicall as Address,
-  });
-  const metadata = characterMetadata?.data?.[0].result;
-
-  // fetchMetadataFromUri(uriToHttp(metadata as string)[0]).then(data => {
-  //   character.description = data['description'];
-  //   character.image = data['image'];
-  // });
-
-  character.gold =
-    Number(
-      formatEther(
-        BigInt((characterMetadata?.data?.[1]?.result as number) || 0),
-      ),
-    ) ?? 0;
-
-  const [description, setDescription] = useState<string>();
-  const [image, setImage] = useState<string>();
+  const [character, setCharacter] = useState<
+    (Character & CharacterStats) | null
+  >(null);
 
   useEffect(() => {
     (async (): Promise<void> => {
-      if (metadata) {
-        const data = await fetchMetadataFromUri(
-          uriToHttp(metadata as string)[0],
-        );
-        setDescription(data['description'] || '');
-        setImage(data['image'] || '');
-      } else {
-        setDescription(character.description);
-        setImage(character.image);
-      }
+      if (!(characterId && publicClient && worldContract)) return;
+
+      const entity = encodeEntity(
+        { characterId: 'uint256' },
+        { characterId: BigInt(characterId) },
+      );
+
+      const characterData = getComponentValueStrict(Characters, entity);
+      const characterStats = getComponentValueStrict(CharacterStats, entity);
+
+      const characterTokenAddress =
+        await worldContract.read.UD__getCharacterToken();
+
+      const characterToken = getContract({
+        address: characterTokenAddress,
+        abi: [
+          {
+            type: 'function',
+            name: 'tokenURI',
+            inputs: [
+              {
+                name: 'tokenId',
+                type: 'uint256',
+                internalType: 'uint256',
+              },
+            ],
+            outputs: [
+              {
+                name: '',
+                type: 'string',
+                internalType: 'string',
+              },
+            ],
+            stateMutability: 'view',
+          },
+        ],
+        client: publicClient,
+      });
+
+      const metadataURI = await characterToken.read.tokenURI([
+        BigInt(characterId),
+      ]);
+
+      const fetachedMetadata = await fetchMetadataFromUri(
+        uriToHttp(metadataURI)[0],
+      );
+
+      const goldTokenAddress = await worldContract.read.UD__getGoldToken();
+
+      const goldToken = getContract({
+        address: goldTokenAddress,
+        abi: [
+          {
+            type: 'function',
+            name: 'balanceOf',
+            inputs: [
+              {
+                name: 'account',
+                type: 'address',
+                internalType: 'address',
+              },
+            ],
+            outputs: [
+              {
+                name: '',
+                type: 'uint256',
+                internalType: 'uint256',
+              },
+            ],
+            stateMutability: 'view',
+          },
+        ],
+        client: publicClient,
+      });
+
+      const goldBalance = await goldToken.read.balanceOf([
+        characterData.owner as `0x${string}`,
+      ]);
+
+      setCharacter({
+        ...fetachedMetadata,
+        goldBalance: formatEther(BigInt(goldBalance)).toString(),
+        agility: characterStats?.agility.toString() ?? '0',
+        experience: characterStats?.experience.toString() ?? '0',
+        characterClass: characterData.class,
+        characterId,
+        hitPoints: characterStats?.hitPoints.toString() ?? '0',
+        intelligence: characterStats?.intelligence.toString() ?? '0',
+        locked: characterData.locked,
+        name: hexToString(characterData.name as `0x${string}`, {
+          size: 32,
+        }),
+        owner: characterData.owner,
+        strength: characterStats?.strength.toString() ?? '0',
+      });
     })();
-  });
+  }, [characterId, Characters, CharacterStats, publicClient, worldContract]);
+
+  const isOwner = useMemo(
+    () => character?.owner === userCharacter?.owner,
+    [character, userCharacter],
+  );
+
   return (
     <Box>
-      {!character.exists && (
-        <Grid>
-          <GridItem>
-            <Center
-              left="0"
-              position="absolute"
-              right="0"
-              top="32%"
-              zIndex={100}
-            >
-              <Card
-                background="black"
-                color="white"
-                margin="0 auto"
-                variant="filled"
-              >
-                <CardBody>
-                  <Text fontWeight="bold">This character does not exist</Text>
-                </CardBody>
-              </Card>
-            </Center>
-          </GridItem>
-        </Grid>
-      )}
-      <Box
-        userSelect={character.exists ? 'all' : 'none'}
-        pointerEvents={character.exists ? 'all' : 'none'}
-      >
+      {character ? (
         <Grid
           gap={2}
           h={{ base: 'calc(100vh - 100px)', lg: 'calc(100vh - 100px)' }}
           mt={4}
           rowGap={10}
           sx={{
-            filter: character.exists ? 'blur(0px)' : 'blur(10px)',
+            filter: character ? 'blur(0px)' : 'blur(10px)',
           }}
           templateColumns={{
             base: 'repeat(1, 1fr)',
@@ -242,9 +173,9 @@ export const Character = (): JSX.Element => {
             rowStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
             <Profile
-              description={description!}
-              image={image!}
-              isOwner={character.isPlayer}
+              description={character.description!}
+              image={character.image}
+              isOwner={isOwner}
               name={character.name}
             />
           </GridItem>
@@ -258,10 +189,10 @@ export const Character = (): JSX.Element => {
             rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
             <Stats
-              agi={character.stats.agi}
-              hp={character.stats.hp}
-              int={character.stats.int}
-              str={character.stats.str}
+              agility={character.agility}
+              hitPoints={character.hitPoints}
+              intelligence={character.intelligence}
+              strength={character.strength}
             />
           </GridItem>
           <GridItem
@@ -274,10 +205,10 @@ export const Character = (): JSX.Element => {
             px={6}
           >
             <Misc
-              experience={character.stats.exp}
-              gold={character.gold}
-              isPlayer={character.isPlayer}
-              max={100}
+              experience={character.experience}
+              goldBalance={character.goldBalance}
+              isPlayer={isOwner}
+              max={'100'}
             />
           </GridItem>
           <GridItem
@@ -289,12 +220,6 @@ export const Character = (): JSX.Element => {
             <Text fontWeight="bold" size="lg">
               Items 30 - 3/3 Equipped
             </Text>
-            {/* {'CharacterMetadata' +
-              JSON.stringify(
-                characterMetadata,
-                (key, value) =>
-                  typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
-              )} */}
             <Grid
               templateColumns={{
                 base: 'repeat(1, 1fr)',
@@ -390,13 +315,13 @@ export const Character = (): JSX.Element => {
               ].map(function (item, i) {
                 return (
                   <GridItem key={i}>
-                    <ItemEquipModal
+                    {/* TODO: we should only use one general modal, which gets passed the item data when clicked */}
+                    <ItemCard
                       agi={item.agi}
                       disabled={item.disabled}
                       icon={item.icon}
                       int={item.int}
                       image={item.image}
-                      isOwner={character.isPlayer}
                       name={item.name}
                       str={item.str}
                     />
@@ -406,7 +331,30 @@ export const Character = (): JSX.Element => {
             </Grid>
           </GridItem>
         </Grid>
-      </Box>
+      ) : (
+        <Grid>
+          <GridItem>
+            <Center
+              left="0"
+              position="absolute"
+              right="0"
+              top="32%"
+              zIndex={100}
+            >
+              <Card
+                background="black"
+                color="white"
+                margin="0 auto"
+                variant="filled"
+              >
+                <CardBody>
+                  <Text fontWeight="bold">This character does not exist</Text>
+                </CardBody>
+              </Card>
+            </Center>
+          </GridItem>
+        </Grid>
+      )}
     </Box>
   );
 };

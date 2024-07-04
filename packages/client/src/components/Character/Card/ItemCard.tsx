@@ -44,9 +44,17 @@ export const ItemCard = ({
     <Card
       border={disabled ? 'solid lightgray' : 'solid'}
       borderRadius={2}
+      cursor="pointer"
       direction="row"
       overflow="hidden"
       variant={disabled ? 'light' : 'outline'}
+      _active={{
+        bgColor: 'rgba(0, 0, 0, .04)',
+        border: 'solid',
+      }}
+      _hover={{
+        border: 'solid',
+      }}
     >
       <Stack direction="row">
         <CardHeader backgroundColor="grey300">

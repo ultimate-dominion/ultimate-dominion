@@ -1,4 +1,5 @@
 import { Box, Button, HStack, Spacer, Text, VStack } from '@chakra-ui/react';
+import { useMemo } from 'react';
 
 import { Level } from '../Level';
 
@@ -6,20 +7,25 @@ export const Misc = ({
   experience,
   isPlayer,
   max,
-  gold,
+  goldBalance,
 }: {
-  experience: number;
+  experience: string;
   isPlayer: boolean;
-  max: number;
-  gold: number;
+  max: string;
+  goldBalance: string;
 }): JSX.Element => {
+  const levelPercent = useMemo(() => {
+    return (100 * Number(experience)) / Number(max);
+  }, [experience, max]);
+
   return (
     <VStack h="100%">
       <Box w="100%">
         <HStack alignItems="start">
           <Box>
             <Text fontWeight="bold">
-              {gold.toLocaleString('en', { useGrouping: true })} $GOLD
+              {Number(goldBalance).toLocaleString('en', { useGrouping: true })}{' '}
+              $GOLD
             </Text>
             <Text>
               {experience}/{max}
@@ -28,7 +34,7 @@ export const Misc = ({
           <Spacer />
           <Text fontWeight="bold">Level 1</Text>
         </HStack>
-        <Level experience={experience} max={max} />
+        <Level levelPercent={levelPercent} />
       </Box>
 
       <Spacer />
