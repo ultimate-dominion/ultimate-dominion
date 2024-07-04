@@ -30,3 +30,9 @@ export type Metadata = {
   image: string;
   name: string;
 };
+
+export type Monster = Metadata & {
+  level: string;
+  mobId: string;
+  monsterId: Entity;
+};

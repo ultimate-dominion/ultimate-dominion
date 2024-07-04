@@ -228,18 +228,18 @@ contract PostDeploy is Script {
         _inventory[0] = 1;
 
         MonsterStats memory newMonster = MonsterStats({
-            hitPoints: 10,
+            hitPoints: 5,
             armor: 1,
-            strength: 1,
-            agility: 1,
+            strength: 2,
+            agility: 10,
             intelligence: 1,
             level: 1,
             experience: 10,
-            class: Classes.Warrior,
+            class: Classes.Rogue,
             inventory: _inventory
         });
 
-        world.UD__createMob(MobType.Monster, abi.encode(newMonster), 'QmV76DPZxcf26Df56Ngw47V4Sh5Yz5FxKjZGb5bLPpyKhe');
+        world.UD__createMob(MobType.Monster, abi.encode(newMonster), 'ipfs://QmVJA7n4XzRVAKcsDXJqiTJKeU8VW9Wfvb3o9QP5SXrPZN');
     }
 
     function setLevels() internal {
