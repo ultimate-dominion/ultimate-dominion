@@ -13,9 +13,9 @@ import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {Characters, CharactersData, UltimateDominionConfig} from "@codegen/index.sol";
-import {Classes, MobType, ItemType} from "@codegen/common.sol";
+import {Classes, MobType, ItemType, SkillType} from "@codegen/common.sol";
 import {_itemsSystemId} from "../src/utils.sol";
-import {WeaponStats, MonsterStats, ArmorStats} from "@interfaces/Structs.sol";
+import {WeaponStats, MonsterStats, ArmorStats, PhysicalAttackStats} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_NAMESPACE} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {System} from "@latticexyz/world/src/System.sol";
@@ -39,7 +39,7 @@ contract SetUp is Test {
     bytes32 alicesCharacterId;
     bytes32 bobCharacterId;
     bytes32 public alicesRandomness = bytes32(keccak256(abi.encode("alicesRestaurant")));
-
+    bytes32 basicAttackId;
     uint256 newArmorId;
 
     function setUp() public virtual {
@@ -84,6 +84,16 @@ contract SetUp is Test {
             hitPointModifier: 4
         });
 
+        PhysicalAttackStats memory basicAttack =
+            PhysicalAttackStats({bonusDamage: 0, armorPenetration: 0, attackModifierBonus: 0, critChanceBonus: 0});
+
+        basicAttackId = world.UD__createSkill(SkillType.PhysicalAttack, abi.encode(basicAttack));
+
+        vm.label(alice, "alice");
+        vm.label(bob, "bob");
+        vm.label(worldAddress, "world");
+        vm.label(world.UD__getCharacterToken(), "character token");
+
         newArmorId = world.UD__createItem(ItemType.Armor, 10 ether, abi.encode(newArmor), "setup_armor_uri");
 
         world.grantAccess(_itemsSystemId("UD"), address(this));
@@ -99,11 +109,6 @@ contract SetUp is Test {
         world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Rogue);
         world.UD__enterGame(bobCharacterId);
         vm.stopPrank();
-
-        vm.label(alice, "alice");
-        vm.label(bob, "bob");
-        vm.label(worldAddress, "world");
-        vm.label(world.UD__getCharacterToken(), "character token");
     }
 
     function getUser() internal returns (address payable) {

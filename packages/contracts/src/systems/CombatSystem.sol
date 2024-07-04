@@ -23,6 +23,7 @@ import {_requireOwner} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS, TO_HIT_MODIFIER, DEFENSE_MODIFIER, ATTACK_MODIFIER} from "../../constants.sol";
+import "forge-std/console2.sol";
 
 contract CombatSystem is System {
     // in pve the attackers are always players and the defenders are always mobs since there is no aggro system
@@ -52,13 +53,14 @@ contract CombatSystem is System {
 
         return encounterId;
     }
+
     /**
      * @param encounterId the bytes32 id of the encounter
      * @param actions : for a pve encounter player actions are calculated first and the mobs.
      */
-
-    function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) public {
+    function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) public payable {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        require(encounterData.start != 0, "this match does not exist");
         require(encounterData.currentTurn < encounterData.maxTurns, "this encounter is over");
         // TODO ensure that the msg.sender is one of the attackers in this encounter
         _queueActions(encounterId, actions);
@@ -103,10 +105,12 @@ contract CombatSystem is System {
         //TODO figure out how many chunks to get and distribute those chunks
         //decode skill data according to type
         if (uint8(skillData.skillType) == 1) {
+            console2.log("physical Attack");
             PhysicalAttackStats memory attackStats = abi.decode(skillData.skillStats, (PhysicalAttackStats));
             uint256 damage = _calculatePhysicalAttack(attackStats, attackerId, defenderId, weaponId, randomNumber);
+            int256 defenderDamage = Stats.getCurrentDamage(defenderId) + int256(damage);
+            Stats.setCurrentDamage(defenderId, defenderDamage);
         }
-        //calculate damage
     }
 
     function _calculatePhysicalAttack(
@@ -130,6 +134,10 @@ contract CombatSystem is System {
         } else {
             damage = 0;
         }
+    }
+
+    function getEncounter(bytes32 encounterId) public view returns (CombatEncounterData memory _encounterData) {
+        return CombatEncounter.get(encounterId);
     }
 
     function _calculatePhysicalAttackModifier(uint256 attackRoll, uint256 attackerAgi, uint256 defenderAgi)

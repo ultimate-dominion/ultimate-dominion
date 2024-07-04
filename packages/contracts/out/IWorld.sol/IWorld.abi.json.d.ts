@@ -385,7 +385,7 @@ declare const abi: [
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -572,6 +572,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getCurrentItemsCounter",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getCurrentLevel",
     "inputs": [
       {
@@ -585,6 +598,62 @@ declare const abi: [
         "name": "currentLevel",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEncounter",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_encounterData",
+        "type": "tuple",
+        "internalType": "struct CombatEncounterData",
+        "components": [
+          {
+            "name": "encounterType",
+            "type": "uint8",
+            "internalType": "enum EncounterType"
+          },
+          {
+            "name": "start",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "end",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "currentTurn",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxTurns",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "defenders",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "attackers",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
       }
     ],
     "stateMutability": "view"

@@ -30,6 +30,7 @@ export default defineWorld({
       key: ["characterId"],
       schema: {
         characterId: "bytes32",
+        tokenId: "uint256",
         owner: "address",
         class: "Classes",
         name: "bytes32",

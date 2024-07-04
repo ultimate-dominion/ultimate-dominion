@@ -85,7 +85,7 @@ contract CharacterSystem is System {
         );
         characterId = getPlayerEntityId(characterTokenId);
         Characters.setOwner(characterId, account);
-
+        Characters.setTokenId(characterId, characterTokenId);
         require(!NameExists.getValue(name), "Name already exists");
         NameExists.setValue(name, true);
         Characters.setName(characterId, name);

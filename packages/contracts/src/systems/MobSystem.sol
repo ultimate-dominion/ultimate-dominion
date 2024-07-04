@@ -42,6 +42,7 @@ contract MobSystem is System {
         MobsData memory stats = Mobs.get(mobId);
         if (uint8(stats.mobType) == 0) {
             MonsterStats memory monsterStats = abi.decode(stats.mobStats, (MonsterStats));
+
             StatsData memory statsData = StatsData({
                 strength: monsterStats.strength,
                 agility: monsterStats.agility,

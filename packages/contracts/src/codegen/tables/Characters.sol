@@ -20,6 +20,7 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 import { Classes } from "./../common.sol";
 
 struct CharactersData {
+  uint256 tokenId;
   address owner;
   Classes class;
   bytes32 name;
@@ -31,12 +32,12 @@ library Characters {
   ResourceId constant _tableId = ResourceId.wrap(0x7462554400000000000000000000000043686172616374657273000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0036040014012001000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0056050020140120010000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (address, uint8, bytes32, bool)
-  Schema constant _valueSchema = Schema.wrap(0x0036040061005f60000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint256, address, uint8, bytes32, bool)
+  Schema constant _valueSchema = Schema.wrap(0x005605001f61005f600000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -52,11 +53,12 @@ library Characters {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](4);
-    fieldNames[0] = "owner";
-    fieldNames[1] = "class";
-    fieldNames[2] = "name";
-    fieldNames[3] = "locked";
+    fieldNames = new string[](5);
+    fieldNames[0] = "tokenId";
+    fieldNames[1] = "owner";
+    fieldNames[2] = "class";
+    fieldNames[3] = "name";
+    fieldNames[4] = "locked";
   }
 
   /**
@@ -74,13 +76,55 @@ library Characters {
   }
 
   /**
+   * @notice Get tokenId.
+   */
+  function getTokenId(bytes32 characterId) internal view returns (uint256 tokenId) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get tokenId.
+   */
+  function _getTokenId(bytes32 characterId) internal view returns (uint256 tokenId) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set tokenId.
+   */
+  function setTokenId(bytes32 characterId, uint256 tokenId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((tokenId)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set tokenId.
+   */
+  function _setTokenId(bytes32 characterId, uint256 tokenId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((tokenId)), _fieldLayout);
+  }
+
+  /**
    * @notice Get owner.
    */
   function getOwner(bytes32 characterId) internal view returns (address owner) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -91,7 +135,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -102,7 +146,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((owner)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((owner)), _fieldLayout);
   }
 
   /**
@@ -112,7 +156,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((owner)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((owner)), _fieldLayout);
   }
 
   /**
@@ -122,7 +166,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return Classes(uint8(bytes1(_blob)));
   }
 
@@ -133,7 +177,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return Classes(uint8(bytes1(_blob)));
   }
 
@@ -144,7 +188,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked(uint8(class)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked(uint8(class)), _fieldLayout);
   }
 
   /**
@@ -154,7 +198,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked(uint8(class)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked(uint8(class)), _fieldLayout);
   }
 
   /**
@@ -164,7 +208,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (bytes32(_blob));
   }
 
@@ -175,7 +219,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (bytes32(_blob));
   }
 
@@ -186,7 +230,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((name)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((name)), _fieldLayout);
   }
 
   /**
@@ -196,7 +240,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((name)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((name)), _fieldLayout);
   }
 
   /**
@@ -206,7 +250,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (_toBool(uint8(bytes1(_blob))));
   }
 
@@ -217,7 +261,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (_toBool(uint8(bytes1(_blob))));
   }
 
@@ -228,7 +272,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((locked)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((locked)), _fieldLayout);
   }
 
   /**
@@ -238,7 +282,7 @@ library Characters {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((locked)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((locked)), _fieldLayout);
   }
 
   /**
@@ -274,8 +318,8 @@ library Characters {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(bytes32 characterId, address owner, Classes class, bytes32 name, bool locked) internal {
-    bytes memory _staticData = encodeStatic(owner, class, name, locked);
+  function set(bytes32 characterId, uint256 tokenId, address owner, Classes class, bytes32 name, bool locked) internal {
+    bytes memory _staticData = encodeStatic(tokenId, owner, class, name, locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -289,8 +333,15 @@ library Characters {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(bytes32 characterId, address owner, Classes class, bytes32 name, bool locked) internal {
-    bytes memory _staticData = encodeStatic(owner, class, name, locked);
+  function _set(
+    bytes32 characterId,
+    uint256 tokenId,
+    address owner,
+    Classes class,
+    bytes32 name,
+    bool locked
+  ) internal {
+    bytes memory _staticData = encodeStatic(tokenId, owner, class, name, locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -305,7 +356,7 @@ library Characters {
    * @notice Set the full data using the data struct.
    */
   function set(bytes32 characterId, CharactersData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.owner, _table.class, _table.name, _table.locked);
+    bytes memory _staticData = encodeStatic(_table.tokenId, _table.owner, _table.class, _table.name, _table.locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -320,7 +371,7 @@ library Characters {
    * @notice Set the full data using the data struct.
    */
   function _set(bytes32 characterId, CharactersData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.owner, _table.class, _table.name, _table.locked);
+    bytes memory _staticData = encodeStatic(_table.tokenId, _table.owner, _table.class, _table.name, _table.locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -336,14 +387,16 @@ library Characters {
    */
   function decodeStatic(
     bytes memory _blob
-  ) internal pure returns (address owner, Classes class, bytes32 name, bool locked) {
-    owner = (address(Bytes.getBytes20(_blob, 0)));
+  ) internal pure returns (uint256 tokenId, address owner, Classes class, bytes32 name, bool locked) {
+    tokenId = (uint256(Bytes.getBytes32(_blob, 0)));
 
-    class = Classes(uint8(Bytes.getBytes1(_blob, 20)));
+    owner = (address(Bytes.getBytes20(_blob, 32)));
 
-    name = (Bytes.getBytes32(_blob, 21));
+    class = Classes(uint8(Bytes.getBytes1(_blob, 52)));
 
-    locked = (_toBool(uint8(Bytes.getBytes1(_blob, 53))));
+    name = (Bytes.getBytes32(_blob, 53));
+
+    locked = (_toBool(uint8(Bytes.getBytes1(_blob, 85))));
   }
 
   /**
@@ -357,7 +410,7 @@ library Characters {
     EncodedLengths,
     bytes memory
   ) internal pure returns (CharactersData memory _table) {
-    (_table.owner, _table.class, _table.name, _table.locked) = decodeStatic(_staticData);
+    (_table.tokenId, _table.owner, _table.class, _table.name, _table.locked) = decodeStatic(_staticData);
   }
 
   /**
@@ -384,8 +437,14 @@ library Characters {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(address owner, Classes class, bytes32 name, bool locked) internal pure returns (bytes memory) {
-    return abi.encodePacked(owner, class, name, locked);
+  function encodeStatic(
+    uint256 tokenId,
+    address owner,
+    Classes class,
+    bytes32 name,
+    bool locked
+  ) internal pure returns (bytes memory) {
+    return abi.encodePacked(tokenId, owner, class, name, locked);
   }
 
   /**
@@ -395,12 +454,13 @@ library Characters {
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
   function encode(
+    uint256 tokenId,
     address owner,
     Classes class,
     bytes32 name,
     bool locked
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(owner, class, name, locked);
+    bytes memory _staticData = encodeStatic(tokenId, owner, class, name, locked);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
