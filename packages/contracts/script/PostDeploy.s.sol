@@ -239,7 +239,7 @@ contract PostDeploy is Script {
             inventory: _inventory
         });
 
-        world.UD__createMob(MobType.Monster, abi.encode(newMonster), 'ipfs://QmVJA7n4XzRVAKcsDXJqiTJKeU8VW9Wfvb3o9QP5SXrPZN');
+        world.UD__createMob(MobType.Monster, abi.encode(newMonster), 'ipfs://QmZN3G116CXqquvtnyACV2Z9L3oy7H3UK1J5NFxD9RTxN9');
     }
 
     function setLevels() internal {

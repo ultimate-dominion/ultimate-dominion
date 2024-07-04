@@ -7,11 +7,13 @@ import {
   Text,
   useBreakpointValue,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
+import { useComponentValue, useEntityQuery } from '@latticexyz/react';
 import {
   Entity,
   getComponentValue,
   getComponentValueStrict,
+  Has,
+  HasValue,
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useState } from 'react';
@@ -33,7 +35,7 @@ const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const TileDetailsPanel = (): JSX.Element => {
   const {
-    components: { Characters, EntitiesAtPosition, Mobs, Position, Stats },
+    components: { Characters, Mobs, Position, Spawned, Stats },
     delegatorAddress,
     network: { publicClient, worldContract },
   } = useMUD();
@@ -50,14 +52,13 @@ export const TileDetailsPanel = (): JSX.Element => {
     ),
   );
 
-  const allEntities = useComponentValue(
-    EntitiesAtPosition,
-    characterPosition &&
-      encodeEntity(
-        { x: 'uint16', y: 'uint16' },
-        { x: characterPosition.x, y: characterPosition.y },
-      ),
-  )?.entities as Entity[];
+  const allEntities = useEntityQuery([
+    Has(Spawned),
+    HasValue(Position, {
+      x: characterPosition?.x,
+      y: characterPosition?.y,
+    }),
+  ]);
 
   const getOtherCharacters = useCallback(
     async (entities: Entity[]): Promise<void> => {
@@ -150,6 +151,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             experience: characterStats?.experience.toString() ?? '0',
             intelligence: characterStats?.intelligence.toString() ?? '0',
             maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
+            level: characterStats?.level.toString() ?? '0',
             locked: characterData.locked,
             name: hexToString(characterData.name as `0x${string}`, {
               size: 32,
@@ -349,8 +351,6 @@ const PlayerRow = ({ player }: { player: Character }) => {
   );
 };
 
-// TODO: Remove when character level is dynamic
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PlayerLevelRow = ({ player }: { player: Character }) => {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
@@ -365,8 +365,7 @@ const PlayerLevelRow = ({ player }: { player: Character }) => {
         _hover={{ borderBottom: '1px solid', cursor: 'pointer' }}
       >
         <Text size={{ base: '4xs', sm: '3xs', md: 'xs', lg: 'sm' }}>
-          {/* TODO: Make level dynamic */}
-          Level 1
+          Level {player.level}
         </Text>
         <IoIosArrowForward size={isMobile ? 10 : 20} />
       </Flex>

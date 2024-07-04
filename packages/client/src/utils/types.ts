@@ -15,6 +15,7 @@ export type CharacterStats = {
   agility: string;
   experience: string;
   intelligence: string;
+  level: string;
   maxHitPoints: string;
   strength: string;
 };
