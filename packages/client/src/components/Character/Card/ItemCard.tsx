@@ -1,5 +1,4 @@
 import {
-  Box,
   Card,
   CardBody,
   CardFooter,
@@ -42,45 +41,43 @@ export const ItemCard = ({
   str: number;
 }): JSX.Element => {
   return (
-    <Box>
-      <Card
-        border={disabled ? 'solid lightgray' : 'solid'}
-        borderRadius={2}
-        direction="row"
-        overflow="hidden"
-        variant={disabled ? 'light' : 'outline'}
-      >
-        <Stack direction="row">
-          <CardHeader backgroundColor="grey300">
-            <Center h="100%">
-              {image == 'book' ? <FaBook size={40} /> : ''}
-              {image == 'bug' ? <FaBug size={40} /> : ''}
-              {image == 'database' ? <FaDatabase size={40} /> : ''}
-              {image == 'door-closed' ? <FaDoorClosed size={40} /> : ''}
-              {image == 'pizza-slice' ? <FaPizzaSlice size={40} /> : ''}
-              {image == 'scribd' ? <FaScribd size={40} /> : ''}
-              {image == 'search' ? <FaSearchLocation size={40} /> : ''}
-              {image == 'socks' ? <FaSocks size={40} /> : ''}
-              {image == 'star-crescent' ? <FaStarAndCrescent size={40} /> : ''}
-            </Center>
-          </CardHeader>
-          <CardBody>
-            <Heading size="sm">{name}</Heading>
+    <Card
+      border={disabled ? 'solid lightgray' : 'solid'}
+      borderRadius={2}
+      direction="row"
+      overflow="hidden"
+      variant={disabled ? 'light' : 'outline'}
+    >
+      <Stack direction="row">
+        <CardHeader backgroundColor="grey300">
+          <Center h="100%">
+            {image == 'book' && <FaBook size={40} />}
+            {image == 'bug' && <FaBug size={40} />}
+            {image == 'database' && <FaDatabase size={40} />}
+            {image == 'door-closed' && <FaDoorClosed size={40} />}
+            {image == 'pizza-slice' && <FaPizzaSlice size={40} />}
+            {image == 'scribd' && <FaScribd size={40} />}
+            {image == 'search' && <FaSearchLocation size={40} />}
+            {image == 'socks' && <FaSocks size={40} />}
+            {image == 'star-crescent' && <FaStarAndCrescent size={40} />}
+          </Center>
+        </CardHeader>
+        <CardBody>
+          <Heading size="sm">{name}</Heading>
 
-            <Text size="sm">
-              STR+{str} AGI+{agi} INT+{int}
-            </Text>
-          </CardBody>
+          <Text size="sm">
+            STR+{str} AGI+{agi} INT+{int}
+          </Text>
+        </CardBody>
 
-          <CardFooter>
-            <Center>
-              {icon == 'fire' ? <FaFire size={20} /> : ''}
-              {icon == 'road' ? <FaRoad size={20} /> : ''}
-              {icon == 'shield' ? <FaShieldAlt size={20} /> : ''}
-            </Center>
-          </CardFooter>
-        </Stack>
-      </Card>
-    </Box>
+        <CardFooter>
+          <Center>
+            {icon == 'fire' && <FaFire size={20} />}
+            {icon == 'road' && <FaRoad size={20} />}
+            {icon == 'shield' && <FaShieldAlt size={20} />}
+          </Center>
+        </CardFooter>
+      </Stack>
+    </Card>
   );
 };

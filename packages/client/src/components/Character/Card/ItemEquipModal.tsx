@@ -13,13 +13,13 @@ import {
 
 import { ItemCard } from './ItemCard';
 
-export const CharacterCard = ({
+export const ItemEquipModal = ({
   agi,
   disabled,
   icon,
   image,
   int,
-  isPlayer,
+  isOwner,
   name,
   str,
 }: {
@@ -28,7 +28,7 @@ export const CharacterCard = ({
   icon: string;
   image: string;
   int: number;
-  isPlayer: boolean;
+  isOwner: boolean;
   name: string;
   str: number;
 }): JSX.Element => {
@@ -39,7 +39,7 @@ export const CharacterCard = ({
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{isPlayer ? 'Equipt?' : 'Make an offer'}</ModalHeader>
+          <ModalHeader>{isOwner ? 'Equip' : 'Make an offer'}</ModalHeader>
           <ModalCloseButton />
           <ModalBody padding={4}>
             <ItemCard

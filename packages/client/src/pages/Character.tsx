@@ -5,7 +5,7 @@ import {
   Center,
   Grid,
   GridItem,
-  Heading,
+  Text,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
@@ -14,7 +14,7 @@ import { useParams } from 'react-router-dom';
 import { Address, formatEther, hexToString } from 'viem';
 import { useReadContracts } from 'wagmi';
 
-import { CharacterCard } from '../components/Character/Card/CharacterCard';
+import { ItemEquipModal } from '../components/Character/Card/ItemEquipModal';
 import { Misc } from '../components/Character/Misc';
 import { Profile } from '../components/Character/Profile';
 import { Stats } from '../components/Character/Stats';
@@ -183,26 +183,24 @@ export const Character = (): JSX.Element => {
   });
   return (
     <Box>
-      {character.exists ? (
-        ''
-      ) : (
+      {!character.exists && (
         <Grid>
           <GridItem>
             <Center
               left="0"
               position="absolute"
               right="0"
-              top="50%"
+              top="32%"
               zIndex={100}
             >
               <Card
                 background="black"
                 color="white"
-                margin={'0 auto'}
+                margin="0 auto"
                 variant="filled"
               >
                 <CardBody>
-                  <Heading>This character does not exist</Heading>
+                  <Text fontWeight="bold">This character does not exist</Text>
                 </CardBody>
               </Card>
             </Center>
@@ -238,13 +236,15 @@ export const Character = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            p={5}
+            pb={5}
+            pt={12}
+            px={6}
             rowStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
             <Profile
               description={description!}
               image={image!}
-              isPlayer={character.isPlayer}
+              isOwner={character.isPlayer}
               name={character.name}
             />
           </GridItem>
@@ -252,7 +252,9 @@ export const Character = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
-            p={5}
+            pb={5}
+            pt={12}
+            px={6}
             rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
             <Stats
@@ -267,7 +269,9 @@ export const Character = (): JSX.Element => {
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
             rowStart={{ base: 3, sm: 3, md: 3, lg: 1, xl: 1 }}
-            p={5}
+            pb={5}
+            pt={12}
+            px={6}
           >
             <Misc
               experience={character.stats.exp}
@@ -282,7 +286,9 @@ export const Character = (): JSX.Element => {
             rowSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             rowStart={{ base: 4, sm: 4, md: 4, lg: 2, xl: 2 }}
           >
-            <Heading>Items 30 - 3/3 Equipped</Heading>
+            <Text fontWeight="bold" size="lg">
+              Items 30 - 3/3 Equipped
+            </Text>
             {/* {'CharacterMetadata' +
               JSON.stringify(
                 characterMetadata,
@@ -384,13 +390,13 @@ export const Character = (): JSX.Element => {
               ].map(function (item, i) {
                 return (
                   <GridItem key={i}>
-                    <CharacterCard
+                    <ItemEquipModal
                       agi={item.agi}
                       disabled={item.disabled}
                       icon={item.icon}
                       int={item.int}
                       image={item.image}
-                      isPlayer={character.isPlayer}
+                      isOwner={character.isPlayer}
                       name={item.name}
                       str={item.str}
                     />

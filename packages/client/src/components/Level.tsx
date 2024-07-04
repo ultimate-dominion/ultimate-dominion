@@ -1,31 +1,34 @@
 import { Box, HStack, Progress, Spacer, Text } from '@chakra-ui/react';
 
+const CURRENT_LEVEL = 1;
+
 export const Level = ({
-  experience,
-  max,
+  levelPercent,
 }: {
-  experience: number;
-  max: number;
+  levelPercent: number;
 }): JSX.Element => {
-  const percent = (experience / max) * 100;
   return (
-    <Box fontSize="10px" mt={5} p={1} position="relative" w="100%">
-      <Text position="absolute" right={100 - percent - 2 + '%'} top="-15px">
-        {experience}
+    <Box fontSize="10px" mt={8} position="relative" w="100%">
+      <Text
+        position="absolute"
+        right={100 - levelPercent - 2 + '%'}
+        top="-15px"
+      >
+        {levelPercent}%
       </Text>
       <Text
-        display={percent > 90 ? 'none' : 'block'}
+        display={levelPercent > 90 ? 'none' : 'block'}
         position="absolute"
         right="0%"
         top="-15px"
       >
-        {max}
+        100%
       </Text>
-      <Progress h={2} value={percent} />
+      <Progress h={2} value={levelPercent} />
       <HStack mt={1}>
-        <Text>Level 1</Text>
+        <Text>Level {CURRENT_LEVEL}</Text>
         <Spacer />
-        <Text>Level 2</Text>
+        <Text>Level {CURRENT_LEVEL + 1}</Text>
       </HStack>
     </Box>
   );
