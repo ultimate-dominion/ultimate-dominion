@@ -660,6 +660,30 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getEntitiesAtPosition",
+    "inputs": [
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "entitiesAtPosition",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getEntropy",
     "inputs": [],
     "outputs": [

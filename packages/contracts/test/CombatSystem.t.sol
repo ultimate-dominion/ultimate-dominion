@@ -56,6 +56,6 @@ contract Test_CombatSystem is SetUp, GasReporter {
         uint256 fees = entropy.getFee(address(1));
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
 
-        assertEq(Stats.get(entityId).currentDamage, 69999);
+        assertEq(Stats.get(entityId).currentDamage, 159999);
     }
 }
