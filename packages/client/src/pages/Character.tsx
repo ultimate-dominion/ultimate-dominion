@@ -146,7 +146,7 @@ export const CharacterPage = (): JSX.Element => {
           gap={2}
           h={{ base: 'calc(100vh - 100px)', lg: 'calc(100vh - 100px)' }}
           mt={4}
-          rowGap={10}
+          rowGap={{ base: 3, lg: 10 }}
           sx={{
             filter: character ? 'blur(0px)' : 'blur(10px)',
           }}
@@ -167,8 +167,8 @@ export const CharacterPage = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            pb={5}
-            pt={12}
+            pb={6}
+            pt={{ base: 6, md: 12 }}
             px={6}
             rowStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
@@ -183,8 +183,8 @@ export const CharacterPage = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
-            pb={5}
-            pt={12}
+            pb={6}
+            pt={{ base: 6, md: 12 }}
             px={6}
             rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
@@ -200,8 +200,8 @@ export const CharacterPage = (): JSX.Element => {
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
             rowStart={{ base: 3, sm: 3, md: 3, lg: 1, xl: 1 }}
-            pb={5}
-            pt={12}
+            pb={6}
+            pt={{ base: 6, md: 12 }}
             px={6}
           >
             <Misc
@@ -214,10 +214,11 @@ export const CharacterPage = (): JSX.Element => {
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            pb={{ base: 12, lg: 0 }}
             rowSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             rowStart={{ base: 4, sm: 4, md: 4, lg: 2, xl: 2 }}
           >
-            <Text fontWeight="bold" size="lg">
+            <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
               Items 30 - 3/3 Equipped
             </Text>
             <Grid
@@ -225,7 +226,7 @@ export const CharacterPage = (): JSX.Element => {
                 base: 'repeat(1, 1fr)',
                 sm: 'repeat(1, 1fr)',
                 md: 'repeat(2, 1fr)',
-                lg: 'repeat(3, 1fr)',
+                xl: 'repeat(3, 1fr)',
               }}
               gap={2}
               mt={4}

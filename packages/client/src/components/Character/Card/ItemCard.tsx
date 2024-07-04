@@ -4,8 +4,6 @@ import {
   CardFooter,
   CardHeader,
   Center,
-  Heading,
-  Stack,
   Text,
 } from '@chakra-ui/react';
 import {
@@ -56,36 +54,36 @@ export const ItemCard = ({
         border: 'solid',
       }}
     >
-      <Stack direction="row">
-        <CardHeader backgroundColor="grey300">
-          <Center h="100%">
-            {image == 'book' && <FaBook size={40} />}
-            {image == 'bug' && <FaBug size={40} />}
-            {image == 'database' && <FaDatabase size={40} />}
-            {image == 'door-closed' && <FaDoorClosed size={40} />}
-            {image == 'pizza-slice' && <FaPizzaSlice size={40} />}
-            {image == 'scribd' && <FaScribd size={40} />}
-            {image == 'search' && <FaSearchLocation size={40} />}
-            {image == 'socks' && <FaSocks size={40} />}
-            {image == 'star-crescent' && <FaStarAndCrescent size={40} />}
-          </Center>
-        </CardHeader>
-        <CardBody>
-          <Heading size="sm">{name}</Heading>
+      <CardHeader backgroundColor="grey300">
+        <Center h="100%">
+          {image == 'book' && <FaBook size={24} />}
+          {image == 'bug' && <FaBug size={24} />}
+          {image == 'database' && <FaDatabase size={24} />}
+          {image == 'door-closed' && <FaDoorClosed size={24} />}
+          {image == 'pizza-slice' && <FaPizzaSlice size={24} />}
+          {image == 'scribd' && <FaScribd size={24} />}
+          {image == 'search' && <FaSearchLocation size={24} />}
+          {image == 'socks' && <FaSocks size={24} />}
+          {image == 'star-crescent' && <FaStarAndCrescent size={24} />}
+        </Center>
+      </CardHeader>
+      <CardBody>
+        <Text fontWeight="bold" size={{ base: 'xs', sm: 'md' }}>
+          {name}
+        </Text>
 
-          <Text size="sm">
-            STR+{str} AGI+{agi} INT+{int}
-          </Text>
-        </CardBody>
+        <Text size={{ base: '2xs', sm: 'sm' }}>
+          STR+{str} AGI+{agi} INT+{int}
+        </Text>
+      </CardBody>
 
-        <CardFooter>
-          <Center>
-            {icon == 'fire' && <FaFire size={20} />}
-            {icon == 'road' && <FaRoad size={20} />}
-            {icon == 'shield' && <FaShieldAlt size={20} />}
-          </Center>
-        </CardFooter>
-      </Stack>
+      <CardFooter>
+        <Center>
+          {icon == 'fire' && <FaFire size={20} />}
+          {icon == 'road' && <FaRoad size={20} />}
+          {icon == 'shield' && <FaShieldAlt size={20} />}
+        </Center>
+      </CardFooter>
     </Card>
   );
 };
