@@ -5,6 +5,7 @@ import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { useMUD } from './contexts/MUDContext';
+import { CharacterPage } from './pages/Character';
 import { CharacterCreation } from './pages/CharacterCreation';
 import { GameBoard } from './pages/GameBoard';
 import { Welcome } from './pages/Welcome';
@@ -32,6 +33,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/" element={<Welcome />} />
       <Route path="/character-creation" element={<CharacterCreation />} />
       <Route path="/game-board" element={<GameBoard />} />
+      <Route path="/characters/:characterId" element={<CharacterPage />} />
     </Routes>
   );
 };
