@@ -103,8 +103,7 @@ contract Test_MobSystem is SetUp, GasReporter {
     bytes32[] memory ents = world.UD__getEntitiesAtPosition(0, 1);
 
     assertEq(world.UD__getEntitiesAtPosition(0, 0).length, 0);
-    // assertEq(ents.length, 6);
+    assertLt(ents.length, 6);
     assertEq(ents[0], bobCharacterId);
-    // assertEq(ents[5], bytes32(0x0000000200000000000000000000000000000000000000000000000400000001));
   }
 }
