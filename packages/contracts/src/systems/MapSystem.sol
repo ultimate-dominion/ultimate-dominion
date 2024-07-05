@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import { System } from "@latticexyz/world/src/System.sol";
-import { Characters, MapConfig, Position, Spawned, MobsByLevel, EntitiesAtPosition } from "../codegen/index.sol";
+import { Characters, EntitiesAtPosition, MapConfig, Position, Spawned, MobsByLevel } from "../codegen/index.sol";
 import { SystemSwitch } from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import { IMobSystem } from "@world/IWorld.sol";
 import { LibChunks } from "../libraries/LibChunks.sol";
@@ -22,7 +22,7 @@ contract MapSystem is System {
     require(x < width, "X out of bounds");
     require(y < height, "Y out of bounds");
     require(_standardDistance(currentX, currentY, x, y) == 1, "Can only move 1 tile at a time");
-    Position.set(entityId, x, y);
+    _moveEntity(entityId, currentX, currentY, x, y);
     _spawnOnTileEnter(x, y);
   }
 
@@ -48,6 +48,8 @@ contract MapSystem is System {
     }
 
     uint256[] memory availableMonsters = MobsByLevel.getMobIds(distanceFromHome);
+    require(availableMonsters.length > 0, "No monsters available for this distance");
+
     uint32[] memory rng;
     // TODO for testing, remove for deployment
     if (block.chainid == 31337) {
@@ -69,6 +71,7 @@ contract MapSystem is System {
     return deltaX + deltaY;
   }
 
+  // Allows (0,1), (1,1), and (1,0) to all be the same distance from (0,0)
   function _chebyshevDistance(uint x1, uint y1, uint x2, uint y2) internal pure returns (uint16) {
     return uint16(_max(_absDiff(x1, x2), _absDiff(y1, y2)));
   }
@@ -79,5 +82,22 @@ contract MapSystem is System {
 
   function _max(uint a, uint b) internal pure returns (uint) {
     return a >= b ? a : b;
+  }
+
+  function _moveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) internal {
+    bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
+    bool entityWasAtPosition;
+    for (uint256 i; i < entAtPos.length; i++) {
+      if (entAtPos[i] == entityId) {
+        entityWasAtPosition = true;
+        bytes32 lastEnt = entAtPos[entAtPos.length - 1];
+        EntitiesAtPosition.updateEntities(currentX, currentY, i, lastEnt);
+        EntitiesAtPosition.popEntities(currentX, currentY);
+        break;
+      }
+    }
+    require(entityWasAtPosition, "Entity was not at that position");
+    Position.set(entityId, x, y);
+    EntitiesAtPosition.pushEntities(x, y, entityId);
   }
 }

@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   Flex,
   Grid,
@@ -345,8 +346,9 @@ const PlayerRow = ({ player }: { player: Character }) => {
   const { name } = player;
 
   return (
-    <HStack h={ROW_HEIGHT} justifyContent="start">
+    <HStack h={ROW_HEIGHT} justifyContent="start" spacing={4}>
       <Text size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}>{name}</Text>
+      <Avatar size="xs" src={player.image} />
     </HStack>
   );
 };

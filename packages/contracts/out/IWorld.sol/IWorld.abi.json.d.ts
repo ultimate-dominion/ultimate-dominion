@@ -891,7 +891,7 @@ declare const abi: [
         "internalType": "struct MonsterStats",
         "components": [
           {
-            "name": "hitPoints",
+            "name": "agility",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -901,12 +901,17 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "strength",
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "experience",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "agility",
+            "name": "hitPoints",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -916,22 +921,17 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "class",
-            "type": "uint8",
-            "internalType": "enum Classes"
-          },
-          {
             "name": "inventory",
             "type": "uint256[]",
             "internalType": "uint256[]"
           },
           {
-            "name": "experience",
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strength",
             "type": "uint256",
             "internalType": "uint256"
           }
@@ -957,7 +957,7 @@ declare const abi: [
         "internalType": "struct MonsterStats",
         "components": [
           {
-            "name": "hitPoints",
+            "name": "agility",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -967,12 +967,17 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "strength",
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "experience",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "agility",
+            "name": "hitPoints",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -982,22 +987,17 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "class",
-            "type": "uint8",
-            "internalType": "enum Classes"
-          },
-          {
             "name": "inventory",
             "type": "uint256[]",
             "internalType": "uint256[]"
           },
           {
-            "name": "experience",
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strength",
             "type": "uint256",
             "internalType": "uint256"
           }
