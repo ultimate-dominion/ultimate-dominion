@@ -1,103 +1,108 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
-import { System } from "@latticexyz/world/src/System.sol";
-import { Characters, EntitiesAtPosition, MapConfig, Position, Spawned, MobsByLevel } from "../codegen/index.sol";
-import { SystemSwitch } from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
-import { IMobSystem } from "@world/IWorld.sol";
-import { LibChunks } from "../libraries/LibChunks.sol";
+import {System} from "@latticexyz/world/src/System.sol";
+import {Characters, EntitiesAtPosition, MapConfig, Position, Spawned, MobsByLevel} from "../codegen/index.sol";
+import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
+import {IMobSystem} from "@world/IWorld.sol";
+import {LibChunks} from "../libraries/LibChunks.sol";
 
 contract MapSystem is System {
-  using LibChunks for uint256;
+    using LibChunks for uint256;
 
-  function move(bytes32 entityId, uint16 x, uint16 y) public {
-    address owner = Characters.getOwner(entityId);
-    require(_msgSender() == owner, "Only the owner can move a character");
+    function move(bytes32 entityId, uint16 x, uint16 y) public {
+        address owner = Characters.getOwner(entityId);
+        require(_msgSender() == owner, "Only the owner can move a character");
 
-    require(Spawned.getSpawned(entityId), "Character not spawned");
+        require(Spawned.getSpawned(entityId), "Character not spawned");
 
-    (uint16 currentX, uint16 currentY) = Position.get(entityId);
-    (uint16 height, uint16 width) = MapConfig.get();
+        (uint16 currentX, uint16 currentY) = Position.get(entityId);
+        (uint16 height, uint16 width) = MapConfig.get();
 
-    require(x < width, "X out of bounds");
-    require(y < height, "Y out of bounds");
-    require(_standardDistance(currentX, currentY, x, y) == 1, "Can only move 1 tile at a time");
-    _moveEntity(entityId, currentX, currentY, x, y);
-    _spawnOnTileEnter(x, y);
-  }
-
-  function spawn(bytes32 entityId) public {
-    address owner = Characters.getOwner(entityId);
-    require(_msgSender() == owner, "Only the owner can spawn a character");
-
-    require(!Spawned.getSpawned(entityId), "Character already spawned");
-
-    Position.set(entityId, 0, 0);
-    Spawned.setSpawned(entityId, true);
-    EntitiesAtPosition.pushEntities(0, 0, entityId);
-  }
-
-  function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
-    return EntitiesAtPosition.getEntities(x, y);
-  }
-
-  function _spawnOnTileEnter(uint16 x, uint16 y) internal {
-    uint256 distanceFromHome = uint256(_chebyshevDistance(0, 0, x, y));
-    if (distanceFromHome == 0) {
-      return;
+        require(x < width, "X out of bounds");
+        require(y < height, "Y out of bounds");
+        require(_standardDistance(currentX, currentY, x, y) == 1, "Can only move 1 tile at a time");
+        _moveEntity(entityId, currentX, currentY, x, y);
+        _spawnOnTileEnter(x, y);
     }
 
-    uint256[] memory availableMonsters = MobsByLevel.getMobIds(distanceFromHome);
-    require(availableMonsters.length > 0, "No monsters available for this distance");
+    function spawn(bytes32 entityId) public {
+        address owner = Characters.getOwner(entityId);
+        require(_msgSender() == owner, "Only the owner can spawn a character");
 
-    uint32[] memory rng;
-    // TODO for testing, remove for deployment
-    if (block.chainid == 31337) {
-      rng = LibChunks.get8Chunks(block.timestamp ** 8);
-    } else {
-      rng = LibChunks.get8Chunks(block.prevrandao);
+        require(!Spawned.getSpawned(entityId), "Character already spawned");
+
+        Position.set(entityId, 0, 0);
+        Spawned.setSpawned(entityId, true);
+        EntitiesAtPosition.pushEntities(0, 0, entityId);
     }
 
-    for (uint256 i; i < (rng[rng.length - 1] % 6); i++) {
-      SystemSwitch.call(
-        abi.encodeCall(IMobSystem.UD__spawnMob, (availableMonsters[uint256(rng[i] % availableMonsters.length)], x, y))
-      );
+    function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
+        return EntitiesAtPosition.getEntities(x, y);
     }
-  }
 
-  function _standardDistance(uint16 fromX, uint16 fromY, uint16 toX, uint16 toY) internal pure returns (uint16) {
-    uint16 deltaX = fromX > toX ? fromX - toX : toX - fromX;
-    uint16 deltaY = fromY > toY ? fromY - toY : toY - fromY;
-    return deltaX + deltaY;
-  }
+    function _spawnOnTileEnter(uint16 x, uint16 y) internal {
+        uint256 distanceFromHome = uint256(_chebyshevDistance(0, 0, x, y));
+        if (distanceFromHome == 0) {
+            return;
+        }
 
-  // Allows (0,1), (1,1), and (1,0) to all be the same distance from (0,0)
-  function _chebyshevDistance(uint x1, uint y1, uint x2, uint y2) internal pure returns (uint16) {
-    return uint16(_max(_absDiff(x1, x2), _absDiff(y1, y2)));
-  }
+        uint256[] memory availableMonsters = MobsByLevel.getMobIds(distanceFromHome);
+        require(availableMonsters.length > 0, "No monsters available for this distance");
 
-  function _absDiff(uint a, uint b) internal pure returns (uint) {
-    return a > b ? a - b : b - a;
-  }
+        uint32[] memory rng;
+        // TODO for testing, remove for deployment
+        if (block.chainid == 31337) {
+            rng = LibChunks.get8Chunks(block.timestamp ** 8);
+        } else {
+            rng = LibChunks.get8Chunks(block.prevrandao);
+        }
 
-  function _max(uint a, uint b) internal pure returns (uint) {
-    return a >= b ? a : b;
-  }
-
-  function _moveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) internal {
-    bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
-    bool entityWasAtPosition;
-    for (uint256 i; i < entAtPos.length; i++) {
-      if (entAtPos[i] == entityId) {
-        entityWasAtPosition = true;
-        bytes32 lastEnt = entAtPos[entAtPos.length - 1];
-        EntitiesAtPosition.updateEntities(currentX, currentY, i, lastEnt);
-        EntitiesAtPosition.popEntities(currentX, currentY);
-        break;
-      }
+        for (uint256 i; i < (rng[rng.length - 1] % 6); i++) {
+            SystemSwitch.call(
+                abi.encodeCall(
+                    IMobSystem.UD__spawnMob, (availableMonsters[uint256(rng[i] % availableMonsters.length)], x, y)
+                )
+            );
+        }
     }
-    require(entityWasAtPosition, "Entity was not at that position");
-    Position.set(entityId, x, y);
-    EntitiesAtPosition.pushEntities(x, y, entityId);
-  }
+
+    function _standardDistance(uint16 fromX, uint16 fromY, uint16 toX, uint16 toY) internal pure returns (uint16) {
+        uint16 deltaX = fromX > toX ? fromX - toX : toX - fromX;
+        uint16 deltaY = fromY > toY ? fromY - toY : toY - fromY;
+        return deltaX + deltaY;
+    }
+
+    // Allows (0,1), (1,1), and (1,0) to all be the same distance from (0,0)
+    function _chebyshevDistance(uint256 x1, uint256 y1, uint256 x2, uint256 y2) internal pure returns (uint16) {
+        return uint16(_max(_absDiff(x1, x2), _absDiff(y1, y2)));
+    }
+
+    function _absDiff(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a > b ? a - b : b - a;
+    }
+
+    function _max(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a >= b ? a : b;
+    }
+
+    function _moveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) internal {
+        bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
+        bool entityWasAtPosition;
+        for (uint256 i; i < entAtPos.length;) {
+            if (entAtPos[i] == entityId) {
+                entityWasAtPosition = true;
+                bytes32 lastEnt = entAtPos[entAtPos.length - 1];
+                EntitiesAtPosition.updateEntities(currentX, currentY, i, lastEnt);
+                EntitiesAtPosition.popEntities(currentX, currentY);
+                break;
+            }
+            {
+                i++;
+            }
+        }
+        require(entityWasAtPosition, "Entity was not at that position");
+        Position.set(entityId, x, y);
+        EntitiesAtPosition.pushEntities(x, y, entityId);
+    }
 }

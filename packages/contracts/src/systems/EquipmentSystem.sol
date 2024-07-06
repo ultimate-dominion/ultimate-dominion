@@ -193,8 +193,7 @@ contract EquipmentSystem is System {
         require(characterOwner == _msgSender(), "ITEMS: Not Character Owner");
         uint8 itemType = uint8(IWorld(_world()).UD__getItemType(itemId));
         if (itemType == 0) {
-            uint256[] memory sortedArray =
-                _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedWeapons(characterId));
+            uint256[] memory sortedArray = _swapToEndOfArray(itemId, CharacterEquipment.getEquippedWeapons(characterId));
             if (sortedArray[sortedArray.length - 1] == itemId) {
                 CharacterEquipment.setEquippedWeapons(characterId, sortedArray);
                 CharacterEquipment.popEquippedWeapons(characterId);
@@ -203,7 +202,7 @@ contract EquipmentSystem is System {
             }
         }
         if (itemType == 1) {
-            uint256[] memory sortedArray = _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedArmor(characterId));
+            uint256[] memory sortedArray = _swapToEndOfArray(itemId, CharacterEquipment.getEquippedArmor(characterId));
             if (sortedArray[sortedArray.length - 1] == itemId) {
                 CharacterEquipment.setEquippedArmor(characterId, sortedArray);
                 CharacterEquipment.popEquippedArmor(characterId);
@@ -251,6 +250,7 @@ contract EquipmentSystem is System {
 
     function _moveIdToEndOfArray(uint256 itemId, uint256[] memory array)
         internal
+        pure
         returns (uint256[] memory sortedArray)
     {
         uint256[] memory arrayToBeSorted = array;
@@ -267,6 +267,20 @@ contract EquipmentSystem is System {
             }
         }
         sortedArray = arrayToBeSorted;
+    }
+
+    function _swapToEndOfArray(uint256 itemId, uint256[] memory array)
+        internal
+        pure
+        returns (uint256[] memory swappedArray)
+    {
+        for (uint256 i; i < array.length;) {
+            if (array[i] == itemId) {
+                uint256 last = array[array.length - 1];
+                array[i] = last;
+                array[array.length - 1] = itemId;
+            }
+        }
     }
 
     function getWeaponStats(uint256 itemId) public view returns (WeaponStats memory _weaponStats) {

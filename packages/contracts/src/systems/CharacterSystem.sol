@@ -68,6 +68,16 @@ contract CharacterSystem is System {
         return address(uint160(uint256(characterId) >> 96));
     }
 
+    function isValidCharacterId(bytes32 characterId) public view returns (bool) {
+        address ownerAddress = getOwnerAddress(characterId);
+        uint256 tokenId = getCharacterTokenId(characterId);
+        address ownerOf;
+        try _characterToken().ownerOf(tokenId) returns (address) {
+            ownerOf = _characterToken().ownerOf(tokenId);
+        } catch {}
+        return ownerOf == ownerAddress;
+    }
+
     /**
      * @param account the address of the account that will own the character
      * @param name the keccack256 hash of the characters name to check for duplicates
@@ -153,10 +163,6 @@ contract CharacterSystem is System {
 
     function issueGold(bytes32 characterId, uint256 amount) internal {
         _gold().mint(getOwner(characterId), amount);
-    }
-
-    function _charactersNamespace() internal returns (ResourceId) {
-        return WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
     }
 
     function getExperience(bytes32 characterId) public view returns (uint256) {

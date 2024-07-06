@@ -260,7 +260,7 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "encounterId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -1380,6 +1380,35 @@ declare const abi: [
     "name": "UD__isParticipant",
     "inputs": [
       {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "participants",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isParticipant",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isParticipant",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "encounterId",
         "type": "bytes32",
         "internalType": "bytes32"
@@ -1388,6 +1417,44 @@ declare const abi: [
     "outputs": [
       {
         "name": "_isParticipant",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isValidCharacterId",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isValidPvE",
+    "inputs": [
+      {
+        "name": "participants",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isValidPvE",
         "type": "bool",
         "internalType": "bool"
       }
