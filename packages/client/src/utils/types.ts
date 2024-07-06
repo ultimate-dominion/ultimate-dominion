@@ -1,8 +1,9 @@
 import { Entity } from '@latticexyz/recs';
 
-export type Character = CharacterData & CharacterStats & Metadata;
+export type Character = CharacterData & CharacterStats;
 
-export type CharacterData = {
+export type CharacterData = Metadata & {
+  characterClass: CharacterClasses;
   characterId: Entity;
   goldBalance: string;
   locked: boolean;
@@ -17,6 +18,7 @@ export type CharacterStats = {
   experience: string;
   intelligence: string;
   level: string;
+  maxHitPoints: string;
   strength: string;
 };
 
@@ -33,27 +35,7 @@ export type Metadata = {
 };
 
 export type Monster = Metadata & {
-  class: StatsClasses;
   level: string;
   mobId: string;
   monsterId: Entity;
-};
-
-export type Weapon = WeaponStats &
-  Metadata & {
-    balance: string;
-    itemId: Entity;
-    owner: string;
-    tokenId: string;
-  };
-
-export type WeaponStats = {
-  agiModifier: string;
-  classRestrictions: StatsClasses[];
-  hitPointModifier: string;
-  intModifier: string;
-  maxDamage: string;
-  minDamage: string;
-  minLevel: string;
-  strModifier: string;
 };

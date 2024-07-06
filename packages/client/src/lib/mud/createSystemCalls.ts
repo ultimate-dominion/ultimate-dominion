@@ -63,33 +63,6 @@ export function createSystemCalls(
     }
   };
 
-  const equipItems = async (characterEntity: Entity, itemIds: string[]) => {
-    try {
-      const tx = await worldContract.write.UD__equipItems([
-        characterEntity.toString() as `0x${string}`,
-        itemIds.map(itemId => BigInt(itemId)),
-      ]);
-
-      await waitForTransaction(tx);
-
-      const characterEquipment = getComponentValue(
-        CharacterEquipment,
-        characterEntity,
-      );
-
-      if (!characterEquipment) return false;
-      const { equippedArmor, equippedWeapons } = characterEquipment;
-
-      const success =
-        equippedArmor.some(id => itemIds.includes(id.toString())) ||
-        equippedWeapons.some(id => itemIds.includes(id.toString()));
-
-      return success;
-    } catch (e) {
-      return false;
-    }
-  };
-
   const mintCharacter = async (account: Address, name: string, uri: string) => {
     try {
       const nameHex = stringToHex(name, { size: 32 });
@@ -148,7 +121,7 @@ export function createSystemCalls(
 
   const rollStats = async (
     characterEntity: Entity,
-    characterClass: StatsClasses,
+    characterClass: CharacterClasses,
   ) => {
     try {
       const entropyAddress = await worldContract.read.UD__getEntropy();
@@ -198,35 +171,6 @@ export function createSystemCalls(
       await waitForTransaction(tx);
 
       const success = !!getComponentValue(Spawned, characterEntity)?.spawned;
-
-      return success;
-    } catch (e) {
-      return false;
-    }
-  };
-
-  const unequipItem = async (characterEntity: Entity, itemId: string) => {
-    try {
-      const tx = await worldContract.write.UD__unequipItem([
-        characterEntity.toString() as `0x${string}`,
-        BigInt(itemId),
-      ]);
-
-      await waitForTransaction(tx);
-
-      const characterEquipment = getComponentValue(
-        CharacterEquipment,
-        characterEntity,
-      );
-
-      if (!characterEquipment) return false;
-
-      const { equippedArmor, equippedWeapons } = characterEquipment;
-
-      const success = !(
-        equippedArmor.includes(BigInt(itemId)) ||
-        equippedWeapons.includes(BigInt(itemId))
-      );
 
       return success;
     } catch (e) {

@@ -167,16 +167,9 @@ export const StatsPanel = (): JSX.Element => {
     );
   }
 
-  const {
-    agility,
-    baseHitPoints,
-    experience,
-    goldBalance,
-    image,
-    intelligence,
-    name,
-    strength,
-  } = character;
+  const { goldBalance, image, name } = character;
+  const { agility, experience, intelligence, maxHitPoints, strength } =
+    characterStats;
 
   return (
     <VStack alignItems="start" h="100%" p={2} spacing={4}>
@@ -203,7 +196,7 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{baseHitPoints}</Text>
+          <Text>{maxHitPoints}</Text>
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">
