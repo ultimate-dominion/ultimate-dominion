@@ -49,6 +49,14 @@ contract Test_CombatSystem is SetUp, GasReporter {
         assertEq(world.UD__getEncounter(matchId).start, block.timestamp);
     }
 
+    function test_createMatch_Revert_Entities_Wrong_Position() public {
+        bytes32 entityId2 = world.UD__spawnMob(1, 0, 1);
+        defenders[0] = entityId2;
+        vm.prank(bob);
+        vm.expectRevert("COMBAT SYSTEM: INVALID PVE");
+        bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
+    }
+
     function test_EndTurn() public {
         vm.prank(bob);
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
