@@ -41,6 +41,13 @@ contract MapSystem is System {
         return EntitiesAtPosition.getEntities(x, y);
     }
 
+    function isAtPosition(bytes32 entityId, uint16 x, uint16 y) public view returns (bool _isAtPosition) {
+        (uint16 j, uint16 k) = Position.get(entityId);
+        if (j == x && k == y) {
+            _isAtPosition = true;
+        }
+    }
+
     function _spawnOnTileEnter(uint16 x, uint16 y) internal {
         uint256 distanceFromHome = uint256(_chebyshevDistance(0, 0, x, y));
         if (distanceFromHome == 0) {

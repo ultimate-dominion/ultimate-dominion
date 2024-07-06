@@ -37,7 +37,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(deployer);
         world.grantAccess(_mobSystemId("UD"), address(this));
 
-        entityId = world.UD__spawnMob(1, 1, 2);
+        entityId = world.UD__spawnMob(1, 0, 0);
 
         defenders.push(entityId);
         attackers.push(bobCharacterId);

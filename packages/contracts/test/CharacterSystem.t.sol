@@ -57,7 +57,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         vm.startPrank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
-        // assertEq(erc1155System.balanceOf(alice, 0), 1);
+        assertEq(erc1155System.balanceOf(alice, 1), 1);
 
         endGasReport();
     }

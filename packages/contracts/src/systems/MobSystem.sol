@@ -109,6 +109,8 @@ contract MobSystem is System {
         return monsterStats;
     }
 
+    function isValidMob(bytes32 entityId) public view returns (bool) {}
+
     function getMob(uint256 mobId) public view returns (MobsData memory) {
         return Mobs.get(mobId);
     }
