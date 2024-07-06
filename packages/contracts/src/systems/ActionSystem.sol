@@ -9,10 +9,8 @@ import {
     Actions,
     Stats,
     CombatEncounter,
-    CombatEncounterData,
-    CharacterEquipment
+    CombatEncounterData
 } from "@codegen/index.sol";
-import {IWorld} from "@world/IWorld.sol";
 import {RngRequestType, MobType, EncounterType, ActionType} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
 import {Mobs, MobsData} from "@tables/Mobs.sol";
@@ -30,11 +28,5 @@ contract ActionSystem is System {
             "Action already exists"
         );
         Actions.set(actionId, actionType, actionStats);
-    }
-
-    function assignActionToCharacter(bytes32 characterId, bytes32 actionId) public {}
-
-    function equipAction(bytes32 characterId, bytes32 actionId) public {
-        require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "ACTIONS: INVALID CALLER");
     }
 }
