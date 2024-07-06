@@ -14,7 +14,7 @@ import { Levels } from "./tables/Levels.sol";
 import { CharacterEquipment, CharacterEquipmentData } from "./tables/CharacterEquipment.sol";
 import { Counters } from "./tables/Counters.sol";
 import { Items, ItemsData } from "./tables/Items.sol";
-import { Skills, SkillsData } from "./tables/Skills.sol";
+import { Actions, ActionsData } from "./tables/Actions.sol";
 import { StarterItems, StarterItemsData } from "./tables/StarterItems.sol";
 import { Name } from "./tables/Name.sol";
 import { NameExists } from "./tables/NameExists.sol";

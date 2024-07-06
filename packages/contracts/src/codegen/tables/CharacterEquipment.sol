@@ -24,7 +24,7 @@ struct CharacterEquipmentData {
   uint256[] equippedArmor;
   uint256[] equippedWeapons;
   bytes32[] equippedSpells;
-  bytes32[] equippedSkills;
+  bytes32[] equippedActions;
 }
 
 library CharacterEquipment {
@@ -61,7 +61,7 @@ library CharacterEquipment {
     fieldNames[4] = "equippedArmor";
     fieldNames[5] = "equippedWeapons";
     fieldNames[6] = "equippedSpells";
-    fieldNames[7] = "equippedSkills";
+    fieldNames[7] = "equippedActions";
   }
 
   /**
@@ -733,9 +733,9 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Get equippedSkills.
+   * @notice Get equippedActions.
    */
-  function getEquippedSkills(bytes32 characterId) internal view returns (bytes32[] memory equippedSkills) {
+  function getEquippedActions(bytes32 characterId) internal view returns (bytes32[] memory equippedActions) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -744,9 +744,9 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Get equippedSkills.
+   * @notice Get equippedActions.
    */
-  function _getEquippedSkills(bytes32 characterId) internal view returns (bytes32[] memory equippedSkills) {
+  function _getEquippedActions(bytes32 characterId) internal view returns (bytes32[] memory equippedActions) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -755,29 +755,29 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Set equippedSkills.
+   * @notice Set equippedActions.
    */
-  function setEquippedSkills(bytes32 characterId, bytes32[] memory equippedSkills) internal {
+  function setEquippedActions(bytes32 characterId, bytes32[] memory equippedActions) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreSwitch.setDynamicField(_tableId, _keyTuple, 3, EncodeArray.encode((equippedSkills)));
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 3, EncodeArray.encode((equippedActions)));
   }
 
   /**
-   * @notice Set equippedSkills.
+   * @notice Set equippedActions.
    */
-  function _setEquippedSkills(bytes32 characterId, bytes32[] memory equippedSkills) internal {
+  function _setEquippedActions(bytes32 characterId, bytes32[] memory equippedActions) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
-    StoreCore.setDynamicField(_tableId, _keyTuple, 3, EncodeArray.encode((equippedSkills)));
+    StoreCore.setDynamicField(_tableId, _keyTuple, 3, EncodeArray.encode((equippedActions)));
   }
 
   /**
-   * @notice Get the length of equippedSkills.
+   * @notice Get the length of equippedActions.
    */
-  function lengthEquippedSkills(bytes32 characterId) internal view returns (uint256) {
+  function lengthEquippedActions(bytes32 characterId) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -788,9 +788,9 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Get the length of equippedSkills.
+   * @notice Get the length of equippedActions.
    */
-  function _lengthEquippedSkills(bytes32 characterId) internal view returns (uint256) {
+  function _lengthEquippedActions(bytes32 characterId) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -801,10 +801,10 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Get an item of equippedSkills.
+   * @notice Get an item of equippedActions.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function getItemEquippedSkills(bytes32 characterId, uint256 _index) internal view returns (bytes32) {
+  function getItemEquippedActions(bytes32 characterId, uint256 _index) internal view returns (bytes32) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -815,10 +815,10 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Get an item of equippedSkills.
+   * @notice Get an item of equippedActions.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function _getItemEquippedSkills(bytes32 characterId, uint256 _index) internal view returns (bytes32) {
+  function _getItemEquippedActions(bytes32 characterId, uint256 _index) internal view returns (bytes32) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -829,9 +829,9 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Push an element to equippedSkills.
+   * @notice Push an element to equippedActions.
    */
-  function pushEquippedSkills(bytes32 characterId, bytes32 _element) internal {
+  function pushEquippedActions(bytes32 characterId, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -839,9 +839,9 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Push an element to equippedSkills.
+   * @notice Push an element to equippedActions.
    */
-  function _pushEquippedSkills(bytes32 characterId, bytes32 _element) internal {
+  function _pushEquippedActions(bytes32 characterId, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -849,9 +849,9 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Pop an element from equippedSkills.
+   * @notice Pop an element from equippedActions.
    */
-  function popEquippedSkills(bytes32 characterId) internal {
+  function popEquippedActions(bytes32 characterId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -859,9 +859,9 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Pop an element from equippedSkills.
+   * @notice Pop an element from equippedActions.
    */
-  function _popEquippedSkills(bytes32 characterId) internal {
+  function _popEquippedActions(bytes32 characterId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -869,9 +869,9 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Update an element of equippedSkills at `_index`.
+   * @notice Update an element of equippedActions at `_index`.
    */
-  function updateEquippedSkills(bytes32 characterId, uint256 _index, bytes32 _element) internal {
+  function updateEquippedActions(bytes32 characterId, uint256 _index, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -882,9 +882,9 @@ library CharacterEquipment {
   }
 
   /**
-   * @notice Update an element of equippedSkills at `_index`.
+   * @notice Update an element of equippedActions at `_index`.
    */
-  function _updateEquippedSkills(bytes32 characterId, uint256 _index, bytes32 _element) internal {
+  function _updateEquippedActions(bytes32 characterId, uint256 _index, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -936,12 +936,12 @@ library CharacterEquipment {
     uint256[] memory equippedArmor,
     uint256[] memory equippedWeapons,
     bytes32[] memory equippedSpells,
-    bytes32[] memory equippedSkills
+    bytes32[] memory equippedActions
   ) internal {
     bytes memory _staticData = encodeStatic(strBonus, agiBonus, intBonus, hpBonus);
 
-    EncodedLengths _encodedLengths = encodeLengths(equippedArmor, equippedWeapons, equippedSpells, equippedSkills);
-    bytes memory _dynamicData = encodeDynamic(equippedArmor, equippedWeapons, equippedSpells, equippedSkills);
+    EncodedLengths _encodedLengths = encodeLengths(equippedArmor, equippedWeapons, equippedSpells, equippedActions);
+    bytes memory _dynamicData = encodeDynamic(equippedArmor, equippedWeapons, equippedSpells, equippedActions);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
@@ -961,12 +961,12 @@ library CharacterEquipment {
     uint256[] memory equippedArmor,
     uint256[] memory equippedWeapons,
     bytes32[] memory equippedSpells,
-    bytes32[] memory equippedSkills
+    bytes32[] memory equippedActions
   ) internal {
     bytes memory _staticData = encodeStatic(strBonus, agiBonus, intBonus, hpBonus);
 
-    EncodedLengths _encodedLengths = encodeLengths(equippedArmor, equippedWeapons, equippedSpells, equippedSkills);
-    bytes memory _dynamicData = encodeDynamic(equippedArmor, equippedWeapons, equippedSpells, equippedSkills);
+    EncodedLengths _encodedLengths = encodeLengths(equippedArmor, equippedWeapons, equippedSpells, equippedActions);
+    bytes memory _dynamicData = encodeDynamic(equippedArmor, equippedWeapons, equippedSpells, equippedActions);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
@@ -984,13 +984,13 @@ library CharacterEquipment {
       _table.equippedArmor,
       _table.equippedWeapons,
       _table.equippedSpells,
-      _table.equippedSkills
+      _table.equippedActions
     );
     bytes memory _dynamicData = encodeDynamic(
       _table.equippedArmor,
       _table.equippedWeapons,
       _table.equippedSpells,
-      _table.equippedSkills
+      _table.equippedActions
     );
 
     bytes32[] memory _keyTuple = new bytes32[](1);
@@ -1009,13 +1009,13 @@ library CharacterEquipment {
       _table.equippedArmor,
       _table.equippedWeapons,
       _table.equippedSpells,
-      _table.equippedSkills
+      _table.equippedActions
     );
     bytes memory _dynamicData = encodeDynamic(
       _table.equippedArmor,
       _table.equippedWeapons,
       _table.equippedSpells,
-      _table.equippedSkills
+      _table.equippedActions
     );
 
     bytes32[] memory _keyTuple = new bytes32[](1);
@@ -1052,7 +1052,7 @@ library CharacterEquipment {
       uint256[] memory equippedArmor,
       uint256[] memory equippedWeapons,
       bytes32[] memory equippedSpells,
-      bytes32[] memory equippedSkills
+      bytes32[] memory equippedActions
     )
   {
     uint256 _start;
@@ -1078,7 +1078,7 @@ library CharacterEquipment {
     unchecked {
       _end += _encodedLengths.atIndex(3);
     }
-    equippedSkills = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
+    equippedActions = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
   }
 
   /**
@@ -1094,7 +1094,7 @@ library CharacterEquipment {
   ) internal pure returns (CharacterEquipmentData memory _table) {
     (_table.strBonus, _table.agiBonus, _table.intBonus, _table.hpBonus) = decodeStatic(_staticData);
 
-    (_table.equippedArmor, _table.equippedWeapons, _table.equippedSpells, _table.equippedSkills) = decodeDynamic(
+    (_table.equippedArmor, _table.equippedWeapons, _table.equippedSpells, _table.equippedActions) = decodeDynamic(
       _encodedLengths,
       _dynamicData
     );
@@ -1141,7 +1141,7 @@ library CharacterEquipment {
     uint256[] memory equippedArmor,
     uint256[] memory equippedWeapons,
     bytes32[] memory equippedSpells,
-    bytes32[] memory equippedSkills
+    bytes32[] memory equippedActions
   ) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
@@ -1149,7 +1149,7 @@ library CharacterEquipment {
         equippedArmor.length * 32,
         equippedWeapons.length * 32,
         equippedSpells.length * 32,
-        equippedSkills.length * 32
+        equippedActions.length * 32
       );
     }
   }
@@ -1162,14 +1162,14 @@ library CharacterEquipment {
     uint256[] memory equippedArmor,
     uint256[] memory equippedWeapons,
     bytes32[] memory equippedSpells,
-    bytes32[] memory equippedSkills
+    bytes32[] memory equippedActions
   ) internal pure returns (bytes memory) {
     return
       abi.encodePacked(
         EncodeArray.encode((equippedArmor)),
         EncodeArray.encode((equippedWeapons)),
         EncodeArray.encode((equippedSpells)),
-        EncodeArray.encode((equippedSkills))
+        EncodeArray.encode((equippedActions))
       );
   }
 
@@ -1187,12 +1187,12 @@ library CharacterEquipment {
     uint256[] memory equippedArmor,
     uint256[] memory equippedWeapons,
     bytes32[] memory equippedSpells,
-    bytes32[] memory equippedSkills
+    bytes32[] memory equippedActions
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(strBonus, agiBonus, intBonus, hpBonus);
 
-    EncodedLengths _encodedLengths = encodeLengths(equippedArmor, equippedWeapons, equippedSpells, equippedSkills);
-    bytes memory _dynamicData = encodeDynamic(equippedArmor, equippedWeapons, equippedSpells, equippedSkills);
+    EncodedLengths _encodedLengths = encodeLengths(equippedArmor, equippedWeapons, equippedSpells, equippedActions);
+    bytes memory _dynamicData = encodeDynamic(equippedArmor, equippedWeapons, equippedSpells, equippedActions);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

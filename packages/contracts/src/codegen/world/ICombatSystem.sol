@@ -21,6 +21,8 @@ interface ICombatSystem {
 
   function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) external payable;
 
+  function UD__isParticipant(bytes32 encounterId) external view returns (bool _isParticipant);
+
   function UD__executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory actions) external;
 
   function UD___calculatePhysicalAttack(

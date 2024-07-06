@@ -11,9 +11,9 @@ import {
     StatsData,
     Characters,
     CharactersData,
-    Skills
+    Actions
 } from "@codegen/index.sol";
-import {RngRequestType, SkillType} from "@codegen/common.sol";
+import {RngRequestType, ActionType} from "@codegen/common.sol";
 
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
