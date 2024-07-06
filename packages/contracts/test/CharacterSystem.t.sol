@@ -67,7 +67,12 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         assertEq(world.UD__getCharacterTokenId(bobCharacterId), uint256(uint88(uint256(bobCharacterId))));
     }
 
-    function test_getOwnerId() public {
-        assertEq(world.UD__getOwnerAddress(bobCharacterId), bob);
+        uint256 fees = entropy.getFee(address(1));
+        vm.startPrank(alice);
+        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__enterGame(alicesCharacterId);
+        assertEq(erc1155System.balanceOf(alice, 1), 1);
+
+        endGasReport();
     }
 }

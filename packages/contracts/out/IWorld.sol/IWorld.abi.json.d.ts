@@ -1532,12 +1532,46 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__isValidMob",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__isValidPvE",
     "inputs": [
       {
-        "name": "participants",
+        "name": "attackers",
         "type": "bytes32[]",
         "internalType": "bytes32[]"
+      },
+      {
+        "name": "defenders",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "outputs": [

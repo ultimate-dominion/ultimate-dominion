@@ -19,7 +19,12 @@ interface ICombatSystem {
     bytes32[] memory defenders
   ) external returns (bytes32 encounterId);
 
-  function UD__isValidPvE(bytes32[] memory participants) external view returns (bool _isValidPvE);
+  function UD__isValidPvE(
+    bytes32[] memory attackers,
+    bytes32[] memory defenders,
+    uint16 x,
+    uint16 y
+  ) external view returns (bool _isValidPvE);
 
   function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) external payable;
 

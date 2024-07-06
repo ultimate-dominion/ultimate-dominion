@@ -12,7 +12,8 @@ import {
     Actions,
     ActionsData,
     CharacterEquipment,
-    CharacterEquipmentData
+    CharacterEquipmentData,
+    Position
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
@@ -32,8 +33,10 @@ contract CombatSystem is System {
         returns (bytes32 encounterId)
     {
         require(isParticipant(_msgSender(), attackers), "COMBAT SYSTEM: INVALID SENDER");
+        (uint16 x, uint16 y) = Position.get(attackers[0]);
+
         if (uint256(encounterType) == 1) {
-            require(isValidPvE(defenders), "COMBAT SYSTEM: INVALID PVE");
+            require(isValidPvE(attackers, defenders, x, y), "COMBAT SYSTEM: INVALID PVE");
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
             CombatEncounterData memory combatData = CombatEncounterData({
@@ -56,10 +59,33 @@ contract CombatSystem is System {
         }
     }
 
-    function isValidPvE(bytes32[] memory participants) public view returns (bool _isValidPvE) {
+    function isValidPvE(bytes32[] memory attackers, bytes32[] memory defenders, uint16 x, uint16 y)
+        public
+        view
+        returns (bool _isValidPvE)
+    {
         _isValidPvE = true;
-        for (uint256 i; i < participants.length; i++) {
-            if (IWorld(_world()).UD__isValidCharacterId(participants[i])) _isValidPvE = false;
+        for (uint256 i; i < attackers.length; i++) {
+            if (!IWorld(_world()).UD__isValidCharacterId(attackers[i])) {
+                _isValidPvE = false;
+                break;
+            }
+            if (!IWorld(_world()).UD__isAtPosition(attackers[i], x, y)) {
+                _isValidPvE = false;
+                break;
+            }
+        }
+        if (_isValidPvE) {
+            for (uint256 i; i < defenders.length; i++) {
+                if (IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
+                    _isValidPvE = false;
+                    break;
+                }
+                if (!IWorld(_world()).UD__isAtPosition(defenders[i], x, y)) {
+                    _isValidPvE = false;
+                    break;
+                }
+            }
         }
         return _isValidPvE;
     }
