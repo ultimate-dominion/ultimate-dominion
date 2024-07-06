@@ -17,11 +17,18 @@ interface ICombatSystem {
     EncounterType encounterType,
     bytes32[] memory attackers,
     bytes32[] memory defenders
-  ) external returns (bytes32);
+  ) external returns (bytes32 encounterId);
+
+  function UD__isValidPvE(bytes32[] memory participants) external view returns (bool _isValidPvE);
 
   function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) external payable;
 
-  function UD__isParticipant(bytes32 encounterId) external view returns (bool _isParticipant);
+  function UD__isParticipant(address account, bytes32 encounterId) external view returns (bool _isParticipant);
+
+  function UD__isParticipant(
+    address account,
+    bytes32[] memory participants
+  ) external view returns (bool _isParticipant);
 
   function UD__executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory actions) external;
 
