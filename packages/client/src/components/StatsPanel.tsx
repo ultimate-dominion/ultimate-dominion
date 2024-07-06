@@ -51,7 +51,7 @@ export const StatsPanel = (): JSX.Element => {
   }
 
   const { goldBalance, image, name } = character;
-  const { agility, experience, hitPoints, intelligence, strength } =
+  const { agility, experience, intelligence, maxHitPoints, strength } =
     characterStats;
 
   return (
@@ -77,7 +77,7 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{hitPoints}</Text>
+          <Text>{maxHitPoints}</Text>
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">

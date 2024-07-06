@@ -1,6 +1,6 @@
 import { useComponentValue } from '@latticexyz/react';
 import { getComponentValueStrict, HasValue, runQuery } from '@latticexyz/recs';
-import { decodeEntity, encodeEntity } from '@latticexyz/store-sync/recs';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -9,15 +9,21 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { formatEther, getContract, hexToString } from 'viem';
+import {
+  bytesToHex,
+  formatEther,
+  getContract,
+  hexToBytes,
+  hexToString,
+} from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import type { Character, CharacterStats } from '../utils/types';
+import type { CharacterData, CharacterStats } from '../utils/types';
 import { useMUD } from './MUDContext';
 
 type CharacterContextType = {
-  character: Character | null;
+  character: CharacterData | null;
   characterStats: CharacterStats;
   isRefreshing: boolean;
   refreshCharacter: () => void;
@@ -28,8 +34,8 @@ const CharacterContext = createContext<CharacterContextType>({
   characterStats: {
     agility: '0',
     experience: '0',
-    hitPoints: '0',
     intelligence: '0',
+    maxHitPoints: '0',
     strength: '0',
   },
   isRefreshing: false,
@@ -44,21 +50,21 @@ export const CharacterProvider = ({
   children,
 }: CharacterProviderProps): JSX.Element => {
   const {
-    components: { Characters, CharacterStats },
+    components: { Characters, Stats },
     delegatorAddress,
     network: { publicClient, worldContract },
   } = useMUD();
   const { renderError } = useToast();
 
-  const [characterDetails, setCharacterDetails] = useState<Character | null>(
+  const [characterData, setCharacterData] = useState<CharacterData | null>(
     null,
   );
   const characterStats = useComponentValue(
-    CharacterStats,
-    characterDetails
+    Stats,
+    characterData
       ? encodeEntity(
           { characterId: 'uint256' },
-          { characterId: BigInt(characterDetails.characterId) },
+          { characterId: BigInt(characterData.characterId) },
         )
       : undefined,
   );
@@ -76,15 +82,17 @@ export const CharacterProvider = ({
     ).map(entity => {
       const characterData = getComponentValueStrict(Characters, entity);
 
+      const entityBytes = hexToBytes(entity.toString() as `0x${string}`);
+      const tokenBytes = entityBytes.slice(20);
+      const tokenId = BigInt(bytesToHex(tokenBytes)).toString();
+
       return {
         characterClass: characterData.class,
-        characterId: decodeEntity(
-          { characterId: 'uint256' },
-          entity,
-        ).characterId.toString(),
+        characterId: entity,
         locked: characterData.locked,
         name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
         owner: characterData.owner,
+        tokenId,
       };
     })[0];
 
@@ -120,7 +128,7 @@ export const CharacterProvider = ({
     });
 
     const metadataURI = await characterToken.read.tokenURI([
-      BigInt(characterComponent.characterId),
+      BigInt(characterComponent.tokenId),
     ]);
 
     const fetachedMetadata = await fetchMetadataFromUri(
@@ -157,7 +165,7 @@ export const CharacterProvider = ({
 
     const goldBalance = await goldToken.read.balanceOf([delegatorAddress]);
 
-    setCharacterDetails({
+    setCharacterData({
       ...characterComponent,
       ...fetachedMetadata,
       goldBalance: formatEther(BigInt(goldBalance)).toString(),
@@ -183,12 +191,12 @@ export const CharacterProvider = ({
   return (
     <CharacterContext.Provider
       value={{
-        character: characterDetails,
+        character: characterData,
         characterStats: {
           agility: characterStats?.agility.toString() ?? '0',
           experience: characterStats?.experience.toString() ?? '0',
-          hitPoints: characterStats?.hitPoints.toString() ?? '0',
           intelligence: characterStats?.intelligence.toString() ?? '0',
+          maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
           strength: characterStats?.strength.toString() ?? '0',
         },
         isRefreshing,

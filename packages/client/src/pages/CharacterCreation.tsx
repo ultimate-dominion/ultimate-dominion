@@ -190,10 +190,7 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const success = await rollStats(
-        BigInt(character.characterId),
-        characterClass,
-      );
+      const success = await rollStats(character.characterId, characterClass);
 
       if (!success) {
         throw new Error('Contract call failed');
@@ -218,7 +215,7 @@ export const CharacterCreation = (): JSX.Element => {
   ]);
 
   const rolledOnce = useMemo(() => {
-    return characterStats.hitPoints !== '0';
+    return characterStats.maxHitPoints !== '0';
   }, [characterStats]);
 
   const onEnterGame = useCallback(async () => {
@@ -234,7 +231,7 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const success = await enterGame(BigInt(character.characterId));
+      const success = await enterGame(character.characterId);
 
       if (!success) {
         throw new Error('Contract call failed');
@@ -313,9 +310,9 @@ export const CharacterCreation = (): JSX.Element => {
               </Text>
               <Text>|</Text>
               <Text fontSize={{ base: 'xs', md: 'sm' }}>
-                ID:{' '}
+                Token ID:{' '}
                 <Text as="span" fontWeight={700}>
-                  {character.characterId}
+                  {character.tokenId}
                 </Text>
               </Text>
             </HStack>
@@ -502,7 +499,7 @@ export const CharacterCreation = (): JSX.Element => {
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
                   <Text>HP - Hit</Text>
-                  <Text>{characterStats.hitPoints ?? '0'}</Text>
+                  <Text>{characterStats.maxHitPoints ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>STR - Strength</Text>

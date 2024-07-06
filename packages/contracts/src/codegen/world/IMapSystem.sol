@@ -12,4 +12,6 @@ interface IMapSystem {
   function UD__move(bytes32 entityId, uint16 x, uint16 y) external;
 
   function UD__spawn(bytes32 entityId) external;
+
+  function UD__getEntitiesAtPosition(uint16 x, uint16 y) external view returns (bytes32[] memory entitiesAtPosition);
 }
