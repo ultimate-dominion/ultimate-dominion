@@ -67,7 +67,7 @@ export const MapPanel = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const success = await spawn(BigInt(character.characterId));
+      const success = await spawn(character.characterId);
 
       if (!success) {
         throw new Error('Contract call failed');
@@ -136,7 +136,7 @@ export const MapPanel = (): JSX.Element => {
             break;
         }
 
-        const success = await move(BigInt(character.characterId), newX, newY);
+        const success = await move(character.characterId, newX, newY);
 
         if (!success) {
           throw new Error('Contract call failed');

@@ -9,6 +9,7 @@ import { Stats, StatsData } from "./tables/Stats.sol";
 import { MapConfig } from "./tables/MapConfig.sol";
 import { Spawned } from "./tables/Spawned.sol";
 import { Mobs, MobsData } from "./tables/Mobs.sol";
+import { MobsByLevel } from "./tables/MobsByLevel.sol";
 import { Levels } from "./tables/Levels.sol";
 import { CharacterEquipment, CharacterEquipmentData } from "./tables/CharacterEquipment.sol";
 import { Counters } from "./tables/Counters.sol";

@@ -4,8 +4,6 @@ export const getErrorMessage = (
   error: unknown,
   defaultError: string = 'Unknown error',
 ): string => {
-  // eslint-disable-next-line no-console
-  console.error(error);
   if (typeof error === 'string') {
     return error;
   }

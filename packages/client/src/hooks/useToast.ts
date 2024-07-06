@@ -11,6 +11,8 @@ export const useToast = (): {
 
   const renderError = (error: unknown, defaultError?: string) => {
     const errorMsg = getErrorMessage(error);
+    // eslint-disable-next-line no-console
+    console.error(error);
 
     if (USER_ERRORS.includes(errorMsg)) {
       return;
