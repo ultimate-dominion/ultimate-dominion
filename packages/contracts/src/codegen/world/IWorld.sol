@@ -13,7 +13,6 @@ import { IItemsSystem } from "./IItemsSystem.sol";
 import { ILootManagerSystem } from "./ILootManagerSystem.sol";
 import { IMapSystem } from "./IMapSystem.sol";
 import { IMobSystem } from "./IMobSystem.sol";
-import { ISkillSystem } from "./ISkillSystem.sol";
 import { IUltimateDominionConfigSystem } from "./IUltimateDominionConfigSystem.sol";
 
 /**
@@ -33,6 +32,5 @@ interface IWorld is
   ILootManagerSystem,
   IMapSystem,
   IMobSystem,
-  ISkillSystem,
   IUltimateDominionConfigSystem
 {}

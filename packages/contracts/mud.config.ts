@@ -18,7 +18,7 @@ export default defineWorld({
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
-    SkillType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
+    ActionType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
     StatusEffects: ["ToHitModifier", "DoT", "HitPointMod", "ArmorMod", "WeaponMod", "Stun"],
   },
   tables: {
@@ -102,7 +102,7 @@ export default defineWorld({
         equippedArmor: "uint256[]",
         equippedWeapons: "uint256[]",
         equippedSpells: "bytes32[]",
-        equippedSkills: "bytes32[]",
+        equippedActions: "bytes32[]",
       },
     },
     Counters: {
@@ -123,13 +123,13 @@ export default defineWorld({
       },
       key: ["itemId"],
     },
-    Skills: {
+    Actions: {
       schema: {
-        skillId: "bytes32",
-        skillType: "SkillType",
-        skillStats: "bytes",
+        actionId: "bytes32",
+        actionType: "ActionType",
+        actionStats: "bytes",
       },
-      key: ["skillId"],
+      key: ["actionId"],
     },
 
     StarterItems: {

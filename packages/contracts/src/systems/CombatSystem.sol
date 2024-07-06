@@ -9,8 +9,8 @@ import {
     MatchEntity,
     Stats,
     StatsData,
-    Skills,
-    SkillsData,
+    Actions,
+    ActionsData,
     CharacterEquipment,
     CharacterEquipmentData
 } from "@codegen/index.sol";
@@ -46,7 +46,7 @@ contract CombatSystem is System {
         CombatEncounter.set(encounterId, combatData);
         if (uint8(encounterType) == 0) {
             for (uint256 i; i < defenders.length; i++) {
-                require(MatchEntity.getEncounterId(defenders[i]).length == 0, "COMBAT: Entity Already engaged");
+                require(MatchEntity.getEncounterId(defenders[i]).length == 0, "COMBAT SYSTEM: ENTITY OCCUPIED");
                 MatchEntity.setEncounterId(defenders[i], encounterId);
             }
         }
@@ -60,13 +60,25 @@ contract CombatSystem is System {
      */
     function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) public payable {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        require(encounterData.start != 0, "this match does not exist");
-        require(encounterData.currentTurn < encounterData.maxTurns, "this encounter is over");
-
-        _queueActions(encounterId, moves);
+        require(encounterData.start != 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
+        require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
+        require(isParticipant(encounterId), "COMBAT SYSTEM: NON-COMBATANT");
+        _queueActions(encounterId, actions);
     }
 
-    function executeCombat(uint256 randomNumber, bytes32 encounterId, CombatMove[] memory moves) public {
+    function isParticipant(bytes32 encounterId) public view returns (bool _isParticipant) {
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        for (uint256 i; i < encounterData.attackers.length;) {
+            if (_msgSender() == IWorld(_world()).UD__getOwnerAddress(encounterData.attackers[i])) _isParticipant = true;
+
+            break;
+            {
+                i++;
+            }
+        }
+    }
+
+    function executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory actions) public {
         // ensure this is an authorised call
         // _requireAccess(address(this), _msgSender());
 
@@ -77,10 +89,10 @@ contract CombatSystem is System {
 
             _executeAttack(
                 encounterId,
-                currentMove.skillId,
-                currentMove.attackerEntityId,
-                currentMove.defenderEntityId,
-                currentMove.weaponId,
+                currentAction.actionId,
+                currentAction.attackerEntityId,
+                currentAction.defenderEntityId,
+                currentAction.weaponId,
                 randomNumber
             );
         }
@@ -94,19 +106,18 @@ contract CombatSystem is System {
 
     function _executeAttack(
         bytes32 matchEntity,
-        bytes32 skillId,
+        bytes32 actionId,
         bytes32 attackerId,
         bytes32 defenderId,
         uint256 weaponId,
         uint256 randomNumber
     ) internal {
-        // get skill data
-        SkillsData memory skillData = Skills.get(skillId);
+        // get action data
+        ActionsData memory actionData = Actions.get(actionId);
         //TODO figure out how many chunks to get and distribute those chunks
-        //decode skill data according to type
-        if (uint8(skillData.skillType) == 1) {
-            console2.log("physical Attack");
-            PhysicalAttackStats memory attackStats = abi.decode(skillData.skillStats, (PhysicalAttackStats));
+        //decode action data according to type
+        if (uint8(actionData.actionType) == 1) {
+            PhysicalAttackStats memory attackStats = abi.decode(actionData.actionStats, (PhysicalAttackStats));
             uint256 damage = _calculatePhysicalAttack(attackStats, attackerId, defenderId, weaponId, randomNumber);
             int256 defenderDamage = Stats.getCurrentDamage(defenderId) + int256(damage);
             Stats.setCurrentDamage(defenderId, defenderDamage);
