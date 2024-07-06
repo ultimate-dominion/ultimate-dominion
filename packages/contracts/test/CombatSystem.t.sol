@@ -44,6 +44,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_createMatch() public {
+        vm.prank(bob);
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
         assertEq(world.UD__getEncounter(matchId).start, block.timestamp);
     }
@@ -62,6 +63,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_EndTurn_Revert_NonCombatant() public {
+        vm.prank(bob);
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
         actions[0] =

@@ -31,27 +31,37 @@ contract CombatSystem is System {
         public
         returns (bytes32 encounterId)
     {
-        uint256 startTime = block.timestamp;
-        bytes32 encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
-        CombatEncounterData memory combatData = CombatEncounterData({
-            encounterType: encounterType,
-            start: startTime,
-            end: 0,
-            currentTurn: 0,
-            maxTurns: DEFAULT_MAX_TURNS,
-            defenders: defenders,
-            attackers: attackers
-        });
+        require(isParticipant(_msgSender(), attackers), "COMBAT SYSTEM: INVALID SENDER");
+        if (uint256(encounterType) == 1) {
+            require(isValidPvE(defenders), "COMBAT SYSTEM: INVALID PVE");
+            uint256 startTime = block.timestamp;
+            encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
+            CombatEncounterData memory combatData = CombatEncounterData({
+                encounterType: encounterType,
+                start: startTime,
+                end: 0,
+                currentTurn: 0,
+                maxTurns: DEFAULT_MAX_TURNS,
+                defenders: defenders,
+                attackers: attackers
+            });
 
-        CombatEncounter.set(encounterId, combatData);
+            CombatEncounter.set(encounterId, combatData);
+        }
         if (uint8(encounterType) == 0) {
             for (uint256 i; i < defenders.length; i++) {
                 require(MatchEntity.getEncounterId(defenders[i]).length == 0, "COMBAT SYSTEM: ENTITY OCCUPIED");
                 MatchEntity.setEncounterId(defenders[i], encounterId);
             }
         }
+    }
 
-        return encounterId;
+    function isValidPvE(bytes32[] memory participants) public view returns (bool _isValidPvE) {
+        _isValidPvE = true;
+        for (uint256 i; i < participants.length; i++) {
+            if (IWorld(_world()).UD__isValidCharacterId(participants[i])) _isValidPvE = false;
+        }
+        return _isValidPvE;
     }
 
     /**
@@ -62,16 +72,29 @@ contract CombatSystem is System {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(encounterData.start != 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
         require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
-        require(isParticipant(encounterId), "COMBAT SYSTEM: NON-COMBATANT");
+        require(isParticipant(_msgSender(), encounterId), "COMBAT SYSTEM: NON-COMBATANT");
         _queueActions(encounterId, actions);
     }
 
-    function isParticipant(bytes32 encounterId) public view returns (bool _isParticipant) {
+    function isParticipant(address account, bytes32 encounterId) public view returns (bool _isParticipant) {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         for (uint256 i; i < encounterData.attackers.length;) {
-            if (_msgSender() == IWorld(_world()).UD__getOwnerAddress(encounterData.attackers[i])) _isParticipant = true;
+            if (account == IWorld(_world()).UD__getOwnerAddress(encounterData.attackers[i])) {
+                _isParticipant = true;
+                break;
+            }
+            {
+                i++;
+            }
+        }
+    }
 
-            break;
+    function isParticipant(address account, bytes32[] memory participants) public view returns (bool _isParticipant) {
+        for (uint256 i; i < participants.length;) {
+            if (account == IWorld(_world()).UD__getOwnerAddress(participants[i])) {
+                _isParticipant = true;
+                break;
+            }
             {
                 i++;
             }

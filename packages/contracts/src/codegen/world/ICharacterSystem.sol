@@ -22,6 +22,8 @@ interface ICharacterSystem {
 
   function UD__getOwnerAddress(bytes32 characterId) external pure returns (address);
 
+  function UD__isValidCharacterId(bytes32 characterId) external view returns (bool);
+
   function UD__mintCharacter(
     address account,
     bytes32 name,
