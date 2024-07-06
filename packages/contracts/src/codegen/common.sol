@@ -40,7 +40,7 @@ enum EncounterType {
   PvE
 }
 
-enum SkillType {
+enum ActionType {
   Temporary,
   PhysicalAttack,
   MagicAttack,

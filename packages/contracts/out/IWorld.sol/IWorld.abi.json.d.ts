@@ -154,6 +154,30 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__createAction",
+    "inputs": [
+      {
+        "name": "actionType",
+        "type": "uint8",
+        "internalType": "enum ActionType"
+      },
+      {
+        "name": "actionStats",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "actionId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__createItem",
     "inputs": [
       {
@@ -297,30 +321,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__createSkill",
-    "inputs": [
-      {
-        "name": "skillType",
-        "type": "uint8",
-        "internalType": "enum SkillType"
-      },
-      {
-        "name": "skillStats",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "skillId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "UD__dropItems",
     "inputs": [
       {
@@ -372,7 +372,7 @@ declare const abi: [
             "internalType": "bytes32"
           },
           {
-            "name": "skillId",
+            "name": "actionId",
             "type": "bytes32",
             "internalType": "bytes32"
           },
@@ -448,7 +448,7 @@ declare const abi: [
             "internalType": "bytes32"
           },
           {
-            "name": "skillId",
+            "name": "actionId",
             "type": "bytes32",
             "internalType": "bytes32"
           },
@@ -1369,6 +1369,25 @@ declare const abi: [
     "outputs": [
       {
         "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isParticipant",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isParticipant",
         "type": "bool",
         "internalType": "bool"
       }

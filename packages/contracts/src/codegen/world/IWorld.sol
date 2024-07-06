@@ -5,13 +5,13 @@ pragma solidity >=0.8.24;
 
 import { IBaseWorld } from "@latticexyz/world/src/codegen/interfaces/IBaseWorld.sol";
 
+import { IActionSystem } from "./IActionSystem.sol";
 import { ICharacterSystem } from "./ICharacterSystem.sol";
 import { ICombatSystem } from "./ICombatSystem.sol";
 import { IEquipmentSystem } from "./IEquipmentSystem.sol";
 import { IItemsSystem } from "./IItemsSystem.sol";
 import { IMapSystem } from "./IMapSystem.sol";
 import { IMobSystem } from "./IMobSystem.sol";
-import { ISkillSystem } from "./ISkillSystem.sol";
 import { IUltimateDominionConfigSystem } from "./IUltimateDominionConfigSystem.sol";
 
 /**
@@ -23,12 +23,12 @@ import { IUltimateDominionConfigSystem } from "./IUltimateDominionConfigSystem.s
  */
 interface IWorld is
   IBaseWorld,
+  IActionSystem,
   ICharacterSystem,
   ICombatSystem,
   IEquipmentSystem,
   IItemsSystem,
   IMapSystem,
   IMobSystem,
-  ISkillSystem,
   IUltimateDominionConfigSystem
 {}
