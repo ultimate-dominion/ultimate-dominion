@@ -43,7 +43,7 @@ interface ICombatSystem {
     bytes32 defenderId,
     uint256 weaponId,
     uint256 randomNumber
-  ) external returns (uint256 damage);
+  ) external returns (int256 damage, bool hit, bool crit);
 
   function UD__getEncounter(bytes32 encounterId) external view returns (CombatEncounterData memory _encounterData);
 

@@ -21,7 +21,7 @@ struct StatsData {
   uint256 agility;
   uint256 intelligence;
   uint256 maxHitPoints;
-  int256 currentDamage;
+  int256 currentHp;
   uint256 experience;
   uint256 level;
   uint256 armor;
@@ -58,7 +58,7 @@ library Stats {
     fieldNames[1] = "agility";
     fieldNames[2] = "intelligence";
     fieldNames[3] = "maxHitPoints";
-    fieldNames[4] = "currentDamage";
+    fieldNames[4] = "currentHp";
     fieldNames[5] = "experience";
     fieldNames[6] = "level";
     fieldNames[7] = "armor";
@@ -247,9 +247,9 @@ library Stats {
   }
 
   /**
-   * @notice Get currentDamage.
+   * @notice Get currentHp.
    */
-  function getCurrentDamage(bytes32 entityId) internal view returns (int256 currentDamage) {
+  function getCurrentHp(bytes32 entityId) internal view returns (int256 currentHp) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
@@ -258,9 +258,9 @@ library Stats {
   }
 
   /**
-   * @notice Get currentDamage.
+   * @notice Get currentHp.
    */
-  function _getCurrentDamage(bytes32 entityId) internal view returns (int256 currentDamage) {
+  function _getCurrentHp(bytes32 entityId) internal view returns (int256 currentHp) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
@@ -269,23 +269,23 @@ library Stats {
   }
 
   /**
-   * @notice Set currentDamage.
+   * @notice Set currentHp.
    */
-  function setCurrentDamage(bytes32 entityId, int256 currentDamage) internal {
+  function setCurrentHp(bytes32 entityId, int256 currentHp) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((currentDamage)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((currentHp)), _fieldLayout);
   }
 
   /**
-   * @notice Set currentDamage.
+   * @notice Set currentHp.
    */
-  function _setCurrentDamage(bytes32 entityId, int256 currentDamage) internal {
+  function _setCurrentHp(bytes32 entityId, int256 currentHp) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((currentDamage)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((currentHp)), _fieldLayout);
   }
 
   /**
@@ -453,7 +453,7 @@ library Stats {
     uint256 agility,
     uint256 intelligence,
     uint256 maxHitPoints,
-    int256 currentDamage,
+    int256 currentHp,
     uint256 experience,
     uint256 level,
     uint256 armor
@@ -463,7 +463,7 @@ library Stats {
       agility,
       intelligence,
       maxHitPoints,
-      currentDamage,
+      currentHp,
       experience,
       level,
       armor
@@ -487,7 +487,7 @@ library Stats {
     uint256 agility,
     uint256 intelligence,
     uint256 maxHitPoints,
-    int256 currentDamage,
+    int256 currentHp,
     uint256 experience,
     uint256 level,
     uint256 armor
@@ -497,7 +497,7 @@ library Stats {
       agility,
       intelligence,
       maxHitPoints,
-      currentDamage,
+      currentHp,
       experience,
       level,
       armor
@@ -521,7 +521,7 @@ library Stats {
       _table.agility,
       _table.intelligence,
       _table.maxHitPoints,
-      _table.currentDamage,
+      _table.currentHp,
       _table.experience,
       _table.level,
       _table.armor
@@ -545,7 +545,7 @@ library Stats {
       _table.agility,
       _table.intelligence,
       _table.maxHitPoints,
-      _table.currentDamage,
+      _table.currentHp,
       _table.experience,
       _table.level,
       _table.armor
@@ -573,7 +573,7 @@ library Stats {
       uint256 agility,
       uint256 intelligence,
       uint256 maxHitPoints,
-      int256 currentDamage,
+      int256 currentHp,
       uint256 experience,
       uint256 level,
       uint256 armor
@@ -587,7 +587,7 @@ library Stats {
 
     maxHitPoints = (uint256(Bytes.getBytes32(_blob, 96)));
 
-    currentDamage = (int256(uint256(Bytes.getBytes32(_blob, 128))));
+    currentHp = (int256(uint256(Bytes.getBytes32(_blob, 128))));
 
     experience = (uint256(Bytes.getBytes32(_blob, 160)));
 
@@ -612,7 +612,7 @@ library Stats {
       _table.agility,
       _table.intelligence,
       _table.maxHitPoints,
-      _table.currentDamage,
+      _table.currentHp,
       _table.experience,
       _table.level,
       _table.armor
@@ -648,12 +648,12 @@ library Stats {
     uint256 agility,
     uint256 intelligence,
     uint256 maxHitPoints,
-    int256 currentDamage,
+    int256 currentHp,
     uint256 experience,
     uint256 level,
     uint256 armor
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(strength, agility, intelligence, maxHitPoints, currentDamage, experience, level, armor);
+    return abi.encodePacked(strength, agility, intelligence, maxHitPoints, currentHp, experience, level, armor);
   }
 
   /**
@@ -667,7 +667,7 @@ library Stats {
     uint256 agility,
     uint256 intelligence,
     uint256 maxHitPoints,
-    int256 currentDamage,
+    int256 currentHp,
     uint256 experience,
     uint256 level,
     uint256 armor
@@ -677,7 +677,7 @@ library Stats {
       agility,
       intelligence,
       maxHitPoints,
-      currentDamage,
+      currentHp,
       experience,
       level,
       armor
