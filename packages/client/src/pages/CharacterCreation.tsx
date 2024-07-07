@@ -362,8 +362,11 @@ export const CharacterCreation = (): JSX.Element => {
                   </FormControl>
                   <FormControl isInvalid={showError && !avatar}>
                     <Input
+                      accept=".png, .jpg, .jpeg, .webp, .svg"
                       id="avatarInput"
-                      onChange={e => setAvatar(e.target.files?.[0] ?? null)}
+                      onChange={e =>
+                        e.target.files?.[0] && setAvatar(e.target.files?.[0])
+                      }
                       style={{ display: 'none' }}
                       type="file"
                     />
