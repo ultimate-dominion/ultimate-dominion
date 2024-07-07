@@ -49,6 +49,23 @@ contract Test_CombatSystem is SetUp, GasReporter {
         assertEq(world.UD__getEncounter(matchId).start, block.timestamp);
     }
 
+    function test_createMatch_Revert_Entities_Wrong_Position() public {
+        bytes32 entityId2 = world.UD__spawnMob(1, 0, 1);
+        defenders[0] = entityId2;
+        vm.prank(bob);
+        vm.expectRevert("COMBAT SYSTEM: INVALID PVE");
+        bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
+    }
+
+    function test_CreateMatch_Revert_ENTITY_OCCUPIED() public {
+        vm.prank(bob);
+        bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
+        assertEq(world.UD__getEncounter(matchId).start, block.timestamp);
+        vm.prank(bob);
+        vm.expectRevert("COMBAT SYSTEM: ENTITY OCCUPIED");
+        world.UD__createMatch(EncounterType.PvE, attackers, defenders);
+    }
+
     function test_EndTurn() public {
         vm.prank(bob);
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
@@ -59,7 +76,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(bob);
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
 
-        assertGt(Stats.get(entityId).currentDamage, 0);
+        assertGt(Stats.get(entityId).currentHp, 0);
     }
 
     function test_EndTurn_Revert_NonCombatant() public {

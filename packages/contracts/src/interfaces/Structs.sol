@@ -53,13 +53,13 @@ struct MonsterTemplateDetails {
 
 struct PhysicalAttackStats {
     // additional damage on top of item damage
-    uint256 bonusDamage;
+    int256 bonusDamage;
     // base armor penetration
-    uint256 armorPenetration;
+    int256 armorPenetration;
     //bonus chance to hit
-    uint256 attackModifierBonus;
+    int256 attackModifierBonus;
     // crit chance
-    uint256 critChanceBonus;
+    int256 critChanceBonus;
 }
 
 struct Action {

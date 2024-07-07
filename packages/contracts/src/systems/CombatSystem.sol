@@ -4,6 +4,7 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
+import {Math} from "@libraries/Math.sol";
 import {
     RandomNumbers,
     MatchEntity,
@@ -27,7 +28,10 @@ import {DEFAULT_MAX_TURNS, TO_HIT_MODIFIER, DEFENSE_MODIFIER, ATTACK_MODIFIER} f
 import "forge-std/console2.sol";
 
 contract CombatSystem is System {
+    using Math for uint256;
+    using Math for int256;
     // in pve the attackers are always players and the defenders are always mobs since there is no aggro system
+
     function createMatch(EncounterType encounterType, bytes32[] memory attackers, bytes32[] memory defenders)
         public
         returns (bytes32 encounterId)
@@ -51,11 +55,14 @@ contract CombatSystem is System {
 
             CombatEncounter.set(encounterId, combatData);
         }
-        if (uint8(encounterType) == 0) {
-            for (uint256 i; i < defenders.length; i++) {
-                require(MatchEntity.getEncounterId(defenders[i]).length == 0, "COMBAT SYSTEM: ENTITY OCCUPIED");
-                MatchEntity.setEncounterId(defenders[i], encounterId);
-            }
+        if (uint8(encounterType) == 0) {}
+        for (uint256 i; i < defenders.length; i++) {
+            require(MatchEntity.getEncounterId(defenders[i]) == bytes32(0), "COMBAT SYSTEM: ENTITY OCCUPIED");
+            MatchEntity.setEncounterId(defenders[i], encounterId);
+        }
+        for (uint256 i; i < attackers.length; i++) {
+            require(MatchEntity.getEncounterId(attackers[i]) == bytes32(0), "COMBAT SYSTEM: ENTITY OCCUPIED");
+            MatchEntity.setEncounterId(attackers[i], encounterId);
         }
     }
 
@@ -167,9 +174,10 @@ contract CombatSystem is System {
         //decode action data according to type
         if (uint8(actionData.actionType) == 1) {
             PhysicalAttackStats memory attackStats = abi.decode(actionData.actionStats, (PhysicalAttackStats));
-            uint256 damage = _calculatePhysicalAttack(attackStats, attackerId, defenderId, weaponId, randomNumber);
-            int256 defenderDamage = Stats.getCurrentDamage(defenderId) + int256(damage);
-            Stats.setCurrentDamage(defenderId, defenderDamage);
+            (int256 damage, bool hit, bool crit) =
+                _calculatePhysicalAttack(attackStats, attackerId, defenderId, weaponId, randomNumber);
+            int256 defenderDamage = Stats.getCurrentHp(defenderId) + int256(damage);
+            Stats.setCurrentHp(defenderId, defenderDamage);
         }
     }
 
@@ -179,17 +187,20 @@ contract CombatSystem is System {
         bytes32 defenderId,
         uint256 weaponId,
         uint256 randomNumber
-    ) public returns (uint256 damage) {
+    ) public returns (int256 damage, bool hit, bool crit) {
         // get attacker
         StatsData memory attacker = applyEquipmentBonuses(attackerId);
         //get defender
         StatsData memory defender = applyEquipmentBonuses(defenderId);
         // get weapon stats
         WeaponStats memory weapon = IWorld(_world()).UD__getWeaponStats(weaponId);
-        if (_calculatePhysicalAttackModifier(randomNumber, attacker.agility, defender.agility)) {
+        (hit, crit) = _calculatePhysicalAttackModifier(randomNumber, attackStats, attacker, defender);
+        if (hit) {
             damage = (
-                attackStats.bonusDamage
-                    + (randomNumber % weapon.maxDamage == 0 ? weapon.minDamage : randomNumber % weapon.maxDamage + 1)
+                Math.add(
+                    attackStats.bonusDamage,
+                    (randomNumber % weapon.maxDamage == 0 ? weapon.minDamage : randomNumber % weapon.maxDamage + 1)
+                )
             ) * (attacker.strength * ATTACK_MODIFIER) - defender.armor;
         } else {
             damage = 0;
@@ -200,11 +211,20 @@ contract CombatSystem is System {
         return CombatEncounter.get(encounterId);
     }
 
-    function _calculatePhysicalAttackModifier(uint256 attackRoll, uint256 attackerAgi, uint256 defenderAgi)
-        internal
-        returns (bool attackLands)
-    {
-        attackLands = (attackRoll + (attackerAgi * TO_HIT_MODIFIER)) >= (defenderAgi * DEFENSE_MODIFIER);
+    function _calculatePhysicalAttackModifier(
+        uint256 attackRoll,
+        PhysicalAttackStats memory attackStats,
+        StatsData memory attacker,
+        StatsData memory defender
+    ) internal returns (bool attackLands, bool crit) {
+        uint256 attackTotal = Math.add(attacker.agility, attackStats.attackModifierBonus) * (TO_HIT_MODIFIER);
+        // attacker.agility + attackStats.attackModifierBonus * TO_HIT_MODIFIER
+
+        uint256 defenseTotal = defender.agility * DEFENSE_MODIFIER;
+        attackLands = attackTotal > defenseTotal;
+        if (attackLands) {
+            crit = attackTotal / defenseTotal > 2;
+        }
     }
 
     function applyEquipmentBonuses(bytes32 entityId) public view returns (StatsData memory modifiedStats) {

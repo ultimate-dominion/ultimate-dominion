@@ -50,7 +50,7 @@ contract MobSystem is System {
                 agility: monsterStats.agility,
                 intelligence: monsterStats.intelligence,
                 maxHitPoints: monsterStats.hitPoints,
-                currentDamage: int256(0),
+                currentHp: int256(0),
                 experience: monsterStats.experience,
                 level: monsterStats.level,
                 armor: monsterStats.armor
