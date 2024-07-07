@@ -170,15 +170,25 @@ contract CombatSystem is System {
         }
 
         encounterData.currentTurn++;
-        uint256 deadMonsterCounter;
+        uint256 deadDefenderCounter;
+        uint256 deadAttackerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
             int256 curHp = Stats.getCurrentHp(encounterData.defenders[i]);
             if (curHp <= 0) {
-                deadMonsterCounter++;
+                deadDefenderCounter++;
             }
         }
-        if (deadMonsterCounter == encounterData.defenders.length || encounterData.currentTurn == encounterData.maxTurns)
-        {
+        for (uint256 i; i < encounterData.attackers.length; i++) {
+            int256 curHp = Stats.getCurrentHp(encounterData.attackers[i]);
+            if (curHp <= 0) {
+                deadAttackerCounter++;
+            }
+        }
+        if (
+            deadAttackerCounter == encounterData.attackers.length
+                || deadDefenderCounter == encounterData.defenders.length
+                || encounterData.currentTurn == encounterData.maxTurns
+        ) {
             // for some reason block.timestamp is not availible here on anvil?
             encounterData.end = block.number;
         }
