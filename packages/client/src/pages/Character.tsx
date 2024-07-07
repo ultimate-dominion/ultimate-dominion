@@ -1,0 +1,361 @@
+import {
+  Box,
+  Card,
+  CardBody,
+  Center,
+  Grid,
+  GridItem,
+  Text,
+} from '@chakra-ui/react';
+import { getComponentValueStrict } from '@latticexyz/recs';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { formatEther, getContract, hexToString } from 'viem';
+
+import { ItemCard } from '../components/Character/Card/ItemCard';
+import { Misc } from '../components/Character/Misc';
+import { Profile } from '../components/Character/Profile';
+import { Stats } from '../components/Character/Stats';
+import { useCharacter } from '../contexts/CharacterContext';
+import { useMUD } from '../contexts/MUDContext';
+import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import type { Character, CharacterStats } from '../utils/types';
+
+export const CharacterPage = (): JSX.Element => {
+  const { characterId } = useParams();
+  const {
+    components: { Characters, CharacterStats },
+    network: { publicClient, worldContract },
+  } = useMUD();
+  const { character: userCharacter } = useCharacter();
+
+  const [character, setCharacter] = useState<
+    (Character & CharacterStats) | null
+  >(null);
+
+  useEffect(() => {
+    (async (): Promise<void> => {
+      if (!(characterId && publicClient && worldContract)) return;
+
+      const entity = encodeEntity(
+        { characterId: 'uint256' },
+        { characterId: BigInt(characterId) },
+      );
+
+      const characterData = getComponentValueStrict(Characters, entity);
+      const characterStats = getComponentValueStrict(CharacterStats, entity);
+
+      const characterTokenAddress =
+        await worldContract.read.UD__getCharacterToken();
+
+      const characterToken = getContract({
+        address: characterTokenAddress,
+        abi: [
+          {
+            type: 'function',
+            name: 'tokenURI',
+            inputs: [
+              {
+                name: 'tokenId',
+                type: 'uint256',
+                internalType: 'uint256',
+              },
+            ],
+            outputs: [
+              {
+                name: '',
+                type: 'string',
+                internalType: 'string',
+              },
+            ],
+            stateMutability: 'view',
+          },
+        ],
+        client: publicClient,
+      });
+
+      const metadataURI = await characterToken.read.tokenURI([
+        BigInt(characterId),
+      ]);
+
+      const fetachedMetadata = await fetchMetadataFromUri(
+        uriToHttp(metadataURI)[0],
+      );
+
+      const goldTokenAddress = await worldContract.read.UD__getGoldToken();
+
+      const goldToken = getContract({
+        address: goldTokenAddress,
+        abi: [
+          {
+            type: 'function',
+            name: 'balanceOf',
+            inputs: [
+              {
+                name: 'account',
+                type: 'address',
+                internalType: 'address',
+              },
+            ],
+            outputs: [
+              {
+                name: '',
+                type: 'uint256',
+                internalType: 'uint256',
+              },
+            ],
+            stateMutability: 'view',
+          },
+        ],
+        client: publicClient,
+      });
+
+      const goldBalance = await goldToken.read.balanceOf([
+        characterData.owner as `0x${string}`,
+      ]);
+
+      setCharacter({
+        ...fetachedMetadata,
+        goldBalance: formatEther(BigInt(goldBalance)).toString(),
+        agility: characterStats?.agility.toString() ?? '0',
+        experience: characterStats?.experience.toString() ?? '0',
+        characterClass: characterData.class,
+        characterId,
+        hitPoints: characterStats?.hitPoints.toString() ?? '0',
+        intelligence: characterStats?.intelligence.toString() ?? '0',
+        locked: characterData.locked,
+        name: hexToString(characterData.name as `0x${string}`, {
+          size: 32,
+        }),
+        owner: characterData.owner,
+        strength: characterStats?.strength.toString() ?? '0',
+      });
+    })();
+  }, [characterId, Characters, CharacterStats, publicClient, worldContract]);
+
+  const isOwner = useMemo(
+    () => character?.owner === userCharacter?.owner,
+    [character, userCharacter],
+  );
+
+  return (
+    <Box>
+      {character ? (
+        <Grid
+          gap={2}
+          h={{ base: 'calc(100vh - 100px)', lg: 'calc(100vh - 100px)' }}
+          mt={4}
+          rowGap={{ base: 3, lg: 10 }}
+          sx={{
+            filter: character ? 'blur(0px)' : 'blur(10px)',
+          }}
+          templateColumns={{
+            base: 'repeat(1, 1fr)',
+            sm: 'repeat(1, 1fr)',
+            lg: 'repeat(3, 1fr)',
+            xl: 'repeat(3, 1fr)',
+          }}
+          templateRows={{
+            base: 'repeat(4, 1fr)',
+            sm: 'repeat(4, 1fr)',
+            lg: 'repeat(2, 1fr)',
+            xl: 'repeat(2, 1fr)',
+          }}
+        >
+          <GridItem
+            border="solid"
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            pb={6}
+            pt={{ base: 6, md: 12 }}
+            px={6}
+            rowStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+          >
+            <Profile
+              description={character.description!}
+              image={character.image}
+              isOwner={isOwner}
+              name={character.name}
+            />
+          </GridItem>
+          <GridItem
+            border="solid"
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
+            pb={6}
+            pt={{ base: 6, md: 12 }}
+            px={6}
+            rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
+          >
+            <Stats
+              agility={character.agility}
+              hitPoints={character.hitPoints}
+              intelligence={character.intelligence}
+              strength={character.strength}
+            />
+          </GridItem>
+          <GridItem
+            border="solid"
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+            rowStart={{ base: 3, sm: 3, md: 3, lg: 1, xl: 1 }}
+            pb={6}
+            pt={{ base: 6, md: 12 }}
+            px={6}
+          >
+            <Misc
+              experience={character.experience}
+              goldBalance={character.goldBalance}
+              isPlayer={isOwner}
+              max={'100'}
+            />
+          </GridItem>
+          <GridItem
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            pb={{ base: 12, lg: 0 }}
+            rowSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            rowStart={{ base: 4, sm: 4, md: 4, lg: 2, xl: 2 }}
+          >
+            <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
+              Items 30 - 3/3 Equipped
+            </Text>
+            <Grid
+              templateColumns={{
+                base: 'repeat(1, 1fr)',
+                sm: 'repeat(1, 1fr)',
+                md: 'repeat(2, 1fr)',
+                xl: 'repeat(3, 1fr)',
+              }}
+              gap={2}
+              mt={4}
+            >
+              {[
+                {
+                  agi: 3,
+                  disabled: false,
+                  icon: 'fire',
+                  image: 'door-closed',
+                  int: 4,
+                  name: 'Rusty Dagger',
+                  str: 1,
+                },
+                {
+                  agi: 3,
+                  disabled: false,
+                  icon: 'shield',
+                  image: 'scribd',
+                  int: 4,
+                  name: 'Copper Knife',
+                  str: 1,
+                },
+                {
+                  agi: 3,
+                  disabled: false,
+                  icon: 'road',
+                  image: 'database',
+                  int: 4,
+                  name: 'Iron Axe',
+                  str: 1,
+                },
+                {
+                  agi: 3,
+                  disabled: true,
+                  icon: 'fire',
+                  image: 'search',
+                  int: 4,
+                  name: 'Rusty Dagger',
+                  str: 1,
+                },
+                {
+                  agi: 3,
+                  disabled: true,
+                  icon: 'shield',
+                  image: 'book',
+                  int: 4,
+                  name: 'Rusty Dagger',
+                  str: 1,
+                },
+                {
+                  agi: 3,
+                  disabled: true,
+                  icon: 'road',
+                  image: 'pizza-slice',
+                  int: 4,
+                  name: 'Rusty Dagger',
+                  str: 1,
+                },
+                {
+                  agi: 3,
+                  disabled: true,
+                  icon: 'fire',
+                  image: 'star-crescent',
+                  int: 4,
+                  name: 'Rusty Dagger',
+                  str: 1,
+                },
+                {
+                  agi: 3,
+                  disabled: true,
+                  icon: 'shield',
+                  image: 'bug',
+                  int: 4,
+                  name: 'Rusty Dagger',
+                  str: 1,
+                },
+                {
+                  agi: 3,
+                  disabled: true,
+                  icon: 'road',
+                  image: 'socks',
+                  int: 4,
+                  name: 'Rusty Dagger',
+                  str: 1,
+                },
+              ].map(function (item, i) {
+                return (
+                  <GridItem key={i}>
+                    {/* TODO: we should only use one general modal, which gets passed the item data when clicked */}
+                    <ItemCard
+                      agi={item.agi}
+                      disabled={item.disabled}
+                      icon={item.icon}
+                      int={item.int}
+                      image={item.image}
+                      name={item.name}
+                      str={item.str}
+                    />
+                  </GridItem>
+                );
+              })}
+            </Grid>
+          </GridItem>
+        </Grid>
+      ) : (
+        <Grid>
+          <GridItem>
+            <Center
+              left="0"
+              position="absolute"
+              right="0"
+              top="32%"
+              zIndex={100}
+            >
+              <Card
+                background="black"
+                color="white"
+                margin="0 auto"
+                variant="filled"
+              >
+                <CardBody>
+                  <Text fontWeight="bold">This character does not exist</Text>
+                </CardBody>
+              </Card>
+            </Center>
+          </GridItem>
+        </Grid>
+      )}
+    </Box>
+  );
+};

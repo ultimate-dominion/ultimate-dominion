@@ -1,12 +1,10 @@
 import {
   Avatar,
-  Box,
   Button,
   Grid,
   GridItem,
   HStack,
   Link,
-  Progress,
   Spacer,
   Spinner,
   Text,
@@ -20,6 +18,7 @@ import { IoIosArrowForward } from 'react-icons/io';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { Level } from './Level';
 
 const CURRENT_LEVEL = 1;
 
@@ -105,29 +104,7 @@ export const StatsPanel = (): JSX.Element => {
         </GridItem>
       </Grid>
 
-      <Box mt={8} position="relative" fontSize="10px" w="100%">
-        <Text
-          position="absolute"
-          right={100 - levelPercent - 2 + '%'}
-          top="-15px"
-        >
-          {levelPercent}%
-        </Text>
-        <Text
-          display={levelPercent > 90 ? 'none' : 'block'}
-          position="absolute"
-          right="0%"
-          top="-15px"
-        >
-          100%
-        </Text>
-        <Progress h={2} value={levelPercent} />
-        <HStack mt={1}>
-          <Text>Level {CURRENT_LEVEL}</Text>
-          <Spacer />
-          <Text>Level {CURRENT_LEVEL + 1}</Text>
-        </HStack>
-      </Box>
+      <Level levelPercent={levelPercent} />
 
       <HStack alignItems="start" w="100%">
         <Text fontWeight="bold">{goldBalance} $GOLD</Text>
