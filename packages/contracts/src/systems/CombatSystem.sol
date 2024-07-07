@@ -5,6 +5,7 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {Math} from "@libraries/Math.sol";
+import {LibChunks} from "@libraries/LibChunks.sol";
 import {
     RandomNumbers,
     MatchEntity,
@@ -14,17 +15,21 @@ import {
     ActionsData,
     CharacterEquipment,
     CharacterEquipmentData,
-    Position
+    CombatEncounter,
+    CombatEncounterData,
+    Position,
+    Mobs,
+    MobsData,
+    Counters
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {Counters} from "@tables/Counters.sol";
-import {Mobs, MobsData} from "@tables/Mobs.sol";
-import {CombatEncounter, CombatEncounterData} from "@tables/CombatEncounter.sol";
-import {MonsterStats, WeaponStats, NPCStats, CombatMove, PhysicalAttackStats} from "@interfaces/Structs.sol";
+import {MonsterStats, WeaponStats, NPCStats, Action, PhysicalAttackStats} from "@interfaces/Structs.sol";
 import {_requireOwner} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
-import {DEFAULT_MAX_TURNS, TO_HIT_MODIFIER, DEFENSE_MODIFIER, ATTACK_MODIFIER} from "../../constants.sol";
+import {
+    DEFAULT_MAX_TURNS, TO_HIT_MODIFIER, DEFENSE_MODIFIER, ATTACK_MODIFIER, CRIT_MODIFIER
+} from "../../constants.sol";
 import "forge-std/console2.sol";
 
 contract CombatSystem is System {
@@ -103,7 +108,7 @@ contract CombatSystem is System {
      */
     function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) public payable {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        require(encounterData.start != 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
+        require(encounterData.start != 0 && encounterData.end == 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
         require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
         require(isParticipant(_msgSender(), encounterId), "COMBAT SYSTEM: NON-COMBATANT");
         _queueActions(encounterId, actions);
@@ -118,6 +123,17 @@ contract CombatSystem is System {
             }
             {
                 i++;
+            }
+        }
+        if (!_isParticipant) {
+            for (uint256 i; i < encounterData.defenders.length;) {
+                if (account == IWorld(_world()).UD__getOwnerAddress(encounterData.defenders[i])) {
+                    _isParticipant = true;
+                    break;
+                }
+                {
+                    i++;
+                }
             }
         }
     }
@@ -137,8 +153,8 @@ contract CombatSystem is System {
     function executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory actions) public {
         // ensure this is an authorised call
         // _requireAccess(address(this), _msgSender());
-
         //get encounter data
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
 
         for (uint256 i; i < moves.length; i++) {
             CombatMove memory currentMove = moves[i];
@@ -151,6 +167,20 @@ contract CombatSystem is System {
                 currentAction.weaponId,
                 randomNumber
             );
+        }
+
+        encounterData.currentTurn++;
+        uint256 deadMonsterCounter;
+        for (uint256 i; i < encounterData.defenders.length; i++) {
+            int256 curHp = Stats.getCurrentHp(encounterData.defenders[i]);
+            if (curHp <= 0) {
+                deadMonsterCounter++;
+            }
+        }
+        if (deadMonsterCounter == encounterData.defenders.length || encounterData.currentTurn == encounterData.maxTurns)
+        {
+            // for some reason block.timestamp is not availible here on anvil?
+            encounterData.end = block.number;
         }
     }
 
@@ -170,14 +200,13 @@ contract CombatSystem is System {
     ) internal {
         // get action data
         ActionsData memory actionData = Actions.get(actionId);
-        //TODO figure out how many chunks to get and distribute those chunks
         //decode action data according to type
         if (uint8(actionData.actionType) == 1) {
             PhysicalAttackStats memory attackStats = abi.decode(actionData.actionStats, (PhysicalAttackStats));
             (int256 damage, bool hit, bool crit) =
                 _calculatePhysicalAttack(attackStats, attackerId, defenderId, weaponId, randomNumber);
-            int256 defenderDamage = Stats.getCurrentHp(defenderId) + int256(damage);
-            Stats.setCurrentHp(defenderId, defenderDamage);
+            int256 currentHp = Stats.getCurrentHp(defenderId) - int256(damage / int256(ATTACK_MODIFIER));
+            Stats.setCurrentHp(defenderId, currentHp);
         }
     }
 
@@ -194,16 +223,44 @@ contract CombatSystem is System {
         StatsData memory defender = applyEquipmentBonuses(defenderId);
         // get weapon stats
         WeaponStats memory weapon = IWorld(_world()).UD__getWeaponStats(weaponId);
-        (hit, crit) = _calculatePhysicalAttackModifier(randomNumber, attackStats, attacker, defender);
-        if (hit) {
-            damage = (
-                Math.add(
-                    attackStats.bonusDamage,
-                    (randomNumber % weapon.maxDamage == 0 ? weapon.minDamage : randomNumber % weapon.maxDamage + 1)
+
+        if (defender.currentHp > 0) {
+            uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
+
+            (hit, crit) = _calculatePhysicalAttackModifier(
+                uint256(rnChunks[1]), uint256(rnChunks[0]), attackStats, attacker, defender
+            );
+
+            if (hit) {
+                damage = (
+                    (
+                        attackStats.bonusDamage
+                            + int256(
+                                uint256(rnChunks[2]) % weapon.maxDamage <= weapon.minDamage
+                                    ? weapon.minDamage
+                                    : uint256(rnChunks[2]) % weapon.maxDamage
+                            ) + int256(attacker.strength / 2)
+                    ) * int256(ATTACK_MODIFIER)
                 )
-            ) * (attacker.strength * ATTACK_MODIFIER) - defender.armor;
+                    - int256(
+                        (
+                            int256(defender.armor) - attackStats.armorPenetration > 0
+                                ? uint256(int256(defender.armor) - attackStats.armorPenetration)
+                                : uint256(1)
+                        ) * DEFENSE_MODIFIER
+                    );
+                if (crit) {
+                    console2.log("CRIT!");
+                    damage = damage * int256(CRIT_MODIFIER);
+                }
+            } else {
+                console2.log("MISS!");
+                damage = 0;
+            }
         } else {
             damage = 0;
+            hit = false;
+            crit = false;
         }
     }
 
@@ -213,17 +270,19 @@ contract CombatSystem is System {
 
     function _calculatePhysicalAttackModifier(
         uint256 attackRoll,
+        uint256 defenseRoll,
         PhysicalAttackStats memory attackStats,
         StatsData memory attacker,
         StatsData memory defender
     ) internal returns (bool attackLands, bool crit) {
-        uint256 attackTotal = Math.add(attacker.agility, attackStats.attackModifierBonus) * (TO_HIT_MODIFIER);
-        // attacker.agility + attackStats.attackModifierBonus * TO_HIT_MODIFIER
+        uint256 attackTotal =
+            (Math.add(attacker.agility, attackStats.attackModifierBonus) + (attackRoll % 1000)) * (TO_HIT_MODIFIER);
+        // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
 
-        uint256 defenseTotal = defender.agility * DEFENSE_MODIFIER;
+        uint256 defenseTotal = ((defenseRoll % 1000) + defender.agility) * DEFENSE_MODIFIER;
         attackLands = attackTotal > defenseTotal;
         if (attackLands) {
-            crit = attackTotal / defenseTotal > 2;
+            crit = attackTotal / defenseTotal >= 2;
         }
     }
 

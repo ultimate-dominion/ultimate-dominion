@@ -76,7 +76,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(bob);
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
 
-        assertGt(Stats.get(entityId).currentHp, 0);
+        assertNotEq(Stats.get(entityId).currentHp, int256(Stats.get(entityId).maxHitPoints));
     }
 
     function test_EndTurn_Revert_NonCombatant() public {
