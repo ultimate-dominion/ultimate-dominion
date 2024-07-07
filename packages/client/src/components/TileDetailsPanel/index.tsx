@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   Flex,
   Grid,
@@ -10,32 +11,39 @@ import {
 import { useComponentValue, useEntityQuery } from '@latticexyz/react';
 import {
   Entity,
+  getComponentValue,
   getComponentValueStrict,
   Has,
   HasValue,
 } from '@latticexyz/recs';
-import { decodeEntity, encodeEntity } from '@latticexyz/store-sync/recs';
-import { useEffect, useState } from 'react';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
+import { useCallback, useEffect, useState } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
-import { formatEther, getContract, hexToString } from 'viem';
+import {
+  bytesToHex,
+  formatEther,
+  getContract,
+  hexToBytes,
+  hexToString,
+} from 'viem';
 
 import { useCharacter } from '../../contexts/CharacterContext';
 import { useMUD } from '../../contexts/MUDContext';
 import { fetchMetadataFromUri, uriToHttp } from '../../utils/helpers';
-import type { Character } from '../../utils/types';
-import { MONSTERS } from './data';
+import type { Character, Monster } from '../../utils/types';
 
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const TileDetailsPanel = (): JSX.Element => {
   const {
-    components: { Characters, CharacterStats, Position, Spawned },
+    components: { Characters, Mobs, Position, Spawned, Stats },
     delegatorAddress,
     network: { publicClient, worldContract },
   } = useMUD();
   const { character } = useCharacter();
 
   const [otherPlayers, setOtherPlayers] = useState<Character[]>([]);
+  const [monsters, setMonsters] = useState<Monster[]>([]);
 
   const characterPosition = useComponentValue(
     Position,
@@ -45,32 +53,26 @@ export const TileDetailsPanel = (): JSX.Element => {
     ),
   );
 
-  const characterEntities = useEntityQuery([
+  const allEntities = useEntityQuery([
     Has(Spawned),
-    Has(Characters),
-    Has(CharacterStats),
     HasValue(Position, {
       x: characterPosition?.x,
       y: characterPosition?.y,
     }),
   ]);
 
-  useEffect(() => {
-    (async (): Promise<void> => {
+  const getOtherCharacters = useCallback(
+    async (entities: Entity[]): Promise<void> => {
       if (!(delegatorAddress && publicClient && worldContract)) return;
 
-      const characters = await Promise.all(
-        characterEntities.map(async (entity: Entity) => {
+      const characters: Character[] = await Promise.all(
+        entities.map(async (entity: Entity) => {
           const characterData = getComponentValueStrict(Characters, entity);
-          const characterStats = getComponentValueStrict(
-            CharacterStats,
-            entity,
-          );
+          const characterStats = getComponentValueStrict(Stats, entity);
 
-          const characterId = decodeEntity(
-            { characterId: 'uint256' },
-            entity,
-          ).characterId.toString();
+          const entityBytes = hexToBytes(entity.toString() as `0x${string}`);
+          const tokenBytes = entityBytes.slice(20);
+          const tokenId = BigInt(bytesToHex(tokenBytes)).toString();
 
           const characterTokenAddress =
             await worldContract.read.UD__getCharacterToken();
@@ -102,7 +104,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           });
 
           const metadataURI = await characterToken.read.tokenURI([
-            BigInt(characterId),
+            BigInt(tokenId),
           ]);
 
           const fetachedMetadata = await fetchMetadataFromUri(
@@ -143,37 +145,93 @@ export const TileDetailsPanel = (): JSX.Element => {
 
           return {
             ...fetachedMetadata,
-            goldBalance: formatEther(BigInt(goldBalance)).toString(),
             agility: characterStats?.agility.toString() ?? '0',
-            experience: characterStats?.experience.toString() ?? '0',
             characterClass: characterData.class,
-            characterId,
-            hitPoints: characterStats?.hitPoints.toString() ?? '0',
+            characterId: entity,
+            goldBalance: formatEther(BigInt(goldBalance)).toString(),
+            experience: characterStats?.experience.toString() ?? '0',
             intelligence: characterStats?.intelligence.toString() ?? '0',
+            maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
+            level: characterStats?.level.toString() ?? '0',
             locked: characterData.locked,
             name: hexToString(characterData.name as `0x${string}`, {
               size: 32,
             }),
             owner: characterData.owner,
             strength: characterStats?.strength.toString() ?? '0',
-          };
+            tokenId,
+          } as Character;
         }),
       );
 
       setOtherPlayers(characters.filter(c => c.owner !== delegatorAddress));
+    },
+    [Characters, Stats, delegatorAddress, publicClient, worldContract],
+  );
+
+  const getMonsters = useCallback(
+    async (entities: Entity[]): Promise<void> => {
+      const monsterAndMobIds = entities.map(entity => {
+        const entityBytes = hexToBytes(entity.toString() as `0x${string}`);
+        const mobIdBytes = entityBytes.slice(0, 4);
+        return {
+          mobId: BigInt(bytesToHex(mobIdBytes)).toString(),
+          monsterId: entity,
+        };
+      });
+
+      const _monsters: Monster[] = await Promise.all(
+        monsterAndMobIds.map(async monsterAndMobId => {
+          const { monsterId, mobId } = monsterAndMobId;
+          const mobData = getComponentValueStrict(
+            Mobs,
+            encodeEntity({ mobId: 'uint256' }, { mobId: BigInt(mobId) }),
+          );
+          const monsterStats = getComponentValueStrict(Stats, monsterId);
+
+          const { mobMetadata: metadataURI } = mobData;
+
+          const fetachedMetadata = await fetchMetadataFromUri(
+            uriToHttp(metadataURI)[0],
+          );
+
+          return {
+            level: monsterStats.level.toString(),
+            mobId,
+            monsterId,
+            ...fetachedMetadata,
+          };
+        }),
+      );
+
+      setMonsters(_monsters);
+    },
+    [Mobs, Stats],
+  );
+
+  useEffect(() => {
+    (async (): Promise<void> => {
+      if (!allEntities) return;
+
+      const characterEntities: Entity[] = [];
+      const monsterEntities: Entity[] = [];
+
+      await Promise.all(
+        allEntities.map(async entity => {
+          const characterData = getComponentValue(Characters, entity);
+
+          if (characterData) {
+            characterEntities.push(entity);
+          } else {
+            monsterEntities.push(entity);
+          }
+        }),
+      );
+
+      await getOtherCharacters(characterEntities);
+      await getMonsters(monsterEntities);
     })();
-  }, [
-    character,
-    characterEntities,
-    characterPosition,
-    Characters,
-    CharacterStats,
-    delegatorAddress,
-    Position,
-    publicClient,
-    Spawned,
-    worldContract,
-  ]);
+  }, [allEntities, Characters, getMonsters, getOtherCharacters]);
 
   return (
     <Box>
@@ -198,12 +256,18 @@ export const TileDetailsPanel = (): JSX.Element => {
       </Grid>
       <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
         <GridItem colSpan={2}>
-          {MONSTERS.map((monster, i) => (
-            <MonsterRow
-              key={`tile-monster-${i}-${monster.name}`}
-              monster={monster}
-            />
-          ))}
+          {monsters.length > 0 &&
+            monsters.map((monster, i) => (
+              <MonsterRow
+                key={`tile-monster-${i}-${monster.name}`}
+                monster={monster}
+              />
+            ))}
+          {monsters.length === 0 && (
+            <Text size={{ base: '2xs', lg: 'sm' }}>
+              No monsters in this area
+            </Text>
+          )}
         </GridItem>
 
         {otherPlayers.length > 0 && (
@@ -239,10 +303,11 @@ export const TileDetailsPanel = (): JSX.Element => {
   );
 };
 
-const MonsterRow = ({ monster }: { monster: (typeof MONSTERS)[0] }) => {
-  const { color, level, name } = monster;
+const MonsterRow = ({ monster }: { monster: Monster }) => {
+  const { level, name } = monster;
 
-  const isFighting = monster.name === 'Green Slime';
+  const color = 'red';
+  const isFighting = false;
 
   return (
     <HStack
@@ -281,14 +346,13 @@ const PlayerRow = ({ player }: { player: Character }) => {
   const { name } = player;
 
   return (
-    <HStack h={ROW_HEIGHT} justifyContent="start">
+    <HStack h={ROW_HEIGHT} justifyContent="start" spacing={4}>
       <Text size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}>{name}</Text>
+      <Avatar size="xs" src={player.image} />
     </HStack>
   );
 };
 
-// TODO: Remove when character level is dynamic
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PlayerLevelRow = ({ player }: { player: Character }) => {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
@@ -303,8 +367,7 @@ const PlayerLevelRow = ({ player }: { player: Character }) => {
         _hover={{ borderBottom: '1px solid', cursor: 'pointer' }}
       >
         <Text size={{ base: '4xs', sm: '3xs', md: 'xs', lg: 'sm' }}>
-          {/* TODO: Make level dynamic */}
-          Level 1
+          Level {player.level}
         </Text>
         <IoIosArrowForward size={isMobile ? 10 : 20} />
       </Flex>

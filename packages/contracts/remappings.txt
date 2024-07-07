@@ -6,6 +6,7 @@ forge-std/=node_modules/forge-std/src/
 @systems/=src/systems/
 @interfaces/=src/interfaces/
 @tables/=src/codegen/tables/
+@libraries=src/libraries/
 @world/=src/codegen/world/
 @codegen/=src/codegen/
 @openzeppelin=node_modules/@openzeppelin/contracts/

@@ -40,22 +40,75 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "move",
+    "name": "getEntitiesAtPosition",
     "inputs": [
       {
-        "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "x",
-        "type": "uint32",
-        "internalType": "uint32"
+        "type": "uint16",
+        "internalType": "uint16"
       },
       {
         "name": "y",
-        "type": "uint32",
-        "internalType": "uint32"
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "entitiesAtPosition",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isAtPosition",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isAtPosition",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "move",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "outputs": [],
@@ -66,9 +119,9 @@ declare const abi: [
     "name": "spawn",
     "inputs": [
       {
-        "name": "characterId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [],
@@ -132,6 +185,55 @@ declare const abi: [
   },
   {
     "type": "event",
+    "name": "Store_SpliceDynamicData",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "dynamicFieldIndex",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "start",
+        "type": "uint48",
+        "indexed": false,
+        "internalType": "uint48"
+      },
+      {
+        "name": "deleteCount",
+        "type": "uint40",
+        "indexed": false,
+        "internalType": "uint40"
+      },
+      {
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "EncodedLengths"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Store_SpliceStaticData",
     "inputs": [
       {
@@ -163,6 +265,17 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "EncodedLengths_InvalidLength",
+    "inputs": [
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "Slice_OutOfBounds",
     "inputs": [
       {
@@ -179,6 +292,107 @@ declare const abi: [
         "name": "end",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Store_IndexOutOfBounds",
+    "inputs": [
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "accessedIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Store_InvalidResourceType",
+    "inputs": [
+      {
+        "name": "expected",
+        "type": "bytes2",
+        "internalType": "bytes2"
+      },
+      {
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "resourceIdString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Store_InvalidSplice",
+    "inputs": [
+      {
+        "name": "startWithinField",
+        "type": "uint40",
+        "internalType": "uint40"
+      },
+      {
+        "name": "deleteCount",
+        "type": "uint40",
+        "internalType": "uint40"
+      },
+      {
+        "name": "fieldLength",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "World_AccessDenied",
+    "inputs": [
+      {
+        "name": "resource",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "caller",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "World_FunctionSelectorNotFound",
+    "inputs": [
+      {
+        "name": "functionSelector",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "World_ResourceNotFound",
+    "inputs": [
+      {
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "resourceIdString",
+        "type": "string",
+        "internalType": "string"
       }
     ]
   }

@@ -40,8 +40,18 @@ enum EncounterType {
   PvE
 }
 
-enum SkillType {
+enum ActionType {
+  Temporary,
   PhysicalAttack,
   MagicAttack,
   StatusEffect
+}
+
+enum StatusEffects {
+  ToHitModifier,
+  DoT,
+  HitPointMod,
+  ArmorMod,
+  WeaponMod,
+  Stun
 }

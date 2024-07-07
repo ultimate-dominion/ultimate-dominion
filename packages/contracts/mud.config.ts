@@ -18,7 +18,8 @@ export default defineWorld({
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
-    SkillType: ["PhysicalAttack", "MagicAttack", "StatusEffect"],
+    ActionType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
+    StatusEffects: ["ToHitModifier", "DoT", "HitPointMod", "ArmorMod", "WeaponMod", "Stun"],
   },
   tables: {
     /**
@@ -28,63 +29,59 @@ export default defineWorld({
     Characters: {
       key: ["characterId"],
       schema: {
+        characterId: "bytes32",
+        tokenId: "uint256",
         owner: "address",
-        characterId: "uint256",
         class: "Classes",
         name: "bytes32",
         locked: "bool",
       },
     },
-    CharacterStats: {
-      key: ["characterId"],
-      schema: {
-        characterId: "uint256",
-        strength: "uint256",
-        agility: "uint256",
-        intelligence: "uint256",
-        hitPoints: "uint256",
-        damageTaken: "int256",
-        experience: "uint256",
-      },
-    },
-    MapConfig: {
-      key: [],
-      schema: {
-        height: "uint32",
-        width: "uint32",
-      },
-      codegen: {
-        dataStruct: false,
-      },
-    },
-    Position: {
-      key: ["characterId"],
-      schema: {
-        characterId: "uint256",
-        x: "uint32",
-        y: "uint32",
-      },
-      codegen: {
-        dataStruct: false,
-      },
-    },
-    Spawned: {
-      key: ["characterId"],
-      schema: {
-        characterId: "uint256",
-        spawned: "bool",
-      },
-    },
-    MobStats: {
+    Stats: {
       key: ["entityId"],
       schema: {
         entityId: "bytes32",
         strength: "uint256",
         agility: "uint256",
         intelligence: "uint256",
-        hitPoints: "uint256",
-        damageTaken: "int256",
+        maxHitPoints: "uint256",
+        currentHp: "int256",
         experience: "uint256",
+        level: "uint256",
+        armor: "uint256",
+      },
+    },
+    MapConfig: {
+      key: [],
+      schema: {
+        height: "uint16",
+        width: "uint16",
+      },
+      codegen: {
+        dataStruct: false,
+      },
+    },
+    Spawned: {
+      key: ["entityId"],
+      schema: {
+        entityId: "bytes32",
+        spawned: "bool",
+      },
+    },
+    Mobs: {
+      key: ["mobId"],
+      schema: {
+        mobId: "uint256",
+        mobType: "MobType",
+        mobStats: "bytes",
+        mobMetadata: "string",
+      },
+    },
+    MobsByLevel: {
+      key: ["level"],
+      schema: {
+        level: "uint256",
+        mobIds: "uint256[]",
       },
     },
     Levels: {
@@ -97,18 +94,24 @@ export default defineWorld({
     CharacterEquipment: {
       key: ["characterId"],
       schema: {
-        characterId: "uint256",
+        characterId: "bytes32",
+        strBonus: "int256",
+        agiBonus: "int256",
+        intBonus: "int256",
+        hpBonus: "int256",
         equippedArmor: "uint256[]",
         equippedWeapons: "uint256[]",
-        equippedSpells: "uint256[]",
+        equippedSpells: "bytes32[]",
+        equippedActions: "bytes32[]",
       },
     },
     Counters: {
       schema: {
         contractAddress: "address",
+        mobId: "uint256",
         counter: "uint256",
       },
-      key: ["contractAddress"],
+      key: ["contractAddress", "mobId"],
     },
     Items: {
       schema: {
@@ -118,15 +121,15 @@ export default defineWorld({
       },
       key: ["itemId"],
     },
-    Mobs: {
+    Actions: {
       schema: {
-        mobId: "uint256",
-        mobType: "MobType",
-        mobStats: "bytes",
-        mobMetadata: "string",
+        actionId: "bytes32",
+        actionType: "ActionType",
+        actionStats: "bytes",
       },
-      key: ["mobId"],
+      key: ["actionId"],
     },
+
     StarterItems: {
       key: ["class"],
       schema: {
@@ -162,18 +165,20 @@ export default defineWorld({
         // array of monsterIds if pve playerIds if pvp
         defenders: "bytes32[]",
         // array of playerIds
-        attackers: "uint256[]",
+        attackers: "bytes32[]",
       },
       key: ["encounterId"],
     },
-    MobEntity: {
-      key: ["mobEntityId"],
+    // when an entity starts combat it creates a "match entity" for that encounter.
+    //when combat ends, the encounterId is set to zero, and the damage taken subtracted from the entities hp.
+    MatchEntity: {
+      key: ["matchEntityId"],
       schema: {
-        mobEntityId: "bytes32",
-        remainingHp: "int256",
-        // by default this is bytes(0), if this mob is in an encounter it will be set,
+        matchEntityId: "bytes32",
+        // by default this is bytes(0), if this entity is in an encounter it will be set,
         // if the mob survives its encounter this will be set back to bytes(0)
         encounterId: "bytes32",
+        damageTaken: "int256",
       },
     },
     RandomNumbers: {
@@ -182,6 +187,28 @@ export default defineWorld({
         sequenceNumber: "uint64",
         RequestType: "RngRequestType",
         arbitraryData: "bytes",
+      },
+    },
+    /**
+     * The position of an entity.
+     */
+    Position: {
+      key: ["entity"],
+      codegen: {
+        dataStruct: false,
+      },
+      schema: {
+        entity: "bytes32",
+        x: "uint16",
+        y: "uint16",
+      },
+    },
+    EntitiesAtPosition: {
+      key: ["x", "y"],
+      schema: {
+        x: "uint16",
+        y: "uint16",
+        entities: "bytes32[]",
       },
     },
     /**

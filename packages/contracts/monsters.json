@@ -1,0 +1,49 @@
+{
+  "monsters": [
+    {
+      "metadataUri": "ipfs://QmZN3G116CXqquvtnyACV2Z9L3oy7H3UK1J5NFxD9RTxN9",
+      "name": "Cave Rat",
+      "stats": {
+        "agility": 1,
+        "armor": 2,
+        "class": 0,
+        "experience": 3,
+        "hitPoints": 4,
+        "intelligence": 5,
+        "inventory": [1],
+        "level": 1,
+        "strength": 7
+      }
+    },
+    {
+      "metadataUri": "ipfs://QmdVptga1u4wdM3moYzEKXui1wWjztAUTUC1h1DiGeyB1a",
+      "name": "Green Slime",
+      "stats": {
+        "agility": 1,
+        "armor": 2,
+        "class": 1,
+        "experience": 3,
+        "hitPoints": 4,
+        "intelligence": 5,
+        "inventory": [1],
+        "level": 1,
+        "strength": 7
+      }
+    },
+    {
+      "metadataUri": "ipfs://QmR2CSbeaS9dy6f7gxfrUbdsYkiKfduND2xh6WDYbGxk7N",
+      "name": "Kobold Scout",
+      "stats": {
+        "agility": 1,
+        "armor": 2,
+        "class": 2,
+        "experience": 3,
+        "hitPoints": 4,
+        "intelligence": 5,
+        "inventory": [1],
+        "level": 1,
+        "strength": 7
+      }
+    }
+  ]
+}

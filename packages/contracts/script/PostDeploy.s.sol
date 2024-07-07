@@ -13,8 +13,6 @@ import { UltimateDominionConfig, Levels, MapConfig } from "@codegen/index.sol";
 import { ResourceIdLib } from "@latticexyz/store/src/ResourceId.sol";
 import { ResourceId, WorldResourceIdLib, WorldResourceIdInstance } from "@latticexyz/world/src/WorldResourceId.sol";
 import { RESOURCE_SYSTEM } from "@latticexyz/world/src/worldResourceTypes.sol";
-import { DeployGold } from "./DeployGold.sol";
-import { DeployCharacters } from "./DeployCharacters.sol";
 import { RngSystem } from "../src/systems/RngSystem.sol";
 import { IERC721Mintable } from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import { registerERC721 } from "@latticexyz/world-modules/src/modules/erc721-puppet/registerERC721.sol";
@@ -23,8 +21,8 @@ import { ERC721MetadataData } from "@latticexyz/world-modules/src/modules/erc721
 import { GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, ITEMS_NAMESPACE, TOKEN_URI } from "../constants.sol";
 import { NoTransferHook } from "../src/NoTransferHook.sol";
 import { BEFORE_CALL_SYSTEM } from "@latticexyz/world/src/systemHookTypes.sol";
-import { Classes, ItemType } from "@codegen/common.sol";
-import { WeaponStats } from "@interfaces/Structs.sol";
+import { Classes, ItemType, MobType } from "@codegen/common.sol";
+import { WeaponStats, MonsterStats, MonsterTemplateDetails } from "@interfaces/Structs.sol";
 import { IERC20Mintable } from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import { ERC20MetadataData } from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/ERC20Metadata.sol";
 import { ERC20System } from "@latticexyz/world-modules/src/modules/erc20-puppet/ERC20System.sol";
@@ -41,6 +39,7 @@ import { _erc1155SystemId } from "@erc1155/utils.sol";
 import { Multicall3 } from "./Multicall3.sol";
 
 import "forge-std/console2.sol";
+import "forge-std/StdJson.sol";
 
 struct ResourceIds {
   ResourceId erc721SystemId;
@@ -55,6 +54,8 @@ struct ResourceIds {
 }
 
 contract PostDeploy is Script {
+  using stdJson for string;
+
   IWorld public world;
   ResourceIds public resourceIds;
   address public worldAddress;
@@ -87,8 +88,8 @@ contract PostDeploy is Script {
       UltimateDominionConfig.setPythProvider(0x52DeaA1c84233F7bb8C8A45baeDE41091c616506);
     }
 
-    uint32 height = uint32(10);
-    uint32 width = uint32(10);
+    uint16 height = uint16(10);
+    uint16 width = uint16(10);
     MapConfig.set(width, height);
 
     //install puppet
@@ -172,6 +173,7 @@ contract PostDeploy is Script {
     UltimateDominionConfig.setItems(address(items));
 
     _createStarterItems();
+    _createMonsters();
     setLevels();
     vm.stopBroadcast();
   }
@@ -215,7 +217,16 @@ contract PostDeploy is Script {
 
   function _createStarterItems() internal {
     uint8[] memory restrictions = new uint8[](0);
-    WeaponStats memory weaponStats = WeaponStats({ damage: 1, speed: 2, classRestrictions: restrictions, minLevel: 0 });
+    WeaponStats memory weaponStats = WeaponStats({
+      minDamage: 1,
+      maxDamage: 4,
+      classRestrictions: restrictions,
+      minLevel: 0,
+      strModifier: 0,
+      agiModifier: 0,
+      intModifier: 0,
+      hitPointModifier: 0
+    });
 
     uint256 starterItemId = world.UD__createItem(
       ItemType.Weapon,
@@ -230,6 +241,31 @@ contract PostDeploy is Script {
     world.UD__setStarterItems(Classes.Rogue, itemIds, amounts);
     world.UD__setStarterItems(Classes.Warrior, itemIds, amounts);
     world.UD__setStarterItems(Classes.Mage, itemIds, amounts);
+  }
+
+  function _createMonsters() internal {
+    string memory json = vm.readFile("monsters.json");
+    bytes memory monsterStatsData = vm.parseJson(json, ".monsters");
+
+    MonsterTemplateDetails[] memory monsterTemplateDetails = abi.decode(monsterStatsData, (MonsterTemplateDetails[]));
+
+    for (uint256 i = 0; i < monsterTemplateDetails.length; i++) {
+      MonsterTemplateDetails memory monsterTemplate = monsterTemplateDetails[i];
+
+      MonsterStats memory newMonster = MonsterStats({
+        agility: monsterTemplate.stats.agility,
+        armor: monsterTemplate.stats.armor,
+        class: monsterTemplate.stats.class,
+        experience: monsterTemplate.stats.experience,
+        hitPoints: monsterTemplate.stats.hitPoints,
+        level: monsterTemplate.stats.level,
+        intelligence: monsterTemplate.stats.intelligence,
+        inventory: monsterTemplate.stats.inventory,
+        strength: monsterTemplate.stats.strength
+      });
+
+      world.UD__createMob(MobType.Monster, abi.encode(newMonster), monsterTemplate.metadataUri);
+    }
   }
 
   function setLevels() internal {

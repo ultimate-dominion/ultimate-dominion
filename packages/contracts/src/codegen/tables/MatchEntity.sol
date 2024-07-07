@@ -16,22 +16,22 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-struct MobEntityData {
-  int256 remainingHp;
+struct MatchEntityData {
   bytes32 encounterId;
+  int256 damageTaken;
 }
 
-library MobEntity {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "UD", name: "MobEntity", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746255440000000000000000000000004d6f62456e7469747900000000000000);
+library MatchEntity {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "UD", name: "MatchEntity", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746255440000000000000000000000004d61746368456e746974790000000000);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0040020020200000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (int256, bytes32)
-  Schema constant _valueSchema = Schema.wrap(0x004002003f5f0000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bytes32, int256)
+  Schema constant _valueSchema = Schema.wrap(0x004002005f3f0000000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -39,7 +39,7 @@ library MobEntity {
    */
   function getKeyNames() internal pure returns (string[] memory keyNames) {
     keyNames = new string[](1);
-    keyNames[0] = "mobEntityId";
+    keyNames[0] = "matchEntityId";
   }
 
   /**
@@ -48,8 +48,8 @@ library MobEntity {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](2);
-    fieldNames[0] = "remainingHp";
-    fieldNames[1] = "encounterId";
+    fieldNames[0] = "encounterId";
+    fieldNames[1] = "damageTaken";
   }
 
   /**
@@ -67,95 +67,95 @@ library MobEntity {
   }
 
   /**
-   * @notice Get remainingHp.
+   * @notice Get encounterId.
    */
-  function getRemainingHp(bytes32 mobEntityId) internal view returns (int256 remainingHp) {
+  function getEncounterId(bytes32 matchEntityId) internal view returns (bytes32 encounterId) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (int256(uint256(bytes32(_blob))));
+    return (bytes32(_blob));
   }
 
   /**
-   * @notice Get remainingHp.
+   * @notice Get encounterId.
    */
-  function _getRemainingHp(bytes32 mobEntityId) internal view returns (int256 remainingHp) {
+  function _getEncounterId(bytes32 matchEntityId) internal view returns (bytes32 encounterId) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    return (bytes32(_blob));
+  }
+
+  /**
+   * @notice Set encounterId.
+   */
+  function setEncounterId(bytes32 matchEntityId, bytes32 encounterId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = matchEntityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((encounterId)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set encounterId.
+   */
+  function _setEncounterId(bytes32 matchEntityId, bytes32 encounterId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = matchEntityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((encounterId)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get damageTaken.
+   */
+  function getDamageTaken(bytes32 matchEntityId) internal view returns (int256 damageTaken) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = matchEntityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
   /**
-   * @notice Set remainingHp.
+   * @notice Get damageTaken.
    */
-  function setRemainingHp(bytes32 mobEntityId, int256 remainingHp) internal {
+  function _getDamageTaken(bytes32 matchEntityId) internal view returns (int256 damageTaken) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((remainingHp)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set remainingHp.
-   */
-  function _setRemainingHp(bytes32 mobEntityId, int256 remainingHp) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((remainingHp)), _fieldLayout);
-  }
-
-  /**
-   * @notice Get encounterId.
-   */
-  function getEncounterId(bytes32 mobEntityId) internal view returns (bytes32 encounterId) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
-
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
-    return (bytes32(_blob));
-  }
-
-  /**
-   * @notice Get encounterId.
-   */
-  function _getEncounterId(bytes32 mobEntityId) internal view returns (bytes32 encounterId) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
-    return (bytes32(_blob));
+    return (int256(uint256(bytes32(_blob))));
   }
 
   /**
-   * @notice Set encounterId.
+   * @notice Set damageTaken.
    */
-  function setEncounterId(bytes32 mobEntityId, bytes32 encounterId) internal {
+  function setDamageTaken(bytes32 matchEntityId, int256 damageTaken) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((encounterId)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((damageTaken)), _fieldLayout);
   }
 
   /**
-   * @notice Set encounterId.
+   * @notice Set damageTaken.
    */
-  function _setEncounterId(bytes32 mobEntityId, bytes32 encounterId) internal {
+  function _setDamageTaken(bytes32 matchEntityId, int256 damageTaken) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((encounterId)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((damageTaken)), _fieldLayout);
   }
 
   /**
    * @notice Get the full data.
    */
-  function get(bytes32 mobEntityId) internal view returns (MobEntityData memory _table) {
+  function get(bytes32 matchEntityId) internal view returns (MatchEntityData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreSwitch.getRecord(
       _tableId,
@@ -168,9 +168,9 @@ library MobEntity {
   /**
    * @notice Get the full data.
    */
-  function _get(bytes32 mobEntityId) internal view returns (MobEntityData memory _table) {
+  function _get(bytes32 matchEntityId) internal view returns (MatchEntityData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreCore.getRecord(
       _tableId,
@@ -183,14 +183,14 @@ library MobEntity {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(bytes32 mobEntityId, int256 remainingHp, bytes32 encounterId) internal {
-    bytes memory _staticData = encodeStatic(remainingHp, encounterId);
+  function set(bytes32 matchEntityId, bytes32 encounterId, int256 damageTaken) internal {
+    bytes memory _staticData = encodeStatic(encounterId, damageTaken);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -198,14 +198,14 @@ library MobEntity {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(bytes32 mobEntityId, int256 remainingHp, bytes32 encounterId) internal {
-    bytes memory _staticData = encodeStatic(remainingHp, encounterId);
+  function _set(bytes32 matchEntityId, bytes32 encounterId, int256 damageTaken) internal {
+    bytes memory _staticData = encodeStatic(encounterId, damageTaken);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -213,14 +213,14 @@ library MobEntity {
   /**
    * @notice Set the full data using the data struct.
    */
-  function set(bytes32 mobEntityId, MobEntityData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.remainingHp, _table.encounterId);
+  function set(bytes32 matchEntityId, MatchEntityData memory _table) internal {
+    bytes memory _staticData = encodeStatic(_table.encounterId, _table.damageTaken);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -228,14 +228,14 @@ library MobEntity {
   /**
    * @notice Set the full data using the data struct.
    */
-  function _set(bytes32 mobEntityId, MobEntityData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.remainingHp, _table.encounterId);
+  function _set(bytes32 matchEntityId, MatchEntityData memory _table) internal {
+    bytes memory _staticData = encodeStatic(_table.encounterId, _table.damageTaken);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -243,10 +243,10 @@ library MobEntity {
   /**
    * @notice Decode the tightly packed blob of static data using this table's field layout.
    */
-  function decodeStatic(bytes memory _blob) internal pure returns (int256 remainingHp, bytes32 encounterId) {
-    remainingHp = (int256(uint256(Bytes.getBytes32(_blob, 0))));
+  function decodeStatic(bytes memory _blob) internal pure returns (bytes32 encounterId, int256 damageTaken) {
+    encounterId = (Bytes.getBytes32(_blob, 0));
 
-    encounterId = (Bytes.getBytes32(_blob, 32));
+    damageTaken = (int256(uint256(Bytes.getBytes32(_blob, 32))));
   }
 
   /**
@@ -259,16 +259,16 @@ library MobEntity {
     bytes memory _staticData,
     EncodedLengths,
     bytes memory
-  ) internal pure returns (MobEntityData memory _table) {
-    (_table.remainingHp, _table.encounterId) = decodeStatic(_staticData);
+  ) internal pure returns (MatchEntityData memory _table) {
+    (_table.encounterId, _table.damageTaken) = decodeStatic(_staticData);
   }
 
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(bytes32 mobEntityId) internal {
+  function deleteRecord(bytes32 matchEntityId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -276,9 +276,9 @@ library MobEntity {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(bytes32 mobEntityId) internal {
+  function _deleteRecord(bytes32 matchEntityId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -287,8 +287,8 @@ library MobEntity {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(int256 remainingHp, bytes32 encounterId) internal pure returns (bytes memory) {
-    return abi.encodePacked(remainingHp, encounterId);
+  function encodeStatic(bytes32 encounterId, int256 damageTaken) internal pure returns (bytes memory) {
+    return abi.encodePacked(encounterId, damageTaken);
   }
 
   /**
@@ -298,10 +298,10 @@ library MobEntity {
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
   function encode(
-    int256 remainingHp,
-    bytes32 encounterId
+    bytes32 encounterId,
+    int256 damageTaken
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(remainingHp, encounterId);
+    bytes memory _staticData = encodeStatic(encounterId, damageTaken);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -312,9 +312,9 @@ library MobEntity {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(bytes32 mobEntityId) internal pure returns (bytes32[] memory) {
+  function encodeKeyTuple(bytes32 matchEntityId) internal pure returns (bytes32[] memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = mobEntityId;
+    _keyTuple[0] = matchEntityId;
 
     return _keyTuple;
   }

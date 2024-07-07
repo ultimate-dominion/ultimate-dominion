@@ -26,7 +26,7 @@ struct CombatEncounterData {
   uint256 currentTurn;
   uint256 maxTurns;
   bytes32[] defenders;
-  uint256[] attackers;
+  bytes32[] attackers;
 }
 
 library CombatEncounter {
@@ -38,8 +38,8 @@ library CombatEncounter {
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint8, uint256, uint256, uint256, uint256, bytes32[], uint256[])
-  Schema constant _valueSchema = Schema.wrap(0x00810502001f1f1f1fc181000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint8, uint256, uint256, uint256, uint256, bytes32[], bytes32[])
+  Schema constant _valueSchema = Schema.wrap(0x00810502001f1f1f1fc1c1000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -454,29 +454,29 @@ library CombatEncounter {
   /**
    * @notice Get attackers.
    */
-  function getAttackers(bytes32 encounterId) internal view returns (uint256[] memory attackers) {
+  function getAttackers(bytes32 encounterId) internal view returns (bytes32[] memory attackers) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
     bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 1);
-    return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_uint256());
+    return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
   }
 
   /**
    * @notice Get attackers.
    */
-  function _getAttackers(bytes32 encounterId) internal view returns (uint256[] memory attackers) {
+  function _getAttackers(bytes32 encounterId) internal view returns (bytes32[] memory attackers) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
     bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 1);
-    return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_uint256());
+    return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
   }
 
   /**
    * @notice Set attackers.
    */
-  function setAttackers(bytes32 encounterId, uint256[] memory attackers) internal {
+  function setAttackers(bytes32 encounterId, bytes32[] memory attackers) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
@@ -486,7 +486,7 @@ library CombatEncounter {
   /**
    * @notice Set attackers.
    */
-  function _setAttackers(bytes32 encounterId, uint256[] memory attackers) internal {
+  function _setAttackers(bytes32 encounterId, bytes32[] memory attackers) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
@@ -523,13 +523,13 @@ library CombatEncounter {
    * @notice Get an item of attackers.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function getItemAttackers(bytes32 encounterId, uint256 _index) internal view returns (uint256) {
+  function getItemAttackers(bytes32 encounterId, uint256 _index) internal view returns (bytes32) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
     unchecked {
       bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 32, (_index + 1) * 32);
-      return (uint256(bytes32(_blob)));
+      return (bytes32(_blob));
     }
   }
 
@@ -537,20 +537,20 @@ library CombatEncounter {
    * @notice Get an item of attackers.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function _getItemAttackers(bytes32 encounterId, uint256 _index) internal view returns (uint256) {
+  function _getItemAttackers(bytes32 encounterId, uint256 _index) internal view returns (bytes32) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
     unchecked {
       bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 32, (_index + 1) * 32);
-      return (uint256(bytes32(_blob)));
+      return (bytes32(_blob));
     }
   }
 
   /**
    * @notice Push an element to attackers.
    */
-  function pushAttackers(bytes32 encounterId, uint256 _element) internal {
+  function pushAttackers(bytes32 encounterId, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
@@ -560,7 +560,7 @@ library CombatEncounter {
   /**
    * @notice Push an element to attackers.
    */
-  function _pushAttackers(bytes32 encounterId, uint256 _element) internal {
+  function _pushAttackers(bytes32 encounterId, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
@@ -590,7 +590,7 @@ library CombatEncounter {
   /**
    * @notice Update an element of attackers at `_index`.
    */
-  function updateAttackers(bytes32 encounterId, uint256 _index, uint256 _element) internal {
+  function updateAttackers(bytes32 encounterId, uint256 _index, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
@@ -603,7 +603,7 @@ library CombatEncounter {
   /**
    * @notice Update an element of attackers at `_index`.
    */
-  function _updateAttackers(bytes32 encounterId, uint256 _index, uint256 _element) internal {
+  function _updateAttackers(bytes32 encounterId, uint256 _index, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
@@ -654,7 +654,7 @@ library CombatEncounter {
     uint256 currentTurn,
     uint256 maxTurns,
     bytes32[] memory defenders,
-    uint256[] memory attackers
+    bytes32[] memory attackers
   ) internal {
     bytes memory _staticData = encodeStatic(encounterType, start, end, currentTurn, maxTurns);
 
@@ -678,7 +678,7 @@ library CombatEncounter {
     uint256 currentTurn,
     uint256 maxTurns,
     bytes32[] memory defenders,
-    uint256[] memory attackers
+    bytes32[] memory attackers
   ) internal {
     bytes memory _staticData = encodeStatic(encounterType, start, end, currentTurn, maxTurns);
 
@@ -760,7 +760,7 @@ library CombatEncounter {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (bytes32[] memory defenders, uint256[] memory attackers) {
+  ) internal pure returns (bytes32[] memory defenders, bytes32[] memory attackers) {
     uint256 _start;
     uint256 _end;
     unchecked {
@@ -772,7 +772,7 @@ library CombatEncounter {
     unchecked {
       _end += _encodedLengths.atIndex(1);
     }
-    attackers = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_uint256());
+    attackers = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
   }
 
   /**
@@ -831,7 +831,7 @@ library CombatEncounter {
    */
   function encodeLengths(
     bytes32[] memory defenders,
-    uint256[] memory attackers
+    bytes32[] memory attackers
   ) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
@@ -843,7 +843,7 @@ library CombatEncounter {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(bytes32[] memory defenders, uint256[] memory attackers) internal pure returns (bytes memory) {
+  function encodeDynamic(bytes32[] memory defenders, bytes32[] memory attackers) internal pure returns (bytes memory) {
     return abi.encodePacked(EncodeArray.encode((defenders)), EncodeArray.encode((attackers)));
   }
 
@@ -860,7 +860,7 @@ library CombatEncounter {
     uint256 currentTurn,
     uint256 maxTurns,
     bytes32[] memory defenders,
-    uint256[] memory attackers
+    bytes32[] memory attackers
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(encounterType, start, end, currentTurn, maxTurns);
 
