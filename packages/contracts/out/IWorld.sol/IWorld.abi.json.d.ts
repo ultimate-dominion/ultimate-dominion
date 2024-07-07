@@ -104,7 +104,7 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "currentDamage",
+            "name": "currentHp",
             "type": "int256",
             "internalType": "int256"
           },
@@ -1223,7 +1223,7 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "currentDamage",
+            "name": "currentHp",
             "type": "int256",
             "internalType": "int256"
           },

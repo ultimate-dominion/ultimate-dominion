@@ -45,7 +45,7 @@ export default defineWorld({
         agility: "uint256",
         intelligence: "uint256",
         maxHitPoints: "uint256",
-        currentDamage: "int256",
+        currentHp: "int256",
         experience: "uint256",
         level: "uint256",
         armor: "uint256",

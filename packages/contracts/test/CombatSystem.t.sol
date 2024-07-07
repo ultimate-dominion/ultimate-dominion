@@ -57,6 +57,15 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
     }
 
+    function test_CreateMatch_Revert_ENTITY_OCCUPIED() public {
+        vm.prank(bob);
+        bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
+        assertEq(world.UD__getEncounter(matchId).start, block.timestamp);
+        vm.prank(bob);
+        vm.expectRevert("COMBAT SYSTEM: ENTITY OCCUPIED");
+        world.UD__createMatch(EncounterType.PvE, attackers, defenders);
+    }
+
     function test_EndTurn() public {
         vm.prank(bob);
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
@@ -67,7 +76,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(bob);
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
 
-        assertGt(Stats.get(entityId).currentDamage, 0);
+        assertGt(Stats.get(entityId).currentHp, 0);
     }
 
     function test_EndTurn_Revert_NonCombatant() public {
