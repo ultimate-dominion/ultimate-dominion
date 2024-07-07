@@ -24,7 +24,7 @@ import {
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {MonsterStats, WeaponStats, NPCStats, Action, PhysicalAttackStats} from "@interfaces/Structs.sol";
-import {_requireOwner} from "../utils.sol";
+import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {
@@ -151,8 +151,9 @@ contract CombatSystem is System {
     }
 
     function executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory actions) public {
-        // ensure this is an authorised call
-        // _requireAccess(address(this), _msgSender());
+        // ensure this is an authorised call from the entropy contract
+        _requireAccess(address(this), _msgSender());
+
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
 
