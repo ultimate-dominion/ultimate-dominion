@@ -17,23 +17,23 @@ declare const abi: [
         "components": [
           {
             "name": "bonusDamage",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "armorPenetration",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "attackModifierBonus",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "critChanceBonus",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           }
         ]
       },
@@ -61,8 +61,18 @@ declare const abi: [
     "outputs": [
       {
         "name": "damage",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "hit",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "crit",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "nonpayable"

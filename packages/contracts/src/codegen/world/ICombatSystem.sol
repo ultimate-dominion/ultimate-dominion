@@ -5,7 +5,7 @@ pragma solidity >=0.8.24;
 
 import { EncounterType } from "@codegen/common.sol";
 import { Action, PhysicalAttackStats } from "@interfaces/Structs.sol";
-import { CombatEncounterData } from "@tables/CombatEncounter.sol";
+import { CombatEncounterData } from "@codegen/index.sol";
 
 /**
  * @title ICombatSystem
