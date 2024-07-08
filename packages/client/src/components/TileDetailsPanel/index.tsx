@@ -30,7 +30,7 @@ import {
 import { useCharacter } from '../../contexts/CharacterContext';
 import { useMUD } from '../../contexts/MUDContext';
 import { fetchMetadataFromUri, uriToHttp } from '../../utils/helpers';
-import type { Character, Monster } from '../../utils/types';
+import { type Character, type Monster } from '../../utils/types';
 
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
@@ -191,11 +191,17 @@ export const TileDetailsPanel = (): JSX.Element => {
 
           const { mobMetadata: metadataURI } = mobData;
 
+          const monsterTemplateStats =
+            (await worldContract.read.UD__getMonsterStats([
+              monsterId as `0x${string}`,
+            ])) as { class: number };
+
           const fetachedMetadata = await fetchMetadataFromUri(
             uriToHttp(metadataURI)[0],
           );
 
           return {
+            class: monsterTemplateStats.class,
             level: monsterStats.level.toString(),
             mobId,
             monsterId,
@@ -206,7 +212,7 @@ export const TileDetailsPanel = (): JSX.Element => {
 
       setMonsters(_monsters);
     },
-    [Mobs, Stats],
+    [Mobs, Stats, worldContract],
   );
 
   useEffect(() => {
@@ -303,10 +309,15 @@ export const TileDetailsPanel = (): JSX.Element => {
   );
 };
 
+const MONSTER_COLORS = {
+  [0]: 'red',
+  [1]: 'yellow',
+  [2]: 'green',
+};
+
 const MonsterRow = ({ monster }: { monster: Monster }) => {
   const { level, name } = monster;
 
-  const color = 'red';
   const isFighting = false;
 
   return (
@@ -329,7 +340,10 @@ const MonsterRow = ({ monster }: { monster: Monster }) => {
         cursor: 'pointer',
       }}
     >
-      <Text color={color} size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}>
+      <Text
+        color={MONSTER_COLORS[monster.class]}
+        size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+      >
         {name}
       </Text>
       <Text

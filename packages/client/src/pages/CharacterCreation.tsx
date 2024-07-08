@@ -30,7 +30,7 @@ import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { API_URL } from '../utils/constants';
 import { shortenAddress } from '../utils/helpers';
-import { CharacterClasses } from '../utils/types';
+import { StatsClasses } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
@@ -56,8 +56,8 @@ export const CharacterCreation = (): JSX.Element => {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [characterClass, setCharacterClass] = useState<CharacterClasses>(
-    CharacterClasses.Warrior,
+  const [characterClass, setCharacterClass] = useState<StatsClasses>(
+    StatsClasses.Warrior,
   );
 
   const [isCreating, setIsCreating] = useState(false);
@@ -322,7 +322,7 @@ export const CharacterCreation = (): JSX.Element => {
             </VStack>
             <Text>
               Class:{' '}
-              {rolledOnce ? CharacterClasses[character.characterClass] : 'None'}
+              {rolledOnce ? StatsClasses[character.characterClass] : 'None'}
             </Text>
           </VStack>
         </Box>
@@ -444,7 +444,7 @@ export const CharacterCreation = (): JSX.Element => {
             </Heading>
             <ButtonGroup justifyContent="space-between">
               <Button
-                onClick={() => setCharacterClass(CharacterClasses.Warrior)}
+                onClick={() => setCharacterClass(StatsClasses.Warrior)}
                 size="sm"
                 variant={characterClass === 0 ? 'solid' : 'outline'}
                 w="150px"
@@ -452,7 +452,7 @@ export const CharacterCreation = (): JSX.Element => {
                 Warrior
               </Button>
               <Button
-                onClick={() => setCharacterClass(CharacterClasses.Rogue)}
+                onClick={() => setCharacterClass(StatsClasses.Rogue)}
                 size="sm"
                 variant={characterClass === 1 ? 'solid' : 'outline'}
                 w="150px"
@@ -460,7 +460,7 @@ export const CharacterCreation = (): JSX.Element => {
                 Rogue
               </Button>
               <Button
-                onClick={() => setCharacterClass(CharacterClasses.Mage)}
+                onClick={() => setCharacterClass(StatsClasses.Mage)}
                 size="sm"
                 variant={characterClass === 2 ? 'solid' : 'outline'}
                 w="150px"
@@ -475,7 +475,7 @@ export const CharacterCreation = (): JSX.Element => {
               <Text color="red" fontSize="sm" mt={2}>
                 Your current class is{' '}
                 <Text as="span" fontWeight={700}>
-                  {CharacterClasses[character.characterClass]}
+                  {StatsClasses[character.characterClass]}
                 </Text>
                 . Re-roll stats to change class.
               </Text>
