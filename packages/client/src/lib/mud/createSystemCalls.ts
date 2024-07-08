@@ -121,7 +121,7 @@ export function createSystemCalls(
 
   const rollStats = async (
     characterEntity: Entity,
-    characterClass: CharacterClasses,
+    characterClass: StatsClasses,
   ) => {
     try {
       const entropyAddress = await worldContract.read.UD__getEntropy();

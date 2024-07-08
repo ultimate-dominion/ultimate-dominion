@@ -3,7 +3,7 @@ import { Entity } from '@latticexyz/recs';
 export type Character = CharacterData & CharacterStats;
 
 export type CharacterData = Metadata & {
-  characterClass: CharacterClasses;
+  characterClass: StatsClasses;
   characterId: Entity;
   goldBalance: string;
   locked: boolean;
@@ -35,6 +35,7 @@ export type Metadata = {
 };
 
 export type Monster = Metadata & {
+  class: StatsClasses;
   level: string;
   mobId: string;
   monsterId: Entity;

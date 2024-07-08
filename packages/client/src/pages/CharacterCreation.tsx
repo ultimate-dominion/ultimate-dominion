@@ -31,14 +31,8 @@ import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
-import {
-  fetchMetadataFromUri,
-  shortenAddress,
-  uriToHttp,
-} from '../utils/helpers';
-import { StatsClasses, Weapon } from '../utils/types';
-
-const STARTER_WEAPON_TOKEN_IDS = [BigInt(1), BigInt(2), BigInt(3)];
+import { shortenAddress } from '../utils/helpers';
+import { StatsClasses } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
