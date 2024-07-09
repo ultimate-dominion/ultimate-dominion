@@ -14,6 +14,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { DevTools } from './components/DevTools';
 import { CharacterProvider } from './contexts/CharacterContext';
+import { MapNavigationProvider } from './contexts/MapNavigationContext';
 import { MUDProvider } from './contexts/MUDContext';
 import { Web3Provider } from './contexts/Web3Provider';
 import { setup } from './lib/mud/setup';
@@ -31,7 +32,9 @@ setup().then(async result => {
       <Web3Provider>
         <MUDProvider setupResult={result}>
           <CharacterProvider>
-            <App />
+            <MapNavigationProvider>
+              <App />
+            </MapNavigationProvider>
           </CharacterProvider>
           {import.meta.env.DEV && <DevTools />}
         </MUDProvider>
