@@ -5,27 +5,29 @@ import {
   Center,
   Grid,
   GridItem,
+  Spinner,
   Text,
 } from '@chakra-ui/react';
-import { getComponentValueStrict } from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
-import { useEffect, useMemo, useState } from 'react';
+import { Entity, getComponentValueStrict } from '@latticexyz/recs';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatEther, getContract, hexToString } from 'viem';
 
 import { ItemCard } from '../components/Character/Card/ItemCard';
 import { Misc } from '../components/Character/Misc';
 import { Profile } from '../components/Character/Profile';
-import { Stats } from '../components/Character/Stats';
+import { Stats as StatsPanel } from '../components/Character/Stats';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type { Character, CharacterStats } from '../utils/types';
 
 export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
+  const { renderError } = useToast();
   const {
-    components: { Characters, CharacterStats },
+    components: { Characters, Stats },
     network: { publicClient, worldContract },
   } = useMUD();
   const { character: userCharacter } = useCharacter();
@@ -33,18 +35,21 @@ export const CharacterPage = (): JSX.Element => {
   const [character, setCharacter] = useState<
     (Character & CharacterStats) | null
   >(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    (async (): Promise<void> => {
+  const fetchCharacter = useCallback(async () => {
+    try {
       if (!(characterId && publicClient && worldContract)) return;
+      setIsLoading(true);
 
-      const entity = encodeEntity(
-        { characterId: 'uint256' },
-        { characterId: BigInt(characterId) },
+      const characterData = getComponentValueStrict(
+        Characters,
+        characterId as Entity,
       );
-
-      const characterData = getComponentValueStrict(Characters, entity);
-      const characterStats = getComponentValueStrict(CharacterStats, entity);
+      const characterStats = getComponentValueStrict(
+        Stats,
+        characterId as Entity,
+      );
 
       const characterTokenAddress =
         await worldContract.read.UD__getCharacterToken();
@@ -76,7 +81,7 @@ export const CharacterPage = (): JSX.Element => {
       });
 
       const metadataURI = await characterToken.read.tokenURI([
-        BigInt(characterId),
+        BigInt(characterData.tokenId),
       ]);
 
       const fetachedMetadata = await fetchMetadataFromUri(
@@ -121,23 +126,50 @@ export const CharacterPage = (): JSX.Element => {
         agility: characterStats?.agility.toString() ?? '0',
         experience: characterStats?.experience.toString() ?? '0',
         characterClass: characterData.class,
-        characterId,
-        hitPoints: characterStats?.hitPoints.toString() ?? '0',
+        characterId: characterId as Entity,
         intelligence: characterStats?.intelligence.toString() ?? '0',
+        level: characterStats?.level.toString() ?? '0',
         locked: characterData.locked,
+        maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
         name: hexToString(characterData.name as `0x${string}`, {
           size: 32,
         }),
         owner: characterData.owner,
         strength: characterStats?.strength.toString() ?? '0',
+        tokenId: characterData.tokenId.toString(),
       });
+    } catch (error) {
+      renderError(error, 'Failed to fetch character data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    characterId,
+    Characters,
+    Stats,
+    publicClient,
+    renderError,
+    worldContract,
+  ]);
+
+  useEffect(() => {
+    (async (): Promise<void> => {
+      await fetchCharacter();
     })();
-  }, [characterId, Characters, CharacterStats, publicClient, worldContract]);
+  }, [fetchCharacter]);
 
   const isOwner = useMemo(
     () => character?.owner === userCharacter?.owner,
     [character, userCharacter],
   );
+
+  if (isLoading) {
+    return (
+      <Center h="100%">
+        <Spinner size="lg" />
+      </Center>
+    );
+  }
 
   return (
     <Box>
@@ -188,10 +220,10 @@ export const CharacterPage = (): JSX.Element => {
             px={6}
             rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
-            <Stats
+            <StatsPanel
               agility={character.agility}
-              hitPoints={character.hitPoints}
               intelligence={character.intelligence}
+              maxHitPoints={character.maxHitPoints}
               strength={character.strength}
             />
           </GridItem>

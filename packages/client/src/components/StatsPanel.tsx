@@ -15,6 +15,7 @@ import { useComponentValue } from '@latticexyz/react';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
+import { useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -23,6 +24,7 @@ import { Level } from './Level';
 const CURRENT_LEVEL = 1;
 
 export const StatsPanel = (): JSX.Element => {
+  const navigate = useNavigate();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
     components: { Levels },
@@ -56,6 +58,8 @@ export const StatsPanel = (): JSX.Element => {
   return (
     <VStack alignItems="start" h="100%" p={2} spacing={4}>
       <HStack
+        as="button"
+        onClick={() => navigate(`/characters/${character.characterId}`)}
         spacing={4}
         _hover={{ cursor: 'pointer', textDecoration: 'underline' }}
       >
