@@ -27,10 +27,10 @@ import {
   hexToString,
 } from 'viem';
 
-import { useCharacter } from '../../contexts/CharacterContext';
-import { useMUD } from '../../contexts/MUDContext';
-import { fetchMetadataFromUri, uriToHttp } from '../../utils/helpers';
-import { type Character, type Monster } from '../../utils/types';
+import { useCharacter } from '../contexts/CharacterContext';
+import { useMUD } from '../contexts/MUDContext';
+import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import { type Character, type Monster } from '../utils/types';
 
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 

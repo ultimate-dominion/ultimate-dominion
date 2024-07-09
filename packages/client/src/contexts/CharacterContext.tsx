@@ -9,16 +9,14 @@ import {
   useEffect,
   useState,
 } from 'react';
-import {
-  bytesToHex,
-  formatEther,
-  getContract,
-  hexToBytes,
-  hexToString,
-} from 'viem';
+import { formatEther, getContract, hexToString } from 'viem';
 
 import { useToast } from '../hooks/useToast';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import {
+  decodeCharacterId,
+  fetchMetadataFromUri,
+  uriToHttp,
+} from '../utils/helpers';
 import type { CharacterData, CharacterStats } from '../utils/types';
 import { useMUD } from './MUDContext';
 
@@ -35,6 +33,7 @@ const CharacterContext = createContext<CharacterContextType>({
     agility: '0',
     experience: '0',
     intelligence: '0',
+    level: '0',
     maxHitPoints: '0',
     strength: '0',
   },
@@ -82,9 +81,9 @@ export const CharacterProvider = ({
     ).map(entity => {
       const characterData = getComponentValueStrict(Characters, entity);
 
-      const entityBytes = hexToBytes(entity.toString() as `0x${string}`);
-      const tokenBytes = entityBytes.slice(20);
-      const tokenId = BigInt(bytesToHex(tokenBytes)).toString();
+      const { characterTokenId } = decodeCharacterId(
+        entity.toString() as `0x${string}`,
+      );
 
       return {
         characterClass: characterData.class,
@@ -92,7 +91,7 @@ export const CharacterProvider = ({
         locked: characterData.locked,
         name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
         owner: characterData.owner,
-        tokenId,
+        tokenId: characterTokenId,
       };
     })[0];
 
@@ -196,6 +195,7 @@ export const CharacterProvider = ({
           agility: characterStats?.agility.toString() ?? '0',
           experience: characterStats?.experience.toString() ?? '0',
           intelligence: characterStats?.intelligence.toString() ?? '0',
+          level: characterStats?.level.toString() ?? '0',
           maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
           strength: characterStats?.strength.toString() ?? '0',
         },
