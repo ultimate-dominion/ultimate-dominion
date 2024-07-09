@@ -2,13 +2,13 @@ import { HStack, Text, VStack } from '@chakra-ui/react';
 
 export const Stats = ({
   agility,
-  baseHitPoints,
   intelligence,
+  maxHitPoints,
   strength,
 }: {
   agility: string;
-  baseHitPoints: string;
   intelligence: string;
+  maxHitPoints: string;
   strength: string;
 }): JSX.Element => {
   return (
@@ -27,7 +27,7 @@ export const Stats = ({
       <VStack w="100%">
         <HStack justify="space-between" w="100%">
           <Text size="lg">HP - Hit</Text>
-          <Text size="lg">{baseHitPoints}</Text>
+          <Text size="lg">{maxHitPoints}</Text>
         </HStack>
 
         <HStack justify="space-between" w="100%">

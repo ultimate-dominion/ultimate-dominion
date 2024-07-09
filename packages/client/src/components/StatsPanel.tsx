@@ -31,7 +31,6 @@ const CURRENT_LEVEL = 1;
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
-  const { renderError } = useToast();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
     components: {

@@ -9,20 +9,7 @@ import {
   Text,
   useDisclosure,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import {
-  Entity,
-  getComponentValue,
-  getComponentValueStrict,
-  Has,
-  NotValue,
-  runQuery,
-} from '@latticexyz/recs';
-import {
-  decodeEntity,
-  encodeEntity,
-  singletonEntity,
-} from '@latticexyz/store-sync/recs';
+import { Entity, getComponentValueStrict } from '@latticexyz/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
@@ -30,12 +17,9 @@ import { formatEther, hexToString } from 'viem';
 import { Misc } from '../components/Character/Misc';
 import { Profile } from '../components/Character/Profile';
 import { Stats as StatsPanel } from '../components/Character/Stats';
-import { ItemCard } from '../components/ItemCard';
-import { ItemEquipModal } from '../components/ItemEquipModal';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type { Character, StatsClasses, Weapon } from '../utils/types';
 
@@ -43,61 +27,62 @@ export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
   const { renderError } = useToast();
   const {
-    components: {
-      CharacterEquipment,
-      Characters,
-      CharactersTokenURI,
-      GoldBalances,
-      ItemsBaseURI,
-      ItemsOwners,
-      ItemsTokenURI,
-      Stats,
-    },
-    isSynced,
+    components: { Characters, Stats },
     network: { publicClient, worldContract },
   } = useMUD();
   const { character: userCharacter } = useCharacter();
 
-  const { isOpen, onClose, onOpen } = useDisclosure();
-
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [isLoadingCharacter, setIsLoadingCharacter] = useState(true);
-  const [items, setItems] = useState<Weapon[] | null>(null);
-  const [isLoadingItems, setIsLoadingItems] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<Weapon | null>(null);
-
-  const equippedWeapons =
-    useComponentValue(CharacterEquipment, characterId as Entity | undefined)
-      ?.equippedWeapons ?? [];
+  const [character, setCharacter] = useState<
+    (Character & CharacterStats) | null
+  >(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchCharacter = useCallback(async () => {
     try {
-      if (!(characterId && publicClient && worldContract)) return null;
-      setIsLoadingCharacter(true);
+      if (!(characterId && publicClient && worldContract)) return;
+      setIsLoading(true);
 
-      const characterData = getComponentValue(
+      const characterData = getComponentValueStrict(
         Characters,
         characterId as Entity,
       );
-      const characterStats = getComponentValue(Stats, characterId as Entity);
-
-      if (!(characterData && characterStats)) return null;
-
-      const ownerEntity = encodeEntity(
-        { address: 'address' },
-        { address: characterData.owner as `0x${string}` },
-      );
-      const tokenIdEntity = encodeEntity(
-        { tokenId: 'uint256' },
-        { tokenId: characterData.tokenId },
+      const characterStats = getComponentValueStrict(
+        Stats,
+        characterId as Entity,
       );
 
-      const goldBalance =
-        getComponentValueStrict(GoldBalances, ownerEntity)?.value ?? BigInt(0);
-      const metadataURI = getComponentValueStrict(
-        CharactersTokenURI,
-        tokenIdEntity,
-      ).tokenURI;
+      const characterTokenAddress =
+        await worldContract.read.UD__getCharacterToken();
+
+      const characterToken = getContract({
+        address: characterTokenAddress,
+        abi: [
+          {
+            type: 'function',
+            name: 'tokenURI',
+            inputs: [
+              {
+                name: 'tokenId',
+                type: 'uint256',
+                internalType: 'uint256',
+              },
+            ],
+            outputs: [
+              {
+                name: '',
+                type: 'string',
+                internalType: 'string',
+              },
+            ],
+            stateMutability: 'view',
+          },
+        ],
+        client: publicClient,
+      });
+
+      const metadataURI = await characterToken.read.tokenURI([
+        BigInt(characterData.tokenId),
+      ]);
 
       const fetachedMetadata = await fetchMetadataFromUri(
         uriToHttp(`ipfs://${metadataURI}`)[0],
@@ -105,144 +90,48 @@ export const CharacterPage = (): JSX.Element => {
 
       const _character = {
         ...fetachedMetadata,
-        agility: characterStats.agility.toString(),
-        baseHitPoints: characterStats.baseHitPoints.toString(),
-        characterClass: characterStats.class,
+        goldBalance: formatEther(BigInt(goldBalance)).toString(),
+        agility: characterStats?.agility.toString() ?? '0',
+        experience: characterStats?.experience.toString() ?? '0',
+        characterClass: characterData.class,
         characterId: characterId as Entity,
-        experience: characterStats.experience.toString(),
-        goldBalance: formatEther(goldBalance as bigint).toString(),
-        intelligence: characterStats.intelligence.toString(),
-        level: characterStats.level.toString(),
+        intelligence: characterStats?.intelligence.toString() ?? '0',
+        level: characterStats?.level.toString() ?? '0',
         locked: characterData.locked,
+        maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
         name: hexToString(characterData.name as `0x${string}`, {
           size: 32,
         }),
         owner: characterData.owner,
-        strength: characterStats.strength.toString(),
+        strength: characterStats?.strength.toString() ?? '0',
         tokenId: characterData.tokenId.toString(),
-      };
-
-      setCharacter(_character);
-      return _character;
+      });
     } catch (error) {
       renderError(error, 'Failed to fetch character data');
-      return null;
     } finally {
-      setIsLoadingCharacter(false);
+      setIsLoading(false);
     }
   }, [
     characterId,
     Characters,
-    CharactersTokenURI,
-    GoldBalances,
     Stats,
     publicClient,
     renderError,
     worldContract,
   ]);
 
-  const fetchCharacterItems = useCallback(
-    async (_character: Character) => {
-      try {
-        const _items = Array.from(
-          runQuery([
-            Has(ItemsOwners),
-            NotValue(ItemsOwners, { balance: BigInt(0) }),
-          ]),
-        )
-          .map(entity => {
-            const itemOwner = getComponentValueStrict(ItemsOwners, entity);
-            const { owner, tokenId } = decodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              entity,
-            );
-
-            return {
-              balance: itemOwner.balance.toString(),
-              itemId: entity,
-              owner,
-              tokenId: tokenId.toString(),
-            };
-          })
-          .filter(item => item.owner === _character.owner)
-          .sort((a, b) => {
-            return Number(a.tokenId) - Number(b.tokenId);
-          });
-
-        const fullItems = await Promise.all(
-          _items.map(async item => {
-            const itemTemplateStats =
-              await worldContract.read.UD__getWeaponStats([
-                BigInt(item.tokenId),
-              ]);
-
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId: BigInt(item.tokenId) },
-            );
-
-            const baseURI = getComponentValueStrict(
-              ItemsBaseURI,
-              singletonEntity,
-            ).uri;
-
-            const tokenURI = getComponentValueStrict(
-              ItemsTokenURI,
-              tokenIdEntity,
-            ).uri;
-
-            const metadata = await fetchMetadataFromUri(
-              uriToHttp(`${baseURI}${tokenURI}`)[0],
-            );
-
-            return {
-              ...metadata,
-              agiModifier: itemTemplateStats.agiModifier.toString(),
-              balance: item.balance,
-              classRestrictions: itemTemplateStats.classRestrictions.map(
-                (classRestriction: number) => classRestriction as StatsClasses,
-              ),
-              hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
-              intModifier: itemTemplateStats.intModifier.toString(),
-              itemId: item.itemId,
-              maxDamage: itemTemplateStats.maxDamage.toString(),
-              minDamage: itemTemplateStats.minDamage.toString(),
-              minLevel: itemTemplateStats.minLevel.toString(),
-              owner: item.owner,
-              strModifier: itemTemplateStats.strModifier.toString(),
-              tokenId: item.tokenId,
-            } as Weapon;
-          }),
-        );
-
-        setItems(fullItems);
-      } catch (error) {
-        renderError(error, 'Failed to fetch character data');
-      } finally {
-        setIsLoadingItems(false);
-      }
-    },
-    [ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError, worldContract],
-  );
-
   useEffect(() => {
-    if (!isSynced) return;
     (async (): Promise<void> => {
-      const _character = await fetchCharacter();
-
-      if (!_character) return;
-      await fetchCharacterItems(_character);
+      await fetchCharacter();
     })();
-  }, [fetchCharacter, fetchCharacterItems, isSynced]);
+  }, [fetchCharacter]);
 
   const isOwner = useMemo(
     () => character?.owner === userCharacter?.owner,
     [character, userCharacter],
   );
 
-  const maxItemsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
-
-  if (isLoadingCharacter) {
+  if (isLoading) {
     return (
       <Center h="100%">
         <Spinner size="lg" />
@@ -301,8 +190,8 @@ export const CharacterPage = (): JSX.Element => {
           >
             <StatsPanel
               agility={character.agility}
-              baseHitPoints={character.baseHitPoints}
               intelligence={character.intelligence}
+              maxHitPoints={character.maxHitPoints}
               strength={character.strength}
             />
           </GridItem>
