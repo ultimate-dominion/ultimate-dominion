@@ -1,4 +1,5 @@
 import { useToast as useChakraToast } from '@chakra-ui/react';
+import { useCallback } from 'react';
 
 import { getErrorMessage, USER_ERRORS } from '../utils/errors';
 
@@ -9,46 +10,55 @@ export const useToast = (): {
 } => {
   const toast = useChakraToast();
 
-  const renderError = (error: unknown, defaultError?: string) => {
-    const errorMsg = getErrorMessage(error);
-    // eslint-disable-next-line no-console
-    console.error(error);
+  const renderError = useCallback(
+    (error: unknown, defaultError?: string) => {
+      const errorMsg = getErrorMessage(error);
+      // eslint-disable-next-line no-console
+      console.error(error);
 
-    if (USER_ERRORS.includes(errorMsg)) {
-      return;
-    }
+      if (USER_ERRORS.includes(errorMsg)) {
+        return;
+      }
 
-    toast({
-      description: getErrorMessage(error, defaultError),
-      position: 'top',
-      status: 'error',
-      containerStyle: {
-        bg: 'red',
-      },
-    });
-  };
+      toast({
+        description: getErrorMessage(error, defaultError),
+        position: 'top',
+        status: 'error',
+        containerStyle: {
+          bg: 'red',
+        },
+      });
+    },
+    [toast],
+  );
 
-  const renderWarning = (msg: string) => {
-    toast({
-      description: msg,
-      position: 'top',
-      status: 'warning',
-      containerStyle: {
-        bg: 'yellow',
-      },
-    });
-  };
+  const renderWarning = useCallback(
+    (msg: string) => {
+      toast({
+        description: msg,
+        position: 'top',
+        status: 'warning',
+        containerStyle: {
+          bg: 'yellow',
+        },
+      });
+    },
+    [toast],
+  );
 
-  const renderSuccess = (msg: string) => {
-    toast({
-      description: msg,
-      position: 'top',
-      status: 'success',
-      containerStyle: {
-        bg: 'green',
-      },
-    });
-  };
+  const renderSuccess = useCallback(
+    (msg: string) => {
+      toast({
+        description: msg,
+        position: 'top',
+        status: 'success',
+        containerStyle: {
+          bg: 'green',
+        },
+      });
+    },
+    [toast],
+  );
 
   return { renderError, renderWarning, renderSuccess };
 };
