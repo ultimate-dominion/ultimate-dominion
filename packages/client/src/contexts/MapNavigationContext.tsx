@@ -31,14 +31,24 @@ import { useMUD } from './MUDContext';
 
 type MapNavigationContextType = {
   isRefreshing: boolean;
+  isSpawned: boolean;
+  isSpawning: boolean;
   monsters: Monster[];
+  onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
+  onSpawn: () => void;
   otherPlayers: Character[];
+  position: { x: number; y: number } | null;
 };
 
 const MapNavigationContext = createContext<MapNavigationContextType>({
   isRefreshing: false,
+  isSpawned: false,
+  isSpawning: false,
   monsters: [],
+  onMove: () => {},
+  onSpawn: () => {},
   otherPlayers: [],
+  position: null,
 });
 
 export type NavigationProviderProps = {
@@ -48,20 +58,24 @@ export type NavigationProviderProps = {
 export const MapNavigationProvider = ({
   children,
 }: NavigationProviderProps): JSX.Element => {
+  const { renderError, renderSuccess } = useToast();
   const {
+    burnerBalance,
     components: { Characters, Mobs, Position, Spawned, Stats },
     delegatorAddress,
     network: { publicClient, worldContract },
+    systemCalls: { move, spawn },
   } = useMUD();
-  const { renderError } = useToast();
   const { character } = useCharacter();
 
   const [otherPlayers, setOtherPlayers] = useState<Character[]>([]);
   const [monsters, setMonsters] = useState<Monster[]>([]);
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSpawning, setIsSpawning] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
+  const [isFetchingEntities, setIsFetchingEntities] = useState(false);
 
-  const characterPosition = useComponentValue(
+  const position = useComponentValue(
     Position,
     encodeEntity(
       { characterId: 'uint256' },
@@ -69,11 +83,19 @@ export const MapNavigationProvider = ({
     ),
   );
 
+  const isSpawned = !!useComponentValue(
+    Spawned,
+    encodeEntity(
+      { characterId: 'uint256' },
+      { characterId: BigInt(character?.characterId ?? 0) },
+    ),
+  )?.spawned;
+
   const allEntities = useEntityQuery([
     Has(Spawned),
     HasValue(Position, {
-      x: characterPosition?.x,
-      y: characterPosition?.y,
+      x: position?.x,
+      y: position?.y,
     }),
   ]);
 
@@ -251,7 +273,7 @@ export const MapNavigationProvider = ({
     (async (): Promise<void> => {
       if (!allEntities) return;
 
-      setIsRefreshing(true);
+      setIsFetchingEntities(true);
 
       const characterEntities: Entity[] = [];
       const monsterEntities: Entity[] = [];
@@ -271,16 +293,122 @@ export const MapNavigationProvider = ({
       await getOtherCharacters(characterEntities);
       await getMonsters(monsterEntities);
 
-      setIsRefreshing(false);
+      setIsFetchingEntities(false);
     })();
   }, [allEntities, Characters, getMonsters, getOtherCharacters]);
+
+  const onSpawn = useCallback(async () => {
+    try {
+      setIsSpawning(true);
+
+      if (burnerBalance === '0') {
+        throw new Error(
+          'Insufficient funds. Please top off your session account.',
+        );
+      }
+
+      if (!delegatorAddress) {
+        throw new Error('Missing delegation.');
+      }
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      const success = await spawn(character.characterId);
+
+      if (!success) {
+        throw new Error('Contract call failed');
+      }
+
+      renderSuccess('Spawned!');
+    } catch (e) {
+      renderError(e, 'Failed to roll stats.');
+    } finally {
+      setIsSpawning(false);
+    }
+  }, [
+    burnerBalance,
+    character,
+    delegatorAddress,
+    renderError,
+    renderSuccess,
+    spawn,
+  ]);
+
+  const onMove = useCallback(
+    async (direction: 'up' | 'down' | 'left' | 'right') => {
+      try {
+        setIsMoving(true);
+
+        if (!delegatorAddress) {
+          throw new Error('Burner not found');
+        }
+
+        if (!position) {
+          throw new Error('Position not found');
+        }
+
+        if (!character) {
+          throw new Error('Character not found');
+        }
+
+        const { x, y } = position;
+
+        if (
+          (direction === 'up' && position.y === 9) ||
+          (direction === 'down' && position.y === 0) ||
+          (direction === 'left' && position.x === 0) ||
+          (direction === 'right' && position.x === 9)
+        ) {
+          return;
+        }
+
+        let newX = x;
+        let newY = y;
+
+        switch (direction) {
+          case 'up':
+            newY = y + 1;
+            break;
+          case 'down':
+            newY = y - 1;
+            break;
+          case 'left':
+            newX = x - 1;
+            break;
+          case 'right':
+            newX = x + 1;
+            break;
+          default:
+            break;
+        }
+
+        const success = await move(character.characterId, newX, newY);
+
+        if (!success) {
+          throw new Error('Contract call failed');
+        }
+      } catch (e) {
+        renderError(e, 'Failed to move.');
+      } finally {
+        setIsMoving(false);
+      }
+    },
+    [character, delegatorAddress, move, position, renderError],
+  );
 
   return (
     <MapNavigationContext.Provider
       value={{
-        isRefreshing,
+        isRefreshing: isFetchingEntities || isMoving,
+        isSpawned,
+        isSpawning,
         monsters,
+        onMove,
+        onSpawn,
         otherPlayers,
+        position: position ? { x: position.x, y: position.y } : null,
       }}
     >
       {children}
