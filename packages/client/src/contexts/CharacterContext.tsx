@@ -70,7 +70,7 @@ export const CharacterProvider = ({
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const getCharacterData = useCallback(async () => {
+  const refreshCharacterData = useCallback(async () => {
     if (!(delegatorAddress && publicClient && worldContract)) return;
     const characterComponent = Array.from(
       runQuery([
@@ -174,18 +174,18 @@ export const CharacterProvider = ({
   const refreshCharacter = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await getCharacterData();
+      await refreshCharacterData();
     } catch (error) {
       renderError('Error refreshing character');
     } finally {
       setIsRefreshing(false);
     }
-  }, [getCharacterData, renderError]);
+  }, [refreshCharacterData, renderError]);
 
   useEffect(() => {
     if (!(delegatorAddress && publicClient && worldContract)) return;
-    getCharacterData();
-  }, [delegatorAddress, getCharacterData, publicClient, worldContract]);
+    refreshCharacterData();
+  }, [delegatorAddress, refreshCharacterData, publicClient, worldContract]);
 
   return (
     <CharacterContext.Provider

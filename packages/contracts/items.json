@@ -1,0 +1,47 @@
+{
+  "metadataUriPrefix": "ipfs://QmVUaqRpQJHyqugYd12Qf2iErNSoGvLF1cbeRHpmX8bChs/",
+  "items": [
+    {
+      "metadataUri": "1_rusty_sword.json",
+      "name": "Rusty Sword",
+      "stats": {
+        "agiModifier": 4,
+        "classRestrictions": [],
+        "hitPointModifier": 6,
+        "intModifier": 5,
+        "maxDamage": 2,
+        "minDamage": 1,
+        "minLevel": 1,
+        "strModifier": 3
+      }
+    },
+    {
+      "metadataUri": "2_cracked_dagger.json",
+      "name": "Cracked Dagger",
+      "stats": {
+        "agiModifier": 4,
+        "classRestrictions": [],
+        "hitPointModifier": 6,
+        "intModifier": 5,
+        "maxDamage": 2,
+        "minDamage": 1,
+        "minLevel": 1,
+        "strModifier": 3
+      }
+    },
+    {
+      "metadataUri": "3_cobbled_wand.json",
+      "name": "Cobbled Wand",
+      "stats": {
+        "agiModifier": 4,
+        "classRestrictions": [],
+        "hitPointModifier": 6,
+        "intModifier": 5,
+        "maxDamage": 2,
+        "minDamage": 1,
+        "minLevel": 1,
+        "strModifier": 3
+      }
+    }
+  ]
+}
