@@ -24,4 +24,8 @@ contract UltimateDominionConfigSystem is System {
     function getItemsContract() public view returns (address _erc1155) {
         _erc1155 = UltimateDominionConfig.getItems();
     }
+
+    function getMulticallContract() public view returns (address _multicall) {
+        _multicall = UltimateDominionConfig.getMulticall();
+    }
 }
