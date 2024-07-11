@@ -22,6 +22,7 @@ import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { getContract } from 'viem';
 import { useWalletClient } from 'wagmi';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -29,8 +30,14 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { API_URL } from '../utils/constants';
-import { shortenAddress } from '../utils/helpers';
-import { CharacterClasses } from '../utils/types';
+import {
+  fetchMetadataFromUri,
+  shortenAddress,
+  uriToHttp,
+} from '../utils/helpers';
+import { StatsClasses, Weapon } from '../utils/types';
+
+const STARTER_WEAPON_IDS = [BigInt(1), BigInt(2), BigInt(3)];
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
@@ -42,6 +49,7 @@ export const CharacterCreation = (): JSX.Element => {
     components: { UltimateDominionConfig },
     delegatorAddress,
     isSynced,
+    network: { publicClient, worldContract },
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
   const { character, characterStats, isRefreshing, refreshCharacter } =
@@ -56,9 +64,10 @@ export const CharacterCreation = (): JSX.Element => {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [characterClass, setCharacterClass] = useState<CharacterClasses>(
-    CharacterClasses.Warrior,
+  const [characterClass, setCharacterClass] = useState<StatsClasses>(
+    StatsClasses.Warrior,
   );
+  const [starterWeapons, setStarterWeapons] = useState<Weapon[] | null>(null);
 
   const [isCreating, setIsCreating] = useState(false);
   const [showError, setShowError] = useState(false);
@@ -74,6 +83,72 @@ export const CharacterCreation = (): JSX.Element => {
   useEffect(() => {
     setShowError(false);
   }, [avatar, description, name]);
+
+  const fetchStarterWeapons = useCallback(async () => {
+    try {
+      const _items: Weapon[] = await Promise.all(
+        STARTER_WEAPON_IDS.map(async itemId => {
+          const itemTemplateStats = await worldContract.read.UD__getWeaponStats(
+            [itemId],
+          );
+
+          const itemsContractAddress =
+            await worldContract.read.UD__getItemsContract();
+
+          const itemsToken = getContract({
+            address: itemsContractAddress,
+            abi: [
+              {
+                constant: true,
+                inputs: [
+                  {
+                    name: 'tokenId',
+                    type: 'uint256',
+                  },
+                ],
+                name: 'uri',
+                outputs: [
+                  {
+                    name: '',
+                    type: 'string',
+                  },
+                ],
+                payable: false,
+                stateMutability: 'view',
+                type: 'function',
+              },
+            ],
+            client: publicClient,
+          });
+
+          const metadataURI = await itemsToken.read.uri([itemId]);
+          const fetachedMetadata = await fetchMetadataFromUri(
+            uriToHttp(metadataURI)[0],
+          );
+
+          return {
+            agiModifier: itemTemplateStats.agiModifier.toString(),
+            classRestrictions: itemTemplateStats.classRestrictions,
+            hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
+            intModifier: itemTemplateStats.intModifier.toString(),
+            maxDamage: itemTemplateStats.maxDamage.toString(),
+            minDamage: itemTemplateStats.minDamage.toString(),
+            minLevel: itemTemplateStats.minLevel.toString(),
+            strModifier: itemTemplateStats.strModifier.toString(),
+            ...fetachedMetadata,
+          } as Weapon;
+        }),
+      );
+
+      setStarterWeapons(_items);
+    } catch (error) {
+      renderError(error, 'Error fetching starter item.');
+    }
+  }, [publicClient, renderError, worldContract]);
+
+  useEffect(() => {
+    fetchStarterWeapons();
+  }, [fetchStarterWeapons]);
 
   const onUploadAvatar = useCallback(() => {
     const input = document.getElementById('avatarInput');
@@ -322,7 +397,7 @@ export const CharacterCreation = (): JSX.Element => {
             </VStack>
             <Text>
               Class:{' '}
-              {rolledOnce ? CharacterClasses[character.characterClass] : 'None'}
+              {rolledOnce ? StatsClasses[character.characterClass] : 'None'}
             </Text>
           </VStack>
         </Box>
@@ -444,7 +519,7 @@ export const CharacterCreation = (): JSX.Element => {
             </Heading>
             <ButtonGroup justifyContent="space-between">
               <Button
-                onClick={() => setCharacterClass(CharacterClasses.Warrior)}
+                onClick={() => setCharacterClass(StatsClasses.Warrior)}
                 size="sm"
                 variant={characterClass === 0 ? 'solid' : 'outline'}
                 w="150px"
@@ -452,7 +527,7 @@ export const CharacterCreation = (): JSX.Element => {
                 Warrior
               </Button>
               <Button
-                onClick={() => setCharacterClass(CharacterClasses.Rogue)}
+                onClick={() => setCharacterClass(StatsClasses.Rogue)}
                 size="sm"
                 variant={characterClass === 1 ? 'solid' : 'outline'}
                 w="150px"
@@ -460,7 +535,7 @@ export const CharacterCreation = (): JSX.Element => {
                 Rogue
               </Button>
               <Button
-                onClick={() => setCharacterClass(CharacterClasses.Mage)}
+                onClick={() => setCharacterClass(StatsClasses.Mage)}
                 size="sm"
                 variant={characterClass === 2 ? 'solid' : 'outline'}
                 w="150px"
@@ -475,7 +550,7 @@ export const CharacterCreation = (): JSX.Element => {
               <Text color="red" fontSize="sm" mt={2}>
                 Your current class is{' '}
                 <Text as="span" fontWeight={700}>
-                  {CharacterClasses[character.characterClass]}
+                  {StatsClasses[character.characterClass]}
                 </Text>
                 . Re-roll stats to change class.
               </Text>
@@ -527,13 +602,20 @@ export const CharacterCreation = (): JSX.Element => {
                 <Heading size="sm">Items</Heading>
                 <Text>1</Text>
               </HStack>
-              <HStack border="1px solid" borderColor="grey400" w="100%">
-                <Box bgColor="grey400" h="50px" w="50px" />
-                <Box>
-                  <Text size="xs">Rusty Dagger</Text>
-                  <Text size="xs">STR+1 AGI+3 INT+4</Text>
-                </Box>
-              </HStack>
+              {starterWeapons && starterWeapons[characterClass] && (
+                <HStack border="1px solid" borderColor="grey400" w="100%">
+                  <Box bgColor="grey400" h="50px" w="50px" />
+                  <Box>
+                    <Text size="xs">{starterWeapons[characterClass].name}</Text>
+                    <Text size="xs">
+                      STR+
+                      {starterWeapons[characterClass].strModifier} AGI+
+                      {starterWeapons[characterClass].agiModifier} INT+
+                      {starterWeapons[characterClass].intModifier}
+                    </Text>
+                  </Box>
+                </HStack>
+              )}
               <Link
                 alignSelf="end"
                 color="grey500"

@@ -1293,14 +1293,9 @@ declare const abi: [
         "internalType": "struct WeaponStats",
         "components": [
           {
-            "name": "minDamage",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "maxDamage",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "classRestrictions",
@@ -1308,17 +1303,7 @@ declare const abi: [
             "internalType": "uint8[]"
           },
           {
-            "name": "minLevel",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "strModifier",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "agiModifier",
+            "name": "hitPointModifier",
             "type": "int256",
             "internalType": "int256"
           },
@@ -1328,7 +1313,22 @@ declare const abi: [
             "internalType": "int256"
           },
           {
-            "name": "hitPointModifier",
+            "name": "maxDamage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minDamage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
           }

@@ -18,7 +18,7 @@ import {
   toBytes,
 } from 'viem';
 
-import { CharacterClasses } from '../../utils/types';
+import { StatsClasses } from '../../utils/types';
 import { ClientComponents } from './createClientComponents';
 import { SetupNetworkResult } from './setupNetwork';
 
@@ -121,7 +121,7 @@ export function createSystemCalls(
 
   const rollStats = async (
     characterEntity: Entity,
-    characterClass: CharacterClasses,
+    characterClass: StatsClasses,
   ) => {
     try {
       const entropyAddress = await worldContract.read.UD__getEntropy();
