@@ -52,8 +52,7 @@ export const CharacterCreation = (): JSX.Element => {
     network: { publicClient, worldContract },
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
-  const { character, characterStats, isRefreshing, refreshCharacter } =
-    useCharacter();
+  const { character, isRefreshing, refreshCharacter } = useCharacter();
   const {
     file: avatar,
     setFile: setAvatar,
@@ -290,8 +289,9 @@ export const CharacterCreation = (): JSX.Element => {
   ]);
 
   const rolledOnce = useMemo(() => {
-    return characterStats.maxHitPoints !== '0';
-  }, [characterStats]);
+    if (!character) return false;
+    return character.baseHitPoints !== '0';
+  }, [character]);
 
   const onEnterGame = useCallback(async () => {
     try {
@@ -577,19 +577,19 @@ export const CharacterCreation = (): JSX.Element => {
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
                   <Text>HP - Hit</Text>
-                  <Text>{characterStats.maxHitPoints ?? '0'}</Text>
+                  <Text>{character?.baseHitPoints ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>STR - Strength</Text>
-                  <Text>{characterStats.strength ?? '0'}</Text>
+                  <Text>{character?.strength ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>AGI - Agility</Text>
-                  <Text>{characterStats.agility ?? '0'}</Text>
+                  <Text>{character?.agility ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>INT - Intelligence</Text>
-                  <Text>{characterStats.intelligence ?? '0'}</Text>
+                  <Text>{character?.intelligence ?? '0'}</Text>
                 </HStack>
               </VStack>
             </VStack>

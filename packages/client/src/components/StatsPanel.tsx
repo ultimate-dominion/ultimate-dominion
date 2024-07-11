@@ -29,7 +29,7 @@ export const StatsPanel = (): JSX.Element => {
   const {
     components: { Levels },
   } = useMUD();
-  const { character, characterStats } = useCharacter();
+  const { character } = useCharacter();
 
   const nextLevelXpRequirement = useComponentValue(
     Levels,
@@ -37,11 +37,11 @@ export const StatsPanel = (): JSX.Element => {
   )?.experience;
 
   const levelPercent = useMemo(() => {
-    if (!nextLevelXpRequirement) return 0;
+    if (!(character && nextLevelXpRequirement)) return 0;
     return (
-      (100 * Number(characterStats.experience)) / Number(nextLevelXpRequirement)
+      (100 * Number(character.experience)) / Number(nextLevelXpRequirement)
     );
-  }, [characterStats.experience, nextLevelXpRequirement]);
+  }, [character, nextLevelXpRequirement]);
 
   if (!character) {
     return (
@@ -51,9 +51,16 @@ export const StatsPanel = (): JSX.Element => {
     );
   }
 
-  const { goldBalance, image, name } = character;
-  const { agility, experience, intelligence, maxHitPoints, strength } =
-    characterStats;
+  const {
+    agility,
+    baseHitPoints,
+    experience,
+    goldBalance,
+    image,
+    intelligence,
+    name,
+    strength,
+  } = character;
 
   return (
     <VStack alignItems="start" h="100%" p={2} spacing={4}>
@@ -80,7 +87,7 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{maxHitPoints}</Text>
+          <Text>{baseHitPoints}</Text>
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">
