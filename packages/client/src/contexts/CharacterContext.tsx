@@ -1,6 +1,9 @@
-import { useComponentValue } from '@latticexyz/react';
-import { getComponentValueStrict, HasValue, runQuery } from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
+import {
+  getComponentValue,
+  getComponentValueStrict,
+  HasValue,
+  runQuery,
+} from '@latticexyz/recs';
 import {
   createContext,
   ReactNode,
@@ -17,26 +20,17 @@ import {
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
-import type { CharacterData, CharacterStats } from '../utils/types';
+import type { Character, CharacterData, CharacterStats } from '../utils/types';
 import { useMUD } from './MUDContext';
 
 type CharacterContextType = {
-  character: CharacterData | null;
-  characterStats: CharacterStats;
+  character: Character | null;
   isRefreshing: boolean;
   refreshCharacter: () => void;
 };
 
 const CharacterContext = createContext<CharacterContextType>({
   character: null,
-  characterStats: {
-    agility: '0',
-    experience: '0',
-    intelligence: '0',
-    level: '0',
-    maxHitPoints: '0',
-    strength: '0',
-  },
   isRefreshing: false,
   refreshCharacter: () => {},
 });
@@ -55,24 +49,15 @@ export const CharacterProvider = ({
   } = useMUD();
   const { renderError } = useToast();
 
-  const [characterData, setCharacterData] = useState<CharacterData | null>(
-    null,
-  );
-  const characterStats = useComponentValue(
-    Stats,
-    characterData
-      ? encodeEntity(
-          { characterId: 'uint256' },
-          { characterId: BigInt(characterData.characterId) },
-        )
-      : undefined,
-  );
-
+  const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const refreshCharacterData = useCallback(async () => {
     if (!(delegatorAddress && publicClient && worldContract)) return;
-    const characterComponent = Array.from(
+    const partialCharacter: Omit<
+      CharacterData & CharacterStats,
+      'goldBalance'
+    > = Array.from(
       runQuery([
         HasValue(Characters, {
           owner: delegatorAddress,
@@ -80,22 +65,29 @@ export const CharacterProvider = ({
       ]),
     ).map(entity => {
       const characterData = getComponentValueStrict(Characters, entity);
+      const characterStats = getComponentValue(Stats, entity);
 
       const { characterTokenId } = decodeCharacterId(
         entity.toString() as `0x${string}`,
       );
 
       return {
-        characterClass: characterData.class,
+        agility: characterStats?.agility.toString() ?? '0',
+        baseHitPoints: characterStats?.baseHitPoints.toString() ?? '0',
+        characterClass: characterStats?.class ?? 0,
         characterId: entity,
+        experience: characterStats?.experience.toString() ?? '0',
+        intelligence: characterStats?.intelligence.toString() ?? '0',
+        level: characterStats?.level.toString() ?? '0',
         locked: characterData.locked,
         name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
         owner: characterData.owner,
+        strength: characterStats?.strength.toString() ?? '0',
         tokenId: characterTokenId,
       };
     })[0];
 
-    if (!characterComponent) return;
+    if (!partialCharacter) return;
 
     const characterTokenAddress =
       await worldContract.read.UD__getCharacterToken();
@@ -127,7 +119,7 @@ export const CharacterProvider = ({
     });
 
     const metadataURI = await characterToken.read.tokenURI([
-      BigInt(characterComponent.tokenId),
+      BigInt(partialCharacter.tokenId),
     ]);
 
     const fetachedMetadata = await fetchMetadataFromUri(
@@ -164,12 +156,12 @@ export const CharacterProvider = ({
 
     const goldBalance = await goldToken.read.balanceOf([delegatorAddress]);
 
-    setCharacterData({
-      ...characterComponent,
+    setUserCharacter({
+      ...partialCharacter,
       ...fetachedMetadata,
       goldBalance: formatEther(BigInt(goldBalance)).toString(),
     });
-  }, [Characters, delegatorAddress, publicClient, worldContract]);
+  }, [Characters, delegatorAddress, publicClient, Stats, worldContract]);
 
   const refreshCharacter = useCallback(async () => {
     setIsRefreshing(true);
@@ -190,15 +182,7 @@ export const CharacterProvider = ({
   return (
     <CharacterContext.Provider
       value={{
-        character: characterData,
-        characterStats: {
-          agility: characterStats?.agility.toString() ?? '0',
-          experience: characterStats?.experience.toString() ?? '0',
-          intelligence: characterStats?.intelligence.toString() ?? '0',
-          level: characterStats?.level.toString() ?? '0',
-          maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
-          strength: characterStats?.strength.toString() ?? '0',
-        },
+        character: userCharacter,
         isRefreshing,
         refreshCharacter,
       }}

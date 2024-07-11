@@ -93,6 +93,7 @@ export const MapNavigationProvider = ({
 
   const allEntities = useEntityQuery([
     Has(Spawned),
+    Has(Stats),
     HasValue(Position, {
       x: position?.x,
       y: position?.y,
@@ -185,20 +186,20 @@ export const MapNavigationProvider = ({
 
             return {
               ...fetachedMetadata,
-              agility: characterStats?.agility.toString() ?? '0',
-              characterClass: characterData.class,
+              agility: characterStats.agility.toString(),
+              baseHitPoints: characterStats.baseHitPoints.toString(),
+              characterClass: characterStats.class,
               characterId: entity,
+              experience: characterStats.experience.toString(),
               goldBalance: formatEther(BigInt(goldBalance)).toString(),
-              experience: characterStats?.experience.toString() ?? '0',
-              intelligence: characterStats?.intelligence.toString() ?? '0',
-              maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
-              level: characterStats?.level.toString() ?? '0',
+              intelligence: characterStats.intelligence.toString(),
+              level: characterStats.level.toString(),
               locked: characterData.locked,
               name: hexToString(characterData.name as `0x${string}`, {
                 size: 32,
               }),
               owner: characterData.owner,
-              strength: characterStats?.strength.toString() ?? '0',
+              strength: characterStats.strength.toString(),
               tokenId,
             } as Character;
           }),
