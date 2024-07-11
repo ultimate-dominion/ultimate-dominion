@@ -73,7 +73,7 @@ contract Test_MobSystem is SetUp, GasReporter {
         uint256 newMobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), "test_monster_uri");
 
         MobsData memory newMob = world.UD__getMob(newMobId);
-        assertEq(newMobId, 4);
+        assertEq(newMobId, 31);
         assertEq(uint8(newMob.mobType), uint8(MobType.Monster));
         assertEq(newMob.mobStats, abi.encode(newMonster));
         assertEq(newMob.mobMetadata, "test_monster_uri");

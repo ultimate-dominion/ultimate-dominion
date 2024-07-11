@@ -162,7 +162,7 @@ contract CharacterSystem is System {
     }
 
     function _isOwner(bytes32 characterId) internal view returns (bool) {
-        return _msgSender() == Characters.getOwner(characterId);
+        return _msgSender() == _characterToken().ownerOf(getCharacterTokenId(characterId));
     }
 
     function getOwner(bytes32 characterId) public view returns (address) {
