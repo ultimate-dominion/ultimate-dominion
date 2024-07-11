@@ -28,7 +28,7 @@ contract UltimateDominionConfigSystem is System {
         _erc1155 = UltimateDominionConfig.getItems();
     }
 
-    function getLootManagerSystem() public view returns (address _lootManager) {
-        _lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
+    function getMulticallContract() public view returns (address _multicall) {
+        _multicall = UltimateDominionConfig.getMulticall();
     }
 }

@@ -1,9 +1,11 @@
+import { useComponentValue } from '@latticexyz/react';
 import {
   getComponentValue,
   getComponentValueStrict,
   HasValue,
   runQuery,
 } from '@latticexyz/recs';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -12,9 +14,10 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { formatEther, getContract, hexToString } from 'viem';
+import { formatEther, hexToString } from 'viem';
 
 import { useToast } from '../hooks/useToast';
+import { BALANCE_OF_ABI, TOKEN_URI_ABI } from '../utils/constants';
 import {
   decodeCharacterId,
   fetchMetadataFromUri,
@@ -43,7 +46,7 @@ export const CharacterProvider = ({
   children,
 }: CharacterProviderProps): JSX.Element => {
   const {
-    components: { Characters, Stats },
+    components: { Characters, Stats, UltimateDominionConfig },
     delegatorAddress,
     network: { publicClient, worldContract },
   } = useMUD();
@@ -52,8 +55,21 @@ export const CharacterProvider = ({
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const ultimateDominionConfig = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  );
+
   const refreshCharacterData = useCallback(async () => {
-    if (!(delegatorAddress && publicClient && worldContract)) return;
+    if (
+      !(
+        delegatorAddress &&
+        publicClient &&
+        ultimateDominionConfig &&
+        worldContract
+      )
+    )
+      return;
     const partialCharacter: Omit<
       CharacterData & CharacterStats,
       'goldBalance'
@@ -89,59 +105,52 @@ export const CharacterProvider = ({
 
     if (!partialCharacter) return;
 
-    const characterTokenAddress =
-      await worldContract.read.UD__getCharacterToken();
+    const { characterToken, goldToken, multicall } = ultimateDominionConfig;
 
-    const characterToken = getContract({
-      address: characterTokenAddress,
-      abi: [
-        {
-          type: 'function',
-          name: 'tokenURI',
-          inputs: [
-            {
-              name: 'tokenId',
-              type: 'uint256',
-              internalType: 'uint256',
-            },
-          ],
-          outputs: [
-            {
-              name: '',
-              type: 'string',
-              internalType: 'string',
-            },
-          ],
-          stateMutability: 'view',
-        },
-      ],
-      client: publicClient,
-    });
+    const characterContract = {
+      address: characterToken as `0x${string}`,
+      abi: TOKEN_URI_ABI,
+    };
 
-    const metadataURI = await characterToken.read.tokenURI([
-      BigInt(partialCharacter.tokenId),
-    ]);
+    const goldTokenContract = {
+      address: goldToken as `0x${string}`,
+      abi: BALANCE_OF_ABI,
+    };
+
+    const [{ result: metadataURI }, { result: goldBalance }] =
+      await publicClient.multicall({
+        contracts: [
+          {
+            ...characterContract,
+            functionName: 'tokenURI',
+            args: [BigInt(partialCharacter.tokenId)],
+          },
+          {
+            ...goldTokenContract,
+            functionName: 'balanceOf',
+            args: [delegatorAddress],
+          },
+        ],
+        multicallAddress: multicall as `0x${string}`,
+      });
 
     const fetachedMetadata = await fetchMetadataFromUri(
-      uriToHttp(metadataURI)[0],
+      uriToHttp(metadataURI as string)[0],
     );
-
-    const metadataURI = getComponentValueStrict(
-      CharactersTokenURI,
-      tokenIdEntity,
-    ).tokenURI;
-
-    const fetachedMetadata = await fetchMetadataFromUri(
-      uriToHttp(`ipfs://${metadataURI}`)[0],
-    );
-
-    const goldBalance = await goldToken.read.balanceOf([delegatorAddress]);
 
     setUserCharacter({
       ...partialCharacter,
       ...fetachedMetadata,
+      goldBalance: formatEther(BigInt(goldBalance as bigint)).toString(),
     });
-  }, [Characters, delegatorAddress, publicClient, Stats, worldContract]);
+  }, [
+    Characters,
+    delegatorAddress,
+    publicClient,
+    Stats,
+    ultimateDominionConfig,
+    worldContract,
+  ]);
 
   const refreshCharacter = useCallback(async () => {
     setIsRefreshing(true);

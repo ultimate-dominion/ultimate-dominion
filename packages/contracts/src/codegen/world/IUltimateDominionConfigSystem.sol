@@ -19,5 +19,5 @@ interface IUltimateDominionConfigSystem {
 
   function UD__getItemsContract() external view returns (address _erc1155);
 
-  function UD__getLootManagerSystem() external view returns (address _lootManager);
+  function UD__getMulticallContract() external view returns (address _multicall);
 }

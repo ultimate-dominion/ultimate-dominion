@@ -6,7 +6,7 @@ import {
   Has,
   HasValue,
 } from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
+import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -15,15 +15,10 @@ import {
   useEffect,
   useState,
 } from 'react';
-import {
-  bytesToHex,
-  formatEther,
-  getContract,
-  hexToBytes,
-  hexToString,
-} from 'viem';
+import { bytesToHex, formatEther, hexToBytes, hexToString } from 'viem';
 
 import { useToast } from '../hooks/useToast';
+import { BALANCE_OF_ABI, TOKEN_URI_ABI } from '../utils/constants';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type { Character, Monster } from '../utils/types';
 import { useCharacter } from './CharacterContext';
@@ -61,7 +56,14 @@ export const MapNavigationProvider = ({
   const { renderError, renderSuccess } = useToast();
   const {
     burnerBalance,
-    components: { Characters, Mobs, Position, Spawned, Stats },
+    components: {
+      Characters,
+      Mobs,
+      Position,
+      Spawned,
+      Stats,
+      UltimateDominionConfig,
+    },
     delegatorAddress,
     network: { publicClient, worldContract },
     systemCalls: { move, spawn },
@@ -74,6 +76,11 @@ export const MapNavigationProvider = ({
   const [isSpawning, setIsSpawning] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
   const [isFetchingEntities, setIsFetchingEntities] = useState(false);
+
+  const ultimateDominionConfig = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  );
 
   const position = useComponentValue(
     Position,
@@ -102,7 +109,15 @@ export const MapNavigationProvider = ({
 
   const getOtherCharacters = useCallback(
     async (entities: Entity[]): Promise<void> => {
-      if (!(delegatorAddress && publicClient && worldContract)) return;
+      if (
+        !(
+          delegatorAddress &&
+          publicClient &&
+          ultimateDominionConfig &&
+          worldContract
+        )
+      )
+        return;
 
       try {
         const characters: Character[] = await Promise.all(
@@ -114,75 +129,39 @@ export const MapNavigationProvider = ({
             const tokenBytes = entityBytes.slice(20);
             const tokenId = BigInt(bytesToHex(tokenBytes)).toString();
 
-            const characterTokenAddress =
-              await worldContract.read.UD__getCharacterToken();
+            const { characterToken, goldToken, multicall } =
+              ultimateDominionConfig;
 
-            const characterToken = getContract({
-              address: characterTokenAddress,
-              abi: [
-                {
-                  type: 'function',
-                  name: 'tokenURI',
-                  inputs: [
-                    {
-                      name: 'tokenId',
-                      type: 'uint256',
-                      internalType: 'uint256',
-                    },
-                  ],
-                  outputs: [
-                    {
-                      name: '',
-                      type: 'string',
-                      internalType: 'string',
-                    },
-                  ],
-                  stateMutability: 'view',
-                },
-              ],
-              client: publicClient,
-            });
+            const characterContract = {
+              address: characterToken as `0x${string}`,
+              abi: TOKEN_URI_ABI,
+            };
 
-            const metadataURI = await characterToken.read.tokenURI([
-              BigInt(tokenId),
-            ]);
+            const goldTokenContract = {
+              address: goldToken as `0x${string}`,
+              abi: BALANCE_OF_ABI,
+            };
+
+            const [{ result: metadataURI }, { result: goldBalance }] =
+              await publicClient.multicall({
+                contracts: [
+                  {
+                    ...characterContract,
+                    functionName: 'tokenURI',
+                    args: [characterData.tokenId],
+                  },
+                  {
+                    ...goldTokenContract,
+                    functionName: 'balanceOf',
+                    args: [characterData.owner],
+                  },
+                ],
+                multicallAddress: multicall as `0x${string}`,
+              });
 
             const fetachedMetadata = await fetchMetadataFromUri(
-              uriToHttp(metadataURI)[0],
+              uriToHttp(metadataURI as string)[0],
             );
-
-            const goldTokenAddress =
-              await worldContract.read.UD__getGoldToken();
-
-            const goldToken = getContract({
-              address: goldTokenAddress,
-              abi: [
-                {
-                  type: 'function',
-                  name: 'balanceOf',
-                  inputs: [
-                    {
-                      name: 'account',
-                      type: 'address',
-                      internalType: 'address',
-                    },
-                  ],
-                  outputs: [
-                    {
-                      name: '',
-                      type: 'uint256',
-                      internalType: 'uint256',
-                    },
-                  ],
-                  stateMutability: 'view',
-                },
-              ],
-              client: publicClient,
-            });
-
-            const goldBalance = await goldToken.read.balanceOf([
-              delegatorAddress,
-            ]);
 
             return {
               ...fetachedMetadata,
@@ -191,7 +170,7 @@ export const MapNavigationProvider = ({
               characterClass: characterStats.class,
               characterId: entity,
               experience: characterStats.experience.toString(),
-              goldBalance: formatEther(BigInt(goldBalance)).toString(),
+              goldBalance: formatEther(goldBalance as bigint).toString(),
               intelligence: characterStats.intelligence.toString(),
               level: characterStats.level.toString(),
               locked: characterData.locked,
@@ -216,6 +195,7 @@ export const MapNavigationProvider = ({
       delegatorAddress,
       publicClient,
       renderError,
+      ultimateDominionConfig,
       worldContract,
     ],
   );
