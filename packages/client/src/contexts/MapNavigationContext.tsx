@@ -1,7 +1,6 @@
 import { useComponentValue, useEntityQuery } from '@latticexyz/react';
 import {
   Entity,
-  getComponentValue,
   getComponentValueStrict,
   Has,
   HasValue,
@@ -100,6 +99,15 @@ export const MapNavigationProvider = ({
 
   const allEntities = useEntityQuery([
     Has(Spawned),
+    Has(Stats),
+    HasValue(Position, {
+      x: position?.x,
+      y: position?.y,
+    }),
+  ]);
+
+  const allCharacterEntities = useEntityQuery([
+    Has(Characters),
     Has(Stats),
     HasValue(Position, {
       x: position?.x,
@@ -252,31 +260,26 @@ export const MapNavigationProvider = ({
 
   useEffect(() => {
     (async (): Promise<void> => {
-      if (!allEntities) return;
+      if (!(allCharacterEntities && allEntities)) return;
 
       setIsFetchingEntities(true);
 
-      const characterEntities: Entity[] = [];
-      const monsterEntities: Entity[] = [];
-
-      await Promise.all(
-        allEntities.map(async entity => {
-          const characterData = getComponentValue(Characters, entity);
-
-          if (characterData) {
-            characterEntities.push(entity);
-          } else {
-            monsterEntities.push(entity);
-          }
-        }),
+      const allMonsterEntities = allEntities.filter(
+        entity => !allCharacterEntities.includes(entity),
       );
 
-      await getOtherCharacters(characterEntities);
-      await getMonsters(monsterEntities);
+      await getOtherCharacters(allCharacterEntities);
+      await getMonsters(allMonsterEntities);
 
       setIsFetchingEntities(false);
     })();
-  }, [allEntities, Characters, getMonsters, getOtherCharacters]);
+  }, [
+    allCharacterEntities,
+    allEntities,
+    Characters,
+    getMonsters,
+    getOtherCharacters,
+  ]);
 
   const onSpawn = useCallback(async () => {
     try {
