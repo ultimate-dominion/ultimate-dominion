@@ -40,3 +40,14 @@ export type Monster = Metadata & {
   mobId: string;
   monsterId: Entity;
 };
+
+export type Weapon = Metadata & {
+  agiModifier: string;
+  classRestrictions: StatsClasses[];
+  hitPointModifier: string;
+  intModifier: string;
+  maxDamage: string;
+  minDamage: string;
+  minLevel: string;
+  strModifier: string;
+};

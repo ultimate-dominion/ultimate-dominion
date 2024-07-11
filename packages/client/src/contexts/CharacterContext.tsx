@@ -70,7 +70,7 @@ export const CharacterProvider = ({
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchCharacterData = useCallback(async () => {
+  const refreshCharacterData = useCallback(async () => {
     if (!(delegatorAddress && publicClient && worldContract)) return;
     const partialCharacter: CharacterData & CharacterStats = Array.from(
       runQuery([
@@ -172,18 +172,18 @@ export const CharacterProvider = ({
   const refreshCharacter = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await fetchCharacterData();
+      await refreshCharacterData();
     } catch (error) {
       renderError('Error refreshing character');
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchCharacterData, renderError]);
+  }, [refreshCharacterData, renderError]);
 
   useEffect(() => {
     if (!(delegatorAddress && publicClient && worldContract)) return;
-    fetchCharacterData();
-  }, [delegatorAddress, fetchCharacterData, publicClient, worldContract]);
+    refreshCharacterData();
+  }, [delegatorAddress, refreshCharacterData, publicClient, worldContract]);
 
   return (
     <CharacterContext.Provider
