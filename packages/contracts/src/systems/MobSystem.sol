@@ -49,11 +49,11 @@ contract MobSystem is System {
                 strength: monsterStats.strength,
                 agility: monsterStats.agility,
                 intelligence: monsterStats.intelligence,
-                maxHitPoints: monsterStats.hitPoints,
+                baseHitPoints: monsterStats.hitPoints,
+                class: monsterStats.class,
                 currentHp: int256(monsterStats.hitPoints),
                 experience: monsterStats.experience,
-                level: monsterStats.level,
-                armor: monsterStats.armor
+                level: monsterStats.level
             });
             Stats.set(entityId, statsData);
         }

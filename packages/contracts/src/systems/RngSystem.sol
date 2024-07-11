@@ -3,9 +3,8 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {RandomNumbers} from "@codegen/index.sol";
-import {Characters, Stats} from "@codegen/index.sol";
+import {Characters, Stats, UltimateDominionConfig, StatsData} from "@codegen/index.sol";
 import {Classes, RngRequestType} from "@codegen/common.sol";
-import {UltimateDominionConfig} from "../codegen/index.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {CombatMove} from "@interfaces/Structs.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
@@ -96,49 +95,51 @@ contract RngSystem is System, IEntropyConsumer {
     function _storeStats(uint256 randomNumber, bytes32 characterId) internal {
         uint64[] memory chunks = randomNumber.get4Chunks();
 
-        Classes characterClass = Characters.getClass(characterId);
+        Classes characterClass = Stats.getClass(characterId);
 
-        uint256 strength = (chunks[0] % 8) + 3; // Range [3, 10]
-        uint256 agility = (chunks[1] % 8) + 3; // Range [3, 10]
+        StatsData memory stats;
+
+        stats.class = characterClass;
+
+        stats.strength = (chunks[0] % 8) + 3; // Range [3, 10]
+        stats.agility = (chunks[1] % 8) + 3; // Range [3, 10]
 
         // Calculate intelligence to ensure total is 19
-        uint256 intelligence = 19 - strength - agility;
+        stats.intelligence = 19 - stats.strength - stats.agility;
 
         // Ensure intelligence is within the range [3, 10]
-        if (intelligence < 3) {
-            uint256 deficit = 3 - intelligence;
-            intelligence = 3;
+        if (stats.intelligence < 3) {
+            uint256 deficit = 3 - stats.intelligence;
+            stats.intelligence = 3;
 
-            if (strength > agility) {
-                strength -= deficit;
+            if (stats.strength > stats.agility) {
+                stats.strength -= deficit;
             } else {
-                agility -= deficit;
+                stats.agility -= deficit;
             }
-        } else if (intelligence > 10) {
-            uint256 excess = intelligence - 10;
-            intelligence = 10;
+        } else if (stats.intelligence > 10) {
+            uint256 excess = stats.intelligence - 10;
+            stats.intelligence = 10;
 
-            if (strength < agility) {
-                strength += excess;
+            if (stats.strength < stats.agility) {
+                stats.strength += excess;
             } else {
-                agility += excess;
+                stats.agility += excess;
             }
         }
 
         // Class-based adjustments; should total to 21
         if (characterClass == Classes.Warrior) {
-            strength += 2;
-            Stats.setMaxHitPoints(characterId, uint256(10));
+            stats.strength += 2;
+            stats.baseHitPoints = uint256(10);
         } else if (characterClass == Classes.Rogue) {
-            agility += 2;
-            Stats.setMaxHitPoints(characterId, uint256(6));
+            stats.agility += 2;
+            stats.baseHitPoints = uint256(6);
         } else if (characterClass == Classes.Mage) {
-            intelligence += 2;
-            Stats.setMaxHitPoints(characterId, uint256(8));
+            stats.intelligence += 2;
+            stats.baseHitPoints = uint256(8);
         }
 
-        Stats.setStrength(characterId, strength);
-        Stats.setAgility(characterId, agility);
-        Stats.setIntelligence(characterId, intelligence);
+        Stats.set(characterId, stats);
     }
 }

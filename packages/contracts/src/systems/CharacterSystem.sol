@@ -42,7 +42,7 @@ contract CharacterSystem is System {
     }
 
     function getClass(bytes32 characterId) public view returns (Classes _class) {
-        _class = Characters.getClass(characterId);
+        _class = Stats.getClass(characterId);
     }
 
     function _goldToken() internal view returns (IERC20System goldToken) {

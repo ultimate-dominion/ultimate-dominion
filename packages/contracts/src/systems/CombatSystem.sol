@@ -23,7 +23,14 @@ import {
     Counters
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {MonsterStats, WeaponStats, NPCStats, Action, PhysicalAttackStats} from "@interfaces/Structs.sol";
+import {
+    MonsterStats,
+    WeaponStats,
+    NPCStats,
+    Action,
+    PhysicalAttackStats,
+    AdjustedCombatStats
+} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -177,12 +184,18 @@ contract CombatSystem is System {
             int256 curHp = Stats.getCurrentHp(encounterData.defenders[i]);
             if (curHp <= 0) {
                 deadDefenderCounter++;
+                if (uint8(encounterData.encounterType) == 0) {
+                    if (IWorld(_world()).UD__isValidCharacterId(encounterData.defenders[i])) {
+                        MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+                    }
+                }
             }
         }
         for (uint256 i; i < encounterData.attackers.length; i++) {
             int256 curHp = Stats.getCurrentHp(encounterData.attackers[i]);
             if (curHp <= 0) {
                 deadAttackerCounter++;
+                MatchEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
             }
         }
         if (
@@ -229,9 +242,9 @@ contract CombatSystem is System {
         uint256 randomNumber
     ) public returns (int256 damage, bool hit, bool crit) {
         // get attacker
-        StatsData memory attacker = applyEquipmentBonuses(attackerId);
+        AdjustedCombatStats memory attacker = IWorld(_world()).UD__applyEquipmentBonuses(attackerId);
         //get defender
-        StatsData memory defender = applyEquipmentBonuses(defenderId);
+        AdjustedCombatStats memory defender = IWorld(_world()).UD__applyEquipmentBonuses(defenderId);
         // get weapon stats
         WeaponStats memory weapon = IWorld(_world()).UD__getWeaponStats(weaponId);
 
@@ -250,13 +263,13 @@ contract CombatSystem is System {
                                 uint256(rnChunks[2]) % weapon.maxDamage <= weapon.minDamage
                                     ? weapon.minDamage
                                     : uint256(rnChunks[2]) % weapon.maxDamage
-                            ) + int256(attacker.strength / 2)
+                            ) + int256(attacker.adjustedStrength / 2)
                     ) * int256(ATTACK_MODIFIER)
                 )
                     - int256(
                         (
-                            int256(defender.armor) - attackStats.armorPenetration > 0
-                                ? uint256(int256(defender.armor) - attackStats.armorPenetration)
+                            int256(defender.adjustedArmor) - attackStats.armorPenetration > 0
+                                ? uint256(int256(defender.adjustedArmor) - attackStats.armorPenetration)
                                 : uint256(1)
                         ) * DEFENSE_MODIFIER
                     );
@@ -283,14 +296,15 @@ contract CombatSystem is System {
         uint256 attackRoll,
         uint256 defenseRoll,
         PhysicalAttackStats memory attackStats,
-        StatsData memory attacker,
-        StatsData memory defender
+        AdjustedCombatStats memory attacker,
+        AdjustedCombatStats memory defender
     ) internal returns (bool attackLands, bool crit) {
-        uint256 attackTotal =
-            (Math.add(attacker.agility, attackStats.attackModifierBonus) + (attackRoll % 1000)) * (TO_HIT_MODIFIER);
+        uint256 attackTotal = (
+            Math.add(attacker.adjustedAgility, attackStats.attackModifierBonus) + (attackRoll % 1000)
+        ) * (TO_HIT_MODIFIER);
         // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
 
-        uint256 defenseTotal = ((defenseRoll % 1000) + defender.agility) * DEFENSE_MODIFIER;
+        uint256 defenseTotal = ((defenseRoll % 1000) + defender.adjustedAgility) * DEFENSE_MODIFIER;
         attackLands = attackTotal > defenseTotal;
         if (attackLands) {
             crit = attackTotal / defenseTotal >= 2;

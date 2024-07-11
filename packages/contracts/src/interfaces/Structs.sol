@@ -51,6 +51,17 @@ struct MonsterTemplateDetails {
     MonsterStats stats;
 }
 
+struct AdjustedCombatStats {
+    uint256 adjustedStrength;
+    uint256 adjustedAgility;
+    uint256 adjustedIntelligence;
+    uint256 adjustedArmor;
+    uint256 adjustedMaxHp;
+    int256 currentHp;
+    uint256 level;
+    uint256 class;
+}
+
 struct PhysicalAttackStats {
     // additional damage on top of item damage
     int256 bonusDamage;
