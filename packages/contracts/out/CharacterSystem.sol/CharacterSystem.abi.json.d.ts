@@ -355,6 +355,24 @@ declare const abi: [
     "stateMutability": "pure"
   },
   {
+    "type": "function",
+    "name": "updateTokenUri",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tokenUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
     "type": "event",
     "name": "Store_SpliceDynamicData",
     "inputs": [

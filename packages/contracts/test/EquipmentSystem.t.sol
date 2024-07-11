@@ -5,7 +5,7 @@ import {Classes, ItemType} from "@codegen/common.sol";
 import {StatsData} from "@tables/Stats.sol";
 import "forge-std/console2.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {UltimateDominionConfig, StarterItemsData} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
@@ -83,13 +83,13 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         vm.startPrank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
-        uint256[] memory itemsToEquip = new uint256[](1);
-        itemsToEquip[0] = 1;
-        world.UD__equipItems(alicesCharacterId, itemsToEquip);
-        assertTrue(world.UD__isEquipped(alicesCharacterId, 1));
+        StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
+
+        world.UD__equipItems(alicesCharacterId, starterDat.itemIds);
+        assertTrue(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
         startGasReport("uneqip 1 item");
-        world.UD__unequipItem(alicesCharacterId, 1);
+        world.UD__unequipItem(alicesCharacterId, starterDat.itemIds[0]);
         endGasReport();
-        assertFalse(world.UD__isEquipped(alicesCharacterId, 1));
+        assertFalse(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
     }
 }
