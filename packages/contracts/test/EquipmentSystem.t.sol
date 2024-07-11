@@ -13,7 +13,7 @@ import {IERC1155MetadataURI} from "@erc1155/IERC1155MetadataURI.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
-import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
+import {WeaponStats, ArmorStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {_itemsSystemId} from "../src/utils.sol";
@@ -67,15 +67,15 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         world.UD__equipItems(bobCharacterId, itemsToEquip);
         StatsData memory baseStats = world.UD__getStats(bobCharacterId);
         startGasReport("apply stat bonuses");
-        StatsData memory modifiedStats = world.UD__applyEquipmentBonuses(bobCharacterId);
+        AdjustedCombatStats memory modifiedStats = world.UD__applyEquipmentBonuses(bobCharacterId);
         endGasReport();
         ArmorStats memory armorStats = world.UD__getArmorStats(newArmorId);
         assertTrue(world.UD__isEquipped(bobCharacterId, newArmorId));
 
-        assertEq(modifiedStats.strength, uint256(int256(baseStats.strength) + armorStats.strModifier));
-        assertEq(modifiedStats.agility, uint256(int256(baseStats.agility) + armorStats.agiModifier));
-        assertEq(modifiedStats.intelligence, uint256(int256(baseStats.intelligence) + armorStats.intModifier));
-        assertEq(modifiedStats.maxHitPoints, uint256(int256(baseStats.maxHitPoints) + armorStats.hitPointModifier));
+        assertEq(modifiedStats.adjustedStrength, uint256(int256(baseStats.strength) + armorStats.strModifier));
+        assertEq(modifiedStats.adjustedAgility, uint256(int256(baseStats.agility) + armorStats.agiModifier));
+        assertEq(modifiedStats.adjustedIntelligence, uint256(int256(baseStats.intelligence) + armorStats.intModifier));
+        assertEq(modifiedStats.adjustedMaxHp, uint256(int256(baseStats.baseHitPoints) + armorStats.hitPointModifier));
     }
 
     function test_unequipItem() public {

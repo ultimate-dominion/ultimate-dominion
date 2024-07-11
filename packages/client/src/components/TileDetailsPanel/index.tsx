@@ -151,7 +151,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             goldBalance: formatEther(BigInt(goldBalance)).toString(),
             experience: characterStats?.experience.toString() ?? '0',
             intelligence: characterStats?.intelligence.toString() ?? '0',
-            maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
+            baseHitPoints: characterStats?.baseHitPoints.toString() ?? '0',
             level: characterStats?.level.toString() ?? '0',
             locked: characterData.locked,
             name: hexToString(characterData.name as `0x${string}`, {

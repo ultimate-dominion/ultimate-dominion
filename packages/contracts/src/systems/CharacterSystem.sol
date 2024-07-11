@@ -41,7 +41,7 @@ contract CharacterSystem is System {
     }
 
     function getClass(bytes32 characterId) public view returns (Classes _class) {
-        _class = Characters.getClass(characterId);
+        _class = Stats.getClass(characterId);
     }
 
     function _goldToken() internal view returns (IERC20System goldToken) {
@@ -106,7 +106,7 @@ contract CharacterSystem is System {
         require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
         require(_isOwner(characterId), "Not your Character.");
         RngRequestType requestType = RngRequestType.CharacterStats;
-        Characters.setClass(characterId, class);
+        Stats.setClass(characterId, class);
         // use systemSwitch to call rng system
         SystemSwitch.call(abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, abi.encode(characterId))));
     }
