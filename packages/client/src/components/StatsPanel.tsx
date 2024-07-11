@@ -45,8 +45,6 @@ export const StatsPanel = (): JSX.Element => {
   } = useMUD();
   const { character } = useCharacter();
 
-  const [items, setItems] = useState<Weapon[] | null>(null);
-
   const nextLevelXpRequirement = useComponentValue(
     Levels,
     encodeEntity({ level: 'uint256' }, { level: BigInt(CURRENT_LEVEL + 1) }),
@@ -166,9 +164,16 @@ export const StatsPanel = (): JSX.Element => {
     );
   }
 
-  const { goldBalance, image, name } = character;
-  const { agility, experience, intelligence, baseHitPoints, strength } =
-    characterStats;
+  const {
+    agility,
+    baseHitPoints,
+    experience,
+    goldBalance,
+    image,
+    intelligence,
+    name,
+    strength,
+  } = character;
 
   return (
     <VStack alignItems="start" h="100%" p={2} spacing={4}>

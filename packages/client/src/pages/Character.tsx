@@ -9,7 +9,7 @@ import {
   Text,
   useDisclosure,
 } from '@chakra-ui/react';
-import { Entity, getComponentValueStrict } from '@latticexyz/recs';
+import { Entity, getComponentValue } from '@latticexyz/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
@@ -42,14 +42,13 @@ export const CharacterPage = (): JSX.Element => {
       if (!(characterId && publicClient && worldContract)) return;
       setIsLoading(true);
 
-      const characterData = getComponentValueStrict(
+      const characterData = getComponentValue(
         Characters,
         characterId as Entity,
       );
-      const characterStats = getComponentValueStrict(
-        Stats,
-        characterId as Entity,
-      );
+      const characterStats = getComponentValue(Stats, characterId as Entity);
+
+      if (!(characterData && characterStats)) return;
 
       const characterTokenAddress =
         await worldContract.read.UD__getCharacterToken();
@@ -90,20 +89,20 @@ export const CharacterPage = (): JSX.Element => {
 
       const _character = {
         ...fetachedMetadata,
-        goldBalance: formatEther(BigInt(goldBalance)).toString(),
-        agility: characterStats?.agility.toString() ?? '0',
-        experience: characterStats?.experience.toString() ?? '0',
-        characterClass: characterData.class,
+        agility: characterStats.agility.toString(),
+        baseHitPoints: characterStats.baseHitPoints.toString(),
+        characterClass: characterStats.class,
         characterId: characterId as Entity,
-        intelligence: characterStats?.intelligence.toString() ?? '0',
-        level: characterStats?.level.toString() ?? '0',
+        experience: characterStats.experience.toString(),
+        goldBalance: formatEther(BigInt(goldBalance)).toString(),
+        intelligence: characterStats.intelligence.toString(),
+        level: characterStats.level.toString(),
         locked: characterData.locked,
-        maxHitPoints: characterStats?.maxHitPoints.toString() ?? '0',
         name: hexToString(characterData.name as `0x${string}`, {
           size: 32,
         }),
         owner: characterData.owner,
-        strength: characterStats?.strength.toString() ?? '0',
+        strength: characterStats.strength.toString(),
         tokenId: characterData.tokenId.toString(),
       });
     } catch (error) {
@@ -190,8 +189,8 @@ export const CharacterPage = (): JSX.Element => {
           >
             <StatsPanel
               agility={character.agility}
+              baseHitPoints={character.baseHitPoints}
               intelligence={character.intelligence}
-              maxHitPoints={character.maxHitPoints}
               strength={character.strength}
             />
           </GridItem>

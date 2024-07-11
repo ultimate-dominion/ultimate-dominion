@@ -291,8 +291,9 @@ export const CharacterCreation = (): JSX.Element => {
   ]);
 
   const rolledOnce = useMemo(() => {
-    return characterStats.baseHitPoints !== '0';
-  }, [characterStats]);
+    if (!character) return false;
+    return character.baseHitPoints !== '0';
+  }, [character]);
 
   const onEnterGame = useCallback(async () => {
     try {
@@ -588,7 +589,7 @@ export const CharacterCreation = (): JSX.Element => {
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
                   <Text>HP - Hit</Text>
-                  <Text>{characterStats.baseHitPoints ?? '0'}</Text>
+                  <Text>{character?.baseHitPoints ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>STR - Strength</Text>

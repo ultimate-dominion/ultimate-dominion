@@ -1,9 +1,8 @@
 import { Entity } from '@latticexyz/recs';
 
-export type Character = CharacterData & CharacterStats;
+export type Character = CharacterData & CharacterStats & Metadata;
 
-export type CharacterData = Metadata & {
-  characterClass: StatsClasses;
+export type CharacterData = {
   characterId: Entity;
   goldBalance: string;
   locked: boolean;
@@ -18,7 +17,6 @@ export type CharacterStats = {
   experience: string;
   intelligence: string;
   level: string;
-  baseHitPoints: string;
   strength: string;
 };
 
