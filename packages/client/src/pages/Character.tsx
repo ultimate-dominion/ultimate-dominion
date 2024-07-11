@@ -8,10 +8,12 @@ import {
   Spinner,
   Text,
 } from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
 import { Entity, getComponentValue } from '@latticexyz/recs';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { formatEther, getContract, hexToString } from 'viem';
+import { formatEther, hexToString } from 'viem';
 
 import { ItemCard } from '../components/Character/Card/ItemCard';
 import { Misc } from '../components/Character/Misc';
@@ -20,6 +22,7 @@ import { Stats as StatsPanel } from '../components/Character/Stats';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { BALANCE_OF_ABI, TOKEN_URI_ABI } from '../utils/constants';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type { Character, CharacterStats } from '../utils/types';
 
@@ -27,10 +30,15 @@ export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
   const { renderError } = useToast();
   const {
-    components: { Characters, Stats },
+    components: { Characters, Stats, UltimateDominionConfig },
     network: { publicClient, worldContract },
   } = useMUD();
   const { character: userCharacter } = useCharacter();
+
+  const ultimateDominionConfig = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  );
 
   const [character, setCharacter] = useState<
     (Character & CharacterStats) | null
@@ -39,7 +47,15 @@ export const CharacterPage = (): JSX.Element => {
 
   const fetchCharacter = useCallback(async () => {
     try {
-      if (!(characterId && publicClient && worldContract)) return;
+      if (
+        !(
+          characterId &&
+          publicClient &&
+          ultimateDominionConfig &&
+          worldContract
+        )
+      )
+        return;
       setIsLoading(true);
 
       const characterData = getComponentValue(
@@ -50,74 +66,38 @@ export const CharacterPage = (): JSX.Element => {
 
       if (!(characterData && characterStats)) return;
 
-      const characterTokenAddress =
-        await worldContract.read.UD__getCharacterToken();
+      const { characterToken, goldToken, multicall } = ultimateDominionConfig;
 
-      const characterToken = getContract({
-        address: characterTokenAddress,
-        abi: [
-          {
-            type: 'function',
-            name: 'tokenURI',
-            inputs: [
-              {
-                name: 'tokenId',
-                type: 'uint256',
-                internalType: 'uint256',
-              },
-            ],
-            outputs: [
-              {
-                name: '',
-                type: 'string',
-                internalType: 'string',
-              },
-            ],
-            stateMutability: 'view',
-          },
-        ],
-        client: publicClient,
-      });
+      const characterContract = {
+        address: characterToken as `0x${string}`,
+        abi: TOKEN_URI_ABI,
+      };
 
-      const metadataURI = await characterToken.read.tokenURI([
-        BigInt(characterData.tokenId),
-      ]);
+      const goldTokenContract = {
+        address: goldToken as `0x${string}`,
+        abi: BALANCE_OF_ABI,
+      };
+
+      const [{ result: metadataURI }, { result: goldBalance }] =
+        await publicClient.multicall({
+          contracts: [
+            {
+              ...characterContract,
+              functionName: 'tokenURI',
+              args: [characterData.tokenId],
+            },
+            {
+              ...goldTokenContract,
+              functionName: 'balanceOf',
+              args: [characterData.owner],
+            },
+          ],
+          multicallAddress: multicall as `0x${string}`,
+        });
 
       const fetachedMetadata = await fetchMetadataFromUri(
-        uriToHttp(metadataURI)[0],
+        uriToHttp(metadataURI as string)[0],
       );
-
-      const goldTokenAddress = await worldContract.read.UD__getGoldToken();
-
-      const goldToken = getContract({
-        address: goldTokenAddress,
-        abi: [
-          {
-            type: 'function',
-            name: 'balanceOf',
-            inputs: [
-              {
-                name: 'account',
-                type: 'address',
-                internalType: 'address',
-              },
-            ],
-            outputs: [
-              {
-                name: '',
-                type: 'uint256',
-                internalType: 'uint256',
-              },
-            ],
-            stateMutability: 'view',
-          },
-        ],
-        client: publicClient,
-      });
-
-      const goldBalance = await goldToken.read.balanceOf([
-        characterData.owner as `0x${string}`,
-      ]);
 
       setCharacter({
         ...fetachedMetadata,
@@ -126,7 +106,7 @@ export const CharacterPage = (): JSX.Element => {
         characterClass: characterStats.class,
         characterId: characterId as Entity,
         experience: characterStats.experience.toString(),
-        goldBalance: formatEther(BigInt(goldBalance)).toString(),
+        goldBalance: formatEther(goldBalance as bigint).toString(),
         intelligence: characterStats.intelligence.toString(),
         level: characterStats.level.toString(),
         locked: characterData.locked,
@@ -148,6 +128,7 @@ export const CharacterPage = (): JSX.Element => {
     Stats,
     publicClient,
     renderError,
+    ultimateDominionConfig,
     worldContract,
   ]);
 
