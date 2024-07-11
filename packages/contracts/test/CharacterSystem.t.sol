@@ -1,8 +1,8 @@
 pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
-import {Classes} from "../src/codegen/common.sol";
-import {StatsData} from "../src/codegen/tables/Stats.sol";
+import {Classes} from "@codegen/common.sol";
+import {StatsData, StarterItemsData} from "@codegen/index.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
 import {IERC721Metadata} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Metadata.sol";
 import "forge-std/console2.sol";
@@ -57,8 +57,16 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         vm.startPrank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
-        assertEq(erc1155System.balanceOf(alice, 1), 1);
+        StarterItemsData memory starterItemsDat = world.UD__getStarterItems(Classes.Rogue);
+        assertEq(erc1155System.balanceOf(alice, starterItemsDat.itemIds[0]), starterItemsDat.amounts[0]);
 
         endGasReport();
+    }
+
+    function test_UpdateTokenUri() public {
+        vm.prank(bob);
+        world.UD__updateTokenUri(bobCharacterId, "newTokenUri");
+
+        assertEq(IERC721Metadata(address(characterToken)).tokenURI(2), "ipfs://newTokenUri");
     }
 }

@@ -36,6 +36,8 @@ interface ICharacterSystem {
 
   function UD__getCurrentLevel(uint256 experience) external view returns (uint256 currentLevel);
 
+  function UD__updateTokenUri(bytes32 characterId, string memory tokenUri) external;
+
   function UD__getOwner(bytes32 characterId) external view returns (address);
 
   function UD__getExperience(bytes32 characterId) external view returns (uint256);
