@@ -84,7 +84,7 @@ contract ItemsSystem is System {
 
     function issueStarterItems(bytes32 characterId) public {
         require(_msgSender() == Systems.getSystem(_characterSystemId("UD")), "ITEMS: Invalid System");
-        StarterItemsData memory starterItems = StarterItems.get(Characters.getClass(characterId));
+        StarterItemsData memory starterItems = StarterItems.get(Stats.getClass(characterId));
 
         address owner = IWorld(_world()).UD__getOwner(characterId);
 

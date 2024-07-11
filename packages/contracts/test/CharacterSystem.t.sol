@@ -29,10 +29,10 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         vm.warp(block.number + 1);
         StatsData memory alicesCharacter = world.UD__getStats(alicesCharacterId);
-        assertEq(uint8(world.UD__getClass(alicesCharacterId)), uint8(Classes.Rogue));
+        assertEq(uint8(alicesCharacter.class), uint8(Classes.Rogue));
         assertEq(
             (
-                alicesCharacter.strength + alicesCharacter.agility + alicesCharacter.maxHitPoints
+                alicesCharacter.strength + alicesCharacter.agility + alicesCharacter.baseHitPoints
                     + alicesCharacter.intelligence
             ),
             27

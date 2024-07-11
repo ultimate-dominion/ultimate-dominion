@@ -16,15 +16,18 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
+// Import user types
+import { Classes } from "./../common.sol";
+
 struct StatsData {
   uint256 strength;
   uint256 agility;
+  Classes class;
   uint256 intelligence;
-  uint256 maxHitPoints;
+  uint256 baseHitPoints;
   int256 currentHp;
   uint256 experience;
   uint256 level;
-  uint256 armor;
 }
 
 library Stats {
@@ -32,12 +35,12 @@ library Stats {
   ResourceId constant _tableId = ResourceId.wrap(0x7462554400000000000000000000000053746174730000000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0100080020202020202020200000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x00e1080020200120202020200000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint256, uint256, uint256, uint256, int256, uint256, uint256, uint256)
-  Schema constant _valueSchema = Schema.wrap(0x010008001f1f1f1f3f1f1f1f0000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint256, uint256, uint8, uint256, uint256, int256, uint256, uint256)
+  Schema constant _valueSchema = Schema.wrap(0x00e108001f1f001f1f3f1f1f0000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -56,12 +59,12 @@ library Stats {
     fieldNames = new string[](8);
     fieldNames[0] = "strength";
     fieldNames[1] = "agility";
-    fieldNames[2] = "intelligence";
-    fieldNames[3] = "maxHitPoints";
-    fieldNames[4] = "currentHp";
-    fieldNames[5] = "experience";
-    fieldNames[6] = "level";
-    fieldNames[7] = "armor";
+    fieldNames[2] = "class";
+    fieldNames[3] = "intelligence";
+    fieldNames[4] = "baseHitPoints";
+    fieldNames[5] = "currentHp";
+    fieldNames[6] = "experience";
+    fieldNames[7] = "level";
   }
 
   /**
@@ -163,13 +166,55 @@ library Stats {
   }
 
   /**
+   * @notice Get class.
+   */
+  function getClass(bytes32 entityId) internal view returns (Classes class) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return Classes(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Get class.
+   */
+  function _getClass(bytes32 entityId) internal view returns (Classes class) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return Classes(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Set class.
+   */
+  function setClass(bytes32 entityId, Classes class) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked(uint8(class)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set class.
+   */
+  function _setClass(bytes32 entityId, Classes class) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked(uint8(class)), _fieldLayout);
+  }
+
+  /**
    * @notice Get intelligence.
    */
   function getIntelligence(bytes32 entityId) internal view returns (uint256 intelligence) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -180,7 +225,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -191,7 +236,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((intelligence)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((intelligence)), _fieldLayout);
   }
 
   /**
@@ -201,49 +246,49 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((intelligence)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((intelligence)), _fieldLayout);
   }
 
   /**
-   * @notice Get maxHitPoints.
+   * @notice Get baseHitPoints.
    */
-  function getMaxHitPoints(bytes32 entityId) internal view returns (uint256 maxHitPoints) {
+  function getBaseHitPoints(bytes32 entityId) internal view returns (uint256 baseHitPoints) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Get maxHitPoints.
+   * @notice Get baseHitPoints.
    */
-  function _getMaxHitPoints(bytes32 entityId) internal view returns (uint256 maxHitPoints) {
+  function _getBaseHitPoints(bytes32 entityId) internal view returns (uint256 baseHitPoints) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Set maxHitPoints.
+   * @notice Set baseHitPoints.
    */
-  function setMaxHitPoints(bytes32 entityId, uint256 maxHitPoints) internal {
+  function setBaseHitPoints(bytes32 entityId, uint256 baseHitPoints) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((maxHitPoints)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((baseHitPoints)), _fieldLayout);
   }
 
   /**
-   * @notice Set maxHitPoints.
+   * @notice Set baseHitPoints.
    */
-  function _setMaxHitPoints(bytes32 entityId, uint256 maxHitPoints) internal {
+  function _setBaseHitPoints(bytes32 entityId, uint256 baseHitPoints) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((maxHitPoints)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((baseHitPoints)), _fieldLayout);
   }
 
   /**
@@ -253,7 +298,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
@@ -264,7 +309,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
@@ -275,7 +320,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((currentHp)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((currentHp)), _fieldLayout);
   }
 
   /**
@@ -285,7 +330,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((currentHp)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((currentHp)), _fieldLayout);
   }
 
   /**
@@ -295,7 +340,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -306,7 +351,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -317,7 +362,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((experience)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((experience)), _fieldLayout);
   }
 
   /**
@@ -327,7 +372,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((experience)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((experience)), _fieldLayout);
   }
 
   /**
@@ -337,7 +382,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -348,7 +393,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -359,7 +404,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((level)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((level)), _fieldLayout);
   }
 
   /**
@@ -369,49 +414,7 @@ library Stats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((level)), _fieldLayout);
-  }
-
-  /**
-   * @notice Get armor.
-   */
-  function getArmor(bytes32 entityId) internal view returns (uint256 armor) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = entityId;
-
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
-    return (uint256(bytes32(_blob)));
-  }
-
-  /**
-   * @notice Get armor.
-   */
-  function _getArmor(bytes32 entityId) internal view returns (uint256 armor) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = entityId;
-
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
-    return (uint256(bytes32(_blob)));
-  }
-
-  /**
-   * @notice Set armor.
-   */
-  function setArmor(bytes32 entityId, uint256 armor) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = entityId;
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((armor)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set armor.
-   */
-  function _setArmor(bytes32 entityId, uint256 armor) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = entityId;
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((armor)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((level)), _fieldLayout);
   }
 
   /**
@@ -451,22 +454,22 @@ library Stats {
     bytes32 entityId,
     uint256 strength,
     uint256 agility,
+    Classes class,
     uint256 intelligence,
-    uint256 maxHitPoints,
+    uint256 baseHitPoints,
     int256 currentHp,
     uint256 experience,
-    uint256 level,
-    uint256 armor
+    uint256 level
   ) internal {
     bytes memory _staticData = encodeStatic(
       strength,
       agility,
+      class,
       intelligence,
-      maxHitPoints,
+      baseHitPoints,
       currentHp,
       experience,
-      level,
-      armor
+      level
     );
 
     EncodedLengths _encodedLengths;
@@ -485,22 +488,22 @@ library Stats {
     bytes32 entityId,
     uint256 strength,
     uint256 agility,
+    Classes class,
     uint256 intelligence,
-    uint256 maxHitPoints,
+    uint256 baseHitPoints,
     int256 currentHp,
     uint256 experience,
-    uint256 level,
-    uint256 armor
+    uint256 level
   ) internal {
     bytes memory _staticData = encodeStatic(
       strength,
       agility,
+      class,
       intelligence,
-      maxHitPoints,
+      baseHitPoints,
       currentHp,
       experience,
-      level,
-      armor
+      level
     );
 
     EncodedLengths _encodedLengths;
@@ -519,12 +522,12 @@ library Stats {
     bytes memory _staticData = encodeStatic(
       _table.strength,
       _table.agility,
+      _table.class,
       _table.intelligence,
-      _table.maxHitPoints,
+      _table.baseHitPoints,
       _table.currentHp,
       _table.experience,
-      _table.level,
-      _table.armor
+      _table.level
     );
 
     EncodedLengths _encodedLengths;
@@ -543,12 +546,12 @@ library Stats {
     bytes memory _staticData = encodeStatic(
       _table.strength,
       _table.agility,
+      _table.class,
       _table.intelligence,
-      _table.maxHitPoints,
+      _table.baseHitPoints,
       _table.currentHp,
       _table.experience,
-      _table.level,
-      _table.armor
+      _table.level
     );
 
     EncodedLengths _encodedLengths;
@@ -571,29 +574,29 @@ library Stats {
     returns (
       uint256 strength,
       uint256 agility,
+      Classes class,
       uint256 intelligence,
-      uint256 maxHitPoints,
+      uint256 baseHitPoints,
       int256 currentHp,
       uint256 experience,
-      uint256 level,
-      uint256 armor
+      uint256 level
     )
   {
     strength = (uint256(Bytes.getBytes32(_blob, 0)));
 
     agility = (uint256(Bytes.getBytes32(_blob, 32)));
 
-    intelligence = (uint256(Bytes.getBytes32(_blob, 64)));
+    class = Classes(uint8(Bytes.getBytes1(_blob, 64)));
 
-    maxHitPoints = (uint256(Bytes.getBytes32(_blob, 96)));
+    intelligence = (uint256(Bytes.getBytes32(_blob, 65)));
 
-    currentHp = (int256(uint256(Bytes.getBytes32(_blob, 128))));
+    baseHitPoints = (uint256(Bytes.getBytes32(_blob, 97)));
 
-    experience = (uint256(Bytes.getBytes32(_blob, 160)));
+    currentHp = (int256(uint256(Bytes.getBytes32(_blob, 129))));
 
-    level = (uint256(Bytes.getBytes32(_blob, 192)));
+    experience = (uint256(Bytes.getBytes32(_blob, 161)));
 
-    armor = (uint256(Bytes.getBytes32(_blob, 224)));
+    level = (uint256(Bytes.getBytes32(_blob, 193)));
   }
 
   /**
@@ -610,12 +613,12 @@ library Stats {
     (
       _table.strength,
       _table.agility,
+      _table.class,
       _table.intelligence,
-      _table.maxHitPoints,
+      _table.baseHitPoints,
       _table.currentHp,
       _table.experience,
-      _table.level,
-      _table.armor
+      _table.level
     ) = decodeStatic(_staticData);
   }
 
@@ -646,14 +649,14 @@ library Stats {
   function encodeStatic(
     uint256 strength,
     uint256 agility,
+    Classes class,
     uint256 intelligence,
-    uint256 maxHitPoints,
+    uint256 baseHitPoints,
     int256 currentHp,
     uint256 experience,
-    uint256 level,
-    uint256 armor
+    uint256 level
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(strength, agility, intelligence, maxHitPoints, currentHp, experience, level, armor);
+    return abi.encodePacked(strength, agility, class, intelligence, baseHitPoints, currentHp, experience, level);
   }
 
   /**
@@ -665,22 +668,22 @@ library Stats {
   function encode(
     uint256 strength,
     uint256 agility,
+    Classes class,
     uint256 intelligence,
-    uint256 maxHitPoints,
+    uint256 baseHitPoints,
     int256 currentHp,
     uint256 experience,
-    uint256 level,
-    uint256 armor
+    uint256 level
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(
       strength,
       agility,
+      class,
       intelligence,
-      maxHitPoints,
+      baseHitPoints,
       currentHp,
       experience,
-      level,
-      armor
+      level
     );
 
     EncodedLengths _encodedLengths;

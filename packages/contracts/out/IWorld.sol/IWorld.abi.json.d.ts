@@ -91,25 +91,30 @@ declare const abi: [
       {
         "name": "modifiedStats",
         "type": "tuple",
-        "internalType": "struct StatsData",
+        "internalType": "struct AdjustedCombatStats",
         "components": [
           {
-            "name": "strength",
+            "name": "adjustedStrength",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "agility",
+            "name": "adjustedAgility",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "intelligence",
+            "name": "adjustedIntelligence",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "maxHitPoints",
+            "name": "adjustedArmor",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "adjustedMaxHp",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -119,17 +124,12 @@ declare const abi: [
             "internalType": "int256"
           },
           {
-            "name": "experience",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "armor",
+            "name": "class",
             "type": "uint256",
             "internalType": "uint256"
           }
@@ -155,7 +155,7 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "canUse",
         "type": "bool",
         "internalType": "bool"
       }
@@ -1223,12 +1223,17 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
             "name": "intelligence",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "maxHitPoints",
+            "name": "baseHitPoints",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -1244,11 +1249,6 @@ declare const abi: [
           },
           {
             "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "armor",
             "type": "uint256",
             "internalType": "uint256"
           }
