@@ -14,9 +14,11 @@ import {
   useEffect,
   useState,
 } from 'react';
+import { useLocation } from 'react-router-dom';
 import { bytesToHex, formatEther, hexToBytes, hexToString } from 'viem';
 
 import { useToast } from '../hooks/useToast';
+import { GAME_BOARD_PATH } from '../Routes';
 import { BALANCE_OF_ABI, TOKEN_URI_ABI } from '../utils/constants';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type { Character, Monster } from '../utils/types';
@@ -52,6 +54,7 @@ export type NavigationProviderProps = {
 export const MapNavigationProvider = ({
   children,
 }: NavigationProviderProps): JSX.Element => {
+  const { pathname } = useLocation();
   const { renderError, renderSuccess } = useToast();
   const {
     burnerBalance,
@@ -381,6 +384,45 @@ export const MapNavigationProvider = ({
     },
     [character, delegatorAddress, move, position, renderError],
   );
+
+  useEffect(() => {
+    if (pathname !== GAME_BOARD_PATH) return;
+
+    const listener = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'ArrowUp':
+          onMove('up');
+          break;
+        case 'ArrowDown':
+          onMove('down');
+          break;
+        case 'ArrowLeft':
+          onMove('left');
+          break;
+        case 'ArrowRight':
+          onMove('right');
+          break;
+        case 'w':
+          onMove('up');
+          break;
+        case 's':
+          onMove('down');
+          break;
+        case 'a':
+          onMove('left');
+          break;
+        case 'd':
+          onMove('right');
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', listener);
+    // eslint-disable-next-line consistent-return
+    return () => window.removeEventListener('keydown', listener);
+  }, [onMove, pathname]);
 
   return (
     <MapNavigationContext.Provider

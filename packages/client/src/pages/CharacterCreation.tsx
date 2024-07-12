@@ -29,6 +29,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
+import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import {
   fetchMetadataFromUri,
@@ -313,7 +314,7 @@ export const CharacterCreation = (): JSX.Element => {
       }
 
       renderSuccess('Your character has awakend!');
-      navigate('/game-board');
+      navigate(GAME_BOARD_PATH);
     } catch (e) {
       renderError(e, 'Failed to enter game.');
     } finally {
@@ -331,15 +332,15 @@ export const CharacterCreation = (): JSX.Element => {
     }
 
     if (character?.locked) {
-      navigate('/game-board');
+      navigate(GAME_BOARD_PATH);
     }
 
     if (!externalWalletClient) {
-      navigate('/');
+      navigate(HOME_PATH);
     }
 
     if (!delegatorAddress && isSynced) {
-      navigate('/');
+      navigate(HOME_PATH);
     }
   }, [
     character,

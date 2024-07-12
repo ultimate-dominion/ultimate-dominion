@@ -31,6 +31,7 @@ export const CharacterPage = (): JSX.Element => {
   const { renderError } = useToast();
   const {
     components: { Characters, Stats, UltimateDominionConfig },
+    isSynced,
     network: { publicClient, worldContract },
   } = useMUD();
   const { character: userCharacter } = useCharacter();
@@ -43,7 +44,9 @@ export const CharacterPage = (): JSX.Element => {
   const [character, setCharacter] = useState<
     (Character & CharacterStats) | null
   >(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingCharacter, setIsLoadingCharacter] = useState(true);
+
+  const [, setIsLoadingItems] = useState(true);
 
   const fetchCharacter = useCallback(async () => {
     try {
@@ -56,7 +59,7 @@ export const CharacterPage = (): JSX.Element => {
         )
       )
         return;
-      setIsLoading(true);
+      setIsLoadingCharacter(true);
 
       const characterData = getComponentValue(
         Characters,
@@ -120,7 +123,7 @@ export const CharacterPage = (): JSX.Element => {
     } catch (error) {
       renderError(error, 'Failed to fetch character data');
     } finally {
-      setIsLoading(false);
+      setIsLoadingCharacter(false);
     }
   }, [
     characterId,
@@ -132,18 +135,31 @@ export const CharacterPage = (): JSX.Element => {
     worldContract,
   ]);
 
+  const fetchCharacterItems = useCallback(async () => {
+    try {
+      // eslint-disable-next-line no-console
+      console.log('test');
+    } catch (error) {
+      renderError(error, 'Failed to fetch character data');
+    } finally {
+      setIsLoadingItems(false);
+    }
+  }, [renderError]);
+
   useEffect(() => {
+    if (!isSynced) return;
     (async (): Promise<void> => {
       await fetchCharacter();
+      await fetchCharacterItems();
     })();
-  }, [fetchCharacter]);
+  }, [fetchCharacter, fetchCharacterItems, isSynced]);
 
   const isOwner = useMemo(
     () => character?.owner === userCharacter?.owner,
     [character, userCharacter],
   );
 
-  if (isLoading) {
+  if (isLoadingCharacter) {
     return (
       <Center h="100%">
         <Spinner size="lg" />
@@ -243,89 +259,7 @@ export const CharacterPage = (): JSX.Element => {
               gap={2}
               mt={4}
             >
-              {[
-                {
-                  agi: 3,
-                  disabled: false,
-                  icon: 'fire',
-                  image: 'door-closed',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: false,
-                  icon: 'shield',
-                  image: 'scribd',
-                  int: 4,
-                  name: 'Copper Knife',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: false,
-                  icon: 'road',
-                  image: 'database',
-                  int: 4,
-                  name: 'Iron Axe',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'fire',
-                  image: 'search',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'shield',
-                  image: 'book',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'road',
-                  image: 'pizza-slice',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'fire',
-                  image: 'star-crescent',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'shield',
-                  image: 'bug',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'road',
-                  image: 'socks',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-              ].map(function (item, i) {
+              {DUMMY_ITEMS.map(function (item, i) {
                 return (
                   <GridItem key={i}>
                     {/* TODO: we should only use one general modal, which gets passed the item data when clicked */}
@@ -371,3 +305,87 @@ export const CharacterPage = (): JSX.Element => {
     </Box>
   );
 };
+
+const DUMMY_ITEMS = [
+  {
+    agi: 3,
+    disabled: false,
+    icon: 'fire',
+    image: 'door-closed',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: false,
+    icon: 'shield',
+    image: 'scribd',
+    int: 4,
+    name: 'Copper Knife',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: false,
+    icon: 'road',
+    image: 'database',
+    int: 4,
+    name: 'Iron Axe',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'fire',
+    image: 'search',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'shield',
+    image: 'book',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'road',
+    image: 'pizza-slice',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'fire',
+    image: 'star-crescent',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'shield',
+    image: 'bug',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'road',
+    image: 'socks',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+];
