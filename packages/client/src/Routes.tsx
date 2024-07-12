@@ -8,6 +8,7 @@ import { useMUD } from './contexts/MUDContext';
 import { CharacterPage } from './pages/Character';
 import { CharacterCreation } from './pages/CharacterCreation';
 import { GameBoard } from './pages/GameBoard';
+import { Leaderboard } from './pages/Leaderboard';
 import { Welcome } from './pages/Welcome';
 
 const AppRoutes: React.FC = () => {
@@ -34,6 +35,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/character-creation" element={<CharacterCreation />} />
       <Route path="/game-board" element={<GameBoard />} />
       <Route path="/characters/:characterId" element={<CharacterPage />} />
+      <Route path="/leaderboard" element={<Leaderboard />} />
     </Routes>
   );
 };
