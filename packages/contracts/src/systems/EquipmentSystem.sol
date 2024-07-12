@@ -99,7 +99,7 @@ contract EquipmentSystem is System {
 
         if (uint8(itemData.itemType) == 0) {
             WeaponStats memory weaponStats = abi.decode(itemData.stats, (WeaponStats));
-            bool isLevel = IWorld(_world()).UD__getCurrentLevel(character.experience) >= weaponStats.minLevel;
+            bool isLevel = character.level >= weaponStats.minLevel;
             bool isClass;
             if (weaponStats.classRestrictions.length > 0) {
                 for (uint256 i; i < weaponStats.classRestrictions.length;) {
@@ -118,7 +118,7 @@ contract EquipmentSystem is System {
         }
         if (uint8(itemData.itemType) == 1) {
             ArmorStats memory armorStats = abi.decode(itemData.stats, (ArmorStats));
-            bool isLevel = IWorld(_world()).UD__getCurrentLevel(character.experience) >= armorStats.minLevel;
+            bool isLevel = character.level >= armorStats.minLevel;
             bool isClass;
             if (armorStats.classRestrictions.length > 0) {
                 for (uint256 i; i < armorStats.classRestrictions.length;) {

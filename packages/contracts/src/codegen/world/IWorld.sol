@@ -10,6 +10,7 @@ import { ICharacterSystem } from "./ICharacterSystem.sol";
 import { ICombatSystem } from "./ICombatSystem.sol";
 import { IEquipmentSystem } from "./IEquipmentSystem.sol";
 import { IItemsSystem } from "./IItemsSystem.sol";
+import { ILootManagerSystem } from "./ILootManagerSystem.sol";
 import { IMapSystem } from "./IMapSystem.sol";
 import { IMobSystem } from "./IMobSystem.sol";
 import { IUltimateDominionConfigSystem } from "./IUltimateDominionConfigSystem.sol";
@@ -28,6 +29,7 @@ interface IWorld is
   ICombatSystem,
   IEquipmentSystem,
   IItemsSystem,
+  ILootManagerSystem,
   IMapSystem,
   IMobSystem,
   IUltimateDominionConfigSystem

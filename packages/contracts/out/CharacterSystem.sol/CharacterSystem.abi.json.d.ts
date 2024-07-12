@@ -91,7 +91,7 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "getCurrentLevel",
+    "name": "getCurrentAvailableLevel",
     "inputs": [
       {
         "name": "experience",
