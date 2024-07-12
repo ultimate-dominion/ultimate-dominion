@@ -44,7 +44,7 @@ function createDummyData(num: number = 1) {
   }
   return result;
 }
-const DUMMY_CHARACTER: Character[] = createDummyData(10)!;
+const DUMMY_CHARACTER: Character[] = createDummyData(50)!;
 const PER_PAGE = 5;
 export const Leaderboard = (): JSX.Element => {
   const [entries, setEntries] = useState(DUMMY_CHARACTER);
@@ -99,6 +99,7 @@ export const Leaderboard = (): JSX.Element => {
 
   return (
     <VStack mt={5}>
+      <Text>Page Limit: {pageLimit}</Text>
       <HStack my={5} w="100%">
         <Input
           onChange={e => setQuery(e.target.value)}
@@ -276,13 +277,13 @@ export const Leaderboard = (): JSX.Element => {
             {page == 1 ? 1 : page - 1}
           </Button>
         )}
-        {PER_PAGE > 1 && (
+        {pageLimit > 1 && (
           <Button
             onClick={() => setPage(page == 1 ? 2 : page)}
             size="sm"
             variant={page > 1 ? 'solid' : 'outline'}
           >
-            {page == 1 ? 2 : page}
+            {page == 1 ? 2 : page} hi
           </Button>
         )}
         {page + 1 <= pageLimit && pageLimit > 2 && (
@@ -295,7 +296,7 @@ export const Leaderboard = (): JSX.Element => {
           </Button>
         )}
 
-        {page < PER_PAGE && (
+        {page < pageLimit && (
           <Button
             onClick={() => setPage(pageLimit)}
             size="sm"
