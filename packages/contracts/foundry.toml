@@ -16,11 +16,8 @@ allow_paths = [
   # projects created from this template and using linked mud packages
   "../../../mud/packages",
 ]
-extra_output_files = [
-  "abi",
-  "evm.bytecode"
-]
-fs_permissions = [{ access = "read", path = "./"}]
+extra_output_files = ["abi", "evm.bytecode"]
+fs_permissions = [{ access = "read-write", path = "./" }]
 libs = ["node_modules", "lib"]
 
 [profile.base-sepolia]

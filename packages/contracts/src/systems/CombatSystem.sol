@@ -205,6 +205,8 @@ contract CombatSystem is System {
         ) {
             // for some reason block.timestamp is not availible here on anvil?
             encounterData.end = block.number;
+            CombatEncounter.set(encounterId, encounterData);
+            _endMatch(encounterId, randomNumber);
         }
     }
 
@@ -252,7 +254,7 @@ contract CombatSystem is System {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
 
             (hit, crit) = _calculatePhysicalAttackModifier(
-                uint256(rnChunks[1]), uint256(rnChunks[0]), attackStats, attacker, defender
+                uint256(rnChunks[0]), uint256(rnChunks[1]), attackStats, attacker, defender
             );
 
             if (hit) {
@@ -312,4 +314,14 @@ contract CombatSystem is System {
     }
 
     function _calculateMagicAttack() public {}
+
+    function _endMatch(bytes32 encounterId, uint256 randomNumber)
+        internal
+        returns (uint256[] memory itemIds, uint256[] memory amounts, uint256 goldAmount)
+    {
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        //check dead attackers and defenders
+
+        //if dead player, drop
+    }
 }

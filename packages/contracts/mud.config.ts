@@ -116,7 +116,9 @@ export default defineWorld({
       schema: {
         itemId: "uint256",
         itemType: "ItemType",
+        dropChance: "uint256",
         stats: "bytes",
+        // probability in 10^6 e.g. 20_000_000 = 20%
       },
       key: ["itemId"],
     },

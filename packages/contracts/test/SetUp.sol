@@ -80,7 +80,7 @@ contract SetUp is Test {
         vm.label(worldAddress, "world");
         vm.label(world.UD__getCharacterToken(), "character token");
 
-        newArmorId = world.UD__createItem(ItemType.Armor, 10 ether, abi.encode(newArmor), "setup_armor_uri");
+        newArmorId = world.UD__createItem(ItemType.Armor, 10 ether, 100000000, abi.encode(newArmor), "setup_armor_uri");
 
         world.grantAccess(_itemsSystemId("UD"), address(this));
 
