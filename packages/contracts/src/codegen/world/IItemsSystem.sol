@@ -15,6 +15,7 @@ interface IItemsSystem {
   function UD__createItem(
     ItemType itemType,
     uint256 supply,
+    uint256 dropChance,
     bytes memory stats,
     string memory itemMetadataURI
   ) external returns (uint256);
@@ -22,6 +23,7 @@ interface IItemsSystem {
   function UD__createItems(
     ItemType[] memory itemTypes,
     uint256[] memory supply,
+    uint256[] memory dropChances,
     bytes[] memory stats,
     string[] memory itemMetadataURIs
   ) external;

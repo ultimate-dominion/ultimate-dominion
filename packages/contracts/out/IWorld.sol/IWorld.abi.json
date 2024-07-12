@@ -201,6 +201,11 @@
         "internalType": "uint256"
       },
       {
+        "name": "dropChance",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "stats",
         "type": "bytes",
         "internalType": "bytes"
@@ -231,6 +236,11 @@
       },
       {
         "name": "supply",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "dropChances",
         "type": "uint256[]",
         "internalType": "uint256[]"
       },
@@ -490,6 +500,11 @@
         "internalType": "struct ArmorStats",
         "components": [
           {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
             "name": "armorModifier",
             "type": "uint256",
             "internalType": "uint256"
@@ -500,17 +515,7 @@
             "internalType": "uint8[]"
           },
           {
-            "name": "minLevel",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "strModifier",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "agiModifier",
+            "name": "hitPointModifier",
             "type": "int256",
             "internalType": "int256"
           },
@@ -520,7 +525,12 @@
             "internalType": "int256"
           },
           {
-            "name": "hitPointModifier",
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
           }

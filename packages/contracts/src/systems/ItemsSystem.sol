@@ -45,18 +45,27 @@ contract ItemsSystem is System {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
 
-    function createItem(ItemType itemType, uint256 supply, bytes memory stats, string memory itemMetadataURI)
-        public
-        returns (uint256)
-    {
+    function createItem(
+        ItemType itemType,
+        uint256 supply,
+        uint256 dropChance,
+        bytes memory stats,
+        string memory itemMetadataURI
+    ) public returns (uint256) {
         uint256 itemId = _incrementItemsCounter();
+        // create new item struct
+        ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, stats: stats});
+
+        // mint supply to this contract
         IWorld(_world()).call(
             _erc1155SystemId(ITEMS_NAMESPACE),
             abi.encodeWithSignature("mint(address,uint256,uint256,bytes)", address(this), itemId, supply, "")
         );
-
+        // see if you can guess what this is doing...
         setTokenUri(itemId, itemMetadataURI);
-        Items.set(itemId, itemType, stats);
+
+        // set the new item struct in the items table;
+        Items.set(itemId, newItem);
 
         return itemId;
     }
@@ -64,6 +73,7 @@ contract ItemsSystem is System {
     function createItems(
         ItemType[] memory itemTypes,
         uint256[] memory supply,
+        uint256[] memory dropChances,
         bytes[] memory stats,
         string[] memory itemMetadataURIs
     ) public {
@@ -74,7 +84,7 @@ contract ItemsSystem is System {
         );
 
         for (uint256 i; i < len; i++) {
-            createItem(itemTypes[i], supply[i], stats[i], itemMetadataURIs[i]);
+            createItem(itemTypes[i], supply[i], dropChances[i], stats[i], itemMetadataURIs[i]);
         }
     }
 

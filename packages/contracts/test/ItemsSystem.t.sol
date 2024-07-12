@@ -51,11 +51,11 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId =
-            world.UD__createItem(ItemType.Weapon, 10 ether, abi.encode(weaponStats), "test_Weapon_uri1/");
+            world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
         uint256 newItemId =
-            world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri/");
+            world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri/");
 
-        assertEq(newItemId, 6);
+        assertEq(newItemId, 7);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
@@ -80,7 +80,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         });
         vm.startPrank(alice);
         vm.expectRevert();
-        world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri1/");
+        world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
     }
 
     function test_GetTotalSupply() public {
@@ -96,7 +96,8 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             strModifier: 0
         });
         vm.startPrank(deployer);
-        uint256 id = world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri/");
+        uint256 id =
+            world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri/");
         assertEq(world.UD__getTotalSupply(id), 100 ether);
     }
 
