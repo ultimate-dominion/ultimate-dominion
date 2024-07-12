@@ -140,6 +140,30 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__calculateGoldDrop",
+    "inputs": [
+      {
+        "name": "mobLevel",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dropAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__checkRequirements",
     "inputs": [
       {
@@ -592,20 +616,7 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getCurrentItemsCounter",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__getCurrentLevel",
+    "name": "UD__getCurrentAvailableLevel",
     "inputs": [
       {
         "name": "experience",
@@ -616,6 +627,19 @@ declare const abi: [
     "outputs": [
       {
         "name": "currentLevel",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getCurrentItemsCounter",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }

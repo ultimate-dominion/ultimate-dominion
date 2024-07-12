@@ -114,7 +114,7 @@ contract CharacterSystem is System {
     function enterGame(bytes32 characterId) public {
         require(_isOwner(characterId), "not your character");
         require(!Characters.getLocked(characterId), "you have entered the game");
-
+        Stats.setLevel(characterId, 1);
         issueGold(characterId, 5 ether);
         // issue starterWeapon
         IWorld(_world()).UD__issueStarterItems(characterId);
@@ -122,7 +122,7 @@ contract CharacterSystem is System {
         Characters.setLocked(characterId, true);
     }
 
-    function getCurrentLevel(uint256 experience) public view returns (uint256 currentLevel) {
+    function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentLevel) {
         if (experience >= Levels.get(19)) {
             currentLevel = 20;
         } else {

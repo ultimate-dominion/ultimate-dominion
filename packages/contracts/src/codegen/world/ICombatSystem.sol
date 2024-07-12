@@ -48,4 +48,6 @@ interface ICombatSystem {
   function UD__getEncounter(bytes32 encounterId) external view returns (CombatEncounterData memory _encounterData);
 
   function UD___calculateMagicAttack() external;
+
+  function UD__calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) external returns (uint256 dropAmount);
 }

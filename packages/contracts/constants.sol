@@ -15,3 +15,6 @@ uint256 constant TO_HIT_MODIFIER = 150_000;
 uint256 constant DEFENSE_MODIFIER = 100_000;
 uint256 constant ATTACK_MODIFIER = 100_000;
 uint256 constant CRIT_MODIFIER = 2;
+
+//Gold Drop constants
+uint256 constant BASE_GOLD_DROP = 1e15; //
