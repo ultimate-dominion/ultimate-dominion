@@ -99,7 +99,6 @@ export const Leaderboard = (): JSX.Element => {
 
   return (
     <VStack mt={5}>
-      <Text>Page Limit: {pageLimit}</Text>
       <HStack my={5} w="100%">
         <Input
           onChange={e => setQuery(e.target.value)}
