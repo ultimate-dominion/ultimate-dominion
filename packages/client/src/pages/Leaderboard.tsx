@@ -282,7 +282,7 @@ export const Leaderboard = (): JSX.Element => {
             size="sm"
             variant={page > 1 ? 'solid' : 'outline'}
           >
-            {page == 1 ? 2 : page} hi
+            {page == 1 ? 2 : page}
           </Button>
         )}
         {page + 1 <= pageLimit && pageLimit > 2 && (
