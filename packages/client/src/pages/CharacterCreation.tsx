@@ -313,6 +313,8 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error('Contract call failed');
       }
 
+      await refreshCharacter();
+
       renderSuccess('Your character has awakend!');
       navigate(GAME_BOARD_PATH);
     } catch (e) {
@@ -320,7 +322,15 @@ export const CharacterCreation = (): JSX.Element => {
     } finally {
       setIsEnteringGame(false);
     }
-  }, [character, enterGame, navigate, renderError, renderSuccess, rolledOnce]);
+  }, [
+    character,
+    enterGame,
+    navigate,
+    refreshCharacter,
+    renderError,
+    renderSuccess,
+    rolledOnce,
+  ]);
 
   const isDisabled = useMemo(() => {
     return !character || isCreating || isEnteringGame || isRollingStats;
@@ -605,9 +615,21 @@ export const CharacterCreation = (): JSX.Element => {
               </HStack>
               {starterWeapons && starterWeapons[characterClass] && (
                 <HStack border="1px solid" borderColor="grey400" w="100%">
-                  <Box bgColor="grey400" h="50px" w="50px" />
+                  <Stack
+                    alignItems="center"
+                    bgColor="grey400"
+                    h="50px"
+                    justifyContent="center"
+                    w="50px"
+                  >
+                    <Text color="white" fontSize="2xl">
+                      {starterWeapons[characterClass].name.slice(-3)}
+                    </Text>
+                  </Stack>
                   <Box>
-                    <Text size="xs">{starterWeapons[characterClass].name}</Text>
+                    <Text size="xs">
+                      {starterWeapons[characterClass].name.slice(0, -3)}
+                    </Text>
                     <Text size="xs">
                       STR+
                       {starterWeapons[characterClass].strModifier} AGI+
