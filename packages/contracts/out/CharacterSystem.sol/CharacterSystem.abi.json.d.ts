@@ -230,12 +230,17 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
             "name": "intelligence",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "maxHitPoints",
+            "name": "baseHitPoints",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -251,11 +256,6 @@ declare const abi: [
           },
           {
             "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "armor",
             "type": "uint256",
             "internalType": "uint256"
           }
@@ -353,6 +353,24 @@ declare const abi: [
       }
     ],
     "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "updateTokenUri",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tokenUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "event",

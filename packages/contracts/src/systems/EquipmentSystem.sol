@@ -38,6 +38,7 @@ import {
     _operatorApprovalTableId,
     _ownersTableId
 } from "@erc1155/utils.sol";
+import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import "forge-std/console2.sol";
 
 contract EquipmentSystem is System {
@@ -90,18 +91,19 @@ contract EquipmentSystem is System {
         }
     }
 
-    function checkRequirements(bytes32 characterId, uint256 itemId) public view returns (bool) {
+    function checkRequirements(bytes32 characterId, uint256 itemId) public view returns (bool canUse) {
         ItemsData memory itemData = Items.get(itemId);
         StatsData memory character = Stats.get(characterId);
-        CharactersData memory characterData = Characters.get(characterId);
-        bool canUse = true;
+
+        canUse = true;
+
         if (uint8(itemData.itemType) == 0) {
             WeaponStats memory weaponStats = abi.decode(itemData.stats, (WeaponStats));
             bool isLevel = IWorld(_world()).UD__getCurrentLevel(character.experience) >= weaponStats.minLevel;
             bool isClass;
             if (weaponStats.classRestrictions.length > 0) {
                 for (uint256 i; i < weaponStats.classRestrictions.length;) {
-                    if (uint8(characterData.class) == uint8(weaponStats.classRestrictions[i])) {
+                    if (uint8(character.class) == uint8(weaponStats.classRestrictions[i])) {
                         isClass = true;
                         break;
                     }
@@ -120,7 +122,7 @@ contract EquipmentSystem is System {
             bool isClass;
             if (armorStats.classRestrictions.length > 0) {
                 for (uint256 i; i < armorStats.classRestrictions.length;) {
-                    if (uint8(characterData.class) == uint8(armorStats.classRestrictions[i])) {
+                    if (uint8(character.class) == uint8(armorStats.classRestrictions[i])) {
                         isClass = true;
                         break;
                     }
@@ -185,7 +187,7 @@ contract EquipmentSystem is System {
         CharacterEquipment.setAgiBonus(characterId, totalAgiModifiers);
         CharacterEquipment.setIntBonus(characterId, totalIntModifiers);
         CharacterEquipment.setHpBonus(characterId, totalHPModifiers);
-        Stats.setArmor(characterId, totalArmor);
+        CharacterEquipment.setArmor(characterId, totalArmor);
     }
 
     function unequipItem(bytes32 characterId, uint256 itemId) public inGame(characterId) returns (bool success) {
@@ -221,31 +223,34 @@ contract EquipmentSystem is System {
         _setEquipmentBonuses(characterId);
     }
 
-    function applyEquipmentBonuses(bytes32 entityId) public view returns (StatsData memory modifiedStats) {
+    function applyEquipmentBonuses(bytes32 entityId) public view returns (AdjustedCombatStats memory modifiedStats) {
         StatsData memory entityStats = Stats.get(entityId);
+        AdjustedCombatStats memory combatStats;
+
         CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
         //TODO add over/underflowProtection
-        entityStats.strength = uint256(
+        combatStats.adjustedStrength = uint256(
             int256(entityStats.strength) + equipmentStats.strBonus >= 0
                 ? int256(entityStats.strength) + equipmentStats.strBonus
                 : int256(0)
         );
-        entityStats.agility = uint256(
+        combatStats.adjustedAgility = uint256(
             int256(entityStats.agility) + equipmentStats.agiBonus >= 0
                 ? int256(entityStats.agility) + equipmentStats.agiBonus
                 : int256(0)
         );
-        entityStats.intelligence = uint256(
+        combatStats.adjustedIntelligence = uint256(
             int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
                 ? int256(entityStats.intelligence) + equipmentStats.intBonus
                 : int256(0)
         );
-        entityStats.maxHitPoints = uint256(
-            int256(entityStats.maxHitPoints) + equipmentStats.hpBonus >= 0
-                ? int256(entityStats.maxHitPoints) + equipmentStats.hpBonus
+        combatStats.adjustedMaxHp = uint256(
+            int256(entityStats.baseHitPoints) + equipmentStats.hpBonus >= 0
+                ? int256(entityStats.baseHitPoints) + equipmentStats.hpBonus
                 : int256(1)
         );
-        return entityStats;
+        combatStats.currentHp = entityStats.currentHp;
+        return combatStats;
     }
 
     function _moveIdToEndOfArray(uint256 itemId, uint256[] memory array)

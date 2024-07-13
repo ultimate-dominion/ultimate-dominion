@@ -11,6 +11,10 @@ import { GameBoard } from './pages/GameBoard';
 import { Leaderboard } from './pages/Leaderboard';
 import { Welcome } from './pages/Welcome';
 
+export const HOME_PATH = '/';
+export const CHARACTER_CREATION_PATH = '/character-creation';
+export const GAME_BOARD_PATH = '/game-board';
+
 const AppRoutes: React.FC = () => {
   const { pathname } = useLocation();
   const {
@@ -19,7 +23,11 @@ const AppRoutes: React.FC = () => {
 
   const syncProgress = useComponentValue(SyncProgress, singletonEntity);
 
-  if (syncProgress && syncProgress.step !== SyncStep.LIVE && pathname !== '/') {
+  if (
+    syncProgress &&
+    syncProgress.step !== SyncStep.LIVE &&
+    pathname !== HOME_PATH
+  ) {
     return (
       <VStack justify="center" h="100%">
         <Text>
@@ -31,9 +39,9 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<Welcome />} />
-      <Route path="/character-creation" element={<CharacterCreation />} />
-      <Route path="/game-board" element={<GameBoard />} />
+      <Route path={HOME_PATH} element={<Welcome />} />
+      <Route path={CHARACTER_CREATION_PATH} element={<CharacterCreation />} />
+      <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
       <Route path="/characters/:characterId" element={<CharacterPage />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
     </Routes>

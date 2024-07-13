@@ -5,139 +5,165 @@ import {
   Center,
   Grid,
   GridItem,
+  Spinner,
   Text,
 } from '@chakra-ui/react';
-import { getComponentValueStrict } from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
-import { useEffect, useMemo, useState } from 'react';
+import { useComponentValue } from '@latticexyz/react';
+import {
+  Entity,
+  getComponentValue,
+  getComponentValueStrict,
+} from '@latticexyz/recs';
+import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { formatEther, getContract, hexToString } from 'viem';
+import { formatEther, hexToString } from 'viem';
 
 import { ItemCard } from '../components/Character/Card/ItemCard';
 import { Misc } from '../components/Character/Misc';
 import { Profile } from '../components/Character/Profile';
-import { Stats } from '../components/Character/Stats';
+import { Stats as StatsPanel } from '../components/Character/Stats';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type { Character, CharacterStats } from '../utils/types';
 
 export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
+  const { renderError } = useToast();
   const {
-    components: { Characters, CharacterStats },
+    components: {
+      Characters,
+      CharactersTokenURI,
+      GoldBalances,
+      Stats,
+      UltimateDominionConfig,
+    },
+    isSynced,
     network: { publicClient, worldContract },
   } = useMUD();
   const { character: userCharacter } = useCharacter();
 
+  const ultimateDominionConfig = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  );
+
   const [character, setCharacter] = useState<
     (Character & CharacterStats) | null
   >(null);
+  const [isLoadingCharacter, setIsLoadingCharacter] = useState(true);
 
-  useEffect(() => {
-    (async (): Promise<void> => {
-      if (!(characterId && publicClient && worldContract)) return;
+  const [, setIsLoadingItems] = useState(true);
 
-      const entity = encodeEntity(
-        { characterId: 'uint256' },
-        { characterId: BigInt(characterId) },
+  const fetchCharacter = useCallback(async () => {
+    try {
+      if (
+        !(
+          characterId &&
+          publicClient &&
+          ultimateDominionConfig &&
+          worldContract
+        )
+      )
+        return;
+      setIsLoadingCharacter(true);
+
+      const characterData = getComponentValue(
+        Characters,
+        characterId as Entity,
+      );
+      const characterStats = getComponentValue(Stats, characterId as Entity);
+
+      if (!(characterData && characterStats)) return;
+
+      const ownerEntity = encodeEntity(
+        { address: 'address' },
+        { address: characterData.owner as `0x${string}` },
+      );
+      const tokenIdEntity = encodeEntity(
+        { tokenId: 'uint256' },
+        { tokenId: characterData.tokenId },
       );
 
-      const characterData = getComponentValueStrict(Characters, entity);
-      const characterStats = getComponentValueStrict(CharacterStats, entity);
-
-      const characterTokenAddress =
-        await worldContract.read.UD__getCharacterToken();
-
-      const characterToken = getContract({
-        address: characterTokenAddress,
-        abi: [
-          {
-            type: 'function',
-            name: 'tokenURI',
-            inputs: [
-              {
-                name: 'tokenId',
-                type: 'uint256',
-                internalType: 'uint256',
-              },
-            ],
-            outputs: [
-              {
-                name: '',
-                type: 'string',
-                internalType: 'string',
-              },
-            ],
-            stateMutability: 'view',
-          },
-        ],
-        client: publicClient,
-      });
-
-      const metadataURI = await characterToken.read.tokenURI([
-        BigInt(characterId),
-      ]);
+      const goldBalance =
+        getComponentValueStrict(GoldBalances, ownerEntity)?.value ?? BigInt(0);
+      const metadataURI = getComponentValueStrict(
+        CharactersTokenURI,
+        tokenIdEntity,
+      ).tokenURI;
 
       const fetachedMetadata = await fetchMetadataFromUri(
-        uriToHttp(metadataURI)[0],
+        uriToHttp(`ipfs://${metadataURI}`)[0],
       );
-
-      const goldTokenAddress = await worldContract.read.UD__getGoldToken();
-
-      const goldToken = getContract({
-        address: goldTokenAddress,
-        abi: [
-          {
-            type: 'function',
-            name: 'balanceOf',
-            inputs: [
-              {
-                name: 'account',
-                type: 'address',
-                internalType: 'address',
-              },
-            ],
-            outputs: [
-              {
-                name: '',
-                type: 'uint256',
-                internalType: 'uint256',
-              },
-            ],
-            stateMutability: 'view',
-          },
-        ],
-        client: publicClient,
-      });
-
-      const goldBalance = await goldToken.read.balanceOf([
-        characterData.owner as `0x${string}`,
-      ]);
 
       setCharacter({
         ...fetachedMetadata,
-        goldBalance: formatEther(BigInt(goldBalance)).toString(),
-        agility: characterStats?.agility.toString() ?? '0',
-        experience: characterStats?.experience.toString() ?? '0',
-        characterClass: characterData.class,
-        characterId,
-        hitPoints: characterStats?.hitPoints.toString() ?? '0',
-        intelligence: characterStats?.intelligence.toString() ?? '0',
+        agility: characterStats.agility.toString(),
+        baseHitPoints: characterStats.baseHitPoints.toString(),
+        characterClass: characterStats.class,
+        characterId: characterId as Entity,
+        experience: characterStats.experience.toString(),
+        goldBalance: formatEther(goldBalance as bigint).toString(),
+        intelligence: characterStats.intelligence.toString(),
+        level: characterStats.level.toString(),
         locked: characterData.locked,
         name: hexToString(characterData.name as `0x${string}`, {
           size: 32,
         }),
         owner: characterData.owner,
-        strength: characterStats?.strength.toString() ?? '0',
+        strength: characterStats.strength.toString(),
+        tokenId: characterData.tokenId.toString(),
       });
+    } catch (error) {
+      renderError(error, 'Failed to fetch character data');
+    } finally {
+      setIsLoadingCharacter(false);
+    }
+  }, [
+    characterId,
+    Characters,
+    CharactersTokenURI,
+    GoldBalances,
+    Stats,
+    publicClient,
+    renderError,
+    ultimateDominionConfig,
+    worldContract,
+  ]);
+
+  const fetchCharacterItems = useCallback(async () => {
+    try {
+      // eslint-disable-next-line no-console
+      console.log('test');
+    } catch (error) {
+      renderError(error, 'Failed to fetch character data');
+    } finally {
+      setIsLoadingItems(false);
+    }
+  }, [renderError]);
+
+  useEffect(() => {
+    if (!isSynced) return;
+    (async (): Promise<void> => {
+      await fetchCharacter();
+      await fetchCharacterItems();
     })();
-  }, [characterId, Characters, CharacterStats, publicClient, worldContract]);
+  }, [fetchCharacter, fetchCharacterItems, isSynced]);
 
   const isOwner = useMemo(
     () => character?.owner === userCharacter?.owner,
     [character, userCharacter],
   );
+
+  if (isLoadingCharacter) {
+    return (
+      <Center h="100%">
+        <Spinner size="lg" />
+      </Center>
+    );
+  }
 
   return (
     <Box>
@@ -188,9 +214,9 @@ export const CharacterPage = (): JSX.Element => {
             px={6}
             rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
-            <Stats
+            <StatsPanel
               agility={character.agility}
-              hitPoints={character.hitPoints}
+              baseHitPoints={character.baseHitPoints}
               intelligence={character.intelligence}
               strength={character.strength}
             />
@@ -231,89 +257,7 @@ export const CharacterPage = (): JSX.Element => {
               gap={2}
               mt={4}
             >
-              {[
-                {
-                  agi: 3,
-                  disabled: false,
-                  icon: 'fire',
-                  image: 'door-closed',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: false,
-                  icon: 'shield',
-                  image: 'scribd',
-                  int: 4,
-                  name: 'Copper Knife',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: false,
-                  icon: 'road',
-                  image: 'database',
-                  int: 4,
-                  name: 'Iron Axe',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'fire',
-                  image: 'search',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'shield',
-                  image: 'book',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'road',
-                  image: 'pizza-slice',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'fire',
-                  image: 'star-crescent',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'shield',
-                  image: 'bug',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'road',
-                  image: 'socks',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-              ].map(function (item, i) {
+              {DUMMY_ITEMS.map(function (item, i) {
                 return (
                   <GridItem key={i}>
                     {/* TODO: we should only use one general modal, which gets passed the item data when clicked */}
@@ -359,3 +303,87 @@ export const CharacterPage = (): JSX.Element => {
     </Box>
   );
 };
+
+const DUMMY_ITEMS = [
+  {
+    agi: 3,
+    disabled: false,
+    icon: 'fire',
+    image: 'door-closed',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: false,
+    icon: 'shield',
+    image: 'scribd',
+    int: 4,
+    name: 'Copper Knife',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: false,
+    icon: 'road',
+    image: 'database',
+    int: 4,
+    name: 'Iron Axe',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'fire',
+    image: 'search',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'shield',
+    image: 'book',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'road',
+    image: 'pizza-slice',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'fire',
+    image: 'star-crescent',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'shield',
+    image: 'bug',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+  {
+    agi: 3,
+    disabled: true,
+    icon: 'road',
+    image: 'socks',
+    int: 4,
+    name: 'Rusty Dagger',
+    str: 1,
+  },
+];

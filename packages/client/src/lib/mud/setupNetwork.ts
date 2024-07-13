@@ -20,6 +20,7 @@ import { share, Subject } from 'rxjs';
 import { createPublicClient, createWalletClient, getContract, Hex } from 'viem';
 
 import { createViemClientConfig } from './createViemClientConfig';
+import { externalTables } from './externalTables';
 import { getNetworkConfig } from './getNetworkConfig';
 import { world } from './world';
 
@@ -72,6 +73,7 @@ export async function setupNetwork() {
       address: networkConfig.worldAddress as Hex,
       publicClient,
       startBlock: BigInt(networkConfig.initialBlockNumber),
+      tables: externalTables,
     });
 
   return {

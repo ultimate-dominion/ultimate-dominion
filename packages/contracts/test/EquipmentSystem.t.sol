@@ -5,7 +5,7 @@ import {Classes, ItemType} from "@codegen/common.sol";
 import {StatsData} from "@tables/Stats.sol";
 import "forge-std/console2.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {UltimateDominionConfig, StarterItemsData} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
@@ -13,7 +13,7 @@ import {IERC1155MetadataURI} from "@erc1155/IERC1155MetadataURI.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
-import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
+import {WeaponStats, ArmorStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {_itemsSystemId} from "../src/utils.sol";
@@ -67,15 +67,15 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         world.UD__equipItems(bobCharacterId, itemsToEquip);
         StatsData memory baseStats = world.UD__getStats(bobCharacterId);
         startGasReport("apply stat bonuses");
-        StatsData memory modifiedStats = world.UD__applyEquipmentBonuses(bobCharacterId);
+        AdjustedCombatStats memory modifiedStats = world.UD__applyEquipmentBonuses(bobCharacterId);
         endGasReport();
         ArmorStats memory armorStats = world.UD__getArmorStats(newArmorId);
         assertTrue(world.UD__isEquipped(bobCharacterId, newArmorId));
 
-        assertEq(modifiedStats.strength, uint256(int256(baseStats.strength) + armorStats.strModifier));
-        assertEq(modifiedStats.agility, uint256(int256(baseStats.agility) + armorStats.agiModifier));
-        assertEq(modifiedStats.intelligence, uint256(int256(baseStats.intelligence) + armorStats.intModifier));
-        assertEq(modifiedStats.maxHitPoints, uint256(int256(baseStats.maxHitPoints) + armorStats.hitPointModifier));
+        assertEq(modifiedStats.adjustedStrength, uint256(int256(baseStats.strength) + armorStats.strModifier));
+        assertEq(modifiedStats.adjustedAgility, uint256(int256(baseStats.agility) + armorStats.agiModifier));
+        assertEq(modifiedStats.adjustedIntelligence, uint256(int256(baseStats.intelligence) + armorStats.intModifier));
+        assertEq(modifiedStats.adjustedMaxHp, uint256(int256(baseStats.baseHitPoints) + armorStats.hitPointModifier));
     }
 
     function test_unequipItem() public {
@@ -83,13 +83,13 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         vm.startPrank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
-        uint256[] memory itemsToEquip = new uint256[](1);
-        itemsToEquip[0] = 1;
-        world.UD__equipItems(alicesCharacterId, itemsToEquip);
-        assertTrue(world.UD__isEquipped(alicesCharacterId, 1));
+        StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
+
+        world.UD__equipItems(alicesCharacterId, starterDat.itemIds);
+        assertTrue(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
         startGasReport("uneqip 1 item");
-        world.UD__unequipItem(alicesCharacterId, 1);
+        world.UD__unequipItem(alicesCharacterId, starterDat.itemIds[0]);
         endGasReport();
-        assertFalse(world.UD__isEquipped(alicesCharacterId, 1));
+        assertFalse(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
     }
 }

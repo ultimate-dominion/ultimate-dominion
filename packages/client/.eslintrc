@@ -28,6 +28,9 @@
     "no-console": "error",
   },
   "settings": {
+    "react": {
+      "version": "detect",
+    },
     "import/resolver": {
       "typescript": {
         "alwaysTryTypes": true,

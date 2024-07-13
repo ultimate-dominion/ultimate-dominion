@@ -84,13 +84,17 @@ contract ItemsSystem is System {
 
     function issueStarterItems(bytes32 characterId) public {
         require(_msgSender() == Systems.getSystem(_characterSystemId("UD")), "ITEMS: Invalid System");
-        StarterItemsData memory starterItems = StarterItems.get(Characters.getClass(characterId));
+        StarterItemsData memory starterItems = getStarterItems(Stats.getClass(characterId));
 
         address owner = IWorld(_world()).UD__getOwner(characterId);
 
         for (uint256 i; i < starterItems.itemIds.length; i++) {
             _items().transferFrom(address(this), owner, starterItems.itemIds[i], starterItems.amounts[i]);
         }
+    }
+
+    function getStarterItems(Classes class) public view returns (StarterItemsData memory data) {
+        return StarterItems.get(class);
     }
 
     function dropItems(uint256[] memory itemIds, uint256[] memory amounts, bytes32[] memory characterIds) public {

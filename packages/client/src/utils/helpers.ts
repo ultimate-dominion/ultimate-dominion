@@ -1,4 +1,32 @@
+import { hexToBigInt } from 'viem';
+
 import type { Metadata } from '../utils/types';
+
+export const decodeCharacterId = (
+  characterId: `0x${string}`,
+): {
+  ownerAddress: string;
+  characterTokenId: string;
+} => {
+  const bigIntValue = hexToBigInt(characterId);
+
+  const characterTokenId = bigIntValue & ((1n << 96n) - 1n);
+
+  const ownerAddressBigInt = bigIntValue >> 96n;
+  const ownerAddress = `0x${ownerAddressBigInt.toString(16).padStart(40, '0')}`;
+
+  return { ownerAddress, characterTokenId: characterTokenId.toString() };
+};
+
+export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
+  const res = await fetch(uri);
+  if (!res.ok) throw new Error('Failed to fetch');
+  const metadata = await res.json();
+  metadata.name = metadata.name || '';
+  metadata.description = metadata.description || '';
+  metadata.image = uriToHttp(metadata.image)[0] || '';
+  return metadata;
+};
 
 const IPFS_GATEWAYS = [
   'https://black-bright-cuckoo-327.mypinata.cloud',
@@ -40,16 +68,6 @@ export const uriToHttp = (uri: string): string[] => {
     console.error(e);
     return [''];
   }
-};
-
-export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
-  const res = await fetch(uri);
-  if (!res.ok) throw new Error('Failed to fetch');
-  const metadata = await res.json();
-  metadata.name = metadata.name || '';
-  metadata.description = metadata.description || '';
-  metadata.image = uriToHttp(metadata.image)[0] || '';
-  return metadata;
 };
 
 export const shortenAddress = (address: string, length = 4): string =>

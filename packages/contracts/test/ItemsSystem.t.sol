@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType} from "@codegen/common.sol";
-import {StatsData} from "@tables/Stats.sol";
+import {StatsData, StarterItemsData} from "@codegen/index.sol";
 import "forge-std/console2.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
@@ -39,14 +40,14 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
         uint8[] memory restrictions = new uint8[](0);
         WeaponStats memory weaponStats = WeaponStats({
-            minDamage: 1,
-            maxDamage: 4,
-            classRestrictions: restrictions,
-            minLevel: 0,
-            strModifier: 0,
             agiModifier: 0,
+            classRestrictions: restrictions,
+            hitPointModifier: 0,
             intModifier: 0,
-            hitPointModifier: 0
+            maxDamage: 4,
+            minDamage: 1,
+            minLevel: 0,
+            strModifier: 0
         });
         vm.startPrank(deployer);
         uint256 firstItemId =
@@ -54,12 +55,12 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         uint256 newItemId =
             world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri/");
 
-        assertEq(newItemId, 4);
+        assertEq(newItemId, 6);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
             keccak256(abi.encode(erc1155System.uri(newItemId))),
-            keccak256(abi.encode("test_Items_uri/test_Weapon_uri/"))
+            keccak256(abi.encode("ipfs://QmVUaqRpQJHyqugYd12Qf2iErNSoGvLF1cbeRHpmX8bChs/test_Weapon_uri/"))
         );
 
         endGasReport();
@@ -68,14 +69,14 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     function test_CreateItem_Revert_NotNamespaceOwner() public {
         uint8[] memory restrictions = new uint8[](0);
         WeaponStats memory weaponStats = WeaponStats({
-            minDamage: 1,
-            maxDamage: 4,
-            classRestrictions: restrictions,
-            minLevel: 0,
-            strModifier: 0,
             agiModifier: 0,
+            classRestrictions: restrictions,
+            hitPointModifier: 0,
             intModifier: 0,
-            hitPointModifier: 0
+            maxDamage: 4,
+            minDamage: 1,
+            minLevel: 0,
+            strModifier: 0
         });
         vm.startPrank(alice);
         vm.expectRevert();
@@ -85,14 +86,14 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     function test_GetTotalSupply() public {
         uint8[] memory restrictions = new uint8[](0);
         WeaponStats memory weaponStats = WeaponStats({
-            minDamage: 1,
-            maxDamage: 4,
-            classRestrictions: restrictions,
-            minLevel: 0,
-            strModifier: 0,
             agiModifier: 0,
+            classRestrictions: restrictions,
+            hitPointModifier: 0,
             intModifier: 0,
-            hitPointModifier: 0
+            maxDamage: 4,
+            minDamage: 1,
+            minLevel: 0,
+            strModifier: 0
         });
         vm.startPrank(deployer);
         uint256 id = world.UD__createItem(ItemType.Weapon, 100 ether, abi.encode(weaponStats), "test_Weapon_uri/");
@@ -104,7 +105,8 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         vm.startPrank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
-        assertEq(erc1155System.balanceOf(address(alice), 1), 1);
+        StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
+        assertEq(erc1155System.balanceOf(address(alice), starterDat.itemIds[0]), starterDat.amounts[0]);
     }
 
     function test_dropItems() public {
