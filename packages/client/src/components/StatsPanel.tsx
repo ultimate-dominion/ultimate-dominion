@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { LEADERBOARD_PATH } from '../Routes';
 import { Level } from './Level';
 
 const CURRENT_LEVEL = 1;
@@ -182,6 +183,7 @@ export const StatsPanel = (): JSX.Element => {
               borderBottom="2px solid"
               borderColor="grey400"
               fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
+              href={LEADERBOARD_PATH}
               pb={1}
               _hover={{
                 borderColor: 'grey500',

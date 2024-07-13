@@ -18,23 +18,23 @@ import { useEffect, useState } from 'react';
 import { FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 
 import { Entry } from '../components/Leaderboard/Entry';
-import { Character, CharacterClasses } from '../utils/types';
+import { Character, StatsClasses } from '../utils/types';
 
 function createDummyData(num: number = 1) {
   const result: Character[] = [];
   for (let i = 0; i < num; i++) {
     result[result.length] = {
-      characterClass: Math.floor(Math.random() * 3) as CharacterClasses,
+      characterClass: Math.floor(Math.random() * 3) as StatsClasses,
       characterId: (Math.random() + 1).toString(36).substring(7) as Entity,
       goldBalance: Math.floor(Math.random() * (1000 - 100) + 100) / 100 + '',
       locked: Math.random() < 0.5,
       owner: (Math.random() + 1).toString(36).substring(7),
       tokenId: i + '',
       agility: Math.floor(Math.random() * 10) + 1 + '',
+      baseHitPoints: Math.floor(Math.random() * 10) + 1 + '',
       experience: Math.floor(Math.random() * 10) + 1 + '',
       intelligence: Math.floor(Math.random() * 10) + 1 + '',
       level: Math.floor(Math.random() * 10) + 1 + '',
-      maxHitPoints: Math.floor(Math.random() * 10) + 1 + '',
       strength: Math.floor(Math.random() * 10) + 1 + '',
       description: (Math.random() + 1).toString(36).substring(7),
       image:
@@ -46,6 +46,7 @@ function createDummyData(num: number = 1) {
 }
 const DUMMY_CHARACTER: Character[] = createDummyData(50)!;
 const PER_PAGE = 5;
+
 export const Leaderboard = (): JSX.Element => {
   const [entries, setEntries] = useState(DUMMY_CHARACTER);
   const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
@@ -232,7 +233,7 @@ export const Leaderboard = (): JSX.Element => {
                 gold={entry.goldBalance}
                 level={entry.level}
                 stats={{
-                  HP: entry.maxHitPoints,
+                  HP: entry.baseHitPoints,
                   AGI: entry.agility,
                   STR: entry.strength,
                   INT: entry.intelligence,
