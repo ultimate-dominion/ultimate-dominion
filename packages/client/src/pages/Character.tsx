@@ -95,7 +95,7 @@ export const CharacterPage = (): JSX.Element => {
       ).tokenURI;
 
       const fetachedMetadata = await fetchMetadataFromUri(
-        uriToHttp(metadataURI as string)[0],
+        uriToHttp(`ipfs://${metadataURI}`)[0],
       );
 
       setCharacter({
