@@ -38,11 +38,14 @@ import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type { Character, StatsClasses, Weapon } from '../utils/types';
 
+const MAX_EQUIPPED_WEAPONS = 3;
+
 export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
   const { renderError } = useToast();
   const {
     components: {
+      CharacterEquipment,
       Characters,
       CharactersTokenURI,
       GoldBalances,
@@ -50,7 +53,6 @@ export const CharacterPage = (): JSX.Element => {
       ItemsOwners,
       ItemsTokenURI,
       Stats,
-      UltimateDominionConfig,
     },
     isSynced,
     network: { publicClient, worldContract },
@@ -59,28 +61,19 @@ export const CharacterPage = (): JSX.Element => {
 
   const { isOpen, onClose, onOpen } = useDisclosure();
 
-  const ultimateDominionConfig = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  );
-
   const [character, setCharacter] = useState<Character | null>(null);
   const [isLoadingCharacter, setIsLoadingCharacter] = useState(true);
   const [items, setItems] = useState<Weapon[] | null>(null);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [selectedItem, setSelectedItem] = useState<Weapon | null>(null);
 
+  const equippedWeapons =
+    useComponentValue(CharacterEquipment, characterId as Entity | undefined)
+      ?.equippedWeapons ?? [];
+
   const fetchCharacter = useCallback(async () => {
     try {
-      if (
-        !(
-          characterId &&
-          publicClient &&
-          ultimateDominionConfig &&
-          worldContract
-        )
-      )
-        return null;
+      if (!(characterId && publicClient && worldContract)) return null;
       setIsLoadingCharacter(true);
 
       const characterData = getComponentValue(
@@ -146,7 +139,6 @@ export const CharacterPage = (): JSX.Element => {
     Stats,
     publicClient,
     renderError,
-    ultimateDominionConfig,
     worldContract,
   ]);
 
@@ -249,6 +241,8 @@ export const CharacterPage = (): JSX.Element => {
     [character, userCharacter],
   );
 
+  const maxItemsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
+
   if (isLoadingCharacter) {
     return (
       <Center h="100%">
@@ -339,8 +333,12 @@ export const CharacterPage = (): JSX.Element => {
             {items ? (
               <>
                 <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
-                  Items {items.length} - 1/{items.length} equipped
+                  Items {items.length} - {equippedWeapons.length}/
+                  {MAX_EQUIPPED_WEAPONS} equipped{' '}
                 </Text>
+                {maxItemsEquipped && (
+                  <Text fontSize="sm">(Max items equipped)</Text>
+                )}
                 <Grid
                   templateColumns={{
                     base: 'repeat(1, 1fr)',
@@ -356,10 +354,17 @@ export const CharacterPage = (): JSX.Element => {
                       <GridItem key={i}>
                         <ItemCard
                           {...item}
-                          onClick={() => {
-                            setSelectedItem(item);
-                            onOpen();
-                          }}
+                          isEquipped={equippedWeapons.includes(
+                            BigInt(item.tokenId),
+                          )}
+                          onClick={
+                            maxItemsEquipped
+                              ? undefined
+                              : () => {
+                                  setSelectedItem(item);
+                                  onOpen();
+                                }
+                          }
                         />
                       </GridItem>
                     );

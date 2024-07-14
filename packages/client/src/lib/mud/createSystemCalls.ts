@@ -63,6 +63,22 @@ export function createSystemCalls(
     }
   };
 
+  const equipItems = async (characterEntity: Entity, itemIds: string[]) => {
+    try {
+      const tx = await worldContract.write.UD__equipItems([
+        characterEntity.toString() as `0x${string}`,
+        itemIds.map(itemId => BigInt(itemId)),
+      ]);
+
+      await waitForTransaction(tx);
+
+      const success = !!getComponentValue(Characters, characterEntity);
+      return success;
+    } catch (e) {
+      return false;
+    }
+  };
+
   const mintCharacter = async (account: Address, name: string, uri: string) => {
     try {
       const nameHex = stringToHex(name, { size: 32 });
@@ -180,6 +196,7 @@ export function createSystemCalls(
 
   return {
     enterGame,
+    equipItems,
     mintCharacter,
     move,
     rollStats,

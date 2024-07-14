@@ -9,9 +9,11 @@ import {
   ModalOverlay,
   Text,
 } from '@chakra-ui/react';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useCharacter } from '../contexts/CharacterContext';
+import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 import type { Weapon } from '../utils/types';
 import { ItemCard } from './ItemCard';
 
@@ -25,11 +27,70 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   onClose,
   ...weapon
 }): JSX.Element => {
-  const { character } = useCharacter();
+  const { renderError, renderSuccess } = useToast();
+  const {
+    burnerBalance,
+    delegatorAddress,
+    systemCalls: { equipItems },
+  } = useMUD();
+  const { character, refreshCharacter } = useCharacter();
+
+  const [isEquipping, setIsEquipping] = useState(false);
 
   const isOwner = useMemo(
     () => character?.owner === weapon.owner,
     [character, weapon.owner],
+  );
+
+  const onEquipItem = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      try {
+        setIsEquipping(true);
+
+        if (!character) {
+          throw new Error('Character not found.');
+        }
+
+        if (burnerBalance === '0') {
+          throw new Error(
+            'Insufficient funds. Please top off your session account.',
+          );
+        }
+
+        if (!delegatorAddress) {
+          throw new Error('Missing delegation.');
+        }
+
+        const success = await equipItems(character.characterId, [
+          weapon.tokenId,
+        ]);
+
+        if (!success) {
+          throw new Error('Contract call failed');
+        }
+
+        await refreshCharacter();
+        renderSuccess(`${weapon.name} equipped successfully!`);
+        onClose();
+      } catch (e) {
+        renderError(e, 'Failed to equip item.');
+      } finally {
+        setIsEquipping(false);
+      }
+    },
+    [
+      burnerBalance,
+      character,
+      delegatorAddress,
+      equipItems,
+      onClose,
+      refreshCharacter,
+      renderError,
+      renderSuccess,
+      weapon,
+    ],
   );
 
   return (
@@ -43,10 +104,15 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
           <ItemCard {...weapon} />
         </ModalBody>
         <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={onClose}>
+          <Button
+            isLoading={isEquipping}
+            loadingText="Equipping..."
+            mr={3}
+            onClick={onEquipItem}
+          >
             Yes
           </Button>
-          <Button onClick={onClose} variant="ghost">
+          <Button isDisabled={isEquipping} onClick={onClose} variant="ghost">
             No
           </Button>
         </ModalFooter>

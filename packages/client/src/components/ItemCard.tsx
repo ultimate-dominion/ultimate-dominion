@@ -11,30 +11,31 @@ import { GiRogue } from 'react-icons/gi';
 import type { Weapon } from '../utils/types';
 
 type ItemCardProps = Weapon & {
+  isEquipped?: boolean;
   onClick?: () => void;
 };
 
 export const ItemCard: React.FC<ItemCardProps> = ({
+  isEquipped = false,
   onClick,
   ...weapon
 }): JSX.Element => {
   const { agiModifier, intModifier, strModifier, name } = weapon;
 
-  const disabled = false;
-
   return (
     <Card
-      border={disabled ? 'solid lightgray' : 'solid'}
+      border={isEquipped ? '3px solid' : '2px solid'}
+      borderColor={isEquipped ? 'black' : 'grey300'}
       borderRadius={2}
       cursor={onClick ? 'pointer' : 'default'}
       direction="row"
       onClick={onClick}
       overflow="hidden"
-      variant={disabled ? 'light' : 'outline'}
+      variant="light"
       _active={
         onClick && {
           bgColor: 'rgba(0, 0, 0, .04)',
-          border: 'solid',
+          borderColor: 'black',
         }
       }
     >
