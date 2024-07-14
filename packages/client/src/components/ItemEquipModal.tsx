@@ -18,11 +18,13 @@ import type { Weapon } from '../utils/types';
 import { ItemCard } from './ItemCard';
 
 type ItemEquipModalProps = Weapon & {
+  isEquipped: boolean;
   isOpen: boolean;
   onClose: () => void;
 };
 
 export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
+  isEquipped,
   isOpen,
   onClose,
   ...weapon
@@ -31,9 +33,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   const {
     burnerBalance,
     delegatorAddress,
-    systemCalls: { equipItems },
+    systemCalls: { equipItems, unequipItem },
   } = useMUD();
-  const { character, refreshCharacter } = useCharacter();
+  const { character } = useCharacter();
 
   const [isEquipping, setIsEquipping] = useState(false);
 
@@ -71,7 +73,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
           throw new Error('Contract call failed');
         }
 
-        await refreshCharacter();
         renderSuccess(`${weapon.name} equipped successfully!`);
         onClose();
       } catch (e) {
@@ -86,12 +87,90 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       delegatorAddress,
       equipItems,
       onClose,
-      refreshCharacter,
       renderError,
       renderSuccess,
       weapon,
     ],
   );
+
+  const onUnequipItem = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      try {
+        setIsEquipping(true);
+
+        if (!character) {
+          throw new Error('Character not found.');
+        }
+
+        if (burnerBalance === '0') {
+          throw new Error(
+            'Insufficient funds. Please top off your session account.',
+          );
+        }
+
+        if (!delegatorAddress) {
+          throw new Error('Missing delegation.');
+        }
+
+        const success = await unequipItem(
+          character.characterId,
+          weapon.tokenId,
+        );
+
+        if (!success) {
+          throw new Error('Contract call failed');
+        }
+
+        renderSuccess(`${weapon.name} unequipped successfully!`);
+        onClose();
+      } catch (e) {
+        renderError(e, 'Failed to unequip item.');
+      } finally {
+        setIsEquipping(false);
+      }
+    },
+    [
+      burnerBalance,
+      character,
+      delegatorAddress,
+      onClose,
+      renderError,
+      renderSuccess,
+      unequipItem,
+      weapon,
+    ],
+  );
+
+  if (isEquipped) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Unequip Item</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody padding={4}>
+            <Text mb={6}>Do you want to unequip this item?</Text>
+            <ItemCard {...weapon} />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              isLoading={isEquipping}
+              loadingText="Unequipping..."
+              mr={3}
+              onClick={onUnequipItem}
+            >
+              Yes
+            </Button>
+            <Button isDisabled={isEquipping} onClick={onClose} variant="ghost">
+              No
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>

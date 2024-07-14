@@ -350,15 +350,16 @@ export const CharacterPage = (): JSX.Element => {
                   mt={4}
                 >
                   {items.map(function (item, i) {
+                    const isEquipped = equippedWeapons.includes(
+                      BigInt(item.tokenId),
+                    );
                     return (
                       <GridItem key={i}>
                         <ItemCard
                           {...item}
-                          isEquipped={equippedWeapons.includes(
-                            BigInt(item.tokenId),
-                          )}
+                          isEquipped={isEquipped}
                           onClick={
-                            maxItemsEquipped
+                            maxItemsEquipped && !isEquipped
                               ? undefined
                               : () => {
                                   setSelectedItem(item);
@@ -405,6 +406,9 @@ export const CharacterPage = (): JSX.Element => {
         </Grid>
       )}
       <ItemEquipModal
+        isEquipped={equippedWeapons.includes(
+          BigInt(selectedItem?.tokenId ?? 0),
+        )}
         isOpen={isOpen}
         onClose={() => {
           onClose();
