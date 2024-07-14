@@ -14,7 +14,7 @@ import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {Characters, CharactersData, UltimateDominionConfig} from "@codegen/index.sol";
 import {Classes, MobType, ItemType, ActionType} from "@codegen/common.sol";
-import {_itemsSystemId} from "../src/utils.sol";
+import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
 import {WeaponStats, MonsterStats, ArmorStats, PhysicalAttackStats} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_NAMESPACE} from "@latticexyz/world/src/worldResourceTypes.sol";
@@ -72,7 +72,6 @@ contract SetUp is Test {
 
         PhysicalAttackStats memory basicAttack =
             PhysicalAttackStats({bonusDamage: 0, armorPenetration: 0, attackModifierBonus: 0, critChanceBonus: 0});
-
         basicAttackId = world.UD__createAction(ActionType.PhysicalAttack, abi.encode(basicAttack));
 
         vm.label(alice, "alice");
@@ -82,8 +81,7 @@ contract SetUp is Test {
 
         newArmorId = world.UD__createItem(ItemType.Armor, 10 ether, 100000000, abi.encode(newArmor), "setup_armor_uri");
 
-        world.grantAccess(_itemsSystemId("UD"), address(this));
-
+        world.grantAccess(_lootManagerSystemId("UD"), address(this));
         vm.stopPrank();
 
         vm.prank(alice);

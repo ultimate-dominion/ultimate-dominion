@@ -249,11 +249,11 @@ contract CombatSystem is System {
         uint256 randomNumber
     ) public returns (int256 damage, bool hit, bool crit) {
         // get attacker
-        AdjustedCombatStats memory attacker = world().UD__applyEquipmentBonuses(attackerId);
+        AdjustedCombatStats memory attacker = IWorld(_world()).UD__applyEquipmentBonuses(attackerId);
         //get defender
-        AdjustedCombatStats memory defender = world().UD__applyEquipmentBonuses(defenderId);
+        AdjustedCombatStats memory defender = IWorld(_world()).UD__applyEquipmentBonuses(defenderId);
         // get weapon stats
-        WeaponStats memory weapon = world().UD__getWeaponStats(weaponId);
+        WeaponStats memory weapon = IWorld(_world()).UD__getWeaponStats(weaponId);
 
         if (defender.currentHp > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
@@ -325,31 +325,52 @@ contract CombatSystem is System {
         returns (uint256[] memory itemIds, uint256[] memory amounts, uint256 goldAmount)
     {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+
         // check dead attackers and defenders
         uint256 cumulativeAttackerLevels;
+        uint256 livingAttackers;
+        bytes32 entityIdTemp;
+        StatsData memory statsTemp;
         for (uint256 i; i < encounterData.attackers.length; i++) {
-            cumulativeAttackerLevels += Stats.getLevel(encounterData.attackers[i]);
+            statsTemp = Stats.get(encounterData.attackers[i]);
+            cumulativeAttackerLevels += statsTemp.level;
+            if (statsTemp.currentHp > 0) {
+                livingAttackers++;
+            }
         }
 
         //if cumulative attacker levels is >= 5 levels above the monster level no gold reward.
         //  for this calculation level is calculated from exp not from actual leveled levels
+
         uint256 goldDrop;
+        uint256 expDrop;
         for (uint256 i; i < encounterData.defenders.length; i++) {
-            uint256 mobLevel = Stats.getLevel(encounterData.defenders[i]);
-            goldDrop += calculateGoldDrop(mobLevel, randomNumber);
+            statsTemp = Stats.get(encounterData.defenders[i]);
+            if (statsTemp.currentHp <= int256(0)) {
+                expDrop += statsTemp.experience;
+                goldDrop += calculateGoldDrop(statsTemp.level, randomNumber);
+            }
         }
         // drop gold reward calculated from the level of mob to player journey wallet (can mint tokens when he returns to 0,0).
-
         // if dead player, drop transfer 50% of un-banked gold to world contract
+        // distribute loot
+
+        for (uint256 i; i < encounterData.attackers.length; i++) {
+            entityIdTemp = encounterData.attackers[i];
+            if (IWorld(_world()).UD__isValidCharacterId(entityIdTemp)) {
+                statsTemp = Stats.get(entityIdTemp);
+                if (statsTemp.currentHp > int256(0) && goldDrop > 0) {
+                    statsTemp.experience += expDrop / livingAttackers;
+                    IWorld(_world()).UD__dropGold(entityIdTemp, (goldDrop / livingAttackers));
+                    Stats.set(entityIdTemp, statsTemp);
+                }
+            }
+        }
     }
 
     function calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) public returns (uint256 dropAmount) {
         // Calculate level-based drop
 
         dropAmount = randomNumber % (BASE_GOLD_DROP * mobLevel);
-    }
-
-    function world() internal returns (IWorld world) {
-        return IWorld(_world());
     }
 }

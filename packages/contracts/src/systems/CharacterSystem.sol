@@ -22,6 +22,7 @@ import {TokenURI} from "@latticexyz/world-modules/src/modules/erc721-puppet/tabl
 import {_tokenUriTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
 import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20System.sol";
 import {IItemsSystem} from "@codegen/world/IItemsSystem.sol";
+import {ILootManagerSystem} from "@codegen/world/ILootManagerSystem.sol";
 import {Classes} from "@codegen/common.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
@@ -114,11 +115,14 @@ contract CharacterSystem is System {
     function enterGame(bytes32 characterId) public {
         require(_isOwner(characterId), "not your character");
         require(!Characters.getLocked(characterId), "you have entered the game");
-        Stats.setLevel(characterId, 1);
-        issueGold(characterId, 5 ether);
+        StatsData memory tempStats = Stats.get(characterId);
+        tempStats.level = 1;
+        tempStats.currentHp = int256(tempStats.baseHitPoints);
+        Stats.set(characterId, tempStats);
+        IWorld(_world()).UD__dropGold(characterId, 5 ether);
         // issue starterWeapon
         IWorld(_world()).UD__issueStarterItems(characterId);
-
+        // SystemSwitch.call(abi.encodeCall(ILootManagerSystem.UD__issueStarterItems, (characterId)));
         Characters.setLocked(characterId, true);
     }
 
@@ -164,10 +168,6 @@ contract CharacterSystem is System {
 
     function getOwner(bytes32 characterId) public view returns (address) {
         return Characters.getOwner(characterId);
-    }
-
-    function issueGold(bytes32 characterId, uint256 amount) internal {
-        _gold().mint(getOwner(characterId), amount);
     }
 
     function getExperience(bytes32 characterId) public view returns (uint256) {

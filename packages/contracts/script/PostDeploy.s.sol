@@ -26,6 +26,7 @@ import {
     ITEMS_NAMESPACE,
     TOKEN_URI
 } from "../constants.sol";
+import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
 import {BEFORE_CALL_SYSTEM} from "@latticexyz/world/src/systemHookTypes.sol";
 import {Classes, ItemType, MobType} from "@codegen/common.sol";
@@ -67,6 +68,7 @@ struct ResourceIds {
     ResourceId erc1155NamespaceId;
     ResourceId itemsSystemId;
     ResourceId combatSystemId;
+    ResourceId lootManagerSystemId;
 }
 
 contract PostDeploy is Script {
@@ -147,18 +149,19 @@ contract PostDeploy is Script {
             resourceIds.erc1155NamespaceId = WorldResourceIdLib.encodeNamespace(ITEMS_NAMESPACE);
             resourceIds.itemsSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "ItemsSystem"});
+            resourceIds.lootManagerSystemId = _lootManagerSystemId("UD");
         }
 
         address characterSystemAddress = Systems.getSystem(resourceIds.characterSystemId);
-
         System goldSystemContract = new ERC20System();
 
         world.registerSystem(resourceIds.erc20SystemId, goldSystemContract, true);
 
         IWorld(worldAddress).grantAccess(resourceIds.erc20NamespaceId, worldAddress);
+        IWorld(worldAddress).grantAccess(resourceIds.lootManagerSystemId, characterSystemAddress);
         IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
 
-        world.transferOwnership(resourceIds.erc20NamespaceId, address(characterSystemAddress));
+        world.transferOwnership(resourceIds.erc20NamespaceId, Systems.getSystem(resourceIds.lootManagerSystemId));
 
         System systemContract = new ERC721System();
         world.registerSystem(resourceIds.erc721SystemId, systemContract, true);
