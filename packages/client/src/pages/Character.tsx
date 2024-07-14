@@ -13,8 +13,15 @@ import {
   Entity,
   getComponentValue,
   getComponentValueStrict,
+  Has,
+  NotValue,
+  runQuery,
 } from '@latticexyz/recs';
-import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
+import {
+  decodeEntity,
+  encodeEntity,
+  singletonEntity,
+} from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
@@ -27,7 +34,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import type { Character, CharacterStats } from '../utils/types';
+import type { Character, StatsClasses, Weapon } from '../utils/types';
 
 export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
@@ -37,6 +44,9 @@ export const CharacterPage = (): JSX.Element => {
       Characters,
       CharactersTokenURI,
       GoldBalances,
+      ItemsBaseURI,
+      ItemsOwners,
+      ItemsTokenURI,
       Stats,
       UltimateDominionConfig,
     },
@@ -50,12 +60,10 @@ export const CharacterPage = (): JSX.Element => {
     singletonEntity,
   );
 
-  const [character, setCharacter] = useState<
-    (Character & CharacterStats) | null
-  >(null);
+  const [character, setCharacter] = useState<Character | null>(null);
   const [isLoadingCharacter, setIsLoadingCharacter] = useState(true);
-
-  const [, setIsLoadingItems] = useState(true);
+  const [items, setItems] = useState<Weapon[] | null>(null);
+  const [isLoadingItems, setIsLoadingItems] = useState(true);
 
   const fetchCharacter = useCallback(async () => {
     try {
@@ -67,7 +75,7 @@ export const CharacterPage = (): JSX.Element => {
           worldContract
         )
       )
-        return;
+        return null;
       setIsLoadingCharacter(true);
 
       const characterData = getComponentValue(
@@ -76,7 +84,7 @@ export const CharacterPage = (): JSX.Element => {
       );
       const characterStats = getComponentValue(Stats, characterId as Entity);
 
-      if (!(characterData && characterStats)) return;
+      if (!(characterData && characterStats)) return null;
 
       const ownerEntity = encodeEntity(
         { address: 'address' },
@@ -98,7 +106,7 @@ export const CharacterPage = (): JSX.Element => {
         uriToHttp(`ipfs://${metadataURI}`)[0],
       );
 
-      setCharacter({
+      const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility.toString(),
         baseHitPoints: characterStats.baseHitPoints.toString(),
@@ -115,9 +123,13 @@ export const CharacterPage = (): JSX.Element => {
         owner: characterData.owner,
         strength: characterStats.strength.toString(),
         tokenId: characterData.tokenId.toString(),
-      });
+      };
+
+      setCharacter(_character);
+      return _character;
     } catch (error) {
       renderError(error, 'Failed to fetch character data');
+      return null;
     } finally {
       setIsLoadingCharacter(false);
     }
@@ -133,22 +145,97 @@ export const CharacterPage = (): JSX.Element => {
     worldContract,
   ]);
 
-  const fetchCharacterItems = useCallback(async () => {
-    try {
-      // eslint-disable-next-line no-console
-      console.log('test');
-    } catch (error) {
-      renderError(error, 'Failed to fetch character data');
-    } finally {
-      setIsLoadingItems(false);
-    }
-  }, [renderError]);
+  const fetchCharacterItems = useCallback(
+    async (_character: Character) => {
+      try {
+        const _items = Array.from(
+          runQuery([
+            Has(ItemsOwners),
+            NotValue(ItemsOwners, { balance: BigInt(0) }),
+          ]),
+        )
+          .map(entity => {
+            const itemOwner = getComponentValueStrict(ItemsOwners, entity);
+            const { owner, tokenId } = decodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              entity,
+            );
+
+            return {
+              balance: itemOwner.balance.toString(),
+              itemId: entity,
+              owner,
+              tokenId: tokenId.toString(),
+            };
+          })
+          .filter(item => item.owner === _character.owner)
+          .sort((a, b) => {
+            return Number(a.tokenId) - Number(b.tokenId);
+          });
+
+        const fullItems = await Promise.all(
+          _items.map(async item => {
+            const itemTemplateStats =
+              await worldContract.read.UD__getWeaponStats([
+                BigInt(item.tokenId),
+              ]);
+
+            const tokenIdEntity = encodeEntity(
+              { tokenId: 'uint256' },
+              { tokenId: BigInt(item.tokenId) },
+            );
+
+            const baseURI = getComponentValueStrict(
+              ItemsBaseURI,
+              singletonEntity,
+            ).uri;
+
+            const tokenURI = getComponentValueStrict(
+              ItemsTokenURI,
+              tokenIdEntity,
+            ).uri;
+
+            const metadata = await fetchMetadataFromUri(
+              uriToHttp(`${baseURI}${tokenURI}`)[0],
+            );
+
+            return {
+              ...metadata,
+              agiModifier: itemTemplateStats.agiModifier.toString(),
+              balance: item.balance,
+              classRestrictions: itemTemplateStats.classRestrictions.map(
+                (classRestriction: number) => classRestriction as StatsClasses,
+              ),
+              hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
+              intModifier: itemTemplateStats.intModifier.toString(),
+              itemId: item.itemId,
+              maxDamage: itemTemplateStats.maxDamage.toString(),
+              minDamage: itemTemplateStats.minDamage.toString(),
+              minLevel: itemTemplateStats.minLevel.toString(),
+              owner: item.owner,
+              strModifier: itemTemplateStats.strModifier.toString(),
+              tokenId: item.tokenId,
+            } as Weapon;
+          }),
+        );
+
+        setItems(fullItems);
+      } catch (error) {
+        renderError(error, 'Failed to fetch character data');
+      } finally {
+        setIsLoadingItems(false);
+      }
+    },
+    [ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError, worldContract],
+  );
 
   useEffect(() => {
     if (!isSynced) return;
     (async (): Promise<void> => {
-      await fetchCharacter();
-      await fetchCharacterItems();
+      const _character = await fetchCharacter();
+
+      if (!_character) return;
+      await fetchCharacterItems(_character);
     })();
   }, [fetchCharacter, fetchCharacterItems, isSynced]);
 
@@ -244,36 +331,38 @@ export const CharacterPage = (): JSX.Element => {
             rowSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             rowStart={{ base: 4, sm: 4, md: 4, lg: 2, xl: 2 }}
           >
-            <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
-              Items 30 - 3/3 Equipped
-            </Text>
-            <Grid
-              templateColumns={{
-                base: 'repeat(1, 1fr)',
-                sm: 'repeat(1, 1fr)',
-                md: 'repeat(2, 1fr)',
-                xl: 'repeat(3, 1fr)',
-              }}
-              gap={2}
-              mt={4}
-            >
-              {DUMMY_ITEMS.map(function (item, i) {
-                return (
-                  <GridItem key={i}>
-                    {/* TODO: we should only use one general modal, which gets passed the item data when clicked */}
-                    <ItemCard
-                      agi={item.agi}
-                      disabled={item.disabled}
-                      icon={item.icon}
-                      int={item.int}
-                      image={item.image}
-                      name={item.name}
-                      str={item.str}
-                    />
-                  </GridItem>
-                );
-              })}
-            </Grid>
+            {items ? (
+              <>
+                <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
+                  Items {items.length} - 1/{items.length} equipped
+                </Text>
+                <Grid
+                  templateColumns={{
+                    base: 'repeat(1, 1fr)',
+                    sm: 'repeat(1, 1fr)',
+                    md: 'repeat(2, 1fr)',
+                    xl: 'repeat(3, 1fr)',
+                  }}
+                  gap={2}
+                  mt={4}
+                >
+                  {items.map(function (item, i) {
+                    return (
+                      <GridItem key={i}>
+                        {/* TODO: we should only use one general modal, which gets passed the item data when clicked */}
+                        <ItemCard {...item} />
+                      </GridItem>
+                    );
+                  })}
+                </Grid>
+              </>
+            ) : isLoadingItems ? (
+              <Center h="100%">
+                <Spinner size="lg" />
+              </Center>
+            ) : (
+              <Text textAlign="center">Error loading items</Text>
+            )}
           </GridItem>
         </Grid>
       ) : (
@@ -303,87 +392,3 @@ export const CharacterPage = (): JSX.Element => {
     </Box>
   );
 };
-
-const DUMMY_ITEMS = [
-  {
-    agi: 3,
-    disabled: false,
-    icon: 'fire',
-    image: 'door-closed',
-    int: 4,
-    name: 'Rusty Dagger',
-    str: 1,
-  },
-  {
-    agi: 3,
-    disabled: false,
-    icon: 'shield',
-    image: 'scribd',
-    int: 4,
-    name: 'Copper Knife',
-    str: 1,
-  },
-  {
-    agi: 3,
-    disabled: false,
-    icon: 'road',
-    image: 'database',
-    int: 4,
-    name: 'Iron Axe',
-    str: 1,
-  },
-  {
-    agi: 3,
-    disabled: true,
-    icon: 'fire',
-    image: 'search',
-    int: 4,
-    name: 'Rusty Dagger',
-    str: 1,
-  },
-  {
-    agi: 3,
-    disabled: true,
-    icon: 'shield',
-    image: 'book',
-    int: 4,
-    name: 'Rusty Dagger',
-    str: 1,
-  },
-  {
-    agi: 3,
-    disabled: true,
-    icon: 'road',
-    image: 'pizza-slice',
-    int: 4,
-    name: 'Rusty Dagger',
-    str: 1,
-  },
-  {
-    agi: 3,
-    disabled: true,
-    icon: 'fire',
-    image: 'star-crescent',
-    int: 4,
-    name: 'Rusty Dagger',
-    str: 1,
-  },
-  {
-    agi: 3,
-    disabled: true,
-    icon: 'shield',
-    image: 'bug',
-    int: 4,
-    name: 'Rusty Dagger',
-    str: 1,
-  },
-  {
-    agi: 3,
-    disabled: true,
-    icon: 'road',
-    image: 'socks',
-    int: 4,
-    name: 'Rusty Dagger',
-    str: 1,
-  },
-];

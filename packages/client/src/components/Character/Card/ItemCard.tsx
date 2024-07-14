@@ -6,38 +6,15 @@ import {
   Center,
   Text,
 } from '@chakra-ui/react';
-import {
-  FaBook,
-  FaBug,
-  FaDatabase,
-  FaDoorClosed,
-  FaFire,
-  FaPizzaSlice,
-  FaRoad,
-  FaScribd,
-  FaSearchLocation,
-  FaShieldAlt,
-  FaSocks,
-  FaStarAndCrescent,
-} from 'react-icons/fa';
+import { GiRogue } from 'react-icons/gi';
 
-export const ItemCard = ({
-  agi,
-  disabled,
-  icon,
-  image,
-  int,
-  name,
-  str,
-}: {
-  agi: number;
-  disabled: boolean;
-  icon: string;
-  image: string;
-  int: number;
-  name: string;
-  str: number;
-}): JSX.Element => {
+import type { Weapon } from '../../../utils/types';
+
+export const ItemCard = (weapon: Weapon): JSX.Element => {
+  const { agiModifier, intModifier, strModifier, name } = weapon;
+
+  const disabled = false;
+
   return (
     <Card
       border={disabled ? 'solid lightgray' : 'solid'}
@@ -56,32 +33,22 @@ export const ItemCard = ({
     >
       <CardHeader backgroundColor="grey300">
         <Center h="100%">
-          {image == 'book' && <FaBook size={24} />}
-          {image == 'bug' && <FaBug size={24} />}
-          {image == 'database' && <FaDatabase size={24} />}
-          {image == 'door-closed' && <FaDoorClosed size={24} />}
-          {image == 'pizza-slice' && <FaPizzaSlice size={24} />}
-          {image == 'scribd' && <FaScribd size={24} />}
-          {image == 'search' && <FaSearchLocation size={24} />}
-          {image == 'socks' && <FaSocks size={24} />}
-          {image == 'star-crescent' && <FaStarAndCrescent size={24} />}
+          <Text fontSize={{ base: 'xl', lg: '3xl' }}>{name.slice(-3)}</Text>
         </Center>
       </CardHeader>
       <CardBody>
         <Text fontWeight="bold" size={{ base: 'xs', sm: 'md' }}>
-          {name}
+          {name.slice(0, -3)}
         </Text>
 
         <Text size={{ base: '2xs', sm: 'sm' }}>
-          STR+{str} AGI+{agi} INT+{int}
+          STR+{strModifier} AGI+{agiModifier} INT+{intModifier}
         </Text>
       </CardBody>
 
       <CardFooter>
         <Center>
-          {icon == 'fire' && <FaFire size={20} />}
-          {icon == 'road' && <FaRoad size={20} />}
-          {icon == 'shield' && <FaShieldAlt size={20} />}
+          <GiRogue size={28} />
         </Center>
       </CardFooter>
     </Card>

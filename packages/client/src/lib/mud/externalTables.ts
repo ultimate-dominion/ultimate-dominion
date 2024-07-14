@@ -9,6 +9,7 @@ const CharactersBalancesTableId = resourceToHex({
   namespace: CHARACTERS_NAMESPACE,
   name: 'Balances',
 });
+
 const CharactersTokenURITableId = resourceToHex({
   type: 'table',
   namespace: CHARACTERS_NAMESPACE,
@@ -21,6 +22,12 @@ const GoldBalancesTableId = resourceToHex({
   name: 'Balances',
 });
 
+const ItemsBaseURITableId = resourceToHex({
+  type: 'table',
+  namespace: ITEMS_NAMESPACE,
+  name: 'MetadataURI',
+});
+
 const ItemsOwnersTableId = resourceToHex({
   type: 'table',
   namespace: ITEMS_NAMESPACE,
@@ -30,7 +37,7 @@ const ItemsOwnersTableId = resourceToHex({
 const ItemsTokenURITableId = resourceToHex({
   type: 'table',
   namespace: ITEMS_NAMESPACE,
-  name: 'MetadataURI',
+  name: 'URIStorage',
 });
 
 export const externalTables = {
@@ -67,6 +74,15 @@ export const externalTables = {
       value: { type: 'uint256' },
     },
   },
+  ItemsBaseURI: {
+    namespace: ITEMS_NAMESPACE,
+    name: 'MetadataURI',
+    tableId: ItemsBaseURITableId,
+    keySchema: {},
+    valueSchema: {
+      uri: { type: 'string' },
+    },
+  },
   ItemsOwners: {
     namespace: ITEMS_NAMESPACE,
     name: 'Owners',
@@ -81,9 +97,11 @@ export const externalTables = {
   },
   ItemsTokenURI: {
     namespace: ITEMS_NAMESPACE,
-    name: 'MetadataURI',
+    name: 'URIStorage',
     tableId: ItemsTokenURITableId,
-    keySchema: {},
+    keySchema: {
+      tokenId: { type: 'uint256' },
+    },
     valueSchema: {
       uri: { type: 'string' },
     },
