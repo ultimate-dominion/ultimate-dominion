@@ -7,6 +7,7 @@ import {
   GridItem,
   Spinner,
   Text,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import {
@@ -30,6 +31,7 @@ import { Misc } from '../components/Character/Misc';
 import { Profile } from '../components/Character/Profile';
 import { Stats as StatsPanel } from '../components/Character/Stats';
 import { ItemCard } from '../components/ItemCard';
+import { ItemEquipModal } from '../components/ItemEquipModal';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -55,6 +57,8 @@ export const CharacterPage = (): JSX.Element => {
   } = useMUD();
   const { character: userCharacter } = useCharacter();
 
+  const { isOpen, onClose, onOpen } = useDisclosure();
+
   const ultimateDominionConfig = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
@@ -64,6 +68,7 @@ export const CharacterPage = (): JSX.Element => {
   const [isLoadingCharacter, setIsLoadingCharacter] = useState(true);
   const [items, setItems] = useState<Weapon[] | null>(null);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<Weapon | null>(null);
 
   const fetchCharacter = useCallback(async () => {
     try {
@@ -349,8 +354,13 @@ export const CharacterPage = (): JSX.Element => {
                   {items.map(function (item, i) {
                     return (
                       <GridItem key={i}>
-                        {/* TODO: we should only use one general modal, which gets passed the item data when clicked */}
-                        <ItemCard {...item} />
+                        <ItemCard
+                          {...item}
+                          onClick={() => {
+                            setSelectedItem(item);
+                            onOpen();
+                          }}
+                        />
                       </GridItem>
                     );
                   })}
@@ -389,6 +399,14 @@ export const CharacterPage = (): JSX.Element => {
           </GridItem>
         </Grid>
       )}
+      <ItemEquipModal
+        isOpen={isOpen}
+        onClose={() => {
+          onClose();
+          setSelectedItem(null);
+        }}
+        {...(selectedItem as Weapon)}
+      />
     </Box>
   );
 };

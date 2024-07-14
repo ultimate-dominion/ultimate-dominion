@@ -10,7 +10,14 @@ import { GiRogue } from 'react-icons/gi';
 
 import type { Weapon } from '../utils/types';
 
-export const ItemCard = (weapon: Weapon): JSX.Element => {
+type ItemCardProps = Weapon & {
+  onClick?: () => void;
+};
+
+export const ItemCard: React.FC<ItemCardProps> = ({
+  onClick,
+  ...weapon
+}): JSX.Element => {
   const { agiModifier, intModifier, strModifier, name } = weapon;
 
   const disabled = false;
@@ -19,17 +26,17 @@ export const ItemCard = (weapon: Weapon): JSX.Element => {
     <Card
       border={disabled ? 'solid lightgray' : 'solid'}
       borderRadius={2}
-      cursor="pointer"
+      cursor={onClick ? 'pointer' : 'default'}
       direction="row"
+      onClick={onClick}
       overflow="hidden"
       variant={disabled ? 'light' : 'outline'}
-      _active={{
-        bgColor: 'rgba(0, 0, 0, .04)',
-        border: 'solid',
-      }}
-      _hover={{
-        border: 'solid',
-      }}
+      _active={
+        onClick && {
+          bgColor: 'rgba(0, 0, 0, .04)',
+          border: 'solid',
+        }
+      }
     >
       <CardHeader backgroundColor="grey300">
         <Center h="100%">

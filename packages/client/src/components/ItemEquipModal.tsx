@@ -1,5 +1,4 @@
 import {
-  Box,
   Button,
   Modal,
   ModalBody,
@@ -8,7 +7,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  useDisclosure,
+  Text,
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
 
@@ -16,8 +15,16 @@ import { useCharacter } from '../contexts/CharacterContext';
 import type { Weapon } from '../utils/types';
 import { ItemCard } from './ItemCard';
 
-export const ItemEquipModal = (weapon: Weapon): JSX.Element => {
-  const { isOpen, onClose, onOpen } = useDisclosure();
+type ItemEquipModalProps = Weapon & {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
+  isOpen,
+  onClose,
+  ...weapon
+}): JSX.Element => {
   const { character } = useCharacter();
 
   const isOwner = useMemo(
@@ -26,26 +33,24 @@ export const ItemEquipModal = (weapon: Weapon): JSX.Element => {
   );
 
   return (
-    <Box>
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{isOwner ? 'Equip' : 'Make an offer'}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody padding={4}>
-            <ItemCard {...weapon} />
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onClose}>
-              Yes
-            </Button>
-            <Button variant="ghost">No</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <Box onClick={onOpen}>
-        <ItemCard {...weapon} />
-      </Box>
-    </Box>
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>{isOwner ? 'Equip Item' : 'Make an offer'}</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody padding={4}>
+          <Text mb={6}>Do you want to equip this item?</Text>
+          <ItemCard {...weapon} />
+        </ModalBody>
+        <ModalFooter>
+          <Button colorScheme="blue" mr={3} onClick={onClose}>
+            Yes
+          </Button>
+          <Button onClick={onClose} variant="ghost">
+            No
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 };
