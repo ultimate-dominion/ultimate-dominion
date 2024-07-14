@@ -43,6 +43,7 @@ export type Weapon = WeaponStats &
   Metadata & {
     balance: string;
     itemId: Entity;
+    owner: string;
     tokenId: string;
   };
 

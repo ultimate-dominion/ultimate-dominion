@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react';
 import { GiRogue } from 'react-icons/gi';
 
-import type { Weapon } from '../../../utils/types';
+import type { Weapon } from '../utils/types';
 
 export const ItemCard = (weapon: Weapon): JSX.Element => {
   const { agiModifier, intModifier, strModifier, name } = weapon;

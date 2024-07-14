@@ -26,10 +26,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
 
-import { ItemCard } from '../components/Character/Card/ItemCard';
 import { Misc } from '../components/Character/Misc';
 import { Profile } from '../components/Character/Profile';
 import { Stats as StatsPanel } from '../components/Character/Stats';
+import { ItemCard } from '../components/ItemCard';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
