@@ -365,6 +365,47 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__dropGold",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__dropItem",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__dropItems",
     "inputs": [
       {
@@ -797,6 +838,19 @@ declare const abi: [
     "outputs": [
       {
         "name": "_erc1155",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getLootManagerSystem",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "_lootManager",
         "type": "address",
         "internalType": "address"
       }
