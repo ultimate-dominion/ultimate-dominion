@@ -35,10 +35,9 @@ import { ItemEquipModal } from '../components/ItemEquipModal';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type { Character, StatsClasses, Weapon } from '../utils/types';
-
-const MAX_EQUIPPED_WEAPONS = 3;
 
 export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
