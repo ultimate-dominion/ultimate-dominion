@@ -93,6 +93,7 @@ struct PhysicalAttackStats {
     int256 attackModifierBonus;
     // crit chance
     int256 critChanceBonus;
+    uint8[] classRestrictions;
 }
 
 struct Action {

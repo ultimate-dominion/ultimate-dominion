@@ -79,6 +79,10 @@ contract CharacterSystem is System {
         return ownerOf == ownerAddress;
     }
 
+    function isValidOwner(bytes32 characterId, address owner) public view returns (bool) {
+        return isValidCharacterId(characterId) && _characterToken().ownerOf(getCharacterTokenId(characterId)) == owner;
+    }
+
     /**
      * @param account the address of the account that will own the character
      * @param name the keccack256 hash of the characters name to check for duplicates
@@ -120,9 +124,8 @@ contract CharacterSystem is System {
         tempStats.currentHp = int256(tempStats.baseHitPoints);
         Stats.set(characterId, tempStats);
         IWorld(_world()).UD__dropGold(characterId, 5 ether);
-        // issue starterWeapon
+        // issue starter gear
         IWorld(_world()).UD__issueStarterItems(characterId);
-        // SystemSwitch.call(abi.encodeCall(ILootManagerSystem.UD__issueStarterItems, (characterId)));
         Characters.setLocked(characterId, true);
     }
 
