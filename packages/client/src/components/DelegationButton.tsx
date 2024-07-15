@@ -8,6 +8,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { setupDelegation } from '../lib/mud/delegation';
 import { getChainNameFromId, isSupportedChain } from '../lib/web3';
+import { CHARACTER_CREATION_PATH } from '../Routes';
 
 export const DelegationButton = ({
   externalWalletClient,
@@ -44,7 +45,7 @@ export const DelegationButton = ({
       }
 
       getBurner();
-      navigate('/character-creation');
+      navigate(CHARACTER_CREATION_PATH);
     } catch (error) {
       renderError(error, 'Failed to delegate');
     } finally {

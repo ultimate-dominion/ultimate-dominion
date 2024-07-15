@@ -52,7 +52,7 @@ import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
 
-import {Multicall3} from "./Multicall3.sol";
+
 
 import "forge-std/console2.sol";
 import "forge-std/StdJson.sol";

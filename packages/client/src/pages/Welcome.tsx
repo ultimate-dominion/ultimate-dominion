@@ -16,6 +16,7 @@ import { useAccount } from 'wagmi';
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH } from '../Routes';
 
 export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
@@ -36,9 +37,9 @@ export const Welcome = (): JSX.Element => {
     }
 
     if (character?.locked) {
-      navigate('/game-board');
+      navigate(GAME_BOARD_PATH);
     } else {
-      navigate('/character-creation');
+      navigate(CHARACTER_CREATION_PATH);
     }
   }, [character, delegatorAddress, isConnected, navigate, onOpen]);
 

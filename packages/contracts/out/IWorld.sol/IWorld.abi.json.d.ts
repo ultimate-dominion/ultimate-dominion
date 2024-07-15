@@ -1147,19 +1147,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getMulticallContract",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "_multicall",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__getName",
     "inputs": [
       {

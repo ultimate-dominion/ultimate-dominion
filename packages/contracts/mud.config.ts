@@ -229,7 +229,6 @@ export default defineWorld({
         entropy: "address",
         pythProvider: "address",
         items: "address",
-        multicall: "address",
       },
     },
   },

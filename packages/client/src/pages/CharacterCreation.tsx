@@ -18,17 +18,18 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
+import { getComponentValueStrict } from '@latticexyz/recs';
+import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { getContract } from 'viem';
 import { useWalletClient } from 'wagmi';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
+import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import {
   fetchMetadataFromUri,
@@ -37,7 +38,7 @@ import {
 } from '../utils/helpers';
 import { StatsClasses, Weapon } from '../utils/types';
 
-const STARTER_WEAPON_IDS = [BigInt(1), BigInt(2), BigInt(3)];
+const STARTER_WEAPON_TOKEN_IDS = [BigInt(1), BigInt(2), BigInt(3)];
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
@@ -46,10 +47,10 @@ export const CharacterCreation = (): JSX.Element => {
   const { data: externalWalletClient } = useWalletClient();
   const {
     burnerBalance,
-    components: { UltimateDominionConfig },
+    components: { ItemsBaseURI, ItemsTokenURI, UltimateDominionConfig },
     delegatorAddress,
     isSynced,
-    network: { publicClient, worldContract },
+    network: { worldContract },
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
@@ -86,43 +87,28 @@ export const CharacterCreation = (): JSX.Element => {
   const fetchStarterWeapons = useCallback(async () => {
     try {
       const _items: Weapon[] = await Promise.all(
-        STARTER_WEAPON_IDS.map(async itemId => {
+        STARTER_WEAPON_TOKEN_IDS.map(async tokenId => {
           const itemTemplateStats = await worldContract.read.UD__getWeaponStats(
-            [itemId],
+            [tokenId],
           );
 
-          const itemsContractAddress =
-            await worldContract.read.UD__getItemsContract();
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: tokenId },
+          );
 
-          const itemsToken = getContract({
-            address: itemsContractAddress,
-            abi: [
-              {
-                constant: true,
-                inputs: [
-                  {
-                    name: 'tokenId',
-                    type: 'uint256',
-                  },
-                ],
-                name: 'uri',
-                outputs: [
-                  {
-                    name: '',
-                    type: 'string',
-                  },
-                ],
-                payable: false,
-                stateMutability: 'view',
-                type: 'function',
-              },
-            ],
-            client: publicClient,
-          });
+          const baseURI = getComponentValueStrict(
+            ItemsBaseURI,
+            singletonEntity,
+          ).uri;
 
-          const metadataURI = await itemsToken.read.uri([itemId]);
+          const tokenURI = getComponentValueStrict(
+            ItemsTokenURI,
+            tokenIdEntity,
+          ).uri;
+
           const fetachedMetadata = await fetchMetadataFromUri(
-            uriToHttp(metadataURI)[0],
+            uriToHttp(`${baseURI}${tokenURI}`)[0],
           );
 
           return {
@@ -143,7 +129,7 @@ export const CharacterCreation = (): JSX.Element => {
     } catch (error) {
       renderError(error, 'Error fetching starter item.');
     }
-  }, [publicClient, renderError, worldContract]);
+  }, [ItemsBaseURI, ItemsTokenURI, renderError, worldContract]);
 
   useEffect(() => {
     fetchStarterWeapons();
@@ -224,7 +210,7 @@ export const CharacterCreation = (): JSX.Element => {
           throw new Error('Contract call failed');
         }
 
-        refreshCharacter();
+        await refreshCharacter();
         renderSuccess('Character created!');
       } catch (e) {
         renderError(e, 'Failed to create character.');
@@ -312,14 +298,24 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error('Contract call failed');
       }
 
+      await refreshCharacter();
+
       renderSuccess('Your character has awakend!');
-      navigate('/game-board');
+      navigate(GAME_BOARD_PATH);
     } catch (e) {
       renderError(e, 'Failed to enter game.');
     } finally {
       setIsEnteringGame(false);
     }
-  }, [character, enterGame, navigate, renderError, renderSuccess, rolledOnce]);
+  }, [
+    character,
+    enterGame,
+    navigate,
+    refreshCharacter,
+    renderError,
+    renderSuccess,
+    rolledOnce,
+  ]);
 
   const isDisabled = useMemo(() => {
     return !character || isCreating || isEnteringGame || isRollingStats;
@@ -331,15 +327,15 @@ export const CharacterCreation = (): JSX.Element => {
     }
 
     if (character?.locked) {
-      navigate('/game-board');
+      navigate(GAME_BOARD_PATH);
     }
 
     if (!externalWalletClient) {
-      navigate('/');
+      navigate(HOME_PATH);
     }
 
     if (!delegatorAddress && isSynced) {
-      navigate('/');
+      navigate(HOME_PATH);
     }
   }, [
     character,
@@ -604,9 +600,21 @@ export const CharacterCreation = (): JSX.Element => {
               </HStack>
               {starterWeapons && starterWeapons[characterClass] && (
                 <HStack border="1px solid" borderColor="grey400" w="100%">
-                  <Box bgColor="grey400" h="50px" w="50px" />
+                  <Stack
+                    alignItems="center"
+                    bgColor="grey400"
+                    h="50px"
+                    justifyContent="center"
+                    w="50px"
+                  >
+                    <Text color="white" fontSize="2xl">
+                      {starterWeapons[characterClass].name.slice(-3)}
+                    </Text>
+                  </Stack>
                   <Box>
-                    <Text size="xs">{starterWeapons[characterClass].name}</Text>
+                    <Text size="xs">
+                      {starterWeapons[characterClass].name.slice(0, -3)}
+                    </Text>
                     <Text size="xs">
                       STR+
                       {starterWeapons[characterClass].strModifier} AGI+
