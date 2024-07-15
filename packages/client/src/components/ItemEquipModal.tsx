@@ -148,10 +148,16 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Unequip Item</ModalHeader>
+          <ModalHeader>
+            {isOwner ? 'Unequip Item' : 'Make an offer'}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody padding={4}>
-            <Text mb={6}>Do you want to unequip this item?</Text>
+            {isOwner ? (
+              <Text mb={6}>Do you want to unequip this item?</Text>
+            ) : (
+              <Text mb={6}>Do you want to make an offer for this item?</Text>
+            )}
             <ItemCard {...weapon} />
           </ModalBody>
           <ModalFooter>
@@ -159,7 +165,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               isLoading={isEquipping}
               loadingText="Unequipping..."
               mr={3}
-              onClick={onUnequipItem}
+              onClick={isOwner ? onUnequipItem : onClose}
             >
               Yes
             </Button>
@@ -179,7 +185,11 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         <ModalHeader>{isOwner ? 'Equip Item' : 'Make an offer'}</ModalHeader>
         <ModalCloseButton />
         <ModalBody padding={4}>
-          <Text mb={6}>Do you want to equip this item?</Text>
+          {isOwner ? (
+            <Text mb={6}>Do you want to equip this item?</Text>
+          ) : (
+            <Text mb={6}>Do you want to make an offer for this item?</Text>
+          )}
           <ItemCard {...weapon} />
         </ModalBody>
         <ModalFooter>
@@ -187,7 +197,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             isLoading={isEquipping}
             loadingText="Equipping..."
             mr={3}
-            onClick={onEquipItem}
+            onClick={isOwner ? onEquipItem : onClose}
           >
             Yes
           </Button>
