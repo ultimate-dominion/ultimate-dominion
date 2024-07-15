@@ -145,6 +145,12 @@ const Text = {
     lg: {
       fontSize: '18px',
     },
+    xl: {
+      fontSize: '24px',
+    },
+    '2xl': {
+      fontSize: '32px',
+    },
   },
 };
 

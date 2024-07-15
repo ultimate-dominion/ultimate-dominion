@@ -1,5 +1,16 @@
 import { Entity } from '@latticexyz/recs';
 
+export enum EncounterType {
+  PvP,
+  PvE,
+}
+
+export enum StatsClasses {
+  Warrior,
+  Rogue,
+  Mage,
+}
+
 export type Character = CharacterData & CharacterStats & Metadata;
 
 export type CharacterData = {
@@ -19,12 +30,6 @@ export type CharacterStats = {
   level: string;
   strength: string;
 };
-
-export enum StatsClasses {
-  Warrior,
-  Rogue,
-  Mage,
-}
 
 export type Metadata = {
   description: string;

@@ -66,6 +66,7 @@ export const GameBoard = (): JSX.Element => {
           colStart={{ base: 0, lg: 5 }}
           overflowY="auto"
           p={{ base: 2, lg: 4 }}
+          pos="relative"
           rowSpan={{ base: 3, lg: 6 }}
           rowStart={{ base: 0, lg: 0 }}
         >

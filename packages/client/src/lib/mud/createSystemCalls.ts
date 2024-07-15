@@ -6,7 +6,13 @@
 // import { getComponentValue } from '@latticexyz/recs';
 // import { singletonEntity } from '@latticexyz/store-sync/recs';
 
-import { Entity, getComponentValue } from '@latticexyz/recs';
+import {
+  Entity,
+  getComponentValue,
+  Has,
+  HasValue,
+  runQuery,
+} from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { uuid } from '@latticexyz/utils';
 import {
@@ -18,7 +24,7 @@ import {
   toBytes,
 } from 'viem';
 
-import { StatsClasses } from '../../utils/types';
+import { EncounterType, StatsClasses } from '../../utils/types';
 import { ClientComponents } from './createClientComponents';
 import { SetupNetworkResult } from './setupNetwork';
 
@@ -46,8 +52,48 @@ export function createSystemCalls(
    *   (https://github.com/latticexyz/mud/blob/main/templates/react/packages/client/src/mud/setupNetwork.ts#L77-L83).
    */
   { publicClient, waitForTransaction, worldContract }: SetupNetworkResult,
-  { CharacterEquipment, Characters, Position, Spawned }: ClientComponents,
+  {
+    CharacterEquipment,
+    Characters,
+    CombatEncounter,
+    Position,
+    Spawned,
+  }: ClientComponents,
 ) {
+  const createMatch = async (
+    encounterType: EncounterType,
+    attackers: string[],
+    defenders: string[],
+  ) => {
+    try {
+      const tx = await worldContract.write.UD__createMatch([
+        encounterType,
+        attackers as `0x${string}`[],
+        defenders as `0x${string}`[],
+      ]);
+
+      await waitForTransaction(tx);
+
+      const success = !!Array.from(
+        runQuery([
+          Has(CombatEncounter),
+          HasValue(CombatEncounter, { encounterType }),
+        ]),
+      ).filter(entity => {
+        const encounter = getComponentValue(CombatEncounter, entity);
+        return (
+          encounter &&
+          encounter.attackers.some(attacker => attackers.includes(attacker)) &&
+          encounter.defenders.some(defender => defenders.includes(defender))
+        );
+      })[0];
+
+      return success;
+    } catch (err) {
+      return false;
+    }
+  };
+
   const enterGame = async (characterEntity: Entity) => {
     try {
       const tx = await worldContract.write.UD__enterGame([
@@ -235,6 +281,7 @@ export function createSystemCalls(
   };
 
   return {
+    createMatch,
     enterGame,
     equipItems,
     mintCharacter,
