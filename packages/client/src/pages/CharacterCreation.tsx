@@ -18,11 +18,11 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
+import { getComponentValueStrict } from '@latticexyz/recs';
+import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { getContract } from 'viem';
 import { useWalletClient } from 'wagmi';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -38,7 +38,7 @@ import {
 } from '../utils/helpers';
 import { StatsClasses, Weapon } from '../utils/types';
 
-const STARTER_WEAPON_IDS = [BigInt(1), BigInt(2), BigInt(3)];
+const STARTER_WEAPON_TOKEN_IDS = [BigInt(1), BigInt(2), BigInt(3)];
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
@@ -47,10 +47,10 @@ export const CharacterCreation = (): JSX.Element => {
   const { data: externalWalletClient } = useWalletClient();
   const {
     burnerBalance,
-    components: { UltimateDominionConfig },
+    components: { ItemsBaseURI, ItemsTokenURI, UltimateDominionConfig },
     delegatorAddress,
     isSynced,
-    network: { publicClient, worldContract },
+    network: { worldContract },
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
@@ -87,43 +87,28 @@ export const CharacterCreation = (): JSX.Element => {
   const fetchStarterWeapons = useCallback(async () => {
     try {
       const _items: Weapon[] = await Promise.all(
-        STARTER_WEAPON_IDS.map(async itemId => {
+        STARTER_WEAPON_TOKEN_IDS.map(async tokenId => {
           const itemTemplateStats = await worldContract.read.UD__getWeaponStats(
-            [itemId],
+            [tokenId],
           );
 
-          const itemsContractAddress =
-            await worldContract.read.UD__getItemsContract();
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: tokenId },
+          );
 
-          const itemsToken = getContract({
-            address: itemsContractAddress,
-            abi: [
-              {
-                constant: true,
-                inputs: [
-                  {
-                    name: 'tokenId',
-                    type: 'uint256',
-                  },
-                ],
-                name: 'uri',
-                outputs: [
-                  {
-                    name: '',
-                    type: 'string',
-                  },
-                ],
-                payable: false,
-                stateMutability: 'view',
-                type: 'function',
-              },
-            ],
-            client: publicClient,
-          });
+          const baseURI = getComponentValueStrict(
+            ItemsBaseURI,
+            singletonEntity,
+          ).uri;
 
-          const metadataURI = await itemsToken.read.uri([itemId]);
+          const tokenURI = getComponentValueStrict(
+            ItemsTokenURI,
+            tokenIdEntity,
+          ).uri;
+
           const fetachedMetadata = await fetchMetadataFromUri(
-            uriToHttp(metadataURI)[0],
+            uriToHttp(`${baseURI}${tokenURI}`)[0],
           );
 
           return {
@@ -144,7 +129,7 @@ export const CharacterCreation = (): JSX.Element => {
     } catch (error) {
       renderError(error, 'Error fetching starter item.');
     }
-  }, [publicClient, renderError, worldContract]);
+  }, [ItemsBaseURI, ItemsTokenURI, renderError, worldContract]);
 
   useEffect(() => {
     fetchStarterWeapons();
@@ -225,7 +210,7 @@ export const CharacterCreation = (): JSX.Element => {
           throw new Error('Contract call failed');
         }
 
-        refreshCharacter();
+        await refreshCharacter();
         renderSuccess('Character created!');
       } catch (e) {
         renderError(e, 'Failed to create character.');

@@ -12,24 +12,41 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
-import { useMemo } from 'react';
+import { getComponentValue, getComponentValueStrict } from '@latticexyz/recs';
+import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { GiRogue } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
+import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
+import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import type { Character, StatsClasses, Weapon } from '../utils/types';
 import { Level } from './Level';
 
 const CURRENT_LEVEL = 1;
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
+  const { renderError } = useToast();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
-    components: { Levels },
+    components: {
+      CharacterEquipment,
+      ItemsBaseURI,
+      ItemsOwners,
+      ItemsTokenURI,
+      Levels,
+    },
+    isSynced,
+    network: { worldContract },
   } = useMUD();
   const { character } = useCharacter();
+
+  const [items, setItems] = useState<Weapon[] | null>(null);
 
   const nextLevelXpRequirement = useComponentValue(
     Levels,
@@ -43,7 +60,106 @@ export const StatsPanel = (): JSX.Element => {
     );
   }, [character, nextLevelXpRequirement]);
 
-  if (!character) {
+  const fetchCharacterItems = useCallback(
+    async (_character: Character, _equippedWeapons: bigint[]) => {
+      try {
+        if (_equippedWeapons.length === 0) {
+          setItems([]);
+          return;
+        }
+
+        const _items = _equippedWeapons
+          .map(tokenId => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(tokenId),
+              },
+            );
+            const itemOwner = getComponentValueStrict(
+              ItemsOwners,
+              tokenOwnersEntity,
+            );
+
+            return {
+              balance: itemOwner.balance.toString(),
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+              tokenId: tokenId.toString(),
+            };
+          })
+          .filter(item => item.owner === _character.owner)
+          .sort((a, b) => {
+            return Number(a.tokenId) - Number(b.tokenId);
+          });
+
+        const fullItems = await Promise.all(
+          _items.map(async item => {
+            const itemTemplateStats =
+              await worldContract.read.UD__getWeaponStats([
+                BigInt(item.tokenId),
+              ]);
+
+            const tokenIdEntity = encodeEntity(
+              { tokenId: 'uint256' },
+              { tokenId: BigInt(item.tokenId) },
+            );
+
+            const baseURI = getComponentValueStrict(
+              ItemsBaseURI,
+              singletonEntity,
+            ).uri;
+
+            const tokenURI = getComponentValueStrict(
+              ItemsTokenURI,
+              tokenIdEntity,
+            ).uri;
+
+            const metadata = await fetchMetadataFromUri(
+              uriToHttp(`${baseURI}${tokenURI}`)[0],
+            );
+
+            return {
+              ...metadata,
+              agiModifier: itemTemplateStats.agiModifier.toString(),
+              balance: item.balance,
+              classRestrictions: itemTemplateStats.classRestrictions.map(
+                (classRestriction: number) => classRestriction as StatsClasses,
+              ),
+              hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
+              intModifier: itemTemplateStats.intModifier.toString(),
+              itemId: item.itemId,
+              maxDamage: itemTemplateStats.maxDamage.toString(),
+              minDamage: itemTemplateStats.minDamage.toString(),
+              minLevel: itemTemplateStats.minLevel.toString(),
+              owner: item.owner,
+              strModifier: itemTemplateStats.strModifier.toString(),
+              tokenId: item.tokenId,
+            } as Weapon;
+          }),
+        );
+
+        setItems(fullItems);
+      } catch (error) {
+        renderError(error, 'Failed to fetch character data');
+      }
+    },
+    [ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError, worldContract],
+  );
+
+  useEffect(() => {
+    if (!isSynced) return;
+    (async (): Promise<void> => {
+      if (!character) return;
+      const equippedWeapons =
+        getComponentValue(CharacterEquipment, character.characterId)
+          ?.equippedWeapons ?? [];
+      await fetchCharacterItems(character, equippedWeapons);
+    })();
+  }, [character, CharacterEquipment, fetchCharacterItems, isSynced]);
+
+  if (!(character && items)) {
     return (
       <VStack h="100%" justify="center">
         <Spinner size="lg" />
@@ -129,32 +245,50 @@ export const StatsPanel = (): JSX.Element => {
         <HStack fontWeight="bold" w="100%">
           <Text>Active Items</Text>
           <Spacer />
-          <Text>1/3</Text>
+          <Text>
+            {items.length}/{MAX_EQUIPPED_WEAPONS}
+          </Text>
         </HStack>
-        <HStack
-          justify="space-between"
-          fontSize="xs"
-          fontWeight="bold"
-          pl={2}
-          w="100%"
-        >
-          <Text>Rusty Dagger</Text>
-          <Button padding="0 2px" size="sm" variant="ghost">
-            ⁂
-          </Button>
-        </HStack>
-        <HStack justify="space-between" fontSize="xs" pl={2} w="100%">
-          <Text>Empty Slot</Text>
-          <Button padding="0 2px" size="sm" variant="ghost">
-            +
-          </Button>
-        </HStack>
-        <HStack justify="space-between" fontSize="xs" pl={2} w="100%">
-          <Text>Empty Slot</Text>
-          <Button padding="0 2px" size="sm" variant="ghost">
-            +
-          </Button>
-        </HStack>
+        {items.map((item, index) => (
+          <HStack
+            fontSize="xs"
+            justify="space-between"
+            key={`equipped-item-${index}`}
+            pl={2}
+            w="100%"
+          >
+            <Text>{item.name}</Text>
+            <Button
+              onClick={() => navigate(`/characters/${character.characterId}`)}
+              p="0 2px"
+              size="sm"
+              variant="ghost"
+            >
+              <GiRogue size={12} />
+            </Button>
+          </HStack>
+        ))}
+        {Array.from({
+          length: MAX_EQUIPPED_WEAPONS - items.length,
+        }).map((_, index) => (
+          <HStack
+            key={`empty-weapon-${index}`}
+            justify="space-between"
+            fontSize="xs"
+            pl={2}
+            w="100%"
+          >
+            <Text>Empty Slot</Text>
+            <Button
+              onClick={() => navigate(`/characters/${character.characterId}`)}
+              p="0 2px"
+              size="sm"
+              variant="ghost"
+            >
+              +
+            </Button>
+          </HStack>
+        ))}
       </VStack>
 
       <HStack justify="space-between" fontWeight="bold" mt={4} w="100%">

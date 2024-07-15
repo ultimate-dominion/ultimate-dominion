@@ -10,6 +10,7 @@ import {
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { IoIosArrowForward } from 'react-icons/io';
+import { useNavigate } from 'react-router-dom';
 
 import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { type Character, type Monster } from '../utils/types';
@@ -156,10 +157,14 @@ const PlayerRow = ({ player }: { player: Character }) => {
 };
 
 const PlayerLevelRow = ({ player }: { player: Character }) => {
+  const navigate = useNavigate();
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
-    <HStack h={ROW_HEIGHT}>
+    <HStack
+      h={ROW_HEIGHT}
+      onClick={() => navigate(`/characters/${player.characterId}`)}
+    >
       <Flex
         alignItems="center"
         as="button"
