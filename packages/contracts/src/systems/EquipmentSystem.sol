@@ -76,8 +76,7 @@ contract EquipmentSystem is System {
                     i++;
                 }
             }
-        }
-        if (uint8(itemData.itemType) == 1) {
+        } else if (uint8(itemData.itemType) == 1) {
             uint256[] memory equippedArmor = CharacterEquipment.getEquippedArmor(characterId);
             for (uint256 i; i < equippedArmor.length;) {
                 if (equippedArmor[i] == itemId) {
@@ -88,6 +87,10 @@ contract EquipmentSystem is System {
                     i++;
                 }
             }
+        } else if (uint8(itemData.itemType) == 2) {
+            // spells
+        } else {
+            revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
     }
 
@@ -139,6 +142,7 @@ contract EquipmentSystem is System {
     }
 
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
+        require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
         if (uint8(itemType) == 0) {
             require(CharacterEquipment.lengthEquippedWeapons(characterId) < 3, "ITEMS: Too many weapons equipped");
             CharacterEquipment.pushEquippedWeapons(characterId, itemId);
