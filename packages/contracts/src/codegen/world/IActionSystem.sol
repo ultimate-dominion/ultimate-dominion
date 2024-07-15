@@ -12,4 +12,8 @@ import { ActionType } from "@codegen/common.sol";
  */
 interface IActionSystem {
   function UD__createAction(ActionType actionType, bytes memory actionStats) external returns (bytes32 actionId);
+
+  function UD__assignActionToCharacter(bytes32 characterId, bytes32 actionId) external;
+
+  function UD__equipAction(bytes32 characterId, bytes32 actionId) external;
 }

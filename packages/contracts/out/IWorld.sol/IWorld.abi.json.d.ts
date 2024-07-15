@@ -34,6 +34,11 @@ declare const abi: [
             "name": "critChanceBonus",
             "type": "int256",
             "internalType": "int256"
+          },
+          {
+            "name": "classRestrictions",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
           }
         ]
       },
@@ -137,6 +142,24 @@ declare const abi: [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__assignActionToCharacter",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actionId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -478,6 +501,24 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__equipAction",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actionId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -1608,6 +1649,30 @@ declare const abi: [
         "name": "entityId",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isValidOwner",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [

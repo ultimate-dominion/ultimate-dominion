@@ -194,7 +194,7 @@ contract EquipmentSystem is System {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         require(characterOwner == _msgSender(), "ITEMS: Not Character Owner");
         uint8 itemType = uint8(IWorld(_world()).UD__getItemType(itemId));
-        if (itemType == 0) {
+        if (itemType == uint8(0)) {
             uint256[] memory sortedArray = _swapToEndOfArray(itemId, CharacterEquipment.getEquippedWeapons(characterId));
             if (sortedArray[sortedArray.length - 1] == itemId) {
                 CharacterEquipment.setEquippedWeapons(characterId, sortedArray);
@@ -202,16 +202,14 @@ contract EquipmentSystem is System {
 
                 success = true;
             }
-        }
-        if (itemType == 1) {
+        } else if (itemType == uint8(1)) {
             uint256[] memory sortedArray = _swapToEndOfArray(itemId, CharacterEquipment.getEquippedArmor(characterId));
             if (sortedArray[sortedArray.length - 1] == itemId) {
                 CharacterEquipment.setEquippedArmor(characterId, sortedArray);
                 CharacterEquipment.popEquippedArmor(characterId);
                 success = true;
             }
-        }
-        if (itemType == 2) {
+        } else if (itemType == uint8(2)) {
             // uint256[] memory sortedArray =
             //     _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
             // if (sortedArray[sortedArray.length - 1] == itemId) {
@@ -219,6 +217,8 @@ contract EquipmentSystem is System {
             //     CharacterEquipment.popEquippedSpells(characterId);
             //     success = true;
             // }
+        } else {
+            revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
         _setEquipmentBonuses(characterId);
     }
@@ -279,12 +279,21 @@ contract EquipmentSystem is System {
         pure
         returns (uint256[] memory swappedArray)
     {
-        for (uint256 i; i < array.length;) {
-            if (array[i] == itemId) {
-                uint256 last = array[array.length - 1];
-                array[i] = last;
-                array[array.length - 1] = itemId;
+        if (array.length > 1) {
+            for (uint256 i; i < array.length;) {
+                if (array[i] == itemId) {
+                    uint256 last = array[array.length - 1];
+                    array[i] = last;
+                    array[array.length - 1] = itemId;
+                    swappedArray = array;
+                    break;
+                }
+                {
+                    i++;
+                }
             }
+        } else {
+            swappedArray = array;
         }
     }
 
