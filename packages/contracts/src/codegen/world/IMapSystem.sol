@@ -9,11 +9,14 @@ pragma solidity >=0.8.24;
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IMapSystem {
-  function UD__move(bytes32 entityId, uint16 x, uint16 y) external;
+    function UD__move(bytes32 entityId, uint16 x, uint16 y) external;
 
-  function UD__spawn(bytes32 entityId) external;
+    function UD__spawn(bytes32 entityId) external;
 
-  function UD__getEntitiesAtPosition(uint16 x, uint16 y) external view returns (bytes32[] memory entitiesAtPosition);
+    function UD__getEntitiesAtPosition(uint16 x, uint16 y)
+        external
+        view
+        returns (bytes32[] memory entitiesAtPosition);
 
-  function UD__isAtPosition(bytes32 entityId, uint16 x, uint16 y) external view returns (bool _isAtPosition);
+    function UD__isAtPosition(bytes32 entityId, uint16 x, uint16 y) external view returns (bool _isAtPosition);
 }
