@@ -1,7 +1,6 @@
 import {
   Button,
   Card,
-  CardBody,
   Center,
   Grid,
   GridItem,
@@ -200,6 +199,7 @@ export const Leaderboard = (): JSX.Element => {
                   })
                 }
                 p={1}
+                size={{ base: '2xs', lg: 'sm' }}
                 variant="ghost"
               >
                 <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
@@ -228,6 +228,7 @@ export const Leaderboard = (): JSX.Element => {
                   })
                 }
                 p={1}
+                size={{ base: '2xs', lg: 'sm' }}
                 variant="ghost"
               >
                 <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
@@ -256,6 +257,7 @@ export const Leaderboard = (): JSX.Element => {
                   })
                 }
                 p={1}
+                size={{ base: '2xs', lg: 'sm' }}
                 variant="ghost"
               >
                 <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
