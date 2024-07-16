@@ -15,7 +15,15 @@ import {
 import { Entity } from '@latticexyz/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useState } from 'react';
-import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
+import {
+  FaBackward,
+  FaFastBackward,
+  FaFastForward,
+  FaForward,
+  FaSearch,
+  FaSortAmountDown,
+  FaSortAmountUp,
+} from 'react-icons/fa';
 
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Character, StatsClasses } from '../utils/types';
@@ -304,6 +312,43 @@ export const Leaderboard = (): JSX.Element => {
         )}
       </VStack>
       <HStack my={5} visibility={total ? 'visible' : 'hidden'}>
+        <Button
+          onClick={() => setPage(1)}
+          size="sm"
+          visibility={page == 1 ? 'hidden' : 'visible'}
+        >
+          <FaFastBackward />
+        </Button>
+        <Button
+          visibility={page == 1 ? 'hidden' : 'visible'}
+          onClick={() => setPage(page == 1 ? 1 : page - 1)}
+          size="sm"
+        >
+          <FaBackward />
+        </Button>
+        <Input
+          max={pageLimit}
+          min={1}
+          onChange={e => setPage(e.target.value)}
+          value={page}
+          w={50}
+        />
+        <Button
+          onClick={() => setPage(page < pageLimit ? page + 1 : page)}
+          size="sm"
+          visibility={page == pageLimit ? 'hidden' : 'visible'}
+        >
+          <FaForward />
+        </Button>
+        <Button
+          onClick={() => setPage(pageLimit)}
+          size="sm"
+          visibility={page == pageLimit ? 'hidden' : 'visible'}
+        >
+          <FaFastForward />
+        </Button>
+      </HStack>
+      {/* <HStack my={5} visibility={total ? 'visible' : 'hidden'}>
         {page > 1 && (
           <Button onClick={() => setPage(1)} size="sm" variant="outline">
             First
@@ -351,7 +396,7 @@ export const Leaderboard = (): JSX.Element => {
             Last
           </Button>
         )}
-      </HStack>
+      </HStack> */}
     </VStack>
   );
 };
