@@ -326,13 +326,18 @@ export const Leaderboard = (): JSX.Element => {
         >
           <FaBackward />
         </Button>
-        <Input
-          max={pageLimit}
-          min={1}
-          onChange={e => setPage(e.target.value)}
-          value={page}
-          w={50}
-        />
+        <Button>
+          <Input
+            max={pageLimit}
+            min={1}
+            mr={5}
+            onChange={e => setPage(e.target.value)}
+            value={page}
+            w={50}
+          />
+          of {pageLimit}
+        </Button>
+
         <Button
           onClick={() => setPage(page < pageLimit ? page + 1 : page)}
           size="sm"
