@@ -91,7 +91,7 @@
   },
   {
     "type": "function",
-    "name": "getCurrentLevel",
+    "name": "getCurrentAvailableLevel",
     "inputs": [
       {
         "name": "experience",
@@ -285,6 +285,30 @@
   },
   {
     "type": "function",
+    "name": "isValidOwner",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "mintCharacter",
     "inputs": [
       {
@@ -371,6 +395,43 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Store_SetRecord",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "staticData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      },
+      {
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "EncodedLengths"
+      },
+      {
+        "name": "dynamicData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
   },
   {
     "type": "event",

@@ -18,4 +18,6 @@ interface IUltimateDominionConfigSystem {
   function UD__getPythProvider() external view returns (address _provider);
 
   function UD__getItemsContract() external view returns (address _erc1155);
+
+  function UD__getLootManagerSystem() external view returns (address _lootManager);
 }

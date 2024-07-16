@@ -66,7 +66,9 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__createMatch(EncounterType.PvE, attackers, defenders);
     }
 
-    function test_EndTurn() public {
+    function test_EndTurn_EndsMatch() public {
+        StatsData memory startingStats = Stats.get(bobCharacterId);
+        uint256 startingGold = goldToken.balanceOf(bob);
         vm.prank(bob);
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
@@ -76,7 +78,16 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(bob);
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
 
-        assertNotEq(Stats.get(entityId).currentHp, int256(Stats.get(entityId).baseHitPoints));
+        while (world.UD__getEncounter(matchId).end == 0) {
+            vm.prank(bob);
+            world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
+        }
+        StatsData memory endingStats = Stats.get(bobCharacterId);
+        uint256 endingGold = goldToken.balanceOf(bob);
+
+        assertNotEq(startingStats.currentHp, int256(Stats.get(entityId).baseHitPoints));
+        assertGt(endingStats.experience, startingStats.experience);
+        assertGt(endingGold, startingGold);
     }
 
     function test_EndTurn_Revert_NonCombatant() public {
@@ -88,5 +99,10 @@ contract Test_CombatSystem is SetUp, GasReporter {
         uint256 fees = entropy.getFee(address(1));
         vm.expectRevert("COMBAT SYSTEM: NON-COMBATANT");
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
+    }
+
+    function test_CalculateGoldDrop() public {
+        uint256 goldDrop = world.UD__calculateGoldDrop(1, uint256(keccak256("thingy")));
+        assertGt(goldDrop, 0);
     }
 }

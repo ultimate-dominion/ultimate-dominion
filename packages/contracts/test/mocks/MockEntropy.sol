@@ -8,6 +8,7 @@ import "forge-std/console2.sol";
 
 contract MockEntropy is IEntropy {
     uint128 mockFee = 100000;
+    uint256 timesCalled;
 
     function register(
         uint128 feeInWei,
@@ -36,8 +37,9 @@ contract MockEntropy is IEntropy {
     ) external payable returns (uint64 assignedSequenceNumber) {
         // require(msg.value == mockFee, 'more fees please');
         assignedSequenceNumber = uint64(1234567);
-        bytes32 randomNumber = keccak256(abi.encode(block.number));
+        bytes32 randomNumber = keccak256(abi.encode(block.number + timesCalled));
         IEntropyConsumer(msg.sender)._entropyCallback(assignedSequenceNumber, address(1), randomNumber);
+        timesCalled++;
         return assignedSequenceNumber;
     }
 
