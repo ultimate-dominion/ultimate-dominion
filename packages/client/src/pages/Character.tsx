@@ -7,56 +7,73 @@ import {
   GridItem,
   Spinner,
   Text,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { Entity, getComponentValue } from '@latticexyz/recs';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
+import {
+  Entity,
+  getComponentValue,
+  getComponentValueStrict,
+  Has,
+  NotValue,
+  runQuery,
+} from '@latticexyz/recs';
+import {
+  decodeEntity,
+  encodeEntity,
+  singletonEntity,
+} from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
 
-import { ItemCard } from '../components/Character/Card/ItemCard';
 import { Misc } from '../components/Character/Misc';
 import { Profile } from '../components/Character/Profile';
 import { Stats as StatsPanel } from '../components/Character/Stats';
+import { ItemCard } from '../components/ItemCard';
+import { ItemEquipModal } from '../components/ItemEquipModal';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { BALANCE_OF_ABI, TOKEN_URI_ABI } from '../utils/constants';
+import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import type { Character, CharacterStats } from '../utils/types';
+import type { Character, StatsClasses, Weapon } from '../utils/types';
 
 export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
   const { renderError } = useToast();
   const {
-    components: { Characters, Stats, UltimateDominionConfig },
+    components: {
+      CharacterEquipment,
+      Characters,
+      CharactersTokenURI,
+      GoldBalances,
+      ItemsBaseURI,
+      ItemsOwners,
+      ItemsTokenURI,
+      Stats,
+    },
+    isSynced,
     network: { publicClient, worldContract },
   } = useMUD();
   const { character: userCharacter } = useCharacter();
 
-  const ultimateDominionConfig = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  );
+  const { isOpen, onClose, onOpen } = useDisclosure();
 
-  const [character, setCharacter] = useState<
-    (Character & CharacterStats) | null
-  >(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [character, setCharacter] = useState<Character | null>(null);
+  const [isLoadingCharacter, setIsLoadingCharacter] = useState(true);
+  const [items, setItems] = useState<Weapon[] | null>(null);
+  const [isLoadingItems, setIsLoadingItems] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<Weapon | null>(null);
+
+  const equippedWeapons =
+    useComponentValue(CharacterEquipment, characterId as Entity | undefined)
+      ?.equippedWeapons ?? [];
 
   const fetchCharacter = useCallback(async () => {
     try {
-      if (
-        !(
-          characterId &&
-          publicClient &&
-          ultimateDominionConfig &&
-          worldContract
-        )
-      )
-        return;
-      setIsLoading(true);
+      if (!(characterId && publicClient && worldContract)) return null;
+      setIsLoadingCharacter(true);
 
       const characterData = getComponentValue(
         Characters,
@@ -64,42 +81,29 @@ export const CharacterPage = (): JSX.Element => {
       );
       const characterStats = getComponentValue(Stats, characterId as Entity);
 
-      if (!(characterData && characterStats)) return;
+      if (!(characterData && characterStats)) return null;
 
-      const { characterToken, goldToken, multicall } = ultimateDominionConfig;
-
-      const characterContract = {
-        address: characterToken as `0x${string}`,
-        abi: TOKEN_URI_ABI,
-      };
-
-      const goldTokenContract = {
-        address: goldToken as `0x${string}`,
-        abi: BALANCE_OF_ABI,
-      };
-
-      const [{ result: metadataURI }, { result: goldBalance }] =
-        await publicClient.multicall({
-          contracts: [
-            {
-              ...characterContract,
-              functionName: 'tokenURI',
-              args: [characterData.tokenId],
-            },
-            {
-              ...goldTokenContract,
-              functionName: 'balanceOf',
-              args: [characterData.owner],
-            },
-          ],
-          multicallAddress: multicall as `0x${string}`,
-        });
-
-      const fetachedMetadata = await fetchMetadataFromUri(
-        uriToHttp(metadataURI as string)[0],
+      const ownerEntity = encodeEntity(
+        { address: 'address' },
+        { address: characterData.owner as `0x${string}` },
+      );
+      const tokenIdEntity = encodeEntity(
+        { tokenId: 'uint256' },
+        { tokenId: characterData.tokenId },
       );
 
-      setCharacter({
+      const goldBalance =
+        getComponentValueStrict(GoldBalances, ownerEntity)?.value ?? BigInt(0);
+      const metadataURI = getComponentValueStrict(
+        CharactersTokenURI,
+        tokenIdEntity,
+      ).tokenURI;
+
+      const fetachedMetadata = await fetchMetadataFromUri(
+        uriToHttp(`ipfs://${metadataURI}`)[0],
+      );
+
+      const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility.toString(),
         baseHitPoints: characterStats.baseHitPoints.toString(),
@@ -116,34 +120,129 @@ export const CharacterPage = (): JSX.Element => {
         owner: characterData.owner,
         strength: characterStats.strength.toString(),
         tokenId: characterData.tokenId.toString(),
-      });
+      };
+
+      setCharacter(_character);
+      return _character;
     } catch (error) {
       renderError(error, 'Failed to fetch character data');
+      return null;
     } finally {
-      setIsLoading(false);
+      setIsLoadingCharacter(false);
     }
   }, [
     characterId,
     Characters,
+    CharactersTokenURI,
+    GoldBalances,
     Stats,
     publicClient,
     renderError,
-    ultimateDominionConfig,
     worldContract,
   ]);
 
+  const fetchCharacterItems = useCallback(
+    async (_character: Character) => {
+      try {
+        const _items = Array.from(
+          runQuery([
+            Has(ItemsOwners),
+            NotValue(ItemsOwners, { balance: BigInt(0) }),
+          ]),
+        )
+          .map(entity => {
+            const itemOwner = getComponentValueStrict(ItemsOwners, entity);
+            const { owner, tokenId } = decodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              entity,
+            );
+
+            return {
+              balance: itemOwner.balance.toString(),
+              itemId: entity,
+              owner,
+              tokenId: tokenId.toString(),
+            };
+          })
+          .filter(item => item.owner === _character.owner)
+          .sort((a, b) => {
+            return Number(a.tokenId) - Number(b.tokenId);
+          });
+
+        const fullItems = await Promise.all(
+          _items.map(async item => {
+            const itemTemplateStats =
+              await worldContract.read.UD__getWeaponStats([
+                BigInt(item.tokenId),
+              ]);
+
+            const tokenIdEntity = encodeEntity(
+              { tokenId: 'uint256' },
+              { tokenId: BigInt(item.tokenId) },
+            );
+
+            const baseURI = getComponentValueStrict(
+              ItemsBaseURI,
+              singletonEntity,
+            ).uri;
+
+            const tokenURI = getComponentValueStrict(
+              ItemsTokenURI,
+              tokenIdEntity,
+            ).uri;
+
+            const metadata = await fetchMetadataFromUri(
+              uriToHttp(`${baseURI}${tokenURI}`)[0],
+            );
+
+            return {
+              ...metadata,
+              agiModifier: itemTemplateStats.agiModifier.toString(),
+              balance: item.balance,
+              classRestrictions: itemTemplateStats.classRestrictions.map(
+                (classRestriction: number) => classRestriction as StatsClasses,
+              ),
+              hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
+              intModifier: itemTemplateStats.intModifier.toString(),
+              itemId: item.itemId,
+              maxDamage: itemTemplateStats.maxDamage.toString(),
+              minDamage: itemTemplateStats.minDamage.toString(),
+              minLevel: itemTemplateStats.minLevel.toString(),
+              owner: item.owner,
+              strModifier: itemTemplateStats.strModifier.toString(),
+              tokenId: item.tokenId,
+            } as Weapon;
+          }),
+        );
+
+        setItems(fullItems);
+      } catch (error) {
+        renderError(error, 'Failed to fetch character data');
+      } finally {
+        setIsLoadingItems(false);
+      }
+    },
+    [ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError, worldContract],
+  );
+
   useEffect(() => {
+    if (!isSynced) return;
     (async (): Promise<void> => {
-      await fetchCharacter();
+      const _character = await fetchCharacter();
+
+      if (!_character) return;
+      await fetchCharacterItems(_character);
     })();
-  }, [fetchCharacter]);
+  }, [fetchCharacter, fetchCharacterItems, isSynced]);
 
   const isOwner = useMemo(
     () => character?.owner === userCharacter?.owner,
     [character, userCharacter],
   );
 
-  if (isLoading) {
+  const maxItemsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
+
+  if (isLoadingCharacter) {
     return (
       <Center h="100%">
         <Spinner size="lg" />
@@ -230,118 +329,55 @@ export const CharacterPage = (): JSX.Element => {
             rowSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             rowStart={{ base: 4, sm: 4, md: 4, lg: 2, xl: 2 }}
           >
-            <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
-              Items 30 - 3/3 Equipped
-            </Text>
-            <Grid
-              templateColumns={{
-                base: 'repeat(1, 1fr)',
-                sm: 'repeat(1, 1fr)',
-                md: 'repeat(2, 1fr)',
-                xl: 'repeat(3, 1fr)',
-              }}
-              gap={2}
-              mt={4}
-            >
-              {[
-                {
-                  agi: 3,
-                  disabled: false,
-                  icon: 'fire',
-                  image: 'door-closed',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: false,
-                  icon: 'shield',
-                  image: 'scribd',
-                  int: 4,
-                  name: 'Copper Knife',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: false,
-                  icon: 'road',
-                  image: 'database',
-                  int: 4,
-                  name: 'Iron Axe',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'fire',
-                  image: 'search',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'shield',
-                  image: 'book',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'road',
-                  image: 'pizza-slice',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'fire',
-                  image: 'star-crescent',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'shield',
-                  image: 'bug',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-                {
-                  agi: 3,
-                  disabled: true,
-                  icon: 'road',
-                  image: 'socks',
-                  int: 4,
-                  name: 'Rusty Dagger',
-                  str: 1,
-                },
-              ].map(function (item, i) {
-                return (
-                  <GridItem key={i}>
-                    {/* TODO: we should only use one general modal, which gets passed the item data when clicked */}
-                    <ItemCard
-                      agi={item.agi}
-                      disabled={item.disabled}
-                      icon={item.icon}
-                      int={item.int}
-                      image={item.image}
-                      name={item.name}
-                      str={item.str}
-                    />
-                  </GridItem>
-                );
-              })}
-            </Grid>
+            {items ? (
+              <>
+                <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
+                  Items {items.length} - {equippedWeapons.length}/
+                  {MAX_EQUIPPED_WEAPONS} equipped{' '}
+                </Text>
+                {maxItemsEquipped && (
+                  <Text fontSize="sm">(Max items equipped)</Text>
+                )}
+                <Grid
+                  templateColumns={{
+                    base: 'repeat(1, 1fr)',
+                    sm: 'repeat(1, 1fr)',
+                    md: 'repeat(2, 1fr)',
+                    xl: 'repeat(3, 1fr)',
+                  }}
+                  gap={2}
+                  mt={4}
+                >
+                  {items.map(function (item, i) {
+                    const isEquipped = equippedWeapons.includes(
+                      BigInt(item.tokenId),
+                    );
+                    return (
+                      <GridItem key={i}>
+                        <ItemCard
+                          {...item}
+                          isEquipped={isEquipped}
+                          onClick={
+                            maxItemsEquipped && !isEquipped
+                              ? undefined
+                              : () => {
+                                  setSelectedItem(item);
+                                  onOpen();
+                                }
+                          }
+                        />
+                      </GridItem>
+                    );
+                  })}
+                </Grid>
+              </>
+            ) : isLoadingItems ? (
+              <Center h="100%">
+                <Spinner size="lg" />
+              </Center>
+            ) : (
+              <Text textAlign="center">Error loading items</Text>
+            )}
           </GridItem>
         </Grid>
       ) : (
@@ -368,6 +404,17 @@ export const CharacterPage = (): JSX.Element => {
           </GridItem>
         </Grid>
       )}
+      <ItemEquipModal
+        isEquipped={equippedWeapons.includes(
+          BigInt(selectedItem?.tokenId ?? 0),
+        )}
+        isOpen={isOpen}
+        onClose={() => {
+          onClose();
+          setSelectedItem(null);
+        }}
+        {...(selectedItem as Weapon)}
+      />
     </Box>
   );
 };

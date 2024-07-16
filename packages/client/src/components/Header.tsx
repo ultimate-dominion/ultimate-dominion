@@ -1,7 +1,9 @@
 import { Box, Button, Heading, Stack } from '@chakra-ui/react';
 import { useLocation } from 'react-router-dom';
 
-const PAGES_WITHOUT_HEADER = ['/'];
+import { HOME_PATH } from '../Routes';
+
+const PAGES_WITHOUT_HEADER = [HOME_PATH];
 
 export const Header = ({
   onOpenWalletDetailsModal,

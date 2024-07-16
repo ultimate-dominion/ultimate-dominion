@@ -30,11 +30,11 @@ import { registerERC20 } from "@latticexyz/world-modules/src/modules/erc20-puppe
 import { System } from "@latticexyz/world/src/System.sol";
 import { CharacterSystem } from "../src/systems/CharacterSystem.sol";
 
-import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
-import {ERC1155System} from "@erc1155/ERC1155System.sol";
-import {IERC1155} from "@erc1155/IERC1155.sol";
-import {registerERC1155} from "@erc1155/registerERC1155.sol";
-import {_erc1155SystemId} from "@erc1155/utils.sol";
+import { ERC1155Module } from "@erc1155/ERC1155Module.sol";
+import { ERC1155System } from "@erc1155/ERC1155System.sol";
+import { IERC1155 } from "@erc1155/IERC1155.sol";
+import { registerERC1155 } from "@erc1155/registerERC1155.sol";
+import { _erc1155SystemId } from "@erc1155/utils.sol";
 
 import "forge-std/console2.sol";
 import "forge-std/StdJson.sol";
@@ -68,20 +68,20 @@ contract PostDeploy is Script {
     // Load the private key from the `PRIVATE_KEY` environment variable (in .env)
     uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
-        // Start broadcasting transactions from the deployer account
-        vm.startBroadcast(deployerPrivateKey);
-        if (block.chainid == 31337) {
-            // Set entropy contracts
-            address mockEntropy = address(new MockEntropy());
-            UltimateDominionConfig.setEntropy(mockEntropy);
-            UltimateDominionConfig.setPythProvider(address(1));
-        } else if (block.chainid == 84532) {
-            UltimateDominionConfig.setEntropy(0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c);
-            UltimateDominionConfig.setPythProvider(0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344);
-        } else if (block.chainid == 8453) {
-            UltimateDominionConfig.setEntropy(0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb);
-            UltimateDominionConfig.setPythProvider(0x52DeaA1c84233F7bb8C8A45baeDE41091c616506);
-        }
+    // Start broadcasting transactions from the deployer account
+    vm.startBroadcast(deployerPrivateKey);
+    if (block.chainid == 31337) {
+      // Set entropy contracts
+      address mockEntropy = address(new MockEntropy());
+      UltimateDominionConfig.setEntropy(mockEntropy);
+      UltimateDominionConfig.setPythProvider(address(1));
+    } else if (block.chainid == 84532) {
+      UltimateDominionConfig.setEntropy(0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c);
+      UltimateDominionConfig.setPythProvider(0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344);
+    } else if (block.chainid == 8453) {
+      UltimateDominionConfig.setEntropy(0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb);
+      UltimateDominionConfig.setPythProvider(0x52DeaA1c84233F7bb8C8A45baeDE41091c616506);
+    }
 
     uint16 height = uint16(10);
     uint16 width = uint16(10);
