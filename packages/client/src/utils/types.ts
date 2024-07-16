@@ -1,5 +1,12 @@
 import { Entity } from '@latticexyz/recs';
 
+export enum ActionType {
+  Temporary,
+  PhysicalAttack,
+  MagicAttack,
+  StatusEffect,
+}
+
 export enum EncounterType {
   PvP,
   PvE,

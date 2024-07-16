@@ -21,8 +21,8 @@ import { ERC721MetadataData } from "@latticexyz/world-modules/src/modules/erc721
 import { GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, ITEMS_NAMESPACE, TOKEN_URI } from "../constants.sol";
 import { NoTransferHook } from "../src/NoTransferHook.sol";
 import { BEFORE_CALL_SYSTEM } from "@latticexyz/world/src/systemHookTypes.sol";
-import { Classes, ItemType, MobType } from "@codegen/common.sol";
-import { WeaponStats, MonsterStats, MonsterTemplateDetails, WeaponTemplateDetails } from "@interfaces/Structs.sol";
+import { ActionType, Classes, ItemType, MobType } from "@codegen/common.sol";
+import { WeaponStats, MonsterStats, MonsterTemplateDetails, PhysicalAttackStats, WeaponTemplateDetails } from "@interfaces/Structs.sol";
 import { IERC20Mintable } from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import { ERC20MetadataData } from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/ERC20Metadata.sol";
 import { ERC20System } from "@latticexyz/world-modules/src/modules/erc20-puppet/ERC20System.sol";
@@ -174,6 +174,10 @@ contract PostDeploy is Script {
     world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
     _createStarterItems();
     _createMonsters();
+
+    PhysicalAttackStats memory basicAttack = PhysicalAttackStats({bonusDamage: 0, armorPenetration: 0, attackModifierBonus: 0, critChanceBonus: 0});
+    world.UD__createAction(ActionType.PhysicalAttack, abi.encode(basicAttack));
+
     setLevels();
     vm.stopBroadcast();
   }

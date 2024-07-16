@@ -15,7 +15,6 @@ import {
   getComponentValue,
   getComponentValueStrict,
   Has,
-  NotValue,
   runQuery,
 } from '@latticexyz/recs';
 import {
@@ -144,12 +143,7 @@ export const CharacterPage = (): JSX.Element => {
   const fetchCharacterItems = useCallback(
     async (_character: Character) => {
       try {
-        const _items = Array.from(
-          runQuery([
-            Has(ItemsOwners),
-            NotValue(ItemsOwners, { balance: BigInt(0) }),
-          ]),
-        )
+        const _items = Array.from(runQuery([Has(ItemsOwners)]))
           .map(entity => {
             const itemOwner = getComponentValueStrict(ItemsOwners, entity);
             const { owner, tokenId } = decodeEntity(

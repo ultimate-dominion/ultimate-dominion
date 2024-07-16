@@ -94,6 +94,36 @@ export function createSystemCalls(
     }
   };
 
+  const endTurn = async (
+    encounterId: Entity,
+    playerId: Entity,
+    defenderId: Entity,
+    actionId: Entity,
+    weaponId: string,
+  ) => {
+    try {
+      const actions = [
+        {
+          attackerEntityId: playerId.toString() as `0x${string}`,
+          defenderEntityId: defenderId.toString() as `0x${string}`,
+          actionId: actionId.toString() as `0x${string}`,
+          weaponId: BigInt(weaponId),
+        },
+      ];
+      const tx = await worldContract.write.UD__endTurn([
+        encounterId.toString() as `0x${string}`,
+        playerId.toString() as `0x${string}`,
+        actions,
+      ]);
+
+      await waitForTransaction(tx);
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
   const enterGame = async (characterEntity: Entity) => {
     try {
       const tx = await worldContract.write.UD__enterGame([
@@ -282,6 +312,7 @@ export function createSystemCalls(
 
   return {
     createMatch,
+    endTurn,
     enterGame,
     equipItems,
     mintCharacter,

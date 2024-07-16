@@ -1,8 +1,13 @@
-import { Stack, Text } from '@chakra-ui/react';
-import { useMemo } from 'react';
+import { Button, HStack, Stack, Text } from '@chakra-ui/react';
+import { Has, HasValue, runQuery } from '@latticexyz/recs';
+import { useCallback, useMemo, useState } from 'react';
 
+import { useCharacter } from '../contexts/CharacterContext';
 import { useCombat } from '../contexts/CombatContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
+import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
+import { ActionType } from '../utils/types';
 
 // enum ActionEvents {
 //   Attack = 'attack',
@@ -47,8 +52,18 @@ import { useMapNavigation } from '../contexts/MapNavigationContext';
 // ];
 
 export const ActionsPanel = (): JSX.Element => {
+  const { renderError } = useToast();
+  const {
+    burnerBalance,
+    components: { Actions },
+    delegatorAddress,
+    systemCalls: { endTurn },
+  } = useMUD();
+  const { character } = useCharacter();
   const { currentBattle, monster } = useCombat();
   const { isSpawned } = useMapNavigation();
+
+  const [isAttacking, setIsAttacking] = useState(false);
 
   const actionText = useMemo(() => {
     if (!isSpawned) {
@@ -62,10 +77,86 @@ export const ActionsPanel = (): JSX.Element => {
     return 'To initiate a battle, move into a new tile and click on a monster.';
   }, [currentBattle, isSpawned, monster]);
 
+  const onAttack = useCallback(async () => {
+    try {
+      setIsAttacking(true);
+
+      if (burnerBalance === '0') {
+        throw new Error(
+          'Insufficient funds. Please top off your session account.',
+        );
+      }
+
+      if (!delegatorAddress) {
+        throw new Error('Missing delegation.');
+      }
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      if (!currentBattle) {
+        throw new Error('Battle not found.');
+      }
+
+      if (!monster) {
+        throw new Error('Monster not found.');
+      }
+
+      const basicAttackId = Array.from(
+        runQuery([
+          Has(Actions),
+          HasValue(Actions, { actionType: ActionType.PhysicalAttack }),
+        ]),
+      )[0];
+
+      if (!basicAttackId) {
+        throw new Error('Basic attack not found.');
+      }
+
+      const success = await endTurn(
+        currentBattle.encounterId,
+        character.characterId,
+        monster.monsterId,
+        basicAttackId,
+        '1',
+      );
+
+      if (!success) {
+        throw new Error('Contract call failed');
+      }
+    } catch (e) {
+      renderError(e, 'Failed to roll stats.');
+    } finally {
+      setIsAttacking(false);
+    }
+  }, [
+    Actions,
+    burnerBalance,
+    character,
+    currentBattle,
+    delegatorAddress,
+    endTurn,
+    monster,
+    renderError,
+  ]);
+
   return (
     <Stack spacing={8}>
       <Stack>
         <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>{actionText}</Text>
+        {currentBattle && monster && (
+          <HStack justify="center">
+            <Button
+              isLoading={isAttacking}
+              loadingText="Attacking..."
+              mt={8}
+              onClick={onAttack}
+            >
+              Attack!
+            </Button>
+          </HStack>
+        )}
       </Stack>
       {/* <Stack>
         {BATTLE_EVENTS.map((event, i) => (
