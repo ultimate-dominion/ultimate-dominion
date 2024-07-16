@@ -4,6 +4,7 @@ import {
   getComponentValueStrict,
   Has,
   HasValue,
+  Not,
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import {
@@ -95,9 +96,10 @@ export const MapNavigationProvider = ({
     ),
   )?.spawned;
 
-  const allEntities = useEntityQuery([
+  const allMonsterEntities = useEntityQuery([
     Has(Spawned),
     Has(Stats),
+    Not(Characters),
     HasValue(Position, {
       x: position?.x,
       y: position?.y,
@@ -106,6 +108,7 @@ export const MapNavigationProvider = ({
 
   const allCharacterEntities = useEntityQuery([
     Has(Characters),
+    Has(Spawned),
     Has(Stats),
     HasValue(Position, {
       x: position?.x,
@@ -235,13 +238,7 @@ export const MapNavigationProvider = ({
 
   useEffect(() => {
     (async (): Promise<void> => {
-      if (!(allCharacterEntities && allEntities)) return;
-
-      setIsFetchingEntities(true);
-
-      const allMonsterEntities = allEntities.filter(
-        entity => !allCharacterEntities.includes(entity),
-      );
+      if (!(allCharacterEntities && allMonsterEntities)) return;
 
       await getOtherCharacters(allCharacterEntities);
       await getMonsters(allMonsterEntities);
@@ -250,7 +247,7 @@ export const MapNavigationProvider = ({
     })();
   }, [
     allCharacterEntities,
-    allEntities,
+    allMonsterEntities,
     Characters,
     getMonsters,
     getOtherCharacters,
