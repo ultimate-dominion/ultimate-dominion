@@ -320,9 +320,9 @@ export const Leaderboard = (): JSX.Element => {
           <FaFastBackward />
         </Button>
         <Button
-          visibility={page == 1 ? 'hidden' : 'visible'}
           onClick={() => setPage(page == 1 ? 1 : page - 1)}
           size="sm"
+          visibility={page == 1 ? 'hidden' : 'visible'}
         >
           <FaBackward />
         </Button>
@@ -348,55 +348,6 @@ export const Leaderboard = (): JSX.Element => {
           <FaFastForward />
         </Button>
       </HStack>
-      {/* <HStack my={5} visibility={total ? 'visible' : 'hidden'}>
-        {page > 1 && (
-          <Button onClick={() => setPage(1)} size="sm" variant="outline">
-            First
-          </Button>
-        )}
-        {page == pageLimit && pageLimit > 1 && page - 2 > 0 && (
-          <Button onClick={() => setPage(page - 2)} size="sm" variant="outline">
-            {page - 2}
-          </Button>
-        )}
-        {page - 1 > -1 && (
-          <Button
-            onClick={() => setPage(page == 1 ? 1 : page - 1)}
-            size="sm"
-            variant={page == 1 ? 'solid' : 'outline'}
-          >
-            {page == 1 ? 1 : page - 1}
-          </Button>
-        )}
-        {pageLimit > 1 && (
-          <Button
-            onClick={() => setPage(page == 1 ? 2 : page)}
-            size="sm"
-            variant={page > 1 ? 'solid' : 'outline'}
-          >
-            {page == 1 ? 2 : page}
-          </Button>
-        )}
-        {page + 1 <= pageLimit && pageLimit > 2 && (
-          <Button
-            onClick={() => setPage(page == 1 ? 3 : page + 1)}
-            size="sm"
-            variant="outline"
-          >
-            {page == 1 ? 3 : page + 1}
-          </Button>
-        )}
-
-        {page < pageLimit && (
-          <Button
-            onClick={() => setPage(pageLimit)}
-            size="sm"
-            variant="outline"
-          >
-            Last
-          </Button>
-        )}
-      </HStack> */}
     </VStack>
   );
 };
