@@ -349,6 +349,7 @@ contract CombatSystem is System {
             if (statsTemp.currentHp <= int256(0)) {
                 expDrop += statsTemp.experience;
                 goldDrop += calculateGoldDrop(statsTemp.level, randomNumber);
+                MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
             }
         }
         // drop gold reward calculated from the level of mob to player journey wallet (can mint tokens when he returns to 0,0).
@@ -363,6 +364,7 @@ contract CombatSystem is System {
                     statsTemp.experience += expDrop / livingAttackers;
                     IWorld(_world()).UD__dropGold(entityIdTemp, (goldDrop / livingAttackers));
                     Stats.set(entityIdTemp, statsTemp);
+                    MatchEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
                 }
             }
         }
@@ -373,4 +375,6 @@ contract CombatSystem is System {
 
         dropAmount = randomNumber % (BASE_GOLD_DROP * mobLevel);
     }
+
+    function calculateItemDrop(uint256 randomNumber, uint256 itemId) public returns (bool) {}
 }
