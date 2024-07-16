@@ -1627,9 +1627,9 @@ declare const abi: [
     "name": "UD__isParticipant",
     "inputs": [
       {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
+        "name": "playerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "encounterId",

@@ -122,14 +122,17 @@ contract CombatSystem is System {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(encounterData.start != 0 && encounterData.end == 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
         require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
-        require(isParticipant(_msgSender(), encounterId), "COMBAT SYSTEM: NON-COMBATANT");
+        require(
+            IWorld(_world()).UD__getOwnerAddress(playerId) == _msgSender() && isParticipant(playerId, encounterId),
+            "COMBAT SYSTEM: NON-COMBATANT"
+        );
         _queueActions(encounterId, actions);
     }
 
-    function isParticipant(address account, bytes32 encounterId) public view returns (bool _isParticipant) {
+    function isParticipant(bytes32 playerId, bytes32 encounterId) public view returns (bool _isParticipant) {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         for (uint256 i; i < encounterData.attackers.length;) {
-            if (account == IWorld(_world()).UD__getOwnerAddress(encounterData.attackers[i])) {
+            if (playerId == encounterData.attackers[i]) {
                 _isParticipant = true;
                 break;
             }
@@ -139,7 +142,7 @@ contract CombatSystem is System {
         }
         if (!_isParticipant) {
             for (uint256 i; i < encounterData.defenders.length;) {
-                if (account == IWorld(_world()).UD__getOwnerAddress(encounterData.defenders[i])) {
+                if (playerId == encounterData.defenders[i]) {
                     _isParticipant = true;
                     break;
                 }

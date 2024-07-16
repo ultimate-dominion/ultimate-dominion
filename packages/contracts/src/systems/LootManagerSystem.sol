@@ -34,11 +34,6 @@ import {
 } from "../utils.sol";
 import {ITEMS_NAMESPACE, WORLD_NAMESPACE} from "../../constants.sol";
 import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
-import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
-import {Owners} from "@erc1155/tables/Owners.sol";
-import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
-import {ERC1155MetadataURI} from "@erc1155/tables/ERC1155MetadataURI.sol";
-import {ERC1155System} from "@erc1155/ERC1155System.sol";
 import {
     _metadataTableId,
     _erc1155URIStorageTableId,
@@ -63,7 +58,9 @@ contract LootManagerSystem is System {
         address owner = IWorld(_world()).UD__getOwner(characterId);
 
         for (uint256 i; i < starterItems.itemIds.length; i++) {
-            _items().safeTransferFrom(address(this), owner, starterItems.itemIds[i], starterItems.amounts[i], "");
+            IERC1155System(UltimateDominionConfig.getItems()).safeTransferFrom(
+                address(this), owner, starterItems.itemIds[i], starterItems.amounts[i], ""
+            );
         }
     }
 
@@ -75,16 +72,12 @@ contract LootManagerSystem is System {
     function dropItem(uint256 itemId, uint256 amount, bytes32 characterId) public {
         AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
         address to = IWorld(_world()).UD__getOwner(characterId);
-        _items().transferFrom(address(this), to, itemId, amount);
+        IERC1155System(UltimateDominionConfig.getItems()).transferFrom(address(this), to, itemId, amount);
     }
 
     function dropItems(uint256[] memory itemIds, uint256[] memory amounts, bytes32[] memory characterIds) public {
         for (uint256 i; i < itemIds.length; i++) {
             dropItem(itemIds[i], amounts[i], characterIds[i]);
         }
-    }
-
-    function _items() internal view returns (IERC1155System _items) {
-        _items = IERC1155System(UltimateDominionConfig.getItems());
     }
 }
