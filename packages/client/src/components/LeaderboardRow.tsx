@@ -1,13 +1,11 @@
 import {
   Avatar,
   Button,
-  Card,
-  CardBody,
   Center,
+  Flex,
   Grid,
   GridItem,
   HStack,
-  Spacer,
   Text,
   VStack,
 } from '@chakra-ui/react';
@@ -30,22 +28,34 @@ export const LeaderboardRow = ({
   gold: string;
 }): JSX.Element => {
   return (
-    <Card
+    <Flex
+      border="2px solid"
+      borderColor="grey400"
       borderRadius={2}
       direction="row"
-      minW={800}
-      overflow="hidden"
-      variant="outline"
       w="100%"
+      _hover={{
+        cursor: 'pointer',
+        button: {
+          bgColor: 'grey300',
+        },
+      }}
+      _active={{
+        button: {
+          bgColor: 'grey400',
+        },
+      }}
     >
-      <Center h="100%">
-        <Avatar borderRadius={0} size={['2xl', 'xl', 'xl', 'lg']}></Avatar>
-      </Center>
-      <CardBody h="100%" p={0} w="100%">
-        <Center h="100%">
-          <HStack mx={3} w="100%">
-            <VStack>
-              <HStack textAlign="left" w="100%">
+      <Grid templateColumns="repeat(10, 1fr)" w="100%">
+        <GridItem colSpan={6}>
+          <Flex>
+            <Avatar
+              borderRadius={0}
+              h="100%"
+              size={['2xl', 'xl', 'xl', 'lg']}
+            />
+            <VStack justify="center" ml={4}>
+              <HStack w="100%">
                 <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
                 <Center>
                   {type == 0 && <FaFire size={15} />}
@@ -58,37 +68,31 @@ export const LeaderboardRow = ({
                 {stats['AGI']} • INT {stats['INT']}
               </Text>
             </VStack>
-            <Spacer />
-            <Grid
-              float="right"
-              templateColumns="repeat(10, 1fr)"
-              textAlign="right"
-              w={{ base: '60vh', lg: '60vh' }}
-            >
-              <GridItem colSpan={3}>
-                <Center h="100%">
-                  <Text textAlign="center">{total}</Text>
-                </Center>
-              </GridItem>
-              <GridItem colSpan={3}>
-                <Center h="100%">
-                  <Text textAlign="center">{level}</Text>
-                </Center>
-              </GridItem>
-              <GridItem colSpan={3}>
-                <Center h="100%">
-                  <Text textAlign="center">{gold}</Text>
-                </Center>
-              </GridItem>
-              <GridItem colSpan={1}>
-                <Button variant="ghost">
-                  <IoIosArrowForward />
-                </Button>
-              </GridItem>
-            </Grid>
-          </HStack>
-        </Center>
-      </CardBody>
-    </Card>
+          </Flex>
+        </GridItem>
+        <GridItem colSpan={1}>
+          <Center h="100%">
+            <Text textAlign="center">{total}</Text>
+          </Center>
+        </GridItem>
+        <GridItem colSpan={1}>
+          <Center h="100%">
+            <Text textAlign="center">{level}</Text>
+          </Center>
+        </GridItem>
+        <GridItem colSpan={1}>
+          <Center h="100%">
+            <Text textAlign="center">{gold}</Text>
+          </Center>
+        </GridItem>
+        <GridItem colSpan={1}>
+          <Center h="100%">
+            <Button variant="ghost">
+              <IoIosArrowForward />
+            </Button>
+          </Center>
+        </GridItem>
+      </Grid>
+    </Flex>
   );
 };

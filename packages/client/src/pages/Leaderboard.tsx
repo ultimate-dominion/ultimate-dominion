@@ -1,6 +1,5 @@
 import {
   Button,
-  Center,
   Flex,
   Grid,
   GridItem,
@@ -8,7 +7,6 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  Spacer,
   Stack,
   Text,
   VStack,
@@ -158,96 +156,79 @@ export const Leaderboard = (): JSX.Element => {
         </HStack>
       </Stack>
       <Flex direction="row" w="100%">
-        <Center>
-          <Text>Players {total}</Text>
-        </Center>
-        <Spacer />
-        <Grid
-          mr={5}
-          float="right"
-          templateColumns="repeat(10, 1fr)"
-          w={{ base: '60vh', lg: '60vh' }}
-        >
-          <GridItem colSpan={3}>
-            <Center>
-              <Button
-                fontWeight={sort.sorted == 'byStats' ? 'bold' : 'normal'}
-                onClick={() =>
-                  setSort({
-                    sorted: 'byStats',
-                    reversed: !sort.reversed,
-                  })
-                }
-                p={1}
-                size={{ base: '2xs', lg: 'sm' }}
-                variant="ghost"
-              >
-                <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
-                  Total Stats
-                </Text>
-                {sort.sorted == 'byStats' && sort.reversed && (
-                  <FaSortAmountUp />
-                )}
-                {sort.sorted == 'byStats' && !sort.reversed && (
-                  <FaSortAmountDown />
-                )}
-                {sort.sorted != 'byStats' && <FaSortAmountDown color="grey" />}
-              </Button>
-            </Center>
+        <Grid templateColumns="repeat(10, 1fr)" w="100%">
+          <GridItem colSpan={6}>
+            <Text>Players {total}</Text>
           </GridItem>
-          <GridItem colSpan={3}>
-            <Center>
-              <Button
-                fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
-                onClick={() =>
-                  setSort({
-                    sorted: 'byLevel',
-                    reversed: !sort.reversed,
-                  })
-                }
-                p={1}
-                size={{ base: '2xs', lg: 'sm' }}
-                variant="ghost"
-              >
-                <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
-                  Level
-                </Text>
-                {sort.sorted == 'byLevel' && sort.reversed && (
-                  <FaSortAmountUp />
-                )}
-                {sort.sorted == 'byLevel' && !sort.reversed && (
-                  <FaSortAmountDown />
-                )}
-                {sort.sorted != 'byLevel' && <FaSortAmountDown color="grey" />}
-              </Button>
-            </Center>
+          <GridItem colSpan={1}>
+            <Button
+              fontWeight={sort.sorted == 'byStats' ? 'bold' : 'normal'}
+              onClick={() =>
+                setSort({
+                  sorted: 'byStats',
+                  reversed: !sort.reversed,
+                })
+              }
+              p={1}
+              size={{ base: '2xs', lg: 'sm' }}
+              variant="ghost"
+            >
+              <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
+                Total Stats
+              </Text>
+              {sort.sorted == 'byStats' && sort.reversed && <FaSortAmountUp />}
+              {sort.sorted == 'byStats' && !sort.reversed && (
+                <FaSortAmountDown />
+              )}
+              {sort.sorted != 'byStats' && <FaSortAmountDown color="grey" />}
+            </Button>
           </GridItem>
-          <GridItem colSpan={3}>
-            <Center>
-              <Button
-                fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
-                onClick={() =>
-                  setSort({
-                    sorted: 'byGold',
-                    reversed: !sort.reversed,
-                  })
-                }
-                p={1}
-                size={{ base: '2xs', lg: 'sm' }}
-                variant="ghost"
-              >
-                <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
-                  $Gold
-                </Text>
-                {sort.sorted == 'byGold' && sort.reversed && <FaSortAmountUp />}
-                {sort.sorted == 'byGold' && !sort.reversed && (
-                  <FaSortAmountDown />
-                )}
-                {sort.sorted != 'byGold' && <FaSortAmountDown color="grey" />}
-              </Button>
-            </Center>
+          <GridItem colSpan={1}>
+            <Button
+              fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
+              onClick={() =>
+                setSort({
+                  sorted: 'byLevel',
+                  reversed: !sort.reversed,
+                })
+              }
+              p={1}
+              size={{ base: '2xs', lg: 'sm' }}
+              variant="ghost"
+            >
+              <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
+                Level
+              </Text>
+              {sort.sorted == 'byLevel' && sort.reversed && <FaSortAmountUp />}
+              {sort.sorted == 'byLevel' && !sort.reversed && (
+                <FaSortAmountDown />
+              )}
+              {sort.sorted != 'byLevel' && <FaSortAmountDown color="grey" />}
+            </Button>
           </GridItem>
-          <GridItem colSpan={1}></GridItem>
+          <GridItem colSpan={2}>
+            <Button
+              fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
+              onClick={() =>
+                setSort({
+                  sorted: 'byGold',
+                  reversed: !sort.reversed,
+                })
+              }
+              p={1}
+              size={{ base: '2xs', lg: 'sm' }}
+              variant="ghost"
+            >
+              <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
+                $Gold
+              </Text>
+              {sort.sorted == 'byGold' && sort.reversed && <FaSortAmountUp />}
+              {sort.sorted == 'byGold' && !sort.reversed && (
+                <FaSortAmountDown />
+              )}
+              {sort.sorted != 'byGold' && <FaSortAmountDown color="grey" />}
+            </Button>
+          </GridItem>
         </Grid>
       </Flex>
 
