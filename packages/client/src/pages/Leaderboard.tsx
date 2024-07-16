@@ -1,7 +1,7 @@
 import {
   Button,
-  Card,
   Center,
+  Flex,
   Grid,
   GridItem,
   HStack,
@@ -52,7 +52,7 @@ function createDummyData(num: number = 1) {
   }
   return result;
 }
-const DUMMY_CHARACTER: Character[] = createDummyData(50)!;
+const DUMMY_CHARACTER: Character[] = createDummyData(50);
 const PER_PAGE = 10;
 
 export const Leaderboard = (): JSX.Element => {
@@ -121,9 +121,9 @@ export const Leaderboard = (): JSX.Element => {
           colStart={{ base: 1, md: 1 }}
           rowStart={{ base: 1, md: 2 }}
         >
-          <Center>
+          <Center h="100%">
             <InputGroup>
-              <InputLeftElement pointerEvents="none">
+              <InputLeftElement h="100%" pointerEvents="none">
                 <FaSearch />
               </InputLeftElement>
               <Input
@@ -179,13 +179,7 @@ export const Leaderboard = (): JSX.Element => {
           </Center>
         </GridItem>
       </Grid>
-      <Card
-        border="none"
-        direction="row"
-        overflow="hidden"
-        variant="outline"
-        w="100%"
-      >
+      <Flex direction="row" w="100%">
         <Center>
           <Text>Players {total}</Text>
         </Center>
@@ -213,15 +207,13 @@ export const Leaderboard = (): JSX.Element => {
                 <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
                   Total Stats
                 </Text>
-                {sort.sorted == 'byStats' && sort.reversed ? (
+                {sort.sorted == 'byStats' && sort.reversed && (
                   <FaSortAmountUp />
-                ) : null}
-                {sort.sorted == 'byStats' && !sort.reversed ? (
+                )}
+                {sort.sorted == 'byStats' && !sort.reversed && (
                   <FaSortAmountDown />
-                ) : null}
-                {sort.sorted != 'byStats' ? (
-                  <FaSortAmountDown color="grey" />
-                ) : null}
+                )}
+                {sort.sorted != 'byStats' && <FaSortAmountDown color="grey" />}
               </Button>
             </Center>
           </GridItem>
@@ -242,15 +234,13 @@ export const Leaderboard = (): JSX.Element => {
                 <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
                   Level
                 </Text>
-                {sort.sorted == 'byLevel' && sort.reversed ? (
+                {sort.sorted == 'byLevel' && sort.reversed && (
                   <FaSortAmountUp />
-                ) : null}
-                {sort.sorted == 'byLevel' && !sort.reversed ? (
+                )}
+                {sort.sorted == 'byLevel' && !sort.reversed && (
                   <FaSortAmountDown />
-                ) : null}
-                {sort.sorted != 'byLevel' ? (
-                  <FaSortAmountDown color="grey" />
-                ) : null}
+                )}
+                {sort.sorted != 'byLevel' && <FaSortAmountDown color="grey" />}
               </Button>
             </Center>
           </GridItem>
@@ -271,21 +261,17 @@ export const Leaderboard = (): JSX.Element => {
                 <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
                   $Gold
                 </Text>
-                {sort.sorted == 'byGold' && sort.reversed ? (
-                  <FaSortAmountUp />
-                ) : null}
-                {sort.sorted == 'byGold' && !sort.reversed ? (
+                {sort.sorted == 'byGold' && sort.reversed && <FaSortAmountUp />}
+                {sort.sorted == 'byGold' && !sort.reversed && (
                   <FaSortAmountDown />
-                ) : null}
-                {sort.sorted != 'byGold' ? (
-                  <FaSortAmountDown color="grey" />
-                ) : null}
+                )}
+                {sort.sorted != 'byGold' && <FaSortAmountDown color="grey" />}
               </Button>
             </Center>
           </GridItem>
           <GridItem colSpan={1}></GridItem>
         </Grid>
-      </Card>
+      </Flex>
 
       <VStack gap={3} overflowX="auto" w="100%">
         {entries.length > 0 ? (
@@ -308,51 +294,53 @@ export const Leaderboard = (): JSX.Element => {
             );
           })
         ) : (
-          <Text fontWeight="bold">No players</Text>
+          <Text mt={12}>No players</Text>
         )}
       </VStack>
-      <HStack my={5} visibility={total ? 'visible' : 'hidden'}>
-        <Button
-          onClick={() => setPage(1)}
-          size="sm"
-          visibility={page == 1 ? 'hidden' : 'visible'}
-        >
-          <FaFastBackward />
-        </Button>
-        <Button
-          onClick={() => setPage(page == 1 ? 1 : page - 1)}
-          size="sm"
-          visibility={page == 1 ? 'hidden' : 'visible'}
-        >
-          <FaBackward />
-        </Button>
-        <Button>
-          <Input
-            max={pageLimit}
-            min={1}
-            mr={5}
-            onChange={e => setPage(e.target.value)}
-            value={page}
-            w={50}
-          />
-          of {pageLimit}
-        </Button>
+      {entries.length > 0 && (
+        <HStack my={5} visibility={total ? 'visible' : 'hidden'}>
+          <Button
+            onClick={() => setPage(1)}
+            size="sm"
+            visibility={page == 1 ? 'hidden' : 'visible'}
+          >
+            <FaFastBackward />
+          </Button>
+          <Button
+            onClick={() => setPage(page == 1 ? 1 : page - 1)}
+            size="sm"
+            visibility={page == 1 ? 'hidden' : 'visible'}
+          >
+            <FaBackward />
+          </Button>
+          <Button>
+            <Input
+              max={pageLimit}
+              min={1}
+              mr={5}
+              onChange={e => setPage(Number(e.target.value))}
+              value={page}
+              w={50}
+            />
+            of {pageLimit}
+          </Button>
 
-        <Button
-          onClick={() => setPage(page < pageLimit ? page + 1 : page)}
-          size="sm"
-          visibility={page == pageLimit ? 'hidden' : 'visible'}
-        >
-          <FaForward />
-        </Button>
-        <Button
-          onClick={() => setPage(pageLimit)}
-          size="sm"
-          visibility={page == pageLimit ? 'hidden' : 'visible'}
-        >
-          <FaFastForward />
-        </Button>
-      </HStack>
+          <Button
+            onClick={() => setPage(page < pageLimit ? page + 1 : page)}
+            size="sm"
+            visibility={page == pageLimit ? 'hidden' : 'visible'}
+          >
+            <FaForward />
+          </Button>
+          <Button
+            onClick={() => setPage(pageLimit)}
+            size="sm"
+            visibility={page == pageLimit ? 'hidden' : 'visible'}
+          >
+            <FaFastForward />
+          </Button>
+        </HStack>
+      )}
     </VStack>
   );
 };
