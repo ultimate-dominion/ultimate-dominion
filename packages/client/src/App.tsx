@@ -6,7 +6,7 @@ import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { WalletDetailsModal } from './components/WalletDetailsModal';
 import { useMUD } from './contexts/MUDContext';
-import AppRoutes from './Routes';
+import AppRoutes, { HOME_PATH } from './Routes';
 
 export const App = (): JSX.Element => {
   return (
@@ -26,7 +26,7 @@ const AppInner = (): JSX.Element => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
-    if (pathname === '/') return;
+    if (pathname === HOME_PATH) return;
 
     if (burnerBalanceFetched && burnerBalance === '0' && isSynced) {
       onOpen();

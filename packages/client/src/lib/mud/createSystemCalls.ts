@@ -46,7 +46,7 @@ export function createSystemCalls(
    *   (https://github.com/latticexyz/mud/blob/main/templates/react/packages/client/src/mud/setupNetwork.ts#L77-L83).
    */
   { publicClient, waitForTransaction, worldContract }: SetupNetworkResult,
-  { Characters, Position, Spawned }: ClientComponents,
+  { CharacterEquipment, Characters, Position, Spawned }: ClientComponents,
 ) {
   const enterGame = async (characterEntity: Entity) => {
     try {
@@ -57,6 +57,33 @@ export function createSystemCalls(
       await waitForTransaction(tx);
 
       const success = !!getComponentValue(Characters, characterEntity)?.locked;
+      return success;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const equipItems = async (characterEntity: Entity, itemIds: string[]) => {
+    try {
+      const tx = await worldContract.write.UD__equipItems([
+        characterEntity.toString() as `0x${string}`,
+        itemIds.map(itemId => BigInt(itemId)),
+      ]);
+
+      await waitForTransaction(tx);
+
+      const characterEquipment = getComponentValue(
+        CharacterEquipment,
+        characterEntity,
+      );
+
+      if (!characterEquipment) return false;
+      const { equippedArmor, equippedWeapons } = characterEquipment;
+
+      const success =
+        equippedArmor.some(id => itemIds.includes(id.toString())) ||
+        equippedWeapons.some(id => itemIds.includes(id.toString()));
+
       return success;
     } catch (e) {
       return false;
@@ -178,11 +205,42 @@ export function createSystemCalls(
     }
   };
 
+  const unequipItem = async (characterEntity: Entity, itemId: string) => {
+    try {
+      const tx = await worldContract.write.UD__unequipItem([
+        characterEntity.toString() as `0x${string}`,
+        BigInt(itemId),
+      ]);
+
+      await waitForTransaction(tx);
+
+      const characterEquipment = getComponentValue(
+        CharacterEquipment,
+        characterEntity,
+      );
+
+      if (!characterEquipment) return false;
+
+      const { equippedArmor, equippedWeapons } = characterEquipment;
+
+      const success = !(
+        equippedArmor.includes(BigInt(itemId)) ||
+        equippedWeapons.includes(BigInt(itemId))
+      );
+
+      return success;
+    } catch (e) {
+      return false;
+    }
+  };
+
   return {
     enterGame,
+    equipItems,
     mintCharacter,
     move,
     rollStats,
     spawn,
+    unequipItem,
   };
 }
