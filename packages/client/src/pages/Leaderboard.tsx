@@ -9,6 +9,7 @@ import {
   InputGroup,
   InputLeftElement,
   Spacer,
+  Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
@@ -28,7 +29,7 @@ import {
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Character, StatsClasses } from '../utils/types';
 
-function createDummyData(num: number = 1) {
+const createDummyData = (num: number = 1) => {
   const result: Character[] = [];
   for (let i = 0; i < num; i++) {
     result[result.length] = {
@@ -51,7 +52,8 @@ function createDummyData(num: number = 1) {
     };
   }
   return result;
-}
+};
+
 const DUMMY_CHARACTER: Character[] = createDummyData(50);
 const PER_PAGE = 10;
 
@@ -87,11 +89,11 @@ export const Leaderboard = (): JSX.Element => {
     entriesCopy = [...entriesCopy].filter(entry => {
       switch (filter.filtered) {
         case 'byWarrior':
-          return entry.characterClass == 0;
+          return entry.characterClass == StatsClasses.Warrior;
         case 'byRogue':
-          return entry.characterClass == 1;
+          return entry.characterClass == StatsClasses.Rogue;
         case 'byMage':
-          return entry.characterClass == 2;
+          return entry.characterClass == StatsClasses.Mage;
         default:
           return true;
       }
@@ -108,77 +110,53 @@ export const Leaderboard = (): JSX.Element => {
   }, [filter.filtered, page, query, sort.reversed, sort.sorted]);
 
   return (
-    <VStack minW={800} mt={5}>
-      <Grid
-        gap={2}
-        mb={5}
-        templateColumns="repeat(8, 1fr)"
-        templateRows={'repeat(2, 1fr)'}
-        w="100%"
-      >
-        <GridItem
-          colSpan={{ md: 4, base: 8 }}
-          colStart={{ base: 1, md: 1 }}
-          rowStart={{ base: 1, md: 2 }}
-        >
-          <Center h="100%">
-            <InputGroup>
-              <InputLeftElement h="100%" pointerEvents="none">
-                <FaSearch />
-              </InputLeftElement>
-              <Input
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Search"
-                value={query}
-              />
-            </InputGroup>{' '}
-          </Center>
-        </GridItem>
-        <GridItem colSpan={{ base: 2, md: 1 }} rowStart={{ base: 2, md: 2 }}>
-          <Center>
-            <Button
-              onClick={() => setFilter({ filtered: 'all' })}
-              variant={filter.filtered == 'all' ? 'solid' : 'outline'}
-            >
-              All
-            </Button>{' '}
-          </Center>
-        </GridItem>
-        <GridItem colSpan={{ base: 2, md: 1 }} rowStart={{ base: 2, md: 2 }}>
-          <Center>
-            <Button
-              onClick={() => setFilter({ filtered: 'byWarrior' })}
-              variant={filter.filtered == 'byWarrior' ? 'solid' : 'outline'}
-            >
-              Warrior
-            </Button>{' '}
-          </Center>
-        </GridItem>
-        <GridItem colSpan={{ base: 2, md: 1 }} rowStart={{ base: 2, md: 2 }}>
-          <Center>
-            <Button
-              onClick={() =>
-                setFilter({
-                  filtered: 'byRogue',
-                })
-              }
-              variant={filter.filtered == 'byRogue' ? 'solid' : 'outline'}
-            >
-              Rogue
-            </Button>{' '}
-          </Center>
-        </GridItem>
-        <GridItem colSpan={{ base: 2, md: 1 }} rowStart={{ base: 2, md: 2 }}>
-          <Center>
-            <Button
-              onClick={() => setFilter({ filtered: 'byMage' })}
-              variant={filter.filtered == 'byMage' ? 'solid' : 'outline'}
-            >
-              Mage
-            </Button>
-          </Center>
-        </GridItem>
-      </Grid>
+    <VStack mt={16}>
+      <Stack direction="row" mb={8} spacing={8} w="100%">
+        <InputGroup w="100%">
+          <InputLeftElement h="100%" pointerEvents="none">
+            <FaSearch />
+          </InputLeftElement>
+          <Input
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search"
+            value={query}
+          />
+        </InputGroup>
+        <HStack>
+          <Button
+            onClick={() => setFilter({ filtered: 'all' })}
+            size="sm"
+            variant={filter.filtered == 'all' ? 'solid' : 'outline'}
+          >
+            All
+          </Button>
+          <Button
+            onClick={() => setFilter({ filtered: 'byWarrior' })}
+            size="sm"
+            variant={filter.filtered == 'byWarrior' ? 'solid' : 'outline'}
+          >
+            Warrior
+          </Button>
+          <Button
+            onClick={() =>
+              setFilter({
+                filtered: 'byRogue',
+              })
+            }
+            size="sm"
+            variant={filter.filtered == 'byRogue' ? 'solid' : 'outline'}
+          >
+            Rogue
+          </Button>
+          <Button
+            onClick={() => setFilter({ filtered: 'byMage' })}
+            size="sm"
+            variant={filter.filtered == 'byMage' ? 'solid' : 'outline'}
+          >
+            Mage
+          </Button>
+        </HStack>
+      </Stack>
       <Flex direction="row" w="100%">
         <Center>
           <Text>Players {total}</Text>
