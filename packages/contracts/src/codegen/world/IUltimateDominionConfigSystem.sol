@@ -9,17 +9,15 @@ pragma solidity >=0.8.24;
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IUltimateDominionConfigSystem {
-    function UD__getCharacterToken() external view returns (address _characterToken);
+  function UD__getCharacterToken() external view returns (address _characterToken);
 
-    function UD__getGoldToken() external view returns (address _goldToken);
+  function UD__getGoldToken() external view returns (address _goldToken);
 
-    function UD__getEntropy() external view returns (address _entropy);
+  function UD__getEntropy() external view returns (address _entropy);
 
-    function UD__getPythProvider() external view returns (address _provider);
+  function UD__getPythProvider() external view returns (address _provider);
 
-    function UD__getItemsContract() external view returns (address _erc1155);
+  function UD__getItemsContract() external view returns (address _erc1155);
 
-    function UD__getMulticallContract() external view returns (address _multicall);
-
-    function UD__getLootManagerSystem() external view returns (address _lootManager);
+  function UD__getLootManagerSystem() external view returns (address _lootManager);
 }
