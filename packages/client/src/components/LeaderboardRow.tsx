@@ -43,9 +43,9 @@ export const LeaderboardRow = ({
       </Center>
       <CardBody h="100%" p={0} w="100%">
         <Center h="100%">
-          <HStack w="100%" mx={3}>
+          <HStack mx={3} w="100%">
             <VStack>
-              <HStack w="100%" textAlign="left">
+              <HStack textAlign="left" w="100%">
                 <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
                 <Center>
                   {type == 0 && <FaFire size={15} />}
@@ -60,10 +60,10 @@ export const LeaderboardRow = ({
             </VStack>
             <Spacer />
             <Grid
-              templateColumns="repeat(10, 1fr)"
-              w={{ base: '60vh', lg: '60vh' }}
               float="right"
+              templateColumns="repeat(10, 1fr)"
               textAlign="right"
+              w={{ base: '60vh', lg: '60vh' }}
             >
               <GridItem colSpan={3}>
                 <Center h="100%">

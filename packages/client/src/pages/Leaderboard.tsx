@@ -168,7 +168,7 @@ export const Leaderboard = (): JSX.Element => {
               variant={filter.filtered == 'byMage' ? 'solid' : 'outline'}
             >
               Mage
-            </Button>{' '}
+            </Button>
           </Center>
         </GridItem>
       </Grid>
@@ -298,16 +298,7 @@ export const Leaderboard = (): JSX.Element => {
             );
           })
         ) : (
-          <Card
-            background="black"
-            color="white"
-            margin="0 auto"
-            variant="filled"
-          >
-            <CardBody>
-              <Text fontWeight="bold">No players</Text>
-            </CardBody>
-          </Card>
+          <Text fontWeight="bold">No players</Text>
         )}
       </VStack>
       <HStack my={5} visibility={total ? 'visible' : 'hidden'}>
