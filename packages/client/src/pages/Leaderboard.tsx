@@ -7,17 +7,18 @@ import {
   GridItem,
   HStack,
   Input,
+  InputGroup,
+  InputLeftElement,
   Spacer,
-  Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
 import { Entity } from '@latticexyz/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useState } from 'react';
-import { FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
+import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 
-import { Entry } from '../components/Leaderboard/Entry';
+import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Character, StatsClasses } from '../utils/types';
 
 function createDummyData(num: number = 1) {
@@ -45,7 +46,7 @@ function createDummyData(num: number = 1) {
   return result;
 }
 const DUMMY_CHARACTER: Character[] = createDummyData(50)!;
-const PER_PAGE = 5;
+const PER_PAGE = 10;
 
 export const Leaderboard = (): JSX.Element => {
   const [entries, setEntries] = useState(DUMMY_CHARACTER);
@@ -55,6 +56,7 @@ export const Leaderboard = (): JSX.Element => {
   const [page, setPage] = useState(1);
   const [pageLimit, setPageLimit] = useState(0);
   const [total, setTotal] = useState(0);
+
   useEffect(() => {
     let entriesCopy = DUMMY_CHARACTER;
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
@@ -99,39 +101,77 @@ export const Leaderboard = (): JSX.Element => {
   }, [filter.filtered, page, query, sort.reversed, sort.sorted]);
 
   return (
-    <VStack mt={5}>
-      <HStack my={5} w="100%">
-        <Input
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Search"
-          value={query}
-        />
-        <Button onClick={() => setFilter({ filtered: 'all' })} variant="solid">
-          All
-        </Button>
-        <Button
-          onClick={() => setFilter({ filtered: 'byWarrior' })}
-          variant="solid"
+    <VStack minW={800} mt={5}>
+      <Grid
+        gap={2}
+        mb={5}
+        templateColumns="repeat(8, 1fr)"
+        templateRows={'repeat(2, 1fr)'}
+        w="100%"
+      >
+        <GridItem
+          colSpan={{ md: 4, base: 8 }}
+          colStart={{ base: 1, md: 1 }}
+          rowStart={{ base: 1, md: 2 }}
         >
-          Warrior
-        </Button>
-        <Button
-          onClick={() =>
-            setFilter({
-              filtered: 'byRogue',
-            })
-          }
-          variant="solid"
-        >
-          Rogue
-        </Button>
-        <Button
-          onClick={() => setFilter({ filtered: 'byMage' })}
-          variant="solid"
-        >
-          Mage
-        </Button>
-      </HStack>
+          <Center>
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <FaSearch />
+              </InputLeftElement>
+              <Input
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search"
+                value={query}
+              />
+            </InputGroup>{' '}
+          </Center>
+        </GridItem>
+        <GridItem colSpan={{ base: 2, md: 1 }} rowStart={{ base: 2, md: 2 }}>
+          <Center>
+            <Button
+              onClick={() => setFilter({ filtered: 'all' })}
+              variant={filter.filtered == 'all' ? 'solid' : 'outline'}
+            >
+              All
+            </Button>{' '}
+          </Center>
+        </GridItem>
+        <GridItem colSpan={{ base: 2, md: 1 }} rowStart={{ base: 2, md: 2 }}>
+          <Center>
+            <Button
+              onClick={() => setFilter({ filtered: 'byWarrior' })}
+              variant={filter.filtered == 'byWarrior' ? 'solid' : 'outline'}
+            >
+              Warrior
+            </Button>{' '}
+          </Center>
+        </GridItem>
+        <GridItem colSpan={{ base: 2, md: 1 }} rowStart={{ base: 2, md: 2 }}>
+          <Center>
+            <Button
+              onClick={() =>
+                setFilter({
+                  filtered: 'byRogue',
+                })
+              }
+              variant={filter.filtered == 'byRogue' ? 'solid' : 'outline'}
+            >
+              Rogue
+            </Button>{' '}
+          </Center>
+        </GridItem>
+        <GridItem colSpan={{ base: 2, md: 1 }} rowStart={{ base: 2, md: 2 }}>
+          <Center>
+            <Button
+              onClick={() => setFilter({ filtered: 'byMage' })}
+              variant={filter.filtered == 'byMage' ? 'solid' : 'outline'}
+            >
+              Mage
+            </Button>{' '}
+          </Center>
+        </GridItem>
+      </Grid>
       <Card
         border="none"
         direction="row"
@@ -139,96 +179,109 @@ export const Leaderboard = (): JSX.Element => {
         variant="outline"
         w="100%"
       >
-        <Stack w="100%">
-          <CardBody w="100%">
-            <HStack w="100%">
-              <VStack>
-                <HStack>
-                  <Text textAlign="left">{total} Players</Text>
-                  <Text size="sm" />
-                  <Center />
-                </HStack>
-              </VStack>
-              <Spacer />
-              <Grid templateColumns="repeat(3, 1fr)" w="50%">
-                <GridItem>
-                  <Center>
-                    <Button
-                      fontWeight=""
-                      onClick={() =>
-                        setSort({
-                          sorted: 'byStats',
-                          reversed: !sort.reversed,
-                        })
-                      }
-                      variant="ghost"
-                    >
-                      <Text mr={5}>Total Stats</Text>
-                      {sort.sorted == 'byStats' && sort.reversed ? (
-                        <FaSortAmountUp />
-                      ) : null}
-                      {sort.sorted == 'byStats' && !sort.reversed ? (
-                        <FaSortAmountDown />
-                      ) : null}
-                    </Button>
-                  </Center>
-                </GridItem>
-                <GridItem>
-                  <Center>
-                    <Button
-                      fontWeight=""
-                      onClick={() =>
-                        setSort({
-                          sorted: 'byLevel',
-                          reversed: !sort.reversed,
-                        })
-                      }
-                      variant="ghost"
-                    >
-                      <Text mr={5}>Level</Text>
-                      {sort.sorted == 'byLevel' && sort.reversed ? (
-                        <FaSortAmountUp />
-                      ) : null}
-                      {sort.sorted == 'byLevel' && !sort.reversed ? (
-                        <FaSortAmountDown />
-                      ) : null}
-                    </Button>
-                  </Center>
-                </GridItem>
-                <GridItem>
-                  <Center>
-                    <Button
-                      fontWeight=""
-                      onClick={() =>
-                        setSort({
-                          sorted: 'byGold',
-                          reversed: !sort.reversed,
-                        })
-                      }
-                      variant="ghost"
-                    >
-                      <Text mr={5}>Gold</Text>
-                      {sort.sorted == 'byGold' && sort.reversed ? (
-                        <FaSortAmountUp />
-                      ) : null}
-                      {sort.sorted == 'byGold' && !sort.reversed ? (
-                        <FaSortAmountDown />
-                      ) : null}
-                    </Button>
-                  </Center>
-                </GridItem>
-              </Grid>
-              <Button variant="link" />
-            </HStack>
-          </CardBody>
-        </Stack>
+        <Center>
+          <Text>Players {total}</Text>
+        </Center>
+        <Spacer />
+        <Grid
+          mr={5}
+          float="right"
+          templateColumns="repeat(10, 1fr)"
+          w={{ base: '60vh', lg: '60vh' }}
+        >
+          <GridItem colSpan={3}>
+            <Center>
+              <Button
+                fontWeight={sort.sorted == 'byStats' ? 'bold' : 'normal'}
+                onClick={() =>
+                  setSort({
+                    sorted: 'byStats',
+                    reversed: !sort.reversed,
+                  })
+                }
+                p={1}
+                variant="ghost"
+              >
+                <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
+                  Total Stats
+                </Text>
+                {sort.sorted == 'byStats' && sort.reversed ? (
+                  <FaSortAmountUp />
+                ) : null}
+                {sort.sorted == 'byStats' && !sort.reversed ? (
+                  <FaSortAmountDown />
+                ) : null}
+                {sort.sorted != 'byStats' ? (
+                  <FaSortAmountDown color="grey" />
+                ) : null}
+              </Button>
+            </Center>
+          </GridItem>
+          <GridItem colSpan={3}>
+            <Center>
+              <Button
+                fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
+                onClick={() =>
+                  setSort({
+                    sorted: 'byLevel',
+                    reversed: !sort.reversed,
+                  })
+                }
+                p={1}
+                variant="ghost"
+              >
+                <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
+                  Level
+                </Text>
+                {sort.sorted == 'byLevel' && sort.reversed ? (
+                  <FaSortAmountUp />
+                ) : null}
+                {sort.sorted == 'byLevel' && !sort.reversed ? (
+                  <FaSortAmountDown />
+                ) : null}
+                {sort.sorted != 'byLevel' ? (
+                  <FaSortAmountDown color="grey" />
+                ) : null}
+              </Button>
+            </Center>
+          </GridItem>
+          <GridItem colSpan={3}>
+            <Center>
+              <Button
+                fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
+                onClick={() =>
+                  setSort({
+                    sorted: 'byGold',
+                    reversed: !sort.reversed,
+                  })
+                }
+                p={1}
+                variant="ghost"
+              >
+                <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
+                  $Gold
+                </Text>
+                {sort.sorted == 'byGold' && sort.reversed ? (
+                  <FaSortAmountUp />
+                ) : null}
+                {sort.sorted == 'byGold' && !sort.reversed ? (
+                  <FaSortAmountDown />
+                ) : null}
+                {sort.sorted != 'byGold' ? (
+                  <FaSortAmountDown color="grey" />
+                ) : null}
+              </Button>
+            </Center>
+          </GridItem>
+          <GridItem colSpan={1}></GridItem>
+        </Grid>
       </Card>
 
-      <VStack gap={3} w="100%">
+      <VStack gap={3} overflowX="auto" w="100%">
         {entries.length > 0 ? (
           entries.map(function (entry, i) {
             return (
-              <Entry
+              <LeaderboardRow
                 name={entry.characterId}
                 gold={entry.goldBalance}
                 level={entry.level}
@@ -241,7 +294,7 @@ export const Leaderboard = (): JSX.Element => {
                 total={entry.experience}
                 type={entry.characterClass}
                 key={i}
-              ></Entry>
+              />
             );
           })
         ) : (
@@ -257,7 +310,7 @@ export const Leaderboard = (): JSX.Element => {
           </Card>
         )}
       </VStack>
-      <HStack my={5}>
+      <HStack my={5} visibility={total ? 'visible' : 'hidden'}>
         {page > 1 && (
           <Button onClick={() => setPage(1)} size="sm" variant="outline">
             First

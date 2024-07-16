@@ -8,14 +8,13 @@ import {
   GridItem,
   HStack,
   Spacer,
-  Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
 import { FaFire, FaRoad, FaShieldAlt } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 
-export const Entry = ({
+export const LeaderboardRow = ({
   name,
   gold,
   level,
@@ -34,19 +33,20 @@ export const Entry = ({
     <Card
       borderRadius={2}
       direction="row"
+      minW={800}
       overflow="hidden"
       variant="outline"
       w="100%"
     >
       <Center h="100%">
-        <Avatar borderRadius={0} size="xl"></Avatar>
+        <Avatar borderRadius={0} size={['2xl', 'xl', 'xl', 'lg']}></Avatar>
       </Center>
-      <Stack w="100%">
-        <CardBody w="100%">
-          <HStack w="100%">
+      <CardBody h="100%" p={0} w="100%">
+        <Center h="100%">
+          <HStack w="100%" mx={3}>
             <VStack>
               <HStack w="100%" textAlign="left">
-                <Text size="sm">{name}</Text>
+                <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
                 <Center>
                   {type == 0 && <FaFire size={15} />}
                   {type == 1 && <FaRoad size={15} />}
@@ -59,35 +59,36 @@ export const Entry = ({
               </Text>
             </VStack>
             <Spacer />
-            <Grid w="50%" templateColumns="repeat(3, 1fr)">
-              <GridItem>
-                <Center>
-                  <Button variant="ghost" fontWeight="bold">
-                    {total}
-                  </Button>
+            <Grid
+              templateColumns="repeat(10, 1fr)"
+              w={{ base: '60vh', lg: '60vh' }}
+              float="right"
+              textAlign="right"
+            >
+              <GridItem colSpan={3}>
+                <Center h="100%">
+                  <Text textAlign="center">{total}</Text>
                 </Center>
               </GridItem>
-              <GridItem>
-                <Center>
-                  <Button variant="ghost" fontWeight="bold">
-                    {level}
-                  </Button>
+              <GridItem colSpan={3}>
+                <Center h="100%">
+                  <Text textAlign="center">{level}</Text>
                 </Center>
               </GridItem>
-              <GridItem>
-                <Center>
-                  <Button variant="ghost" fontWeight="bold">
-                    {gold}
-                  </Button>
+              <GridItem colSpan={3}>
+                <Center h="100%">
+                  <Text textAlign="center">{gold}</Text>
                 </Center>
+              </GridItem>
+              <GridItem colSpan={1}>
+                <Button variant="ghost">
+                  <IoIosArrowForward />
+                </Button>
               </GridItem>
             </Grid>
-            <Button variant="link">
-              <IoIosArrowForward />
-            </Button>
           </HStack>
-        </CardBody>
-      </Stack>
+        </Center>
+      </CardBody>
     </Card>
   );
 };
