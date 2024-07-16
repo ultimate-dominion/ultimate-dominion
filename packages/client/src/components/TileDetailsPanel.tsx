@@ -11,16 +11,13 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useEntityQuery } from '@latticexyz/react';
-import { getComponentValue, Has } from '@latticexyz/recs';
 import { useState } from 'react';
 import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
-import { useCharacter } from '../contexts/CharacterContext';
+import { useCombat } from '../contexts/CombatContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
-import { useMUD } from '../contexts/MUDContext';
 import { type Character, type Monster } from '../utils/types';
 import { InitiateCombatModal } from './InitiateCombatModal';
 
@@ -29,22 +26,7 @@ const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 export const TileDetailsPanel = (): JSX.Element => {
   const { isRefreshing, monsters, otherPlayers } = useMapNavigation();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    components: { CombatEncounter },
-  } = useMUD();
-  const { character } = useCharacter();
-
-  const currentBattle = Array.from(useEntityQuery([Has(CombatEncounter)]))
-    .map(entity => {
-      const encounter = getComponentValue(CombatEncounter, entity);
-      return encounter;
-    })
-    .filter(
-      encounter =>
-        character &&
-        (encounter?.attackers.includes(character.characterId) ||
-          encounter?.defenders.includes(character.characterId)),
-    )[0];
+  const { currentBattle } = useCombat();
 
   const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
 

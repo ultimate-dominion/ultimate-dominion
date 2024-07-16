@@ -31,6 +31,17 @@ export type CharacterStats = {
   strength: string;
 };
 
+export type CombatDetails = {
+  attackers: Entity[];
+  currentTurn: string;
+  defenders: Entity[];
+  encounterId: Entity;
+  encounterType: EncounterType;
+  end: string;
+  maxTurns: string;
+  start: string;
+};
+
 export type Metadata = {
   description: string;
   image: string;

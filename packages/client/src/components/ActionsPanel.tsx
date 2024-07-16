@@ -1,4 +1,8 @@
 import { Stack, Text } from '@chakra-ui/react';
+import { useMemo } from 'react';
+
+import { useCombat } from '../contexts/CombatContext';
+import { useMapNavigation } from '../contexts/MapNavigationContext';
 
 // enum ActionEvents {
 //   Attack = 'attack',
@@ -43,12 +47,25 @@ import { Stack, Text } from '@chakra-ui/react';
 // ];
 
 export const ActionsPanel = (): JSX.Element => {
+  const { currentBattle, monster } = useCombat();
+  const { isSpawned } = useMapNavigation();
+
+  const actionText = useMemo(() => {
+    if (!isSpawned) {
+      return 'You must spawn on the map to start battling.';
+    }
+
+    if (currentBattle && monster) {
+      return `You are currently in a battle with a ${monster.name}.`;
+    }
+
+    return 'To initiate a battle, move into a new tile and click on a monster.';
+  }, [currentBattle, isSpawned, monster]);
+
   return (
     <Stack spacing={8}>
       <Stack>
-        <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-          You must spawn on the map to start battling.
-        </Text>
+        <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>{actionText}</Text>
       </Stack>
       {/* <Stack>
         {BATTLE_EVENTS.map((event, i) => (
