@@ -323,7 +323,7 @@ export const CharacterCreation = (): JSX.Element => {
 
   useEffect(() => {
     if (character && rolledOnce) {
-      setCharacterClass(character.characterClass);
+      setCharacterClass(character.entityClass);
     }
 
     if (character?.locked) {
@@ -392,8 +392,7 @@ export const CharacterCreation = (): JSX.Element => {
               <Text textAlign="center">{character.description}</Text>
             </VStack>
             <Text>
-              Class:{' '}
-              {rolledOnce ? StatsClasses[character.characterClass] : 'None'}
+              Class: {rolledOnce ? StatsClasses[character.entityClass] : 'None'}
             </Text>
           </VStack>
         </Box>
@@ -542,11 +541,11 @@ export const CharacterCreation = (): JSX.Element => {
           </VStack>
           {character &&
             rolledOnce &&
-            characterClass !== character.characterClass && (
+            characterClass !== character.entityClass && (
               <Text color="red" fontSize="sm" mt={2}>
                 Your current class is{' '}
                 <Text as="span" fontWeight={700}>
-                  {StatsClasses[character.characterClass]}
+                  {StatsClasses[character.entityClass]}
                 </Text>
                 . Re-roll stats to change class.
               </Text>

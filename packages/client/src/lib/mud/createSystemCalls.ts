@@ -17,6 +17,8 @@ import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { uuid } from '@latticexyz/utils';
 import {
   Address,
+  BaseError,
+  ContractFunctionRevertedError,
   getContract,
   keccak256,
   parseAbiItem,
@@ -51,7 +53,12 @@ export function createSystemCalls(
    *   syncToRecs
    *   (https://github.com/latticexyz/mud/blob/main/templates/react/packages/client/src/mud/setupNetwork.ts#L77-L83).
    */
-  { publicClient, waitForTransaction, worldContract }: SetupNetworkResult,
+  {
+    delegatorAddress,
+    publicClient,
+    waitForTransaction,
+    worldContract,
+  }: SetupNetworkResult & { delegatorAddress?: Address },
   {
     CharacterEquipment,
     Characters,
@@ -66,6 +73,22 @@ export function createSystemCalls(
     defenders: string[],
   ) => {
     try {
+      if (!delegatorAddress) {
+        throw new Error('Delegator address not found');
+      }
+
+      await publicClient.simulateContract({
+        address: worldContract.address,
+        abi: worldContract.abi,
+        functionName: 'UD__createMatch',
+        args: [
+          encounterType,
+          attackers as `0x${string}`[],
+          defenders as `0x${string}`[],
+        ],
+        account: delegatorAddress,
+      });
+
       const tx = await worldContract.write.UD__createMatch([
         encounterType,
         attackers as `0x${string}`[],
@@ -90,6 +113,16 @@ export function createSystemCalls(
 
       return success;
     } catch (err) {
+      if (err instanceof BaseError) {
+        const revertError = err.walk(
+          err => err instanceof ContractFunctionRevertedError,
+        );
+        if (revertError instanceof ContractFunctionRevertedError) {
+          const args = revertError.data?.args ?? [];
+          // eslint-disable-next-line no-console
+          console.error(args);
+        }
+      }
       return false;
     }
   };

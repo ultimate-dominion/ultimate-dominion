@@ -152,8 +152,8 @@ export const MapNavigationProvider = ({
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
               baseHitPoints: characterStats.baseHitPoints.toString(),
-              characterClass: characterStats.class,
               characterId: entity,
+              entityClass: characterStats.class,
               experience: characterStats.experience.toString(),
               goldBalance: formatEther(goldBalance as bigint).toString(),
               intelligence: characterStats.intelligence.toString(),
@@ -209,31 +209,32 @@ export const MapNavigationProvider = ({
 
             const { mobMetadata: metadataURI } = mobData;
 
-            const monsterTemplateStats =
-              (await worldContract.read.UD__getMonsterStats([
-                monsterId as `0x${string}`,
-              ])) as { class: number };
-
             const fetachedMetadata = await fetchMetadataFromUri(
               uriToHttp(metadataURI)[0],
             );
 
             return {
-              class: monsterTemplateStats.class,
+              agility: monsterStats.agility.toString(),
+              baseHitPoints: monsterStats.baseHitPoints.toString(),
+              currentHp: monsterStats.currentHp.toString(),
+              entityClass: monsterStats.class,
+              experience: monsterStats.experience.toString(),
+              intelligence: monsterStats.intelligence.toString(),
               level: monsterStats.level.toString(),
               mobId,
               monsterId,
+              strength: monsterStats.strength.toString(),
               ...fetachedMetadata,
             };
           }),
         );
 
-        setMonsters(_monsters);
+        setMonsters(_monsters.filter(m => Number(m.currentHp) > 0));
       } catch (error) {
         renderError(error, 'Failed to fetch monsters');
       }
     },
-    [Mobs, renderError, Stats, worldContract],
+    [Mobs, renderError, Stats],
   );
 
   useEffect(() => {

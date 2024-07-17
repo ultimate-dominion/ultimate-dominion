@@ -1,4 +1,4 @@
-import { Button, HStack, Stack, Text } from '@chakra-ui/react';
+import { Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
 import { Has, HasValue, runQuery } from '@latticexyz/recs';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -162,6 +162,20 @@ export const ActionsPanel = (): JSX.Element => {
               </Button>
             ))}
           </HStack>
+        )}
+        {currentBattle && equippedItems && monster && (
+          <VStack mt={4}>
+            <Text fontWeight={700}>MONSTER STATS:</Text>
+            <HStack>
+              <Text>Max Health: {monster.baseHitPoints}</Text>
+              <Text>Current Health: {monster.currentHp}</Text>
+            </HStack>
+            <HStack>
+              <Text>Attack: {monster.agility}</Text>
+              <Text>Defense: {monster.intelligence}</Text>
+              <Text>Level: {monster.level}</Text>
+            </HStack>
+          </VStack>
         )}
       </Stack>
       {/* <Stack>

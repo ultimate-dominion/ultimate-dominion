@@ -1,5 +1,5 @@
 import { useEntityQuery } from '@latticexyz/react';
-import { Entity, getComponentValue, Has } from '@latticexyz/recs';
+import { Entity, getComponentValue, Has, HasValue } from '@latticexyz/recs';
 import { createContext, ReactNode, useContext, useMemo } from 'react';
 
 import type { CombatDetails, Monster } from '../utils/types';
@@ -31,7 +31,12 @@ export const CombatProvider = ({
   const { monsters } = useMapNavigation();
 
   const currentBattle =
-    Array.from(useEntityQuery([Has(CombatEncounter)]))
+    Array.from(
+      useEntityQuery([
+        Has(CombatEncounter),
+        HasValue(CombatEncounter, { end: BigInt(0) }),
+      ]),
+    )
       .map(entity => {
         const encounter = getComponentValue(CombatEncounter, entity);
         if (!encounter) return null;

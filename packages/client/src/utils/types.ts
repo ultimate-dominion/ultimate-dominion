@@ -27,7 +27,7 @@ export enum StatsClasses {
   Mage,
 }
 
-export type Character = CharacterData & CharacterStats & Metadata;
+export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
   characterId: Entity;
@@ -37,10 +37,11 @@ export type CharacterData = {
   tokenId: string;
 };
 
-export type CharacterStats = {
+export type EntityStats = {
   agility: string;
   baseHitPoints: string;
-  characterClass: StatsClasses;
+  currentHp: string;
+  entityClass: StatsClasses;
   experience: string;
   intelligence: string;
   level: string;
@@ -64,12 +65,11 @@ export type Metadata = {
   name: string;
 };
 
-export type Monster = Metadata & {
-  class: StatsClasses;
-  level: string;
-  mobId: string;
-  monsterId: Entity;
-};
+export type Monster = Metadata &
+  EntityStats & {
+    mobId: string;
+    monsterId: Entity;
+  };
 
 export type Weapon = WeaponStats &
   Metadata & {

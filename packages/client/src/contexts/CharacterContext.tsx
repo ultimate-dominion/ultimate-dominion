@@ -20,7 +20,7 @@ import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type {
   Character,
   CharacterData,
-  CharacterStats,
+  EntityStats,
   StatsClasses,
   Weapon,
 } from '../utils/types';
@@ -70,7 +70,7 @@ export const CharacterProvider = ({
 
   const fetchCharacterData = useCallback(async () => {
     if (!(delegatorAddress && publicClient && worldContract)) return;
-    const partialCharacter: CharacterData & CharacterStats = Array.from(
+    const partialCharacter: CharacterData & EntityStats = Array.from(
       runQuery([
         HasValue(Characters, {
           owner: delegatorAddress,
@@ -91,8 +91,9 @@ export const CharacterProvider = ({
       return {
         agility: characterStats?.agility.toString() ?? '0',
         baseHitPoints: characterStats?.baseHitPoints.toString() ?? '0',
-        characterClass: characterStats?.class ?? 0,
+        currentHp: characterStats?.currentHp.toString() ?? '0',
         characterId: entity,
+        entityClass: characterStats?.class ?? 0,
         experience: characterStats?.experience.toString() ?? '0',
         goldBalance: formatEther(goldBalance).toString(),
         intelligence: characterStats?.intelligence.toString() ?? '0',

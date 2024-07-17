@@ -56,6 +56,7 @@ export const StatsPanel = (): JSX.Element => {
   const {
     agility,
     baseHitPoints,
+    currentHp,
     experience,
     goldBalance,
     image,
@@ -89,7 +90,9 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{baseHitPoints}</Text>
+          <Text>
+            {currentHp}/{baseHitPoints}
+          </Text>
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">

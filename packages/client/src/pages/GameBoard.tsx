@@ -29,11 +29,13 @@ export const GameBoard = (): JSX.Element => {
   const { character } = useCharacter();
 
   useEffect(() => {
+    if (!isSynced) return;
+
     if (!externalWalletClient) {
       navigate(HOME_PATH);
     }
 
-    if (isSynced && !delegatorAddress) {
+    if (!delegatorAddress) {
       navigate(HOME_PATH);
     }
 
