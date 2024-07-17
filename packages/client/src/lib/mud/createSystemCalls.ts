@@ -110,11 +110,19 @@ export function createSystemCalls(
           weaponId: BigInt(weaponId),
         },
       ];
-      const tx = await worldContract.write.UD__endTurn([
-        encounterId.toString() as `0x${string}`,
-        playerId.toString() as `0x${string}`,
-        actions,
-      ]);
+
+      const fee = await getFee();
+
+      const tx = await worldContract.write.UD__endTurn(
+        [
+          encounterId.toString() as `0x${string}`,
+          playerId.toString() as `0x${string}`,
+          actions,
+        ],
+        {
+          value: fee,
+        },
+      );
 
       await waitForTransaction(tx);
 
@@ -227,20 +235,7 @@ export function createSystemCalls(
     characterClass: StatsClasses,
   ) => {
     try {
-      const entropyAddress = await worldContract.read.UD__getEntropy();
-      const providerAddress = await worldContract.read.UD__getPythProvider();
-
-      const entropyContract = getContract({
-        address: entropyAddress,
-        abi: [
-          parseAbiItem(
-            'function getFee(address provider) view returns (uint256)',
-          ),
-        ],
-        client: publicClient,
-      });
-
-      const fee = await entropyContract.read.getFee([providerAddress]);
+      const fee = await getFee();
 
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
@@ -308,6 +303,25 @@ export function createSystemCalls(
     } catch (e) {
       return false;
     }
+  };
+
+  const getFee = async () => {
+    const entropyAddress = await worldContract.read.UD__getEntropy();
+    const providerAddress = await worldContract.read.UD__getPythProvider();
+
+    const entropyContract = getContract({
+      address: entropyAddress,
+      abi: [
+        parseAbiItem(
+          'function getFee(address provider) view returns (uint256)',
+        ),
+      ],
+      client: publicClient,
+    });
+
+    const fee = await entropyContract.read.getFee([providerAddress]);
+
+    return fee;
   };
 
   return {
