@@ -3,6 +3,7 @@ pragma solidity >=0.8.24;
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, EncounterType} from "@codegen/common.sol";
 import {StatsData, Stats} from "@tables/Stats.sol";
+import {MatchEntity} from "@tables/MatchEntity.sol";
 import "forge-std/console2.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
@@ -87,9 +88,10 @@ contract Test_CombatSystem is SetUp, GasReporter {
         StatsData memory endingStats = Stats.get(bobCharacterId);
         uint256 endingGold = goldToken.balanceOf(bob);
 
-        assertNotEq(startingStats.currentHp, int256(Stats.get(entityId).baseHitPoints));
+        assertNotEq(startingStats.currentHp, int256(Stats.get(entityId).baseHp));
         assertGt(endingStats.experience, startingStats.experience);
         assertGt(endingGold, startingGold);
+        assertEq(MatchEntity.getEncounterId(bobCharacterId), bytes32(0));
 
         // start new match
         defenders[0] = entityId2;

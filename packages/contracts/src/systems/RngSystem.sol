@@ -131,13 +131,13 @@ contract RngSystem is System, IEntropyConsumer {
         // Class-based adjustments; should total to 21
         if (characterClass == Classes.Warrior) {
             stats.strength += 2;
-            stats.baseHitPoints = uint256(10);
+            stats.baseHp = uint256(10);
         } else if (characterClass == Classes.Rogue) {
             stats.agility += 2;
-            stats.baseHitPoints = uint256(6);
+            stats.baseHp = uint256(6);
         } else if (characterClass == Classes.Mage) {
             stats.intelligence += 2;
-            stats.baseHitPoints = uint256(8);
+            stats.baseHp = uint256(8);
         }
 
         Stats.set(characterId, stats);
