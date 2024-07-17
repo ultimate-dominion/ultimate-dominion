@@ -363,12 +363,16 @@ contract CombatSystem is System {
             entityIdTemp = encounterData.attackers[i];
             if (IWorld(_world()).UD__isValidCharacterId(entityIdTemp)) {
                 statsTemp = Stats.get(entityIdTemp);
-                if (statsTemp.currentHp > int256(0) && goldDrop > 0) {
-                    statsTemp.experience += expDrop / livingAttackers;
-                    IWorld(_world()).UD__dropGold(entityIdTemp, (goldDrop / livingAttackers));
-                    Stats.set(entityIdTemp, statsTemp);
-                    MatchEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
+                if (statsTemp.currentHp > int256(0)) {
+                    if (goldDrop > uint256(0)) {
+                        IWorld(_world()).UD__dropGold(entityIdTemp, (goldDrop / livingAttackers));
+                    }
+                    if (expDrop > uint256(0) && livingAttackers > uint256(0)) {
+                        statsTemp.experience += expDrop / livingAttackers;
+                    }
                 }
+                Stats.set(entityIdTemp, statsTemp);
+                MatchEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
             }
         }
     }
