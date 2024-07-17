@@ -288,6 +288,8 @@ export const CharacterPage = (): JSX.Element => {
               image={character.image}
               isOwner={isOwner}
               name={character.name}
+              characterId={character.characterId}
+              fetchCharacter={fetchCharacter}
             />
           </GridItem>
           <GridItem
