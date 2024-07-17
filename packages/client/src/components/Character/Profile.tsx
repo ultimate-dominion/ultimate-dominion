@@ -281,7 +281,7 @@ export const Profile = ({
                         Update
                       </Button>
                       <Spacer></Spacer>
-                      <Button variant="ghost" onClick={onClose}>
+                      <Button onClick={onClose} variant="ghost">
                         Cancel
                       </Button>
                     </ModalFooter>
