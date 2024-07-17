@@ -284,12 +284,12 @@ export const CharacterPage = (): JSX.Element => {
             rowStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
             <Profile
+              characterId={character.characterId}
               description={character.description!}
+              fetchCharacter={fetchCharacter}
               image={character.image}
               isOwner={isOwner}
               name={character.name}
-              characterId={character.characterId}
-              fetchCharacter={fetchCharacter}
             />
           </GridItem>
           <GridItem

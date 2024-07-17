@@ -221,6 +221,7 @@ export const Profile = ({
                                 placeholder={name}
                                 type="text"
                                 value={newName}
+                                maxLength={15}
                               />
                               {/* {showError && !name && (
                                   <FormHelperText color="red">
