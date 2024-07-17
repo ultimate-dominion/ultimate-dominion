@@ -31,6 +31,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     bytes32[] public defenders;
     bytes32[] public attackers;
     bytes32 entityId;
+    bytes32 entityId2;
 
     function setUp() public override {
         super.setUp();
@@ -38,6 +39,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.grantAccess(_mobSystemId("UD"), address(this));
 
         entityId = world.UD__spawnMob(1, 0, 0);
+        entityId2 = world.UD__spawnMob(1, 0, 0);
 
         defenders.push(entityId);
         attackers.push(bobCharacterId);
@@ -50,7 +52,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_createMatch_Revert_Entities_Wrong_Position() public {
-        bytes32 entityId2 = world.UD__spawnMob(1, 0, 1);
+        entityId2 = world.UD__spawnMob(1, 0, 1);
         defenders[0] = entityId2;
         vm.prank(bob);
         vm.expectRevert("COMBAT SYSTEM: INVALID PVE");
@@ -88,6 +90,11 @@ contract Test_CombatSystem is SetUp, GasReporter {
         assertNotEq(startingStats.currentHp, int256(Stats.get(entityId).baseHitPoints));
         assertGt(endingStats.experience, startingStats.experience);
         assertGt(endingGold, startingGold);
+
+        // start new match
+        defenders[0] = entityId2;
+        vm.prank(bob);
+        bytes32 matchId2 = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
     }
 
     function test_EndTurn_Revert_NonCombatant() public {
