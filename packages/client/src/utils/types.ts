@@ -12,6 +12,15 @@ export enum EncounterType {
   PvE,
 }
 
+export enum ItemType {
+  Weapon,
+  Armor,
+  Spell,
+  Potion,
+  Material,
+  QuestItem,
+}
+
 export enum StatsClasses {
   Warrior,
   Rogue,

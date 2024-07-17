@@ -36,7 +36,12 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import type { Character, StatsClasses, Weapon } from '../utils/types';
+import {
+  type Character,
+  ItemType,
+  type StatsClasses,
+  type Weapon,
+} from '../utils/types';
 
 export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
@@ -47,6 +52,7 @@ export const CharacterPage = (): JSX.Element => {
       Characters,
       CharactersTokenURI,
       GoldBalances,
+      Items,
       ItemsBaseURI,
       ItemsOwners,
       ItemsTokenURI,
@@ -145,20 +151,37 @@ export const CharacterPage = (): JSX.Element => {
       try {
         const _items = Array.from(runQuery([Has(ItemsOwners)]))
           .map(entity => {
-            const itemOwner = getComponentValueStrict(ItemsOwners, entity);
+            const itemdBalance = getComponentValueStrict(
+              ItemsOwners,
+              entity,
+            ).balance;
+
             const { owner, tokenId } = decodeEntity(
               { owner: 'address', tokenId: 'uint256' },
               entity,
             );
 
+            const tokenIdEntity = encodeEntity(
+              { tokenId: 'uint256' },
+              { tokenId },
+            );
+
+            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+
             return {
-              balance: itemOwner.balance.toString(),
+              balance: itemdBalance.toString(),
               itemId: entity,
+              itemType: itemTemplate.itemType,
               owner,
               tokenId: tokenId.toString(),
+              tokenIdEntity,
             };
           })
-          .filter(item => item.owner === _character.owner)
+          .filter(
+            item =>
+              item.owner === _character.owner &&
+              item.itemType === ItemType.Weapon,
+          )
           .sort((a, b) => {
             return Number(a.tokenId) - Number(b.tokenId);
           });
@@ -170,11 +193,6 @@ export const CharacterPage = (): JSX.Element => {
                 BigInt(item.tokenId),
               ]);
 
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId: BigInt(item.tokenId) },
-            );
-
             const baseURI = getComponentValueStrict(
               ItemsBaseURI,
               singletonEntity,
@@ -182,7 +200,7 @@ export const CharacterPage = (): JSX.Element => {
 
             const tokenURI = getComponentValueStrict(
               ItemsTokenURI,
-              tokenIdEntity,
+              item.tokenIdEntity,
             ).uri;
 
             const metadata = await fetchMetadataFromUri(
@@ -216,7 +234,14 @@ export const CharacterPage = (): JSX.Element => {
         setIsLoadingItems(false);
       }
     },
-    [ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError, worldContract],
+    [
+      Items,
+      ItemsBaseURI,
+      ItemsOwners,
+      ItemsTokenURI,
+      renderError,
+      worldContract,
+    ],
   );
 
   useEffect(() => {

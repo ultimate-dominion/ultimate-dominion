@@ -22,6 +22,7 @@ import {TokenURI} from "@latticexyz/world-modules/src/modules/erc721-puppet/tabl
 import {_tokenUriTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
 import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20System.sol";
 import {IItemsSystem} from "@codegen/world/IItemsSystem.sol";
+import {ILootManagerSystem} from "@codegen/world/ILootManagerSystem.sol";
 import {Classes} from "@codegen/common.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
@@ -78,6 +79,10 @@ contract CharacterSystem is System {
         return ownerOf == ownerAddress;
     }
 
+    function isValidOwner(bytes32 characterId, address owner) public view returns (bool) {
+        return isValidCharacterId(characterId) && _characterToken().ownerOf(getCharacterTokenId(characterId)) == owner;
+    }
+
     /**
      * @param account the address of the account that will own the character
      * @param name the keccack256 hash of the characters name to check for duplicates
@@ -114,15 +119,17 @@ contract CharacterSystem is System {
     function enterGame(bytes32 characterId) public {
         require(_isOwner(characterId), "not your character");
         require(!Characters.getLocked(characterId), "you have entered the game");
-
-        issueGold(characterId, 5 ether);
-        // issue starterWeapon
+        StatsData memory tempStats = Stats.get(characterId);
+        tempStats.level = 1;
+        tempStats.currentHp = int256(tempStats.baseHitPoints);
+        Stats.set(characterId, tempStats);
+        IWorld(_world()).UD__dropGold(characterId, 5 ether);
+        // issue starter gear
         IWorld(_world()).UD__issueStarterItems(characterId);
-
         Characters.setLocked(characterId, true);
     }
 
-    function getCurrentLevel(uint256 experience) public view returns (uint256 currentLevel) {
+    function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentLevel) {
         if (experience >= Levels.get(19)) {
             currentLevel = 20;
         } else {
@@ -164,10 +171,6 @@ contract CharacterSystem is System {
 
     function getOwner(bytes32 characterId) public view returns (address) {
         return Characters.getOwner(characterId);
-    }
-
-    function issueGold(bytes32 characterId, uint256 amount) internal {
-        _gold().mint(getOwner(characterId), amount);
     }
 
     function getExperience(bytes32 characterId) public view returns (uint256) {
