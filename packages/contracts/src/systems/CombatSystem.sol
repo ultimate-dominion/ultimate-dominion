@@ -330,7 +330,7 @@ contract CombatSystem is System {
 
     function _endMatch(bytes32 encounterId, uint256 randomNumber)
         internal
-        returns (uint256[] memory itemIds, uint256[] memory amounts, uint256 goldAmount)
+        returns (uint256 expAmount, uint256 goldAmount)
     {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
 
@@ -349,13 +349,11 @@ contract CombatSystem is System {
         //if cumulative attacker levels is >= 5 levels above the monster level no gold reward.
         //  for this calculation level is calculated from exp not from actual leveled levels
 
-        uint256 goldDrop;
-        uint256 expDrop;
         for (uint256 i; i < encounterData.defenders.length; i++) {
             statsTemp = Stats.get(encounterData.defenders[i]);
             if (statsTemp.currentHp <= int256(0)) {
-                expDrop += statsTemp.experience;
-                goldDrop += calculateGoldDrop(statsTemp.level, randomNumber);
+                expAmount += statsTemp.experience;
+                goldAmount += calculateGoldDrop(statsTemp.level, randomNumber);
                 MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
                 _calculateItemDrop(
                     randomNumber,
