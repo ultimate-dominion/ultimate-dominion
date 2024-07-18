@@ -60,13 +60,13 @@ export const InitiateCombatModal: React.FC<InitiateCombatModalProps> = ({
       );
 
       if (!success) {
-        throw new Error('Contract call failed');
+        throw new Error('Contract call failed.');
       }
 
       renderSuccess(`Battle has begun!`);
       onClose();
     } catch (e) {
-      renderError(e, 'Failed to initiate battle');
+      renderError('Failed to initiate battle.', e);
     } finally {
       setIsInitiating(false);
     }

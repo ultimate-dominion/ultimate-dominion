@@ -126,8 +126,8 @@ export const CharacterCreation = (): JSX.Element => {
       );
 
       setStarterWeapons(_items);
-    } catch (error) {
-      renderError(error, 'Error fetching starter item.');
+    } catch (e) {
+      renderError('Error fetching starter item.', e);
     }
   }, [ItemsBaseURI, ItemsTokenURI, renderError, worldContract]);
 
@@ -168,7 +168,7 @@ export const CharacterCreation = (): JSX.Element => {
         const avatarCid = await onUpload();
         if (!avatarCid)
           throw new Error(
-            'Something went wrong uploading your character avatar',
+            'Something went wrong uploading your character avatar.',
           );
 
         const image = `ipfs://${avatarCid}`;
@@ -191,13 +191,13 @@ export const CharacterCreation = (): JSX.Element => {
         );
         if (!res.ok)
           throw new Error(
-            'Something went wrong uploading your character metadata',
+            'Something went wrong uploading your character metadata.',
           );
 
         const { cid: characterMetadataCid } = await res.json();
         if (!characterMetadataCid)
           throw new Error(
-            'Something went wrong uploading your character metadata',
+            'Something went wrong uploading your character metadata.',
           );
 
         const success = await mintCharacter(
@@ -207,13 +207,13 @@ export const CharacterCreation = (): JSX.Element => {
         );
 
         if (!success) {
-          throw new Error('Contract call failed');
+          throw new Error('Contract call failed.');
         }
 
         await refreshCharacter();
         renderSuccess('Character created!');
       } catch (e) {
-        renderError(e, 'Failed to create character.');
+        renderError('Failed to create character.', e);
       } finally {
         setIsCreating(false);
       }
@@ -253,13 +253,13 @@ export const CharacterCreation = (): JSX.Element => {
       const success = await rollStats(character.characterId, characterClass);
 
       if (!success) {
-        throw new Error('Contract call failed');
+        throw new Error('Contract call failed.');
       }
 
       refreshCharacter();
       renderSuccess('Stats rolled!');
     } catch (e) {
-      renderError(e, 'Failed to roll stats.');
+      renderError('Failed to roll stats.', e);
     } finally {
       setIsRollingStats(false);
     }
@@ -295,7 +295,7 @@ export const CharacterCreation = (): JSX.Element => {
       const success = await enterGame(character.characterId);
 
       if (!success) {
-        throw new Error('Contract call failed');
+        throw new Error('Contract call failed.');
       }
 
       await refreshCharacter();
@@ -303,7 +303,7 @@ export const CharacterCreation = (): JSX.Element => {
       renderSuccess('Your character has awakend!');
       navigate(GAME_BOARD_PATH);
     } catch (e) {
-      renderError(e, 'Failed to enter game.');
+      renderError('Failed to enter game.', e);
     } finally {
       setIsEnteringGame(false);
     }

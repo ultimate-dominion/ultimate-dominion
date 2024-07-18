@@ -1,6 +1,6 @@
 export const USER_ERRORS = ['User denied signature'];
 
-export const getErrorMessage = (
+export const getError = (
   error: unknown,
   defaultError: string = 'Unknown error',
 ): string => {

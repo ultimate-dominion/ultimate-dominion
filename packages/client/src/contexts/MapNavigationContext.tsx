@@ -170,8 +170,8 @@ export const MapNavigationProvider = ({
         );
 
         setOtherPlayers(characters.filter(c => c.owner !== delegatorAddress));
-      } catch (error) {
-        renderError(error, 'Failed to fetch other players');
+      } catch (e) {
+        renderError('Failed to fetch other players.', e);
       }
     },
     [
@@ -230,8 +230,8 @@ export const MapNavigationProvider = ({
         );
 
         setMonsters(_monsters.filter(m => Number(m.currentHp) > 0));
-      } catch (error) {
-        renderError(error, 'Failed to fetch monsters');
+      } catch (e) {
+        renderError('Failed to fetch monsters.', e);
       }
     },
     [Mobs, renderError, Stats],
@@ -275,12 +275,12 @@ export const MapNavigationProvider = ({
       const success = await spawn(character.characterId);
 
       if (!success) {
-        throw new Error('Contract call failed');
+        throw new Error('Contract call failed.');
       }
 
       renderSuccess('Spawned!');
     } catch (e) {
-      renderError(e, 'Failed to roll stats.');
+      renderError('Failed to roll stats.', e);
     } finally {
       setIsSpawning(false);
     }
@@ -299,15 +299,15 @@ export const MapNavigationProvider = ({
         setIsMoving(true);
 
         if (!delegatorAddress) {
-          throw new Error('Burner not found');
+          throw new Error('Burner not found.');
         }
 
         if (!position) {
-          throw new Error('Position not found');
+          throw new Error('Position not found.');
         }
 
         if (!character) {
-          throw new Error('Character not found');
+          throw new Error('Character not found.');
         }
 
         const { x, y } = position;
@@ -344,10 +344,10 @@ export const MapNavigationProvider = ({
         const success = await move(character.characterId, newX, newY);
 
         if (!success) {
-          throw new Error('Contract call failed');
+          throw new Error('Contract call failed.');
         }
       } catch (e) {
-        renderError(e, 'Failed to move.');
+        renderError('Failed to move.', e);
       } finally {
         setIsMoving(false);
       }

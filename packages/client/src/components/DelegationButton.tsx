@@ -28,17 +28,17 @@ export const DelegationButton = ({
   const onSetupDelegation = useCallback(async () => {
     try {
       if (!setupDelegation) {
-        throw new Error('Delegation setup function not available');
+        throw new Error('Delegation setup function not available.');
       }
 
       if (!network) {
-        throw new Error('Network not available');
+        throw new Error('Network not available.');
       }
 
       setIsDelegating(true);
       await setupDelegation(network, externalWalletClient, burnerAddress);
 
-      renderSuccess('Delegation successful');
+      renderSuccess('Delegation successful.');
 
       if (onClose) {
         onClose();
@@ -46,8 +46,8 @@ export const DelegationButton = ({
 
       getBurner();
       navigate(CHARACTER_CREATION_PATH);
-    } catch (error) {
-      renderError(error, 'Failed to delegate');
+    } catch (e) {
+      renderError('Failed to delegate.', e);
     } finally {
       setIsDelegating(false);
     }

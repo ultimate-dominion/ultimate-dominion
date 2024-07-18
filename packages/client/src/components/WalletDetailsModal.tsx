@@ -68,16 +68,16 @@ export const WalletDetailsModal = ({
       setIsDepositing(true);
 
       if (!(externalWalletBalance && externalWalletClient)) {
-        throw new Error('No external wallet client found');
+        throw new Error('No external wallet client found.');
       }
 
       if (!depositAmount || parseEther(depositAmount) <= 0) {
-        setDepositErrorMessage('Amount must be greater than 0');
+        setDepositErrorMessage('Amount must be greater than 0.');
         return;
       }
 
       if (parseEther(depositAmount) > externalWalletBalance.value) {
-        setDepositErrorMessage('Insufficient funds in external wallet');
+        setDepositErrorMessage('Insufficient funds in external wallet.');
         return;
       }
 
@@ -88,8 +88,8 @@ export const WalletDetailsModal = ({
 
       setDepositAmount('0');
       renderSuccess('Funds deposited successfully!');
-    } catch (error) {
-      renderError(error, 'Error depositing funds');
+    } catch (e) {
+      renderError('Error depositing funds.', e);
     } finally {
       setIsDepositing(false);
     }
@@ -107,12 +107,12 @@ export const WalletDetailsModal = ({
       setIsWithdrawing(true);
 
       if (!withdrawAmount || parseEther(withdrawAmount) <= 0) {
-        setWithdrawErrorMessage('Amount must be greater than 0');
+        setWithdrawErrorMessage('Amount must be greater than 0.');
         return;
       }
 
       if (parseEther(withdrawAmount) > parseEther(burnerBalance)) {
-        setWithdrawErrorMessage('Insufficient funds in session wallet');
+        setWithdrawErrorMessage('Insufficient funds in session wallet.');
         return;
       }
 
@@ -123,8 +123,8 @@ export const WalletDetailsModal = ({
 
       setWithdrawAmount('0');
       renderSuccess('Funds withdrawn successfully!');
-    } catch (error) {
-      renderError(error, 'Error withdrawing funds');
+    } catch (e) {
+      renderError('Error withdrawing funds.', e);
     } finally {
       setIsWithdrawing(false);
     }

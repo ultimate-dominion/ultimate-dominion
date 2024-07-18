@@ -125,12 +125,12 @@ export const ActionsPanel = (): JSX.Element => {
         );
 
         if (!success) {
-          throw new Error('Contract call failed');
+          throw new Error('Contract call failed.');
         }
 
         await refreshCharacter();
       } catch (e) {
-        renderError(e, 'Failed to roll stats.');
+        renderError('Failed to roll stats.', e);
       } finally {
         setIsAttacking(false);
       }

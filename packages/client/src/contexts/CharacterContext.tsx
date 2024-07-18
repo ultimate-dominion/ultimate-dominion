@@ -141,8 +141,8 @@ export const CharacterProvider = ({
     setIsRefreshing(true);
     try {
       await fetchCharacterData();
-    } catch (error) {
-      renderError('Error refreshing character');
+    } catch (e) {
+      renderError('Error refreshing character.', e);
     } finally {
       setIsRefreshing(false);
     }
@@ -241,8 +241,8 @@ export const CharacterProvider = ({
         );
 
         setEquippedItems(fullItems);
-      } catch (error) {
-        renderError(error, 'Failed to fetch character data');
+      } catch (e) {
+        renderError('Failed to fetch character data.', e);
       }
     },
     [ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError, worldContract],

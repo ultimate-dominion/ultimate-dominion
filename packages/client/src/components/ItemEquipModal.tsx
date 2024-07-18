@@ -65,14 +65,14 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       const success = await equipItems(character.characterId, [weapon.tokenId]);
 
       if (!success) {
-        throw new Error('Contract call failed');
+        throw new Error('Contract call failed.');
       }
 
       await refreshCharacter();
       renderSuccess(`${weapon.name} equipped successfully!`);
       onClose();
     } catch (e) {
-      renderError(e, 'Failed to equip item.');
+      renderError('Failed to equip item.', e);
     } finally {
       setIsEquipping(false);
     }
@@ -109,14 +109,14 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       const success = await unequipItem(character.characterId, weapon.tokenId);
 
       if (!success) {
-        throw new Error('Contract call failed');
+        throw new Error('Contract call failed.');
       }
 
       await refreshCharacter();
       renderSuccess(`${weapon.name} unequipped successfully!`);
       onClose();
     } catch (e) {
-      renderError(e, 'Failed to unequip item.');
+      renderError('Failed to unequip item.', e);
     } finally {
       setIsEquipping(false);
     }

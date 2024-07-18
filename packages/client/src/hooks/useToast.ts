@@ -1,27 +1,28 @@
 import { useToast as useChakraToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
 
-import { getErrorMessage, USER_ERRORS } from '../utils/errors';
+import { getError, USER_ERRORS } from '../utils/errors';
 
 export const useToast = (): {
-  renderError: (error: unknown, defaultError?: string) => void;
+  renderError: (errorMsg: string, errorLog?: unknown) => void;
   renderWarning: (msg: string) => void;
   renderSuccess: (msg: string) => void;
 } => {
   const toast = useChakraToast();
 
   const renderError = useCallback(
-    (error: unknown, defaultError?: string) => {
-      const errorMsg = getErrorMessage(error);
-      // eslint-disable-next-line no-console
-      console.error(error);
+    (errorMsg: string, errorLog?: unknown) => {
+      const formattedErrorLog = getError(errorLog);
 
-      if (USER_ERRORS.includes(errorMsg)) {
+      if (USER_ERRORS.includes(formattedErrorLog)) {
         return;
       }
 
+      // eslint-disable-next-line no-console
+      console.error(errorLog);
+
       toast({
-        description: getErrorMessage(error, defaultError),
+        description: errorMsg,
         position: 'top',
         status: 'error',
         containerStyle: {
