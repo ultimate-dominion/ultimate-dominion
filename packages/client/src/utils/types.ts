@@ -39,7 +39,7 @@ export type CharacterData = {
 
 export type EntityStats = {
   agility: string;
-  baseHitPoints: string;
+  baseHp: string;
   currentHp: string;
   entityClass: StatsClasses;
   experience: string;

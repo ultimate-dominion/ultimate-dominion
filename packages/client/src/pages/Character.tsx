@@ -111,7 +111,7 @@ export const CharacterPage = (): JSX.Element => {
       const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility.toString(),
-        baseHitPoints: characterStats.baseHitPoints.toString(),
+        baseHp: characterStats.baseHp.toString(),
         entityClass: characterStats.class,
         characterId: characterId as Entity,
         currentHp: characterStats.currentHp.toString(),
@@ -321,7 +321,7 @@ export const CharacterPage = (): JSX.Element => {
           >
             <StatsPanel
               agility={character.agility}
-              baseHitPoints={character.baseHitPoints}
+              baseHp={character.baseHp}
               currentHp={character.currentHp}
               intelligence={character.intelligence}
               strength={character.strength}

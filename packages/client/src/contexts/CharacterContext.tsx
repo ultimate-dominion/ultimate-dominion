@@ -90,7 +90,7 @@ export const CharacterProvider = ({
 
       return {
         agility: characterStats?.agility.toString() ?? '0',
-        baseHitPoints: characterStats?.baseHitPoints.toString() ?? '0',
+        baseHp: characterStats?.baseHp.toString() ?? '0',
         currentHp: characterStats?.currentHp.toString() ?? '0',
         characterId: entity,
         entityClass: characterStats?.class ?? 0,

@@ -151,7 +151,7 @@ export const MapNavigationProvider = ({
             return {
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
-              baseHitPoints: characterStats.baseHitPoints.toString(),
+              baseHp: characterStats.baseHp.toString(),
               characterId: entity,
               entityClass: characterStats.class,
               experience: characterStats.experience.toString(),
@@ -215,7 +215,7 @@ export const MapNavigationProvider = ({
 
             return {
               agility: monsterStats.agility.toString(),
-              baseHitPoints: monsterStats.baseHitPoints.toString(),
+              baseHp: monsterStats.baseHp.toString(),
               currentHp: monsterStats.currentHp.toString(),
               entityClass: monsterStats.class,
               experience: monsterStats.experience.toString(),
