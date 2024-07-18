@@ -121,7 +121,7 @@ contract CharacterSystem is System {
         require(!Characters.getLocked(characterId), "you have entered the game");
         StatsData memory tempStats = Stats.get(characterId);
         tempStats.level = 1;
-        tempStats.currentHp = int256(tempStats.baseHitPoints);
+        tempStats.currentHp = int256(tempStats.baseHp);
         Stats.set(characterId, tempStats);
         IWorld(_world()).UD__dropGold(characterId, 5 ether);
         // issue starter gear

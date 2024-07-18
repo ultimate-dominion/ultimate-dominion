@@ -249,8 +249,8 @@ contract EquipmentSystem is System {
                 : int256(0)
         );
         combatStats.adjustedMaxHp = uint256(
-            int256(entityStats.baseHitPoints) + equipmentStats.hpBonus >= 0
-                ? int256(entityStats.baseHitPoints) + equipmentStats.hpBonus
+            int256(entityStats.baseHp) + equipmentStats.hpBonus >= 0
+                ? int256(entityStats.baseHp) + equipmentStats.hpBonus
                 : int256(1)
         );
         combatStats.currentHp = entityStats.currentHp;
