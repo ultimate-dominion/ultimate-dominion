@@ -1,6 +1,7 @@
 import { Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
 import { Has, HasValue, runQuery } from '@latticexyz/recs';
 import { useCallback, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useCombat } from '../contexts/CombatContext';
@@ -163,6 +164,21 @@ export const ActionsPanel = (): JSX.Element => {
         )}
         {currentBattle && equippedItems && monster && (
           <HStack justify="center">
+            {equippedItems.length === 0 && (
+              <Text color="red" fontWeight={700}>
+                You have no equipped items. In order to attack, you must go to
+                your{' '}
+                <Text
+                  as={Link}
+                  color="green"
+                  to={`/characters/${character?.characterId}`}
+                  _hover={{ textDecoration: 'underline' }}
+                >
+                  character page
+                </Text>{' '}
+                and equip at least 1 item.
+              </Text>
+            )}
             {equippedItems.map((item, index) => (
               <Button
                 key={`equipped-item-${index}`}
