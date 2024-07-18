@@ -50,6 +50,4 @@ interface ICombatSystem {
   function UD___calculateMagicAttack() external;
 
   function UD__calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) external returns (uint256 dropAmount);
-
-  function UD__calculateItemDrop(uint256 randomNumber, uint256 itemId) external returns (bool);
 }

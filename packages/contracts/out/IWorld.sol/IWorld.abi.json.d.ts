@@ -187,30 +187,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__calculateItemDrop",
-    "inputs": [
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "itemId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "UD__checkRequirements",
     "inputs": [
       {
@@ -1417,7 +1393,7 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "baseHitPoints",
+            "name": "baseHp",
             "type": "uint256",
             "internalType": "uint256"
           },

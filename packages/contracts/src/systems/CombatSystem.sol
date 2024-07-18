@@ -13,6 +13,7 @@ import {
     StatsData,
     Actions,
     ActionsData,
+    Items,
     CharacterEquipment,
     CharacterEquipmentData,
     CombatEncounter,
@@ -239,8 +240,10 @@ contract CombatSystem is System {
             PhysicalAttackStats memory attackStats = abi.decode(actionData.actionStats, (PhysicalAttackStats));
             (int256 damage, bool hit, bool crit) =
                 _calculatePhysicalAttack(attackStats, attackerId, defenderId, weaponId, randomNumber);
-            int256 currentHp = Stats.getCurrentHp(defenderId) - int256(damage / int256(ATTACK_MODIFIER));
-            Stats.setCurrentHp(defenderId, currentHp);
+            if (hit) {
+                int256 currentHp = Stats.getCurrentHp(defenderId) - int256(damage / int256(ATTACK_MODIFIER));
+                Stats.setCurrentHp(defenderId, currentHp);
+            }
         }
     }
 
@@ -286,10 +289,12 @@ contract CombatSystem is System {
                 if (crit) {
                     console2.log("CRIT!");
                     damage = damage * int256(CRIT_MODIFIER);
+                    crit = true;
                 }
             } else {
                 console2.log("MISS!");
                 damage = 0;
+                hit = false;
             }
         } else {
             damage = 0;
@@ -352,6 +357,11 @@ contract CombatSystem is System {
                 expDrop += statsTemp.experience;
                 goldDrop += calculateGoldDrop(statsTemp.level, randomNumber);
                 MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+                _calculateItemDrop(
+                    randomNumber,
+                    encounterData.defenders[i],
+                    encounterData.attackers[randomNumber % encounterData.attackers.length]
+                );
             }
         }
         // drop gold reward calculated from the level of mob to player journey wallet (can mint tokens when he returns to 0,0).
@@ -382,5 +392,14 @@ contract CombatSystem is System {
         dropAmount = randomNumber % (BASE_GOLD_DROP * mobLevel);
     }
 
-    function calculateItemDrop(uint256 randomNumber, uint256 itemId) public returns (bool) {}
+    function _calculateItemDrop(uint256 randomNumber, bytes32 entityId, bytes32 characterId) internal {
+        uint256 mobId = IWorld(_world()).UD__getMobId(entityId);
+        MonsterStats memory monsterStats = abi.decode(Mobs.getMobStats(mobId), (MonsterStats));
+        for (uint256 i; i < monsterStats.inventory.length; i++) {
+            uint256 dropChance = Items.getDropChance(monsterStats.inventory[i]);
+            if (randomNumber % 100_000 > dropChance) {
+                IWorld(_world()).UD__dropItem(monsterStats.inventory[i], 1, characterId);
+            }
+        }
+    }
 }
