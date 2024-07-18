@@ -1,10 +1,10 @@
 import { Box, HStack, Progress, Spacer, Text } from '@chakra-ui/react';
 
-const CURRENT_LEVEL = 1;
-
 export const Level = ({
+  currentLevel,
   levelPercent,
 }: {
+  currentLevel: string;
   levelPercent: number;
 }): JSX.Element => {
   return (
@@ -14,7 +14,7 @@ export const Level = ({
         right={100 - levelPercent - 2 + '%'}
         top="-15px"
       >
-        {levelPercent}%
+        {levelPercent.toFixed(2)}%
       </Text>
       <Text
         display={levelPercent > 90 ? 'none' : 'block'}
@@ -26,9 +26,9 @@ export const Level = ({
       </Text>
       <Progress h={2} value={levelPercent} />
       <HStack mt={1}>
-        <Text>Level {CURRENT_LEVEL}</Text>
+        <Text>Level {currentLevel}</Text>
         <Spacer />
-        <Text>Level {CURRENT_LEVEL + 1}</Text>
+        <Text>Level {Number(currentLevel) + 1}</Text>
       </HStack>
     </Box>
   );

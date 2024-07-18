@@ -6,11 +6,20 @@
 // import { getComponentValue } from '@latticexyz/recs';
 // import { singletonEntity } from '@latticexyz/store-sync/recs';
 
-import { Entity, getComponentValue } from '@latticexyz/recs';
+import {
+  Entity,
+  getComponentValue,
+  getComponentValueStrict,
+  Has,
+  HasValue,
+  runQuery,
+} from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { uuid } from '@latticexyz/utils';
 import {
   Address,
+  BaseError,
+  ContractFunctionRevertedError,
   getContract,
   keccak256,
   parseAbiItem,
@@ -18,11 +27,29 @@ import {
   toBytes,
 } from 'viem';
 
-import { StatsClasses } from '../../utils/types';
+import { EncounterType, StatsClasses } from '../../utils/types';
 import { ClientComponents } from './createClientComponents';
 import { SetupNetworkResult } from './setupNetwork';
 
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
+
+type SystemCallReturn = Promise<{
+  success: boolean;
+  error?: string;
+}>;
+
+const getContractError = (error: unknown): string => {
+  if (error instanceof BaseError) {
+    const revertError = error.walk(
+      e => e instanceof ContractFunctionRevertedError,
+    );
+    if (revertError instanceof ContractFunctionRevertedError) {
+      const args = revertError.data?.args ?? [];
+      return args[0] as string;
+    }
+  }
+  return 'An error occurred calling the contract.';
+};
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSystemCalls(
@@ -45,11 +72,145 @@ export function createSystemCalls(
    *   syncToRecs
    *   (https://github.com/latticexyz/mud/blob/main/templates/react/packages/client/src/mud/setupNetwork.ts#L77-L83).
    */
-  { publicClient, waitForTransaction, worldContract }: SetupNetworkResult,
-  { CharacterEquipment, Characters, Position, Spawned }: ClientComponents,
+  {
+    delegatorAddress,
+    publicClient,
+    waitForTransaction,
+    worldContract,
+  }: SetupNetworkResult & { delegatorAddress?: Address },
+  {
+    CharacterEquipment,
+    Characters,
+    CombatEncounter,
+    Position,
+    Spawned,
+  }: ClientComponents,
 ) {
-  const enterGame = async (characterEntity: Entity) => {
+  const createMatch = async (
+    encounterType: EncounterType,
+    attackers: string[],
+    defenders: string[],
+  ): SystemCallReturn => {
     try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [
+          encounterType,
+          attackers as `0x${string}`[],
+          defenders as `0x${string}`[],
+        ],
+        functionName: 'UD__createMatch',
+      });
+
+      const tx = await worldContract.write.UD__createMatch([
+        encounterType,
+        attackers as `0x${string}`[],
+        defenders as `0x${string}`[],
+      ]);
+
+      await waitForTransaction(tx);
+
+      const success = !!Array.from(
+        runQuery([
+          Has(CombatEncounter),
+          HasValue(CombatEncounter, { encounterType }),
+        ]),
+      ).filter(entity => {
+        const encounter = getComponentValue(CombatEncounter, entity);
+        return (
+          encounter &&
+          encounter.attackers.some(attacker => attackers.includes(attacker)) &&
+          encounter.defenders.some(defender => defenders.includes(defender))
+        );
+      })[0];
+
+      return {
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const endTurn = async (
+    encounterId: Entity,
+    playerId: Entity,
+    defenderId: Entity,
+    actionId: Entity,
+    weaponId: string,
+    previousTurn: string,
+  ): SystemCallReturn => {
+    try {
+      const actions = [
+        {
+          attackerEntityId: playerId.toString() as `0x${string}`,
+          defenderEntityId: defenderId.toString() as `0x${string}`,
+          actionId: actionId.toString() as `0x${string}`,
+          weaponId: BigInt(weaponId),
+        },
+      ];
+
+      const fee = await getFee();
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [
+          encounterId.toString() as `0x${string}`,
+          playerId.toString() as `0x${string}`,
+          actions,
+        ],
+        functionName: 'UD__endTurn',
+        value: fee,
+      });
+
+      const tx = await worldContract.write.UD__endTurn(
+        [
+          encounterId.toString() as `0x${string}`,
+          playerId.toString() as `0x${string}`,
+          actions,
+        ],
+        {
+          value: fee,
+        },
+      );
+
+      await waitForTransaction(tx);
+
+      const currentTurn = getComponentValueStrict(
+        CombatEncounter,
+        encounterId,
+      ).currentTurn;
+
+      const success = currentTurn === BigInt(previousTurn) + BigInt(1);
+
+      return {
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const enterGame = async (characterEntity: Entity): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterEntity.toString() as `0x${string}`],
+        functionName: 'UD__enterGame',
+      });
+
       const tx = await worldContract.write.UD__enterGame([
         characterEntity.toString() as `0x${string}`,
       ]);
@@ -57,14 +218,33 @@ export function createSystemCalls(
       await waitForTransaction(tx);
 
       const success = !!getComponentValue(Characters, characterEntity)?.locked;
-      return success;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const equipItems = async (characterEntity: Entity, itemIds: string[]) => {
+  const equipItems = async (
+    characterEntity: Entity,
+    itemIds: string[],
+  ): SystemCallReturn => {
     try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [
+          characterEntity.toString() as `0x${string}`,
+          itemIds.map(itemId => BigInt(itemId)),
+        ],
+        functionName: 'UD__equipItems',
+      });
+
       const tx = await worldContract.write.UD__equipItems([
         characterEntity.toString() as `0x${string}`,
         itemIds.map(itemId => BigInt(itemId)),
@@ -72,26 +252,42 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const characterEquipment = getComponentValue(
+      const characterEquipment = getComponentValueStrict(
         CharacterEquipment,
         characterEntity,
       );
 
-      if (!characterEquipment) return false;
       const { equippedArmor, equippedWeapons } = characterEquipment;
 
       const success =
         equippedArmor.some(id => itemIds.includes(id.toString())) ||
         equippedWeapons.some(id => itemIds.includes(id.toString()));
 
-      return success;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const mintCharacter = async (account: Address, name: string, uri: string) => {
+  const mintCharacter = async (
+    account: Address,
+    name: string,
+    uri: string,
+  ): SystemCallReturn => {
     try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [account, stringToHex(name, { size: 32 }), uri],
+        functionName: 'UD__mintCharacter',
+      });
+
       const nameHex = stringToHex(name, { size: 32 });
       const simulatedTx = await worldContract.simulate.UD__mintCharacter([
         account,
@@ -109,7 +305,7 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const sucess = !!getComponentValue(
+      const success = !!getComponentValue(
         Characters,
         encodeEntity(
           { characterId: 'uint256' },
@@ -117,13 +313,30 @@ export function createSystemCalls(
         ),
       );
 
-      return sucess;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const move = async (characterEntity: Entity, x: number, y: number) => {
+  const move = async (
+    characterEntity: Entity,
+    x: number,
+    y: number,
+  ): SystemCallReturn => {
+    await publicClient.simulateContract({
+      abi: worldContract.abi,
+      account: delegatorAddress,
+      address: worldContract.address,
+      args: [characterEntity.toString() as `0x${string}`, x, y],
+      functionName: 'UD__move',
+    });
+
     const positionId = uuid();
     Position.addOverride(positionId, {
       entity: characterEntity,
@@ -138,9 +351,21 @@ export function createSystemCalls(
       ]);
       await waitForTransaction(tx);
 
-      return getComponentValue(Position, characterEntity);
+      const { x: newX, y: newY } = getComponentValueStrict(
+        Position,
+        characterEntity,
+      );
+
+      const success = x === newX && y === newY;
+
+      return {
+        success,
+      };
     } catch (e) {
-      return null;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     } finally {
       Position.removeOverride(positionId);
     }
@@ -149,25 +374,25 @@ export function createSystemCalls(
   const rollStats = async (
     characterEntity: Entity,
     characterClass: StatsClasses,
-  ) => {
+  ): SystemCallReturn => {
     try {
-      const entropyAddress = await worldContract.read.UD__getEntropy();
-      const providerAddress = await worldContract.read.UD__getPythProvider();
-
-      const entropyContract = getContract({
-        address: entropyAddress,
-        abi: [
-          parseAbiItem(
-            'function getFee(address provider) view returns (uint256)',
-          ),
-        ],
-        client: publicClient,
-      });
-
-      const fee = await entropyContract.read.getFee([providerAddress]);
+      const fee = await getFee();
 
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [
+          userRandomNumber,
+          characterEntity.toString() as `0x${string}`,
+          characterClass,
+        ],
+        functionName: 'UD__rollStats',
+        value: fee,
+      });
 
       const tx = await worldContract.write.UD__rollStats(
         [
@@ -183,14 +408,27 @@ export function createSystemCalls(
       await waitForTransaction(tx);
 
       const success = !!getComponentValue(Characters, characterEntity);
-      return success;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const spawn = async (characterEntity: Entity) => {
+  const spawn = async (characterEntity: Entity): SystemCallReturn => {
     try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterEntity.toString() as `0x${string}`],
+        functionName: 'UD__spawn',
+      });
+
       const tx = await worldContract.write.UD__spawn([
         characterEntity.toString() as `0x${string}`,
       ]);
@@ -199,14 +437,30 @@ export function createSystemCalls(
 
       const success = !!getComponentValue(Spawned, characterEntity)?.spawned;
 
-      return success;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const unequipItem = async (characterEntity: Entity, itemId: string) => {
+  const unequipItem = async (
+    characterEntity: Entity,
+    itemId: string,
+  ): SystemCallReturn => {
     try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterEntity.toString() as `0x${string}`, BigInt(itemId)],
+        functionName: 'UD__unequipItem',
+      });
+
       const tx = await worldContract.write.UD__unequipItem([
         characterEntity.toString() as `0x${string}`,
         BigInt(itemId),
@@ -214,12 +468,10 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const characterEquipment = getComponentValue(
+      const characterEquipment = getComponentValueStrict(
         CharacterEquipment,
         characterEntity,
       );
-
-      if (!characterEquipment) return false;
 
       const { equippedArmor, equippedWeapons } = characterEquipment;
 
@@ -228,13 +480,39 @@ export function createSystemCalls(
         equippedWeapons.includes(BigInt(itemId))
       );
 
-      return success;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
+  const getFee = async () => {
+    const entropyAddress = await worldContract.read.UD__getEntropy();
+    const providerAddress = await worldContract.read.UD__getPythProvider();
+
+    const entropyContract = getContract({
+      address: entropyAddress,
+      abi: [
+        parseAbiItem(
+          'function getFee(address provider) view returns (uint256)',
+        ),
+      ],
+      client: publicClient,
+    });
+
+    const fee = await entropyContract.read.getFee([providerAddress]);
+
+    return fee;
+  };
+
   return {
+    createMatch,
+    endTurn,
     enterGame,
     equipItems,
     mintCharacter,

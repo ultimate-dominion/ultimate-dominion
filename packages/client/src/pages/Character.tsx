@@ -15,7 +15,6 @@ import {
   getComponentValue,
   getComponentValueStrict,
   Has,
-  NotValue,
   runQuery,
 } from '@latticexyz/recs';
 import {
@@ -36,8 +35,17 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import type { Character, StatsClasses, Weapon } from '../utils/types';
+import {
+  decodeCharacterId,
+  fetchMetadataFromUri,
+  uriToHttp,
+} from '../utils/helpers';
+import {
+  type Character,
+  ItemType,
+  type StatsClasses,
+  type Weapon,
+} from '../utils/types';
 
 export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
@@ -48,6 +56,7 @@ export const CharacterPage = (): JSX.Element => {
       Characters,
       CharactersTokenURI,
       GoldBalances,
+      Items,
       ItemsBaseURI,
       ItemsOwners,
       ItemsTokenURI,
@@ -106,9 +115,10 @@ export const CharacterPage = (): JSX.Element => {
       const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility.toString(),
-        baseHitPoints: characterStats.baseHitPoints.toString(),
-        characterClass: characterStats.class,
+        baseHp: characterStats.baseHp.toString(),
+        entityClass: characterStats.class,
         characterId: characterId as Entity,
+        currentHp: characterStats.currentHp.toString(),
         experience: characterStats.experience.toString(),
         goldBalance: formatEther(goldBalance as bigint).toString(),
         intelligence: characterStats.intelligence.toString(),
@@ -124,8 +134,8 @@ export const CharacterPage = (): JSX.Element => {
 
       setCharacter(_character);
       return _character;
-    } catch (error) {
-      renderError(error, 'Failed to fetch character data');
+    } catch (e) {
+      renderError('Failed to fetch character data.', e);
       return null;
     } finally {
       setIsLoadingCharacter(false);
@@ -135,36 +145,48 @@ export const CharacterPage = (): JSX.Element => {
     Characters,
     CharactersTokenURI,
     GoldBalances,
+    renderError,
     Stats,
     publicClient,
-    renderError,
     worldContract,
   ]);
 
   const fetchCharacterItems = useCallback(
     async (_character: Character) => {
       try {
-        const _items = Array.from(
-          runQuery([
-            Has(ItemsOwners),
-            NotValue(ItemsOwners, { balance: BigInt(0) }),
-          ]),
-        )
+        const _items = Array.from(runQuery([Has(ItemsOwners)]))
           .map(entity => {
-            const itemOwner = getComponentValueStrict(ItemsOwners, entity);
+            const itemdBalance = getComponentValueStrict(
+              ItemsOwners,
+              entity,
+            ).balance;
+
             const { owner, tokenId } = decodeEntity(
               { owner: 'address', tokenId: 'uint256' },
               entity,
             );
 
+            const tokenIdEntity = encodeEntity(
+              { tokenId: 'uint256' },
+              { tokenId },
+            );
+
+            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+
             return {
-              balance: itemOwner.balance.toString(),
+              balance: itemdBalance.toString(),
               itemId: entity,
+              itemType: itemTemplate.itemType,
               owner,
               tokenId: tokenId.toString(),
+              tokenIdEntity,
             };
           })
-          .filter(item => item.owner === _character.owner)
+          .filter(
+            item =>
+              item.owner === _character.owner &&
+              item.itemType === ItemType.Weapon,
+          )
           .sort((a, b) => {
             return Number(a.tokenId) - Number(b.tokenId);
           });
@@ -176,11 +198,6 @@ export const CharacterPage = (): JSX.Element => {
                 BigInt(item.tokenId),
               ]);
 
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId: BigInt(item.tokenId) },
-            );
-
             const baseURI = getComponentValueStrict(
               ItemsBaseURI,
               singletonEntity,
@@ -188,7 +205,7 @@ export const CharacterPage = (): JSX.Element => {
 
             const tokenURI = getComponentValueStrict(
               ItemsTokenURI,
-              tokenIdEntity,
+              item.tokenIdEntity,
             ).uri;
 
             const metadata = await fetchMetadataFromUri(
@@ -216,29 +233,43 @@ export const CharacterPage = (): JSX.Element => {
         );
 
         setItems(fullItems);
-      } catch (error) {
-        renderError(error, 'Failed to fetch character data');
+      } catch (e) {
+        renderError('Failed to fetch character data.', e);
       } finally {
         setIsLoadingItems(false);
       }
     },
-    [ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError, worldContract],
+    [
+      Items,
+      ItemsBaseURI,
+      ItemsOwners,
+      ItemsTokenURI,
+      renderError,
+      worldContract,
+    ],
   );
+
+  const isOwner = useMemo(() => {
+    if (!(userCharacter && characterId)) return false;
+    const { ownerAddress } = decodeCharacterId(characterId as `0x${string}`);
+    return userCharacter.owner.toLowerCase() === ownerAddress;
+  }, [userCharacter, characterId]);
 
   useEffect(() => {
     if (!isSynced) return;
     (async (): Promise<void> => {
+      if (isOwner && userCharacter) {
+        setCharacter(userCharacter);
+        await fetchCharacterItems(userCharacter);
+        setIsLoadingCharacter(false);
+        return;
+      }
       const _character = await fetchCharacter();
 
       if (!_character) return;
       await fetchCharacterItems(_character);
     })();
-  }, [fetchCharacter, fetchCharacterItems, isSynced]);
-
-  const isOwner = useMemo(
-    () => character?.owner === userCharacter?.owner,
-    [character, userCharacter],
-  );
+  }, [fetchCharacter, fetchCharacterItems, isOwner, isSynced, userCharacter]);
 
   const maxItemsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
 
@@ -301,7 +332,8 @@ export const CharacterPage = (): JSX.Element => {
           >
             <StatsPanel
               agility={character.agility}
-              baseHitPoints={character.baseHitPoints}
+              baseHp={character.baseHp}
+              currentHp={character.currentHp}
               intelligence={character.intelligence}
               strength={character.strength}
             />

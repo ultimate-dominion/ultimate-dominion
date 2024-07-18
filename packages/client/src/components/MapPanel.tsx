@@ -8,6 +8,7 @@ import {
 } from 'react-icons/io';
 import { TbDirectionArrows } from 'react-icons/tb';
 
+import { useCombat } from '../contexts/CombatContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
 
 const SAFE_ZONE_AREA = {
@@ -25,6 +26,7 @@ export const MapPanel = (): JSX.Element => {
     otherPlayers,
     position,
   } = useMapNavigation();
+  const { currentBattle } = useCombat();
 
   return (
     <Stack
@@ -91,7 +93,10 @@ export const MapPanel = (): JSX.Element => {
         </Stack>
       </Box>
       {isSpawned ? (
-        <NavigationCompass isMoving={isRefreshing} onMove={onMove} />
+        <NavigationCompass
+          isDisabled={!!currentBattle || isRefreshing}
+          onMove={onMove}
+        />
       ) : (
         <Button
           isLoading={isSpawning}
@@ -119,10 +124,10 @@ const CharacterPiece = (): JSX.Element => (
 );
 
 const NavigationCompass = ({
-  isMoving,
+  isDisabled,
   onMove,
 }: {
-  isMoving: boolean;
+  isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
 }): JSX.Element => {
   return (
@@ -181,7 +186,7 @@ const NavigationCompass = ({
         <Button
           bg="white"
           borderRadius="50%"
-          isDisabled={isMoving}
+          isDisabled={isDisabled}
           p={0}
           onClick={() => onMove('up')}
           variant="ghost"
@@ -197,7 +202,7 @@ const NavigationCompass = ({
           <Button
             bg="white"
             borderRadius="50%"
-            isDisabled={isMoving}
+            isDisabled={isDisabled}
             p={0}
             onClick={() => onMove('left')}
             variant="ghost"
@@ -209,7 +214,7 @@ const NavigationCompass = ({
           <Button
             bg="white"
             borderRadius="50%"
-            isDisabled={isMoving}
+            isDisabled={isDisabled}
             p={0}
             onClick={() => onMove('right')}
             variant="ghost"
@@ -225,7 +230,7 @@ const NavigationCompass = ({
         <Button
           bg="white"
           borderRadius="50%"
-          isDisabled={isMoving}
+          isDisabled={isDisabled}
           p={0}
           onClick={() => onMove('down')}
           variant="ghost"

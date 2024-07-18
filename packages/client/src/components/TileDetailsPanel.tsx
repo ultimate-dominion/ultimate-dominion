@@ -8,17 +8,27 @@ import {
   Spinner,
   Text,
   useBreakpointValue,
+  useDisclosure,
+  VStack,
 } from '@chakra-ui/react';
+import { useState } from 'react';
+import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
+import { useCombat } from '../contexts/CombatContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { type Character, type Monster } from '../utils/types';
+import { InitiateCombatModal } from './InitiateCombatModal';
 
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const TileDetailsPanel = (): JSX.Element => {
   const { isRefreshing, monsters, otherPlayers } = useMapNavigation();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { currentBattle } = useCombat();
+
+  const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
 
   if (isRefreshing) {
     return (
@@ -56,6 +66,10 @@ export const TileDetailsPanel = (): JSX.Element => {
               <MonsterRow
                 key={`tile-monster-${i}-${monster.name}`}
                 monster={monster}
+                onClick={() => {
+                  setSelectedMonster(monster);
+                  onOpen();
+                }}
               />
             ))}
           {monsters.length === 0 && (
@@ -94,6 +108,30 @@ export const TileDetailsPanel = (): JSX.Element => {
           </GridItem>
         )}
       </Grid>
+      {selectedMonster && (
+        <InitiateCombatModal
+          isOpen={isOpen}
+          onClose={onClose}
+          {...selectedMonster}
+        />
+      )}
+      {currentBattle && (
+        <Box
+          pos="absolute"
+          bg="rgba(0, 0, 0, 0.5)"
+          h="100%"
+          w="100%"
+          top={0}
+          left={0}
+        >
+          <VStack h="100%" justifyContent="center" spacing={8}>
+            <Text color="white" fontWeight="bold" size="xl">
+              Combat in progress!
+            </Text>
+            <GiCrossedSwords color="white" size="100px" />
+          </VStack>
+        </Box>
+      )}
     </Box>
   );
 };
@@ -104,7 +142,13 @@ const MONSTER_COLORS = {
   [2]: 'green',
 };
 
-const MonsterRow = ({ monster }: { monster: Monster }) => {
+const MonsterRow = ({
+  monster,
+  onClick,
+}: {
+  monster: Monster;
+  onClick: () => void;
+}) => {
   const { level, name } = monster;
 
   const isFighting = false;
@@ -116,6 +160,7 @@ const MonsterRow = ({ monster }: { monster: Monster }) => {
       border="1px solid transparent"
       h={ROW_HEIGHT}
       justifyContent="space-between"
+      onClick={onClick}
       px={{ base: 1, sm: 2, md: 4 }}
       transition="all 0.3s ease"
       w="100%"

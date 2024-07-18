@@ -5,7 +5,7 @@ import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { callFrom } from '@latticexyz/world/internal';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import { share, Subject } from 'rxjs';
-import { createWalletClient, getContract, type Hex } from 'viem';
+import { type Address, createWalletClient, getContract, type Hex } from 'viem';
 
 import { createSystemCalls } from '../mud/createSystemCalls';
 import { type SetupNetworkResult } from '../mud/setupNetwork';
@@ -25,7 +25,7 @@ export type WorldContract = Burner['worldContract'];
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createBurner(
   network: SetupNetworkResult,
-  delegatorAddress?: Hex,
+  delegatorAddress?: Address,
 ) {
   /*
    * Create an observable for contract writes that we can
@@ -108,6 +108,7 @@ export function createBurner(
     systemCalls: createSystemCalls(
       {
         ...network,
+        delegatorAddress,
         worldContract: worldContract,
       },
       burnerComponents,

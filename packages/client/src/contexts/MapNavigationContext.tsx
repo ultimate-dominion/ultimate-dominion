@@ -151,9 +151,9 @@ export const MapNavigationProvider = ({
             return {
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
-              baseHitPoints: characterStats.baseHitPoints.toString(),
-              characterClass: characterStats.class,
+              baseHp: characterStats.baseHp.toString(),
               characterId: entity,
+              entityClass: characterStats.class,
               experience: characterStats.experience.toString(),
               goldBalance: formatEther(goldBalance as bigint).toString(),
               intelligence: characterStats.intelligence.toString(),
@@ -170,8 +170,8 @@ export const MapNavigationProvider = ({
         );
 
         setOtherPlayers(characters.filter(c => c.owner !== delegatorAddress));
-      } catch (error) {
-        renderError(error, 'Failed to fetch other players');
+      } catch (e) {
+        renderError('Failed to fetch other players.', e);
       }
     },
     [
@@ -209,31 +209,32 @@ export const MapNavigationProvider = ({
 
             const { mobMetadata: metadataURI } = mobData;
 
-            const monsterTemplateStats =
-              (await worldContract.read.UD__getMonsterStats([
-                monsterId as `0x${string}`,
-              ])) as { class: number };
-
             const fetachedMetadata = await fetchMetadataFromUri(
               uriToHttp(metadataURI)[0],
             );
 
             return {
-              class: monsterTemplateStats.class,
+              agility: monsterStats.agility.toString(),
+              baseHp: monsterStats.baseHp.toString(),
+              currentHp: monsterStats.currentHp.toString(),
+              entityClass: monsterStats.class,
+              experience: monsterStats.experience.toString(),
+              intelligence: monsterStats.intelligence.toString(),
               level: monsterStats.level.toString(),
               mobId,
               monsterId,
+              strength: monsterStats.strength.toString(),
               ...fetachedMetadata,
             };
           }),
         );
 
-        setMonsters(_monsters);
-      } catch (error) {
-        renderError(error, 'Failed to fetch monsters');
+        setMonsters(_monsters.filter(m => Number(m.currentHp) > 0));
+      } catch (e) {
+        renderError('Failed to fetch monsters.', e);
       }
     },
-    [Mobs, renderError, Stats, worldContract],
+    [Mobs, renderError, Stats],
   );
 
   useEffect(() => {
@@ -271,15 +272,15 @@ export const MapNavigationProvider = ({
         throw new Error('Character not found.');
       }
 
-      const success = await spawn(character.characterId);
+      const { error, success } = await spawn(character.characterId);
 
-      if (!success) {
-        throw new Error('Contract call failed');
+      if (error && !success) {
+        throw new Error(error);
       }
 
       renderSuccess('Spawned!');
     } catch (e) {
-      renderError(e, 'Failed to roll stats.');
+      renderError('Failed to spawn.', e);
     } finally {
       setIsSpawning(false);
     }
@@ -298,15 +299,15 @@ export const MapNavigationProvider = ({
         setIsMoving(true);
 
         if (!delegatorAddress) {
-          throw new Error('Burner not found');
+          throw new Error('Burner not found.');
         }
 
         if (!position) {
-          throw new Error('Position not found');
+          throw new Error('Position not found.');
         }
 
         if (!character) {
-          throw new Error('Character not found');
+          throw new Error('Character not found.');
         }
 
         const { x, y } = position;
@@ -340,13 +341,17 @@ export const MapNavigationProvider = ({
             break;
         }
 
-        const success = await move(character.characterId, newX, newY);
+        const { error, success } = await move(
+          character.characterId,
+          newX,
+          newY,
+        );
 
-        if (!success) {
-          throw new Error('Contract call failed');
+        if (error && !success) {
+          throw new Error(error);
         }
       } catch (e) {
-        renderError(e, 'Failed to move.');
+        renderError('Failed to move.', e);
       } finally {
         setIsMoving(false);
       }
