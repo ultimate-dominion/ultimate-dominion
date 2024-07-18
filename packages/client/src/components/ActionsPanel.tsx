@@ -60,7 +60,7 @@ export const ActionsPanel = (): JSX.Element => {
     delegatorAddress,
     systemCalls: { endTurn },
   } = useMUD();
-  const { character, equippedItems } = useCharacter();
+  const { character, equippedItems, refreshCharacter } = useCharacter();
   const { currentBattle, monster } = useCombat();
   const { isSpawned } = useMapNavigation();
 
@@ -127,6 +127,8 @@ export const ActionsPanel = (): JSX.Element => {
         if (!success) {
           throw new Error('Contract call failed');
         }
+
+        await refreshCharacter();
       } catch (e) {
         renderError(e, 'Failed to roll stats.');
       } finally {
@@ -141,6 +143,7 @@ export const ActionsPanel = (): JSX.Element => {
       delegatorAddress,
       endTurn,
       monster,
+      refreshCharacter,
       renderError,
     ],
   );

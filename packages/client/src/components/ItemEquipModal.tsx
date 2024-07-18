@@ -35,7 +35,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     delegatorAddress,
     systemCalls: { equipItems, unequipItem },
   } = useMUD();
-  const { character } = useCharacter();
+  const { character, refreshCharacter } = useCharacter();
 
   const [isEquipping, setIsEquipping] = useState(false);
 
@@ -68,6 +68,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         throw new Error('Contract call failed');
       }
 
+      await refreshCharacter();
       renderSuccess(`${weapon.name} equipped successfully!`);
       onClose();
     } catch (e) {
@@ -81,6 +82,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     delegatorAddress,
     equipItems,
     onClose,
+    refreshCharacter,
     renderError,
     renderSuccess,
     weapon,
@@ -110,6 +112,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         throw new Error('Contract call failed');
       }
 
+      await refreshCharacter();
       renderSuccess(`${weapon.name} unequipped successfully!`);
       onClose();
     } catch (e) {
@@ -122,6 +125,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     character,
     delegatorAddress,
     onClose,
+    refreshCharacter,
     renderError,
     renderSuccess,
     unequipItem,

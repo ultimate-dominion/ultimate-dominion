@@ -35,7 +35,11 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import {
+  decodeCharacterId,
+  fetchMetadataFromUri,
+  uriToHttp,
+} from '../utils/helpers';
 import {
   type Character,
   ItemType,
@@ -141,9 +145,9 @@ export const CharacterPage = (): JSX.Element => {
     Characters,
     CharactersTokenURI,
     GoldBalances,
+    renderError,
     Stats,
     publicClient,
-    renderError,
     worldContract,
   ]);
 
@@ -245,20 +249,26 @@ export const CharacterPage = (): JSX.Element => {
     ],
   );
 
+  const isOwner = useMemo(() => {
+    if (!(userCharacter && characterId)) return false;
+    const { ownerAddress } = decodeCharacterId(characterId as `0x${string}`);
+    return userCharacter.owner.toLowerCase() === ownerAddress;
+  }, [userCharacter, characterId]);
+
   useEffect(() => {
     if (!isSynced) return;
     (async (): Promise<void> => {
+      if (isOwner && userCharacter) {
+        setCharacter(userCharacter);
+        await fetchCharacterItems(userCharacter);
+        return;
+      }
       const _character = await fetchCharacter();
 
       if (!_character) return;
       await fetchCharacterItems(_character);
     })();
-  }, [fetchCharacter, fetchCharacterItems, isSynced]);
-
-  const isOwner = useMemo(
-    () => character?.owner === userCharacter?.owner,
-    [character, userCharacter],
-  );
+  }, [fetchCharacter, fetchCharacterItems, isOwner, isSynced, userCharacter]);
 
   const maxItemsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
 

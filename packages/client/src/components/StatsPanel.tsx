@@ -23,8 +23,6 @@ import { useMUD } from '../contexts/MUDContext';
 import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { Level } from './Level';
 
-const CURRENT_LEVEL = 1;
-
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
@@ -35,7 +33,10 @@ export const StatsPanel = (): JSX.Element => {
 
   const nextLevelXpRequirement = useComponentValue(
     Levels,
-    encodeEntity({ level: 'uint256' }, { level: BigInt(CURRENT_LEVEL + 1) }),
+    encodeEntity(
+      { level: 'uint256' },
+      { level: BigInt(Number(character?.level ?? 0) + 1) },
+    ),
   )?.experience;
 
   const levelPercent = useMemo(() => {
@@ -120,10 +121,12 @@ export const StatsPanel = (): JSX.Element => {
         </GridItem>
       </Grid>
 
-      <Level levelPercent={levelPercent} />
+      <Level currentLevel={character.level} levelPercent={levelPercent} />
 
       <HStack alignItems="start" w="100%">
-        <Text fontWeight="bold">{goldBalance} $GOLD</Text>
+        <Text fontWeight="bold">
+          {Number(goldBalance).toLocaleString()} $GOLD
+        </Text>
         <Spacer />
         <Text>
           {experience}/{nextLevelXpRequirement?.toString() ?? '0'}
