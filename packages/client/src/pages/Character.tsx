@@ -261,6 +261,7 @@ export const CharacterPage = (): JSX.Element => {
       if (isOwner && userCharacter) {
         setCharacter(userCharacter);
         await fetchCharacterItems(userCharacter);
+        setIsLoadingCharacter(false);
         return;
       }
       const _character = await fetchCharacter();

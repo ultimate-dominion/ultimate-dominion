@@ -9,6 +9,7 @@
 import {
   Entity,
   getComponentValue,
+  getComponentValueStrict,
   Has,
   HasValue,
   runQuery,
@@ -31,6 +32,24 @@ import { ClientComponents } from './createClientComponents';
 import { SetupNetworkResult } from './setupNetwork';
 
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
+
+type SystemCallReturn = Promise<{
+  success: boolean;
+  error?: string;
+}>;
+
+const getContractError = (error: unknown): string => {
+  if (error instanceof BaseError) {
+    const revertError = error.walk(
+      e => e instanceof ContractFunctionRevertedError,
+    );
+    if (revertError instanceof ContractFunctionRevertedError) {
+      const args = revertError.data?.args ?? [];
+      return args[0] as string;
+    }
+  }
+  return 'An error occurred calling the contract.';
+};
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSystemCalls(
@@ -71,22 +90,18 @@ export function createSystemCalls(
     encounterType: EncounterType,
     attackers: string[],
     defenders: string[],
-  ) => {
+  ): SystemCallReturn => {
     try {
-      if (!delegatorAddress) {
-        throw new Error('Delegator address not found');
-      }
-
       await publicClient.simulateContract({
-        address: worldContract.address,
         abi: worldContract.abi,
-        functionName: 'UD__createMatch',
+        account: delegatorAddress,
+        address: worldContract.address,
         args: [
           encounterType,
           attackers as `0x${string}`[],
           defenders as `0x${string}`[],
         ],
-        account: delegatorAddress,
+        functionName: 'UD__createMatch',
       });
 
       const tx = await worldContract.write.UD__createMatch([
@@ -111,19 +126,14 @@ export function createSystemCalls(
         );
       })[0];
 
-      return success;
-    } catch (err) {
-      if (err instanceof BaseError) {
-        const revertError = err.walk(
-          err => err instanceof ContractFunctionRevertedError,
-        );
-        if (revertError instanceof ContractFunctionRevertedError) {
-          const args = revertError.data?.args ?? [];
-          // eslint-disable-next-line no-console
-          console.error(args);
-        }
-      }
-      return false;
+      return {
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
@@ -133,7 +143,8 @@ export function createSystemCalls(
     defenderId: Entity,
     actionId: Entity,
     weaponId: string,
-  ) => {
+    previousTurn: string,
+  ): SystemCallReturn => {
     try {
       const actions = [
         {
@@ -145,6 +156,19 @@ export function createSystemCalls(
       ];
 
       const fee = await getFee();
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [
+          encounterId.toString() as `0x${string}`,
+          playerId.toString() as `0x${string}`,
+          actions,
+        ],
+        functionName: 'UD__endTurn',
+        value: fee,
+      });
 
       const tx = await worldContract.write.UD__endTurn(
         [
@@ -159,14 +183,34 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      return true;
+      const currentTurn = getComponentValueStrict(
+        CombatEncounter,
+        encounterId,
+      ).currentTurn;
+
+      const success = currentTurn === BigInt(previousTurn) + BigInt(1);
+
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const enterGame = async (characterEntity: Entity) => {
+  const enterGame = async (characterEntity: Entity): SystemCallReturn => {
     try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterEntity.toString() as `0x${string}`],
+        functionName: 'UD__enterGame',
+      });
+
       const tx = await worldContract.write.UD__enterGame([
         characterEntity.toString() as `0x${string}`,
       ]);
@@ -174,14 +218,33 @@ export function createSystemCalls(
       await waitForTransaction(tx);
 
       const success = !!getComponentValue(Characters, characterEntity)?.locked;
-      return success;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const equipItems = async (characterEntity: Entity, itemIds: string[]) => {
+  const equipItems = async (
+    characterEntity: Entity,
+    itemIds: string[],
+  ): SystemCallReturn => {
     try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [
+          characterEntity.toString() as `0x${string}`,
+          itemIds.map(itemId => BigInt(itemId)),
+        ],
+        functionName: 'UD__equipItems',
+      });
+
       const tx = await worldContract.write.UD__equipItems([
         characterEntity.toString() as `0x${string}`,
         itemIds.map(itemId => BigInt(itemId)),
@@ -189,26 +252,42 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const characterEquipment = getComponentValue(
+      const characterEquipment = getComponentValueStrict(
         CharacterEquipment,
         characterEntity,
       );
 
-      if (!characterEquipment) return false;
       const { equippedArmor, equippedWeapons } = characterEquipment;
 
       const success =
         equippedArmor.some(id => itemIds.includes(id.toString())) ||
         equippedWeapons.some(id => itemIds.includes(id.toString()));
 
-      return success;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const mintCharacter = async (account: Address, name: string, uri: string) => {
+  const mintCharacter = async (
+    account: Address,
+    name: string,
+    uri: string,
+  ): SystemCallReturn => {
     try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [account, stringToHex(name, { size: 32 }), uri],
+        functionName: 'UD__mintCharacter',
+      });
+
       const nameHex = stringToHex(name, { size: 32 });
       const simulatedTx = await worldContract.simulate.UD__mintCharacter([
         account,
@@ -226,7 +305,7 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const sucess = !!getComponentValue(
+      const success = !!getComponentValue(
         Characters,
         encodeEntity(
           { characterId: 'uint256' },
@@ -234,13 +313,30 @@ export function createSystemCalls(
         ),
       );
 
-      return sucess;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const move = async (characterEntity: Entity, x: number, y: number) => {
+  const move = async (
+    characterEntity: Entity,
+    x: number,
+    y: number,
+  ): SystemCallReturn => {
+    await publicClient.simulateContract({
+      abi: worldContract.abi,
+      account: delegatorAddress,
+      address: worldContract.address,
+      args: [characterEntity.toString() as `0x${string}`, x, y],
+      functionName: 'UD__move',
+    });
+
     const positionId = uuid();
     Position.addOverride(positionId, {
       entity: characterEntity,
@@ -255,9 +351,21 @@ export function createSystemCalls(
       ]);
       await waitForTransaction(tx);
 
-      return getComponentValue(Position, characterEntity);
+      const { x: newX, y: newY } = getComponentValueStrict(
+        Position,
+        characterEntity,
+      );
+
+      const success = x === newX && y === newY;
+
+      return {
+        success,
+      };
     } catch (e) {
-      return null;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     } finally {
       Position.removeOverride(positionId);
     }
@@ -266,12 +374,25 @@ export function createSystemCalls(
   const rollStats = async (
     characterEntity: Entity,
     characterClass: StatsClasses,
-  ) => {
+  ): SystemCallReturn => {
     try {
       const fee = await getFee();
 
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [
+          userRandomNumber,
+          characterEntity.toString() as `0x${string}`,
+          characterClass,
+        ],
+        functionName: 'UD__rollStats',
+        value: fee,
+      });
 
       const tx = await worldContract.write.UD__rollStats(
         [
@@ -287,14 +408,27 @@ export function createSystemCalls(
       await waitForTransaction(tx);
 
       const success = !!getComponentValue(Characters, characterEntity);
-      return success;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const spawn = async (characterEntity: Entity) => {
+  const spawn = async (characterEntity: Entity): SystemCallReturn => {
     try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterEntity.toString() as `0x${string}`],
+        functionName: 'UD__spawn',
+      });
+
       const tx = await worldContract.write.UD__spawn([
         characterEntity.toString() as `0x${string}`,
       ]);
@@ -303,14 +437,30 @@ export function createSystemCalls(
 
       const success = !!getComponentValue(Spawned, characterEntity)?.spawned;
 
-      return success;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
-  const unequipItem = async (characterEntity: Entity, itemId: string) => {
+  const unequipItem = async (
+    characterEntity: Entity,
+    itemId: string,
+  ): SystemCallReturn => {
     try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterEntity.toString() as `0x${string}`, BigInt(itemId)],
+        functionName: 'UD__unequipItem',
+      });
+
       const tx = await worldContract.write.UD__unequipItem([
         characterEntity.toString() as `0x${string}`,
         BigInt(itemId),
@@ -318,12 +468,10 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const characterEquipment = getComponentValue(
+      const characterEquipment = getComponentValueStrict(
         CharacterEquipment,
         characterEntity,
       );
-
-      if (!characterEquipment) return false;
 
       const { equippedArmor, equippedWeapons } = characterEquipment;
 
@@ -332,9 +480,14 @@ export function createSystemCalls(
         equippedWeapons.includes(BigInt(itemId))
       );
 
-      return success;
+      return {
+        success,
+      };
     } catch (e) {
-      return false;
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 

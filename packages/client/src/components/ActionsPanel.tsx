@@ -116,21 +116,22 @@ export const ActionsPanel = (): JSX.Element => {
           throw new Error('Basic attack not found.');
         }
 
-        const success = await endTurn(
+        const { error, success } = await endTurn(
           currentBattle.encounterId,
           character.characterId,
           monster.monsterId,
           basicAttackId,
           itemId,
+          currentBattle.currentTurn,
         );
 
-        if (!success) {
-          throw new Error('Contract call failed.');
+        if (error && !success) {
+          throw new Error(error);
         }
 
         await refreshCharacter();
       } catch (e) {
-        renderError('Failed to roll stats.', e);
+        renderError('Failed to attack.', e);
       } finally {
         setIsAttacking(false);
       }

@@ -272,15 +272,15 @@ export const MapNavigationProvider = ({
         throw new Error('Character not found.');
       }
 
-      const success = await spawn(character.characterId);
+      const { error, success } = await spawn(character.characterId);
 
-      if (!success) {
-        throw new Error('Contract call failed.');
+      if (error && !success) {
+        throw new Error(error);
       }
 
       renderSuccess('Spawned!');
     } catch (e) {
-      renderError('Failed to roll stats.', e);
+      renderError('Failed to spawn.', e);
     } finally {
       setIsSpawning(false);
     }
@@ -341,10 +341,14 @@ export const MapNavigationProvider = ({
             break;
         }
 
-        const success = await move(character.characterId, newX, newY);
+        const { error, success } = await move(
+          character.characterId,
+          newX,
+          newY,
+        );
 
-        if (!success) {
-          throw new Error('Contract call failed.');
+        if (error && !success) {
+          throw new Error(error);
         }
       } catch (e) {
         renderError('Failed to move.', e);

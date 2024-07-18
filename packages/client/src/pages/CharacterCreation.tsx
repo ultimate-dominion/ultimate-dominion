@@ -200,14 +200,14 @@ export const CharacterCreation = (): JSX.Element => {
             'Something went wrong uploading your character metadata.',
           );
 
-        const success = await mintCharacter(
+        const { error, success } = await mintCharacter(
           delegatorAddress,
           name,
           characterMetadataCid,
         );
 
-        if (!success) {
-          throw new Error('Contract call failed.');
+        if (error && !success) {
+          throw new Error(error);
         }
 
         await refreshCharacter();
@@ -250,10 +250,13 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const success = await rollStats(character.characterId, characterClass);
+      const { error, success } = await rollStats(
+        character.characterId,
+        characterClass,
+      );
 
-      if (!success) {
-        throw new Error('Contract call failed.');
+      if (error && !success) {
+        throw new Error(error);
       }
 
       refreshCharacter();
@@ -292,10 +295,10 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const success = await enterGame(character.characterId);
+      const { error, success } = await enterGame(character.characterId);
 
-      if (!success) {
-        throw new Error('Contract call failed.');
+      if (error && !success) {
+        throw new Error(error);
       }
 
       await refreshCharacter();

@@ -62,10 +62,12 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         throw new Error('Missing delegation.');
       }
 
-      const success = await equipItems(character.characterId, [weapon.tokenId]);
+      const { error, success } = await equipItems(character.characterId, [
+        weapon.tokenId,
+      ]);
 
-      if (!success) {
-        throw new Error('Contract call failed.');
+      if (error && !success) {
+        throw new Error(error);
       }
 
       await refreshCharacter();
@@ -106,10 +108,13 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         throw new Error('Missing delegation.');
       }
 
-      const success = await unequipItem(character.characterId, weapon.tokenId);
+      const { error, success } = await unequipItem(
+        character.characterId,
+        weapon.tokenId,
+      );
 
-      if (!success) {
-        throw new Error('Contract call failed.');
+      if (error && !success) {
+        throw new Error(error);
       }
 
       await refreshCharacter();

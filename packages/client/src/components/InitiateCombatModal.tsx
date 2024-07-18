@@ -53,14 +53,14 @@ export const InitiateCombatModal: React.FC<InitiateCombatModalProps> = ({
         throw new Error('Missing delegation.');
       }
 
-      const success = await createMatch(
+      const { error, success } = await createMatch(
         EncounterType.PvE,
         [character.characterId],
         [monster.monsterId],
       );
 
-      if (!success) {
-        throw new Error('Contract call failed.');
+      if (error && !success) {
+        throw new Error(error);
       }
 
       renderSuccess(`Battle has begun!`);
