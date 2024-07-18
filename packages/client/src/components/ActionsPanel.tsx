@@ -8,6 +8,7 @@ import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { ActionType } from '../utils/types';
+import { HealthBar } from './HealthBar';
 
 // enum ActionEvents {
 //   Attack = 'attack',
@@ -149,6 +150,14 @@ export const ActionsPanel = (): JSX.Element => {
       <Stack>
         <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>{actionText}</Text>
         {currentBattle && equippedItems && monster && (
+          <HealthBar
+            baseHp={monster.baseHp}
+            currentHp={monster.currentHp}
+            mt={4}
+            w="80%"
+          />
+        )}
+        {currentBattle && equippedItems && monster && (
           <HStack justify="center">
             {equippedItems.map((item, index) => (
               <Button
@@ -166,10 +175,6 @@ export const ActionsPanel = (): JSX.Element => {
         {currentBattle && equippedItems && monster && (
           <VStack mt={4}>
             <Text fontWeight={700}>MONSTER STATS:</Text>
-            <HStack>
-              <Text>Max Health: {monster.baseHitPoints}</Text>
-              <Text>Current Health: {monster.currentHp}</Text>
-            </HStack>
             <HStack>
               <Text>Attack: {monster.agility}</Text>
               <Text>Defense: {monster.intelligence}</Text>
