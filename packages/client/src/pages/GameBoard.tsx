@@ -6,13 +6,16 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Text,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useWalletClient } from 'wagmi';
 
 import { ActionsPanel } from '../components/ActionsPanel';
+import { InfoModal } from '../components/InfoModal';
 import { MapPanel } from '../components/MapPanel';
 import { StatsPanel } from '../components/StatsPanel';
 import { TileDetailsPanel } from '../components/TileDetailsPanel';
@@ -23,10 +26,12 @@ import { useMUD } from '../contexts/MUDContext';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 
 export const GameBoard = (): JSX.Element => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   const { data: externalWalletClient } = useWalletClient();
   const navigate = useNavigate();
   const { delegatorAddress, isSynced } = useMUD();
-  const { character } = useCharacter();
+  const { character, equippedItems } = useCharacter();
 
   useEffect(() => {
     if (!isSynced) return;
@@ -43,6 +48,12 @@ export const GameBoard = (): JSX.Element => {
       navigate(GAME_BOARD_PATH);
     }
   }, [character, delegatorAddress, externalWalletClient, isSynced, navigate]);
+
+  useEffect(() => {
+    if (character?.experience === '0' && equippedItems?.length === 0) {
+      onOpen();
+    }
+  }, [character, equippedItems, onOpen]);
 
   return (
     <MapNavigationProvider>
@@ -118,6 +129,27 @@ export const GameBoard = (): JSX.Element => {
             </Popover>
           </Box>
         </Grid>
+        <InfoModal
+          heading="Welcome to the game board!"
+          isOpen={isOpen}
+          onClose={onClose}
+        >
+          <Text>
+            In order to start battling, you must have at least 1 weapon
+            equipped. Go to your{' '}
+            <Text
+              as={Link}
+              color="blue"
+              to={`/characters/${character?.characterId}`}
+              _hover={{
+                textDecoration: 'underline',
+              }}
+            >
+              character page
+            </Text>{' '}
+            to equip a weapon.
+          </Text>
+        </InfoModal>
       </CombatProvider>
     </MapNavigationProvider>
   );

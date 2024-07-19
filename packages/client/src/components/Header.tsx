@@ -1,7 +1,7 @@
 import { Box, Button, Heading, Stack } from '@chakra-ui/react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-import { HOME_PATH } from '../Routes';
+import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 
 const PAGES_WITHOUT_HEADER = [HOME_PATH];
 
@@ -11,6 +11,8 @@ export const Header = ({
   onOpenWalletDetailsModal: () => void;
 }): JSX.Element => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
   if (PAGES_WITHOUT_HEADER.includes(pathname)) {
     return <Box />;
   }
@@ -34,6 +36,8 @@ export const Header = ({
         Wallet Details
       </Button>
       <Heading
+        as="button"
+        onClick={() => navigate(GAME_BOARD_PATH)}
         size={{ base: 'sm', sm: 'md' }}
         textAlign={{ base: 'left', lg: 'right' }}
       >
