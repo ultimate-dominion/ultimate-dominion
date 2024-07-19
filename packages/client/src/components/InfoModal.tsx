@@ -7,6 +7,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Text,
 } from '@chakra-ui/react';
 import { ReactNode } from 'react';
 
@@ -27,7 +28,9 @@ export const InfoModal: React.FC<InfoModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{heading}</ModalHeader>
+        <ModalHeader>
+          <Text>{heading}</Text>
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody padding={4}>{children}</ModalBody>
         <ModalFooter>
