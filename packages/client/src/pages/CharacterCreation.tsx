@@ -9,7 +9,6 @@ import {
   Heading,
   HStack,
   Input,
-  Link,
   SimpleGrid,
   Stack,
   Text,
@@ -626,14 +625,6 @@ export const CharacterCreation = (): JSX.Element => {
                   </Box>
                 </HStack>
               )}
-              <Link
-                alignSelf="end"
-                color="grey500"
-                fontSize="18px"
-                fontWeight={700}
-              >
-                Auction House ▶
-              </Link>
             </VStack>
           </SimpleGrid>
           {!isSmallScreen && (
