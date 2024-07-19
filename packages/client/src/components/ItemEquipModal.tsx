@@ -31,7 +31,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 }): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
   const {
-    burnerBalance,
     delegatorAddress,
     systemCalls: { equipItems, unequipItem },
   } = useMUD();
@@ -50,12 +49,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
       if (!character) {
         throw new Error('Character not found.');
-      }
-
-      if (burnerBalance === '0') {
-        throw new Error(
-          'Insufficient funds. Please top off your session account.',
-        );
       }
 
       if (!delegatorAddress) {
@@ -79,7 +72,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       setIsEquipping(false);
     }
   }, [
-    burnerBalance,
     character,
     delegatorAddress,
     equipItems,
@@ -96,12 +88,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
       if (!character) {
         throw new Error('Character not found.');
-      }
-
-      if (burnerBalance === '0') {
-        throw new Error(
-          'Insufficient funds. Please top off your session account.',
-        );
       }
 
       if (!delegatorAddress) {
@@ -126,7 +112,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       setIsEquipping(false);
     }
   }, [
-    burnerBalance,
     character,
     delegatorAddress,
     onClose,

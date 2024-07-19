@@ -56,7 +56,6 @@ import { HealthBar } from './HealthBar';
 export const ActionsPanel = (): JSX.Element => {
   const { renderError } = useToast();
   const {
-    burnerBalance,
     components: { Actions },
     delegatorAddress,
     systemCalls: { endTurn },
@@ -83,12 +82,6 @@ export const ActionsPanel = (): JSX.Element => {
     async (itemId: string) => {
       try {
         setIsAttacking(true);
-
-        if (burnerBalance === '0') {
-          throw new Error(
-            'Insufficient funds. Please top off your session account.',
-          );
-        }
 
         if (!delegatorAddress) {
           throw new Error('Missing delegation.');
@@ -139,7 +132,6 @@ export const ActionsPanel = (): JSX.Element => {
     },
     [
       Actions,
-      burnerBalance,
       character,
       currentBattle,
       delegatorAddress,

@@ -8,27 +8,67 @@ import {
   Spinner,
   Text,
   useBreakpointValue,
-  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
+import { useCharacter } from '../contexts/CharacterContext';
 import { useCombat } from '../contexts/CombatContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
-import { type Character, type Monster } from '../utils/types';
-import { InitiateCombatModal } from './InitiateCombatModal';
+import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
+import { type Character, EncounterType, type Monster } from '../utils/types';
 
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const TileDetailsPanel = (): JSX.Element => {
+  const { renderError, renderSuccess } = useToast();
+
+  const {
+    delegatorAddress,
+    systemCalls: { createMatch },
+  } = useMUD();
+  const { character } = useCharacter();
   const { isRefreshing, monsters, otherPlayers } = useMapNavigation();
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const { currentBattle } = useCombat();
 
-  const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
+  const [isInitiating, setIsInitiating] = useState(false);
+
+  const onInitiateCombat = useCallback(
+    async (monster: Monster) => {
+      try {
+        setIsInitiating(true);
+
+        if (!character) {
+          throw new Error('Character not found.');
+        }
+
+        if (!delegatorAddress) {
+          throw new Error('Missing delegation.');
+        }
+
+        const { error, success } = await createMatch(
+          EncounterType.PvE,
+          [character.characterId],
+          [monster.monsterId],
+        );
+
+        if (error && !success) {
+          throw new Error(error);
+        }
+
+        renderSuccess('Battle has begun!');
+      } catch (e) {
+        renderError('Failed to initiate battle.', e);
+      } finally {
+        setIsInitiating(false);
+      }
+    },
+    [character, createMatch, delegatorAddress, renderError, renderSuccess],
+  );
 
   if (isRefreshing) {
     return (
@@ -67,8 +107,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                 key={`tile-monster-${i}-${monster.name}`}
                 monster={monster}
                 onClick={() => {
-                  setSelectedMonster(monster);
-                  onOpen();
+                  onInitiateCombat(monster);
                 }}
               />
             ))}
@@ -108,12 +147,22 @@ export const TileDetailsPanel = (): JSX.Element => {
           </GridItem>
         )}
       </Grid>
-      {selectedMonster && (
-        <InitiateCombatModal
-          isOpen={isOpen}
-          onClose={onClose}
-          {...selectedMonster}
-        />
+      {isInitiating && (
+        <Box
+          pos="absolute"
+          bg="rgba(0, 0, 0, 0.5)"
+          h="100%"
+          w="100%"
+          top={0}
+          left={0}
+        >
+          <VStack h="100%" justifyContent="center" spacing={8}>
+            <Text color="white" fontWeight="bold" size="xl">
+              Initiating battle!
+            </Text>
+            <Spinner color="white" size="xl" />
+          </VStack>
+        </Box>
       )}
       {currentBattle && (
         <Box
@@ -126,7 +175,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         >
           <VStack h="100%" justifyContent="center" spacing={8}>
             <Text color="white" fontWeight="bold" size="xl">
-              Combat in progress!
+              Battle in progress!
             </Text>
             <GiCrossedSwords color="white" size="100px" />
           </VStack>
@@ -175,7 +224,7 @@ const MonsterRow = ({
       }}
     >
       <Text
-        color={MONSTER_COLORS[monster.class]}
+        color={MONSTER_COLORS[monster.entityClass]}
         size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
       >
         {name}
