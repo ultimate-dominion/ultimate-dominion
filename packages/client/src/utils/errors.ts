@@ -1,4 +1,5 @@
 export const USER_ERRORS = ['User denied signature'];
+export const INSUFFICIENT_FUNDS_MESSAGE = 'Insufficient funds.';
 
 export const getError = (
   error: unknown,

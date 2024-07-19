@@ -1,7 +1,11 @@
 import { useToast as useChakraToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
 
-import { getError, USER_ERRORS } from '../utils/errors';
+import {
+  getError,
+  INSUFFICIENT_FUNDS_MESSAGE,
+  USER_ERRORS,
+} from '../utils/errors';
 
 export const useToast = (): {
   renderError: (errorMsg: string, errorLog?: unknown) => void;
@@ -20,6 +24,18 @@ export const useToast = (): {
 
       // eslint-disable-next-line no-console
       console.error(errorLog);
+
+      if ((errorLog as Error).message === INSUFFICIENT_FUNDS_MESSAGE) {
+        toast({
+          description: (errorLog as Error).message,
+          position: 'top',
+          status: 'error',
+          containerStyle: {
+            bg: 'red',
+          },
+        });
+        return;
+      }
 
       toast({
         description: errorMsg,
