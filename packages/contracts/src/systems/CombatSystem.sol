@@ -186,7 +186,6 @@ contract CombatSystem is System {
             );
         }
 
-        encounterData.currentTurn++;
         uint256 deadDefenderCounter;
         uint256 deadAttackerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
@@ -197,6 +196,18 @@ contract CombatSystem is System {
                     if (IWorld(_world()).UD__isValidCharacterId(encounterData.defenders[i])) {
                         MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
                     }
+                }
+            } else {
+                if (!IWorld(_world()).UD__isValidCharacterId(encounterData.defenders[i])) {
+                    // execute mob action
+                    // _executeAction(
+                    //     encounterId,
+                    //     actionId,
+                    //     encounterData.defenders[i],
+                    //     encounterData.attackers[randomNumber % encounterData.attackers.length],
+                    //     weaponId,
+                    //     randomNumber
+                    // );
                 }
             }
         }
@@ -213,9 +224,10 @@ contract CombatSystem is System {
                 || encounterData.currentTurn == encounterData.maxTurns
         ) {
             // for some reason block.timestamp is not availible here on anvil?
-            encounterData.end = block.number;
-            CombatEncounter.set(encounterId, encounterData);
+
             _endMatch(encounterId, randomNumber);
+        } else {
+            encounterData.currentTurn++;
         }
     }
 
@@ -334,6 +346,12 @@ contract CombatSystem is System {
     {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
 
+        if (block.chainid == 31337) {
+            encounterData.end = block.number;
+        } else {
+            encounterData.end = block.timestamp;
+        }
+
         // check dead attackers and defenders
         uint256 cumulativeAttackerLevels;
         uint256 livingAttackers;
@@ -382,6 +400,7 @@ contract CombatSystem is System {
             }
             MatchEntity.setEncounterId(entityIdTemp, bytes32(0));
         }
+        CombatEncounter.set(encounterId, encounterData);
     }
 
     function calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) public returns (uint256 dropAmount) {

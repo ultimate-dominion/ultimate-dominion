@@ -92,11 +92,6 @@ contract Test_CombatSystem is SetUp, GasReporter {
         assertGt(endingStats.experience, startingStats.experience);
         assertGt(endingGold, startingGold);
         assertEq(MatchEntity.getEncounterId(bobCharacterId), bytes32(0));
-
-        // start new match
-        defenders[0] = entityId2;
-        vm.prank(bob);
-        bytes32 matchId2 = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
     }
 
     function test_EndTurn_Revert_NonCombatant() public {

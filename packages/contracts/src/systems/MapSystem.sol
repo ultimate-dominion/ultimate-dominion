@@ -2,7 +2,15 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {Characters, EntitiesAtPosition, MapConfig, Position, Spawned, MobsByLevel} from "../codegen/index.sol";
+import {
+    Characters,
+    EntitiesAtPosition,
+    MapConfig,
+    Position,
+    Spawned,
+    MobsByLevel,
+    MatchEntity
+} from "../codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
@@ -13,8 +21,8 @@ contract MapSystem is System {
     function move(bytes32 entityId, uint16 x, uint16 y) public {
         address owner = Characters.getOwner(entityId);
         require(_msgSender() == owner, "Only the owner can move a character");
-
         require(Spawned.getSpawned(entityId), "Character not spawned");
+        require(MatchEntity.getEncounterId(entityId) == bytes32(0), "Cannot move while in an encounter.");
 
         (uint16 currentX, uint16 currentY) = Position.get(entityId);
         (uint16 height, uint16 width) = MapConfig.get();
