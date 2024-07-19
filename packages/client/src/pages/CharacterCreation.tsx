@@ -244,7 +244,7 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error(error);
       }
 
-      refreshCharacter();
+      await refreshCharacter();
       renderSuccess('Stats rolled!');
     } catch (e) {
       renderError('Failed to roll stats.', e);

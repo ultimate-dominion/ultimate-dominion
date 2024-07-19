@@ -90,6 +90,7 @@ export function createSystemCalls(
     CombatEncounter,
     Position,
     Spawned,
+    Stats,
   }: ClientComponents,
 ) {
   const createMatch = async (
@@ -411,9 +412,17 @@ export function createSystemCalls(
         },
       );
 
-      await waitForTransaction(tx);
+      const { blockNumber } = await waitForTransaction(tx);
 
-      const success = !!getComponentValue(Characters, characterEntity);
+      const blockToWaitFor = blockNumber + BigInt(2);
+
+      let currentBlockNumber = await publicClient.getBlockNumber();
+      while (currentBlockNumber < blockToWaitFor) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        currentBlockNumber = await publicClient.getBlockNumber();
+      }
+
+      const success = !!getComponentValue(Stats, characterEntity);
       return {
         success,
       };

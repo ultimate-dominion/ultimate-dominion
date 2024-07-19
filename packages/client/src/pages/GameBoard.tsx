@@ -90,10 +90,10 @@ export const GameBoard = (): JSX.Element => {
   return (
     <Grid
       gap={2}
-      h={{ base: 'calc(100vh - 100px)', lg: 'calc(100vh - 100px)' }}
+      h="calc(100vh - 100px)"
       mt={4}
       templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
-      templateRows={{ base: 'repeat(12, 1fr)', lg: 'repeat(12, 1fr)' }}
+      templateRows="repeat(12, 1fr)"
     >
       <GridItem
         border="2px solid"
