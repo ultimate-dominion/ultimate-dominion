@@ -6,27 +6,42 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Text,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect } from 'react';
+import { IoIosWarning } from 'react-icons/io';
+import { Link, useNavigate } from 'react-router-dom';
 import { useWalletClient } from 'wagmi';
 
 import { ActionsPanel } from '../components/ActionsPanel';
+import { InfoModal } from '../components/InfoModal';
 import { MapPanel } from '../components/MapPanel';
 import { StatsPanel } from '../components/StatsPanel';
 import { TileDetailsPanel } from '../components/TileDetailsPanel';
 import { useCharacter } from '../contexts/CharacterContext';
-import { CombatProvider } from '../contexts/CombatContext';
-import { MapNavigationProvider } from '../contexts/MapNavigationContext';
+import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { useMUD } from '../contexts/MUDContext';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 
 export const GameBoard = (): JSX.Element => {
+  const {
+    isOpen: isEquipInfoModalOpen,
+    onOpen: onOpenEquipInfoModal,
+    onClose: onCloseEquipInfoModal,
+  } = useDisclosure();
+  const {
+    isOpen: isOuterRealmsInfoModalOpen,
+    onOpen: onOpenOuterRealmsInfoModal,
+    onClose: onCloseOuterRealmsInfoModal,
+  } = useDisclosure();
+
   const { data: externalWalletClient } = useWalletClient();
   const navigate = useNavigate();
   const { delegatorAddress, isSynced } = useMUD();
-  const { character } = useCharacter();
+  const { character, equippedItems } = useCharacter();
+  const { position } = useMapNavigation();
 
   useEffect(() => {
     if (!isSynced) return;
@@ -44,81 +59,147 @@ export const GameBoard = (): JSX.Element => {
     }
   }, [character, delegatorAddress, externalWalletClient, isSynced, navigate]);
 
+  useEffect(() => {
+    if (character?.experience === '0' && equippedItems?.length === 0) {
+      onOpenEquipInfoModal();
+    }
+  }, [character, equippedItems, onOpenEquipInfoModal]);
+
+  useEffect(() => {
+    if (!(character && position)) return;
+    const outerRealms = position.x === 5 || position.y === 5;
+
+    const outerRealmsSeenKey = `outer-realms-warning-seen-${character.characterId}`;
+
+    const hasSeenWarning = localStorage.getItem(outerRealmsSeenKey);
+    if (hasSeenWarning) return;
+
+    if (character.level === '1' && outerRealms) {
+      onOpenOuterRealmsInfoModal();
+    }
+  }, [character, onOpenOuterRealmsInfoModal, position]);
+
+  const onAcknowledgeOuterRealmsWarning = useCallback(() => {
+    if (!character) return;
+
+    const outerRealmsSeenKey = `outer-realms-warning-seen-${character.characterId}`;
+    localStorage.setItem(outerRealmsSeenKey, 'true');
+    onCloseOuterRealmsInfoModal();
+  }, [character, onCloseOuterRealmsInfoModal]);
+
   return (
-    <MapNavigationProvider>
-      <CombatProvider>
-        <Grid
-          gap={2}
-          h={{ base: 'calc(100vh - 100px)', lg: 'calc(100vh - 100px)' }}
-          mt={4}
-          templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
-          templateRows={{ base: 'repeat(12, 1fr)', lg: 'repeat(12, 1fr)' }}
-        >
-          <GridItem
-            border="2px solid"
-            colSpan={{ base: 1, lg: 4 }}
-            display={{ base: 'none', lg: 'block' }}
-            overflowY="auto"
-            p={4}
-            rowSpan={{ base: 12, lg: 12 }}
-          >
+    <Grid
+      gap={2}
+      h="calc(100vh - 100px)"
+      mt={4}
+      templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
+      templateRows="repeat(12, 1fr)"
+    >
+      <GridItem
+        border="2px solid"
+        colSpan={{ base: 1, lg: 4 }}
+        display={{ base: 'none', lg: 'block' }}
+        overflowY="auto"
+        p={4}
+        rowSpan={{ base: 12, lg: 12 }}
+      >
+        <StatsPanel />
+      </GridItem>
+      <GridItem
+        border="2px solid"
+        colSpan={{ base: 1, lg: 8 }}
+        colStart={{ base: 0, lg: 5 }}
+        overflowY="auto"
+        p={{ base: 2, lg: 4 }}
+        pos="relative"
+        rowSpan={{ base: 3, lg: 6 }}
+        rowStart={{ base: 0, lg: 0 }}
+      >
+        <TileDetailsPanel />
+      </GridItem>
+      <GridItem
+        border="2px solid"
+        colSpan={{ base: 1, lg: 8 }}
+        colStart={{ base: 0, lg: 5 }}
+        overflowY="auto"
+        p={{ base: 2, lg: 4 }}
+        rowSpan={{ base: 4, lg: 6 }}
+        rowStart={{ base: 4, lg: 7 }}
+      >
+        <ActionsPanel />
+      </GridItem>
+      <GridItem
+        colSpan={{ base: 1, lg: 4 }}
+        colStart={{ base: 0, lg: 13 }}
+        rowSpan={{ base: 3, lg: 12 }}
+        rowStart={{ base: 8, lg: 0 }}
+      >
+        <MapPanel />
+      </GridItem>
+      <Box
+        bottom={2}
+        display={{ base: 'block', lg: 'none' }}
+        left="50%"
+        pos="fixed"
+        px={2}
+        transform="translateX(-50%)"
+        w="100%"
+      >
+        <Popover>
+          <PopoverTrigger>
+            <VStack>
+              <Button size="sm" w="100%">
+                Stats
+              </Button>
+            </VStack>
+          </PopoverTrigger>
+          <PopoverContent p={4}>
             <StatsPanel />
-          </GridItem>
-          <GridItem
-            border="2px solid"
-            colSpan={{ base: 1, lg: 8 }}
-            colStart={{ base: 0, lg: 5 }}
-            overflowY="auto"
-            p={{ base: 2, lg: 4 }}
-            pos="relative"
-            rowSpan={{ base: 3, lg: 6 }}
-            rowStart={{ base: 0, lg: 0 }}
+          </PopoverContent>
+        </Popover>
+      </Box>
+      <InfoModal
+        heading="Welcome to the game board!"
+        isOpen={isEquipInfoModalOpen}
+        onClose={onCloseEquipInfoModal}
+      >
+        <Text>
+          In order to start battling, you must have at least 1 weapon equipped.
+          Go to your{' '}
+          <Text
+            as={Link}
+            color="blue"
+            to={`/characters/${character?.characterId}`}
+            _hover={{
+              textDecoration: 'underline',
+            }}
           >
-            <TileDetailsPanel />
-          </GridItem>
-          <GridItem
-            border="2px solid"
-            colSpan={{ base: 1, lg: 8 }}
-            colStart={{ base: 0, lg: 5 }}
-            overflowY="auto"
-            p={{ base: 2, lg: 4 }}
-            rowSpan={{ base: 4, lg: 6 }}
-            rowStart={{ base: 4, lg: 7 }}
-          >
-            <ActionsPanel />
-          </GridItem>
-          <GridItem
-            colSpan={{ base: 1, lg: 4 }}
-            colStart={{ base: 0, lg: 13 }}
-            rowSpan={{ base: 3, lg: 12 }}
-            rowStart={{ base: 8, lg: 0 }}
-          >
-            <MapPanel />
-          </GridItem>
-          <Box
-            bottom={2}
-            display={{ base: 'block', lg: 'none' }}
-            left="50%"
-            pos="fixed"
-            px={2}
-            transform="translateX(-50%)"
-            w="100%"
-          >
-            <Popover>
-              <PopoverTrigger>
-                <VStack>
-                  <Button size="sm" w="100%">
-                    Stats
-                  </Button>
-                </VStack>
-              </PopoverTrigger>
-              <PopoverContent p={4}>
-                <StatsPanel />
-              </PopoverContent>
-            </Popover>
-          </Box>
-        </Grid>
-      </CombatProvider>
-    </MapNavigationProvider>
+            character page
+          </Text>{' '}
+          to equip a weapon.
+        </Text>
+      </InfoModal>
+      <InfoModal
+        heading="Careful! You're about to enter the Outer Realms!"
+        isOpen={isOuterRealmsInfoModalOpen}
+        onClose={onAcknowledgeOuterRealmsWarning}
+      >
+        <VStack>
+          <IoIosWarning color="orange" size={40} />
+          <Text mt={4}>
+            The{' '}
+            <Text as="span" fontWeight={700}>
+              Outer Realms
+            </Text>{' '}
+            is a dangerous place for a level 1 character. Any other player could
+            attack you at any time.
+          </Text>
+          <Text>
+            It is recommended that you level up your character more before
+            entering.
+          </Text>
+        </VStack>
+      </InfoModal>
+    </Grid>
   );
 };

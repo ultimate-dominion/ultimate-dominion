@@ -57,7 +57,6 @@ export const MapNavigationProvider = ({
   const { pathname } = useLocation();
   const { renderError, renderSuccess } = useToast();
   const {
-    burnerBalance,
     components: {
       Characters,
       CharactersTokenURI,
@@ -258,12 +257,6 @@ export const MapNavigationProvider = ({
     try {
       setIsSpawning(true);
 
-      if (burnerBalance === '0') {
-        throw new Error(
-          'Insufficient funds. Please top off your session account.',
-        );
-      }
-
       if (!delegatorAddress) {
         throw new Error('Missing delegation.');
       }
@@ -284,14 +277,7 @@ export const MapNavigationProvider = ({
     } finally {
       setIsSpawning(false);
     }
-  }, [
-    burnerBalance,
-    character,
-    delegatorAddress,
-    renderError,
-    renderSuccess,
-    spawn,
-  ]);
+  }, [character, delegatorAddress, renderError, renderSuccess, spawn]);
 
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {

@@ -286,7 +286,6 @@ export const CharacterPage = (): JSX.Element => {
       {character ? (
         <Grid
           gap={2}
-          h={{ base: 'calc(100vh - 100px)', lg: 'calc(100vh - 100px)' }}
           mt={4}
           rowGap={{ base: 3, lg: 10 }}
           sx={{

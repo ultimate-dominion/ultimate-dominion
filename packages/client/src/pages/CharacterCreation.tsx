@@ -9,7 +9,6 @@ import {
   Heading,
   HStack,
   Input,
-  Link,
   SimpleGrid,
   Stack,
   Text,
@@ -46,7 +45,6 @@ export const CharacterCreation = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { data: externalWalletClient } = useWalletClient();
   const {
-    burnerBalance,
     components: { ItemsBaseURI, ItemsTokenURI, UltimateDominionConfig },
     delegatorAddress,
     isSynced,
@@ -150,12 +148,6 @@ export const CharacterCreation = (): JSX.Element => {
       try {
         setIsCreating(true);
 
-        if (burnerBalance === '0') {
-          throw new Error(
-            'Insufficient funds. Please top off your session account.',
-          );
-        }
-
         if (!delegatorAddress) {
           throw new Error('Missing delegation.');
         }
@@ -220,7 +212,6 @@ export const CharacterCreation = (): JSX.Element => {
     },
     [
       avatar,
-      burnerBalance,
       delegatorAddress,
       description,
       mintCharacter,
@@ -235,12 +226,6 @@ export const CharacterCreation = (): JSX.Element => {
   const onRollStats = useCallback(async () => {
     try {
       setIsRollingStats(true);
-
-      if (burnerBalance === '0') {
-        throw new Error(
-          'Insufficient funds. Please top off your session account.',
-        );
-      }
 
       if (!delegatorAddress) {
         throw new Error('Missing delegation.');
@@ -259,7 +244,7 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error(error);
       }
 
-      refreshCharacter();
+      await refreshCharacter();
       renderSuccess('Stats rolled!');
     } catch (e) {
       renderError('Failed to roll stats.', e);
@@ -267,7 +252,6 @@ export const CharacterCreation = (): JSX.Element => {
       setIsRollingStats(false);
     }
   }, [
-    burnerBalance,
     character,
     characterClass,
     delegatorAddress,
@@ -626,14 +610,6 @@ export const CharacterCreation = (): JSX.Element => {
                   </Box>
                 </HStack>
               )}
-              <Link
-                alignSelf="end"
-                color="grey500"
-                fontSize="18px"
-                fontWeight={700}
-              >
-                Auction House ▶
-              </Link>
             </VStack>
           </SimpleGrid>
           {!isSmallScreen && (

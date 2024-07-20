@@ -21,12 +21,14 @@ import {
   BaseError,
   ContractFunctionRevertedError,
   getContract,
+  InsufficientFundsError,
   keccak256,
   parseAbiItem,
   stringToHex,
   toBytes,
 } from 'viem';
 
+import { INSUFFICIENT_FUNDS_MESSAGE } from '../../utils/errors';
 import { EncounterType, StatsClasses } from '../../utils/types';
 import { ClientComponents } from './createClientComponents';
 import { SetupNetworkResult } from './setupNetwork';
@@ -38,15 +40,19 @@ type SystemCallReturn = Promise<{
   error?: string;
 }>;
 
-const getContractError = (error: unknown): string => {
-  if (error instanceof BaseError) {
-    const revertError = error.walk(
-      e => e instanceof ContractFunctionRevertedError,
-    );
-    if (revertError instanceof ContractFunctionRevertedError) {
-      const args = revertError.data?.args ?? [];
-      return args[0] as string;
-    }
+const getContractError = (error: BaseError): string => {
+  const revertError = error.walk(
+    e => e instanceof ContractFunctionRevertedError,
+  );
+  if (revertError instanceof ContractFunctionRevertedError) {
+    const args = revertError.data?.args ?? [];
+    return args[0] as string;
+  }
+  const insufficientFundsError = error.walk(
+    e => e instanceof InsufficientFundsError,
+  );
+  if (insufficientFundsError instanceof InsufficientFundsError) {
+    return INSUFFICIENT_FUNDS_MESSAGE;
   }
   return 'An error occurred calling the contract.';
 };
@@ -84,6 +90,7 @@ export function createSystemCalls(
     CombatEncounter,
     Position,
     Spawned,
+    Stats,
   }: ClientComponents,
 ) {
   const createMatch = async (
@@ -131,7 +138,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e),
+        error: getContractError(e as BaseError),
         success: false,
       };
     }
@@ -195,7 +202,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e),
+        error: getContractError(e as BaseError),
         success: false,
       };
     }
@@ -223,7 +230,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e),
+        error: getContractError(e as BaseError),
         success: false,
       };
     }
@@ -268,7 +275,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e),
+        error: getContractError(e as BaseError),
         success: false,
       };
     }
@@ -318,7 +325,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e),
+        error: getContractError(e as BaseError),
         success: false,
       };
     }
@@ -363,7 +370,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e),
+        error: getContractError(e as BaseError),
         success: false,
       };
     } finally {
@@ -405,15 +412,23 @@ export function createSystemCalls(
         },
       );
 
-      await waitForTransaction(tx);
+      const { blockNumber } = await waitForTransaction(tx);
 
-      const success = !!getComponentValue(Characters, characterEntity);
+      const blockToWaitFor = blockNumber + BigInt(2);
+
+      let currentBlockNumber = await publicClient.getBlockNumber();
+      while (currentBlockNumber < blockToWaitFor) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        currentBlockNumber = await publicClient.getBlockNumber();
+      }
+
+      const success = !!getComponentValue(Stats, characterEntity);
       return {
         success,
       };
     } catch (e) {
       return {
-        error: getContractError(e),
+        error: getContractError(e as BaseError),
         success: false,
       };
     }
@@ -442,7 +457,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e),
+        error: getContractError(e as BaseError),
         success: false,
       };
     }
@@ -485,7 +500,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e),
+        error: getContractError(e as BaseError),
         success: false,
       };
     }
