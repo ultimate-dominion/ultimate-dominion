@@ -13,16 +13,10 @@ import {
 } from '@chakra-ui/react';
 import { Entity } from '@latticexyz/recs';
 import FuzzySearch from 'fuzzy-search';
-import { useEffect, useState } from 'react';
-import {
-  FaBackward,
-  FaFastBackward,
-  FaFastForward,
-  FaForward,
-  FaSearch,
-  FaSortAmountDown,
-  FaSortAmountUp,
-} from 'react-icons/fa';
+import { useEffect, useMemo, useState } from 'react';
+import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
+import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
+import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
 
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Character, StatsClasses } from '../utils/types';
@@ -31,14 +25,15 @@ const createDummyData = (num: number = 1) => {
   const result: Character[] = [];
   for (let i = 0; i < num; i++) {
     result[result.length] = {
-      characterClass: Math.floor(Math.random() * 3) as StatsClasses,
       characterId: (Math.random() + 1).toString(36).substring(7) as Entity,
+      entityClass: Math.floor(Math.random() * 3) as StatsClasses,
       goldBalance: Math.floor(Math.random() * (1000 - 100) + 100) / 100 + '',
       locked: Math.random() < 0.5,
       owner: (Math.random() + 1).toString(36).substring(7),
       tokenId: i + '',
       agility: Math.floor(Math.random() * 10) + 1 + '',
-      baseHitPoints: Math.floor(Math.random() * 10) + 1 + '',
+      baseHp: Math.floor(Math.random() * 10) + 1 + '',
+      currentHp: Math.floor(Math.random() * 10) + 1 + '',
       experience: Math.floor(Math.random() * 10) + 1 + '',
       intelligence: Math.floor(Math.random() * 10) + 1 + '',
       level: Math.floor(Math.random() * 10) + 1 + '',
@@ -60,11 +55,21 @@ export const Leaderboard = (): JSX.Element => {
   const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
   const [filter, setFilter] = useState({ filtered: 'all' });
   const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState('1');
   const [pageLimit, setPageLimit] = useState(0);
   const [total, setTotal] = useState(0);
 
+  const pageNumber = useMemo(() => {
+    if (isNaN(Number(page))) {
+      return 1;
+    }
+    return Number(page);
+  }, [page]);
+
   useEffect(() => {
+    if (pageNumber < 1) {
+      return;
+    }
     let entriesCopy = DUMMY_CHARACTER;
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
       switch (sort.sorted) {
@@ -87,11 +92,11 @@ export const Leaderboard = (): JSX.Element => {
     entriesCopy = [...entriesCopy].filter(entry => {
       switch (filter.filtered) {
         case 'byWarrior':
-          return entry.characterClass == StatsClasses.Warrior;
+          return entry.entityClass == StatsClasses.Warrior;
         case 'byRogue':
-          return entry.characterClass == StatsClasses.Rogue;
+          return entry.entityClass == StatsClasses.Rogue;
         case 'byMage':
-          return entry.characterClass == StatsClasses.Mage;
+          return entry.entityClass == StatsClasses.Mage;
         default:
           return true;
       }
@@ -102,10 +107,17 @@ export const Leaderboard = (): JSX.Element => {
       { caseSensitive: false },
     );
     entriesCopy = searcher.search(query);
-    setPageLimit(Math.floor(Math.ceil(entriesCopy.length / PER_PAGE)));
-    setEntries(entriesCopy.slice((page - 1) * PER_PAGE, page * PER_PAGE));
+    const _pageLimit = Math.floor(Math.ceil(entriesCopy.length / PER_PAGE));
+    setPageLimit(_pageLimit);
+    setEntries(
+      entriesCopy.slice((pageNumber - 1) * PER_PAGE, pageNumber * PER_PAGE),
+    );
     setTotal(entriesCopy.length);
-  }, [filter.filtered, page, query, sort.reversed, sort.sorted]);
+
+    if (pageNumber > _pageLimit) {
+      setPage(_pageLimit.toString());
+    }
+  }, [filter.filtered, pageNumber, query, sort.reversed, sort.sorted]);
 
   return (
     <VStack mt={16}>
@@ -241,13 +253,13 @@ export const Leaderboard = (): JSX.Element => {
                 gold={entry.goldBalance}
                 level={entry.level}
                 stats={{
-                  HP: entry.baseHitPoints,
+                  HP: entry.baseHp,
                   AGI: entry.agility,
                   STR: entry.strength,
                   INT: entry.intelligence,
                 }}
                 total={entry.experience}
-                type={entry.characterClass}
+                type={entry.entityClass}
                 key={i}
               />
             );
@@ -259,44 +271,67 @@ export const Leaderboard = (): JSX.Element => {
       {entries.length > 0 && (
         <HStack my={5} visibility={total ? 'visible' : 'hidden'}>
           <Button
-            onClick={() => setPage(1)}
-            size="sm"
-            visibility={page == 1 ? 'hidden' : 'visible'}
+            onClick={() => setPage('1')}
+            size="xs"
+            visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
           >
-            <FaFastBackward />
+            <FaBackwardStep />
           </Button>
           <Button
-            onClick={() => setPage(page == 1 ? 1 : page - 1)}
-            size="sm"
-            visibility={page == 1 ? 'hidden' : 'visible'}
+            onClick={() =>
+              setPage((pageNumber == 1 ? 1 : pageNumber - 1).toString())
+            }
+            size="xs"
+            visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
           >
-            <FaBackward />
+            <IoCaretBack />
           </Button>
-          <Button>
-            <Input
-              max={pageLimit}
-              min={1}
-              mr={5}
-              onChange={e => setPage(Number(e.target.value))}
-              value={page}
-              w={50}
-            />
-            of {pageLimit}
-          </Button>
-
+          <Input
+            max={pageLimit}
+            min={1}
+            onChange={e => {
+              const value = e.target.value;
+              if (value === '') {
+                setPage(value);
+                return;
+              }
+              if (isNaN(Number(value))) {
+                return;
+              }
+              if (Number(value) < 1) {
+                return;
+              }
+              if (Number(value) > pageLimit) {
+                return;
+              }
+              setPage(value);
+            }}
+            p={2}
+            size="sm"
+            value={page}
+            w={10}
+          />
+          <Text size="sm">of {pageLimit}</Text>
           <Button
-            onClick={() => setPage(page < pageLimit ? page + 1 : page)}
-            size="sm"
-            visibility={page == pageLimit ? 'hidden' : 'visible'}
+            onClick={() =>
+              setPage(
+                (pageNumber < pageLimit
+                  ? pageNumber + 1
+                  : pageNumber
+                ).toString(),
+              )
+            }
+            size="xs"
+            visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
           >
-            <FaForward />
+            <IoCaretForward />
           </Button>
           <Button
-            onClick={() => setPage(pageLimit)}
-            size="sm"
-            visibility={page == pageLimit ? 'hidden' : 'visible'}
+            onClick={() => setPage(pageLimit.toString())}
+            size="xs"
+            visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
           >
-            <FaFastForward />
+            <FaForwardStep />
           </Button>
         </HStack>
       )}
