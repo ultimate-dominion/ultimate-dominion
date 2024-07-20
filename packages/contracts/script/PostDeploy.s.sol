@@ -19,10 +19,11 @@ import { registerERC721 } from "@latticexyz/world-modules/src/modules/erc721-pup
 import { ERC721System } from "@latticexyz/world-modules/src/modules/erc721-puppet/ERC721System.sol";
 import { ERC721MetadataData } from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/ERC721Metadata.sol";
 import { GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, ITEMS_NAMESPACE, TOKEN_URI } from "../constants.sol";
+import { _lootManagerSystemId } from "../src/utils.sol";
 import { NoTransferHook } from "../src/NoTransferHook.sol";
 import { BEFORE_CALL_SYSTEM } from "@latticexyz/world/src/systemHookTypes.sol";
-import { Classes, ItemType, MobType } from "@codegen/common.sol";
-import { WeaponStats, MonsterStats, MonsterTemplateDetails, WeaponTemplateDetails } from "@interfaces/Structs.sol";
+import { ActionType, Classes, ItemType, MobType } from "@codegen/common.sol";
+import { WeaponStats, MonsterStats, MonsterTemplateDetails, WeaponTemplateDetails, ArmorTemplateDetails, ArmorStats, PhysicalAttackStats, StarterItems } from "@interfaces/Structs.sol";
 import { IERC20Mintable } from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import { ERC20MetadataData } from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/ERC20Metadata.sol";
 import { ERC20System } from "@latticexyz/world-modules/src/modules/erc20-puppet/ERC20System.sol";
@@ -50,6 +51,7 @@ struct ResourceIds {
   ResourceId erc1155NamespaceId;
   ResourceId itemsSystemId;
   ResourceId combatSystemId;
+  ResourceId lootManagerSystemId;
 }
 
 contract PostDeploy is Script {
@@ -143,18 +145,19 @@ contract PostDeploy is Script {
         namespace: "UD",
         name: "ItemsSystem"
       });
+      resourceIds.lootManagerSystemId = _lootManagerSystemId("UD");
     }
 
     address characterSystemAddress = Systems.getSystem(resourceIds.characterSystemId);
-
     System goldSystemContract = new ERC20System();
 
     world.registerSystem(resourceIds.erc20SystemId, goldSystemContract, true);
 
     IWorld(worldAddress).grantAccess(resourceIds.erc20NamespaceId, worldAddress);
+    IWorld(worldAddress).grantAccess(resourceIds.lootManagerSystemId, characterSystemAddress);
     IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
 
-    world.transferOwnership(resourceIds.erc20NamespaceId, address(characterSystemAddress));
+    world.transferOwnership(resourceIds.erc20NamespaceId, Systems.getSystem(resourceIds.lootManagerSystemId));
 
     System systemContract = new ERC721System();
     world.registerSystem(resourceIds.erc721SystemId, systemContract, true);
@@ -174,6 +177,17 @@ contract PostDeploy is Script {
     world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
     _createStarterItems();
     _createMonsters();
+
+    uint8[] memory classRestrictions = new uint8[](0);
+    PhysicalAttackStats memory basicAttack = PhysicalAttackStats({
+      bonusDamage: 0,
+      armorPenetration: 0,
+      attackModifierBonus: 0,
+      critChanceBonus: 0,
+      classRestrictions: classRestrictions
+    });
+    world.UD__createAction(ActionType.PhysicalAttack, abi.encode(basicAttack));
+
     setLevels();
     vm.stopBroadcast();
   }
@@ -219,49 +233,80 @@ contract PostDeploy is Script {
   }
 
   function _createStarterItems() internal {
+    // string memory root = vm.projectRoot();
+    // string memory path = string.concat("items.json");
     string memory json = vm.readFile("items.json");
-    bytes memory itemStatsData = vm.parseJson(json, ".items");
+    bytes memory data = vm.parseJson(json);
 
-    WeaponTemplateDetails[] memory itemTemplateDetails = abi.decode(itemStatsData, (WeaponTemplateDetails[]));
+    StarterItems memory itemsData = abi.decode(data, (StarterItems));
 
-    uint256[] memory warriorItemIds = new uint256[](1);
-    uint256[] memory rogueItemIds = new uint256[](1);
-    uint256[] memory mageItemIds = new uint256[](1);
+    uint256[] memory warriorItemIds = new uint256[](2);
+    uint256[] memory rogueItemIds = new uint256[](2);
+    uint256[] memory mageItemIds = new uint256[](2);
 
-    for (uint256 i = 0; i < itemTemplateDetails.length; i++) {
-      WeaponTemplateDetails memory itemTemplate = itemTemplateDetails[i];
+    for (uint256 i = 0; i < itemsData.weapons.length; i++) {
+      WeaponTemplateDetails memory weaponTemplate = itemsData.weapons[i];
 
       WeaponStats memory newWeapon = WeaponStats({
-        agiModifier: itemTemplate.stats.agiModifier,
-        classRestrictions: itemTemplate.stats.classRestrictions,
-        hitPointModifier: itemTemplate.stats.hitPointModifier,
-        intModifier: itemTemplate.stats.intModifier,
-        maxDamage: itemTemplate.stats.maxDamage,
-        minDamage: itemTemplate.stats.minDamage,
-        minLevel: itemTemplate.stats.minLevel,
-        strModifier: itemTemplate.stats.strModifier
+        agiModifier: weaponTemplate.stats.agiModifier,
+        classRestrictions: weaponTemplate.stats.classRestrictions,
+        hitPointModifier: weaponTemplate.stats.hitPointModifier,
+        intModifier: weaponTemplate.stats.intModifier,
+        maxDamage: weaponTemplate.stats.maxDamage,
+        minDamage: weaponTemplate.stats.minDamage,
+        minLevel: weaponTemplate.stats.minLevel,
+        strModifier: weaponTemplate.stats.strModifier
+      });
+
+      uint256 starterArmorId = world.UD__createItem(
+        ItemType.Weapon,
+        weaponTemplate.initialSupply,
+        weaponTemplate.dropChance,
+        abi.encode(newWeapon),
+        weaponTemplate.metadataUri
+      );
+
+      if (i == 0) {
+        warriorItemIds[1] = starterArmorId;
+      }
+      if (i == 1) {
+        rogueItemIds[1] = starterArmorId;
+      }
+      if (i == 2) {
+        mageItemIds[1] = starterArmorId;
+      }
+    }
+
+    for (uint256 i = 0; i < itemsData.armor.length; i++) {
+      ArmorTemplateDetails memory armorTemplate = itemsData.armor[i];
+
+      ArmorStats memory newArmor = ArmorStats({
+        agiModifier: armorTemplate.stats.agiModifier,
+        armorModifier: armorTemplate.stats.armorModifier,
+        classRestrictions: armorTemplate.stats.classRestrictions,
+        hitPointModifier: armorTemplate.stats.hitPointModifier,
+        intModifier: armorTemplate.stats.intModifier,
+        minLevel: armorTemplate.stats.minLevel,
+        strModifier: armorTemplate.stats.strModifier
       });
 
       uint256 starterItemId = world.UD__createItem(
-        ItemType.Weapon,
-        10 ether,
-        abi.encode(newWeapon),
-        itemTemplate.metadataUri
+        ItemType.Armor,
+        armorTemplate.initialSupply,
+        armorTemplate.dropChance,
+        abi.encode(newArmor),
+        armorTemplate.metadataUri
       );
 
       if (i == 0) {
         warriorItemIds[0] = starterItemId;
-      }
-      if (i == 1) {
         rogueItemIds[0] = starterItemId;
-      }
-      if (i == 2) {
         mageItemIds[0] = starterItemId;
       }
     }
-
-    uint256[] memory amounts = new uint256[](1);
+    uint256[] memory amounts = new uint256[](2);
     amounts[0] = 1;
+    amounts[1] = 1;
 
     world.UD__setStarterItems(Classes.Warrior, warriorItemIds, amounts);
     world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);

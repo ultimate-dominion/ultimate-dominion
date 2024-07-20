@@ -23,8 +23,8 @@ import {
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
-import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess} from "../utils.sol";
-import {ITEMS_NAMESPACE} from "../../constants.sol";
+import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess, _lootManagerSystemId} from "../utils.sol";
+import {ITEMS_NAMESPACE, WORLD_NAMESPACE} from "../../constants.sol";
 import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
@@ -45,18 +45,33 @@ contract ItemsSystem is System {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
 
-    function createItem(ItemType itemType, uint256 supply, bytes memory stats, string memory itemMetadataURI)
-        public
-        returns (uint256)
-    {
+    function createItem(
+        ItemType itemType,
+        uint256 supply,
+        uint256 dropChance,
+        bytes memory stats,
+        string memory itemMetadataURI
+    ) public returns (uint256) {
         uint256 itemId = _incrementItemsCounter();
+        // create new item struct
+        ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, stats: stats});
+
+        // mint supply to this contract
         IWorld(_world()).call(
             _erc1155SystemId(ITEMS_NAMESPACE),
-            abi.encodeWithSignature("mint(address,uint256,uint256,bytes)", address(this), itemId, supply, "")
+            abi.encodeWithSignature(
+                "mint(address,uint256,uint256,bytes)",
+                Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE)),
+                itemId,
+                supply,
+                ""
+            )
         );
-
+        // see if you can guess what this is doing...
         setTokenUri(itemId, itemMetadataURI);
-        Items.set(itemId, itemType, stats);
+
+        // set the new item struct in the items table;
+        Items.set(itemId, newItem);
 
         return itemId;
     }
@@ -64,6 +79,7 @@ contract ItemsSystem is System {
     function createItems(
         ItemType[] memory itemTypes,
         uint256[] memory supply,
+        uint256[] memory dropChances,
         bytes[] memory stats,
         string[] memory itemMetadataURIs
     ) public {
@@ -74,7 +90,7 @@ contract ItemsSystem is System {
         );
 
         for (uint256 i; i < len; i++) {
-            createItem(itemTypes[i], supply[i], stats[i], itemMetadataURIs[i]);
+            createItem(itemTypes[i], supply[i], dropChances[i], stats[i], itemMetadataURIs[i]);
         }
     }
 
@@ -82,27 +98,8 @@ contract ItemsSystem is System {
         _supply = TotalSupply.getTotalSupply(_totalSupplyTableId(ITEMS_NAMESPACE), tokenId);
     }
 
-    function issueStarterItems(bytes32 characterId) public {
-        require(_msgSender() == Systems.getSystem(_characterSystemId("UD")), "ITEMS: Invalid System");
-        StarterItemsData memory starterItems = getStarterItems(Stats.getClass(characterId));
-
-        address owner = IWorld(_world()).UD__getOwner(characterId);
-
-        for (uint256 i; i < starterItems.itemIds.length; i++) {
-            _items().transferFrom(address(this), owner, starterItems.itemIds[i], starterItems.amounts[i]);
-        }
-    }
-
     function getStarterItems(Classes class) public view returns (StarterItemsData memory data) {
         return StarterItems.get(class);
-    }
-
-    function dropItems(uint256[] memory itemIds, uint256[] memory amounts, bytes32[] memory characterIds) public {
-        _requireAccess(address(this), _msgSender());
-        for (uint256 i; i < itemIds.length; i++) {
-            address to = IWorld(_world()).UD__getOwner(characterIds[i]);
-            _items().transferFrom(address(this), to, itemIds[i], amounts[i]);
-        }
     }
 
     function setTokenUri(uint256 tokenId, string memory tokenUri) public {

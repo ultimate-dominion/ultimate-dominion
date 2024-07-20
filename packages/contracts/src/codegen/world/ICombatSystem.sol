@@ -28,7 +28,7 @@ interface ICombatSystem {
 
   function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) external payable;
 
-  function UD__isParticipant(address account, bytes32 encounterId) external view returns (bool _isParticipant);
+  function UD__isParticipant(bytes32 playerId, bytes32 encounterId) external view returns (bool _isParticipant);
 
   function UD__isParticipant(
     address account,
@@ -48,4 +48,8 @@ interface ICombatSystem {
   function UD__getEncounter(bytes32 encounterId) external view returns (CombatEncounterData memory _encounterData);
 
   function UD___calculateMagicAttack() external;
+
+  function UD__calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) external returns (uint256 dropAmount);
+
+  function UD__calculateItemDrop(uint256 randomNumber, uint256 itemId) external returns (bool);
 }

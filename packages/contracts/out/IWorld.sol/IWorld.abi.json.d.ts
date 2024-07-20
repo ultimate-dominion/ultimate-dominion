@@ -34,6 +34,11 @@ declare const abi: [
             "name": "critChanceBonus",
             "type": "int256",
             "internalType": "int256"
+          },
+          {
+            "name": "classRestrictions",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
           }
         ]
       },
@@ -140,6 +145,72 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__assignActionToCharacter",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actionId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__calculateGoldDrop",
+    "inputs": [
+      {
+        "name": "mobLevel",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dropAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__calculateItemDrop",
+    "inputs": [
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__checkRequirements",
     "inputs": [
       {
@@ -201,6 +272,11 @@ declare const abi: [
         "internalType": "uint256"
       },
       {
+        "name": "dropChance",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "stats",
         "type": "bytes",
         "internalType": "bytes"
@@ -231,6 +307,11 @@ declare const abi: [
       },
       {
         "name": "supply",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "dropChances",
         "type": "uint256[]",
         "internalType": "uint256[]"
       },
@@ -331,6 +412,47 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__dropGold",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__dropItem",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__dropItems",
     "inputs": [
       {
@@ -403,6 +525,24 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__equipAction",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actionId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -490,6 +630,11 @@ declare const abi: [
         "internalType": "struct ArmorStats",
         "components": [
           {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
             "name": "armorModifier",
             "type": "uint256",
             "internalType": "uint256"
@@ -500,17 +645,7 @@ declare const abi: [
             "internalType": "uint8[]"
           },
           {
-            "name": "minLevel",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "strModifier",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "agiModifier",
+            "name": "hitPointModifier",
             "type": "int256",
             "internalType": "int256"
           },
@@ -520,7 +655,12 @@ declare const abi: [
             "internalType": "int256"
           },
           {
-            "name": "hitPointModifier",
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
           }
@@ -582,20 +722,7 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getCurrentItemsCounter",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__getCurrentLevel",
+    "name": "UD__getCurrentAvailableLevel",
     "inputs": [
       {
         "name": "experience",
@@ -606,6 +733,19 @@ declare const abi: [
     "outputs": [
       {
         "name": "currentLevel",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getCurrentItemsCounter",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -763,6 +903,19 @@ declare const abi: [
     "outputs": [
       {
         "name": "_erc1155",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getLootManagerSystem",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "_lootManager",
         "type": "address",
         "internalType": "address"
       }
@@ -1264,7 +1417,7 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "baseHitPoints",
+            "name": "baseHp",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -1474,9 +1627,9 @@ declare const abi: [
     "name": "UD__isParticipant",
     "inputs": [
       {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
+        "name": "playerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "encounterId",
@@ -1520,6 +1673,30 @@ declare const abi: [
         "name": "entityId",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isValidOwner",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [

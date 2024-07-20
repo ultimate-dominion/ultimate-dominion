@@ -75,7 +75,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         assertEq(modifiedStats.adjustedStrength, uint256(int256(baseStats.strength) + armorStats.strModifier));
         assertEq(modifiedStats.adjustedAgility, uint256(int256(baseStats.agility) + armorStats.agiModifier));
         assertEq(modifiedStats.adjustedIntelligence, uint256(int256(baseStats.intelligence) + armorStats.intModifier));
-        assertEq(modifiedStats.adjustedMaxHp, uint256(int256(baseStats.baseHitPoints) + armorStats.hitPointModifier));
+        assertEq(modifiedStats.adjustedMaxHp, uint256(int256(baseStats.baseHp) + armorStats.hitPointModifier));
     }
 
     function test_unequipItem() public {

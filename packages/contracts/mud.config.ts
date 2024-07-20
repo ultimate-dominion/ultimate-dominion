@@ -4,7 +4,10 @@ export default defineWorld({
   namespace: "UD",
   deploy: {},
   userTypes: {
-    ResourceId: { filePath: "@latticexyz/store/src/ResourceId.sol", type: "bytes32" },
+    ResourceId: {
+      filePath: "@latticexyz/store/src/ResourceId.sol",
+      type: "bytes32",
+    },
   },
   systems: {},
   enums: {
@@ -19,7 +22,14 @@ export default defineWorld({
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
     ActionType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
-    StatusEffects: ["ToHitModifier", "DoT", "HitPointMod", "ArmorMod", "WeaponMod", "Stun"],
+    StatusEffects: [
+      "ToHitModifier",
+      "DoT",
+      "HitPointMod",
+      "ArmorMod",
+      "WeaponMod",
+      "Stun",
+    ],
   },
   tables: {
     /**
@@ -44,7 +54,7 @@ export default defineWorld({
         agility: "uint256",
         class: "Classes",
         intelligence: "uint256",
-        baseHitPoints: "uint256",
+        baseHp: "uint256",
         currentHp: "int256",
         experience: "uint256",
         level: "uint256",
@@ -116,7 +126,9 @@ export default defineWorld({
       schema: {
         itemId: "uint256",
         itemType: "ItemType",
+        dropChance: "uint256",
         stats: "bytes",
+        // probability in 10^6 e.g. 20_000_000 = 20%
       },
       key: ["itemId"],
     },

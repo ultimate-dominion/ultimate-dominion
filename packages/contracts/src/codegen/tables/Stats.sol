@@ -24,7 +24,7 @@ struct StatsData {
   uint256 agility;
   Classes class;
   uint256 intelligence;
-  uint256 baseHitPoints;
+  uint256 baseHp;
   int256 currentHp;
   uint256 experience;
   uint256 level;
@@ -61,7 +61,7 @@ library Stats {
     fieldNames[1] = "agility";
     fieldNames[2] = "class";
     fieldNames[3] = "intelligence";
-    fieldNames[4] = "baseHitPoints";
+    fieldNames[4] = "baseHp";
     fieldNames[5] = "currentHp";
     fieldNames[6] = "experience";
     fieldNames[7] = "level";
@@ -250,9 +250,9 @@ library Stats {
   }
 
   /**
-   * @notice Get baseHitPoints.
+   * @notice Get baseHp.
    */
-  function getBaseHitPoints(bytes32 entityId) internal view returns (uint256 baseHitPoints) {
+  function getBaseHp(bytes32 entityId) internal view returns (uint256 baseHp) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
@@ -261,9 +261,9 @@ library Stats {
   }
 
   /**
-   * @notice Get baseHitPoints.
+   * @notice Get baseHp.
    */
-  function _getBaseHitPoints(bytes32 entityId) internal view returns (uint256 baseHitPoints) {
+  function _getBaseHp(bytes32 entityId) internal view returns (uint256 baseHp) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
@@ -272,23 +272,23 @@ library Stats {
   }
 
   /**
-   * @notice Set baseHitPoints.
+   * @notice Set baseHp.
    */
-  function setBaseHitPoints(bytes32 entityId, uint256 baseHitPoints) internal {
+  function setBaseHp(bytes32 entityId, uint256 baseHp) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((baseHitPoints)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((baseHp)), _fieldLayout);
   }
 
   /**
-   * @notice Set baseHitPoints.
+   * @notice Set baseHp.
    */
-  function _setBaseHitPoints(bytes32 entityId, uint256 baseHitPoints) internal {
+  function _setBaseHp(bytes32 entityId, uint256 baseHp) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = entityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((baseHitPoints)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((baseHp)), _fieldLayout);
   }
 
   /**
@@ -456,7 +456,7 @@ library Stats {
     uint256 agility,
     Classes class,
     uint256 intelligence,
-    uint256 baseHitPoints,
+    uint256 baseHp,
     int256 currentHp,
     uint256 experience,
     uint256 level
@@ -466,7 +466,7 @@ library Stats {
       agility,
       class,
       intelligence,
-      baseHitPoints,
+      baseHp,
       currentHp,
       experience,
       level
@@ -490,7 +490,7 @@ library Stats {
     uint256 agility,
     Classes class,
     uint256 intelligence,
-    uint256 baseHitPoints,
+    uint256 baseHp,
     int256 currentHp,
     uint256 experience,
     uint256 level
@@ -500,7 +500,7 @@ library Stats {
       agility,
       class,
       intelligence,
-      baseHitPoints,
+      baseHp,
       currentHp,
       experience,
       level
@@ -524,7 +524,7 @@ library Stats {
       _table.agility,
       _table.class,
       _table.intelligence,
-      _table.baseHitPoints,
+      _table.baseHp,
       _table.currentHp,
       _table.experience,
       _table.level
@@ -548,7 +548,7 @@ library Stats {
       _table.agility,
       _table.class,
       _table.intelligence,
-      _table.baseHitPoints,
+      _table.baseHp,
       _table.currentHp,
       _table.experience,
       _table.level
@@ -576,7 +576,7 @@ library Stats {
       uint256 agility,
       Classes class,
       uint256 intelligence,
-      uint256 baseHitPoints,
+      uint256 baseHp,
       int256 currentHp,
       uint256 experience,
       uint256 level
@@ -590,7 +590,7 @@ library Stats {
 
     intelligence = (uint256(Bytes.getBytes32(_blob, 65)));
 
-    baseHitPoints = (uint256(Bytes.getBytes32(_blob, 97)));
+    baseHp = (uint256(Bytes.getBytes32(_blob, 97)));
 
     currentHp = (int256(uint256(Bytes.getBytes32(_blob, 129))));
 
@@ -615,7 +615,7 @@ library Stats {
       _table.agility,
       _table.class,
       _table.intelligence,
-      _table.baseHitPoints,
+      _table.baseHp,
       _table.currentHp,
       _table.experience,
       _table.level
@@ -651,12 +651,12 @@ library Stats {
     uint256 agility,
     Classes class,
     uint256 intelligence,
-    uint256 baseHitPoints,
+    uint256 baseHp,
     int256 currentHp,
     uint256 experience,
     uint256 level
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(strength, agility, class, intelligence, baseHitPoints, currentHp, experience, level);
+    return abi.encodePacked(strength, agility, class, intelligence, baseHp, currentHp, experience, level);
   }
 
   /**
@@ -670,7 +670,7 @@ library Stats {
     uint256 agility,
     Classes class,
     uint256 intelligence,
-    uint256 baseHitPoints,
+    uint256 baseHp,
     int256 currentHp,
     uint256 experience,
     uint256 level
@@ -680,7 +680,7 @@ library Stats {
       agility,
       class,
       intelligence,
-      baseHitPoints,
+      baseHp,
       currentHp,
       experience,
       level

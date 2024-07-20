@@ -24,6 +24,8 @@ interface ICharacterSystem {
 
   function UD__isValidCharacterId(bytes32 characterId) external view returns (bool);
 
+  function UD__isValidOwner(bytes32 characterId, address owner) external view returns (bool);
+
   function UD__mintCharacter(
     address account,
     bytes32 name,
@@ -34,7 +36,7 @@ interface ICharacterSystem {
 
   function UD__enterGame(bytes32 characterId) external;
 
-  function UD__getCurrentLevel(uint256 experience) external view returns (uint256 currentLevel);
+  function UD__getCurrentAvailableLevel(uint256 experience) external view returns (uint256 currentLevel);
 
   function UD__updateTokenUri(bytes32 characterId, string memory tokenUri) external;
 

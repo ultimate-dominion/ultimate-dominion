@@ -31,10 +31,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         StatsData memory alicesCharacter = world.UD__getStats(alicesCharacterId);
         assertEq(uint8(alicesCharacter.class), uint8(Classes.Rogue));
         assertEq(
-            (
-                alicesCharacter.strength + alicesCharacter.agility + alicesCharacter.baseHitPoints
-                    + alicesCharacter.intelligence
-            ),
+            (alicesCharacter.strength + alicesCharacter.agility + alicesCharacter.baseHp + alicesCharacter.intelligence),
             27
         );
 
@@ -68,5 +65,10 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         world.UD__updateTokenUri(bobCharacterId, "newTokenUri");
 
         assertEq(IERC721Metadata(address(characterToken)).tokenURI(2), "ipfs://newTokenUri");
+    }
+
+    function test_getCharacterId() public {
+        uint256 bobTokenId = world.UD__getCharacterTokenId(bobCharacterId);
+        assertEq(bobTokenId, 2);
     }
 }

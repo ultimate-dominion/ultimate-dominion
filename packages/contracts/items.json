@@ -1,12 +1,31 @@
 {
-  "metadataUriPrefix": "ipfs://QmVUaqRpQJHyqugYd12Qf2iErNSoGvLF1cbeRHpmX8bChs/",
-  "items": [
+  "armor": [
     {
+      "dropChance": 20000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "1_rags.json",
+      "name": "Rags",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 1,
+        "classRestrictions": [],
+        "hitPointModifier": 0,
+        "intModifier": 0,
+        "minLevel": 0,
+        "strModifier": 0
+      }
+    }
+  ],
+  "metadataUriPrefix": "ipfs://QmVUaqRpQJHyqugYd12Qf2iErNSoGvLF1cbeRHpmX8bChs/",
+  "weapons": [
+    {
+      "dropChance": 20000000,
+      "initialSupply": 10000000000000000000,
       "metadataUri": "1_rusty_sword.json",
       "name": "Rusty Sword",
       "stats": {
         "agiModifier": 4,
-        "classRestrictions": [],
+        "classRestrictions": [0],
         "hitPointModifier": 6,
         "intModifier": 5,
         "maxDamage": 2,
@@ -16,11 +35,13 @@
       }
     },
     {
+      "dropChance": 20000000,
+      "initialSupply": 10000000000000000000,
       "metadataUri": "2_cracked_dagger.json",
       "name": "Cracked Dagger",
       "stats": {
         "agiModifier": 4,
-        "classRestrictions": [],
+        "classRestrictions": [1],
         "hitPointModifier": 6,
         "intModifier": 5,
         "maxDamage": 2,
@@ -30,11 +51,13 @@
       }
     },
     {
+      "dropChance": 20000000,
+      "initialSupply": 10000000000000000000,
       "metadataUri": "3_cobbled_wand.json",
       "name": "Cobbled Wand",
       "stats": {
         "agiModifier": 4,
-        "classRestrictions": [],
+        "classRestrictions": [2],
         "hitPointModifier": 6,
         "intModifier": 5,
         "maxDamage": 2,

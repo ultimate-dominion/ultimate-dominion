@@ -35,7 +35,12 @@ import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {
-    DEFAULT_MAX_TURNS, TO_HIT_MODIFIER, DEFENSE_MODIFIER, ATTACK_MODIFIER, CRIT_MODIFIER
+    DEFAULT_MAX_TURNS,
+    TO_HIT_MODIFIER,
+    DEFENSE_MODIFIER,
+    ATTACK_MODIFIER,
+    CRIT_MODIFIER,
+    BASE_GOLD_DROP
 } from "../../constants.sol";
 import "forge-std/console2.sol";
 
@@ -117,14 +122,17 @@ contract CombatSystem is System {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(encounterData.start != 0 && encounterData.end == 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
         require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
-        require(isParticipant(_msgSender(), encounterId), "COMBAT SYSTEM: NON-COMBATANT");
+        require(
+            IWorld(_world()).UD__getOwnerAddress(playerId) == _msgSender() && isParticipant(playerId, encounterId),
+            "COMBAT SYSTEM: NON-COMBATANT"
+        );
         _queueActions(encounterId, actions);
     }
 
-    function isParticipant(address account, bytes32 encounterId) public view returns (bool _isParticipant) {
+    function isParticipant(bytes32 playerId, bytes32 encounterId) public view returns (bool _isParticipant) {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         for (uint256 i; i < encounterData.attackers.length;) {
-            if (account == IWorld(_world()).UD__getOwnerAddress(encounterData.attackers[i])) {
+            if (playerId == encounterData.attackers[i]) {
                 _isParticipant = true;
                 break;
             }
@@ -134,7 +142,7 @@ contract CombatSystem is System {
         }
         if (!_isParticipant) {
             for (uint256 i; i < encounterData.defenders.length;) {
-                if (account == IWorld(_world()).UD__getOwnerAddress(encounterData.defenders[i])) {
+                if (playerId == encounterData.defenders[i]) {
                     _isParticipant = true;
                     break;
                 }
@@ -205,6 +213,8 @@ contract CombatSystem is System {
         ) {
             // for some reason block.timestamp is not availible here on anvil?
             encounterData.end = block.number;
+            CombatEncounter.set(encounterId, encounterData);
+            _endMatch(encounterId, randomNumber);
         }
     }
 
@@ -252,7 +262,7 @@ contract CombatSystem is System {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
 
             (hit, crit) = _calculatePhysicalAttackModifier(
-                uint256(rnChunks[1]), uint256(rnChunks[0]), attackStats, attacker, defender
+                uint256(rnChunks[0]), uint256(rnChunks[1]), attackStats, attacker, defender
             );
 
             if (hit) {
@@ -312,4 +322,65 @@ contract CombatSystem is System {
     }
 
     function _calculateMagicAttack() public {}
+
+    function _endMatch(bytes32 encounterId, uint256 randomNumber)
+        internal
+        returns (uint256[] memory itemIds, uint256[] memory amounts, uint256 goldAmount)
+    {
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+
+        // check dead attackers and defenders
+        uint256 cumulativeAttackerLevels;
+        uint256 livingAttackers;
+        StatsData memory statsTemp;
+        for (uint256 i; i < encounterData.attackers.length; i++) {
+            statsTemp = Stats.get(encounterData.attackers[i]);
+            cumulativeAttackerLevels += statsTemp.level;
+            if (statsTemp.currentHp > 0) {
+                livingAttackers++;
+            }
+        }
+
+        //if cumulative attacker levels is >= 5 levels above the monster level no gold reward.
+        //  for this calculation level is calculated from exp not from actual leveled levels
+
+        uint256 goldDrop;
+        uint256 expDrop;
+        for (uint256 i; i < encounterData.defenders.length; i++) {
+            statsTemp = Stats.get(encounterData.defenders[i]);
+            if (statsTemp.currentHp <= int256(0)) {
+                expDrop += statsTemp.experience;
+                goldDrop += calculateGoldDrop(statsTemp.level, randomNumber);
+                MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+            }
+        }
+        // drop gold reward calculated from the level of mob to player journey wallet (can mint tokens when he returns to 0,0).
+        // if dead player, drop transfer 50% of un-banked gold to world contract
+        // distribute loot
+        bytes32 entityIdTemp;
+        for (uint256 i; i < encounterData.attackers.length; i++) {
+            entityIdTemp = encounterData.attackers[i];
+            if (IWorld(_world()).UD__isValidCharacterId(entityIdTemp)) {
+                statsTemp = Stats.get(entityIdTemp);
+                if (statsTemp.currentHp > int256(0)) {
+                    if (goldDrop > uint256(0)) {
+                        IWorld(_world()).UD__dropGold(entityIdTemp, (goldDrop / livingAttackers));
+                    }
+                    if (expDrop > uint256(0) && livingAttackers > uint256(0)) {
+                        statsTemp.experience += expDrop / livingAttackers;
+                    }
+                }
+                Stats.set(entityIdTemp, statsTemp);
+            }
+            MatchEntity.setEncounterId(entityIdTemp, bytes32(0));
+        }
+    }
+
+    function calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) public returns (uint256 dropAmount) {
+        // Calculate level-based drop
+
+        dropAmount = randomNumber % (BASE_GOLD_DROP * mobLevel);
+    }
+
+    function calculateItemDrop(uint256 randomNumber, uint256 itemId) public returns (bool) {}
 }
