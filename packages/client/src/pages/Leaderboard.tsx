@@ -1,8 +1,7 @@
 import {
+  Box,
   Button,
   Flex,
-  Grid,
-  GridItem,
   HStack,
   Input,
   InputGroup,
@@ -57,7 +56,6 @@ export const Leaderboard = (): JSX.Element => {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState('1');
   const [pageLimit, setPageLimit] = useState(0);
-  const [total, setTotal] = useState(0);
 
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {
@@ -112,7 +110,6 @@ export const Leaderboard = (): JSX.Element => {
     setEntries(
       entriesCopy.slice((pageNumber - 1) * PER_PAGE, pageNumber * PER_PAGE),
     );
-    setTotal(entriesCopy.length);
 
     if (pageNumber > _pageLimit) {
       setPage(_pageLimit.toString());
@@ -121,7 +118,12 @@ export const Leaderboard = (): JSX.Element => {
 
   return (
     <VStack mt={16}>
-      <Stack direction="row" mb={8} spacing={8} w="100%">
+      <Stack
+        direction={{ base: 'column', md: 'row' }}
+        mb={8}
+        spacing={{ base: 4, md: 8 }}
+        w="100%"
+      >
         <InputGroup w="100%">
           <InputLeftElement h="100%" pointerEvents="none">
             <FaSearch />
@@ -167,13 +169,12 @@ export const Leaderboard = (): JSX.Element => {
           </Button>
         </HStack>
       </Stack>
-      <Flex direction="row" w="100%">
-        <Grid templateColumns="repeat(10, 1fr)" w="100%">
-          <GridItem colSpan={6}>
-            <Text>Players {total}</Text>
-          </GridItem>
-          <GridItem colSpan={1}>
+      <Flex justify="space-between" w="100%">
+        <Text>Players {entries.length}</Text>
+        <HStack>
+          <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
             <Button
+              display={{ base: 'none', lg: 'flex' }}
               fontWeight={sort.sorted == 'byStats' ? 'bold' : 'normal'}
               onClick={() =>
                 setSort({
@@ -184,8 +185,9 @@ export const Leaderboard = (): JSX.Element => {
               p={1}
               size={{ base: '2xs', lg: 'sm' }}
               variant="ghost"
+              w="100%"
             >
-              <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
+              <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
                 Total Stats
               </Text>
               {sort.sorted == 'byStats' && sort.reversed && <FaSortAmountUp />}
@@ -194,8 +196,6 @@ export const Leaderboard = (): JSX.Element => {
               )}
               {sort.sorted != 'byStats' && <FaSortAmountDown color="grey" />}
             </Button>
-          </GridItem>
-          <GridItem colSpan={1}>
             <Button
               fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
               onClick={() =>
@@ -207,8 +207,9 @@ export const Leaderboard = (): JSX.Element => {
               p={1}
               size={{ base: '2xs', lg: 'sm' }}
               variant="ghost"
+              w="100%"
             >
-              <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
+              <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
                 Level
               </Text>
               {sort.sorted == 'byLevel' && sort.reversed && <FaSortAmountUp />}
@@ -217,8 +218,6 @@ export const Leaderboard = (): JSX.Element => {
               )}
               {sort.sorted != 'byLevel' && <FaSortAmountDown color="grey" />}
             </Button>
-          </GridItem>
-          <GridItem colSpan={2}>
             <Button
               fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
               onClick={() =>
@@ -230,8 +229,9 @@ export const Leaderboard = (): JSX.Element => {
               p={1}
               size={{ base: '2xs', lg: 'sm' }}
               variant="ghost"
+              w="100%"
             >
-              <Text mr={5} size={{ base: '2xs', sm: 'xs' }}>
+              <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
                 $Gold
               </Text>
               {sort.sorted == 'byGold' && sort.reversed && <FaSortAmountUp />}
@@ -240,8 +240,9 @@ export const Leaderboard = (): JSX.Element => {
               )}
               {sort.sorted != 'byGold' && <FaSortAmountDown color="grey" />}
             </Button>
-          </GridItem>
-        </Grid>
+          </HStack>
+          <Box display={{ base: 'none', md: 'block' }} w="50px" />
+        </HStack>
       </Flex>
 
       <VStack gap={3} overflowX="auto" w="100%">
@@ -251,6 +252,7 @@ export const Leaderboard = (): JSX.Element => {
               <LeaderboardRow
                 name={entry.characterId}
                 gold={entry.goldBalance}
+                key={`leaderboard-row-${i}`}
                 level={entry.level}
                 stats={{
                   HP: entry.baseHp,
@@ -260,7 +262,6 @@ export const Leaderboard = (): JSX.Element => {
                 }}
                 total={entry.experience}
                 type={entry.entityClass}
-                key={i}
               />
             );
           })
@@ -268,73 +269,68 @@ export const Leaderboard = (): JSX.Element => {
           <Text mt={12}>No players</Text>
         )}
       </VStack>
-      {entries.length > 0 && (
-        <HStack my={5} visibility={total ? 'visible' : 'hidden'}>
-          <Button
-            onClick={() => setPage('1')}
-            size="xs"
-            visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
-          >
-            <FaBackwardStep />
-          </Button>
-          <Button
-            onClick={() =>
-              setPage((pageNumber == 1 ? 1 : pageNumber - 1).toString())
-            }
-            size="xs"
-            visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
-          >
-            <IoCaretBack />
-          </Button>
-          <Input
-            max={pageLimit}
-            min={1}
-            onChange={e => {
-              const value = e.target.value;
-              if (value === '') {
-                setPage(value);
-                return;
-              }
-              if (isNaN(Number(value))) {
-                return;
-              }
-              if (Number(value) < 1) {
-                return;
-              }
-              if (Number(value) > pageLimit) {
-                return;
-              }
+      <HStack my={5} visibility={entries.length > 0 ? 'visible' : 'hidden'}>
+        <Button
+          onClick={() => setPage('1')}
+          size="xs"
+          visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
+        >
+          <FaBackwardStep />
+        </Button>
+        <Button
+          onClick={() =>
+            setPage((pageNumber == 1 ? 1 : pageNumber - 1).toString())
+          }
+          size="xs"
+          visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
+        >
+          <IoCaretBack />
+        </Button>
+        <Input
+          max={pageLimit}
+          min={1}
+          onChange={e => {
+            const value = e.target.value;
+            if (value === '') {
               setPage(value);
-            }}
-            p={2}
-            size="sm"
-            value={page}
-            w={10}
-          />
-          <Text size="sm">of {pageLimit}</Text>
-          <Button
-            onClick={() =>
-              setPage(
-                (pageNumber < pageLimit
-                  ? pageNumber + 1
-                  : pageNumber
-                ).toString(),
-              )
+              return;
             }
-            size="xs"
-            visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
-          >
-            <IoCaretForward />
-          </Button>
-          <Button
-            onClick={() => setPage(pageLimit.toString())}
-            size="xs"
-            visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
-          >
-            <FaForwardStep />
-          </Button>
-        </HStack>
-      )}
+            if (isNaN(Number(value))) {
+              return;
+            }
+            if (Number(value) < 1) {
+              return;
+            }
+            if (Number(value) > pageLimit) {
+              return;
+            }
+            setPage(value);
+          }}
+          p={2}
+          size="sm"
+          value={page}
+          w={10}
+        />
+        <Text size="sm">of {pageLimit}</Text>
+        <Button
+          onClick={() =>
+            setPage(
+              (pageNumber < pageLimit ? pageNumber + 1 : pageNumber).toString(),
+            )
+          }
+          size="xs"
+          visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
+        >
+          <IoCaretForward />
+        </Button>
+        <Button
+          onClick={() => setPage(pageLimit.toString())}
+          size="xs"
+          visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
+        >
+          <FaForwardStep />
+        </Button>
+      </HStack>
     </VStack>
   );
 };
