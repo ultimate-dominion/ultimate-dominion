@@ -131,7 +131,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             {isOwner ? 'Unequip Item' : 'Make an offer'}
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody padding={4}>
+          <ModalBody p={4}>
             {isOwner ? (
               <Text mb={6}>Do you want to unequip this item?</Text>
             ) : (

@@ -32,7 +32,7 @@ export const InfoModal: React.FC<InfoModalProps> = ({
           <Text>{heading}</Text>
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody padding={4}>{children}</ModalBody>
+        <ModalBody p={4}>{children}</ModalBody>
         <ModalFooter>
           <Button onClick={onClose} variant="ghost">
             Close

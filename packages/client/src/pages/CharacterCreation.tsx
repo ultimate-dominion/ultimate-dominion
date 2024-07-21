@@ -406,6 +406,7 @@ export const CharacterCreation = (): JSX.Element => {
                 <VStack w="100%">
                   <FormControl isInvalid={showError && !name}>
                     <Input
+                      maxLength={15}
                       onChange={e => setName(e.target.value)}
                       placeholder="Name"
                       type="text"

@@ -18,6 +18,7 @@ export const CopyText = ({
   return (
     <Tooltip
       closeDelay={1000}
+      openDelay={500}
       hasArrow
       label={isCopied ? 'Copied!' : text}
       placement="top"
