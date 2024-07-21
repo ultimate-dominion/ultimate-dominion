@@ -19,7 +19,6 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { type Address } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -40,12 +39,13 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
   isOpen,
   name,
   onClose,
+  tokenId,
 }): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
 
   const {
     delegatorAddress,
-    network: { worldContract, publicClient },
+    systemCalls: { updateTokenUri },
   } = useMUD();
   const { refreshCharacter } = useCharacter();
 
@@ -147,12 +147,16 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
             'Something went wrong uploading your character metadata',
           );
 
-        const tx = await worldContract.write.UD__updateTokenUri([
-          characterId as Address,
+        const { error, success } = await updateTokenUri(
+          characterId,
           characterMetadataCid,
-        ]);
+          tokenId,
+        );
 
-        await publicClient.waitForTransactionReceipt({ hash: tx });
+        if (error && !success) {
+          throw new Error(error);
+        }
+
         await refreshCharacter();
         renderSuccess('Character updated!');
         onClose();
@@ -173,11 +177,11 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
       newName,
       onClose,
       onUpload,
-      publicClient,
       refreshCharacter,
       renderError,
       renderSuccess,
-      worldContract.write,
+      tokenId,
+      updateTokenUri,
     ],
   );
 

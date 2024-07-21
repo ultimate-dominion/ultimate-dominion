@@ -87,6 +87,7 @@ export function createSystemCalls(
   {
     CharacterEquipment,
     Characters,
+    CharactersTokenURI,
     CombatEncounter,
     Position,
     Spawned,
@@ -506,6 +507,50 @@ export function createSystemCalls(
     }
   };
 
+  const updateTokenUri = async (
+    characterId: string,
+    characterMetadataCid: string,
+    tokenId: string,
+  ): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId as `0x${string}`, characterMetadataCid],
+        functionName: 'UD__updateTokenUri',
+      });
+
+      const tx = await worldContract.write.UD__updateTokenUri([
+        characterId as `0x${string}`,
+        characterMetadataCid,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const tokenIdEntity = encodeEntity(
+        { tokenId: 'uint256' },
+        { tokenId: BigInt(tokenId) },
+      );
+
+      const newMetadataURI = getComponentValueStrict(
+        CharactersTokenURI,
+        tokenIdEntity,
+      ).tokenURI;
+
+      const success = newMetadataURI === `ipfs://${characterMetadataCid}`;
+
+      return {
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const getFee = async () => {
     const entropyAddress = await worldContract.read.UD__getEntropy();
     const providerAddress = await worldContract.read.UD__getPythProvider();
@@ -535,5 +580,6 @@ export function createSystemCalls(
     rollStats,
     spawn,
     unequipItem,
+    updateTokenUri,
   };
 }
