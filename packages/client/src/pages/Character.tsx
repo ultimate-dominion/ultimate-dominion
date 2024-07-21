@@ -34,6 +34,7 @@ import { GiAxeSword, GiRogue } from 'react-icons/gi';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
 
+import { EditCharacterModal } from '../components/EditCharacterModal';
 import { ItemCard } from '../components/ItemCard';
 import { ItemEquipModal } from '../components/ItemEquipModal';
 import { Level } from '../components/Level';
@@ -77,7 +78,16 @@ export const CharacterPage = (): JSX.Element => {
   } = useMUD();
   const { character: userCharacter } = useCharacter();
 
-  const { isOpen, onClose, onOpen } = useDisclosure();
+  const {
+    isOpen: isItemModalOpen,
+    onClose: onCloseItemModal,
+    onOpen: onOpenItemModal,
+  } = useDisclosure();
+  const {
+    isOpen: isEditModalOpen,
+    onClose: onCloseEditModal,
+    onOpen: onOpenEditModal,
+  } = useDisclosure();
 
   const [character, setCharacter] = useState<Character | null>(null);
   const [isLoadingCharacter, setIsLoadingCharacter] = useState(true);
@@ -368,6 +378,7 @@ export const CharacterPage = (): JSX.Element => {
                   {isOwner && (
                     <Button
                       bottom="0"
+                      onClick={onOpenEditModal}
                       position="absolute"
                       right="0"
                       size="sm"
@@ -514,7 +525,7 @@ export const CharacterPage = (): JSX.Element => {
                               ? undefined
                               : () => {
                                   setSelectedItem(item);
-                                  onOpen();
+                                  onOpenItemModal();
                                 }
                           }
                         />
@@ -556,13 +567,20 @@ export const CharacterPage = (): JSX.Element => {
           </GridItem>
         </Grid>
       )}
+      {character && (
+        <EditCharacterModal
+          isOpen={isEditModalOpen}
+          onClose={onCloseEditModal}
+          {...character}
+        />
+      )}
       <ItemEquipModal
         isEquipped={equippedWeapons.includes(
           BigInt(selectedItem?.tokenId ?? 0),
         )}
-        isOpen={isOpen}
+        isOpen={isItemModalOpen}
         onClose={() => {
-          onClose();
+          onCloseItemModal();
           setSelectedItem(null);
         }}
         {...(selectedItem as Weapon)}
