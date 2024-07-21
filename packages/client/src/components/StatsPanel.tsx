@@ -216,7 +216,7 @@ export const StatsPanel = (): JSX.Element => {
                 textDecoration: 'none',
               }}
             >
-              Leader Board
+              Leaderboard
             </Link>
           </VStack>
         </>

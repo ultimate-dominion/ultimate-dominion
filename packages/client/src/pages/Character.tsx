@@ -1,13 +1,19 @@
 import {
+  Avatar,
   Box,
+  Button,
   Card,
   CardBody,
   Center,
   Grid,
   GridItem,
+  Heading,
+  HStack,
+  Spacer,
   Spinner,
   Text,
   useDisclosure,
+  VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import {
@@ -23,17 +29,18 @@ import {
   singletonEntity,
 } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { FaHatWizard } from 'react-icons/fa';
+import { GiAxeSword, GiRogue } from 'react-icons/gi';
+import { useNavigate, useParams } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
 
-import { Misc } from '../components/Character/Misc';
-import { Profile } from '../components/Character/Profile';
-import { Stats as StatsPanel } from '../components/Character/Stats';
 import { ItemCard } from '../components/ItemCard';
 import { ItemEquipModal } from '../components/ItemEquipModal';
+import { Level } from '../components/Level';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { LEADERBOARD_PATH } from '../Routes';
 import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
   decodeCharacterId,
@@ -43,13 +50,15 @@ import {
 import {
   type Character,
   ItemType,
-  type StatsClasses,
+  StatsClasses,
   type Weapon,
 } from '../utils/types';
 
 export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
   const { renderError } = useToast();
+  const navigate = useNavigate();
+
   const {
     components: {
       CharacterEquipment,
@@ -60,6 +69,7 @@ export const CharacterPage = (): JSX.Element => {
       ItemsBaseURI,
       ItemsOwners,
       ItemsTokenURI,
+      Levels,
       Stats,
     },
     isSynced,
@@ -273,6 +283,21 @@ export const CharacterPage = (): JSX.Element => {
 
   const maxItemsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
 
+  const nextLevelXpRequirement = useComponentValue(
+    Levels,
+    encodeEntity(
+      { level: 'uint256' },
+      { level: BigInt(Number(character?.level ?? 0) + 1) },
+    ),
+  )?.experience;
+
+  const levelPercent = useMemo(() => {
+    if (!(character && nextLevelXpRequirement)) return 0;
+    return (
+      (100 * Number(character.experience)) / Number(nextLevelXpRequirement)
+    );
+  }, [character, nextLevelXpRequirement]);
+
   if (isLoadingCharacter) {
     return (
       <Center h="100%">
@@ -313,12 +338,47 @@ export const CharacterPage = (): JSX.Element => {
             px={6}
             rowStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
-            <Profile
-              description={character.description!}
-              image={character.image}
-              isOwner={isOwner}
-              name={character.name}
-            />
+            <Box h="100%" position="relative">
+              <VStack>
+                <HStack w="100%">
+                  <Center>
+                    <Avatar size="lg" src={character.image} />
+                    <Heading margin="0px 20px" size="lg">
+                      {character.name}
+                    </Heading>
+                  </Center>
+                  <Spacer />
+                  <Center>
+                    {character.entityClass === StatsClasses.Warrior && (
+                      <GiAxeSword size={28} />
+                    )}
+                    {character.entityClass === StatsClasses.Rogue && (
+                      <GiRogue size={28} />
+                    )}
+                    {character.entityClass === StatsClasses.Mage && (
+                      <FaHatWizard size={28} />
+                    )}
+                  </Center>
+                </HStack>
+                <Spacer />
+                <Box mt={3} w="100%">
+                  <Text overflow="hidden" size="sm" textAlign="left">
+                    {character.description}
+                  </Text>
+                  {isOwner && (
+                    <Button
+                      bottom="0"
+                      position="absolute"
+                      right="0"
+                      size="sm"
+                      variant="ghost"
+                    >
+                      Edit Character
+                    </Button>
+                  )}
+                </Box>
+              </VStack>
+            </Box>
           </GridItem>
           <GridItem
             border="solid"
@@ -329,13 +389,42 @@ export const CharacterPage = (): JSX.Element => {
             px={6}
             rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
-            <StatsPanel
-              agility={character.agility}
-              baseHp={character.baseHp}
-              currentHp={character.currentHp}
-              intelligence={character.intelligence}
-              strength={character.strength}
-            />
+            <VStack>
+              <HStack justify="space-between" w="100%">
+                <Text alignSelf="start" fontWeight="bold">
+                  My Stats
+                </Text>
+                <Text alignSelf="start" fontWeight="bold">
+                  Ability Points: 3
+                </Text>
+              </HStack>
+              <Text alignSelf="end" mt={4} size="xs">
+                Base
+              </Text>
+              <VStack w="100%">
+                <HStack justify="space-between" w="100%">
+                  <Text size="lg">HP - Hit</Text>
+                  <Text size="lg">
+                    {character.currentHp}/{character.baseHp}
+                  </Text>
+                </HStack>
+
+                <HStack justify="space-between" w="100%">
+                  <Text size="lg">STR - Strength</Text>
+                  <Text size="lg">{character.strength}</Text>
+                </HStack>
+
+                <HStack justify="space-between" w="100%">
+                  <Text size="lg">AGI - Agility</Text>
+                  <Text size="lg">{character.agility}</Text>
+                </HStack>
+
+                <HStack justify="space-between" w="100%">
+                  <Text size="lg">INT - Intelligence</Text>
+                  <Text size="lg">{character.intelligence}</Text>
+                </HStack>
+              </VStack>
+            </VStack>
           </GridItem>
           <GridItem
             border="solid"
@@ -346,12 +435,44 @@ export const CharacterPage = (): JSX.Element => {
             pt={{ base: 6, md: 12 }}
             px={6}
           >
-            <Misc
-              experience={character.experience}
-              goldBalance={character.goldBalance}
-              isPlayer={isOwner}
-              max={'100'}
-            />
+            <VStack h="100%">
+              <Box w="100%">
+                <HStack alignItems="start">
+                  <Box>
+                    <Text fontWeight="bold">
+                      {Number(character.goldBalance).toLocaleString('en', {
+                        useGrouping: true,
+                      })}{' '}
+                      $GOLD
+                    </Text>
+                    <Text>
+                      {character.experience}/
+                      {nextLevelXpRequirement?.toString() ?? '0'}
+                    </Text>
+                  </Box>
+                  <Spacer />
+                  <Text fontWeight="bold">Level 1</Text>
+                </HStack>
+                <Level
+                  currentLevel={character.level}
+                  levelPercent={levelPercent}
+                />
+              </Box>
+
+              <Spacer />
+              <Box alignSelf="start" w="100%">
+                <Button m="5px 0" w="100%">
+                  {isOwner ? 'Auction House' : 'Chat'}
+                </Button>
+                <Button
+                  m="5px 0"
+                  onClick={() => navigate(LEADERBOARD_PATH)}
+                  w="100%"
+                >
+                  Leaderboard
+                </Button>
+              </Box>
+            </VStack>
           </GridItem>
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}

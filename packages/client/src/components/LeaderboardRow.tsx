@@ -8,30 +8,40 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { FaFire, FaRoad, FaShieldAlt } from 'react-icons/fa';
+import { useMemo } from 'react';
+import { FaHatWizard } from 'react-icons/fa';
+import { GiAxeSword, GiRogue } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
+import { useNavigate } from 'react-router-dom';
+
+import { type Character, StatsClasses } from '../utils/types';
 
 export const LeaderboardRow = ({
-  name,
-  gold,
+  agility,
+  baseHp,
+  characterId,
+  entityClass,
+  image,
+  intelligence,
+  goldBalance,
   level,
-  stats,
-  total,
-  type,
-}: {
-  name: string;
-  type: number;
-  stats: { STR: string; AGI: string; INT: string; HP: string };
-  total: string;
-  level: string;
-  gold: string;
-}): JSX.Element => {
+  name,
+  strength,
+}: Character): JSX.Element => {
+  const navigate = useNavigate();
+
+  const totalStats = useMemo(
+    () => Number(agility) + Number(strength) + Number(intelligence),
+    [agility, strength, intelligence],
+  );
+
   return (
     <Flex
       border="2px solid"
       borderColor="grey400"
       borderRadius={2}
       justify="space-between"
+      onClick={() => navigate(`/characters/${characterId}`)}
       w="100%"
       _hover={{
         cursor: 'pointer',
@@ -46,19 +56,19 @@ export const LeaderboardRow = ({
       }}
     >
       <Flex>
-        <Avatar borderRadius={0} size="lg" />
-        <VStack justify="center" ml={4}>
+        <Avatar borderRadius={0} size="lg" src={image} />
+        <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
             <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
             <Center>
-              {type == 0 && <FaFire size={15} />}
-              {type == 1 && <FaRoad size={15} />}
-              {type == 2 && <FaShieldAlt size={15} />}
+              {entityClass == StatsClasses.Warrior && <GiAxeSword size={15} />}
+              {entityClass == StatsClasses.Rogue && <GiRogue size={15} />}
+              {entityClass == StatsClasses.Mage && <FaHatWizard size={15} />}
             </Center>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            HP {stats['HP']} • STR {stats['STR']} • AGI
-            {stats['AGI']} • INT {stats['INT']}
+            HP {baseHp} • STR {strength} • AGI
+            {agility} • INT {intelligence}
           </Text>
         </VStack>
       </Flex>
@@ -71,7 +81,7 @@ export const LeaderboardRow = ({
             textAlign="center"
             w="100%"
           >
-            {total}
+            {totalStats}
           </Text>
           <Text
             fontWeight={500}
@@ -87,7 +97,7 @@ export const LeaderboardRow = ({
             textAlign="center"
             w="100%"
           >
-            {gold}
+            {Number(goldBalance).toLocaleString()}
           </Text>
         </HStack>
         <Box display={{ base: 'none', md: 'block' }} w="50px">

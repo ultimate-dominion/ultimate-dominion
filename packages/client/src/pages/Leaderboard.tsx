@@ -1,56 +1,48 @@
 import {
   Box,
   Button,
+  Center,
   Flex,
   HStack,
   Input,
   InputGroup,
   InputLeftElement,
+  Spinner,
   Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { Entity } from '@latticexyz/recs';
+import { useEntityQuery } from '@latticexyz/react';
+import { Entity, getComponentValueStrict, Has } from '@latticexyz/recs';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
 import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
+import { formatEther, hexToString } from 'viem';
 
 import { LeaderboardRow } from '../components/LeaderboardRow';
+import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
+import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import { Character, StatsClasses } from '../utils/types';
 
-const createDummyData = (num: number = 1) => {
-  const result: Character[] = [];
-  for (let i = 0; i < num; i++) {
-    result[result.length] = {
-      characterId: (Math.random() + 1).toString(36).substring(7) as Entity,
-      entityClass: Math.floor(Math.random() * 3) as StatsClasses,
-      goldBalance: Math.floor(Math.random() * (1000 - 100) + 100) / 100 + '',
-      locked: Math.random() < 0.5,
-      owner: (Math.random() + 1).toString(36).substring(7),
-      tokenId: i + '',
-      agility: Math.floor(Math.random() * 10) + 1 + '',
-      baseHp: Math.floor(Math.random() * 10) + 1 + '',
-      currentHp: Math.floor(Math.random() * 10) + 1 + '',
-      experience: Math.floor(Math.random() * 10) + 1 + '',
-      intelligence: Math.floor(Math.random() * 10) + 1 + '',
-      level: Math.floor(Math.random() * 10) + 1 + '',
-      strength: Math.floor(Math.random() * 10) + 1 + '',
-      description: (Math.random() + 1).toString(36).substring(7),
-      image:
-        'http://example.com/' + (Math.random() + 1).toString(36).substring(7),
-      name: (Math.random() + 1).toString(36).substring(7),
-    };
-  }
-  return result;
-};
-
-const DUMMY_CHARACTER: Character[] = createDummyData(50);
 const PER_PAGE = 10;
 
 export const Leaderboard = (): JSX.Element => {
-  const [entries, setEntries] = useState(DUMMY_CHARACTER);
+  const { renderError } = useToast();
+
+  const {
+    components: { Characters, CharactersTokenURI, GoldBalances, Stats },
+    delegatorAddress,
+    network: { publicClient, worldContract },
+  } = useMUD();
+
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [isFetchingCharacters, setIsFetchingCharacters] = useState(true);
+
+  const [entries, setEntries] = useState<Character[]>([]);
   const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
   const [filter, setFilter] = useState({ filtered: 'all' });
   const [query, setQuery] = useState('');
@@ -64,11 +56,95 @@ export const Leaderboard = (): JSX.Element => {
     return Number(page);
   }, [page]);
 
+  const allCharacterEntities = useEntityQuery([Has(Characters), Has(Stats)]);
+
+  const getAllCharacters = useCallback(
+    async (entities: Entity[]): Promise<void> => {
+      if (!(delegatorAddress && publicClient && worldContract)) return;
+
+      try {
+        setIsFetchingCharacters(true);
+
+        const _characters: Character[] = await Promise.all(
+          entities.map(async (entity: Entity) => {
+            const characterData = getComponentValueStrict(Characters, entity);
+            const characterStats = getComponentValueStrict(Stats, entity);
+            const { tokenId } = characterData;
+
+            const ownerEntity = encodeEntity(
+              { address: 'address' },
+              { address: characterData.owner as `0x${string}` },
+            );
+            const tokenIdEntity = encodeEntity(
+              { tokenId: 'uint256' },
+              { tokenId: BigInt(tokenId) },
+            );
+
+            const goldBalance =
+              getComponentValueStrict(GoldBalances, ownerEntity)?.value ??
+              BigInt(0);
+            const metadataURI = getComponentValueStrict(
+              CharactersTokenURI,
+              tokenIdEntity,
+            ).tokenURI;
+
+            const fetachedMetadata = await fetchMetadataFromUri(
+              uriToHttp(`ipfs://${metadataURI}`)[0],
+            );
+
+            return {
+              ...fetachedMetadata,
+              agility: characterStats.agility.toString(),
+              baseHp: characterStats.baseHp.toString(),
+              characterId: entity,
+              entityClass: characterStats.class,
+              experience: characterStats.experience.toString(),
+              goldBalance: formatEther(goldBalance as bigint).toString(),
+              intelligence: characterStats.intelligence.toString(),
+              level: characterStats.level.toString(),
+              locked: characterData.locked,
+              name: hexToString(characterData.name as `0x${string}`, {
+                size: 32,
+              }),
+              owner: characterData.owner,
+              strength: characterStats.strength.toString(),
+              tokenId: tokenId.toString(),
+            } as Character;
+          }),
+        );
+
+        setCharacters(_characters);
+      } catch (e) {
+        renderError('Failed to fetch other players.', e);
+      } finally {
+        setIsFetchingCharacters(false);
+      }
+    },
+    [
+      Characters,
+      CharactersTokenURI,
+      delegatorAddress,
+      GoldBalances,
+      publicClient,
+      renderError,
+      Stats,
+      worldContract,
+    ],
+  );
+
+  useEffect(() => {
+    (async (): Promise<void> => {
+      if (!allCharacterEntities) return;
+
+      await getAllCharacters(allCharacterEntities);
+    })();
+  }, [allCharacterEntities, getAllCharacters]);
+
   useEffect(() => {
     if (pageNumber < 1) {
       return;
     }
-    let entriesCopy = DUMMY_CHARACTER;
+    let entriesCopy: Character[] = characters;
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
       switch (sort.sorted) {
         case 'byGold':
@@ -105,7 +181,8 @@ export const Leaderboard = (): JSX.Element => {
       { caseSensitive: false },
     );
     entriesCopy = searcher.search(query);
-    const _pageLimit = Math.floor(Math.ceil(entriesCopy.length / PER_PAGE));
+    const _pageLimit =
+      Math.floor(Math.ceil(entriesCopy.length / PER_PAGE)) || 1;
     setPageLimit(_pageLimit);
     setEntries(
       entriesCopy.slice((pageNumber - 1) * PER_PAGE, pageNumber * PER_PAGE),
@@ -114,7 +191,22 @@ export const Leaderboard = (): JSX.Element => {
     if (pageNumber > _pageLimit) {
       setPage(_pageLimit.toString());
     }
-  }, [filter.filtered, pageNumber, query, sort.reversed, sort.sorted]);
+  }, [
+    characters,
+    filter.filtered,
+    pageNumber,
+    query,
+    sort.reversed,
+    sort.sorted,
+  ]);
+
+  if (isFetchingCharacters) {
+    return (
+      <Center h="100%">
+        <Spinner size="lg" />
+      </Center>
+    );
+  }
 
   return (
     <VStack mt={16}>
@@ -248,22 +340,7 @@ export const Leaderboard = (): JSX.Element => {
       <VStack gap={3} overflowX="auto" w="100%">
         {entries.length > 0 ? (
           entries.map(function (entry, i) {
-            return (
-              <LeaderboardRow
-                name={entry.characterId}
-                gold={entry.goldBalance}
-                key={`leaderboard-row-${i}`}
-                level={entry.level}
-                stats={{
-                  HP: entry.baseHp,
-                  AGI: entry.agility,
-                  STR: entry.strength,
-                  INT: entry.intelligence,
-                }}
-                total={entry.experience}
-                type={entry.entityClass}
-              />
-            );
+            return <LeaderboardRow key={`leaderboard-row-${i}`} {...entry} />;
           })
         ) : (
           <Text mt={12}>No players</Text>
