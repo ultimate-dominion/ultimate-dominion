@@ -1,13 +1,19 @@
 import {
+  Avatar,
   Box,
+  Button,
   Card,
   CardBody,
   Center,
   Grid,
   GridItem,
+  Heading,
+  HStack,
+  Spacer,
   Spinner,
   Text,
   useDisclosure,
+  VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import {
@@ -15,7 +21,6 @@ import {
   getComponentValue,
   getComponentValueStrict,
   Has,
-  NotValue,
   runQuery,
 } from '@latticexyz/recs';
 import {
@@ -24,33 +29,47 @@ import {
   singletonEntity,
 } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { FaHatWizard } from 'react-icons/fa';
+import { GiAxeSword, GiRogue } from 'react-icons/gi';
+import { useNavigate, useParams } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
 
-import { Misc } from '../components/Character/Misc';
-import { Profile } from '../components/Character/Profile';
-import { Stats as StatsPanel } from '../components/Character/Stats';
 import { ItemCard } from '../components/ItemCard';
 import { ItemEquipModal } from '../components/ItemEquipModal';
+import { Level } from '../components/Level';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { LEADERBOARD_PATH } from '../Routes';
 import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import type { Character, StatsClasses, Weapon } from '../utils/types';
+import {
+  decodeCharacterId,
+  fetchMetadataFromUri,
+  uriToHttp,
+} from '../utils/helpers';
+import {
+  type Character,
+  ItemType,
+  StatsClasses,
+  type Weapon,
+} from '../utils/types';
 
 export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
   const { renderError } = useToast();
+  const navigate = useNavigate();
+
   const {
     components: {
       CharacterEquipment,
       Characters,
       CharactersTokenURI,
       GoldBalances,
+      Items,
       ItemsBaseURI,
       ItemsOwners,
       ItemsTokenURI,
+      Levels,
       Stats,
     },
     isSynced,
@@ -106,9 +125,10 @@ export const CharacterPage = (): JSX.Element => {
       const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility.toString(),
-        baseHitPoints: characterStats.baseHitPoints.toString(),
-        characterClass: characterStats.class,
+        baseHp: characterStats.baseHp.toString(),
+        entityClass: characterStats.class,
         characterId: characterId as Entity,
+        currentHp: characterStats.currentHp.toString(),
         experience: characterStats.experience.toString(),
         goldBalance: formatEther(goldBalance as bigint).toString(),
         intelligence: characterStats.intelligence.toString(),
@@ -124,8 +144,8 @@ export const CharacterPage = (): JSX.Element => {
 
       setCharacter(_character);
       return _character;
-    } catch (error) {
-      renderError(error, 'Failed to fetch character data');
+    } catch (e) {
+      renderError('Failed to fetch character data.', e);
       return null;
     } finally {
       setIsLoadingCharacter(false);
@@ -135,36 +155,48 @@ export const CharacterPage = (): JSX.Element => {
     Characters,
     CharactersTokenURI,
     GoldBalances,
+    renderError,
     Stats,
     publicClient,
-    renderError,
     worldContract,
   ]);
 
   const fetchCharacterItems = useCallback(
     async (_character: Character) => {
       try {
-        const _items = Array.from(
-          runQuery([
-            Has(ItemsOwners),
-            NotValue(ItemsOwners, { balance: BigInt(0) }),
-          ]),
-        )
+        const _items = Array.from(runQuery([Has(ItemsOwners)]))
           .map(entity => {
-            const itemOwner = getComponentValueStrict(ItemsOwners, entity);
+            const itemdBalance = getComponentValueStrict(
+              ItemsOwners,
+              entity,
+            ).balance;
+
             const { owner, tokenId } = decodeEntity(
               { owner: 'address', tokenId: 'uint256' },
               entity,
             );
 
+            const tokenIdEntity = encodeEntity(
+              { tokenId: 'uint256' },
+              { tokenId },
+            );
+
+            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+
             return {
-              balance: itemOwner.balance.toString(),
+              balance: itemdBalance.toString(),
               itemId: entity,
+              itemType: itemTemplate.itemType,
               owner,
               tokenId: tokenId.toString(),
+              tokenIdEntity,
             };
           })
-          .filter(item => item.owner === _character.owner)
+          .filter(
+            item =>
+              item.owner === _character.owner &&
+              item.itemType === ItemType.Weapon,
+          )
           .sort((a, b) => {
             return Number(a.tokenId) - Number(b.tokenId);
           });
@@ -176,11 +208,6 @@ export const CharacterPage = (): JSX.Element => {
                 BigInt(item.tokenId),
               ]);
 
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId: BigInt(item.tokenId) },
-            );
-
             const baseURI = getComponentValueStrict(
               ItemsBaseURI,
               singletonEntity,
@@ -188,7 +215,7 @@ export const CharacterPage = (): JSX.Element => {
 
             const tokenURI = getComponentValueStrict(
               ItemsTokenURI,
-              tokenIdEntity,
+              item.tokenIdEntity,
             ).uri;
 
             const metadata = await fetchMetadataFromUri(
@@ -216,31 +243,60 @@ export const CharacterPage = (): JSX.Element => {
         );
 
         setItems(fullItems);
-      } catch (error) {
-        renderError(error, 'Failed to fetch character data');
+      } catch (e) {
+        renderError('Failed to fetch character data.', e);
       } finally {
         setIsLoadingItems(false);
       }
     },
-    [ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError, worldContract],
+    [
+      Items,
+      ItemsBaseURI,
+      ItemsOwners,
+      ItemsTokenURI,
+      renderError,
+      worldContract,
+    ],
   );
+
+  const isOwner = useMemo(() => {
+    if (!(userCharacter && characterId)) return false;
+    const { ownerAddress } = decodeCharacterId(characterId as `0x${string}`);
+    return userCharacter.owner.toLowerCase() === ownerAddress;
+  }, [userCharacter, characterId]);
 
   useEffect(() => {
     if (!isSynced) return;
     (async (): Promise<void> => {
+      if (isOwner && userCharacter) {
+        setCharacter(userCharacter);
+        await fetchCharacterItems(userCharacter);
+        setIsLoadingCharacter(false);
+        return;
+      }
       const _character = await fetchCharacter();
 
       if (!_character) return;
       await fetchCharacterItems(_character);
     })();
-  }, [fetchCharacter, fetchCharacterItems, isSynced]);
-
-  const isOwner = useMemo(
-    () => character?.owner === userCharacter?.owner,
-    [character, userCharacter],
-  );
+  }, [fetchCharacter, fetchCharacterItems, isOwner, isSynced, userCharacter]);
 
   const maxItemsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
+
+  const nextLevelXpRequirement = useComponentValue(
+    Levels,
+    encodeEntity(
+      { level: 'uint256' },
+      { level: BigInt(Number(character?.level ?? 0) + 1) },
+    ),
+  )?.experience;
+
+  const levelPercent = useMemo(() => {
+    if (!(character && nextLevelXpRequirement)) return 0;
+    return (
+      (100 * Number(character.experience)) / Number(nextLevelXpRequirement)
+    );
+  }, [character, nextLevelXpRequirement]);
 
   if (isLoadingCharacter) {
     return (
@@ -255,7 +311,6 @@ export const CharacterPage = (): JSX.Element => {
       {character ? (
         <Grid
           gap={2}
-          h={{ base: 'calc(100vh - 100px)', lg: 'calc(100vh - 100px)' }}
           mt={4}
           rowGap={{ base: 3, lg: 10 }}
           sx={{
@@ -283,14 +338,47 @@ export const CharacterPage = (): JSX.Element => {
             px={6}
             rowStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
-            <Profile
-              characterId={character.characterId}
-              description={character.description!}
-              fetchCharacter={fetchCharacter}
-              image={character.image}
-              isOwner={isOwner}
-              name={character.name}
-            />
+            <Box h="100%" position="relative">
+              <VStack>
+                <HStack w="100%">
+                  <Center>
+                    <Avatar size="lg" src={character.image} />
+                    <Heading margin="0px 20px" size="lg">
+                      {character.name}
+                    </Heading>
+                  </Center>
+                  <Spacer />
+                  <Center>
+                    {character.entityClass === StatsClasses.Warrior && (
+                      <GiAxeSword size={28} />
+                    )}
+                    {character.entityClass === StatsClasses.Rogue && (
+                      <GiRogue size={28} />
+                    )}
+                    {character.entityClass === StatsClasses.Mage && (
+                      <FaHatWizard size={28} />
+                    )}
+                  </Center>
+                </HStack>
+                <Spacer />
+                <Box mt={3} w="100%">
+                  <Text overflow="hidden" size="sm" textAlign="left">
+                    {character.description}
+                  </Text>
+                  {isOwner && (
+                    <Button
+                      bottom="0"
+                      position="absolute"
+                      right="0"
+                      size="sm"
+                      variant="ghost"
+                    >
+                      Edit Character
+                    </Button>
+                  )}
+                </Box>
+              </VStack>
+            </Box>
           </GridItem>
           <GridItem
             border="solid"
@@ -301,12 +389,42 @@ export const CharacterPage = (): JSX.Element => {
             px={6}
             rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
-            <StatsPanel
-              agility={character.agility}
-              baseHitPoints={character.baseHitPoints}
-              intelligence={character.intelligence}
-              strength={character.strength}
-            />
+            <VStack>
+              <HStack justify="space-between" w="100%">
+                <Text alignSelf="start" fontWeight="bold">
+                  My Stats
+                </Text>
+                <Text alignSelf="start" fontWeight="bold">
+                  Ability Points: 3
+                </Text>
+              </HStack>
+              <Text alignSelf="end" mt={4} size="xs">
+                Base
+              </Text>
+              <VStack w="100%">
+                <HStack justify="space-between" w="100%">
+                  <Text size="lg">HP - Hit</Text>
+                  <Text size="lg">
+                    {character.currentHp}/{character.baseHp}
+                  </Text>
+                </HStack>
+
+                <HStack justify="space-between" w="100%">
+                  <Text size="lg">STR - Strength</Text>
+                  <Text size="lg">{character.strength}</Text>
+                </HStack>
+
+                <HStack justify="space-between" w="100%">
+                  <Text size="lg">AGI - Agility</Text>
+                  <Text size="lg">{character.agility}</Text>
+                </HStack>
+
+                <HStack justify="space-between" w="100%">
+                  <Text size="lg">INT - Intelligence</Text>
+                  <Text size="lg">{character.intelligence}</Text>
+                </HStack>
+              </VStack>
+            </VStack>
           </GridItem>
           <GridItem
             border="solid"
@@ -317,12 +435,44 @@ export const CharacterPage = (): JSX.Element => {
             pt={{ base: 6, md: 12 }}
             px={6}
           >
-            <Misc
-              experience={character.experience}
-              goldBalance={character.goldBalance}
-              isPlayer={isOwner}
-              max={'100'}
-            />
+            <VStack h="100%">
+              <Box w="100%">
+                <HStack alignItems="start">
+                  <Box>
+                    <Text fontWeight="bold">
+                      {Number(character.goldBalance).toLocaleString('en', {
+                        useGrouping: true,
+                      })}{' '}
+                      $GOLD
+                    </Text>
+                    <Text>
+                      {character.experience}/
+                      {nextLevelXpRequirement?.toString() ?? '0'}
+                    </Text>
+                  </Box>
+                  <Spacer />
+                  <Text fontWeight="bold">Level 1</Text>
+                </HStack>
+                <Level
+                  currentLevel={character.level}
+                  levelPercent={levelPercent}
+                />
+              </Box>
+
+              <Spacer />
+              <Box alignSelf="start" w="100%">
+                <Button m="5px 0" w="100%">
+                  {isOwner ? 'Auction House' : 'Chat'}
+                </Button>
+                <Button
+                  m="5px 0"
+                  onClick={() => navigate(LEADERBOARD_PATH)}
+                  w="100%"
+                >
+                  Leaderboard
+                </Button>
+              </Box>
+            </VStack>
           </GridItem>
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}

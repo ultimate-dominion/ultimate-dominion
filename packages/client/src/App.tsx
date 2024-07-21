@@ -5,13 +5,19 @@ import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { WalletDetailsModal } from './components/WalletDetailsModal';
+import { CombatProvider } from './contexts/CombatContext';
+import { MapNavigationProvider } from './contexts/MapNavigationContext';
 import { useMUD } from './contexts/MUDContext';
 import AppRoutes, { HOME_PATH } from './Routes';
 
 export const App = (): JSX.Element => {
   return (
     <Router>
-      <AppInner />
+      <MapNavigationProvider>
+        <CombatProvider>
+          <AppInner />
+        </CombatProvider>
+      </MapNavigationProvider>
     </Router>
   );
 };

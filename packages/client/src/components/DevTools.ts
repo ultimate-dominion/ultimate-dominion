@@ -1,5 +1,7 @@
 import mudConfig from 'contracts/mud.config';
 import characterSystemAbi from 'contracts/out/CharacterSystem.sol/CharacterSystem.abi.json';
+import combatSystemAbi from 'contracts/out/CombatSystem.sol/CombatSystem.abi.json';
+import equipmentSystemAbi from 'contracts/out/EquipmentSystem.sol/EquipmentSystem.abi.json';
 import mapSystemAbi from 'contracts/out/MapSystem.sol/MapSystem.abi.json';
 import { useEffect, useMemo } from 'react';
 
@@ -13,6 +15,8 @@ export function DevTools(): null {
     () => [
       ...network.worldContract.abi,
       ...characterSystemAbi,
+      ...combatSystemAbi,
+      ...equipmentSystemAbi,
       ...mapSystemAbi,
     ],
     [network.worldContract.abi],

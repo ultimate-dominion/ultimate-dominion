@@ -1,4 +1,4 @@
-[
+declare const abi: [
   {
     "type": "function",
     "name": "_msgSender",
@@ -40,207 +40,42 @@
   },
   {
     "type": "function",
-    "name": "enterGame",
+    "name": "applyEquipmentBonuses",
     "inputs": [
       {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "getCharacterTokenId",
-    "inputs": [
-      {
-        "name": "characterId",
+        "name": "entityId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
     ],
     "outputs": [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "getClass",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_class",
-        "type": "uint8",
-        "internalType": "enum Classes"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getCurrentAvailableLevel",
-    "inputs": [
-      {
-        "name": "experience",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "currentLevel",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getExperience",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getName",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_name",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getOwner",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getOwnerAddress",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "getPlayerEntityId",
-    "inputs": [
-      {
-        "name": "characterTokenId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getStats",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
+        "name": "modifiedStats",
         "type": "tuple",
-        "internalType": "struct StatsData",
+        "internalType": "struct AdjustedCombatStats",
         "components": [
           {
-            "name": "strength",
+            "name": "adjustedStrength",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "agility",
+            "name": "adjustedAgility",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "class",
-            "type": "uint8",
-            "internalType": "enum Classes"
-          },
-          {
-            "name": "intelligence",
+            "name": "adjustedIntelligence",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "baseHp",
+            "name": "adjustedArmor",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "adjustedMaxHp",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -250,12 +85,12 @@
             "internalType": "int256"
           },
           {
-            "name": "experience",
+            "name": "level",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "level",
+            "name": "class",
             "type": "uint256",
             "internalType": "uint256"
           }
@@ -266,17 +101,22 @@
   },
   {
     "type": "function",
-    "name": "isValidCharacterId",
+    "name": "checkRequirements",
     "inputs": [
       {
         "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "canUse",
         "type": "bool",
         "internalType": "bool"
       }
@@ -285,7 +125,7 @@
   },
   {
     "type": "function",
-    "name": "isValidOwner",
+    "name": "equipItems",
     "inputs": [
       {
         "name": "characterId",
@@ -293,71 +133,154 @@
         "internalType": "bytes32"
       },
       {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
       }
     ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "mintCharacter",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "name",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "tokenUri",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "rollStats",
+    "name": "getArmorStats",
     "inputs": [
       {
-        "name": "userRandomNumber",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_ArmorStats",
+        "type": "tuple",
+        "internalType": "struct ArmorStats",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorModifier",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "classRestrictions",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
+          },
+          {
+            "name": "hitPointModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getWeaponStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_weaponStats",
+        "type": "tuple",
+        "internalType": "struct WeaponStats",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "classRestrictions",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
+          },
+          {
+            "name": "hitPointModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxDamage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minDamage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isEquipped",
+    "inputs": [
       {
         "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
       },
       {
-        "name": "class",
-        "type": "uint8",
-        "internalType": "enum Classes"
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
-    "outputs": [],
-    "stateMutability": "payable"
+    "outputs": [
+      {
+        "name": "_isEquipped",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -380,7 +303,7 @@
   },
   {
     "type": "function",
-    "name": "updateTokenUri",
+    "name": "unequipItem",
     "inputs": [
       {
         "name": "characterId",
@@ -388,50 +311,19 @@
         "internalType": "bytes32"
       },
       {
-        "name": "tokenUri",
-        "type": "string",
-        "internalType": "string"
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "event",
-    "name": "Store_SetRecord",
-    "inputs": [
-      {
-        "name": "tableId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "keyTuple",
-        "type": "bytes32[]",
-        "indexed": false,
-        "internalType": "bytes32[]"
-      },
-      {
-        "name": "staticData",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      },
-      {
-        "name": "encodedLengths",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "EncodedLengths"
-      },
-      {
-        "name": "dynamicData",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      }
-    ],
-    "anonymous": false
   },
   {
     "type": "event",
@@ -602,48 +494,5 @@
         "internalType": "uint40"
       }
     ]
-  },
-  {
-    "type": "error",
-    "name": "World_AccessDenied",
-    "inputs": [
-      {
-        "name": "resource",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "caller",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "World_FunctionSelectorNotFound",
-    "inputs": [
-      {
-        "name": "functionSelector",
-        "type": "bytes4",
-        "internalType": "bytes4"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "World_ResourceNotFound",
-    "inputs": [
-      {
-        "name": "resourceId",
-        "type": "bytes32",
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "resourceIdString",
-        "type": "string",
-        "internalType": "string"
-      }
-    ]
   }
-]
+]; export default abi;

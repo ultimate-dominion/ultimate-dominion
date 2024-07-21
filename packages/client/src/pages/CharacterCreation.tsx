@@ -9,7 +9,6 @@ import {
   Heading,
   HStack,
   Input,
-  Link,
   SimpleGrid,
   Stack,
   Text,
@@ -46,7 +45,6 @@ export const CharacterCreation = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { data: externalWalletClient } = useWalletClient();
   const {
-    burnerBalance,
     components: { ItemsBaseURI, ItemsTokenURI, UltimateDominionConfig },
     delegatorAddress,
     isSynced,
@@ -126,8 +124,8 @@ export const CharacterCreation = (): JSX.Element => {
       );
 
       setStarterWeapons(_items);
-    } catch (error) {
-      renderError(error, 'Error fetching starter item.');
+    } catch (e) {
+      renderError('Error fetching starter item.', e);
     }
   }, [ItemsBaseURI, ItemsTokenURI, renderError, worldContract]);
 
@@ -150,12 +148,6 @@ export const CharacterCreation = (): JSX.Element => {
       try {
         setIsCreating(true);
 
-        if (burnerBalance === '0') {
-          throw new Error(
-            'Insufficient funds. Please top off your session account.',
-          );
-        }
-
         if (!delegatorAddress) {
           throw new Error('Missing delegation.');
         }
@@ -168,7 +160,7 @@ export const CharacterCreation = (): JSX.Element => {
         const avatarCid = await onUpload();
         if (!avatarCid)
           throw new Error(
-            'Something went wrong uploading your character avatar',
+            'Something went wrong uploading your character avatar.',
           );
 
         const image = `ipfs://${avatarCid}`;
@@ -191,36 +183,35 @@ export const CharacterCreation = (): JSX.Element => {
         );
         if (!res.ok)
           throw new Error(
-            'Something went wrong uploading your character metadata',
+            'Something went wrong uploading your character metadata.',
           );
 
         const { cid: characterMetadataCid } = await res.json();
         if (!characterMetadataCid)
           throw new Error(
-            'Something went wrong uploading your character metadata',
+            'Something went wrong uploading your character metadata.',
           );
 
-        const success = await mintCharacter(
+        const { error, success } = await mintCharacter(
           delegatorAddress,
           name,
           characterMetadataCid,
         );
 
-        if (!success) {
-          throw new Error('Contract call failed');
+        if (error && !success) {
+          throw new Error(error);
         }
 
         await refreshCharacter();
         renderSuccess('Character created!');
       } catch (e) {
-        renderError(e, 'Failed to create character.');
+        renderError('Failed to create character.', e);
       } finally {
         setIsCreating(false);
       }
     },
     [
       avatar,
-      burnerBalance,
       delegatorAddress,
       description,
       mintCharacter,
@@ -236,12 +227,6 @@ export const CharacterCreation = (): JSX.Element => {
     try {
       setIsRollingStats(true);
 
-      if (burnerBalance === '0') {
-        throw new Error(
-          'Insufficient funds. Please top off your session account.',
-        );
-      }
-
       if (!delegatorAddress) {
         throw new Error('Missing delegation.');
       }
@@ -250,21 +235,23 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const success = await rollStats(character.characterId, characterClass);
+      const { error, success } = await rollStats(
+        character.characterId,
+        characterClass,
+      );
 
-      if (!success) {
-        throw new Error('Contract call failed');
+      if (error && !success) {
+        throw new Error(error);
       }
 
-      refreshCharacter();
+      await refreshCharacter();
       renderSuccess('Stats rolled!');
     } catch (e) {
-      renderError(e, 'Failed to roll stats.');
+      renderError('Failed to roll stats.', e);
     } finally {
       setIsRollingStats(false);
     }
   }, [
-    burnerBalance,
     character,
     characterClass,
     delegatorAddress,
@@ -276,7 +263,7 @@ export const CharacterCreation = (): JSX.Element => {
 
   const rolledOnce = useMemo(() => {
     if (!character) return false;
-    return character.baseHitPoints !== '0';
+    return character.baseHp !== '0';
   }, [character]);
 
   const onEnterGame = useCallback(async () => {
@@ -292,10 +279,10 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const success = await enterGame(character.characterId);
+      const { error, success } = await enterGame(character.characterId);
 
-      if (!success) {
-        throw new Error('Contract call failed');
+      if (error && !success) {
+        throw new Error(error);
       }
 
       await refreshCharacter();
@@ -303,7 +290,7 @@ export const CharacterCreation = (): JSX.Element => {
       renderSuccess('Your character has awakend!');
       navigate(GAME_BOARD_PATH);
     } catch (e) {
-      renderError(e, 'Failed to enter game.');
+      renderError('Failed to enter game.', e);
     } finally {
       setIsEnteringGame(false);
     }
@@ -323,7 +310,7 @@ export const CharacterCreation = (): JSX.Element => {
 
   useEffect(() => {
     if (character && rolledOnce) {
-      setCharacterClass(character.characterClass);
+      setCharacterClass(character.entityClass);
     }
 
     if (character?.locked) {
@@ -392,8 +379,7 @@ export const CharacterCreation = (): JSX.Element => {
               <Text textAlign="center">{character.description}</Text>
             </VStack>
             <Text>
-              Class:{' '}
-              {rolledOnce ? StatsClasses[character.characterClass] : 'None'}
+              Class: {rolledOnce ? StatsClasses[character.entityClass] : 'None'}
             </Text>
           </VStack>
         </Box>
@@ -543,11 +529,11 @@ export const CharacterCreation = (): JSX.Element => {
           </VStack>
           {character &&
             rolledOnce &&
-            characterClass !== character.characterClass && (
+            characterClass !== character.entityClass && (
               <Text color="red" fontSize="sm" mt={2}>
                 Your current class is{' '}
                 <Text as="span" fontWeight={700}>
-                  {StatsClasses[character.characterClass]}
+                  {StatsClasses[character.entityClass]}
                 </Text>
                 . Re-roll stats to change class.
               </Text>
@@ -574,7 +560,7 @@ export const CharacterCreation = (): JSX.Element => {
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
                   <Text>HP - Hit</Text>
-                  <Text>{character?.baseHitPoints ?? '0'}</Text>
+                  <Text>{character?.baseHp ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>STR - Strength</Text>
@@ -625,14 +611,6 @@ export const CharacterCreation = (): JSX.Element => {
                   </Box>
                 </HStack>
               )}
-              <Link
-                alignSelf="end"
-                color="grey500"
-                fontSize="18px"
-                fontWeight={700}
-              >
-                Auction House ▶
-              </Link>
             </VStack>
           </SimpleGrid>
           {!isSmallScreen && (

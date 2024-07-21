@@ -8,11 +8,13 @@ import { useMUD } from './contexts/MUDContext';
 import { CharacterPage } from './pages/Character';
 import { CharacterCreation } from './pages/CharacterCreation';
 import { GameBoard } from './pages/GameBoard';
+import { Leaderboard } from './pages/Leaderboard';
 import { Welcome } from './pages/Welcome';
 
 export const HOME_PATH = '/';
 export const CHARACTER_CREATION_PATH = '/character-creation';
 export const GAME_BOARD_PATH = '/game-board';
+export const LEADERBOARD_PATH = '/leaderboard';
 
 const AppRoutes: React.FC = () => {
   const { pathname } = useLocation();
@@ -42,6 +44,7 @@ const AppRoutes: React.FC = () => {
       <Route path={CHARACTER_CREATION_PATH} element={<CharacterCreation />} />
       <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
       <Route path="/characters/:characterId" element={<CharacterPage />} />
+      <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
     </Routes>
   );
 };

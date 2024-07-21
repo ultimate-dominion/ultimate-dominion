@@ -1,6 +1,8 @@
 out/*
 !out/IWorld.sol
 !out/CharacterSystem.sol
+!out/CombatSystem.sol
+!out/EquipmentSystem.sol
 !out/MapSystem.sol
 cache/
 node_modules/

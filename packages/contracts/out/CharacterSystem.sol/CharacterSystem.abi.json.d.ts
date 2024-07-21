@@ -240,7 +240,7 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "baseHitPoints",
+            "name": "baseHp",
             "type": "uint256",
             "internalType": "uint256"
           },

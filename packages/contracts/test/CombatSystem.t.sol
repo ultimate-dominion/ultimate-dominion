@@ -3,6 +3,7 @@ pragma solidity >=0.8.24;
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, EncounterType} from "@codegen/common.sol";
 import {StatsData, Stats} from "@tables/Stats.sol";
+import {MatchEntity} from "@tables/MatchEntity.sol";
 import "forge-std/console2.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
@@ -31,6 +32,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     bytes32[] public defenders;
     bytes32[] public attackers;
     bytes32 entityId;
+    bytes32 entityId2;
 
     function setUp() public override {
         super.setUp();
@@ -38,6 +40,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.grantAccess(_mobSystemId("UD"), address(this));
 
         entityId = world.UD__spawnMob(1, 0, 0);
+        entityId2 = world.UD__spawnMob(1, 0, 0);
 
         defenders.push(entityId);
         attackers.push(bobCharacterId);
@@ -50,7 +53,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_createMatch_Revert_Entities_Wrong_Position() public {
-        bytes32 entityId2 = world.UD__spawnMob(1, 0, 1);
+        entityId2 = world.UD__spawnMob(1, 0, 1);
         defenders[0] = entityId2;
         vm.prank(bob);
         vm.expectRevert("COMBAT SYSTEM: INVALID PVE");
@@ -85,9 +88,15 @@ contract Test_CombatSystem is SetUp, GasReporter {
         StatsData memory endingStats = Stats.get(bobCharacterId);
         uint256 endingGold = goldToken.balanceOf(bob);
 
-        assertNotEq(startingStats.currentHp, int256(Stats.get(entityId).baseHitPoints));
+        assertNotEq(startingStats.currentHp, int256(Stats.get(entityId).baseHp));
         assertGt(endingStats.experience, startingStats.experience);
         assertGt(endingGold, startingGold);
+        assertEq(MatchEntity.getEncounterId(bobCharacterId), bytes32(0));
+
+        // start new match
+        defenders[0] = entityId2;
+        vm.prank(bob);
+        bytes32 matchId2 = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
     }
 
     function test_EndTurn_Revert_NonCombatant() public {
