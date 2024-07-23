@@ -8,82 +8,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD___calculatePhysicalAttack",
-    "inputs": [
-      {
-        "name": "attackStats",
-        "type": "tuple",
-        "internalType": "struct PhysicalAttackStats",
-        "components": [
-          {
-            "name": "bonusDamage",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "armorPenetration",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "attackModifierBonus",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "critChanceBonus",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "classRestrictions",
-            "type": "uint8[]",
-            "internalType": "uint8[]"
-          }
-        ]
-      },
-      {
-        "name": "attackerId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "defenderId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "weaponId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "damage",
-        "type": "int256",
-        "internalType": "int256"
-      },
-      {
-        "name": "hit",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "crit",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "UD__applyEquipmentBonuses",
     "inputs": [
       {
@@ -142,48 +66,6 @@ declare const abi: [
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__assignActionToCharacter",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "actionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__calculateGoldDrop",
-    "inputs": [
-      {
-        "name": "mobLevel",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "dropAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -501,24 +383,6 @@ declare const abi: [
     "inputs": [
       {
         "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__equipAction",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "actionId",
         "type": "bytes32",
         "internalType": "bytes32"
       }

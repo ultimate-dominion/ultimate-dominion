@@ -19,6 +19,8 @@ import { StarterItems, StarterItemsData } from "./tables/StarterItems.sol";
 import { Name } from "./tables/Name.sol";
 import { NameExists } from "./tables/NameExists.sol";
 import { CombatEncounter, CombatEncounterData } from "./tables/CombatEncounter.sol";
+import { ActionOutcome, ActionOutcomeData } from "./tables/ActionOutcome.sol";
+import { CombatOutcome, CombatOutcomeData } from "./tables/CombatOutcome.sol";
 import { MatchEntity, MatchEntityData } from "./tables/MatchEntity.sol";
 import { RandomNumbers, RandomNumbersData } from "./tables/RandomNumbers.sol";
 import { Position } from "./tables/Position.sol";

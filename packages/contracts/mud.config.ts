@@ -180,6 +180,41 @@ export default defineWorld({
       },
       key: ["encounterId"],
     },
+    ActionOutcome: {
+      schema: {
+        encounterId: "bytes32",
+        currentTurn: "uint256",
+        actionNumber: "uint256",
+        actionId: "bytes32",
+        weaponId: "uint256",
+        attackerId: "bytes32",
+        defenderId: "bytes32",
+        hit: "bool",
+        miss: "bool",
+        crit: "bool",
+        attackerDamageDelt: "int256",
+        defenderDamageDelt: "int256",
+        attackerDied: "bool",
+        defenderDied: "bool",
+        blockNumber: "uint256",
+        timestamp: "uint256",
+      },
+      key: ["encounterId", "currentTurn", "actionNumber"],
+      type: "offchainTable",
+    },
+    CombatOutcome: {
+      schema: {
+        encounterId: "bytes32",
+        endTime: "uint256",
+        expDropped: "uint256",
+        goldDropped: "uint256",
+        itemsDropped: "uint256[]",
+        deadAttackers: "bytes32[]",
+        deadDefenders: "bytes32[]",
+      },
+      key: ["encounterId"],
+      type: "offchainTable",
+    },
     // when an entity starts combat it creates a "match entity" for that encounter.
     //when combat ends, the encounterId is set to zero, and the damage taken subtracted from the entities hp.
     MatchEntity: {

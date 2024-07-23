@@ -21,7 +21,9 @@ import {
     Position,
     Mobs,
     MobsData,
-    Counters
+    Counters,
+    ActionOutcome,
+    ActionOutcomeData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {
@@ -176,14 +178,24 @@ contract CombatSystem is System {
         for (uint256 i; i < actions.length; i++) {
             Action memory currentAction = actions[i];
 
-            _executeAction(
-                encounterId,
-                currentAction.actionId,
-                currentAction.attackerEntityId,
-                currentAction.defenderEntityId,
-                currentAction.weaponId,
-                randomNumber
-            );
+            ActionOutcomeData memory currentActionData = ActionOutcomeData({
+                actionId: currentAction.actionId,
+                weaponId: currentAction.weaponId,
+                attackerId: currentAction.attackerEntityId,
+                defenderId: currentAction.defenderEntityId,
+                hit: false,
+                miss: false,
+                crit: false,
+                attackerDamageDelt: 0,
+                defenderDamageDelt: 0,
+                attackerDied: false,
+                defenderDied: false,
+                blockNumber: block.number,
+                timestamp: block.timestamp
+            });
+
+            currentActionData = _executeAction(currentActionData, randomNumber);
+            ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
         }
 
         uint256 deadDefenderCounter;
@@ -237,26 +249,35 @@ contract CombatSystem is System {
         );
     }
 
-    function _executeAction(
-        bytes32 matchEntity,
-        bytes32 actionId,
-        bytes32 attackerId,
-        bytes32 defenderId,
-        uint256 weaponId,
-        uint256 randomNumber
-    ) internal {
+    function _executeAction(ActionOutcomeData memory actionOutcomeData, uint256 randomNumber)
+        internal
+        returns (ActionOutcomeData memory)
+    {
         // get action data
-        ActionsData memory actionData = Actions.get(actionId);
+        ActionsData memory actionData = Actions.get(actionOutcomeData.actionId);
+
         //decode action data according to type
         if (uint8(actionData.actionType) == 1) {
+            // get attack stats
             PhysicalAttackStats memory attackStats = abi.decode(actionData.actionStats, (PhysicalAttackStats));
-            (int256 damage, bool hit, bool crit) =
-                _calculatePhysicalAttack(attackStats, attackerId, defenderId, weaponId, randomNumber);
-            if (hit) {
-                int256 currentHp = Stats.getCurrentHp(defenderId) - int256(damage / int256(ATTACK_MODIFIER));
-                Stats.setCurrentHp(defenderId, currentHp);
+            // calculate damage
+            (actionOutcomeData.attackerDamageDelt, actionOutcomeData.hit, actionOutcomeData.crit) =
+            _calculatePhysicalAttack(
+                attackStats,
+                actionOutcomeData.attackerId,
+                actionOutcomeData.defenderId,
+                actionOutcomeData.weaponId,
+                randomNumber
+            );
+            // if hit deduct damage
+            if (actionOutcomeData.hit) {
+                int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
+                    - int256(actionOutcomeData.attackerDamageDelt / int256(ATTACK_MODIFIER));
+                Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
             }
         }
+
+        return actionOutcomeData;
     }
 
     function _calculatePhysicalAttack(
@@ -265,7 +286,7 @@ contract CombatSystem is System {
         bytes32 defenderId,
         uint256 weaponId,
         uint256 randomNumber
-    ) public returns (int256 damage, bool hit, bool crit) {
+    ) internal view returns (int256 damage, bool hit, bool crit) {
         // get attacker
         AdjustedCombatStats memory attacker = IWorld(_world()).UD__applyEquipmentBonuses(attackerId);
         //get defender
@@ -325,7 +346,8 @@ contract CombatSystem is System {
         PhysicalAttackStats memory attackStats,
         AdjustedCombatStats memory attacker,
         AdjustedCombatStats memory defender
-    ) internal returns (bool attackLands, bool crit) {
+    ) internal view returns (bool attackLands, bool crit) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         uint256 attackTotal = (
             Math.add(attacker.adjustedAgility, attackStats.attackModifierBonus) + (attackRoll % 1000)
         ) * (TO_HIT_MODIFIER);
@@ -371,7 +393,7 @@ contract CombatSystem is System {
             statsTemp = Stats.get(encounterData.defenders[i]);
             if (statsTemp.currentHp <= int256(0)) {
                 expAmount += statsTemp.experience;
-                goldAmount += calculateGoldDrop(statsTemp.level, randomNumber);
+                goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
                 MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
                 _calculateItemDrop(
                     randomNumber,
@@ -403,9 +425,9 @@ contract CombatSystem is System {
         CombatEncounter.set(encounterId, encounterData);
     }
 
-    function calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) public returns (uint256 dropAmount) {
+    function _calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) internal view returns (uint256 dropAmount) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         // Calculate level-based drop
-
         dropAmount = randomNumber % (BASE_GOLD_DROP * mobLevel);
     }
 

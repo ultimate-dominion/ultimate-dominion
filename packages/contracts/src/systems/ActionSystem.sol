@@ -32,9 +32,9 @@ contract ActionSystem is System {
         Actions.set(actionId, actionType, actionStats);
     }
 
-    function assignActionToCharacter(bytes32 characterId, bytes32 actionId) public {}
+    // function assignActionToCharacter(bytes32 characterId, bytes32 actionId) public {}
 
-    function equipAction(bytes32 characterId, bytes32 actionId) public {
-        require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "ACTIONS: INVALID CALLER");
-    }
+    // function equipAction(bytes32 characterId, bytes32 actionId) public {
+    //     require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "ACTIONS: INVALID CALLER");
+    // }
 }

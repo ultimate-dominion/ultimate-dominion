@@ -104,9 +104,4 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.expectRevert("COMBAT SYSTEM: NON-COMBATANT");
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
     }
-
-    function test_CalculateGoldDrop() public {
-        uint256 goldDrop = world.UD__calculateGoldDrop(1, uint256(keccak256("thingy")));
-        assertGt(goldDrop, 0);
-    }
 }
