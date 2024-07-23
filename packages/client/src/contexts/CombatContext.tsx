@@ -9,12 +9,12 @@ import { useMUD } from './MUDContext';
 
 type CombatContextType = {
   currentBattle: CombatDetails | null;
-  monster: Monster | null;
+  monsterOponent: Monster | null;
 };
 
 const CombatContext = createContext<CombatContextType>({
   currentBattle: null,
-  monster: null,
+  monsterOponent: null,
 });
 
 export type NavigationProviderProps = {
@@ -59,7 +59,7 @@ export const CombatProvider = ({
             encounter?.defenders.includes(character.characterId)),
       )[0] ?? null;
 
-  const monster = useMemo(() => {
+  const monsterOponent = useMemo(() => {
     if (!currentBattle) return null;
 
     return (
@@ -73,7 +73,7 @@ export const CombatProvider = ({
     <CombatContext.Provider
       value={{
         currentBattle,
-        monster,
+        monsterOponent,
       }}
     >
       {children}

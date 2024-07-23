@@ -32,7 +32,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaHatWizard } from 'react-icons/fa';
 import { GiAxeSword, GiRogue } from 'react-icons/gi';
 import { useNavigate, useParams } from 'react-router-dom';
-import { formatEther, hexToString } from 'viem';
+import { formatEther, hexToString, zeroHash } from 'viem';
 
 import { EditCharacterModal } from '../components/EditCharacterModal';
 import { ItemCard } from '../components/ItemCard';
@@ -71,6 +71,7 @@ export const CharacterPage = (): JSX.Element => {
       ItemsOwners,
       ItemsTokenURI,
       Levels,
+      MatchEntity,
       Stats,
     },
     isSynced,
@@ -132,6 +133,12 @@ export const CharacterPage = (): JSX.Element => {
         uriToHttp(`ipfs://${metadataURI}`)[0],
       );
 
+      const encounterId = getComponentValue(
+        MatchEntity,
+        characterId as Entity,
+      )?.encounterId;
+      const inBattle = !!encounterId && encounterId !== zeroHash;
+
       const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility.toString(),
@@ -141,6 +148,7 @@ export const CharacterPage = (): JSX.Element => {
         currentHp: characterStats.currentHp.toString(),
         experience: characterStats.experience.toString(),
         goldBalance: formatEther(goldBalance as bigint).toString(),
+        inBattle,
         intelligence: characterStats.intelligence.toString(),
         level: characterStats.level.toString(),
         locked: characterData.locked,
@@ -165,6 +173,7 @@ export const CharacterPage = (): JSX.Element => {
     Characters,
     CharactersTokenURI,
     GoldBalances,
+    MatchEntity,
     renderError,
     Stats,
     publicClient,
