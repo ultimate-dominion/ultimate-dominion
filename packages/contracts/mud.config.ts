@@ -225,6 +225,7 @@ export default defineWorld({
         // if the mob survives its encounter this will be set back to bytes(0)
         encounterId: "bytes32",
         damageTaken: "int256",
+        died: "bool",
       },
     },
     RandomNumbers: {

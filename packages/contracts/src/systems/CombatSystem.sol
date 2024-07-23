@@ -194,41 +194,26 @@ contract CombatSystem is System {
                 timestamp: block.timestamp
             });
 
+            // execute action
             currentActionData = _executeAction(currentActionData, randomNumber);
+            if (currentActionData.defenderDied) {
+                MatchEntity.setDied(currentActionData.defenderId, true);
+            }
+            if (currentActionData.attackerDied) {
+                MatchEntity.setDied(currentActionData.attackerId, true);
+            }
+
+            // emit action data to offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
         }
 
         uint256 deadDefenderCounter;
         uint256 deadAttackerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
-            int256 curHp = Stats.getCurrentHp(encounterData.defenders[i]);
-            if (curHp <= 0) {
-                deadDefenderCounter++;
-                if (uint8(encounterData.encounterType) == 0) {
-                    if (IWorld(_world()).UD__isValidCharacterId(encounterData.defenders[i])) {
-                        MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
-                    }
-                }
-            } else {
-                if (!IWorld(_world()).UD__isValidCharacterId(encounterData.defenders[i])) {
-                    // execute mob action
-                    // _executeAction(
-                    //     encounterId,
-                    //     actionId,
-                    //     encounterData.defenders[i],
-                    //     encounterData.attackers[randomNumber % encounterData.attackers.length],
-                    //     weaponId,
-                    //     randomNumber
-                    // );
-                }
-            }
+            if (MatchEntity.getDied(encounterData.defenders[i])) deadDefenderCounter++;
         }
         for (uint256 i; i < encounterData.attackers.length; i++) {
-            int256 curHp = Stats.getCurrentHp(encounterData.attackers[i]);
-            if (curHp <= 0) {
-                deadAttackerCounter++;
-                MatchEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
-            }
+            if (MatchEntity.getDied(encounterData.attackers[i])) deadAttackerCounter++;
         }
         if (
             deadAttackerCounter == encounterData.attackers.length
@@ -236,7 +221,6 @@ contract CombatSystem is System {
                 || encounterData.currentTurn == encounterData.maxTurns
         ) {
             // for some reason block.timestamp is not availible here on anvil?
-
             _endMatch(encounterId, randomNumber);
         } else {
             encounterData.currentTurn++;
@@ -273,6 +257,7 @@ contract CombatSystem is System {
             if (actionOutcomeData.hit) {
                 int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
                     - int256(actionOutcomeData.attackerDamageDelt / int256(ATTACK_MODIFIER));
+                if (currentHp <= 0) actionOutcomeData.defenderDied = true;
                 Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
             }
         }
@@ -377,7 +362,9 @@ contract CombatSystem is System {
         // check dead attackers and defenders
         uint256 cumulativeAttackerLevels;
         uint256 livingAttackers;
+
         StatsData memory statsTemp;
+
         for (uint256 i; i < encounterData.attackers.length; i++) {
             statsTemp = Stats.get(encounterData.attackers[i]);
             cumulativeAttackerLevels += statsTemp.level;
@@ -388,17 +375,15 @@ contract CombatSystem is System {
 
         //if cumulative attacker levels is >= 5 levels above the monster level no gold reward.
         //  for this calculation level is calculated from exp not from actual leveled levels
-
+        bytes32 defenderTemp;
         for (uint256 i; i < encounterData.defenders.length; i++) {
-            statsTemp = Stats.get(encounterData.defenders[i]);
-            if (statsTemp.currentHp <= int256(0)) {
-                expAmount += statsTemp.experience;
+            defenderTemp = encounterData.defenders[i];
+            if (MatchEntity.getDied(defenderTemp)) {
+                expAmount += Stats.getExperience(defenderTemp);
                 goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
-                MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+                MatchEntity.setEncounterId(defenderTemp, bytes32(0));
                 _calculateItemDrop(
-                    randomNumber,
-                    encounterData.defenders[i],
-                    encounterData.attackers[randomNumber % encounterData.attackers.length]
+                    randomNumber, defenderTemp, encounterData.attackers[randomNumber % encounterData.attackers.length]
                 );
             }
         }
