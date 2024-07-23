@@ -54,7 +54,33 @@ contract MapSystem is System {
             return;
         }
 
-        uint256[] memory availableMonsters = MobsByLevel.getMobIds(distanceFromHome);
+        uint8 startLevel = 0;
+        uint8 endLevel = 0;
+
+        if (distanceFromHome < 5) {
+            startLevel = 1;
+            endLevel = 6;
+        } else {
+            startLevel = 6;
+            endLevel = 11;
+        }
+
+        uint256 numOfMobs = 0;
+        for (uint256 i = startLevel; i < endLevel; i++) {
+            numOfMobs += MobsByLevel.lengthMobIds(i);
+        }
+
+        uint256[] memory availableMonsters = new uint256[](numOfMobs);
+        uint256 index = 0;
+
+        for (uint256 i = startLevel; i < endLevel; i++) {
+            uint256[] memory mobIds = MobsByLevel.getMobIds(i);
+            for (uint256 j = 0; j < mobIds.length; j++) {
+                availableMonsters[index] = mobIds[j];
+                index++;
+            }
+        }
+        
         require(availableMonsters.length > 0, "No monsters available for this distance");
 
         uint32[] memory rng;
