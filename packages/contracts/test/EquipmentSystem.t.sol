@@ -41,7 +41,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         itemIds[0] = newArmorId;
         amounts[0] = 1;
         characterIds[0] = bobCharacterId;
-        world.UD__dropItems(itemIds, amounts, characterIds);
+        world.UD__dropItems(characterIds, itemIds, amounts);
         vm.startPrank(bob);
         uint256[] memory itemsToEquip = new uint256[](1);
         itemsToEquip[0] = newArmorId;
@@ -58,7 +58,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         itemIds[0] = newArmorId;
         amounts[0] = 1;
         characterIds[0] = bobCharacterId;
-        world.UD__dropItems(itemIds, amounts, characterIds);
+        world.UD__dropItems(characterIds, itemIds, amounts);
 
         vm.startPrank(bob);
         uint256[] memory itemsToEquip = new uint256[](1);

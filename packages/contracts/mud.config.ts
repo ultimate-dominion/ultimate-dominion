@@ -35,7 +35,13 @@ export default defineWorld({
     /**
      * Marks an entity as an admin. Used on address entities.
      */
-    Admin: "bool",
+    Admin: {
+      key: ["user"],
+      schema: {
+        user: "address",
+        isAdmin: "bool",
+      },
+    },
     Characters: {
       key: ["characterId"],
       schema: {

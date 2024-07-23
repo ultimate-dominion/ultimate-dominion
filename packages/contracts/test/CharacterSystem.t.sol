@@ -71,4 +71,6 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         uint256 bobTokenId = world.UD__getCharacterTokenId(bobCharacterId);
         assertEq(bobTokenId, 2);
     }
+
+    function test_levelCharacter() public {}
 }

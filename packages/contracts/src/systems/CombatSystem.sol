@@ -422,7 +422,7 @@ contract CombatSystem is System {
         for (uint256 i; i < monsterStats.inventory.length; i++) {
             uint256 dropChance = Items.getDropChance(monsterStats.inventory[i]);
             if (randomNumber % 100_000 > dropChance) {
-                IWorld(_world()).UD__dropItem(monsterStats.inventory[i], 1, characterId);
+                IWorld(_world()).UD__dropItem(characterId, monsterStats.inventory[i], 1);
             }
         }
     }

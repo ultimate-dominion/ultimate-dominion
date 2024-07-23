@@ -3,21 +3,30 @@ pragma solidity >=0.8.24;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
+
 import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {StoreCore, EncodedLengths} from "@latticexyz/store/src/StoreCore.sol";
-import {MockEntropy} from "@test/mocks/MockEntropy.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
-import {IWorld} from "@world/IWorld.sol";
-import {UltimateDominionConfig, Levels, MapConfig} from "@codegen/index.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
-import {RngSystem} from "../src/systems/RngSystem.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {registerERC721} from "@latticexyz/world-modules/src/modules/erc721-puppet/registerERC721.sol";
 import {ERC721System} from "@latticexyz/world-modules/src/modules/erc721-puppet/ERC721System.sol";
 import {ERC721MetadataData} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/ERC721Metadata.sol";
+import {BEFORE_CALL_SYSTEM} from "@latticexyz/world/src/systemHookTypes.sol";
+import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
+import {ERC20MetadataData} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/ERC20Metadata.sol";
+import {ERC20System} from "@latticexyz/world-modules/src/modules/erc20-puppet/ERC20System.sol";
+import {registerERC20} from "@latticexyz/world-modules/src/modules/erc20-puppet/registerERC20.sol";
+import {System} from "@latticexyz/world/src/System.sol";
+
+import {MockEntropy} from "@test/mocks/MockEntropy.sol";
+import {IWorld} from "@world/IWorld.sol";
+import {UltimateDominionConfig, Levels, MapConfig, Admin} from "@codegen/index.sol";
+import {CharacterSystem} from "@systems/CharacterSystem.sol";
+import {RngSystem} from "@systems/RngSystem.sol";
 import {
     GOLD_NAMESPACE,
     CHARACTERS_NAMESPACE,
@@ -28,7 +37,6 @@ import {
 } from "../constants.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
-import {BEFORE_CALL_SYSTEM} from "@latticexyz/world/src/systemHookTypes.sol";
 import {Classes, ItemType, MobType} from "@codegen/common.sol";
 import {
     WeaponStats,
@@ -39,12 +47,6 @@ import {
     ArmorStats,
     StarterItems
 } from "@interfaces/Structs.sol";
-import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
-import {ERC20MetadataData} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/ERC20Metadata.sol";
-import {ERC20System} from "@latticexyz/world-modules/src/modules/erc20-puppet/ERC20System.sol";
-import {registerERC20} from "@latticexyz/world-modules/src/modules/erc20-puppet/registerERC20.sol";
-import {System} from "@latticexyz/world/src/System.sol";
-import {CharacterSystem} from "../src/systems/CharacterSystem.sol";
 
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
@@ -67,6 +69,7 @@ struct ResourceIds {
     ResourceId itemsSystemId;
     ResourceId combatSystemId;
     ResourceId lootManagerSystemId;
+    ResourceId adminSystemId;
 }
 
 contract PostDeploy is Script {
@@ -103,6 +106,8 @@ contract PostDeploy is Script {
         uint16 height = uint16(10);
         uint16 width = uint16(10);
         MapConfig.set(width, height);
+        // set deployer as admin
+        Admin.set(vm.addr(deployerPrivateKey), true);
 
         //install puppet
         world.installModule(new PuppetModule(), new bytes(0));
@@ -132,6 +137,8 @@ contract PostDeploy is Script {
 
             resourceIds.characterSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CharacterSystem"});
+            resourceIds.adminSystemId =
+                WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AdminSystem"});
 
             resourceIds.erc721NamespaceId = WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
 
@@ -147,12 +154,18 @@ contract PostDeploy is Script {
         }
 
         address characterSystemAddress = Systems.getSystem(resourceIds.characterSystemId);
+
         System goldSystemContract = new ERC20System();
 
         world.registerSystem(resourceIds.erc20SystemId, goldSystemContract, true);
-
+        // grant world access to erc20 namespace
         IWorld(worldAddress).grantAccess(resourceIds.erc20NamespaceId, worldAddress);
+        //grant character system access to loot manager
         IWorld(worldAddress).grantAccess(resourceIds.lootManagerSystemId, characterSystemAddress);
+        //grant Admin system access to lootManager
+        IWorld(worldAddress).grantAccess(resourceIds.lootManagerSystemId, Systems.getSystem(resourceIds.adminSystemId));
+
+        //register mint function selector on world
         IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
 
         world.transferOwnership(resourceIds.erc20NamespaceId, Systems.getSystem(resourceIds.lootManagerSystemId));
