@@ -1,6 +1,7 @@
 import { useComponentValue, useEntityQuery } from '@latticexyz/react';
 import {
   Entity,
+  getComponentValue,
   getComponentValueStrict,
   Has,
   HasValue,
@@ -16,7 +17,13 @@ import {
   useState,
 } from 'react';
 import { useLocation } from 'react-router-dom';
-import { bytesToHex, formatEther, hexToBytes, hexToString } from 'viem';
+import {
+  bytesToHex,
+  formatEther,
+  hexToBytes,
+  hexToString,
+  zeroHash,
+} from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import { GAME_BOARD_PATH } from '../Routes';
@@ -61,6 +68,7 @@ export const MapNavigationProvider = ({
       Characters,
       CharactersTokenURI,
       GoldBalances,
+      MatchEntity,
       Mobs,
       Position,
       Spawned,
@@ -147,6 +155,12 @@ export const MapNavigationProvider = ({
               uriToHttp(`ipfs://${metadataURI}`)[0],
             );
 
+            const encounterId = getComponentValue(
+              MatchEntity,
+              entity,
+            )?.encounterId;
+            const inBattle = !!encounterId && encounterId !== zeroHash;
+
             return {
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
@@ -155,6 +169,7 @@ export const MapNavigationProvider = ({
               entityClass: characterStats.class,
               experience: characterStats.experience.toString(),
               goldBalance: formatEther(goldBalance as bigint).toString(),
+              inBattle,
               intelligence: characterStats.intelligence.toString(),
               level: characterStats.level.toString(),
               locked: characterData.locked,
@@ -178,6 +193,7 @@ export const MapNavigationProvider = ({
       CharactersTokenURI,
       delegatorAddress,
       GoldBalances,
+      MatchEntity,
       publicClient,
       renderError,
       Stats,
@@ -205,6 +221,11 @@ export const MapNavigationProvider = ({
               encodeEntity({ mobId: 'uint256' }, { mobId: BigInt(mobId) }),
             );
             const monsterStats = getComponentValueStrict(Stats, monsterId);
+            const encounterId = getComponentValue(
+              MatchEntity,
+              monsterId,
+            )?.encounterId;
+            const inBattle = !!encounterId && encounterId !== zeroHash;
 
             const { mobMetadata: metadataURI } = mobData;
 
@@ -218,6 +239,7 @@ export const MapNavigationProvider = ({
               currentHp: monsterStats.currentHp.toString(),
               entityClass: monsterStats.class,
               experience: monsterStats.experience.toString(),
+              inBattle,
               intelligence: monsterStats.intelligence.toString(),
               level: monsterStats.level.toString(),
               mobId,
@@ -233,7 +255,7 @@ export const MapNavigationProvider = ({
         renderError('Failed to fetch monsters.', e);
       }
     },
-    [Mobs, renderError, Stats],
+    [MatchEntity, Mobs, renderError, Stats],
   );
 
   useEffect(() => {

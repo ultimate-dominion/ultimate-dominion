@@ -1,4 +1,4 @@
-import { Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
+import { Button, HStack, Stack, Text } from '@chakra-ui/react';
 import { Has, HasValue, runQuery } from '@latticexyz/recs';
 import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -9,7 +9,6 @@ import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { ActionType } from '../utils/types';
-import { HealthBar } from './HealthBar';
 
 // enum ActionEvents {
 //   Attack = 'attack',
@@ -61,7 +60,7 @@ export const ActionsPanel = (): JSX.Element => {
     systemCalls: { endTurn },
   } = useMUD();
   const { character, equippedItems, refreshCharacter } = useCharacter();
-  const { currentBattle, monster } = useCombat();
+  const { currentBattle, monsterOponent } = useCombat();
   const { isSpawned } = useMapNavigation();
 
   const [isAttacking, setIsAttacking] = useState(false);
@@ -71,12 +70,12 @@ export const ActionsPanel = (): JSX.Element => {
       return 'You must spawn on the map to start battling.';
     }
 
-    if (currentBattle && monster) {
-      return `You are currently in a battle with a ${monster.name}.`;
+    if (currentBattle && monsterOponent) {
+      return `You are currently in battle with a ${monsterOponent.name}.`;
     }
 
     return 'To initiate a battle, move into a new tile and click on a monster.';
-  }, [currentBattle, isSpawned, monster]);
+  }, [currentBattle, isSpawned, monsterOponent]);
 
   const onAttack = useCallback(
     async (itemId: string) => {
@@ -95,7 +94,7 @@ export const ActionsPanel = (): JSX.Element => {
           throw new Error('Battle not found.');
         }
 
-        if (!monster) {
+        if (!monsterOponent) {
           throw new Error('Monster not found.');
         }
 
@@ -113,7 +112,7 @@ export const ActionsPanel = (): JSX.Element => {
         const { error, success } = await endTurn(
           currentBattle.encounterId,
           character.characterId,
-          monster.monsterId,
+          monsterOponent.monsterId,
           basicAttackId,
           itemId,
           currentBattle.currentTurn,
@@ -136,7 +135,7 @@ export const ActionsPanel = (): JSX.Element => {
       currentBattle,
       delegatorAddress,
       endTurn,
-      monster,
+      monsterOponent,
       refreshCharacter,
       renderError,
     ],
@@ -146,15 +145,7 @@ export const ActionsPanel = (): JSX.Element => {
     <Stack spacing={8}>
       <Stack>
         <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>{actionText}</Text>
-        {currentBattle && equippedItems && monster && (
-          <HealthBar
-            baseHp={monster.baseHp}
-            currentHp={monster.currentHp}
-            mt={4}
-            w="80%"
-          />
-        )}
-        {currentBattle && equippedItems && monster && (
+        {currentBattle && equippedItems && monsterOponent && (
           <HStack justify="center">
             {equippedItems.length === 0 && (
               <Text color="red" fontWeight={700}>
@@ -183,16 +174,6 @@ export const ActionsPanel = (): JSX.Element => {
               </Button>
             ))}
           </HStack>
-        )}
-        {currentBattle && equippedItems && monster && (
-          <VStack mt={4}>
-            <Text fontWeight={700}>MONSTER STATS:</Text>
-            <HStack>
-              <Text>Attack: {monster.agility}</Text>
-              <Text>Defense: {monster.intelligence}</Text>
-              <Text>Level: {monster.level}</Text>
-            </HStack>
-          </VStack>
         )}
       </Stack>
       {/* <Stack>
