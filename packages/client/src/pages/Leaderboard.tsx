@@ -13,7 +13,12 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useEntityQuery } from '@latticexyz/react';
-import { Entity, getComponentValueStrict, Has } from '@latticexyz/recs';
+import {
+  Entity,
+  getComponentValue,
+  getComponentValueStrict,
+  Has,
+} from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -81,8 +86,7 @@ export const Leaderboard = (): JSX.Element => {
             );
 
             const goldBalance =
-              getComponentValueStrict(GoldBalances, ownerEntity)?.value ??
-              BigInt(0);
+              getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
             const metadataURI = getComponentValueStrict(
               CharactersTokenURI,
               tokenIdEntity,

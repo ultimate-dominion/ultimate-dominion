@@ -122,7 +122,7 @@ export const CharacterPage = (): JSX.Element => {
       );
 
       const goldBalance =
-        getComponentValueStrict(GoldBalances, ownerEntity)?.value ?? BigInt(0);
+        getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
       const metadataURI = getComponentValueStrict(
         CharactersTokenURI,
         tokenIdEntity,
