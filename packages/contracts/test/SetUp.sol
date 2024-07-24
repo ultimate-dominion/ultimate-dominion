@@ -70,14 +70,6 @@ contract SetUp is Test {
             hitPointModifier: 4
         });
 
-        // PhysicalAttackStats memory basicAttack = PhysicalAttackStats({
-        //     bonusDamage: 0,
-        //     armorPenetration: 0,
-        //     attackModifierBonus: 0,
-        //     critChanceBonus: 0,
-        //     classRestrictions: classRestrictions
-        // });
-        // basicAttackId = world.UD__createAction(ActionType.PhysicalAttack, abi.encode(basicAttack));
         basicAttackId = keccak256(
             abi.encode(
                 PhysicalAttackStats({
