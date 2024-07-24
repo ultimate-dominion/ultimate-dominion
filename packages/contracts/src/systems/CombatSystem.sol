@@ -220,7 +220,6 @@ contract CombatSystem is System {
                 || deadDefenderCounter == encounterData.defenders.length
                 || encounterData.currentTurn == encounterData.maxTurns
         ) {
-            // for some reason block.timestamp is not availible here on anvil?
             _endMatch(encounterId, randomNumber);
         } else {
             encounterData.currentTurn++;

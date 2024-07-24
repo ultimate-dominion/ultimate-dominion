@@ -29,8 +29,12 @@ contract AdminSystem is System {
         _;
     }
 
-    function clearBattleState(bytes32 entityId) public onlyAdmin {
+    function adminClearBattleState(bytes32 entityId) public onlyAdmin {
         MatchEntity.setEncounterId(entityId, bytes32(0));
+    }
+
+    function adminSetCombatEncounter(bytes32 encounterId, CombatEncounterData memory encounterData) public onlyAdmin {
+        CombatEncounter.set(encounterId, encounterData);
     }
 
     function setAdmin(address newAdmin, bool adminState) public onlyAdmin {
