@@ -31,11 +31,10 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 }): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
   const {
-    burnerBalance,
     delegatorAddress,
     systemCalls: { equipItems, unequipItem },
   } = useMUD();
-  const { character } = useCharacter();
+  const { character, refreshCharacter } = useCharacter();
 
   const [isEquipping, setIsEquipping] = useState(false);
 
@@ -44,104 +43,84 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     [character, weapon.owner],
   );
 
-  const onEquipItem = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+  const onEquipItem = useCallback(async () => {
+    try {
+      setIsEquipping(true);
 
-      try {
-        setIsEquipping(true);
-
-        if (!character) {
-          throw new Error('Character not found.');
-        }
-
-        if (burnerBalance === '0') {
-          throw new Error(
-            'Insufficient funds. Please top off your session account.',
-          );
-        }
-
-        if (!delegatorAddress) {
-          throw new Error('Missing delegation.');
-        }
-
-        const success = await equipItems(character.characterId, [
-          weapon.tokenId,
-        ]);
-
-        if (!success) {
-          throw new Error('Contract call failed');
-        }
-
-        renderSuccess(`${weapon.name} equipped successfully!`);
-        onClose();
-      } catch (e) {
-        renderError(e, 'Failed to equip item.');
-      } finally {
-        setIsEquipping(false);
+      if (!character) {
+        throw new Error('Character not found.');
       }
-    },
-    [
-      burnerBalance,
-      character,
-      delegatorAddress,
-      equipItems,
-      onClose,
-      renderError,
-      renderSuccess,
-      weapon,
-    ],
-  );
 
-  const onUnequipItem = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-
-      try {
-        setIsEquipping(true);
-
-        if (!character) {
-          throw new Error('Character not found.');
-        }
-
-        if (burnerBalance === '0') {
-          throw new Error(
-            'Insufficient funds. Please top off your session account.',
-          );
-        }
-
-        if (!delegatorAddress) {
-          throw new Error('Missing delegation.');
-        }
-
-        const success = await unequipItem(
-          character.characterId,
-          weapon.tokenId,
-        );
-
-        if (!success) {
-          throw new Error('Contract call failed');
-        }
-
-        renderSuccess(`${weapon.name} unequipped successfully!`);
-        onClose();
-      } catch (e) {
-        renderError(e, 'Failed to unequip item.');
-      } finally {
-        setIsEquipping(false);
+      if (!delegatorAddress) {
+        throw new Error('Missing delegation.');
       }
-    },
-    [
-      burnerBalance,
-      character,
-      delegatorAddress,
-      onClose,
-      renderError,
-      renderSuccess,
-      unequipItem,
-      weapon,
-    ],
-  );
+
+      const { error, success } = await equipItems(character.characterId, [
+        weapon.tokenId,
+      ]);
+
+      if (error && !success) {
+        throw new Error(error);
+      }
+
+      await refreshCharacter();
+      renderSuccess(`${weapon.name} equipped successfully!`);
+      onClose();
+    } catch (e) {
+      renderError('Failed to equip item.', e);
+    } finally {
+      setIsEquipping(false);
+    }
+  }, [
+    character,
+    delegatorAddress,
+    equipItems,
+    onClose,
+    refreshCharacter,
+    renderError,
+    renderSuccess,
+    weapon,
+  ]);
+
+  const onUnequipItem = useCallback(async () => {
+    try {
+      setIsEquipping(true);
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      if (!delegatorAddress) {
+        throw new Error('Missing delegation.');
+      }
+
+      const { error, success } = await unequipItem(
+        character.characterId,
+        weapon.tokenId,
+      );
+
+      if (error && !success) {
+        throw new Error(error);
+      }
+
+      await refreshCharacter();
+      renderSuccess(`${weapon.name} unequipped successfully!`);
+      onClose();
+    } catch (e) {
+      renderError('Failed to unequip item.', e);
+    } finally {
+      setIsEquipping(false);
+    }
+  }, [
+    character,
+    delegatorAddress,
+    onClose,
+    refreshCharacter,
+    renderError,
+    renderSuccess,
+    unequipItem,
+    weapon,
+  ]);
 
   if (isEquipped) {
     return (
@@ -152,7 +131,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             {isOwner ? 'Unequip Item' : 'Make an offer'}
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody padding={4}>
+          <ModalBody p={4}>
             {isOwner ? (
               <Text mb={6}>Do you want to unequip this item?</Text>
             ) : (

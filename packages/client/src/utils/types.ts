@@ -1,6 +1,33 @@
 import { Entity } from '@latticexyz/recs';
 
-export type Character = CharacterData & CharacterStats & Metadata;
+export enum ActionType {
+  Temporary,
+  PhysicalAttack,
+  MagicAttack,
+  StatusEffect,
+}
+
+export enum EncounterType {
+  PvP,
+  PvE,
+}
+
+export enum ItemType {
+  Weapon,
+  Armor,
+  Spell,
+  Potion,
+  Material,
+  QuestItem,
+}
+
+export enum StatsClasses {
+  Warrior,
+  Rogue,
+  Mage,
+}
+
+export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
   characterId: Entity;
@@ -10,21 +37,27 @@ export type CharacterData = {
   tokenId: string;
 };
 
-export type CharacterStats = {
+export type EntityStats = {
   agility: string;
-  baseHitPoints: string;
-  characterClass: StatsClasses;
+  baseHp: string;
+  currentHp: string;
+  entityClass: StatsClasses;
   experience: string;
   intelligence: string;
   level: string;
   strength: string;
 };
 
-export enum StatsClasses {
-  Warrior,
-  Rogue,
-  Mage,
-}
+export type CombatDetails = {
+  attackers: Entity[];
+  currentTurn: string;
+  defenders: Entity[];
+  encounterId: Entity;
+  encounterType: EncounterType;
+  end: string;
+  maxTurns: string;
+  start: string;
+};
 
 export type Metadata = {
   description: string;
@@ -32,12 +65,11 @@ export type Metadata = {
   name: string;
 };
 
-export type Monster = Metadata & {
-  class: StatsClasses;
-  level: string;
-  mobId: string;
-  monsterId: Entity;
-};
+export type Monster = Metadata &
+  EntityStats & {
+    mobId: string;
+    monsterId: Entity;
+  };
 
 export type Weapon = WeaponStats &
   Metadata & {

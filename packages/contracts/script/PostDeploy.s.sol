@@ -188,6 +188,17 @@ contract PostDeploy is Script {
         world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
         _createStarterItems();
         _createMonsters();
+
+        uint8[] memory classRestrictions = new uint8[](0);
+        PhysicalAttackStats memory basicAttack = PhysicalAttackStats({
+            bonusDamage: 0,
+            armorPenetration: 0,
+            attackModifierBonus: 0,
+            critChanceBonus: 0,
+            classRestrictions: classRestrictions
+        });
+        world.UD__createAction(ActionType.PhysicalAttack, abi.encode(basicAttack));
+
         setLevels();
         vm.stopBroadcast();
     }
