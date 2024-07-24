@@ -238,6 +238,7 @@ contract CombatSystem is System {
     {
         // get action data
         ActionsData memory actionData = Actions.get(actionOutcomeData.actionId);
+        require(actionData.actionStats.length != 0, "action does not exist");
         //decode action data according to type
         if (uint8(actionData.actionType) == 1) {
             // get attack stats
