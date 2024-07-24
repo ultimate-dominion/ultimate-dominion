@@ -1532,6 +1532,13 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__gimme5",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__isAtPosition",
     "inputs": [
       {

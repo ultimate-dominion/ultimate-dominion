@@ -282,6 +282,27 @@ export function createSystemCalls(
     }
   };
 
+  const gimme5 = async (): SystemCallReturn => {
+    try {
+      // await publicClient.simulateContract({
+      //   abi: worldContract.abi,
+      //   account: delegatorAddress,
+      //   address: worldContract.address,
+      //   args: [],
+      //   functionName: 'UD__gimme5',
+      // });
+      await worldContract.simulate.UD__gimme5();
+      const tx = await worldContract.write.UD__gimme5();
+      await waitForTransaction(tx);
+      return { success: true };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const mintCharacter = async (
     account: Address,
     name: string,
@@ -575,6 +596,7 @@ export function createSystemCalls(
     endTurn,
     enterGame,
     equipItems,
+    gimme5,
     mintCharacter,
     move,
     rollStats,
