@@ -85,6 +85,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             vm.prank(bob);
             world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
         }
+
         StatsData memory endingStats = Stats.get(bobCharacterId);
         uint256 endingGold = goldToken.balanceOf(bob);
 

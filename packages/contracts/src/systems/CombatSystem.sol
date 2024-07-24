@@ -238,7 +238,6 @@ contract CombatSystem is System {
     {
         // get action data
         ActionsData memory actionData = Actions.get(actionOutcomeData.actionId);
-
         //decode action data according to type
         if (uint8(actionData.actionType) == 1) {
             // get attack stats
@@ -259,6 +258,8 @@ contract CombatSystem is System {
                 if (currentHp <= 0) actionOutcomeData.defenderDied = true;
                 Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
             }
+        } else {
+            revert("action type not recognized");
         }
 
         return actionOutcomeData;
@@ -280,7 +281,6 @@ contract CombatSystem is System {
 
         if (defender.currentHp > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
-
             (hit, crit) = _calculatePhysicalAttackModifier(
                 uint256(rnChunks[0]), uint256(rnChunks[1]), attackStats, attacker, defender
             );

@@ -8,82 +8,6 @@
   },
   {
     "type": "function",
-    "name": "_calculatePhysicalAttack",
-    "inputs": [
-      {
-        "name": "attackStats",
-        "type": "tuple",
-        "internalType": "struct PhysicalAttackStats",
-        "components": [
-          {
-            "name": "bonusDamage",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "armorPenetration",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "attackModifierBonus",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "critChanceBonus",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "classRestrictions",
-            "type": "uint8[]",
-            "internalType": "uint8[]"
-          }
-        ]
-      },
-      {
-        "name": "attackerId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "defenderId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "weaponId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "damage",
-        "type": "int256",
-        "internalType": "int256"
-      },
-      {
-        "name": "hit",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "crit",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "_msgSender",
     "inputs": [],
     "outputs": [
@@ -120,54 +44,6 @@
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "calculateGoldDrop",
-    "inputs": [
-      {
-        "name": "mobLevel",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "dropAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "calculateItemDrop",
-    "inputs": [
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "itemId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",

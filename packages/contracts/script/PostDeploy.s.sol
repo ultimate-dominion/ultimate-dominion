@@ -37,7 +37,7 @@ import {
 } from "../constants.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
-import {Classes, ItemType, MobType} from "@codegen/common.sol";
+import {Classes, ItemType, MobType, ActionType} from "@codegen/common.sol";
 import {
     WeaponStats,
     MonsterStats,
@@ -45,6 +45,7 @@ import {
     WeaponTemplateDetails,
     ArmorTemplateDetails,
     ArmorStats,
+    PhysicalAttackStats,
     StarterItems
 } from "@interfaces/Structs.sol";
 
