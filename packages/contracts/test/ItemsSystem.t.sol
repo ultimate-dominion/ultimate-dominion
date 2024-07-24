@@ -117,7 +117,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         itemIds[0] = newArmorId;
         amounts[0] = 1;
         characterIds[0] = alicesCharacterId;
-        world.UD__dropItems(itemIds, amounts, characterIds);
+        world.UD__dropItems(characterIds, itemIds, amounts);
 
         assertEq(erc1155System.balanceOf(address(alice), newArmorId), 1);
     }
