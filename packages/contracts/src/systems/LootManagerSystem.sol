@@ -69,15 +69,15 @@ contract LootManagerSystem is System {
         _goldToken().mint(IWorld(_world()).UD__getOwner(characterId), amount);
     }
 
-    function dropItem(uint256 itemId, uint256 amount, bytes32 characterId) public {
+    function dropItem(bytes32 characterId, uint256 itemId, uint256 amount) public {
         AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
         address to = IWorld(_world()).UD__getOwner(characterId);
         IERC1155System(UltimateDominionConfig.getItems()).transferFrom(address(this), to, itemId, amount);
     }
 
-    function dropItems(uint256[] memory itemIds, uint256[] memory amounts, bytes32[] memory characterIds) public {
+    function dropItems(bytes32[] memory characterIds, uint256[] memory itemIds, uint256[] memory amounts) public {
         for (uint256 i; i < itemIds.length; i++) {
-            dropItem(itemIds[i], amounts[i], characterIds[i]);
+            dropItem(characterIds[i], itemIds[i], amounts[i]);
         }
     }
 }

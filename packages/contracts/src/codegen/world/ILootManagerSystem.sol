@@ -13,7 +13,7 @@ interface ILootManagerSystem {
 
   function UD__dropGold(bytes32 characterId, uint256 amount) external;
 
-  function UD__dropItem(uint256 itemId, uint256 amount, bytes32 characterId) external;
+  function UD__dropItem(bytes32 characterId, uint256 itemId, uint256 amount) external;
 
-  function UD__dropItems(uint256[] memory itemIds, uint256[] memory amounts, bytes32[] memory characterIds) external;
+  function UD__dropItems(bytes32[] memory characterIds, uint256[] memory itemIds, uint256[] memory amounts) external;
 }

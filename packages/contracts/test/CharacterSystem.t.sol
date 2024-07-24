@@ -8,6 +8,12 @@ import {IERC721Metadata} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import "forge-std/console2.sol";
 
 contract Test_CharacterSystem is SetUp, GasReporter {
+    function setUp() public virtual override {
+        super.setUp();
+        vm.prank(deployer);
+        world.UD__setAdmin(address(this), true);
+    }
+
     function test_Mint() public {
         startGasReport("mints a character");
 
@@ -70,5 +76,17 @@ contract Test_CharacterSystem is SetUp, GasReporter {
     function test_getCharacterId() public {
         uint256 bobTokenId = world.UD__getCharacterTokenId(bobCharacterId);
         assertEq(bobTokenId, 2);
+    }
+
+    function test_levelCharacter() public {
+        StatsData memory bobStats = world.UD__getStats(bobCharacterId);
+        uint256 startingStr = bobStats.strength;
+        bobStats.experience = 100_000;
+
+        world.UD__adminSetStats(bobCharacterId, bobStats);
+        bobStats.strength += 2;
+        vm.prank(bob);
+        world.UD__levelCharacter(bobCharacterId, bobStats);
+        assertEq(world.UD__getStats(bobCharacterId).strength, startingStr + 2);
     }
 }

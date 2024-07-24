@@ -34,9 +34,21 @@ import "forge-std/console2.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {_erc721SystemId, _erc1155SystemId, _itemsSystemId} from "../utils.sol";
-import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, WORLD_NAMESPACE, ITEMS_NAMESPACE} from "../../constants.sol";
+import {
+    GOLD_NAMESPACE,
+    CHARACTERS_NAMESPACE,
+    WORLD_NAMESPACE,
+    ITEMS_NAMESPACE,
+    BASE_HP_GAIN,
+    ABILITY_POINTS_PER_LEVEL
+} from "../../constants.sol";
 
 contract CharacterSystem is System {
+    modifier onlyOwner(bytes32 characterId) {
+        require(isValidOwner(characterId, _msgSender()), "CHARACTER SYSTEM: INVALID OPERATOR");
+        _;
+    }
+
     function getName(bytes32 characterId) public view returns (bytes32 _name) {
         _name = Characters.getName(characterId);
     }
@@ -107,17 +119,19 @@ contract CharacterSystem is System {
         _setTokenURI(characterTokenId, tokenUri);
     }
 
-    function rollStats(bytes32 userRandomNumber, bytes32 characterId, Classes class) public payable {
+    function rollStats(bytes32 userRandomNumber, bytes32 characterId, Classes class)
+        public
+        payable
+        onlyOwner(characterId)
+    {
         require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
-        require(_isOwner(characterId), "Not your Character.");
         RngRequestType requestType = RngRequestType.CharacterStats;
         Stats.setClass(characterId, class);
         // use systemSwitch to call rng system
         SystemSwitch.call(abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, abi.encode(characterId))));
     }
 
-    function enterGame(bytes32 characterId) public {
-        require(_isOwner(characterId), "not your character");
+    function enterGame(bytes32 characterId) public onlyOwner(characterId) {
         require(!Characters.getLocked(characterId), "you have entered the game");
         StatsData memory tempStats = Stats.get(characterId);
         tempStats.level = 1;
@@ -129,13 +143,13 @@ contract CharacterSystem is System {
         Characters.setLocked(characterId, true);
     }
 
-    function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentLevel) {
+    function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentAvailibleLevel) {
         if (experience >= Levels.get(19)) {
-            currentLevel = 20;
+            currentAvailibleLevel = 20;
         } else {
             for (uint256 i; i < 20;) {
                 if (Levels.get(i) <= experience && Levels.get(i + 1) > experience) {
-                    currentLevel = i + 1;
+                    currentAvailibleLevel = i + 1;
                     break;
                 }
                 {
@@ -145,8 +159,34 @@ contract CharacterSystem is System {
         }
     }
 
-    function updateTokenUri(bytes32 characterId, string memory tokenUri) public {
-        require(_isOwner(characterId), "CHARACTERS: NOT AUTHORIZED");
+    function levelCharacter(bytes32 characterId, StatsData memory desiredStats) public onlyOwner(characterId) {
+        StatsData memory stats = Stats.get(characterId);
+        uint256 availibleLevel = getCurrentAvailableLevel(stats.experience);
+        if (availibleLevel > stats.level) {
+            stats.level++;
+        }
+        uint256 strChange = desiredStats.strength - stats.strength;
+        uint256 agiChange = desiredStats.agility - stats.agility;
+        uint256 intChange = desiredStats.intelligence - stats.intelligence;
+        uint256 hpChange = desiredStats.baseHp - stats.baseHp;
+
+        require(
+            (strChange + agiChange + intChange + hpChange) == ABILITY_POINTS_PER_LEVEL,
+            "CHARACTER SYSTEM: INVALID STAT CHANGE"
+        );
+        // bonus single hp every 5 levels
+        if (stats.level % 5 == 0) {
+            stats.baseHp++;
+        }
+        stats.strength = desiredStats.strength;
+        stats.agility = desiredStats.agility;
+        stats.intelligence = desiredStats.intelligence;
+        stats.baseHp = desiredStats.baseHp;
+
+        Stats.set(characterId, stats);
+    }
+
+    function updateTokenUri(bytes32 characterId, string memory tokenUri) public onlyOwner(characterId) {
         _setTokenURI(getCharacterTokenId(characterId), tokenUri);
     }
 
@@ -163,10 +203,6 @@ contract CharacterSystem is System {
 
     function _gold() internal view returns (IERC20System gold) {
         return IERC20System(UltimateDominionConfig.getGoldToken());
-    }
-
-    function _isOwner(bytes32 characterId) internal view returns (bool) {
-        return _msgSender() == _characterToken().ownerOf(getCharacterTokenId(characterId));
     }
 
     function getOwner(bytes32 characterId) public view returns (address) {

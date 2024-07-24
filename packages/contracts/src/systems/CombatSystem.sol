@@ -13,6 +13,7 @@ import {
     StatsData,
     Actions,
     ActionsData,
+    Items,
     CharacterEquipment,
     CharacterEquipmentData,
     CombatEncounter,
@@ -20,7 +21,9 @@ import {
     Position,
     Mobs,
     MobsData,
-    Counters
+    Counters,
+    ActionOutcome,
+    ActionOutcomeData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {
@@ -175,46 +178,51 @@ contract CombatSystem is System {
         for (uint256 i; i < actions.length; i++) {
             Action memory currentAction = actions[i];
 
-            _executeAction(
-                encounterId,
-                currentAction.actionId,
-                currentAction.attackerEntityId,
-                currentAction.defenderEntityId,
-                currentAction.weaponId,
-                randomNumber
-            );
+            ActionOutcomeData memory currentActionData = ActionOutcomeData({
+                actionId: currentAction.actionId,
+                weaponId: currentAction.weaponId,
+                attackerId: currentAction.attackerEntityId,
+                defenderId: currentAction.defenderEntityId,
+                hit: false,
+                miss: false,
+                crit: false,
+                attackerDamageDelt: 0,
+                defenderDamageDelt: 0,
+                attackerDied: false,
+                defenderDied: false,
+                blockNumber: block.number,
+                timestamp: block.timestamp
+            });
+
+            // execute action
+            currentActionData = _executeAction(currentActionData, randomNumber);
+            if (currentActionData.defenderDied) {
+                MatchEntity.setDied(currentActionData.defenderId, true);
+            }
+            if (currentActionData.attackerDied) {
+                MatchEntity.setDied(currentActionData.attackerId, true);
+            }
+
+            // emit action data to offchain table
+            ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
         }
 
-        encounterData.currentTurn++;
         uint256 deadDefenderCounter;
         uint256 deadAttackerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
-            int256 curHp = Stats.getCurrentHp(encounterData.defenders[i]);
-            if (curHp <= 0) {
-                deadDefenderCounter++;
-                if (uint8(encounterData.encounterType) == 0) {
-                    if (IWorld(_world()).UD__isValidCharacterId(encounterData.defenders[i])) {
-                        MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
-                    }
-                }
-            }
+            if (MatchEntity.getDied(encounterData.defenders[i])) deadDefenderCounter++;
         }
         for (uint256 i; i < encounterData.attackers.length; i++) {
-            int256 curHp = Stats.getCurrentHp(encounterData.attackers[i]);
-            if (curHp <= 0) {
-                deadAttackerCounter++;
-                MatchEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
-            }
+            if (MatchEntity.getDied(encounterData.attackers[i])) deadAttackerCounter++;
         }
         if (
             deadAttackerCounter == encounterData.attackers.length
                 || deadDefenderCounter == encounterData.defenders.length
                 || encounterData.currentTurn == encounterData.maxTurns
         ) {
-            // for some reason block.timestamp is not availible here on anvil?
-            encounterData.end = block.number;
-            CombatEncounter.set(encounterId, encounterData);
             _endMatch(encounterId, randomNumber);
+        } else {
+            encounterData.currentTurn++;
         }
     }
 
@@ -224,24 +232,38 @@ contract CombatSystem is System {
         );
     }
 
-    function _executeAction(
-        bytes32 matchEntity,
-        bytes32 actionId,
-        bytes32 attackerId,
-        bytes32 defenderId,
-        uint256 weaponId,
-        uint256 randomNumber
-    ) internal {
+    function _executeAction(ActionOutcomeData memory actionOutcomeData, uint256 randomNumber)
+        internal
+        returns (ActionOutcomeData memory)
+    {
         // get action data
-        ActionsData memory actionData = Actions.get(actionId);
+        ActionsData memory actionData = Actions.get(actionOutcomeData.actionId);
+        require(actionData.actionStats.length != 0, "action does not exist");
         //decode action data according to type
         if (uint8(actionData.actionType) == 1) {
+            // get attack stats
             PhysicalAttackStats memory attackStats = abi.decode(actionData.actionStats, (PhysicalAttackStats));
-            (int256 damage, bool hit, bool crit) =
-                _calculatePhysicalAttack(attackStats, attackerId, defenderId, weaponId, randomNumber);
-            int256 currentHp = Stats.getCurrentHp(defenderId) - int256(damage / int256(ATTACK_MODIFIER));
-            Stats.setCurrentHp(defenderId, currentHp);
+            // calculate damage
+            (actionOutcomeData.attackerDamageDelt, actionOutcomeData.hit, actionOutcomeData.crit) =
+            _calculatePhysicalAttack(
+                attackStats,
+                actionOutcomeData.attackerId,
+                actionOutcomeData.defenderId,
+                actionOutcomeData.weaponId,
+                randomNumber
+            );
+            // if hit deduct damage
+            if (actionOutcomeData.hit) {
+                int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
+                    - int256(actionOutcomeData.attackerDamageDelt / int256(ATTACK_MODIFIER));
+                if (currentHp <= 0) actionOutcomeData.defenderDied = true;
+                Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
+            }
+        } else {
+            revert("action type not recognized");
         }
+
+        return actionOutcomeData;
     }
 
     function _calculatePhysicalAttack(
@@ -250,7 +272,7 @@ contract CombatSystem is System {
         bytes32 defenderId,
         uint256 weaponId,
         uint256 randomNumber
-    ) public returns (int256 damage, bool hit, bool crit) {
+    ) internal view returns (int256 damage, bool hit, bool crit) {
         // get attacker
         AdjustedCombatStats memory attacker = IWorld(_world()).UD__applyEquipmentBonuses(attackerId);
         //get defender
@@ -260,7 +282,6 @@ contract CombatSystem is System {
 
         if (defender.currentHp > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
-
             (hit, crit) = _calculatePhysicalAttackModifier(
                 uint256(rnChunks[0]), uint256(rnChunks[1]), attackStats, attacker, defender
             );
@@ -286,10 +307,12 @@ contract CombatSystem is System {
                 if (crit) {
                     console2.log("CRIT!");
                     damage = damage * int256(CRIT_MODIFIER);
+                    crit = true;
                 }
             } else {
                 console2.log("MISS!");
                 damage = 0;
+                hit = false;
             }
         } else {
             damage = 0;
@@ -308,7 +331,8 @@ contract CombatSystem is System {
         PhysicalAttackStats memory attackStats,
         AdjustedCombatStats memory attacker,
         AdjustedCombatStats memory defender
-    ) internal returns (bool attackLands, bool crit) {
+    ) internal view returns (bool attackLands, bool crit) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         uint256 attackTotal = (
             Math.add(attacker.adjustedAgility, attackStats.attackModifierBonus) + (attackRoll % 1000)
         ) * (TO_HIT_MODIFIER);
@@ -325,14 +349,22 @@ contract CombatSystem is System {
 
     function _endMatch(bytes32 encounterId, uint256 randomNumber)
         internal
-        returns (uint256[] memory itemIds, uint256[] memory amounts, uint256 goldAmount)
+        returns (uint256 expAmount, uint256 goldAmount)
     {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+
+        if (block.chainid == 31337) {
+            encounterData.end = block.number;
+        } else {
+            encounterData.end = block.timestamp;
+        }
 
         // check dead attackers and defenders
         uint256 cumulativeAttackerLevels;
         uint256 livingAttackers;
+
         StatsData memory statsTemp;
+
         for (uint256 i; i < encounterData.attackers.length; i++) {
             statsTemp = Stats.get(encounterData.attackers[i]);
             cumulativeAttackerLevels += statsTemp.level;
@@ -343,15 +375,16 @@ contract CombatSystem is System {
 
         //if cumulative attacker levels is >= 5 levels above the monster level no gold reward.
         //  for this calculation level is calculated from exp not from actual leveled levels
-
-        uint256 goldDrop;
-        uint256 expDrop;
+        bytes32 defenderTemp;
         for (uint256 i; i < encounterData.defenders.length; i++) {
-            statsTemp = Stats.get(encounterData.defenders[i]);
-            if (statsTemp.currentHp <= int256(0)) {
-                expDrop += statsTemp.experience;
-                goldDrop += calculateGoldDrop(statsTemp.level, randomNumber);
-                MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+            defenderTemp = encounterData.defenders[i];
+            if (MatchEntity.getDied(defenderTemp)) {
+                expAmount += Stats.getExperience(defenderTemp);
+                goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
+                MatchEntity.setEncounterId(defenderTemp, bytes32(0));
+                _calculateItemDrop(
+                    randomNumber, defenderTemp, encounterData.attackers[randomNumber % encounterData.attackers.length]
+                );
             }
         }
         // drop gold reward calculated from the level of mob to player journey wallet (can mint tokens when he returns to 0,0).
@@ -363,24 +396,34 @@ contract CombatSystem is System {
             if (IWorld(_world()).UD__isValidCharacterId(entityIdTemp)) {
                 statsTemp = Stats.get(entityIdTemp);
                 if (statsTemp.currentHp > int256(0)) {
-                    if (goldDrop > uint256(0)) {
-                        IWorld(_world()).UD__dropGold(entityIdTemp, (goldDrop / livingAttackers));
+                    if (goldAmount > uint256(0)) {
+                        IWorld(_world()).UD__dropGold(entityIdTemp, (goldAmount / livingAttackers));
                     }
-                    if (expDrop > uint256(0) && livingAttackers > uint256(0)) {
-                        statsTemp.experience += expDrop / livingAttackers;
+                    if (expAmount > uint256(0) && livingAttackers > uint256(0)) {
+                        statsTemp.experience += expAmount / livingAttackers;
                     }
                 }
                 Stats.set(entityIdTemp, statsTemp);
             }
             MatchEntity.setEncounterId(entityIdTemp, bytes32(0));
         }
+        CombatEncounter.set(encounterId, encounterData);
     }
 
-    function calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) public returns (uint256 dropAmount) {
+    function _calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) internal view returns (uint256 dropAmount) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         // Calculate level-based drop
-
         dropAmount = randomNumber % (BASE_GOLD_DROP * mobLevel);
     }
 
-    function calculateItemDrop(uint256 randomNumber, uint256 itemId) public returns (bool) {}
+    function _calculateItemDrop(uint256 randomNumber, bytes32 entityId, bytes32 characterId) internal {
+        uint256 mobId = IWorld(_world()).UD__getMobId(entityId);
+        MonsterStats memory monsterStats = abi.decode(Mobs.getMobStats(mobId), (MonsterStats));
+        for (uint256 i; i < monsterStats.inventory.length; i++) {
+            uint256 dropChance = Items.getDropChance(monsterStats.inventory[i]);
+            if (randomNumber % 100_000 > dropChance) {
+                IWorld(_world()).UD__dropItem(characterId, monsterStats.inventory[i], 1);
+            }
+        }
+    }
 }
