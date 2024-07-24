@@ -1888,6 +1888,7 @@ declare const abi: [
   },
   {
     "type": "function",
+<<<<<<< HEAD
     "name": "UD__incrementCounter",
     "inputs": [
       {
@@ -1903,6 +1904,11 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
+=======
+    "name": "UD__gimme5",
+    "inputs": [],
+    "outputs": [],
+>>>>>>> 681890d (well, it compiles)
     "stateMutability": "nonpayable"
   },
   {

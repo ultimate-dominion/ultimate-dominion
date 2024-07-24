@@ -44,6 +44,27 @@ export default defineWorld({
         isAdmin: "bool",
       },
     },
+    Admin: "bool",
+    AuctionHouseOrders: {
+      key: ["orderId"],
+      schema: {
+        orderId: "bytes32",
+        collection: "address",
+        tokenId: "uint256",
+        buyer: "address",
+        price: "uint256",
+      }
+    },
+    AuctionHouseSales: {
+      key: ["saleId"],
+      schema: {
+        saleId: "bytes32",
+        collection: "address",
+        tokenId: "uint256",
+        buyer: "address",
+        price: "uint256"
+      }
+    },
     Characters: {
       key: ["characterId"],
       schema: {
