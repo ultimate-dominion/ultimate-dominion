@@ -6,6 +6,7 @@ import {
   GridItem,
   HStack,
   Spinner,
+  Stack,
   Text,
   useBreakpointValue,
   VStack,
@@ -27,6 +28,7 @@ const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const TileDetailsPanel = (): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   const {
     delegatorAddress,
@@ -84,46 +86,69 @@ export const TileDetailsPanel = (): JSX.Element => {
       <VStack mt={4}>
         <HStack alignItems="start" w="100%">
           <VStack w="48%">
-            <Text fontWeight="bold" size="lg">
-              {monsterOponent.name.slice(0, -3)}
+            <Text fontWeight="bold" size={{ base: 'md', lg: 'lg' }}>
+              {isDesktop
+                ? monsterOponent.name.slice(0, -3)
+                : monsterOponent.name}
             </Text>
-            <Text fontSize="68px">{monsterOponent.name.slice(-3)}</Text>
+            {isDesktop && (
+              <Text fontSize="68px">{monsterOponent.name.slice(-3)}</Text>
+            )}
           </VStack>
-          <VStack mt={8}>
-            <GiCrossedSwords color="red" size={40} />
+          <VStack mt={{ base: 0, lg: 14 }} w="4%">
+            <GiCrossedSwords color="red" size={isDesktop ? 40 : 28} />
           </VStack>
-          <VStack w="48%">
-            <Text fontWeight="bold" size="lg">
+          <Stack
+            alignItems="center"
+            direction={{ base: 'row', lg: 'column' }}
+            justify={{ base: 'center', lg: 'start' }}
+            w="48%"
+          >
+            <Text fontWeight="bold" size={{ base: 'md', lg: 'lg' }}>
               {character.name}
             </Text>
-            <Avatar my={5} size="lg" src={character.image} />
-          </VStack>
+            <Avatar
+              my={{ base: 1, lg: 5 }}
+              size={{ base: 'xs', lg: 'lg' }}
+              src={character.image}
+            />
+          </Stack>
         </HStack>
         <HStack alignItems="start" w="100%">
-          <VStack w="48%">
+          <VStack spacing={{ base: 0, lg: 2 }} w="48%">
             <HealthBar
               baseHp={monsterOponent.baseHp}
               currentHp={monsterOponent.currentHp}
               w="90%"
             />
             <VStack alignItems="start" px={4}>
-              <Text fontSize="sm">Agility: {monsterOponent.agility}</Text>
-              <Text fontSize="sm">
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Agility: {monsterOponent.agility}
+              </Text>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
                 Intelligence: {monsterOponent.intelligence}
               </Text>
-              <Text fontSize="sm">Strength: {monsterOponent.strength}</Text>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Strength: {monsterOponent.strength}
+              </Text>
             </VStack>
           </VStack>
-          <VStack w="48%">
+          <VStack spacing={{ base: 0, lg: 2 }} w="48%">
             <HealthBar
               baseHp={character.baseHp}
               currentHp={character.currentHp}
               w="90%"
             />
             <VStack alignItems="start" px={4}>
-              <Text fontSize="sm">Agility: {character.agility}</Text>
-              <Text fontSize="sm">Intelligence: {character.intelligence}</Text>
-              <Text fontSize="sm">Strength: {character.strength}</Text>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Agility: {character.agility}
+              </Text>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Intelligence: {character.intelligence}
+              </Text>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Strength: {character.strength}
+              </Text>
             </VStack>
           </VStack>
         </HStack>
