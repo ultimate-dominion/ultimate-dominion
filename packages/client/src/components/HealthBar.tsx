@@ -29,7 +29,12 @@ export const HealthBar = ({
           HP
         </Text>
         <Box borderLeft="2px solid black" h="100%" position="relative" w="100%">
-          <Box bgColor={barColor} h="100%" w={`${health}%`} />
+          <Box
+            bgColor={barColor}
+            h="100%"
+            transition="all 0.5s"
+            w={`${health}%`}
+          />
         </Box>
       </Flex>
       <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
