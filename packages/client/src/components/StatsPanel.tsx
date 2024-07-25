@@ -16,7 +16,7 @@ import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
 import { GiRogue } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -193,6 +193,7 @@ export const StatsPanel = (): JSX.Element => {
         <>
           <VStack alignSelf="start" alignItems="start">
             <Link
+              as={RouterLink}
               borderBottom="2px solid"
               borderColor="grey400"
               fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
@@ -206,10 +207,11 @@ export const StatsPanel = (): JSX.Element => {
               Auction House
             </Link>
             <Link
+              as={RouterLink}
               borderBottom="2px solid"
               borderColor="grey400"
               fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-              href={LEADERBOARD_PATH}
+              to={LEADERBOARD_PATH}
               pb={1}
               _hover={{
                 borderColor: 'grey500',
