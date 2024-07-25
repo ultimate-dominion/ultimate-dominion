@@ -1889,6 +1889,7 @@ declare const abi: [
   {
     "type": "function",
 <<<<<<< HEAD
+<<<<<<< HEAD
     "name": "UD__incrementCounter",
     "inputs": [
       {
@@ -1913,6 +1914,8 @@ declare const abi: [
   },
   {
     "type": "function",
+=======
+>>>>>>> 4fa4bdd (A little bit of everything)
     "name": "UD__isAtPosition",
     "inputs": [
       {
@@ -2252,6 +2255,29 @@ declare const abi: [
         "name": "y",
         "type": "uint16",
         "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__newSale",
+    "inputs": [
+      {
+        "name": "_collection",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_price",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],

@@ -1,6 +1,10 @@
 {
   "31337": {
+<<<<<<< HEAD
     "address": "0xec49f248866357cc892edc7d90475e63c8cc33ee"
+=======
+    "address": "0x1937f18ca0d96cd3c4a5b16ceb71adab9d1e178d"
+>>>>>>> 1d1b932 (A little bit of everything)
   },
   "84532": {
     "address": "0xdf2332face5011cf84e9a97e3903ab786cd2ac6e",

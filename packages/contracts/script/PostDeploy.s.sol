@@ -134,6 +134,7 @@ contract PostDeploy is Script {
         UltimateDominionConfig.setCharacterToken(address(characters));
 
         {
+            
             resourceIds.erc20NamespaceId = WorldResourceIdLib.encodeNamespace(GOLD_NAMESPACE);
             resourceIds.erc20SystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "Gold", name: "GoldToken"});
@@ -146,7 +147,7 @@ contract PostDeploy is Script {
             
             resourceIds.adminSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AdminSystem"});
-
+            resourceIds.auctionHouseOrderSystemId = WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AdminSystem"});
             resourceIds.erc721NamespaceId = WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
 
             resourceIds.erc721SystemId =
@@ -177,6 +178,8 @@ contract PostDeploy is Script {
 
         //register mint function selector on world
         IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
+
+        IWorld(worldAddress).registerFunctionSelector(resourceIds.auctionHouseOrderSystemId, "placeOrder(address, uint256, uint256)");
 
         world.transferOwnership(resourceIds.erc20NamespaceId, Systems.getSystem(resourceIds.lootManagerSystemId));
 

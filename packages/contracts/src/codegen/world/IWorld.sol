@@ -11,7 +11,6 @@ import { IAuctionSystem } from "./IAuctionSystem.sol";
 import { ICharacterSystem } from "./ICharacterSystem.sol";
 import { ICombatSystem } from "./ICombatSystem.sol";
 import { IEquipmentSystem } from "./IEquipmentSystem.sol";
-import { IFreeItemStoreSystem } from "./IFreeItemStoreSystem.sol";
 import { IItemsSystem } from "./IItemsSystem.sol";
 import { ILootManagerSystem } from "./ILootManagerSystem.sol";
 import { IMapSystem } from "./IMapSystem.sol";
@@ -33,7 +32,6 @@ interface IWorld is
   ICharacterSystem,
   ICombatSystem,
   IEquipmentSystem,
-  IFreeItemStoreSystem,
   IItemsSystem,
   ILootManagerSystem,
   IMapSystem,

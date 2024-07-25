@@ -121,7 +121,6 @@ export const AuctionHouse = (): JSX.Element => {
           .sort((a, b) => {
             return Number(a.tokenId) - Number(b.tokenId);
           });
-
         const fullItems = await Promise.all(
           _items.map(async item => {
             const itemTemplateStats =
