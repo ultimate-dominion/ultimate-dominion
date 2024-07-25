@@ -6,6 +6,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { useMUD } from './contexts/MUDContext';
 import { AuctionHouse } from './pages/AuctionHouse';
+import { AuctionHouseItem } from './pages/AuctionHouseItem';
 import { CharacterPage } from './pages/Character';
 import { CharacterCreation } from './pages/CharacterCreation';
 import { GameBoard } from './pages/GameBoard';
@@ -47,6 +48,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/characters/:characterId" element={<CharacterPage />} />
       <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
       <Route path={AUCTION_HOUSE_PATH} element={<AuctionHouse />} />
+      <Route path="/item" element={<AuctionHouseItem />} />
     </Routes>
   );
 };

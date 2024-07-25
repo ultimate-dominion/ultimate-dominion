@@ -42,7 +42,6 @@ export default defineWorld({
         isAdmin: "bool",
       },
     },
-    Admin: "bool",
     AuctionHouseOrders: {
       key: ["orderId"],
       schema: {

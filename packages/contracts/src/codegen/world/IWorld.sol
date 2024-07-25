@@ -7,10 +7,10 @@ import { IBaseWorld } from "@latticexyz/world/src/codegen/interfaces/IBaseWorld.
 
 import { IActionSystem } from "./IActionSystem.sol";
 import { IAdminSystem } from "./IAdminSystem.sol";
+import { IAuctionHouseSaleSystem } from "./IAuctionHouseSaleSystem.sol";
 import { ICharacterSystem } from "./ICharacterSystem.sol";
 import { ICombatSystem } from "./ICombatSystem.sol";
 import { IEquipmentSystem } from "./IEquipmentSystem.sol";
-import { IFreeItemStoreSystem } from "./IFreeItemStoreSystem.sol";
 import { IItemsSystem } from "./IItemsSystem.sol";
 import { ILootManagerSystem } from "./ILootManagerSystem.sol";
 import { IMapSystem } from "./IMapSystem.sol";
@@ -28,10 +28,10 @@ interface IWorld is
   IBaseWorld,
   IActionSystem,
   IAdminSystem,
+  IAuctionHouseSaleSystem,
   ICharacterSystem,
   ICombatSystem,
   IEquipmentSystem,
-  IFreeItemStoreSystem,
   IItemsSystem,
   ILootManagerSystem,
   IMapSystem,

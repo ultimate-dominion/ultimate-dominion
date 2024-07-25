@@ -282,27 +282,6 @@ export function createSystemCalls(
     }
   };
 
-  const gimme5 = async (): SystemCallReturn => {
-    try {
-      // await publicClient.simulateContract({
-      //   abi: worldContract.abi,
-      //   account: delegatorAddress,
-      //   address: worldContract.address,
-      //   args: [],
-      //   functionName: 'UD__gimme5',
-      // });
-      await worldContract.simulate.UD__gimme5();
-      const tx = await worldContract.write.UD__gimme5();
-      await waitForTransaction(tx);
-      return { success: true };
-    } catch (e) {
-      return {
-        error: getContractError(e as BaseError),
-        success: false,
-      };
-    }
-  };
-
   const mintCharacter = async (
     account: Address,
     name: string,
@@ -344,6 +323,103 @@ export function createSystemCalls(
 
       return {
         success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+  // const placeOrder = async (
+  //   account: Address,
+  //   tokenId: string,
+  //   price: string,
+  // ): SystemCallReturn => {
+  //   try {
+  //     await publicClient.simulateContract({
+  //       abi: worldContract.abi,
+  //       account: delegatorAddress,
+  //       address: worldContract.address,
+  //       args: [account, BigInt(tokenId), BigInt(price)],
+  //       functionName: 'UD__adminDropItem',
+  //     });
+
+  //     const simulatedTx = await worldContract.simulate.UD__placeOrder([
+  //       account,
+  //       BigInt(tokenId),
+  //       BigInt(price),
+  //     ]);
+
+  //     // const result = simulatedTx.result;
+
+  //     const tx = await worldContract.write.UD__placeOrder([
+  //       account,
+  //       BigInt(tokenId),
+  //       BigInt(price),
+  //     ]);
+
+  //     const success = await waitForTransaction(tx);
+
+  //     // const success = !!getComponentValue(
+  //     //   Characters,
+  //     //   encodeEntity(
+  //     //     { characterId: 'uint256' },
+  //     //     { characterId: BigInt(characterId) },
+  //     //   ),
+  //     // );
+
+  //     return {
+  //       success: success ? true : false,
+  //     };
+  //   } catch (e) {
+  //     return {
+  //       error: getContractError(e as BaseError),
+  //       success: false,
+  //     };
+  //   }
+  // };
+
+  const adminDropItem = async (
+    account: Address,
+    tokenId: string,
+    amount: string,
+  ): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [account, BigInt(tokenId), BigInt(amount)],
+        functionName: 'UD__adminDropItem',
+      });
+
+      await worldContract.simulate.UD__adminDropItem([
+        account,
+        BigInt(tokenId),
+        BigInt(amount),
+      ]);
+
+      // const result = simulatedTx.result;
+
+      const tx = await worldContract.write.UD__adminDropItem([
+        account,
+        BigInt(tokenId),
+        BigInt(amount),
+      ]);
+
+      const success = await waitForTransaction(tx);
+
+      // const success = !!getComponentValue(
+      //   Characters,
+      //   encodeEntity(
+      //     { characterId: 'uint256' },
+      //     { characterId: BigInt(characterId) },
+      //   ),
+      // );
+
+      return {
+        success: success ? true : false,
       };
     } catch (e) {
       return {
@@ -592,11 +668,11 @@ export function createSystemCalls(
   };
 
   return {
+    adminDropItem,
     createMatch,
     endTurn,
     enterGame,
     equipItems,
-    gimme5,
     mintCharacter,
     move,
     rollStats,

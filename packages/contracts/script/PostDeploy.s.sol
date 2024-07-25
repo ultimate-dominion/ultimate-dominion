@@ -71,6 +71,7 @@ struct ResourceIds {
     ResourceId combatSystemId;
     ResourceId lootManagerSystemId;
     ResourceId adminSystemId;
+    ResourceId auctionHouseOrderSystemId;
 }
 
 contract PostDeploy is Script {
@@ -108,7 +109,7 @@ contract PostDeploy is Script {
         uint16 width = uint16(10);
         MapConfig.set(width, height);
         // set deployer as admin
-        Admin.set(vm.addr(deployerPrivateKey), true);
+        Admin.set(0x147914732644F7F984783634db2085039FC2F190, true);
 
         //install puppet
         world.installModule(new PuppetModule(), new bytes(0));
@@ -132,6 +133,7 @@ contract PostDeploy is Script {
         UltimateDominionConfig.setCharacterToken(address(characters));
 
         {
+            
             resourceIds.erc20NamespaceId = WorldResourceIdLib.encodeNamespace(GOLD_NAMESPACE);
             resourceIds.erc20SystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "Gold", name: "GoldToken"});
@@ -140,7 +142,7 @@ contract PostDeploy is Script {
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CharacterSystem"});
             resourceIds.adminSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AdminSystem"});
-
+            resourceIds.auctionHouseOrderSystemId = WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AdminSystem"});
             resourceIds.erc721NamespaceId = WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
 
             resourceIds.erc721SystemId =
@@ -168,6 +170,8 @@ contract PostDeploy is Script {
 
         //register mint function selector on world
         IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
+
+        IWorld(worldAddress).registerFunctionSelector(resourceIds.auctionHouseOrderSystemId, "placeOrder(address, uint256, uint256)");
 
         world.transferOwnership(resourceIds.erc20NamespaceId, Systems.getSystem(resourceIds.lootManagerSystemId));
 
