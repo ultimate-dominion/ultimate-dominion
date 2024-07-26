@@ -60,22 +60,34 @@ export const ActionsPanel = (): JSX.Element => {
     systemCalls: { endTurn },
   } = useMUD();
   const { character, equippedItems, refreshCharacter } = useCharacter();
+  const { isSpawned, monsters, position } = useMapNavigation();
   const { currentBattle, monsterOponent } = useCombat();
-  const { isSpawned } = useMapNavigation();
 
   const [isAttacking, setIsAttacking] = useState(false);
 
   const actionText = useMemo(() => {
-    if (!isSpawned) {
-      return 'You must spawn on the map to start battling.';
+    if (!(isSpawned && position)) {
+      return 'In order to begin battling, you must spawn your character.';
+    }
+
+    if (position.x === 0 && position.y === 0) {
+      return 'You are currently in the starting tile. Move to a new tile to find monsters to battle.';
+    }
+
+    if ((position.x !== 0 || position.y !== 0) && monsters.length === 0) {
+      return 'Looks like there are no monsters in this tile. Move to a new tile to find monsters to battle.';
+    }
+
+    if ((position.x !== 0 || position.y !== 0) && monsters.length > 0) {
+      return 'To initiate a battle, click on a monster.';
     }
 
     if (currentBattle && monsterOponent) {
       return `You are currently in battle with a ${monsterOponent.name}.`;
     }
 
-    return 'To initiate a battle, move into a new tile and click on a monster.';
-  }, [currentBattle, isSpawned, monsterOponent]);
+    return '';
+  }, [currentBattle, isSpawned, monsterOponent, monsters, position]);
 
   const onAttack = useCallback(
     async (itemId: string) => {
@@ -144,7 +156,9 @@ export const ActionsPanel = (): JSX.Element => {
   return (
     <Stack spacing={8}>
       <Stack>
-        <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>{actionText}</Text>
+        {!currentBattle && (
+          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>{actionText}</Text>
+        )}
         {currentBattle && equippedItems && monsterOponent && (
           <HStack justify="center">
             {equippedItems.length === 0 && (
