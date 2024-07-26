@@ -11,7 +11,7 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
@@ -39,6 +39,17 @@ export const TileDetailsPanel = (): JSX.Element => {
   const { currentBattle, monsterOponent } = useCombat();
 
   const [isInitiating, setIsInitiating] = useState(false);
+  const [isMonsterHit, setIsMonsterHit] = useState(false);
+
+  useEffect(() => {
+    if (!monsterOponent) return;
+    if (monsterOponent.currentHp === monsterOponent.baseHp) return;
+
+    setIsMonsterHit(true);
+    setTimeout(() => {
+      setIsMonsterHit(false);
+    }, 700);
+  }, [monsterOponent, monsterOponent?.baseHp, monsterOponent?.currentHp]);
 
   const onInitiateCombat = useCallback(
     async (monster: Monster) => {
@@ -73,7 +84,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     [character, createMatch, delegatorAddress, renderError, renderSuccess],
   );
 
-  if (isRefreshing) {
+  if (!currentBattle && isRefreshing) {
     return (
       <Flex alignItems="center" h="100%" justifyContent="center">
         <Spinner size="lg" />
@@ -84,15 +95,33 @@ export const TileDetailsPanel = (): JSX.Element => {
   if (character && currentBattle && monsterOponent) {
     return (
       <VStack mt={4}>
+        <style>
+          {`
+          @keyframes flicker {
+            0% { opacity: 1; }
+            25% { opacity: 0; }
+            50% { opacity: 1; }
+            75% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+        `}
+        </style>
         <HStack alignItems="start" w="100%">
           <VStack w="48%">
-            <Text fontWeight="bold" size={{ base: 'md', lg: 'lg' }}>
+            <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
               {isDesktop
                 ? monsterOponent.name.slice(0, -3)
                 : monsterOponent.name}
             </Text>
             {isDesktop && (
-              <Text fontSize="68px">{monsterOponent.name.slice(-3)}</Text>
+              <Text
+                animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
+                fontSize="68px"
+                opacity={isMonsterHit ? 0 : 1}
+                transition="opacity 0.1s ease-in-out"
+              >
+                {monsterOponent.name.slice(-3)}
+              </Text>
             )}
           </VStack>
           <VStack mt={{ base: 0, lg: 14 }} w="4%">
@@ -104,12 +133,12 @@ export const TileDetailsPanel = (): JSX.Element => {
             justify={{ base: 'center', lg: 'start' }}
             w="48%"
           >
-            <Text fontWeight="bold" size={{ base: 'md', lg: 'lg' }}>
+            <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
               {character.name}
             </Text>
             <Avatar
               my={{ base: 1, lg: 5 }}
-              size={{ base: 'xs', lg: 'lg' }}
+              size={{ base: '2xs', lg: 'lg' }}
               src={character.image}
             />
           </Stack>
@@ -160,7 +189,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     return (
       <Box h="100%">
         <VStack h="100%" justifyContent="center" spacing={8}>
-          <Text fontWeight="bold" size="xl">
+          <Text fontWeight="bold" size={{ base: 'md', lg: 'xl' }}>
             Initiating battle!
           </Text>
           <Spinner color="red" size="xl" />
