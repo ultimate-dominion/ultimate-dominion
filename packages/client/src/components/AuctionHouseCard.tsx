@@ -3,6 +3,7 @@ import {
   CardBody,
   CardFooter,
   CardHeader,
+  Center,
   Grid,
   GridItem,
   Heading,
@@ -29,7 +30,9 @@ export const AuctionHouseCard = ({
   return (
     <Card mb={5} borderRadius={2} border="solid">
       <CardHeader>
-        <Image src={image}></Image>
+        <Center>
+          <Image src={image}></Image>
+        </Center>
       </CardHeader>
       <CardBody>
         <Stack direction="row">

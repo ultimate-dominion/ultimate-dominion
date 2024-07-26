@@ -3,6 +3,7 @@ import {
   CardBody,
   CardFooter,
   CardHeader,
+  Center,
   Grid,
   GridItem,
   Heading,
@@ -31,7 +32,9 @@ export const AuctionHouseCardSkeleton = ({
     <Card mb={5} borderRadius={2} border="solid">
       <CardHeader>
         <Skeleton>
-          <Image src={image} minHeight={100}></Image>
+          <Center>
+            <Image src={image} minH={100}></Image>
+          </Center>
         </Skeleton>
       </CardHeader>
       <CardBody>

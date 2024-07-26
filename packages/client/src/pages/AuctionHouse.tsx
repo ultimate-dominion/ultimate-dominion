@@ -16,6 +16,7 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
+  Skeleton,
   Spacer,
   Stack,
   Text,
@@ -220,6 +221,16 @@ export const AuctionHouse = (): JSX.Element => {
           <DrawerHeader>Inventory</DrawerHeader>
 
           <DrawerBody>
+            {userCharacter ? (
+              <Heading textAlign="right">
+                {userCharacter?.goldBalance} $GOLD
+              </Heading>
+            ) : (
+              <Skeleton>
+                <Heading textAlign="right"> $GOLD</Heading>
+              </Skeleton>
+            )}
+
             <Grid
               templateColumns={{
                 base: 'repeat(1, 1fr)',
@@ -271,7 +282,13 @@ export const AuctionHouse = (): JSX.Element => {
               </Button>
             </Stack>
             <Spacer />
-            <Heading>{userCharacter?.goldBalance} $GOLD</Heading>
+            {userCharacter ? (
+              <Heading>{userCharacter?.goldBalance} $GOLD</Heading>
+            ) : (
+              <Skeleton>
+                <Heading> $GOLD</Heading>
+              </Skeleton>
+            )}
           </Stack>
           <Stack
             direction={{ base: 'column', md: 'row' }}
@@ -332,13 +349,14 @@ export const AuctionHouse = (): JSX.Element => {
           rowStart={3}
           colSpan={5}
         >
-          <Heading size="lg" mb={5} borderBottom="solid">
+          <Heading size="lg" borderBottom="solid">
             Warrior
           </Heading>
 
           <Grid
             templateColumns={{ base: 'repeat(1, 1fr)', lg: 'repeat(3, 1fr)' }}
             gap={5}
+            my={5}
           >
             {items != null &&
             items.filter(item => itemClasses.warrior.indexOf(item.name) > -1)
@@ -359,7 +377,7 @@ export const AuctionHouse = (): JSX.Element => {
                     <GridItem key={i}>
                       <AuctionHouseCard
                         name={item.name}
-                        image={''}
+                        image="https://placehold.jp/500x500.png"
                         agi={item.agiModifier}
                         int={item.intModifier}
                         hit={item.hitPointModifier}
@@ -379,13 +397,14 @@ export const AuctionHouse = (): JSX.Element => {
               ></AuctionHouseCardSkeleton>
             )}
           </Grid>
-          <Heading size="lg" mb={5} borderBottom="solid">
+          <Heading size="lg" borderBottom="solid">
             Rogue
           </Heading>
 
           <Grid
             templateColumns={{ base: 'repeat(1, 1fr)', lg: 'repeat(3, 1fr)' }}
             gap={5}
+            my={5}
           >
             {items != null &&
             items.filter(item => itemClasses.rogue.indexOf(item.name) > -1)
@@ -406,7 +425,7 @@ export const AuctionHouse = (): JSX.Element => {
                     <GridItem key={i}>
                       <AuctionHouseCard
                         name={item.name}
-                        image={''}
+                        image="https://placehold.jp/500x500.png"
                         agi={item.agiModifier}
                         int={item.intModifier}
                         hit={item.hitPointModifier}
@@ -427,13 +446,14 @@ export const AuctionHouse = (): JSX.Element => {
             )}
           </Grid>
 
-          <Heading size="lg" mb={5} borderBottom="solid">
+          <Heading size="lg" borderBottom="solid">
             Mage
           </Heading>
 
           <Grid
             templateColumns={{ base: 'repeat(1, 1fr)', lg: 'repeat(3, 1fr)' }}
             gap={5}
+            my={5}
           >
             {items != null &&
             items.filter(item => itemClasses.mage.indexOf(item.name) > -1)
@@ -454,7 +474,7 @@ export const AuctionHouse = (): JSX.Element => {
                     <GridItem key={i}>
                       <AuctionHouseCard
                         name={item.name}
-                        image={''}
+                        image="https://placehold.jp/500x500.png"
                         agi={item.agiModifier}
                         int={item.intModifier}
                         hit={item.hitPointModifier}
