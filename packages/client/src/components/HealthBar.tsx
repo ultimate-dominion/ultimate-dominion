@@ -14,21 +14,30 @@ export const HealthBar = ({
 
   return (
     <VStack alignItems="end" spacing={0.5} {...stackProps}>
-      <Flex border="2px solid black" width="100%" height="24px">
+      <Flex
+        border="2px solid black"
+        width="100%"
+        h={{ base: '18px', md: '24px' }}
+      >
         <Text
           bgColor="black"
           color="white"
-          fontSize="sm"
           fontWeight={700}
-          px={2}
+          px={{ base: 1, md: 2 }}
+          size={{ base: '2xs', md: 'xs' }}
         >
           HP
         </Text>
         <Box borderLeft="2px solid black" h="100%" position="relative" w="100%">
-          <Box bgColor={barColor} h="100%" w={`${health}%`} />
+          <Box
+            bgColor={barColor}
+            h="100%"
+            transition="all 0.5s"
+            w={`${health}%`}
+          />
         </Box>
       </Flex>
-      <Text fontSize="xs" fontWeight={700}>
+      <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
         {currentHp} / {baseHp}
       </Text>
     </VStack>

@@ -6,6 +6,7 @@ import {
   GridItem,
   HStack,
   Spinner,
+  Stack,
   Text,
   useBreakpointValue,
   VStack,
@@ -21,11 +22,13 @@ import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { type Character, EncounterType, type Monster } from '../utils/types';
+import { HealthBar } from './HealthBar';
 
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const TileDetailsPanel = (): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   const {
     delegatorAddress,
@@ -33,7 +36,7 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useMUD();
   const { character } = useCharacter();
   const { isRefreshing, monsters, otherPlayers } = useMapNavigation();
-  const { currentBattle } = useCombat();
+  const { currentBattle, monsterOponent } = useCombat();
 
   const [isInitiating, setIsInitiating] = useState(false);
 
@@ -75,6 +78,94 @@ export const TileDetailsPanel = (): JSX.Element => {
       <Flex alignItems="center" h="100%" justifyContent="center">
         <Spinner size="lg" />
       </Flex>
+    );
+  }
+
+  if (character && currentBattle && monsterOponent) {
+    return (
+      <VStack mt={4}>
+        <HStack alignItems="start" w="100%">
+          <VStack w="48%">
+            <Text fontWeight="bold" size={{ base: 'md', lg: 'lg' }}>
+              {isDesktop
+                ? monsterOponent.name.slice(0, -3)
+                : monsterOponent.name}
+            </Text>
+            {isDesktop && (
+              <Text fontSize="68px">{monsterOponent.name.slice(-3)}</Text>
+            )}
+          </VStack>
+          <VStack mt={{ base: 0, lg: 14 }} w="4%">
+            <GiCrossedSwords color="red" size={isDesktop ? 40 : 28} />
+          </VStack>
+          <Stack
+            alignItems="center"
+            direction={{ base: 'row', lg: 'column' }}
+            justify={{ base: 'center', lg: 'start' }}
+            w="48%"
+          >
+            <Text fontWeight="bold" size={{ base: 'md', lg: 'lg' }}>
+              {character.name}
+            </Text>
+            <Avatar
+              my={{ base: 1, lg: 5 }}
+              size={{ base: 'xs', lg: 'lg' }}
+              src={character.image}
+            />
+          </Stack>
+        </HStack>
+        <HStack alignItems="start" w="100%">
+          <VStack spacing={{ base: 0, lg: 2 }} w="48%">
+            <HealthBar
+              baseHp={monsterOponent.baseHp}
+              currentHp={monsterOponent.currentHp}
+              w="90%"
+            />
+            <VStack alignItems="start" px={4}>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Agility: {monsterOponent.agility}
+              </Text>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Intelligence: {monsterOponent.intelligence}
+              </Text>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Strength: {monsterOponent.strength}
+              </Text>
+            </VStack>
+          </VStack>
+          <VStack spacing={{ base: 0, lg: 2 }} w="48%">
+            <HealthBar
+              baseHp={character.baseHp}
+              currentHp={character.currentHp}
+              w="90%"
+            />
+            <VStack alignItems="start" px={4}>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Agility: {character.agility}
+              </Text>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Intelligence: {character.intelligence}
+              </Text>
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                Strength: {character.strength}
+              </Text>
+            </VStack>
+          </VStack>
+        </HStack>
+      </VStack>
+    );
+  }
+
+  if (isInitiating) {
+    return (
+      <Box h="100%">
+        <VStack h="100%" justifyContent="center" spacing={8}>
+          <Text fontWeight="bold" size="xl">
+            Initiating battle!
+          </Text>
+          <Spinner color="red" size="xl" />
+        </VStack>
+      </Box>
     );
   }
 
@@ -147,40 +238,6 @@ export const TileDetailsPanel = (): JSX.Element => {
           </GridItem>
         )}
       </Grid>
-      {isInitiating && (
-        <Box
-          pos="absolute"
-          bg="rgba(0, 0, 0, 0.5)"
-          h="100%"
-          w="100%"
-          top={0}
-          left={0}
-        >
-          <VStack h="100%" justifyContent="center" spacing={8}>
-            <Text color="white" fontWeight="bold" size="xl">
-              Initiating battle!
-            </Text>
-            <Spinner color="white" size="xl" />
-          </VStack>
-        </Box>
-      )}
-      {currentBattle && (
-        <Box
-          pos="absolute"
-          bg="rgba(0, 0, 0, 0.5)"
-          h="100%"
-          w="100%"
-          top={0}
-          left={0}
-        >
-          <VStack h="100%" justifyContent="center" spacing={8}>
-            <Text color="white" fontWeight="bold" size="xl">
-              Battle in progress!
-            </Text>
-            <GiCrossedSwords color="white" size="100px" />
-          </VStack>
-        </Box>
-      )}
     </Box>
   );
 };
@@ -198,43 +255,48 @@ const MonsterRow = ({
   monster: Monster;
   onClick: () => void;
 }) => {
-  const { level, name } = monster;
-
-  const isFighting = false;
+  const { inBattle, level, name } = monster;
 
   return (
     <HStack
       as="button"
-      bg={isFighting ? 'grey300' : 'transparent'}
       border="1px solid transparent"
       h={ROW_HEIGHT}
       justifyContent="space-between"
-      onClick={onClick}
+      onClick={inBattle ? undefined : onClick}
       px={{ base: 1, sm: 2, md: 4 }}
       transition="all 0.3s ease"
       w="100%"
       _active={{
-        bg: 'grey300',
+        bg: inBattle ? 'transparent' : 'grey300',
         border: '1px solid',
-        cursor: 'pointer',
+        cursor: inBattle ? 'not-allowed' : 'pointer',
       }}
       _hover={{
         border: '1px solid',
-        cursor: 'pointer',
+        cursor: inBattle ? 'not-allowed' : 'pointer',
       }}
     >
       <Text
         color={MONSTER_COLORS[monster.entityClass]}
+        filter={inBattle ? 'grayscale(100%)' : 'none'}
         size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
       >
         {name}
       </Text>
-      <Text
-        fontWeight="bold"
-        size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
-      >
-        Level {level}
-      </Text>
+      {!inBattle && (
+        <Text
+          fontWeight="bold"
+          size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+        >
+          Level {level}
+        </Text>
+      )}
+      {inBattle && (
+        <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
+          (In battle...)
+        </Text>
+      )}
     </HStack>
   );
 };

@@ -13,7 +13,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { formatEther, hexToString } from 'viem';
+import { formatEther, hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
@@ -56,6 +56,7 @@ export const CharacterProvider = ({
       ItemsOwners,
       ItemsTokenURI,
       GoldBalances,
+      MatchEntity,
       Stats,
     },
     delegatorAddress,
@@ -88,6 +89,9 @@ export const CharacterProvider = ({
       const goldBalance =
         getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
 
+      const encounterId = getComponentValue(MatchEntity, entity)?.encounterId;
+      const inBattle = !!encounterId && encounterId !== zeroHash;
+
       return {
         agility: characterStats?.agility.toString() ?? '0',
         baseHp: characterStats?.baseHp.toString() ?? '0',
@@ -96,6 +100,7 @@ export const CharacterProvider = ({
         entityClass: characterStats?.class ?? 0,
         experience: characterStats?.experience.toString() ?? '0',
         goldBalance: formatEther(goldBalance).toString(),
+        inBattle,
         intelligence: characterStats?.intelligence.toString() ?? '0',
         level: characterStats?.level.toString() ?? '0',
         locked: characterData.locked,
@@ -132,6 +137,7 @@ export const CharacterProvider = ({
     CharactersTokenURI,
     delegatorAddress,
     GoldBalances,
+    MatchEntity,
     publicClient,
     Stats,
     worldContract,

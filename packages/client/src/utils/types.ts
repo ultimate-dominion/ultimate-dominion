@@ -32,6 +32,7 @@ export type Character = CharacterData & EntityStats & Metadata;
 export type CharacterData = {
   characterId: Entity;
   goldBalance: string;
+  inBattle: boolean;
   locked: boolean;
   owner: string;
   tokenId: string;
@@ -67,6 +68,7 @@ export type Metadata = {
 
 export type Monster = Metadata &
   EntityStats & {
+    inBattle: boolean;
     mobId: string;
     monsterId: Entity;
   };
