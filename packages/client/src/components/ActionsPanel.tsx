@@ -1,14 +1,24 @@
-import { Button, HStack, Stack, Text } from '@chakra-ui/react';
-import { Has, HasValue, runQuery } from '@latticexyz/recs';
+import { Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
+import { useEntityQuery } from '@latticexyz/react';
+import {
+  getComponentValueStrict,
+  Has,
+  HasValue,
+  runQuery,
+} from '@latticexyz/recs';
+import { decodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+// eslint-disable-next-line import/no-named-as-default
+import Typist from 'react-typist';
+import { formatUnits } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useCombat } from '../contexts/CombatContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { ActionType } from '../utils/types';
+import { ActionType, type BattleActionOutcome } from '../utils/types';
 
 // enum ActionEvents {
 //   Attack = 'attack',
@@ -55,39 +65,143 @@ import { ActionType } from '../utils/types';
 export const ActionsPanel = (): JSX.Element => {
   const { renderError } = useToast();
   const {
-    components: { Actions },
+    components: { ActionOutcome, Actions },
     delegatorAddress,
     systemCalls: { endTurn },
   } = useMUD();
-  const { character, equippedItems, refreshCharacter } = useCharacter();
-  const { isSpawned, monsters, position } = useMapNavigation();
+  const {
+    isRefreshing: isRefreshingCharacter,
+    character,
+    equippedItems,
+    refreshCharacter,
+  } = useCharacter();
+  const {
+    isRefreshing: isRefreshingMap,
+    isSpawned,
+    monsters,
+    position,
+  } = useMapNavigation();
   const { currentBattle, monsterOponent } = useCombat();
 
   const [isAttacking, setIsAttacking] = useState(false);
 
+  const battleActionOutcomes = useEntityQuery([
+    Has(ActionOutcome),
+    HasValue(ActionOutcome, { attackerId: character?.characterId }),
+  ])
+    .map(entity => {
+      const _actionOutcome = getComponentValueStrict(ActionOutcome, entity);
+
+      const { encounterId, currentTurn, actionNumber } = decodeEntity(
+        {
+          encounterId: 'bytes32',
+          currentTurn: 'uint256',
+          actionNumber: 'uint256',
+        },
+        entity,
+      );
+
+      return {
+        attackerDamageDelt: formatUnits(
+          _actionOutcome.attackerDamageDelt,
+          5,
+        ).toString(),
+        attackerDied: _actionOutcome.attackerDied,
+        attackerId: _actionOutcome.attackerId.toString(),
+        actionId: _actionOutcome.actionId.toString(),
+        actionNumber: actionNumber.toString(),
+        blockNumber: _actionOutcome.blockNumber.toString(),
+        crit: _actionOutcome.crit,
+        currentTurn: currentTurn.toString(),
+        defenderDamageDelt: _actionOutcome.defenderDamageDelt.toString(),
+        defenderDied: _actionOutcome.defenderDied,
+        defenderId: _actionOutcome.defenderId.toString(),
+        encounterId: encounterId.toString(),
+        hit: _actionOutcome.hit,
+        miss: _actionOutcome.miss,
+        timestamp: _actionOutcome.timestamp.toString(),
+        weaponId: _actionOutcome.weaponId.toString(),
+      } as BattleActionOutcome;
+    })
+    .filter(action => action.encounterId === currentBattle?.encounterId);
+
   const actionText = useMemo(() => {
+    if (isRefreshingCharacter || isRefreshingMap) return '';
+
     if (!(isSpawned && position)) {
-      return 'In order to begin battling, you must spawn your character.';
+      return (
+        <Typist
+          avgTypingDelay={10}
+          cursor={{ show: false }}
+          stdTypingDelay={10}
+        >
+          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+            In order to begin battling, you must{' '}
+            <Text as="span" fontWeight={700}>
+              spawn
+            </Text>{' '}
+            your character.
+          </Text>
+        </Typist>
+      );
     }
 
     if (position.x === 0 && position.y === 0) {
-      return 'You are currently in the starting tile. Move to a new tile to find monsters to battle.';
+      return (
+        <Typist
+          avgTypingDelay={10}
+          cursor={{ show: false }}
+          stdTypingDelay={10}
+        >
+          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+            You are currently in the starting tile.{' '}
+            <Text as="span" fontWeight={700}>
+              Move to a new tile
+            </Text>{' '}
+            to find monsters to battle.
+          </Text>
+        </Typist>
+      );
     }
 
     if ((position.x !== 0 || position.y !== 0) && monsters.length === 0) {
-      return 'Looks like there are no monsters in this tile. Move to a new tile to find monsters to battle.';
+      return (
+        <Typist
+          avgTypingDelay={10}
+          cursor={{ show: false }}
+          stdTypingDelay={10}
+        >
+          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+            Looks like there are no monsters in this tile.{' '}
+            <Text as="span" fontWeight={700}>
+              Move to a new tile
+            </Text>{' '}
+            to find monsters to battle.
+          </Text>
+        </Typist>
+      );
     }
 
     if ((position.x !== 0 || position.y !== 0) && monsters.length > 0) {
-      return 'To initiate a battle, click on a monster.';
-    }
-
-    if (currentBattle && monsterOponent) {
-      return `You are currently in battle with a ${monsterOponent.name}.`;
+      return (
+        <Typist
+          avgTypingDelay={10}
+          cursor={{ show: false }}
+          stdTypingDelay={10}
+        >
+          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+            To initiate a battle,{' '}
+            <Text as="span" fontWeight={700}>
+              click on a monster
+            </Text>
+            .
+          </Text>
+        </Typist>
+      );
     }
 
     return '';
-  }, [currentBattle, isSpawned, monsterOponent, monsters, position]);
+  }, [isRefreshingCharacter, isRefreshingMap, isSpawned, monsters, position]);
 
   const onAttack = useCallback(
     async (itemId: string) => {
@@ -154,41 +268,97 @@ export const ActionsPanel = (): JSX.Element => {
   );
 
   return (
-    <Stack spacing={8}>
-      <Stack>
-        {!currentBattle && (
-          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>{actionText}</Text>
-        )}
-        {currentBattle && equippedItems && monsterOponent && (
-          <HStack justify="center">
-            {equippedItems.length === 0 && (
-              <Text color="red" fontWeight={700}>
-                You have no equipped items. In order to attack, you must go to
-                your{' '}
-                <Text
-                  as={Link}
-                  color="green"
-                  to={`/characters/${character?.characterId}`}
-                  _hover={{ textDecoration: 'underline' }}
-                >
-                  character page
-                </Text>{' '}
-                and equip at least 1 item.
-              </Text>
-            )}
+    <>
+      {currentBattle && equippedItems && monsterOponent && (
+        <VStack bgColor="white" position="sticky" spacing={0} top={0} w="100%">
+          <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
+            Choose your move:
+          </Text>
+          {equippedItems.length === 0 && (
+            <Text color="red" fontWeight={700}>
+              You have no equipped items. In order to attack, you must go to
+              your{' '}
+              <Text
+                as={Link}
+                color="green"
+                to={`/characters/${character?.characterId}`}
+                _hover={{ textDecoration: 'underline' }}
+              >
+                character page
+              </Text>{' '}
+              and equip at least 1 item.
+            </Text>
+          )}
+          <HStack w="100%">
             {equippedItems.map((item, index) => (
               <Button
-                key={`equipped-item-${index}`}
+                borderLeft={index === 0 ? 'none' : '1px'}
+                borderRadius={0}
+                borderRight={
+                  index === equippedItems.length - 1 ? 'none' : '1px'
+                }
                 isLoading={isAttacking}
+                key={`equipped-item-${index}`}
                 loadingText="Attacking..."
-                mt={8}
                 onClick={() => onAttack(item.tokenId)}
+                variant="outline"
+                w="100%"
               >
-                Attack with {item.name}
+                {item.name}
               </Button>
             ))}
           </HStack>
-        )}
+        </VStack>
+      )}
+      <Stack p={{ base: 2, lg: 4 }}>
+        {!currentBattle && actionText}
+
+        {monsterOponent &&
+          battleActionOutcomes.map((action, i) => {
+            if (action.miss) {
+              return (
+                <Typist
+                  avgTypingDelay={10}
+                  cursor={{ show: false }}
+                  key={`battle-action-${i}`}
+                  stdTypingDelay={10}
+                >
+                  <Text
+                    key={`battle-action-${i}`}
+                    size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                  >
+                    You missed{' '}
+                    <Text as="span" color="green">
+                      {monsterOponent.name}
+                    </Text>
+                    .
+                  </Text>
+                </Typist>
+              );
+            }
+            const critText = action.crit ? 'Critical hit! ' : '';
+
+            return (
+              <Typist
+                avgTypingDelay={10}
+                cursor={{ show: false }}
+                key={`battle-action-${i}`}
+                stdTypingDelay={10}
+              >
+                <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                  {critText}You attacked{' '}
+                  <Text as="span" color="green">
+                    {monsterOponent?.name}
+                  </Text>{' '}
+                  for{' '}
+                  <Text as="span" color="red">
+                    {action.attackerDamageDelt}
+                  </Text>{' '}
+                  damage.
+                </Text>
+              </Typist>
+            );
+          })}
       </Stack>
       {/* <Stack>
         {BATTLE_EVENTS.map((event, i) => (
@@ -225,6 +395,6 @@ export const ActionsPanel = (): JSX.Element => {
           </Text>
         ))}
       </Stack> */}
-    </Stack>
+    </>
   );
 };

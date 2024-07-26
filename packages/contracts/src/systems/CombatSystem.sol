@@ -223,6 +223,7 @@ contract CombatSystem is System {
             _endMatch(encounterId, randomNumber);
         } else {
             encounterData.currentTurn++;
+        CombatEncounter.set(encounterId, encounterData);
         }
     }
 

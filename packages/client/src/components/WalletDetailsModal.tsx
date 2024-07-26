@@ -63,6 +63,13 @@ export const WalletDetailsModal = ({
     setWithdrawErrorMessage(null);
   }, [depositAmount, withdrawAmount]);
 
+  useEffect(() => {
+    if (isOpen) {
+      setDepositAmount('0');
+      setWithdrawAmount('0');
+    }
+  }, [isOpen]);
+
   const onDeposit = useCallback(async () => {
     try {
       setIsDepositing(true);

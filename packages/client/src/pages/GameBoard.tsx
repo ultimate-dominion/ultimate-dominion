@@ -122,7 +122,7 @@ export const GameBoard = (): JSX.Element => {
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
         overflowY="auto"
-        p={{ base: 2, lg: 4 }}
+        position="relative"
         rowSpan={{ base: 4, lg: 6 }}
         rowStart={{ base: 4, lg: 7 }}
       >
