@@ -298,6 +298,7 @@ export default defineWorld({
         locked: "bool",
         goldToken: "address",
         characterToken: "address",
+        auctionHouseOrderContract: "address",
         entropy: "address",
         pythProvider: "address",
         items: "address",

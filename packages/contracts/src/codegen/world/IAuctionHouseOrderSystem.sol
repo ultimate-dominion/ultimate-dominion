@@ -9,5 +9,5 @@ pragma solidity >=0.8.24;
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IAuctionHouseOrderSystem {
-  function UD__placeOrder(address _collection, uint256 _tokenId, uint256 _price) external;
+  function UD__placeOrder(address _collection, uint256 _tokenId, uint256 _price) external returns (bytes32);
 }

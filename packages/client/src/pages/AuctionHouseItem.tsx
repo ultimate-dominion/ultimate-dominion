@@ -17,14 +17,86 @@ import {
 } from '@chakra-ui/react';
 // import { Entity } from '@latticexyz/recs';
 import { useState } from 'react';
+import { Address } from 'viem';
+
+import { useCharacter } from '../contexts/CharacterContext';
+import { useMUD } from '../contexts/MUDContext';
 
 export const AuctionHouseItem = (): JSX.Element => {
-  const [filter, setFilter] = useState({ filtered: 'all' });
-  const [query, setQuery] = useState('');
+  const { character: userCharacter } = useCharacter();
+  const {
+    network: { worldContract },
+  } = useMUD();
 
+  const [filter /*, setFilter*/] = useState({ filtered: 'all' });
+  const [query, setQuery] = useState('');
+  // const { items } = useComponentValue(
+  //   UltimateDominionConfig,
+  //   singletonEntity,
+  // ) ?? { characterToken: null };
+  // const abi = [
+  //     {
+  //       inputs: [
+  //         {
+  //           internalType: 'address',
+  //           name: 'account',
+  //           type: 'address',
+  //         },
+  //         {
+  //           internalType: 'address',
+  //           name: 'operator',
+  //           type: 'address',
+  //         },
+  //       ],
+  //       name: 'isApprovedForAll',
+  //       outputs: [
+  //         {
+  //           internalType: 'bool',
+  //           name: '',
+  //           type: 'bool',
+  //         },
+  //       ],
+  //       stateMutability: 'view',
+  //       type: 'function',
+  //     },
+  //     {
+  //       inputs: [
+  //         {
+  //           internalType: 'address',
+  //           name: 'operator',
+  //           type: 'address',
+  //         },
+  //         {
+  //           internalType: 'bool',
+  //           name: 'approved',
+  //           type: 'bool',
+  //         },
+  //       ],
+  //       name: 'setApprovalForAll',
+  //       outputs: [],
+  //       stateMutability: 'nonpayable',
+  //       type: 'function',
+  //     },
+  //   ],
+  // const { data: allowance, refetch } = useContractRead({
+  //   address: items,
+  //   abi: abi,
+  //   functionName: 'setApprovalForAll',
+  //   args: [AuctionHouseOrdersContract, true],
+  // });
+  const bid = async function () {
+    await worldContract.write.UD__placeOrder([
+      userCharacter?.owner as Address,
+      BigInt(1),
+      BigInt(1),
+    ]);
+  };
   return (
     <Box>
-      <Grid templateRows="repeat(10, 1fr)" templateColumns="repeat(10, 1fr)">
+      <Grid
+        templateRows="repeat(10, 1fr)"
+        templateColumns={{ base: 'repeat(5, 1fr)', lg: 'repeat(10, 1fr)' }}
+      >
         <GridItem backgroundColor="lavender" p={5} rowSpan={2} colSpan={5}>
           <Heading>Item Name</Heading>
           <Image></Image>
@@ -67,7 +139,7 @@ export const AuctionHouseItem = (): JSX.Element => {
               />
             </InputGroup>
             <Button
-              onClick={() => setFilter({ filtered: 'all' })}
+              onClick={() => bid()}
               size="sm"
               variant={filter.filtered == 'all' ? 'solid' : 'outline'}
             >
@@ -79,8 +151,8 @@ export const AuctionHouseItem = (): JSX.Element => {
           backgroundColor="mintcream"
           p={5}
           rowSpan={8}
-          rowStart={3}
-          colSpan={10}
+          colSpan={{ base: 5, lg: 10 }}
+          order={3}
         >
           <Tabs variant="enclosed" size="lg">
             <TabList>

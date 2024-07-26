@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Center,
   Drawer,
   DrawerBody,
   DrawerCloseButton,
@@ -34,6 +35,8 @@ import { PiBackpackDuotone } from 'react-icons/pi';
 
 import { AuctionHouseCard } from '../components/AuctionHouseCard';
 import { ItemCard } from '../components/ItemCard';
+import { AuctionHouseCardSkeleton } from '../components/Skeletons/AuctionHouseCardSkeleton';
+import { ItemCardSkeleton } from '../components/Skeletons/ItemCardSkeleton';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -233,6 +236,23 @@ export const AuctionHouse = (): JSX.Element => {
                     </GridItem>
                   );
                 })}
+              <ItemCardSkeleton
+                agiModifier={''}
+                classRestrictions={[]}
+                hitPointModifier={''}
+                intModifier={''}
+                maxDamage={''}
+                minDamage={''}
+                minLevel={''}
+                strModifier={''}
+                description={''}
+                image={''}
+                name={''}
+                balance={''}
+                itemId={undefined}
+                owner={''}
+                tokenId={''}
+              ></ItemCardSkeleton>
             </Grid>
           </DrawerBody>
 
@@ -253,7 +273,12 @@ export const AuctionHouse = (): JSX.Element => {
             <Spacer />
             <Heading>{userCharacter?.goldBalance} $GOLD</Heading>
           </Stack>
-          <Stack direction="row" mb={8} spacing={8} w="100%">
+          <Stack
+            direction={{ base: 'column', md: 'row' }}
+            mb={8}
+            spacing={8}
+            w="100%"
+          >
             <InputGroup w="100%">
               <InputLeftElement h="100%" pointerEvents="none">
                 <FaSearch />
@@ -311,52 +336,116 @@ export const AuctionHouse = (): JSX.Element => {
             Warrior
           </Heading>
 
-          <Grid templateColumns="repeat(3, 1fr)" gap={5}>
-            {items
-              ?.filter(item => itemClasses.warrior.indexOf(item.name) > -1)
-              ?.map(function (item, i) {
-                return (
-                  <GridItem key={i}>
-                    <AuctionHouseCard
-                      name={item.name}
-                      image={''}
-                      agi={item.agiModifier}
-                      int={item.intModifier}
-                      hit={item.hitPointModifier}
-                      str={item.strModifier}
-                    />
-                  </GridItem>
-                );
-              })}
+          <Grid
+            templateColumns={{ base: 'repeat(1, 1fr)', lg: 'repeat(3, 1fr)' }}
+            gap={5}
+          >
+            {items != null &&
+            items.filter(item => itemClasses.warrior.indexOf(item.name) > -1)
+              .length == 0 ? (
+              <GridItem colSpan={3}>
+                <Center>
+                  <Text m={12}>No Items</Text>
+                </Center>
+              </GridItem>
+            ) : (
+              ''
+            )}
+            {items ? (
+              items
+                .filter(item => itemClasses.warrior.indexOf(item.name) > -1)
+                .map(function (item, i) {
+                  return (
+                    <GridItem key={i}>
+                      <AuctionHouseCard
+                        name={item.name}
+                        image={''}
+                        agi={item.agiModifier}
+                        int={item.intModifier}
+                        hit={item.hitPointModifier}
+                        str={item.strModifier}
+                      />
+                    </GridItem>
+                  );
+                })
+            ) : (
+              <AuctionHouseCardSkeleton
+                name={''}
+                image={''}
+                agi={''}
+                int={''}
+                hit={''}
+                str={''}
+              ></AuctionHouseCardSkeleton>
+            )}
           </Grid>
           <Heading size="lg" mb={5} borderBottom="solid">
             Rogue
           </Heading>
 
-          <Grid templateColumns="repeat(3, 1fr)" gap={5}>
-            {items
-              ?.filter(item => itemClasses.rogue.indexOf(item.name) > -1)
-              ?.map(function (item, i) {
-                return (
-                  <GridItem key={i}>
-                    <AuctionHouseCard
-                      name={item.name}
-                      image={''}
-                      agi={item.agiModifier}
-                      int={item.intModifier}
-                      hit={item.hitPointModifier}
-                      str={item.strModifier}
-                    />
-                  </GridItem>
-                );
-              })}
+          <Grid
+            templateColumns={{ base: 'repeat(1, 1fr)', lg: 'repeat(3, 1fr)' }}
+            gap={5}
+          >
+            {items != null &&
+            items.filter(item => itemClasses.rogue.indexOf(item.name) > -1)
+              .length == 0 ? (
+              <GridItem colSpan={3}>
+                <Center>
+                  <Text m={12}>No Items</Text>
+                </Center>
+              </GridItem>
+            ) : (
+              ''
+            )}
+            {items ? (
+              items
+                .filter(item => itemClasses.rogue.indexOf(item.name) > -1)
+                .map(function (item, i) {
+                  return (
+                    <GridItem key={i}>
+                      <AuctionHouseCard
+                        name={item.name}
+                        image={''}
+                        agi={item.agiModifier}
+                        int={item.intModifier}
+                        hit={item.hitPointModifier}
+                        str={item.strModifier}
+                      />
+                    </GridItem>
+                  );
+                })
+            ) : (
+              <AuctionHouseCardSkeleton
+                name={''}
+                image={''}
+                agi={''}
+                int={''}
+                hit={''}
+                str={''}
+              ></AuctionHouseCardSkeleton>
+            )}
           </Grid>
 
           <Heading size="lg" mb={5} borderBottom="solid">
             Mage
           </Heading>
 
-          <Grid templateColumns="repeat(3, 1fr)" gap={5}>
+          <Grid
+            templateColumns={{ base: 'repeat(1, 1fr)', lg: 'repeat(3, 1fr)' }}
+            gap={5}
+          >
+            {items != null &&
+            items.filter(item => itemClasses.mage.indexOf(item.name) > -1)
+              .length == 0 ? (
+              <GridItem colSpan={3}>
+                <Center>
+                  <Text m={12}>No Items</Text>
+                </Center>
+              </GridItem>
+            ) : (
+              ''
+            )}
             {items ? (
               items
                 ?.filter(item => itemClasses.mage.indexOf(item.name) > -1)
@@ -375,8 +464,23 @@ export const AuctionHouse = (): JSX.Element => {
                   );
                 })
             ) : (
-              <Text textAlign="center">Error loading items</Text>
+              <AuctionHouseCardSkeleton
+                name={''}
+                image={''}
+                agi={''}
+                int={''}
+                hit={''}
+                str={''}
+              ></AuctionHouseCardSkeleton>
             )}
+            <AuctionHouseCardSkeleton
+              name={''}
+              image={''}
+              agi={''}
+              int={''}
+              hit={''}
+              str={''}
+            ></AuctionHouseCardSkeleton>
           </Grid>
         </GridItem>
       </Grid>

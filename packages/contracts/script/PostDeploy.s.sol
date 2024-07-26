@@ -71,7 +71,6 @@ struct ResourceIds {
     ResourceId combatSystemId;
     ResourceId lootManagerSystemId;
     ResourceId adminSystemId;
-    ResourceId auctionHouseOrderSystemId;
 }
 
 contract PostDeploy is Script {
@@ -105,6 +104,8 @@ contract PostDeploy is Script {
             UltimateDominionConfig.setPythProvider(0x52DeaA1c84233F7bb8C8A45baeDE41091c616506);
         }
 
+        //UltimateDominionConfig.setAuctionHouseOrdersContract()
+
         uint16 height = uint16(10);
         uint16 width = uint16(10);
         MapConfig.set(width, height);
@@ -133,7 +134,6 @@ contract PostDeploy is Script {
         UltimateDominionConfig.setCharacterToken(address(characters));
 
         {
-            
             resourceIds.erc20NamespaceId = WorldResourceIdLib.encodeNamespace(GOLD_NAMESPACE);
             resourceIds.erc20SystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "Gold", name: "GoldToken"});
@@ -142,7 +142,7 @@ contract PostDeploy is Script {
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CharacterSystem"});
             resourceIds.adminSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AdminSystem"});
-            resourceIds.auctionHouseOrderSystemId = WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AuctionHouseOrderSystem"});
+
             resourceIds.erc721NamespaceId = WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
 
             resourceIds.erc721SystemId =
@@ -170,8 +170,6 @@ contract PostDeploy is Script {
 
         //register mint function selector on world
         IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
-
-        IWorld(worldAddress).registerFunctionSelector(resourceIds.auctionHouseOrderSystemId, "placeOrder(address, uint256, uint256)");
 
         world.transferOwnership(resourceIds.erc20NamespaceId, Systems.getSystem(resourceIds.lootManagerSystemId));
 

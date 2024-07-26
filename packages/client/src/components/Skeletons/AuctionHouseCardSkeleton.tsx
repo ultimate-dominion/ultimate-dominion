@@ -7,11 +7,12 @@ import {
   GridItem,
   Heading,
   Image,
+  Skeleton,
   Spacer,
   Stack,
   Text,
 } from '@chakra-ui/react';
-export const AuctionHouseCard = ({
+export const AuctionHouseCardSkeleton = ({
   name,
   image,
   agi,
@@ -29,25 +30,37 @@ export const AuctionHouseCard = ({
   return (
     <Card mb={5} borderRadius={2} border="solid">
       <CardHeader>
-        <Image src={image}></Image>
+        <Skeleton>
+          <Image src={image} minHeight={100}></Image>
+        </Skeleton>
       </CardHeader>
       <CardBody>
         <Stack direction="row">
-          <Heading>{name}</Heading>
+          <Skeleton>
+            <Heading>{name}</Heading>
+          </Skeleton>
           <Spacer />
         </Stack>
         <Grid templateColumns={{ base: '1fr', lg: 'repeat(4, 1fr)' }} gap={1}>
           <GridItem>
-            <Text>AGI: +{agi} </Text>
+            <Skeleton>
+              <Text>AGI: +{agi} </Text>
+            </Skeleton>
           </GridItem>
           <GridItem>
-            <Text>INT: +{int} </Text>
+            <Skeleton>
+              <Text>INT: +{int} </Text>
+            </Skeleton>
           </GridItem>
           <GridItem>
-            <Text>HIT +{hit} </Text>
+            <Skeleton>
+              <Text>HIT +{hit} </Text>
+            </Skeleton>
           </GridItem>
           <GridItem>
-            <Text>STR: +{str} </Text>
+            <Skeleton>
+              <Text>STR: +{str} </Text>
+            </Skeleton>
           </GridItem>
         </Grid>
       </CardBody>

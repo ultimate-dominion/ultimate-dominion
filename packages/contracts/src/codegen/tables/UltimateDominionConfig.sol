@@ -20,6 +20,7 @@ struct UltimateDominionConfigData {
   bool locked;
   address goldToken;
   address characterToken;
+  address auctionHouseOrderContract;
   address entropy;
   address pythProvider;
   address items;
@@ -30,12 +31,12 @@ library UltimateDominionConfig {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000556c74696d617465446f6d696e696f6e);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0065060001141414141400000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0079070001141414141414000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (bool, address, address, address, address, address)
-  Schema constant _valueSchema = Schema.wrap(0x0065060060616161616100000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bool, address, address, address, address, address, address)
+  Schema constant _valueSchema = Schema.wrap(0x0079070060616161616161000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -50,13 +51,14 @@ library UltimateDominionConfig {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](6);
+    fieldNames = new string[](7);
     fieldNames[0] = "locked";
     fieldNames[1] = "goldToken";
     fieldNames[2] = "characterToken";
-    fieldNames[3] = "entropy";
-    fieldNames[4] = "pythProvider";
-    fieldNames[5] = "items";
+    fieldNames[3] = "auctionHouseOrderContract";
+    fieldNames[4] = "entropy";
+    fieldNames[5] = "pythProvider";
+    fieldNames[6] = "items";
   }
 
   /**
@@ -188,12 +190,50 @@ library UltimateDominionConfig {
   }
 
   /**
+   * @notice Get auctionHouseOrderContract.
+   */
+  function getAuctionHouseOrderContract() internal view returns (address auctionHouseOrderContract) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Get auctionHouseOrderContract.
+   */
+  function _getAuctionHouseOrderContract() internal view returns (address auctionHouseOrderContract) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Set auctionHouseOrderContract.
+   */
+  function setAuctionHouseOrderContract(address auctionHouseOrderContract) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((auctionHouseOrderContract)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set auctionHouseOrderContract.
+   */
+  function _setAuctionHouseOrderContract(address auctionHouseOrderContract) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((auctionHouseOrderContract)), _fieldLayout);
+  }
+
+  /**
    * @notice Get entropy.
    */
   function getEntropy() internal view returns (address entropy) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -203,7 +243,7 @@ library UltimateDominionConfig {
   function _getEntropy() internal view returns (address entropy) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -213,7 +253,7 @@ library UltimateDominionConfig {
   function setEntropy(address entropy) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((entropy)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((entropy)), _fieldLayout);
   }
 
   /**
@@ -222,7 +262,7 @@ library UltimateDominionConfig {
   function _setEntropy(address entropy) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((entropy)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((entropy)), _fieldLayout);
   }
 
   /**
@@ -231,7 +271,7 @@ library UltimateDominionConfig {
   function getPythProvider() internal view returns (address pythProvider) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -241,7 +281,7 @@ library UltimateDominionConfig {
   function _getPythProvider() internal view returns (address pythProvider) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -251,7 +291,7 @@ library UltimateDominionConfig {
   function setPythProvider(address pythProvider) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((pythProvider)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((pythProvider)), _fieldLayout);
   }
 
   /**
@@ -260,7 +300,7 @@ library UltimateDominionConfig {
   function _setPythProvider(address pythProvider) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((pythProvider)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((pythProvider)), _fieldLayout);
   }
 
   /**
@@ -269,7 +309,7 @@ library UltimateDominionConfig {
   function getItems() internal view returns (address items) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -279,7 +319,7 @@ library UltimateDominionConfig {
   function _getItems() internal view returns (address items) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -289,7 +329,7 @@ library UltimateDominionConfig {
   function setItems(address items) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((items)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((items)), _fieldLayout);
   }
 
   /**
@@ -298,7 +338,7 @@ library UltimateDominionConfig {
   function _setItems(address items) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((items)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((items)), _fieldLayout);
   }
 
   /**
@@ -336,11 +376,20 @@ library UltimateDominionConfig {
     bool locked,
     address goldToken,
     address characterToken,
+    address auctionHouseOrderContract,
     address entropy,
     address pythProvider,
     address items
   ) internal {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items);
+    bytes memory _staticData = encodeStatic(
+      locked,
+      goldToken,
+      characterToken,
+      auctionHouseOrderContract,
+      entropy,
+      pythProvider,
+      items
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -357,11 +406,20 @@ library UltimateDominionConfig {
     bool locked,
     address goldToken,
     address characterToken,
+    address auctionHouseOrderContract,
     address entropy,
     address pythProvider,
     address items
   ) internal {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items);
+    bytes memory _staticData = encodeStatic(
+      locked,
+      goldToken,
+      characterToken,
+      auctionHouseOrderContract,
+      entropy,
+      pythProvider,
+      items
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -379,6 +437,7 @@ library UltimateDominionConfig {
       _table.locked,
       _table.goldToken,
       _table.characterToken,
+      _table.auctionHouseOrderContract,
       _table.entropy,
       _table.pythProvider,
       _table.items
@@ -400,6 +459,7 @@ library UltimateDominionConfig {
       _table.locked,
       _table.goldToken,
       _table.characterToken,
+      _table.auctionHouseOrderContract,
       _table.entropy,
       _table.pythProvider,
       _table.items
@@ -425,6 +485,7 @@ library UltimateDominionConfig {
       bool locked,
       address goldToken,
       address characterToken,
+      address auctionHouseOrderContract,
       address entropy,
       address pythProvider,
       address items
@@ -436,11 +497,13 @@ library UltimateDominionConfig {
 
     characterToken = (address(Bytes.getBytes20(_blob, 21)));
 
-    entropy = (address(Bytes.getBytes20(_blob, 41)));
+    auctionHouseOrderContract = (address(Bytes.getBytes20(_blob, 41)));
 
-    pythProvider = (address(Bytes.getBytes20(_blob, 61)));
+    entropy = (address(Bytes.getBytes20(_blob, 61)));
 
-    items = (address(Bytes.getBytes20(_blob, 81)));
+    pythProvider = (address(Bytes.getBytes20(_blob, 81)));
+
+    items = (address(Bytes.getBytes20(_blob, 101)));
   }
 
   /**
@@ -458,6 +521,7 @@ library UltimateDominionConfig {
       _table.locked,
       _table.goldToken,
       _table.characterToken,
+      _table.auctionHouseOrderContract,
       _table.entropy,
       _table.pythProvider,
       _table.items
@@ -490,11 +554,12 @@ library UltimateDominionConfig {
     bool locked,
     address goldToken,
     address characterToken,
+    address auctionHouseOrderContract,
     address entropy,
     address pythProvider,
     address items
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(locked, goldToken, characterToken, entropy, pythProvider, items);
+    return abi.encodePacked(locked, goldToken, characterToken, auctionHouseOrderContract, entropy, pythProvider, items);
   }
 
   /**
@@ -507,11 +572,20 @@ library UltimateDominionConfig {
     bool locked,
     address goldToken,
     address characterToken,
+    address auctionHouseOrderContract,
     address entropy,
     address pythProvider,
     address items
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items);
+    bytes memory _staticData = encodeStatic(
+      locked,
+      goldToken,
+      characterToken,
+      auctionHouseOrderContract,
+      entropy,
+      pythProvider,
+      items
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
