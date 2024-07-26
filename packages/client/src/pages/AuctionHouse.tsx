@@ -489,6 +489,14 @@ export const AuctionHouse = (): JSX.Element => {
                 str={''}
               ></AuctionHouseCardSkeleton>
             )}
+            <AuctionHouseCardSkeleton
+              name={''}
+              image={''}
+              agi={''}
+              int={''}
+              hit={''}
+              str={''}
+            ></AuctionHouseCardSkeleton>
           </Grid>
         </GridItem>
       </Grid>

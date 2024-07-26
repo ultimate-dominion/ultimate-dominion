@@ -173,6 +173,69 @@ export const AuctionHouseItem = (): JSX.Element => {
   //   setItems([...items.filter(x => x.orderId != orderId)]);
   // };
 
+  const [filter /*, setFilter*/] = useState({ filtered: 'all' });
+  const [query, setQuery] = useState('');
+  // const { items } = useComponentValue(
+  //   UltimateDominionConfig,
+  //   singletonEntity,
+  // ) ?? { characterToken: null };
+  // const abi = [
+  //     {
+  //       inputs: [
+  //         {
+  //           internalType: 'address',
+  //           name: 'account',
+  //           type: 'address',
+  //         },
+  //         {
+  //           internalType: 'address',
+  //           name: 'operator',
+  //           type: 'address',
+  //         },
+  //       ],
+  //       name: 'isApprovedForAll',
+  //       outputs: [
+  //         {
+  //           internalType: 'bool',
+  //           name: '',
+  //           type: 'bool',
+  //         },
+  //       ],
+  //       stateMutability: 'view',
+  //       type: 'function',
+  //     },
+  //     {
+  //       inputs: [
+  //         {
+  //           internalType: 'address',
+  //           name: 'operator',
+  //           type: 'address',
+  //         },
+  //         {
+  //           internalType: 'bool',
+  //           name: 'approved',
+  //           type: 'bool',
+  //         },
+  //       ],
+  //       name: 'setApprovalForAll',
+  //       outputs: [],
+  //       stateMutability: 'nonpayable',
+  //       type: 'function',
+  //     },
+  //   ],
+  // const { data: allowance, refetch } = useContractRead({
+  //   address: items,
+  //   abi: abi,
+  //   functionName: 'setApprovalForAll',
+  //   args: [AuctionHouseOrdersContract, true],
+  // });
+  const bid = async function () {
+    await worldContract.write.UD__placeOrder([
+      userCharacter?.owner as Address,
+      BigInt(1),
+      BigInt(1),
+    ]);
+  };
   return (
     <Box>
       <Grid

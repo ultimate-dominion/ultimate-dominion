@@ -1,10 +1,14 @@
 {
   "31337": {
 <<<<<<< HEAD
+<<<<<<< HEAD
     "address": "0xec49f248866357cc892edc7d90475e63c8cc33ee"
 =======
     "address": "0x1937f18ca0d96cd3c4a5b16ceb71adab9d1e178d"
 >>>>>>> 1d1b932 (A little bit of everything)
+=======
+    "address": "0xc74a47f39c27f1a9ed6f03926331a38372c6a0b8"
+>>>>>>> 5f004c3 (responsiveness)
   },
   "84532": {
     "address": "0xdf2332face5011cf84e9a97e3903ab786cd2ac6e",
