@@ -142,7 +142,7 @@ contract PostDeploy is Script {
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CharacterSystem"});
             resourceIds.adminSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AdminSystem"});
-            resourceIds.auctionHouseOrderSystemId = WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AdminSystem"});
+            resourceIds.auctionHouseOrderSystemId = WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AuctionHouseOrderSystem"});
             resourceIds.erc721NamespaceId = WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
 
             resourceIds.erc721SystemId =
