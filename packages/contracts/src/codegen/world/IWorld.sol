@@ -7,7 +7,12 @@ import { IBaseWorld } from "@latticexyz/world/src/codegen/interfaces/IBaseWorld.
 
 import { IActionSystem } from "./IActionSystem.sol";
 import { IAdminSystem } from "./IAdminSystem.sol";
+<<<<<<< HEAD
 import { IAuctionSystem } from "./IAuctionSystem.sol";
+=======
+import { IAuctionHouseOrderSystem } from "./IAuctionHouseOrderSystem.sol";
+import { IAuctionHouseSaleSystem } from "./IAuctionHouseSaleSystem.sol";
+>>>>>>> a688059 (Add skeletons, Add back contract functions)
 import { ICharacterSystem } from "./ICharacterSystem.sol";
 import { ICombatSystem } from "./ICombatSystem.sol";
 import { IEquipmentSystem } from "./IEquipmentSystem.sol";
