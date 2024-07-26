@@ -85,7 +85,7 @@ export const MapNavigationProvider = ({
 
   const [isSpawning, setIsSpawning] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
-  const [isFetchingEntities, setIsFetchingEntities] = useState(false);
+  const [isFetchingEntities, setIsFetchingEntities] = useState(true);
 
   const position = useComponentValue(
     Position,
@@ -262,9 +262,9 @@ export const MapNavigationProvider = ({
     (async (): Promise<void> => {
       if (!(allCharacterEntities && allMonsterEntities)) return;
 
+      setIsFetchingEntities(true);
       await getOtherCharacters(allCharacterEntities);
       await getMonsters(allMonsterEntities);
-
       setIsFetchingEntities(false);
     })();
   }, [

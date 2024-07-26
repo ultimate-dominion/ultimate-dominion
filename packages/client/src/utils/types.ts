@@ -27,6 +27,25 @@ export enum StatsClasses {
   Mage,
 }
 
+export type BattleActionOutcome = {
+  attackerDamageDelt: string;
+  attackerDied: boolean;
+  attackerId: string;
+  actionId: string;
+  actionNumber: string;
+  blockNumber: string;
+  crit: boolean;
+  currentTurn: string;
+  defenderDamageDelt: string;
+  defenderDied: boolean;
+  defenderId: string;
+  encounterId: string;
+  hit: boolean;
+  miss: boolean;
+  timestamp: string;
+  weaponId: string;
+};
+
 export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
