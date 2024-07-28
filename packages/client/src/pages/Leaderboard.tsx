@@ -119,7 +119,10 @@ export const Leaderboard = (): JSX.Element => {
 
         setCharacters(_characters);
       } catch (e) {
-        renderError('Failed to fetch other players.', e);
+        renderError(
+          (e as Error)?.message ?? 'Failed to fetch other players.',
+          e,
+        );
       } finally {
         setIsFetchingCharacters(false);
       }

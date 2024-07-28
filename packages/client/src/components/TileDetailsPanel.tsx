@@ -17,7 +17,6 @@ import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
-import { useCombat } from '../contexts/CombatContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -35,21 +34,43 @@ export const TileDetailsPanel = (): JSX.Element => {
     systemCalls: { createMatch },
   } = useMUD();
   const { character } = useCharacter();
-  const { isRefreshing, monsters, otherPlayers } = useMapNavigation();
-  const { currentBattle, monsterOponent } = useCombat();
+  const {
+    battleActionOutcomes,
+    currentBattle,
+    isRefreshing,
+    monsterOponent,
+    monsters,
+    otherPlayers,
+  } = useMapNavigation();
 
   const [isInitiating, setIsInitiating] = useState(false);
   const [isMonsterHit, setIsMonsterHit] = useState(false);
 
   useEffect(() => {
-    if (!monsterOponent) return;
-    if (monsterOponent.currentHp === monsterOponent.baseHp) return;
+    if (!(battleActionOutcomes[0] && currentBattle)) return;
+
+    const currentBattleTurnKey = 'current-battle-turn';
+    const currentBattleTurn = localStorage.getItem(currentBattleTurnKey);
+
+    if (currentBattleTurn) {
+      if (currentBattleTurn === currentBattle.currentTurn) {
+        return;
+      }
+    }
+
+    if (
+      battleActionOutcomes[battleActionOutcomes.length - 1]
+        .attackerDamageDelt === '0'
+    )
+      return;
 
     setIsMonsterHit(true);
     setTimeout(() => {
       setIsMonsterHit(false);
     }, 700);
-  }, [monsterOponent, monsterOponent?.baseHp, monsterOponent?.currentHp]);
+
+    localStorage.setItem(currentBattleTurnKey, currentBattle.currentTurn);
+  }, [battleActionOutcomes, currentBattle]);
 
   const onInitiateCombat = useCallback(
     async (monster: Monster) => {
@@ -76,7 +97,7 @@ export const TileDetailsPanel = (): JSX.Element => {
 
         renderSuccess('Battle has begun!');
       } catch (e) {
-        renderError('Failed to initiate battle.', e);
+        renderError((e as Error)?.message ?? 'Failed to initiate battle.', e);
       } finally {
         setIsInitiating(false);
       }

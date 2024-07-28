@@ -47,7 +47,7 @@ export const DelegationButton = ({
       getBurner();
       navigate(CHARACTER_CREATION_PATH);
     } catch (e) {
-      renderError('Failed to delegate.', e);
+      renderError((e as Error)?.message ?? 'Failed to delegate.', e);
     } finally {
       setIsDelegating(false);
     }

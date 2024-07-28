@@ -67,7 +67,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       renderSuccess(`${weapon.name} equipped successfully!`);
       onClose();
     } catch (e) {
-      renderError('Failed to equip item.', e);
+      renderError((e as Error)?.message ?? 'Failed to equip item.', e);
     } finally {
       setIsEquipping(false);
     }
@@ -107,7 +107,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       renderSuccess(`${weapon.name} unequipped successfully!`);
       onClose();
     } catch (e) {
-      renderError('Failed to unequip item.', e);
+      renderError((e as Error)?.message ?? 'Failed to unequip item.', e);
     } finally {
       setIsEquipping(false);
     }

@@ -125,7 +125,7 @@ export const CharacterCreation = (): JSX.Element => {
 
       setStarterWeapons(_items);
     } catch (e) {
-      renderError('Error fetching starter item.', e);
+      renderError((e as Error)?.message ?? 'Error fetching starter item.', e);
     }
   }, [ItemsBaseURI, ItemsTokenURI, renderError, worldContract]);
 
@@ -205,7 +205,7 @@ export const CharacterCreation = (): JSX.Element => {
         await refreshCharacter();
         renderSuccess('Character created!');
       } catch (e) {
-        renderError('Failed to create character.', e);
+        renderError((e as Error)?.message ?? 'Failed to create character.', e);
       } finally {
         setIsCreating(false);
       }
@@ -247,7 +247,7 @@ export const CharacterCreation = (): JSX.Element => {
       await refreshCharacter();
       renderSuccess('Stats rolled!');
     } catch (e) {
-      renderError('Failed to roll stats.', e);
+      renderError((e as Error)?.message ?? 'Failed to roll stats.', e);
     } finally {
       setIsRollingStats(false);
     }
@@ -290,7 +290,7 @@ export const CharacterCreation = (): JSX.Element => {
       renderSuccess('Your character has awakend!');
       navigate(GAME_BOARD_PATH);
     } catch (e) {
-      renderError('Failed to enter game.', e);
+      renderError((e as Error)?.message ?? 'Failed to enter game.', e);
     } finally {
       setIsEnteringGame(false);
     }
@@ -437,7 +437,7 @@ export const CharacterCreation = (): JSX.Element => {
                       size="sm"
                       type="button"
                     >
-                      Upload Avatar
+                      Upload Avatar Image
                     </Button>
                     {showError && !avatar && (
                       <FormHelperText color="red">
