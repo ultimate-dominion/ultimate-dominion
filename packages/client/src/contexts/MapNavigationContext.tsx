@@ -185,7 +185,10 @@ export const MapNavigationProvider = ({
 
         setOtherPlayers(characters.filter(c => c.owner !== delegatorAddress));
       } catch (e) {
-        renderError('Failed to fetch other players.', e);
+        renderError(
+          (e as Error)?.message ?? 'Failed to fetch other players.',
+          e,
+        );
       }
     },
     [
@@ -252,7 +255,7 @@ export const MapNavigationProvider = ({
 
         setMonsters(_monsters.filter(m => Number(m.currentHp) > 0));
       } catch (e) {
-        renderError('Failed to fetch monsters.', e);
+        renderError((e as Error)?.message ?? 'Failed to fetch monsters.', e);
       }
     },
     [MatchEntity, Mobs, renderError, Stats],
@@ -295,7 +298,7 @@ export const MapNavigationProvider = ({
 
       renderSuccess('Spawned!');
     } catch (e) {
-      renderError('Failed to spawn.', e);
+      renderError((e as Error)?.message ?? 'Failed to spawn.', e);
     } finally {
       setIsSpawning(false);
     }
@@ -359,7 +362,7 @@ export const MapNavigationProvider = ({
           throw new Error(error);
         }
       } catch (e) {
-        renderError('Failed to move.', e);
+        renderError((e as Error)?.message ?? 'Failed to move.', e);
       } finally {
         setIsMoving(false);
       }

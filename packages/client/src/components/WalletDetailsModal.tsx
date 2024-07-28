@@ -96,7 +96,7 @@ export const WalletDetailsModal = ({
       setDepositAmount('0');
       renderSuccess('Funds deposited successfully!');
     } catch (e) {
-      renderError('Error depositing funds.', e);
+      renderError((e as Error)?.message ?? 'Error depositing funds.', e);
     } finally {
       setIsDepositing(false);
     }
@@ -131,7 +131,7 @@ export const WalletDetailsModal = ({
       setWithdrawAmount('0');
       renderSuccess('Funds withdrawn successfully!');
     } catch (e) {
-      renderError('Error withdrawing funds.', e);
+      renderError((e as Error)?.message ?? 'Error withdrawing funds.', e);
     } finally {
       setIsWithdrawing(false);
     }

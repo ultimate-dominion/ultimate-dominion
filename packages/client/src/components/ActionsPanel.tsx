@@ -250,7 +250,7 @@ export const ActionsPanel = (): JSX.Element => {
 
         await refreshCharacter();
       } catch (e) {
-        renderError('Failed to attack.', e);
+        renderError((e as Error)?.message ?? 'Failed to attack.', e);
       } finally {
         setIsAttacking(false);
       }

@@ -233,7 +233,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                     size="sm"
                     type="button"
                   >
-                    Upload Avatar
+                    Upload Avatar Image
                   </Button>
                   {showError && !(avatar || image) && (
                     <FormHelperText color="red">

@@ -76,7 +76,7 @@ export const TileDetailsPanel = (): JSX.Element => {
 
         renderSuccess('Battle has begun!');
       } catch (e) {
-        renderError('Failed to initiate battle.', e);
+        renderError((e as Error)?.message ?? 'Failed to initiate battle.', e);
       } finally {
         setIsInitiating(false);
       }
