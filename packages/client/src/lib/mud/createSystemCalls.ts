@@ -135,6 +135,7 @@ export function createSystemCalls(
       })[0];
 
       return {
+        error: success ? undefined : 'Failed to create match.',
         success,
       };
     } catch (e) {
@@ -199,6 +200,7 @@ export function createSystemCalls(
       const success = currentTurn === BigInt(previousTurn) + BigInt(1);
 
       return {
+        error: success ? undefined : 'Failed to end turn.',
         success,
       };
     } catch (e) {
@@ -227,6 +229,7 @@ export function createSystemCalls(
 
       const success = !!getComponentValue(Characters, characterEntity)?.locked;
       return {
+        error: success ? undefined : 'Failed to enter game.',
         success,
       };
     } catch (e) {
@@ -272,6 +275,7 @@ export function createSystemCalls(
         equippedWeapons.some(id => itemIds.includes(id.toString()));
 
       return {
+        error: success ? undefined : 'Failed to equip items.',
         success,
       };
     } catch (e) {
@@ -322,6 +326,7 @@ export function createSystemCalls(
       );
 
       return {
+        error: success ? undefined : 'Failed to mint character.',
         success,
       };
     } catch (e) {
@@ -367,6 +372,7 @@ export function createSystemCalls(
       const success = x === newX && y === newY;
 
       return {
+        error: success ? undefined : 'Failed to move.',
         success,
       };
     } catch (e) {
@@ -425,6 +431,7 @@ export function createSystemCalls(
 
       const success = !!getComponentValue(Stats, characterEntity);
       return {
+        error: success ? undefined : 'Failed to roll stats.',
         success,
       };
     } catch (e) {
@@ -454,6 +461,7 @@ export function createSystemCalls(
       const success = !!getComponentValue(Spawned, characterEntity)?.spawned;
 
       return {
+        error: success ? undefined : 'Failed to spawn.',
         success,
       };
     } catch (e) {
@@ -497,6 +505,7 @@ export function createSystemCalls(
       );
 
       return {
+        error: success ? undefined : 'Failed to unequip item.',
         success,
       };
     } catch (e) {
@@ -541,6 +550,7 @@ export function createSystemCalls(
       const success = newMetadataURI === `ipfs://${characterMetadataCid}`;
 
       return {
+        error: success ? undefined : 'Failed to update token URI.',
         success,
       };
     } catch (e) {
