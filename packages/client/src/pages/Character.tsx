@@ -163,7 +163,10 @@ export const CharacterPage = (): JSX.Element => {
       setCharacter(_character);
       return _character;
     } catch (e) {
-      renderError('Failed to fetch character data.', e);
+      renderError(
+        (e as Error)?.message ?? 'Failed to fetch character data.',
+        e,
+      );
       return null;
     } finally {
       setIsLoadingCharacter(false);
@@ -263,7 +266,10 @@ export const CharacterPage = (): JSX.Element => {
 
         setItems(fullItems);
       } catch (e) {
-        renderError('Failed to fetch character data.', e);
+        renderError(
+          (e as Error)?.message ?? 'Failed to fetch character items.',
+          e,
+        );
       } finally {
         setIsLoadingItems(false);
       }
