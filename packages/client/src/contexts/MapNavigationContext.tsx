@@ -14,6 +14,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -28,14 +29,16 @@ import {
 import { useToast } from '../hooks/useToast';
 import { GAME_BOARD_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import type { Character, Monster } from '../utils/types';
+import type { Character, CombatDetails, Monster } from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 
 type MapNavigationContextType = {
+  currentBattle: CombatDetails | null;
   isRefreshing: boolean;
   isSpawned: boolean;
   isSpawning: boolean;
+  monsterOponent: Monster | null;
   monsters: Monster[];
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSpawn: () => void;
@@ -44,9 +47,11 @@ type MapNavigationContextType = {
 };
 
 const MapNavigationContext = createContext<MapNavigationContextType>({
+  currentBattle: null,
   isRefreshing: false,
   isSpawned: false,
   isSpawning: false,
+  monsterOponent: null,
   monsters: [],
   onMove: () => {},
   onSpawn: () => {},
@@ -67,6 +72,7 @@ export const MapNavigationProvider = ({
     components: {
       Characters,
       CharactersTokenURI,
+      CombatEncounter,
       GoldBalances,
       MatchEntity,
       Mobs,
@@ -304,9 +310,39 @@ export const MapNavigationProvider = ({
     }
   }, [character, delegatorAddress, renderError, renderSuccess, spawn]);
 
+  const currentBattle =
+    Array.from(
+      useEntityQuery([
+        Has(CombatEncounter),
+        HasValue(CombatEncounter, { end: BigInt(0) }),
+      ]),
+    )
+      .map(entity => {
+        const encounter = getComponentValue(CombatEncounter, entity);
+        if (!encounter) return null;
+
+        return {
+          attackers: encounter.attackers as Entity[],
+          currentTurn: encounter.currentTurn.toString(),
+          defenders: encounter.defenders as Entity[],
+          encounterId: entity,
+          encounterType: encounter.encounterType,
+          end: encounter.end.toString(),
+          maxTurns: encounter.maxTurns.toString(),
+          start: encounter.start.toString(),
+        };
+      })
+      .filter(
+        encounter =>
+          character &&
+          (encounter?.attackers.includes(character.characterId) ||
+            encounter?.defenders.includes(character.characterId)),
+      )[0] ?? null;
+
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
       try {
+        if (currentBattle) return;
         setIsMoving(true);
 
         if (!delegatorAddress) {
@@ -367,8 +403,18 @@ export const MapNavigationProvider = ({
         setIsMoving(false);
       }
     },
-    [character, delegatorAddress, move, position, renderError],
+    [character, currentBattle, delegatorAddress, move, position, renderError],
   );
+
+  const monsterOponent = useMemo(() => {
+    if (!currentBattle) return null;
+
+    return (
+      monsters.find(monster =>
+        currentBattle.defenders.includes(monster.monsterId),
+      ) ?? null
+    );
+  }, [currentBattle, monsters]);
 
   useEffect(() => {
     if (pathname !== GAME_BOARD_PATH) return;
@@ -412,9 +458,11 @@ export const MapNavigationProvider = ({
   return (
     <MapNavigationContext.Provider
       value={{
+        currentBattle,
         isRefreshing: isFetchingEntities || isMoving,
         isSpawned,
         isSpawning,
+        monsterOponent,
         monsters,
         onMove,
         onSpawn,

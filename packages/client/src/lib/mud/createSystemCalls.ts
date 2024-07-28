@@ -192,12 +192,16 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const currentTurn = getComponentValueStrict(
+      const { currentTurn, end } = getComponentValueStrict(
         CombatEncounter,
         encounterId,
-      ).currentTurn;
+      );
 
-      const success = currentTurn === BigInt(previousTurn) + BigInt(1);
+      let success = currentTurn === BigInt(previousTurn) + BigInt(1);
+
+      if (!success) {
+        success = end !== BigInt(0);
+      }
 
       return {
         error: success ? undefined : 'Failed to end turn.',
