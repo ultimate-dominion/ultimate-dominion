@@ -1,23 +1,11 @@
 import { Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
-import { useEntityQuery } from '@latticexyz/react';
-import {
-  getComponentValueStrict,
-  Has,
-  HasValue,
-  runQuery,
-} from '@latticexyz/recs';
-import { decodeEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 // eslint-disable-next-line import/no-named-as-default
 import Typist from 'react-typist';
-import { formatUnits } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
-import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
-import { ActionType, type BattleActionOutcome } from '../utils/types';
 
 // enum ActionEvents {
 //   Attack = 'attack',
@@ -62,68 +50,22 @@ import { ActionType, type BattleActionOutcome } from '../utils/types';
 // ];
 
 export const ActionsPanel = (): JSX.Element => {
-  const { renderError } = useToast();
-  const {
-    components: { ActionOutcome, Actions },
-    delegatorAddress,
-    systemCalls: { endTurn },
-  } = useMUD();
   const {
     isRefreshing: isRefreshingCharacter,
     character,
     equippedItems,
-    refreshCharacter,
   } = useCharacter();
   const {
+    battleActionOutcomes,
     currentBattle,
+    isAttacking,
     isRefreshing: isRefreshingMap,
     isSpawned,
     monsterOponent,
     monsters,
+    onAttack,
     position,
   } = useMapNavigation();
-
-  const [isAttacking, setIsAttacking] = useState(false);
-
-  const battleActionOutcomes = useEntityQuery([
-    Has(ActionOutcome),
-    HasValue(ActionOutcome, { attackerId: character?.characterId }),
-  ])
-    .map(entity => {
-      const _actionOutcome = getComponentValueStrict(ActionOutcome, entity);
-
-      const { encounterId, currentTurn, actionNumber } = decodeEntity(
-        {
-          encounterId: 'bytes32',
-          currentTurn: 'uint256',
-          actionNumber: 'uint256',
-        },
-        entity,
-      );
-
-      return {
-        attackerDamageDelt: formatUnits(
-          _actionOutcome.attackerDamageDelt,
-          5,
-        ).toString(),
-        attackerDied: _actionOutcome.attackerDied,
-        attackerId: _actionOutcome.attackerId.toString(),
-        actionId: _actionOutcome.actionId.toString(),
-        actionNumber: actionNumber.toString(),
-        blockNumber: _actionOutcome.blockNumber.toString(),
-        crit: _actionOutcome.crit,
-        currentTurn: currentTurn.toString(),
-        defenderDamageDelt: _actionOutcome.defenderDamageDelt.toString(),
-        defenderDied: _actionOutcome.defenderDied,
-        defenderId: _actionOutcome.defenderId.toString(),
-        encounterId: encounterId.toString(),
-        hit: _actionOutcome.hit,
-        miss: _actionOutcome.miss,
-        timestamp: _actionOutcome.timestamp.toString(),
-        weaponId: _actionOutcome.weaponId.toString(),
-      } as BattleActionOutcome;
-    })
-    .filter(action => action.encounterId === currentBattle?.encounterId);
 
   const actionText = useMemo(() => {
     if (isRefreshingCharacter || isRefreshingMap) return '';
@@ -202,70 +144,6 @@ export const ActionsPanel = (): JSX.Element => {
 
     return '';
   }, [isRefreshingCharacter, isRefreshingMap, isSpawned, monsters, position]);
-
-  const onAttack = useCallback(
-    async (itemId: string) => {
-      try {
-        setIsAttacking(true);
-
-        if (!delegatorAddress) {
-          throw new Error('Missing delegation.');
-        }
-
-        if (!character) {
-          throw new Error('Character not found.');
-        }
-
-        if (!currentBattle) {
-          throw new Error('Battle not found.');
-        }
-
-        if (!monsterOponent) {
-          throw new Error('Monster not found.');
-        }
-
-        const basicAttackId = Array.from(
-          runQuery([
-            Has(Actions),
-            HasValue(Actions, { actionType: ActionType.PhysicalAttack }),
-          ]),
-        )[0];
-
-        if (!basicAttackId) {
-          throw new Error('Basic attack not found.');
-        }
-
-        const { error, success } = await endTurn(
-          currentBattle.encounterId,
-          character.characterId,
-          monsterOponent.monsterId,
-          basicAttackId,
-          itemId,
-          currentBattle.currentTurn,
-        );
-
-        if (error && !success) {
-          throw new Error(error);
-        }
-
-        await refreshCharacter();
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to attack.', e);
-      } finally {
-        setIsAttacking(false);
-      }
-    },
-    [
-      Actions,
-      character,
-      currentBattle,
-      delegatorAddress,
-      endTurn,
-      monsterOponent,
-      refreshCharacter,
-      renderError,
-    ],
-  );
 
   return (
     <>

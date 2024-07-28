@@ -6,8 +6,9 @@ import {
   Has,
   HasValue,
   Not,
+  runQuery,
 } from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
+import { decodeEntity, encodeEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -21,6 +22,7 @@ import { useLocation } from 'react-router-dom';
 import {
   bytesToHex,
   formatEther,
+  formatUnits,
   hexToBytes,
   hexToString,
   zeroHash,
@@ -29,17 +31,26 @@ import {
 import { useToast } from '../hooks/useToast';
 import { GAME_BOARD_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import type { Character, CombatDetails, Monster } from '../utils/types';
+import {
+  ActionType,
+  type BattleActionOutcome,
+  type Character,
+  type CombatDetails,
+  type Monster,
+} from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 
 type MapNavigationContextType = {
+  battleActionOutcomes: BattleActionOutcome[];
   currentBattle: CombatDetails | null;
+  isAttacking: boolean;
   isRefreshing: boolean;
   isSpawned: boolean;
   isSpawning: boolean;
   monsterOponent: Monster | null;
   monsters: Monster[];
+  onAttack: (itemId: string) => void;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSpawn: () => void;
   otherPlayers: Character[];
@@ -47,12 +58,15 @@ type MapNavigationContextType = {
 };
 
 const MapNavigationContext = createContext<MapNavigationContextType>({
+  battleActionOutcomes: [],
   currentBattle: null,
+  isAttacking: false,
   isRefreshing: false,
   isSpawned: false,
   isSpawning: false,
   monsterOponent: null,
   monsters: [],
+  onAttack: () => {},
   onMove: () => {},
   onSpawn: () => {},
   otherPlayers: [],
@@ -70,6 +84,8 @@ export const MapNavigationProvider = ({
   const { renderError, renderSuccess } = useToast();
   const {
     components: {
+      ActionOutcome,
+      Actions,
       Characters,
       CharactersTokenURI,
       CombatEncounter,
@@ -82,16 +98,18 @@ export const MapNavigationProvider = ({
     },
     delegatorAddress,
     network: { publicClient, worldContract },
-    systemCalls: { move, spawn },
+    systemCalls: { endTurn, move, spawn },
   } = useMUD();
-  const { character } = useCharacter();
-
-  const [otherPlayers, setOtherPlayers] = useState<Character[]>([]);
-  const [monsters, setMonsters] = useState<Monster[]>([]);
+  const { character, refreshCharacter } = useCharacter();
 
   const [isSpawning, setIsSpawning] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
   const [isFetchingEntities, setIsFetchingEntities] = useState(true);
+
+  const [otherPlayers, setOtherPlayers] = useState<Character[]>([]);
+  const [monsters, setMonsters] = useState<Monster[]>([]);
+
+  const [isAttacking, setIsAttacking] = useState(false);
 
   const position = useComponentValue(
     Position,
@@ -455,15 +473,122 @@ export const MapNavigationProvider = ({
     return () => window.removeEventListener('keydown', listener);
   }, [onMove, pathname]);
 
+  const onAttack = useCallback(
+    async (itemId: string) => {
+      try {
+        setIsAttacking(true);
+
+        if (!delegatorAddress) {
+          throw new Error('Missing delegation.');
+        }
+
+        if (!character) {
+          throw new Error('Character not found.');
+        }
+
+        if (!currentBattle) {
+          throw new Error('Battle not found.');
+        }
+
+        if (!monsterOponent) {
+          throw new Error('Monster not found.');
+        }
+
+        const basicAttackId = Array.from(
+          runQuery([
+            Has(Actions),
+            HasValue(Actions, { actionType: ActionType.PhysicalAttack }),
+          ]),
+        )[0];
+
+        if (!basicAttackId) {
+          throw new Error('Basic attack not found.');
+        }
+
+        const { error, success } = await endTurn(
+          currentBattle.encounterId,
+          character.characterId,
+          monsterOponent.monsterId,
+          basicAttackId,
+          itemId,
+          currentBattle.currentTurn,
+        );
+
+        if (error && !success) {
+          throw new Error(error);
+        }
+
+        await refreshCharacter();
+      } catch (e) {
+        renderError((e as Error)?.message ?? 'Failed to attack.', e);
+      } finally {
+        setIsAttacking(false);
+      }
+    },
+    [
+      Actions,
+      character,
+      currentBattle,
+      delegatorAddress,
+      endTurn,
+      monsterOponent,
+      refreshCharacter,
+      renderError,
+    ],
+  );
+
+  const battleActionOutcomes = useEntityQuery([
+    Has(ActionOutcome),
+    HasValue(ActionOutcome, { attackerId: character?.characterId }),
+  ])
+    .map(entity => {
+      const _actionOutcome = getComponentValueStrict(ActionOutcome, entity);
+
+      const { encounterId, currentTurn, actionNumber } = decodeEntity(
+        {
+          encounterId: 'bytes32',
+          currentTurn: 'uint256',
+          actionNumber: 'uint256',
+        },
+        entity,
+      );
+
+      return {
+        attackerDamageDelt: formatUnits(
+          _actionOutcome.attackerDamageDelt,
+          5,
+        ).toString(),
+        attackerDied: _actionOutcome.attackerDied,
+        attackerId: _actionOutcome.attackerId.toString(),
+        actionId: _actionOutcome.actionId.toString(),
+        actionNumber: actionNumber.toString(),
+        blockNumber: _actionOutcome.blockNumber.toString(),
+        crit: _actionOutcome.crit,
+        currentTurn: currentTurn.toString(),
+        defenderDamageDelt: _actionOutcome.defenderDamageDelt.toString(),
+        defenderDied: _actionOutcome.defenderDied,
+        defenderId: _actionOutcome.defenderId.toString(),
+        encounterId: encounterId.toString(),
+        hit: _actionOutcome.hit,
+        miss: _actionOutcome.miss,
+        timestamp: _actionOutcome.timestamp.toString(),
+        weaponId: _actionOutcome.weaponId.toString(),
+      } as BattleActionOutcome;
+    })
+    .filter(action => action.encounterId === currentBattle?.encounterId);
+
   return (
     <MapNavigationContext.Provider
       value={{
+        battleActionOutcomes,
         currentBattle,
+        isAttacking,
         isRefreshing: isFetchingEntities || isMoving,
         isSpawned,
         isSpawning,
         monsterOponent,
         monsters,
+        onAttack,
         onMove,
         onSpawn,
         otherPlayers,
