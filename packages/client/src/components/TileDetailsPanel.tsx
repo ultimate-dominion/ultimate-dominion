@@ -17,7 +17,6 @@ import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
-import { useCombat } from '../contexts/CombatContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -35,8 +34,13 @@ export const TileDetailsPanel = (): JSX.Element => {
     systemCalls: { createMatch },
   } = useMUD();
   const { character } = useCharacter();
-  const { isRefreshing, monsters, otherPlayers } = useMapNavigation();
-  const { currentBattle, monsterOponent } = useCombat();
+  const {
+    currentBattle,
+    isRefreshing,
+    monsterOponent,
+    monsters,
+    otherPlayers,
+  } = useMapNavigation();
 
   const [isInitiating, setIsInitiating] = useState(false);
   const [isMonsterHit, setIsMonsterHit] = useState(false);

@@ -14,7 +14,6 @@ import Typist from 'react-typist';
 import { formatUnits } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
-import { useCombat } from '../contexts/CombatContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -76,12 +75,13 @@ export const ActionsPanel = (): JSX.Element => {
     refreshCharacter,
   } = useCharacter();
   const {
+    currentBattle,
     isRefreshing: isRefreshingMap,
     isSpawned,
+    monsterOponent,
     monsters,
     position,
   } = useMapNavigation();
-  const { currentBattle, monsterOponent } = useCombat();
 
   const [isAttacking, setIsAttacking] = useState(false);
 
