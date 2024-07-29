@@ -3,7 +3,9 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {RandomNumbers} from "@codegen/index.sol";
-import {Characters, Stats, UltimateDominionConfig, StatsData} from "@codegen/index.sol";
+import {
+    Characters, Counters, Stats, UltimateDominionConfig, StatsData, RngLogs, RngLogsData
+} from "@codegen/index.sol";
 import {Classes, RngRequestType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
@@ -40,8 +42,6 @@ contract RngSystem is System, IEntropyConsumer {
         returns (uint64 sequenceNumber)
     {
         uint128 requestFee = _entropy().getFee(_provider());
-        // check if the user has sent enough fees
-        // if (_msgValue() < requestFee) revert('not enough fees');
 
         // NOTE: required for testing, since callback is coming before data is stored
         /////////////// TODO: remove for mainnet deployment //////
@@ -60,6 +60,17 @@ contract RngSystem is System, IEntropyConsumer {
         // RandomNumbers.set(sequenceNumber, requestType, data);
         RandomNumbers.setArbitraryData(sequenceNumber, data);
         RandomNumbers.setRequestType(sequenceNumber, requestType);
+        RngLogsData memory rngLog = RngLogsData({
+            sequenceNumber: sequenceNumber,
+            provider: _provider(),
+            entropy: address(_entropy()),
+            fee: requestFee,
+            requestType: requestType,
+            randomNumber: 0,
+            userRandomNumber: userRandomNumber,
+            data: data
+        });
+        RngLogs.set(_incrementCounter(), rngLog);
     }
 
     function entropyCallback(
@@ -77,6 +88,7 @@ contract RngSystem is System, IEntropyConsumer {
     function _storeFullfilment(uint64 sequenceNumber, uint256 randomNumber) internal {
         RngRequestType requestType = RandomNumbers.getRequestType(sequenceNumber);
         bytes memory _data = RandomNumbers.getArbitraryData(sequenceNumber);
+        RngLogs.setRandomNumber(_getCounter(), randomNumber);
 
         if (uint8(requestType) == uint8(0)) {
             bytes32 characterId = abi.decode(_data, (bytes32));
@@ -141,5 +153,14 @@ contract RngSystem is System, IEntropyConsumer {
         }
 
         Stats.set(characterId, stats);
+    }
+
+    function _getCounter() internal returns (uint256 _counter) {
+        _counter = Counters.get(address(this), 1);
+    }
+
+    function _incrementCounter() internal returns (uint256 _counter) {
+        _counter = Counters.get(address(this), 1) + 1;
+        Counters.set(address(this), 1, _counter);
     }
 }
