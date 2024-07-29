@@ -74,6 +74,7 @@ export async function setupNetwork() {
       publicClient,
       startBlock: BigInt(networkConfig.initialBlockNumber),
       tables: externalTables,
+      indexerUrl: 'https://store-indexer-latest-web.onrender.com/trpc',
     });
 
   return {
