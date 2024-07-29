@@ -25,6 +25,50 @@ import { Address, erc20Abi } from 'viem';
 import { AuctionHouseListedItem } from '../components/AuctionHouseListedItem';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+// const erc1155 = [
+//   {
+//     inputs: [
+//       {
+//         internalType: 'address',
+//         name: 'account',
+//         type: 'address',
+//       },
+//       {
+//         internalType: 'address',
+//         name: 'operator',
+//         type: 'address',
+//       },
+//     ],
+//     name: 'isApprovedForAll',
+//     outputs: [
+//       {
+//         internalType: 'bool',
+//         name: '',
+//         type: 'bool',
+//       },
+//     ],
+//     stateMutability: 'view',
+//     type: 'function',
+//   },
+//   {
+//     inputs: [
+//       {
+//         internalType: 'address',
+//         name: 'operator',
+//         type: 'address',
+//       },
+//       {
+//         internalType: 'bool',
+//         name: 'approved',
+//         type: 'bool',
+//       },
+//     ],
+//     name: 'setApprovalForAll',
+//     outputs: [],
+//     stateMutability: 'nonpayable',
+//     type: 'function',
+//   },
+// ];
 
 export const AuctionHouseItem = (): JSX.Element => {
   const params = useParams();
@@ -236,6 +280,49 @@ export const AuctionHouseItem = (): JSX.Element => {
       BigInt(1),
     ]);
   };
+  const bid = async function (a: bigint) {
+    if (params.itemId) {
+      if (allowance >= BigInt(a)) {
+        const orderId = await worldContract.write.UD__placeOrder([
+          itemsContract as Address,
+          BigInt(params.itemId),
+          BigInt(a),
+        ]);
+        setItems([
+          ...items,
+          {
+            orderId: orderId as Address,
+            collection: itemsContract as Address,
+            buyer: userCharacter?.owner as Address,
+            tokenId: BigInt(params.itemId),
+            price: a,
+          },
+        ]);
+      }
+    }
+    //console.log("no item id")
+  };
+
+  // const cancel = async function (_orderId: Address) {
+  //   const order = items.filter(x => x.orderId == _orderId)[0];
+  //   const orderId = await worldContract.write.UD__cancelOrder([
+  //     itemsContract as Address,
+  //     order.tokenId,
+  //   ]);
+  //   setItems([...items.filter(x => x.orderId != orderId)]);
+  // };
+
+  // const fill = async function (_orderId: Address) {
+  //   const order = items.filter(x => x.orderId == _orderId)[0];
+  //   const orderId = await worldContract.write.UD__fulfillOrder([
+  //     itemsContract as Address,
+  //     order.tokenId,
+  //     order.buyer,
+  //     order.price,
+  //   ]);
+  //   setItems([...items.filter(x => x.orderId != orderId)]);
+  // };
+
   return (
     <Box>
       <Grid

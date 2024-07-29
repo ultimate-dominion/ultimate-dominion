@@ -10,4 +10,15 @@ pragma solidity >=0.8.24;
  */
 interface IAuctionHouseOrderSystem {
   function UD__placeOrder(address _collection, uint256 _tokenId, uint256 _price) external returns (bytes32);
+
+  function UD__cancelOrder(address _collection, uint256 _tokenId) external returns (bytes32);
+
+  function UD__fulfillOrder(
+    address _collection,
+    uint256 _tokenId,
+    address _buyer,
+    uint256 _expectedPrice
+  ) external returns (bytes32);
+
+  function UD__auctionHouseOrdersContractAddress() external view returns (address);
 }
