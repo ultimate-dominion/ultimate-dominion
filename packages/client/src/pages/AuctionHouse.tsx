@@ -260,7 +260,7 @@ export const AuctionHouse = (): JSX.Element => {
                 image={''}
                 name={''}
                 balance={''}
-                itemId={undefined}
+                itemId={'undefined'}
                 owner={''}
                 tokenId={''}
               ></ItemCardSkeleton>

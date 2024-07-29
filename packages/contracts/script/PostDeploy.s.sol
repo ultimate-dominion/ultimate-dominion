@@ -71,6 +71,7 @@ struct ResourceIds {
     ResourceId combatSystemId;
     ResourceId lootManagerSystemId;
     ResourceId adminSystemId;
+    // ResourceId auctionHouseOrderSystemId;
 }
 
 contract PostDeploy is Script {
@@ -130,7 +131,6 @@ contract PostDeploy is Script {
             CHARACTERS_NAMESPACE,
             ERC721MetadataData({name: ERC721_NAME, symbol: ERC721_SYMBOL, baseURI: TOKEN_URI})
         );
-
         UltimateDominionConfig.setCharacterToken(address(characters));
 
         {
@@ -140,6 +140,10 @@ contract PostDeploy is Script {
 
             resourceIds.characterSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CharacterSystem"});
+            // resourceIds.auctionHouseOrderSystemId =
+            //     WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AuctionHouseOrderSystem"});
+
+            
             resourceIds.adminSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AdminSystem"});
 
@@ -147,6 +151,9 @@ contract PostDeploy is Script {
 
             resourceIds.erc721SystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "Characters", name: "ERC721System"});
+            // resourceIds.auctionHouseOrderSystemId =
+            //     WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "AuctionHouseOrderSystem"});
+
             resourceIds.combatSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CombatSystem"});
             resourceIds.erc1155SystemId = _erc1155SystemId(ITEMS_NAMESPACE);

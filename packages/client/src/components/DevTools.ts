@@ -1,6 +1,7 @@
 import mudConfig from 'contracts/mud.config';
 import AdminSystemAbi from 'contracts/out/AdminSystem.sol/AdminSystem.abi.json';
 import AuctionHouseOrderSystemAbi from 'contracts/out/AuctionHouseOrderSystem.sol/AuctionHouseOrderSystem.abi.json';
+import AuctionHouseSaleSystemAbi from 'contracts/out/AuctionHouseSaleSystem.sol/AuctionHouseSaleSystem.abi.json';
 import characterSystemAbi from 'contracts/out/CharacterSystem.sol/CharacterSystem.abi.json';
 import combatSystemAbi from 'contracts/out/CombatSystem.sol/CombatSystem.abi.json';
 import equipmentSystemAbi from 'contracts/out/EquipmentSystem.sol/EquipmentSystem.abi.json';
@@ -22,6 +23,7 @@ export function DevTools(): null {
       ...mapSystemAbi,
       ...AdminSystemAbi,
       ...AuctionHouseOrderSystemAbi,
+      ...AuctionHouseSaleSystemAbi,
     ],
     [network.worldContract.abi],
   );

@@ -15,82 +15,179 @@ import {
   Tabs,
   Text,
 } from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
 // import { Entity } from '@latticexyz/recs';
-import { useState } from 'react';
-import { Address } from 'viem';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Address, erc20Abi } from 'viem';
 
+import { AuctionHouseListedItem } from '../components/AuctionHouseListedItem';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+// const erc1155 = [
+//   {
+//     inputs: [
+//       {
+//         internalType: 'address',
+//         name: 'account',
+//         type: 'address',
+//       },
+//       {
+//         internalType: 'address',
+//         name: 'operator',
+//         type: 'address',
+//       },
+//     ],
+//     name: 'isApprovedForAll',
+//     outputs: [
+//       {
+//         internalType: 'bool',
+//         name: '',
+//         type: 'bool',
+//       },
+//     ],
+//     stateMutability: 'view',
+//     type: 'function',
+//   },
+//   {
+//     inputs: [
+//       {
+//         internalType: 'address',
+//         name: 'operator',
+//         type: 'address',
+//       },
+//       {
+//         internalType: 'bool',
+//         name: 'approved',
+//         type: 'bool',
+//       },
+//     ],
+//     name: 'setApprovalForAll',
+//     outputs: [],
+//     stateMutability: 'nonpayable',
+//     type: 'function',
+//   },
+// ];
 
 export const AuctionHouseItem = (): JSX.Element => {
+  const params = useParams();
+
   const { character: userCharacter } = useCharacter();
   const {
-    network: { worldContract },
+    components: { UltimateDominionConfig },
+    network: { publicClient, walletClient, worldContract },
   } = useMUD();
 
   const [filter /*, setFilter*/] = useState({ filtered: 'all' });
-  const [query, setQuery] = useState('');
-  // const { items } = useComponentValue(
-  //   UltimateDominionConfig,
-  //   singletonEntity,
-  // ) ?? { characterToken: null };
-  // const abi = [
-  //     {
-  //       inputs: [
-  //         {
-  //           internalType: 'address',
-  //           name: 'account',
-  //           type: 'address',
-  //         },
-  //         {
-  //           internalType: 'address',
-  //           name: 'operator',
-  //           type: 'address',
-  //         },
-  //       ],
-  //       name: 'isApprovedForAll',
-  //       outputs: [
-  //         {
-  //           internalType: 'bool',
-  //           name: '',
-  //           type: 'bool',
-  //         },
-  //       ],
-  //       stateMutability: 'view',
-  //       type: 'function',
-  //     },
-  //     {
-  //       inputs: [
-  //         {
-  //           internalType: 'address',
-  //           name: 'operator',
-  //           type: 'address',
-  //         },
-  //         {
-  //           internalType: 'bool',
-  //           name: 'approved',
-  //           type: 'bool',
-  //         },
-  //       ],
-  //       name: 'setApprovalForAll',
-  //       outputs: [],
-  //       stateMutability: 'nonpayable',
-  //       type: 'function',
-  //     },
-  //   ],
-  // const { data: allowance, refetch } = useContractRead({
-  //   address: items,
-  //   abi: abi,
-  //   functionName: 'setApprovalForAll',
-  //   args: [AuctionHouseOrdersContract, true],
-  // });
-  const bid = async function () {
-    await worldContract.write.UD__placeOrder([
-      userCharacter?.owner as Address,
-      BigInt(1),
-      BigInt(1),
-    ]);
+  const [amount, setAmount] = useState(0n);
+  const [allowance, setAllowance] = useState(0n);
+  const [
+    auctionHouseOrdersContractAddress,
+    setAuctionHouseOrdersContractAddress,
+  ] = useState('');
+  const [items, setItems] = useState(
+    Array<{
+      orderId: Address;
+      collection: Address;
+      buyer: Address;
+      price: bigint;
+      tokenId: bigint;
+    }>,
+  );
+  const { goldToken } = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  ) ?? { goldToken: null };
+  const { items: itemsContract } = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  ) ?? { items: null };
+  useEffect(
+    () =>
+      async function () {
+        const auctionHouseOrder =
+          await worldContract.read.UD__auctionHouseOrdersContractAddress();
+        setAuctionHouseOrdersContractAddress(auctionHouseOrder);
+        if (userCharacter?.owner) {
+          const allowance = await publicClient.readContract({
+            address: goldToken as Address,
+            abi: erc20Abi,
+            functionName: 'allowance',
+            args: [
+              userCharacter?.owner as Address,
+              auctionHouseOrdersContractAddress as Address,
+            ],
+          });
+          setAllowance(allowance);
+        }
+      },
+    [
+      auctionHouseOrdersContractAddress,
+      goldToken,
+      publicClient,
+      userCharacter?.owner,
+      worldContract.read,
+    ],
+  );
+
+  const allow = async function (a: bigint) {
+    const tx = {
+      address: goldToken as Address,
+      abi: erc20Abi,
+      functionName: 'approve',
+      args: [
+        auctionHouseOrdersContractAddress, //userCharacter?.owner as Address,
+        a, //auctionHouseOrdersContractAddress as Address,
+      ],
+    };
+    const results = await publicClient.simulateContract(tx);
+    await walletClient.writeContract(tx);
+    setAllowance(results.result == true ? a : 0n);
   };
+  const bid = async function (a: bigint) {
+    if (params.itemId) {
+      if (allowance >= BigInt(a)) {
+        const orderId = await worldContract.write.UD__placeOrder([
+          itemsContract as Address,
+          BigInt(params.itemId),
+          BigInt(a),
+        ]);
+        setItems([
+          ...items,
+          {
+            orderId: orderId as Address,
+            collection: itemsContract as Address,
+            buyer: userCharacter?.owner as Address,
+            tokenId: BigInt(params.itemId),
+            price: a,
+          },
+        ]);
+      }
+    }
+    //console.log("no item id")
+  };
+
+  // const cancel = async function (_orderId: Address) {
+  //   const order = items.filter(x => x.orderId == _orderId)[0];
+  //   const orderId = await worldContract.write.UD__cancelOrder([
+  //     itemsContract as Address,
+  //     order.tokenId,
+  //   ]);
+  //   setItems([...items.filter(x => x.orderId != orderId)]);
+  // };
+
+  // const fill = async function (_orderId: Address) {
+  //   const order = items.filter(x => x.orderId == _orderId)[0];
+  //   const orderId = await worldContract.write.UD__fulfillOrder([
+  //     itemsContract as Address,
+  //     order.tokenId,
+  //     order.buyer,
+  //     order.price,
+  //   ]);
+  //   setItems([...items.filter(x => x.orderId != orderId)]);
+  // };
+
   return (
     <Box>
       <Grid
@@ -133,18 +230,30 @@ export const AuctionHouseItem = (): JSX.Element => {
           <Stack direction="row" mt={8} spacing={8} w="100%">
             <InputGroup w="100%">
               <Input
-                onChange={e => setQuery(e.target.value)}
+                onChange={e => setAmount(BigInt(e.target.value))}
                 placeholder="0.00"
-                value={query}
+                type="number"
+                min={0}
+                value={amount.toString()}
               />
             </InputGroup>
-            <Button
-              onClick={() => bid()}
-              size="sm"
-              variant={filter.filtered == 'all' ? 'solid' : 'outline'}
-            >
-              Bid
-            </Button>
+            {allowance >= amount && allowance != 0n ? (
+              <Button
+                onClick={() => bid(amount)}
+                size="sm"
+                variant={filter.filtered == 'all' ? 'solid' : 'outline'}
+              >
+                bid
+              </Button>
+            ) : (
+              <Button
+                onClick={() => allow(amount)}
+                size="sm"
+                variant={filter.filtered == 'all' ? 'solid' : 'outline'}
+              >
+                allow
+              </Button>
+            )}
           </Stack>
         </GridItem>
         <GridItem
@@ -165,8 +274,18 @@ export const AuctionHouseItem = (): JSX.Element => {
                 <p>one!</p>
               </TabPanel>
               <TabPanel>
-                <p>two!</p>
-              </TabPanel>
+                {items.map(function (item) {
+                  return (
+                    <AuctionHouseListedItem
+                      key={item.orderId}
+                      name={item.orderId.toString()}
+                      buyer={item.buyer.toString()}
+                      price={item.price.toString()}
+                      // onClick={() => cancel(item.orderId)}
+                    ></AuctionHouseListedItem>
+                  );
+                })}
+              </TabPanel>{' '}
               <TabPanel>
                 <p>three!</p>
               </TabPanel>

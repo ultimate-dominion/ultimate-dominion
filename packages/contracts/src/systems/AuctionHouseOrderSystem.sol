@@ -27,6 +27,10 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
 //import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 //import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+/// ERC721 are currently unsupported
+error ERC721NotSupported();
+event Action(address indexed _collection, uint256 indexed _tokenId, address indexed _seller, string _action);
+
 struct Order {
     bytes32 id;
     address buyer;
@@ -38,6 +42,7 @@ contract AuctionHouseOrderSystem is System, ReentrancyGuard {
     mapping(address => bool) public collections;
     // collection => id => buyer => order
     mapping(address => mapping(uint256 => mapping(address => Order))) public orders;
+    Order[] activeOrders;
 
     bytes4 constant interface721 = 0x80ac58cd;
     bytes4 constant interface1155 = 0xd9b67a26;
@@ -45,9 +50,10 @@ contract AuctionHouseOrderSystem is System, ReentrancyGuard {
     function _goldToken() internal view returns (IERC20System goldToken) {
         goldToken = IERC20System(UltimateDominionConfig.getGoldToken());
     }
+
     function placeOrder(address _collection, uint256 _tokenId, uint256 _price) external nonReentrant returns (bytes32){
-        require(_collection == UltimateDominionConfig.getItems(), "This collection is not allowed");
-        require(_price > 0, "You cannot create an order at no cost");
+        require(_collection == UltimateDominionConfig.getItems(), "Collection is not allowed");
+        require(_price > 0, "Order price insufficient");
         Order memory order = orders[_collection][_tokenId][msg.sender];
         bytes32 id = bytes32(abi.encodePacked(_collection, _tokenId, msg.sender));
         require(order.id == 0, "You already have an order for this item. Please cancel the existing order before making a new one.");
@@ -60,9 +66,61 @@ contract AuctionHouseOrderSystem is System, ReentrancyGuard {
         // INTERACTIONS
         _goldToken().transferFrom(msg.sender, address(this), _price);
         return id;
-        
     }
-    
+
+    function cancelOrder(address _collection, uint256 _tokenId) external nonReentrant returns (bytes32){
+		// CHECKS
+        Order memory order = orders[_collection][_tokenId][msg.sender];
+		require(order.id != 0, "Order does not exist");
+
+		// EFFECTS
+		delete orders[_collection][_tokenId][msg.sender];
+
+		// INTERACTIONS
+        //_goldToken().transfer(msg.sender, order.price);
+        emit Action(_collection, _tokenId, msg.sender, 'order canceled');
+
+	}
+
+    function fulfillOrder(address _collection, uint256 _tokenId, address _buyer, uint256 _expectedPrice) external  nonReentrant returns (bytes32) {
+		// CHECKS
+		Order memory order = orders[_collection][_tokenId][_buyer];
+        require(order.id == 0, "Order does not exist.");
+		require(order.price != _expectedPrice, "Offer insufficient"); 
+		if(IERC165(_collection).supportsInterface(interface721))
+        {
+            //require(IERC721(_collection).ownerOf(_tokenId) == msg.sender || IERC721(_collection).getApproved(_tokenId) == msg.sender, "You do not have access to the item.");
+            revert ERC721NotSupported();
+        }
+		else if(IERC165(_collection).supportsInterface(interface1155))
+        {
+            require(IERC1155System(UltimateDominionConfig.getItems()).balanceOf(msg.sender, _tokenId) >= 1, "You do not have enough of the item.");
+        }
+        bytes32 id = bytes32(abi.encodePacked(_collection, _tokenId, _buyer));
+		// EFFECTS
+        delete orders[_collection][_tokenId][msg.sender];
+
+		// INTERACTIONS
+		// transfer NFT to user
+        if(IERC165(_collection).supportsInterface(interface721)) {
+            //IERC721(_collection).safeTransferFrom(msg.sender, order.buyer, _tokenId);
+            revert ERC721NotSupported();
+        }
+        else if(IERC165(_collection).supportsInterface(interface1155)){
+            //IERC1155System(UltimateDominionConfig.getItems()).transferFrom(msg.sender, order.buyer, _tokenId, 1);
+
+        }
+        //_goldToken().transfer(address(this), order.price);
+
+        emit Action(_collection, _tokenId, _buyer, 'Order fulfilled');
+        return id;
+
+	}
+
+    function auctionHouseOrdersContractAddress() external view returns (address) {
+        return address(this);
+    }
+
 }
 // import {System} from "@latticexyz/world/src/System.sol";
 // import {AuctionHouseOrders, AuctionHouseSales} from "../codegen/index.sol";
