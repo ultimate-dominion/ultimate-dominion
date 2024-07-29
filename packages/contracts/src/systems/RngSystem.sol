@@ -41,9 +41,6 @@ contract RngSystem is System, IEntropyConsumer {
         payable
         returns (uint64 sequenceNumber)
     {
-        uint128 requestFee = _entropy().getFee(_provider());
-        require(_world().balance >= requestFee);
-
         // NOTE: required for testing, since callback is coming before data is stored
         /////////////// TODO: remove for mainnet deployment //////
         if (block.chainid == 31337) {
@@ -57,21 +54,37 @@ contract RngSystem is System, IEntropyConsumer {
         /////////////////////////////////////////
 
         // pay the fees and request a random number from entropy
-        sequenceNumber = _entropy().requestWithCallback{value: requestFee}(_provider(), userRandomNumber);
-        // RandomNumbers.set(sequenceNumber, requestType, data);
-        RandomNumbers.setArbitraryData(sequenceNumber, data);
-        RandomNumbers.setRequestType(sequenceNumber, requestType);
+        // sequenceNumber = _entropy().requestWithCallback{value: requestFee}(_provider(), userRandomNumber);
+
+        //prevrando entropy
+        sequenceNumber = uint64(_incrementCounter(1));
+
         RngLogsData memory rngLog = RngLogsData({
             sequenceNumber: sequenceNumber,
             provider: _provider(),
             entropy: address(_entropy()),
-            fee: requestFee,
+            // fee: requestFee,
+            fee: 0,
             requestType: requestType,
             randomNumber: 0,
             userRandomNumber: userRandomNumber,
             data: data
         });
-        RngLogs.set(_incrementCounter(), rngLog);
+
+        RngLogs.set(sequenceNumber, rngLog);
+
+        uint256 rng;
+
+        if (block.chainid == 31337) {
+            rng = uint256(keccak256(abi.encode(block.number ** 8 + 1)));
+        } else {
+            rng = block.prevrandao;
+        }
+
+        RandomNumbers.setArbitraryData(sequenceNumber, data);
+        RandomNumbers.setRequestType(sequenceNumber, requestType);
+
+        entropyCallback(sequenceNumber, address(0), bytes32(rng));
     }
 
     function entropyCallback(
@@ -89,7 +102,8 @@ contract RngSystem is System, IEntropyConsumer {
     function _storeFullfilment(uint64 sequenceNumber, uint256 randomNumber) internal {
         RngRequestType requestType = RandomNumbers.getRequestType(sequenceNumber);
         bytes memory _data = RandomNumbers.getArbitraryData(sequenceNumber);
-        RngLogs.setRandomNumber(_getCounter(), randomNumber);
+
+        RngLogs.setRandomNumber(_getCounter(1), randomNumber);
 
         if (uint8(requestType) == uint8(0)) {
             bytes32 characterId = abi.decode(_data, (bytes32));
@@ -158,12 +172,12 @@ contract RngSystem is System, IEntropyConsumer {
         Stats.set(characterId, stats);
     }
 
-    function _getCounter() internal returns (uint256 _counter) {
-        _counter = Counters.get(address(this), 1);
+    function _getCounter(uint256 counterNumber) internal returns (uint256 _counter) {
+        _counter = Counters.get(address(this), counterNumber);
     }
 
-    function _incrementCounter() internal returns (uint256 _counter) {
-        _counter = Counters.get(address(this), 1) + 1;
-        Counters.set(address(this), 1, _counter);
+    function _incrementCounter(uint256 counterNumber) internal returns (uint256 _counter) {
+        _counter = Counters.get(address(this), counterNumber) + 1;
+        Counters.set(address(this), counterNumber, _counter);
     }
 }
