@@ -42,6 +42,7 @@ contract RngSystem is System, IEntropyConsumer {
         returns (uint64 sequenceNumber)
     {
         uint128 requestFee = _entropy().getFee(_provider());
+        require(_world().balance >= requestFee);
 
         // NOTE: required for testing, since callback is coming before data is stored
         /////////////// TODO: remove for mainnet deployment //////
@@ -93,10 +94,12 @@ contract RngSystem is System, IEntropyConsumer {
         if (uint8(requestType) == uint8(0)) {
             bytes32 characterId = abi.decode(_data, (bytes32));
             _storeStats(randomNumber, characterId);
-        }
-        if (uint8(requestType) == uint8(1)) {
+        } else if (uint8(requestType) == uint8(1)) {
             (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
+            require(moves.length > 0, "RNG: Invalid moves");
             _executeCombat(randomNumber, encounterId, moves);
+        } else {
+            revert("RNG: Unrecognized request type");
         }
     }
 
