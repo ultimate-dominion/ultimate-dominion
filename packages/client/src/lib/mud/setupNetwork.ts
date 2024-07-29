@@ -74,6 +74,7 @@ export async function setupNetwork() {
       publicClient,
       startBlock: BigInt(networkConfig.initialBlockNumber),
       tables: externalTables,
+      indexerUrl: (import.meta.env.VITE_INDEXER_URL as string) ?? undefined,
     });
 
   return {
