@@ -19,8 +19,6 @@ import { StarterItems, StarterItemsData } from "./tables/StarterItems.sol";
 import { Name } from "./tables/Name.sol";
 import { NameExists } from "./tables/NameExists.sol";
 import { CombatEncounter, CombatEncounterData } from "./tables/CombatEncounter.sol";
-import { ActionOutcome, ActionOutcomeData } from "./tables/ActionOutcome.sol";
-import { CombatOutcome, CombatOutcomeData } from "./tables/CombatOutcome.sol";
 import { MatchEntity, MatchEntityData } from "./tables/MatchEntity.sol";
 import { RandomNumbers, RandomNumbersData } from "./tables/RandomNumbers.sol";
 import { Position } from "./tables/Position.sol";
@@ -29,3 +27,6 @@ import { UltimateDominionConfig, UltimateDominionConfigData } from "./tables/Ult
 import { Orders, OrdersData } from "./tables/Orders.sol";
 import { Considerations, ConsiderationsData } from "./tables/Considerations.sol";
 import { Offers, OffersData } from "./tables/Offers.sol";
+import { RngLogs, RngLogsData } from "./tables/RngLogs.sol";
+import { ActionOutcome, ActionOutcomeData } from "./tables/ActionOutcome.sol";
+import { CombatOutcome, CombatOutcomeData } from "./tables/CombatOutcome.sol";
