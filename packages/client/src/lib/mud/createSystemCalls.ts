@@ -29,7 +29,7 @@ import {
 } from 'viem';
 
 import { INSUFFICIENT_FUNDS_MESSAGE } from '../../utils/errors';
-import { EncounterType, StatsClasses } from '../../utils/types';
+import { EncounterType, EntityStats, StatsClasses } from '../../utils/types';
 import { ClientComponents } from './createClientComponents';
 import { SetupNetworkResult } from './setupNetwork';
 
@@ -290,26 +290,76 @@ export function createSystemCalls(
     }
   };
 
+  const levelCharacter = async (
+    characterId: Entity,
+    entityStats: Omit<EntityStats, 'entityClass'> & {
+      class: StatsClasses;
+    },
+  ): SystemCallReturn => {
+    try {
+      const formattedNewStats = {
+        agility: BigInt(entityStats.agility),
+        baseHp: BigInt(entityStats.baseHp),
+        class: entityStats.class,
+        currentHp: BigInt(entityStats.currentHp),
+        experience: BigInt(entityStats.experience),
+        intelligence: BigInt(entityStats.intelligence),
+        level: BigInt(entityStats.level) + BigInt(1),
+        strength: BigInt(entityStats.strength),
+      };
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId as `0x${string}`, formattedNewStats],
+        functionName: 'UD__levelCharacter',
+      });
+
+      const tx = await worldContract.write.UD__levelCharacter([
+        characterId as `0x${string}`,
+        formattedNewStats,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const newLevel = getComponentValueStrict(
+        Stats,
+        encodeEntity(
+          { characterId: 'uint256' },
+          { characterId: BigInt(characterId) },
+        ),
+      ).level;
+
+      const success = newLevel === formattedNewStats.level;
+
+      return {
+        error: success ? undefined : 'Failed to level character.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const mintCharacter = async (
     account: Address,
     name: string,
     uri: string,
   ): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
+      const nameHex = stringToHex(name, { size: 32 });
+
+      const simulatedTx = await publicClient.simulateContract({
         abi: worldContract.abi,
         account: delegatorAddress,
         address: worldContract.address,
-        args: [account, stringToHex(name, { size: 32 }), uri],
+        args: [account, nameHex, uri],
         functionName: 'UD__mintCharacter',
       });
-
-      const nameHex = stringToHex(name, { size: 32 });
-      const simulatedTx = await worldContract.simulate.UD__mintCharacter([
-        account,
-        nameHex,
-        uri,
-      ]);
 
       const characterId = simulatedTx.result;
 
@@ -589,6 +639,7 @@ export function createSystemCalls(
     endTurn,
     enterGame,
     equipItems,
+    levelCharacter,
     mintCharacter,
     move,
     rollStats,

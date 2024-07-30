@@ -35,7 +35,7 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useMUD();
   const { character } = useCharacter();
   const {
-    battleActionOutcomes,
+    actionOutcomes,
     currentBattle,
     isRefreshing,
     monsterOponent,
@@ -47,7 +47,7 @@ export const TileDetailsPanel = (): JSX.Element => {
   const [isMonsterHit, setIsMonsterHit] = useState(false);
 
   useEffect(() => {
-    if (!(battleActionOutcomes[0] && currentBattle)) return;
+    if (!(actionOutcomes[0] && currentBattle)) return;
 
     const currentBattleTurnKey = 'current-battle-turn';
     const currentBattleTurn = localStorage.getItem(currentBattleTurnKey);
@@ -58,10 +58,7 @@ export const TileDetailsPanel = (): JSX.Element => {
       }
     }
 
-    if (
-      battleActionOutcomes[battleActionOutcomes.length - 1]
-        .attackerDamageDelt === '0'
-    )
+    if (actionOutcomes[actionOutcomes.length - 1].attackerDamageDelt === '0')
       return;
 
     setIsMonsterHit(true);
@@ -70,7 +67,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     }, 700);
 
     localStorage.setItem(currentBattleTurnKey, currentBattle.currentTurn);
-  }, [battleActionOutcomes, currentBattle]);
+  }, [actionOutcomes, currentBattle]);
 
   const onInitiateCombat = useCallback(
     async (monster: Monster) => {
