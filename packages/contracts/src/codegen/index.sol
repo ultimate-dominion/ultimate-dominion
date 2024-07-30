@@ -26,3 +26,6 @@ import { RandomNumbers, RandomNumbersData } from "./tables/RandomNumbers.sol";
 import { Position } from "./tables/Position.sol";
 import { EntitiesAtPosition } from "./tables/EntitiesAtPosition.sol";
 import { UltimateDominionConfig, UltimateDominionConfigData } from "./tables/UltimateDominionConfig.sol";
+import { Orders } from "./tables/Orders.sol";
+import { Considerations, ConsiderationsData } from "./tables/Considerations.sol";
+import { Offers, OffersData } from "./tables/Offers.sol";
