@@ -228,14 +228,8 @@ contract CombatSystem is System {
     }
 
     function _queueActions(bytes32 encounterId, Action[] memory actions) internal {
-        // SystemSwitch.call(
-        //     abi.encodeCall(IRngSystem.getRng, (encounterId, RngRequestType.Combat, abi.encode(encounterId, actions)))
-        // );
         SystemSwitch.call(
-            abi.encodeCall(
-                IRngSystem.getRng,
-                (keccak256(abi.encode("UltimateDominion")), RngRequestType.Combat, abi.encode(encounterId, actions))
-            )
+            abi.encodeCall(IRngSystem.getRng, (encounterId, RngRequestType.Combat, abi.encode(encounterId, actions)))
         );
     }
 
