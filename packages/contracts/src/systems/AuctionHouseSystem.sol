@@ -14,10 +14,11 @@ import {_requireOwner, _requireAccess} from "../utils.sol";
 
 contract AuctionHouseSystem is System {
     function createOrder(Order memory order) public returns (bytes32 _orderHash) {
-        // create OfferData
-        // create ConsiderationData
+        // create OffersData
+        // create ConsiderationsData
         // create order Hash out of offer and consideration data
-        // store offer in offer table
+        // store offer in offers table
+        // store consideration in considerations table
         // store order in order table
         // transfer offer items to world contract
         // set orderStatus to pending
