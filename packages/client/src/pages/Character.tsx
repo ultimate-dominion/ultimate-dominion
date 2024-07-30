@@ -38,6 +38,7 @@ import { EditCharacterModal } from '../components/EditCharacterModal';
 import { ItemCard } from '../components/ItemCard';
 import { ItemEquipModal } from '../components/ItemEquipModal';
 import { Level } from '../components/Level';
+import { LevelingPanel } from '../components/LevelingPanel';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -308,20 +309,38 @@ export const CharacterPage = (): JSX.Element => {
 
   const maxItemsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
 
+  const currentLevelXpRequirement =
+    useComponentValue(
+      Levels,
+      character
+        ? encodeEntity(
+            { level: 'uint256' },
+            { level: BigInt(Number(character.level) - 1) },
+          )
+        : undefined,
+    )?.experience ?? BigInt(0);
+
   const nextLevelXpRequirement =
     useComponentValue(
       Levels,
-      encodeEntity(
-        { level: 'uint256' },
-        { level: BigInt(Number(character?.level ?? 0) + 1) },
-      ),
+      character
+        ? encodeEntity({ level: 'uint256' }, { level: BigInt(character.level) })
+        : undefined,
     )?.experience ?? BigInt(0);
 
   const levelPercent = useMemo(() => {
     if (!character) return 0;
+
+    const xpSinceLastLevel =
+      BigInt(character.experience) - currentLevelXpRequirement;
     const percent =
-      (100 * Number(character.experience)) / Number(nextLevelXpRequirement);
+      (100 * Number(xpSinceLastLevel)) / Number(nextLevelXpRequirement);
     return percent > 100 ? 100 : percent;
+  }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
+
+  const canLevel = useMemo(() => {
+    if (!character) return false;
+    return BigInt(character.experience) >= nextLevelXpRequirement;
   }, [character, nextLevelXpRequirement]);
 
   if (isLoadingCharacter) {
@@ -416,42 +435,7 @@ export const CharacterPage = (): JSX.Element => {
             px={6}
             rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
-            <VStack>
-              <HStack justify="space-between" w="100%">
-                <Text alignSelf="start" fontWeight="bold">
-                  My Stats
-                </Text>
-                <Text alignSelf="start" fontWeight="bold">
-                  Ability Points: 3
-                </Text>
-              </HStack>
-              <Text alignSelf="end" mt={4} size="xs">
-                Base
-              </Text>
-              <VStack w="100%">
-                <HStack justify="space-between" w="100%">
-                  <Text size="lg">HP - Hit</Text>
-                  <Text size="lg">
-                    {character.currentHp}/{character.baseHp}
-                  </Text>
-                </HStack>
-
-                <HStack justify="space-between" w="100%">
-                  <Text size="lg">STR - Strength</Text>
-                  <Text size="lg">{character.strength}</Text>
-                </HStack>
-
-                <HStack justify="space-between" w="100%">
-                  <Text size="lg">AGI - Agility</Text>
-                  <Text size="lg">{character.agility}</Text>
-                </HStack>
-
-                <HStack justify="space-between" w="100%">
-                  <Text size="lg">INT - Intelligence</Text>
-                  <Text size="lg">{character.intelligence}</Text>
-                </HStack>
-              </VStack>
-            </VStack>
+            <LevelingPanel canLevel={canLevel} character={character} />
           </GridItem>
           <GridItem
             border="solid"
@@ -494,7 +478,7 @@ export const CharacterPage = (): JSX.Element => {
                     </Text>
                   </Box>
                   <Spacer />
-                  <Text fontWeight="bold">Level 1</Text>
+                  <Text fontWeight="bold">Level {character.level}</Text>
                 </HStack>
                 <Level
                   currentLevel={character.level}

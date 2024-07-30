@@ -32,21 +32,35 @@ export const StatsPanel = (): JSX.Element => {
   } = useMUD();
   const { character, equippedItems } = useCharacter();
 
+  const currentLevelXpRequirement =
+    useComponentValue(
+      Levels,
+      character
+        ? encodeEntity(
+            { level: 'uint256' },
+            { level: BigInt(Number(character.level) - 1) },
+          )
+        : undefined,
+    )?.experience ?? BigInt(0);
+
   const nextLevelXpRequirement =
     useComponentValue(
       Levels,
-      encodeEntity(
-        { level: 'uint256' },
-        { level: BigInt(Number(character?.level ?? 0) + 1) },
-      ),
+      character
+        ? encodeEntity({ level: 'uint256' }, { level: BigInt(character.level) })
+        : undefined,
     )?.experience ?? BigInt(0);
 
   const levelPercent = useMemo(() => {
     if (!character) return 0;
+
+    const xpSinceLastLevel =
+      BigInt(character.experience) - currentLevelXpRequirement;
+
     const percent =
-      (100 * Number(character.experience)) / Number(nextLevelXpRequirement);
+      (100 * Number(xpSinceLastLevel)) / Number(nextLevelXpRequirement);
     return percent > 100 ? 100 : percent;
-  }, [character, nextLevelXpRequirement]);
+  }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
   if (!(character && equippedItems)) {
     return (

@@ -22,10 +22,12 @@ export const useToast = (): {
         return;
       }
 
-      // eslint-disable-next-line no-console
-      console.error(errorLog);
+      if (errorLog) {
+        // eslint-disable-next-line no-console
+        console.error(errorLog);
+      }
 
-      if ((errorLog as Error).message === INSUFFICIENT_FUNDS_MESSAGE) {
+      if ((errorLog as Error)?.message === INSUFFICIENT_FUNDS_MESSAGE) {
         toast({
           description: (errorLog as Error).message,
           position: 'top',
