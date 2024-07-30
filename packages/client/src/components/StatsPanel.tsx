@@ -32,19 +32,20 @@ export const StatsPanel = (): JSX.Element => {
   } = useMUD();
   const { character, equippedItems } = useCharacter();
 
-  const nextLevelXpRequirement = useComponentValue(
-    Levels,
-    encodeEntity(
-      { level: 'uint256' },
-      { level: BigInt(Number(character?.level ?? 0) + 1) },
-    ),
-  )?.experience;
+  const nextLevelXpRequirement =
+    useComponentValue(
+      Levels,
+      encodeEntity(
+        { level: 'uint256' },
+        { level: BigInt(Number(character?.level ?? 0) + 1) },
+      ),
+    )?.experience ?? BigInt(0);
 
   const levelPercent = useMemo(() => {
-    if (!(character && nextLevelXpRequirement)) return 0;
-    return (
-      (100 * Number(character.experience)) / Number(nextLevelXpRequirement)
-    );
+    if (!character) return 0;
+    const percent =
+      (100 * Number(character.experience)) / Number(nextLevelXpRequirement);
+    return percent > 100 ? 100 : percent;
   }, [character, nextLevelXpRequirement]);
 
   if (!(character && equippedItems)) {
@@ -130,9 +131,33 @@ export const StatsPanel = (): JSX.Element => {
         </Text>
         <Spacer />
         <Text>
-          {experience}/{nextLevelXpRequirement?.toString() ?? '0'}
+          <Text
+            as="span"
+            color={
+              BigInt(experience) >= nextLevelXpRequirement ? 'green' : 'black'
+            }
+            fontWeight={
+              BigInt(experience) >= nextLevelXpRequirement ? 'bold' : 'normal'
+            }
+          >
+            {BigInt(experience) >= nextLevelXpRequirement
+              ? nextLevelXpRequirement.toString()
+              : experience}
+          </Text>
+          /{nextLevelXpRequirement.toString()}
         </Text>
       </HStack>
+
+      {BigInt(experience) >= nextLevelXpRequirement && (
+        <Button
+          alignSelf="center"
+          onClick={() => navigate(`/characters/${character.characterId}`)}
+          size="xs"
+          variant="gold"
+        >
+          Level Up!
+        </Button>
+      )}
 
       <VStack align="stretch" alignItems="start" mt={4} spacing={2} w="100%">
         <HStack fontWeight="bold" w="100%">

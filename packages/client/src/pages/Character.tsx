@@ -308,19 +308,20 @@ export const CharacterPage = (): JSX.Element => {
 
   const maxItemsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
 
-  const nextLevelXpRequirement = useComponentValue(
-    Levels,
-    encodeEntity(
-      { level: 'uint256' },
-      { level: BigInt(Number(character?.level ?? 0) + 1) },
-    ),
-  )?.experience;
+  const nextLevelXpRequirement =
+    useComponentValue(
+      Levels,
+      encodeEntity(
+        { level: 'uint256' },
+        { level: BigInt(Number(character?.level ?? 0) + 1) },
+      ),
+    )?.experience ?? BigInt(0);
 
   const levelPercent = useMemo(() => {
-    if (!(character && nextLevelXpRequirement)) return 0;
-    return (
-      (100 * Number(character.experience)) / Number(nextLevelXpRequirement)
-    );
+    if (!character) return 0;
+    const percent =
+      (100 * Number(character.experience)) / Number(nextLevelXpRequirement);
+    return percent > 100 ? 100 : percent;
   }, [character, nextLevelXpRequirement]);
 
   if (isLoadingCharacter) {
@@ -472,8 +473,24 @@ export const CharacterPage = (): JSX.Element => {
                       $GOLD
                     </Text>
                     <Text>
-                      {character.experience}/
-                      {nextLevelXpRequirement?.toString() ?? '0'}
+                      <Text
+                        as="span"
+                        color={
+                          BigInt(character.experience) >= nextLevelXpRequirement
+                            ? 'green'
+                            : 'black'
+                        }
+                        fontWeight={
+                          BigInt(character.experience) >= nextLevelXpRequirement
+                            ? 'bold'
+                            : 'normal'
+                        }
+                      >
+                        {BigInt(character.experience) >= nextLevelXpRequirement
+                          ? nextLevelXpRequirement.toString()
+                          : character.experience}
+                      </Text>
+                      /{nextLevelXpRequirement.toString()}
                     </Text>
                   </Box>
                   <Spacer />
