@@ -341,6 +341,7 @@ contract CombatSystem is System {
 
         uint256 defenseTotal = ((defenseRoll % 1000) + defender.adjustedAgility) * DEFENSE_MODIFIER;
         attackLands = attackTotal > defenseTotal;
+
         if (attackLands) {
             crit = attackTotal / defenseTotal >= 2;
         }

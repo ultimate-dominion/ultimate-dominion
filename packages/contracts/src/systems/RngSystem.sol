@@ -74,9 +74,10 @@ contract RngSystem is System, IEntropyConsumer {
         RngLogs.set(sequenceNumber, rngLog);
 
         uint256 rng;
-
         if (block.chainid == 31337) {
-            rng = uint256(keccak256(abi.encode(block.number ** 8 + 1)));
+            uint256 timesCalled;
+            rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled) ** 8)));
+            timesCalled++;
         } else {
             rng = block.prevrandao;
         }
