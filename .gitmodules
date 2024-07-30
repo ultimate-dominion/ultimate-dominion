@@ -1,6 +1,3 @@
 [submodule "packages/contracts/lib/ERC1155-puppet"]
 	path = packages/contracts/lib/ERC1155-puppet
 	url = https://github.com/MrDeadCe11/ERC1155-puppet
-[submodule "packages/contracts/lib/foundry-chainlink-toolkit"]
-	path = packages/contracts/lib/foundry-chainlink-toolkit
-	url = https://github.com/smartcontractkit/foundry-chainlink-toolkit
