@@ -32,6 +32,8 @@ export const LevelingPanel = ({
   useEffect(() => {
     if (canLevel) {
       setAbilityPoints(2);
+    } else {
+      setAbilityPoints(0);
     }
     setNewAgility(character.agility);
     setNewIntelligence(character.intelligence);

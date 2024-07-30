@@ -340,6 +340,7 @@ export const CharacterPage = (): JSX.Element => {
 
   const canLevel = useMemo(() => {
     if (!character) return false;
+    if (nextLevelXpRequirement === BigInt(0)) return false;
     return BigInt(character.experience) >= nextLevelXpRequirement;
   }, [character, nextLevelXpRequirement]);
 
