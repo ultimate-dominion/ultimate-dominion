@@ -29,6 +29,32 @@ const Button = {
     },
   },
   variants: {
+    gold: {
+      bg: 'gold',
+      border: '2px solid',
+      borderColor: 'black',
+      color: 'black',
+      _active: {
+        bg: 'rgba(0, 0, 0, 1)',
+        color: 'white',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _hover: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        color: 'white',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _loading: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _hover: {
+          bg: 'rgba(0, 0, 0, 0.8)',
+        },
+      },
+    },
     outline: {
       border: '2px solid',
       borderColor: 'grey500',
@@ -116,8 +142,20 @@ const Progress = {
     track: {
       borderRadius: 5,
     },
-    filledTrack: {
-      bg: 'black',
+  },
+  defaultProps: {
+    variant: 'filling',
+  },
+  variants: {
+    filling: {
+      filledTrack: {
+        bg: 'black',
+      },
+    },
+    filled: {
+      filledTrack: {
+        bg: 'green',
+      },
     },
   },
 };
