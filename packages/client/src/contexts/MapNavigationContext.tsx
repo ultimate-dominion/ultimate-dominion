@@ -36,6 +36,7 @@ import {
   ActionType,
   type Character,
   type CombatDetails,
+  type CombatOutcomeType,
   type Monster,
 } from '../utils/types';
 import { useCharacter } from './CharacterContext';
@@ -43,13 +44,15 @@ import { useMUD } from './MUDContext';
 
 type MapNavigationContextType = {
   actionOutcomes: ActionOutcomeType[];
+  aliveMonsters: Monster[];
+  allMonsters: Monster[];
   currentBattle: CombatDetails | null;
   isAttacking: boolean;
   isRefreshing: boolean;
   isSpawned: boolean;
   isSpawning: boolean;
+  lastestBattleOutcome: CombatOutcomeType | null;
   monsterOponent: Monster | null;
-  monsters: Monster[];
   onAttack: (itemId: string) => void;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSpawn: () => void;
@@ -59,13 +62,15 @@ type MapNavigationContextType = {
 
 const MapNavigationContext = createContext<MapNavigationContextType>({
   actionOutcomes: [],
+  aliveMonsters: [],
+  allMonsters: [],
   currentBattle: null,
   isAttacking: false,
   isRefreshing: false,
   isSpawned: false,
   isSpawning: false,
+  lastestBattleOutcome: null,
   monsterOponent: null,
-  monsters: [],
   onAttack: () => {},
   onMove: () => {},
   onSpawn: () => {},
@@ -89,6 +94,7 @@ export const MapNavigationProvider = ({
       Characters,
       CharactersTokenURI,
       CombatEncounter,
+      CombatOutcome,
       GoldBalances,
       MatchEntity,
       Mobs,
@@ -277,7 +283,7 @@ export const MapNavigationProvider = ({
           }),
         );
 
-        setMonsters(_monsters.filter(m => Number(m.currentHp) > 0));
+        setMonsters(_monsters);
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to fetch monsters.', e);
       }
@@ -328,34 +334,34 @@ export const MapNavigationProvider = ({
     }
   }, [character, delegatorAddress, renderError, renderSuccess, spawn]);
 
-  const currentBattle =
-    Array.from(
-      useEntityQuery([
-        Has(CombatEncounter),
-        HasValue(CombatEncounter, { end: BigInt(0) }),
-      ]),
-    )
-      .map(entity => {
-        const encounter = getComponentValue(CombatEncounter, entity);
-        if (!encounter) return null;
+  const allBattles = useEntityQuery([Has(CombatEncounter)])
+    .map(entity => {
+      const encounter = getComponentValueStrict(CombatEncounter, entity);
 
-        return {
-          attackers: encounter.attackers as Entity[],
-          currentTurn: encounter.currentTurn.toString(),
-          defenders: encounter.defenders as Entity[],
-          encounterId: entity,
-          encounterType: encounter.encounterType,
-          end: encounter.end.toString(),
-          maxTurns: encounter.maxTurns.toString(),
-          start: encounter.start.toString(),
-        };
-      })
-      .filter(
-        encounter =>
-          character &&
-          (encounter?.attackers.includes(character.characterId) ||
-            encounter?.defenders.includes(character.characterId)),
-      )[0] ?? null;
+      return {
+        attackers: encounter.attackers as Entity[],
+        currentTurn: encounter.currentTurn.toString(),
+        defenders: encounter.defenders as Entity[],
+        encounterId: entity,
+        encounterType: encounter.encounterType,
+        end: encounter.end.toString(),
+        maxTurns: encounter.maxTurns.toString(),
+        start: encounter.start.toString(),
+      };
+    })
+    .filter(
+      encounter =>
+        character &&
+        (encounter?.attackers.includes(character.characterId) ||
+          encounter?.defenders.includes(character.characterId)),
+    );
+
+  const currentBattle = useMemo(() => {
+    const latestBattle = allBattles[allBattles.length - 1];
+    if (!latestBattle) return null;
+    if (latestBattle.end !== '0') return null;
+    return latestBattle;
+  }, [allBattles]);
 
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
@@ -537,57 +543,95 @@ export const MapNavigationProvider = ({
     ],
   );
 
-  const actionOutcomes = useEntityQuery([
+  const allActionOutcomes = useEntityQuery([
     Has(ActionOutcome),
     HasValue(ActionOutcome, { attackerId: character?.characterId }),
-  ])
-    .map(entity => {
-      const _actionOutcome = getComponentValueStrict(ActionOutcome, entity);
+  ]).map(entity => {
+    const _actionOutcome = getComponentValueStrict(ActionOutcome, entity);
 
-      const { encounterId, currentTurn, actionNumber } = decodeEntity(
-        {
-          encounterId: 'bytes32',
-          currentTurn: 'uint256',
-          actionNumber: 'uint256',
-        },
-        entity,
-      );
+    const { encounterId, currentTurn, actionNumber } = decodeEntity(
+      {
+        encounterId: 'bytes32',
+        currentTurn: 'uint256',
+        actionNumber: 'uint256',
+      },
+      entity,
+    );
 
-      return {
-        attackerDamageDelt: formatUnits(
-          _actionOutcome.attackerDamageDelt,
-          5,
-        ).toString(),
-        attackerDied: _actionOutcome.attackerDied,
-        attackerId: _actionOutcome.attackerId.toString(),
-        actionId: _actionOutcome.actionId.toString(),
-        actionNumber: actionNumber.toString(),
-        blockNumber: _actionOutcome.blockNumber.toString(),
-        crit: _actionOutcome.crit,
-        currentTurn: currentTurn.toString(),
-        defenderDamageDelt: _actionOutcome.defenderDamageDelt.toString(),
-        defenderDied: _actionOutcome.defenderDied,
-        defenderId: _actionOutcome.defenderId.toString(),
-        encounterId: encounterId.toString(),
-        hit: _actionOutcome.hit,
-        miss: _actionOutcome.miss,
-        timestamp: _actionOutcome.timestamp.toString(),
-        weaponId: _actionOutcome.weaponId.toString(),
-      } as ActionOutcomeType;
-    })
-    .filter(action => action.encounterId === currentBattle?.encounterId);
+    return {
+      attackerDamageDelt: formatUnits(
+        _actionOutcome.attackerDamageDelt,
+        5,
+      ).toString(),
+      attackerDied: _actionOutcome.attackerDied,
+      attackerId: _actionOutcome.attackerId.toString(),
+      actionId: _actionOutcome.actionId.toString(),
+      actionNumber: actionNumber.toString(),
+      blockNumber: _actionOutcome.blockNumber.toString(),
+      crit: _actionOutcome.crit,
+      currentTurn: currentTurn.toString(),
+      defenderDamageDelt: _actionOutcome.defenderDamageDelt.toString(),
+      defenderDied: _actionOutcome.defenderDied,
+      defenderId: _actionOutcome.defenderId.toString(),
+      encounterId: encounterId.toString(),
+      hit: _actionOutcome.hit,
+      miss: _actionOutcome.miss,
+      timestamp: _actionOutcome.timestamp.toString(),
+      weaponId: _actionOutcome.weaponId.toString(),
+    } as ActionOutcomeType;
+  });
+
+  const currentBattleActionOutcomes = useMemo(
+    () =>
+      allActionOutcomes.filter(
+        action => action.encounterId === currentBattle?.encounterId,
+      ),
+    [allActionOutcomes, currentBattle],
+  );
+
+  const lastestBattleOutcome = useMemo(() => {
+    const latestCompletedBattle = allBattles.filter(b => b.end !== '0').pop();
+    if (!latestCompletedBattle) return null;
+
+    const combatOutcome = getComponentValue(
+      CombatOutcome,
+      latestCompletedBattle.encounterId,
+    );
+    if (!combatOutcome) return null;
+    const combatActionOutcomes = allActionOutcomes.filter(
+      a => a.encounterId === latestCompletedBattle.encounterId,
+    );
+
+    const winner = combatActionOutcomes.find(a => a.attackerDied === false)
+      ? latestCompletedBattle.attackers[0]
+      : latestCompletedBattle.defenders[0];
+    if (!winner) return null;
+
+    return {
+      attackers: latestCompletedBattle.attackers,
+      defenders: latestCompletedBattle.defenders,
+      encounterId: latestCompletedBattle.encounterId,
+      endTime: combatOutcome.endTime.toString(),
+      expDropped: combatOutcome.expDropped.toString(),
+      goldDropped: formatEther(combatOutcome.goldDropped).toString(),
+      itemsDropped: combatOutcome.itemsDropped.map(i => i.toString()),
+      winner,
+    };
+  }, [allActionOutcomes, allBattles, CombatOutcome]);
 
   return (
     <MapNavigationContext.Provider
       value={{
-        actionOutcomes,
+        actionOutcomes: currentBattleActionOutcomes,
+        aliveMonsters: monsters.filter(m => Number(m.currentHp) > 0),
+        allMonsters: monsters,
         currentBattle,
         isAttacking,
         isRefreshing: isFetchingEntities || isMoving,
         isSpawned,
         isSpawning,
+        lastestBattleOutcome,
         monsterOponent,
-        monsters,
         onAttack,
         onMove,
         onSpawn,
