@@ -256,6 +256,8 @@ export default defineWorld({
       key: ["orderHash"],
       schema: {
         orderHash: "bytes32",
+        offerer: "address",
+        offerCounter: "uint256",
         orderStatus: "OrderStatus",
       },
     },

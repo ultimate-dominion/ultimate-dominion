@@ -16,7 +16,7 @@ contract AuctionHouseSystem is System {
     function createOrder(Order memory order) public returns (bytes32 _orderHash) {
         // create OffersData
         // create ConsiderationsData
-        // create order Hash out of offer and consideration data
+        // create order Hash out of offer and consideration data and the Counter for the offerer
         // store offer in offers table
         // store consideration in considerations table
         // store order in order table
