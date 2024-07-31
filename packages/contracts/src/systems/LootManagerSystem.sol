@@ -97,6 +97,7 @@ contract LootManagerSystem is System {
     {
         uint256 mobId = IWorld(_world()).UD__getMobId(entityId);
         MonsterStats memory monsterStats = abi.decode(Mobs.getMobStats(mobId), (MonsterStats));
+
         uint256[] memory itemIdsDropped = new uint256[](monsterStats.inventory.length);
         uint256 totalItemsDropped;
         // drop items
@@ -164,19 +165,13 @@ contract LootManagerSystem is System {
                 MatchEntity.setEncounterId(distTemps.defenderTemp, bytes32(0));
 
                 // get dropped items into temporary array
-                uint256[] memory itemsCalc = _calculateItemDrop(
+                _itemIdsDropped = _calculateItemDrop(
                     randomNumber,
                     distTemps.defenderTemp,
                     encounterData.attackers[randomNumber % encounterData.attackers.length]
                 );
-                // add length to total items
-                distTemps.totalItemsDropped += itemsCalc.length;
-                // encode and add to items dropped array
-                itemsDroppedTemp[i] = abi.encode(itemsCalc);
             }
         }
-
-        _itemIdsDropped = _trimDroppedItemIds(distTemps.totalItemsDropped, itemsDroppedTemp);
 
         // drop gold reward calculated from the level of mob to player journey wallet (can mint tokens when he returns to 0,0).
         // if dead player, drop transfer 50% of un-banked gold to world contract
