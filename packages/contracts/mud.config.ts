@@ -175,6 +175,7 @@ export default defineWorld({
         start: "uint256",
         // timestamp of when combat ended.  0 if ongoing.
         end: "uint256",
+        rewardsDistributed: "bool",
         // the current turn.  starts at 0
         currentTurn: "uint256",
         // the max number of turns. default is 15 for pve
@@ -294,8 +295,6 @@ export default defineWorld({
         expDropped: "uint256",
         goldDropped: "uint256",
         itemsDropped: "uint256[]",
-        deadAttackers: "bytes32[]",
-        deadDefenders: "bytes32[]",
       },
       key: ["encounterId"],
       type: "offchainTable",

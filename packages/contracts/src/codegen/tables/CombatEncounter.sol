@@ -23,6 +23,7 @@ struct CombatEncounterData {
   EncounterType encounterType;
   uint256 start;
   uint256 end;
+  bool rewardsDistributed;
   uint256 currentTurn;
   uint256 maxTurns;
   bytes32[] defenders;
@@ -34,12 +35,12 @@ library CombatEncounter {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000436f6d626174456e636f756e74657200);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0081050201202020200000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0082060201202001202000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint8, uint256, uint256, uint256, uint256, bytes32[], bytes32[])
-  Schema constant _valueSchema = Schema.wrap(0x00810502001f1f1f1fc1c1000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint8, uint256, uint256, bool, uint256, uint256, bytes32[], bytes32[])
+  Schema constant _valueSchema = Schema.wrap(0x00820602001f1f601f1fc1c10000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -55,14 +56,15 @@ library CombatEncounter {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](7);
+    fieldNames = new string[](8);
     fieldNames[0] = "encounterType";
     fieldNames[1] = "start";
     fieldNames[2] = "end";
-    fieldNames[3] = "currentTurn";
-    fieldNames[4] = "maxTurns";
-    fieldNames[5] = "defenders";
-    fieldNames[6] = "attackers";
+    fieldNames[3] = "rewardsDistributed";
+    fieldNames[4] = "currentTurn";
+    fieldNames[5] = "maxTurns";
+    fieldNames[6] = "defenders";
+    fieldNames[7] = "attackers";
   }
 
   /**
@@ -206,13 +208,55 @@ library CombatEncounter {
   }
 
   /**
+   * @notice Get rewardsDistributed.
+   */
+  function getRewardsDistributed(bytes32 encounterId) internal view returns (bool rewardsDistributed) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = encounterId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (_toBool(uint8(bytes1(_blob))));
+  }
+
+  /**
+   * @notice Get rewardsDistributed.
+   */
+  function _getRewardsDistributed(bytes32 encounterId) internal view returns (bool rewardsDistributed) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = encounterId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (_toBool(uint8(bytes1(_blob))));
+  }
+
+  /**
+   * @notice Set rewardsDistributed.
+   */
+  function setRewardsDistributed(bytes32 encounterId, bool rewardsDistributed) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = encounterId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((rewardsDistributed)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set rewardsDistributed.
+   */
+  function _setRewardsDistributed(bytes32 encounterId, bool rewardsDistributed) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = encounterId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((rewardsDistributed)), _fieldLayout);
+  }
+
+  /**
    * @notice Get currentTurn.
    */
   function getCurrentTurn(bytes32 encounterId) internal view returns (uint256 currentTurn) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -223,7 +267,7 @@ library CombatEncounter {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -234,7 +278,7 @@ library CombatEncounter {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((currentTurn)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((currentTurn)), _fieldLayout);
   }
 
   /**
@@ -244,7 +288,7 @@ library CombatEncounter {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((currentTurn)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((currentTurn)), _fieldLayout);
   }
 
   /**
@@ -254,7 +298,7 @@ library CombatEncounter {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -265,7 +309,7 @@ library CombatEncounter {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -276,7 +320,7 @@ library CombatEncounter {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((maxTurns)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((maxTurns)), _fieldLayout);
   }
 
   /**
@@ -286,7 +330,7 @@ library CombatEncounter {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((maxTurns)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((maxTurns)), _fieldLayout);
   }
 
   /**
@@ -651,12 +695,13 @@ library CombatEncounter {
     EncounterType encounterType,
     uint256 start,
     uint256 end,
+    bool rewardsDistributed,
     uint256 currentTurn,
     uint256 maxTurns,
     bytes32[] memory defenders,
     bytes32[] memory attackers
   ) internal {
-    bytes memory _staticData = encodeStatic(encounterType, start, end, currentTurn, maxTurns);
+    bytes memory _staticData = encodeStatic(encounterType, start, end, rewardsDistributed, currentTurn, maxTurns);
 
     EncodedLengths _encodedLengths = encodeLengths(defenders, attackers);
     bytes memory _dynamicData = encodeDynamic(defenders, attackers);
@@ -675,12 +720,13 @@ library CombatEncounter {
     EncounterType encounterType,
     uint256 start,
     uint256 end,
+    bool rewardsDistributed,
     uint256 currentTurn,
     uint256 maxTurns,
     bytes32[] memory defenders,
     bytes32[] memory attackers
   ) internal {
-    bytes memory _staticData = encodeStatic(encounterType, start, end, currentTurn, maxTurns);
+    bytes memory _staticData = encodeStatic(encounterType, start, end, rewardsDistributed, currentTurn, maxTurns);
 
     EncodedLengths _encodedLengths = encodeLengths(defenders, attackers);
     bytes memory _dynamicData = encodeDynamic(defenders, attackers);
@@ -699,6 +745,7 @@ library CombatEncounter {
       _table.encounterType,
       _table.start,
       _table.end,
+      _table.rewardsDistributed,
       _table.currentTurn,
       _table.maxTurns
     );
@@ -720,6 +767,7 @@ library CombatEncounter {
       _table.encounterType,
       _table.start,
       _table.end,
+      _table.rewardsDistributed,
       _table.currentTurn,
       _table.maxTurns
     );
@@ -741,7 +789,14 @@ library CombatEncounter {
   )
     internal
     pure
-    returns (EncounterType encounterType, uint256 start, uint256 end, uint256 currentTurn, uint256 maxTurns)
+    returns (
+      EncounterType encounterType,
+      uint256 start,
+      uint256 end,
+      bool rewardsDistributed,
+      uint256 currentTurn,
+      uint256 maxTurns
+    )
   {
     encounterType = EncounterType(uint8(Bytes.getBytes1(_blob, 0)));
 
@@ -749,9 +804,11 @@ library CombatEncounter {
 
     end = (uint256(Bytes.getBytes32(_blob, 33)));
 
-    currentTurn = (uint256(Bytes.getBytes32(_blob, 65)));
+    rewardsDistributed = (_toBool(uint8(Bytes.getBytes1(_blob, 65))));
 
-    maxTurns = (uint256(Bytes.getBytes32(_blob, 97)));
+    currentTurn = (uint256(Bytes.getBytes32(_blob, 66)));
+
+    maxTurns = (uint256(Bytes.getBytes32(_blob, 98)));
   }
 
   /**
@@ -786,7 +843,14 @@ library CombatEncounter {
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (CombatEncounterData memory _table) {
-    (_table.encounterType, _table.start, _table.end, _table.currentTurn, _table.maxTurns) = decodeStatic(_staticData);
+    (
+      _table.encounterType,
+      _table.start,
+      _table.end,
+      _table.rewardsDistributed,
+      _table.currentTurn,
+      _table.maxTurns
+    ) = decodeStatic(_staticData);
 
     (_table.defenders, _table.attackers) = decodeDynamic(_encodedLengths, _dynamicData);
   }
@@ -819,10 +883,11 @@ library CombatEncounter {
     EncounterType encounterType,
     uint256 start,
     uint256 end,
+    bool rewardsDistributed,
     uint256 currentTurn,
     uint256 maxTurns
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(encounterType, start, end, currentTurn, maxTurns);
+    return abi.encodePacked(encounterType, start, end, rewardsDistributed, currentTurn, maxTurns);
   }
 
   /**
@@ -857,12 +922,13 @@ library CombatEncounter {
     EncounterType encounterType,
     uint256 start,
     uint256 end,
+    bool rewardsDistributed,
     uint256 currentTurn,
     uint256 maxTurns,
     bytes32[] memory defenders,
     bytes32[] memory attackers
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(encounterType, start, end, currentTurn, maxTurns);
+    bytes memory _staticData = encodeStatic(encounterType, start, end, rewardsDistributed, currentTurn, maxTurns);
 
     EncodedLengths _encodedLengths = encodeLengths(defenders, attackers);
     bytes memory _dynamicData = encodeDynamic(defenders, attackers);
@@ -878,5 +944,17 @@ library CombatEncounter {
     _keyTuple[0] = encounterId;
 
     return _keyTuple;
+  }
+}
+
+/**
+ * @notice Cast a value to a bool.
+ * @dev Boolean values are encoded as uint8 (1 = true, 0 = false), but Solidity doesn't allow casting between uint8 and bool.
+ * @param value The uint8 value to convert.
+ * @return result The boolean value.
+ */
+function _toBool(uint8 value) pure returns (bool result) {
+  assembly {
+    result := value
   }
 }

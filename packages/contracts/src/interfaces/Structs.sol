@@ -124,3 +124,11 @@ struct QuestEntity {
     uint256 questId;
     uint256 currentStep;
 }
+
+struct RewardDistributionTemps {
+    bytes32 defenderTemp;
+    bytes32 entityIdTemp;
+    uint256 totalItemsDropped;
+    uint256 livingAttackers;
+    uint256 cumulativeAttackerLevels;
+}

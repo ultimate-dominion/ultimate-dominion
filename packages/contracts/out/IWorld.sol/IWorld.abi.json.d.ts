@@ -90,6 +90,11 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
+            "name": "rewardsDistributed",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
             "name": "currentTurn",
             "type": "uint256",
             "internalType": "uint256"
@@ -439,6 +444,40 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__distributeRewards",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_expAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_goldAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_itemIdsDropped",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__dropGold",
     "inputs": [
       {
@@ -582,7 +621,7 @@ declare const abi: [
     "name": "UD__executeCombat",
     "inputs": [
       {
-        "name": "randomNumber",
+        "name": "prevRandao",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -791,6 +830,11 @@ declare const abi: [
             "name": "end",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "rewardsDistributed",
+            "type": "bool",
+            "internalType": "bool"
           },
           {
             "name": "currentTurn",

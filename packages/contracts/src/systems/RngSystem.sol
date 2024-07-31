@@ -74,8 +74,8 @@ contract RngSystem is System, IEntropyConsumer {
         RngLogs.set(sequenceNumber, rngLog);
 
         uint256 rng;
+        uint256 timesCalled;
         if (block.chainid == 31337) {
-            uint256 timesCalled;
             rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled) ** 8)));
             timesCalled++;
         } else {
