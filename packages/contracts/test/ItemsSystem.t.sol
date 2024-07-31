@@ -121,4 +121,16 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
         assertEq(erc1155System.balanceOf(address(alice), newArmorId), 1);
     }
+
+    function test_dropItems_Revert_UnauthorizedCaller() public {
+        uint256[] memory itemIds = new uint256[](1);
+        uint256[] memory amounts = new uint256[](1);
+        bytes32[] memory characterIds = new bytes32[](1);
+        itemIds[0] = newArmorId;
+        amounts[0] = 1;
+        characterIds[0] = alicesCharacterId;
+        vm.prank(bob);
+        vm.expectRevert();
+        world.UD__dropItems(characterIds, itemIds, amounts);
+    }
 }

@@ -16,4 +16,9 @@ interface ILootManagerSystem {
   function UD__dropItem(bytes32 characterId, uint256 itemId, uint256 amount) external;
 
   function UD__dropItems(bytes32[] memory characterIds, uint256[] memory itemIds, uint256[] memory amounts) external;
+
+  function UD__distributeRewards(
+    bytes32 encounterId,
+    uint256 randomNumber
+  ) external returns (uint256 _expAmount, uint256 _goldAmount, uint256[] memory _itemIdsDropped);
 }

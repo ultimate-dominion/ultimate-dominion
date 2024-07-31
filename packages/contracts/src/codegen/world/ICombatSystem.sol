@@ -35,7 +35,7 @@ interface ICombatSystem {
     bytes32[] memory participants
   ) external view returns (bool _isParticipant);
 
-  function UD__executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory actions) external;
+  function UD__executeCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) external;
 
   function UD__getEncounter(bytes32 encounterId) external view returns (CombatEncounterData memory _encounterData);
 

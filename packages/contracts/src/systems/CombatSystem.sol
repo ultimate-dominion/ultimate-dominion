@@ -18,6 +18,8 @@ import {
     CharacterEquipmentData,
     CombatEncounter,
     CombatEncounterData,
+    CombatOutcome,
+    CombatOutcomeData,
     Position,
     Mobs,
     MobsData,
@@ -67,6 +69,7 @@ contract CombatSystem is System {
                 encounterType: encounterType,
                 start: startTime,
                 end: 0,
+                rewardsDistributed: false,
                 currentTurn: 0,
                 maxTurns: DEFAULT_MAX_TURNS,
                 defenders: defenders,
@@ -168,7 +171,8 @@ contract CombatSystem is System {
         }
     }
 
-    function executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory actions) public {
+    function executeCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) public {
+        uint256 randomNumber = uint256(keccak256(abi.encode(prevRandao, encounterId)));
         // ensure this is an authorised call from the entropy contract
         _requireAccess(address(this), _msgSender());
 
@@ -349,83 +353,39 @@ contract CombatSystem is System {
 
     function _calculateMagicAttack() public {}
 
-    function _endMatch(bytes32 encounterId, uint256 randomNumber)
-        internal
-        returns (uint256 expAmount, uint256 goldAmount)
-    {
+    function _endMatch(bytes32 encounterId, uint256 randomNumber) internal {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        require(CombatEncounter.getEnd(encounterId) == 0, "match already over");
 
         if (block.chainid == 31337) {
+            CombatEncounter.setEnd(encounterId, block.number);
             encounterData.end = block.number;
         } else {
+            CombatEncounter.setEnd(encounterId, block.timestamp);
             encounterData.end = block.timestamp;
         }
 
-        // check dead attackers and defenders
-        uint256 cumulativeAttackerLevels;
-        uint256 livingAttackers;
-
-        StatsData memory statsTemp;
-
-        for (uint256 i; i < encounterData.attackers.length; i++) {
-            statsTemp = Stats.get(encounterData.attackers[i]);
-            cumulativeAttackerLevels += statsTemp.level;
-            if (statsTemp.currentHp > 0) {
-                livingAttackers++;
-            }
-        }
-
-        //if cumulative attacker levels is >= 5 levels above the monster level no gold reward.
-        //  for this calculation level is calculated from exp not from actual leveled levels
         bytes32 defenderTemp;
         for (uint256 i; i < encounterData.defenders.length; i++) {
             defenderTemp = encounterData.defenders[i];
             if (MatchEntity.getDied(defenderTemp)) {
-                expAmount += Stats.getExperience(defenderTemp);
-                goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
                 MatchEntity.setEncounterId(defenderTemp, bytes32(0));
-                _calculateItemDrop(
-                    randomNumber, defenderTemp, encounterData.attackers[randomNumber % encounterData.attackers.length]
-                );
             }
         }
-        // drop gold reward calculated from the level of mob to player journey wallet (can mint tokens when he returns to 0,0).
-        // if dead player, drop transfer 50% of un-banked gold to world contract
-        // distribute loot
-        bytes32 entityIdTemp;
+
+        (uint256 expAmount, uint256 goldAmount, uint256[] memory itemsDropped) =
+            IWorld(_world()).UD__distributeRewards(encounterId, randomNumber);
+
+        CombatOutcomeData memory combatOutcome = CombatOutcomeData({
+            endTime: block.timestamp,
+            expDropped: expAmount,
+            goldDropped: goldAmount,
+            itemsDropped: itemsDropped
+        });
+
         for (uint256 i; i < encounterData.attackers.length; i++) {
-            entityIdTemp = encounterData.attackers[i];
-            if (IWorld(_world()).UD__isValidCharacterId(entityIdTemp)) {
-                statsTemp = Stats.get(entityIdTemp);
-                if (statsTemp.currentHp > int256(0)) {
-                    if (goldAmount > uint256(0)) {
-                        IWorld(_world()).UD__dropGold(entityIdTemp, (goldAmount / livingAttackers));
-                    }
-                    if (expAmount > uint256(0) && livingAttackers > uint256(0)) {
-                        statsTemp.experience += expAmount / livingAttackers;
-                    }
-                }
-                Stats.set(entityIdTemp, statsTemp);
-            }
-            MatchEntity.setEncounterId(entityIdTemp, bytes32(0));
+            MatchEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
         }
-        CombatEncounter.set(encounterId, encounterData);
-    }
-
-    function _calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) internal view returns (uint256 dropAmount) {
-        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        // Calculate level-based drop
-        dropAmount = randomNumber % (BASE_GOLD_DROP * mobLevel);
-    }
-
-    function _calculateItemDrop(uint256 randomNumber, bytes32 entityId, bytes32 characterId) internal {
-        uint256 mobId = IWorld(_world()).UD__getMobId(entityId);
-        MonsterStats memory monsterStats = abi.decode(Mobs.getMobStats(mobId), (MonsterStats));
-        for (uint256 i; i < monsterStats.inventory.length; i++) {
-            uint256 dropChance = Items.getDropChance(monsterStats.inventory[i]);
-            if (randomNumber % 100_000 > dropChance) {
-                IWorld(_world()).UD__dropItem(characterId, monsterStats.inventory[i], 1);
-            }
-        }
+        CombatOutcome.set(encounterId, combatOutcome);
     }
 }

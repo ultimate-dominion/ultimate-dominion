@@ -124,7 +124,7 @@ declare const abi: [
     "name": "executeCombat",
     "inputs": [
       {
-        "name": "randomNumber",
+        "name": "prevRandao",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -194,6 +194,11 @@ declare const abi: [
             "name": "end",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "rewardsDistributed",
+            "type": "bool",
+            "internalType": "bool"
           },
           {
             "name": "currentTurn",
