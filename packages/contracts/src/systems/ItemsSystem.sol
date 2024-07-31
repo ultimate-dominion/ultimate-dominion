@@ -73,6 +73,7 @@ contract ItemsSystem is System {
         // set the new item struct in the items table;
         Items.set(itemId, newItem);
 
+
         return itemId;
     }
 
