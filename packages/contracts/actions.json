@@ -1,0 +1,15 @@
+{
+    "physicalAttacks": [
+        {
+            "actionId": "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d",
+            "name": "basic weapon attack",
+            "stats": {
+                "armorPenetration": 0,
+                "attackModifierBonus": 0,
+                "bonusDamage": 0,
+                "classrestrictions": [],
+                "critChanceBonus": 0
+            }
+        }
+    ]
+}
