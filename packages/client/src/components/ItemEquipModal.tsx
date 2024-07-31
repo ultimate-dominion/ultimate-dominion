@@ -163,7 +163,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       <ModalContent>
         <ModalHeader>{isOwner ? 'Equip Item' : 'Make an offer'}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody padding={4}>
+        <ModalBody p={4}>
           {isOwner ? (
             <Text mb={6}>Do you want to equip this item?</Text>
           ) : (

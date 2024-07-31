@@ -35,11 +35,11 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useMUD();
   const { character } = useCharacter();
   const {
+    aliveMonsters,
     actionOutcomes,
     currentBattle,
     isRefreshing,
     monsterOponent,
-    monsters,
     otherPlayers,
   } = useMapNavigation();
 
@@ -239,8 +239,8 @@ export const TileDetailsPanel = (): JSX.Element => {
       </Grid>
       <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
         <GridItem colSpan={2}>
-          {monsters.length > 0 &&
-            monsters.map((monster, i) => (
+          {aliveMonsters.length > 0 &&
+            aliveMonsters.map((monster, i) => (
               <MonsterRow
                 key={`tile-monster-${i}-${monster.name}`}
                 monster={monster}
@@ -249,7 +249,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                 }}
               />
             ))}
-          {monsters.length === 0 && (
+          {aliveMonsters.length === 0 && (
             <Text size={{ base: '2xs', lg: 'sm' }}>
               No monsters in this area
             </Text>
