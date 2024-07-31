@@ -3,7 +3,9 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {RandomNumbers} from "@codegen/index.sol";
-import {Characters, Stats, UltimateDominionConfig, StatsData} from "@codegen/index.sol";
+import {
+    Characters, Counters, Stats, UltimateDominionConfig, StatsData, RngLogs, RngLogsData
+} from "@codegen/index.sol";
 import {Classes, RngRequestType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
@@ -39,10 +41,6 @@ contract RngSystem is System, IEntropyConsumer {
         payable
         returns (uint64 sequenceNumber)
     {
-        uint128 requestFee = _entropy().getFee(_provider());
-        // check if the user has sent enough fees
-        // if (_msgValue() < requestFee) revert('not enough fees');
-
         // NOTE: required for testing, since callback is coming before data is stored
         /////////////// TODO: remove for mainnet deployment //////
         if (block.chainid == 31337) {
@@ -56,10 +54,38 @@ contract RngSystem is System, IEntropyConsumer {
         /////////////////////////////////////////
 
         // pay the fees and request a random number from entropy
-        sequenceNumber = _entropy().requestWithCallback{value: requestFee}(_provider(), userRandomNumber);
-        // RandomNumbers.set(sequenceNumber, requestType, data);
+        // sequenceNumber = _entropy().requestWithCallback{value: requestFee}(_provider(), userRandomNumber);
+
+        //prevrando entropy
+        sequenceNumber = uint64(_incrementCounter(1));
+
+        RngLogsData memory rngLog = RngLogsData({
+            sequenceNumber: sequenceNumber,
+            provider: _provider(),
+            entropy: address(_entropy()),
+            // fee: requestFee,
+            fee: 0,
+            requestType: requestType,
+            randomNumber: 0,
+            userRandomNumber: userRandomNumber,
+            data: data
+        });
+
+        RngLogs.set(sequenceNumber, rngLog);
+
+        uint256 rng;
+        if (block.chainid == 31337) {
+            uint256 timesCalled;
+            rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled) ** 8)));
+            timesCalled++;
+        } else {
+            rng = block.prevrandao;
+        }
+
         RandomNumbers.setArbitraryData(sequenceNumber, data);
         RandomNumbers.setRequestType(sequenceNumber, requestType);
+
+        entropyCallback(sequenceNumber, address(0), bytes32(rng));
     }
 
     function entropyCallback(
@@ -78,13 +104,17 @@ contract RngSystem is System, IEntropyConsumer {
         RngRequestType requestType = RandomNumbers.getRequestType(sequenceNumber);
         bytes memory _data = RandomNumbers.getArbitraryData(sequenceNumber);
 
+        RngLogs.setRandomNumber(_getCounter(1), randomNumber);
+
         if (uint8(requestType) == uint8(0)) {
             bytes32 characterId = abi.decode(_data, (bytes32));
             _storeStats(randomNumber, characterId);
-        }
-        if (uint8(requestType) == uint8(1)) {
+        } else if (uint8(requestType) == uint8(1)) {
             (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
+            require(moves.length > 0, "RNG: Invalid moves");
             _executeCombat(randomNumber, encounterId, moves);
+        } else {
+            revert("RNG: Unrecognized request type");
         }
     }
 
@@ -141,5 +171,14 @@ contract RngSystem is System, IEntropyConsumer {
         }
 
         Stats.set(characterId, stats);
+    }
+
+    function _getCounter(uint256 counterNumber) internal returns (uint256 _counter) {
+        _counter = Counters.get(address(this), counterNumber);
+    }
+
+    function _incrementCounter(uint256 counterNumber) internal returns (uint256 _counter) {
+        _counter = Counters.get(address(this), counterNumber) + 1;
+        Counters.set(address(this), counterNumber, _counter);
     }
 }

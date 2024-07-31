@@ -56,7 +56,7 @@ export const ActionsPanel = (): JSX.Element => {
     equippedItems,
   } = useCharacter();
   const {
-    battleActionOutcomes,
+    actionOutcomes,
     currentBattle,
     isAttacking,
     isRefreshing: isRefreshingMap,
@@ -192,7 +192,7 @@ export const ActionsPanel = (): JSX.Element => {
         {!currentBattle && actionText}
 
         {monsterOponent &&
-          battleActionOutcomes.map((action, i) => {
+          actionOutcomes.map((action, i) => {
             if (action.miss) {
               return (
                 <Typist

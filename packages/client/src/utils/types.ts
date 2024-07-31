@@ -27,7 +27,7 @@ export enum StatsClasses {
   Mage,
 }
 
-export type BattleActionOutcome = {
+export type ActionOutcomeType = {
   attackerDamageDelt: string;
   attackerDied: boolean;
   attackerId: string;
@@ -55,6 +55,16 @@ export type CharacterData = {
   locked: boolean;
   owner: string;
   tokenId: string;
+};
+
+export type CombatOutcomeType = {
+  deadAttackers: Entity[];
+  deadDefenders: Entity[];
+  encounterId: Entity;
+  endTime: string;
+  expDropped: string;
+  goldDropped: string;
+  itemsDropped: Entity[];
 };
 
 export type EntityStats = {

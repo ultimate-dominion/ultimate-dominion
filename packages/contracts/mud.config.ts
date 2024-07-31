@@ -125,10 +125,10 @@ export default defineWorld({
     Counters: {
       schema: {
         contractAddress: "address",
-        mobId: "uint256",
+        counterId: "uint256",
         counter: "uint256",
       },
-      key: ["contractAddress", "mobId"],
+      key: ["contractAddress", "counterId"],
     },
     Items: {
       schema: {
@@ -188,41 +188,7 @@ export default defineWorld({
       },
       key: ["encounterId"],
     },
-    ActionOutcome: {
-      schema: {
-        encounterId: "bytes32",
-        currentTurn: "uint256",
-        actionNumber: "uint256",
-        actionId: "bytes32",
-        weaponId: "uint256",
-        attackerId: "bytes32",
-        defenderId: "bytes32",
-        hit: "bool",
-        miss: "bool",
-        crit: "bool",
-        attackerDamageDelt: "int256",
-        defenderDamageDelt: "int256",
-        attackerDied: "bool",
-        defenderDied: "bool",
-        blockNumber: "uint256",
-        timestamp: "uint256",
-      },
-      key: ["encounterId", "currentTurn", "actionNumber"],
-      type: "offchainTable",
-    },
-    CombatOutcome: {
-      schema: {
-        encounterId: "bytes32",
-        endTime: "uint256",
-        expDropped: "uint256",
-        goldDropped: "uint256",
-        itemsDropped: "uint256[]",
-        deadAttackers: "bytes32[]",
-        deadDefenders: "bytes32[]",
-      },
-      key: ["encounterId"],
-      type: "offchainTable",
-    },
+
     // when an entity starts combat it creates a "match entity" for that encounter.
     //when combat ends, the encounterId is set to zero, and the damage taken subtracted from the entities hp.
     MatchEntity: {
@@ -313,6 +279,57 @@ export default defineWorld({
         identifier: "uint256",
         amount: "uint256",
       },
+    },
+    ///////////////////////// OFFCHAIN TABLES//////////////////
+    RngLogs: {
+      key: ["requestId"],
+      schema: {
+        requestId: "uint256",
+        sequenceNumber: "uint64",
+        provider: "address",
+        entropy: "address",
+        fee: "uint256",
+        requestType: "RngRequestType",
+        randomNumber: "uint256",
+        userRandomNumber: "bytes32",
+        data: "bytes",
+      },
+      type: "offchainTable",
+    },
+    ActionOutcome: {
+      schema: {
+        encounterId: "bytes32",
+        currentTurn: "uint256",
+        actionNumber: "uint256",
+        actionId: "bytes32",
+        weaponId: "uint256",
+        attackerId: "bytes32",
+        defenderId: "bytes32",
+        hit: "bool",
+        miss: "bool",
+        crit: "bool",
+        attackerDamageDelt: "int256",
+        defenderDamageDelt: "int256",
+        attackerDied: "bool",
+        defenderDied: "bool",
+        blockNumber: "uint256",
+        timestamp: "uint256",
+      },
+      key: ["encounterId", "currentTurn", "actionNumber"],
+      type: "offchainTable",
+    },
+    CombatOutcome: {
+      schema: {
+        encounterId: "bytes32",
+        endTime: "uint256",
+        expDropped: "uint256",
+        goldDropped: "uint256",
+        itemsDropped: "uint256[]",
+        deadAttackers: "bytes32[]",
+        deadDefenders: "bytes32[]",
+      },
+      key: ["encounterId"],
+      type: "offchainTable",
     },
   },
   excludeSystems: ["RngSystem"],

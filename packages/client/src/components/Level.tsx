@@ -10,6 +10,8 @@ export const Level = ({
   return (
     <Box fontSize="10px" mt={8} position="relative" w="100%">
       <Text
+        color={levelPercent === 100 ? 'green' : 'black'}
+        fontWeight={levelPercent === 100 ? 'bold' : 'normal'}
         position="absolute"
         right={100 - levelPercent - 2 + '%'}
         top="-15px"
@@ -24,7 +26,11 @@ export const Level = ({
       >
         100%
       </Text>
-      <Progress h={2} value={levelPercent} />
+      <Progress
+        h={2}
+        variant={levelPercent === 100 ? 'filled' : 'filling'}
+        value={levelPercent}
+      />
       <HStack mt={1}>
         <Text>Level {currentLevel}</Text>
         <Spacer />

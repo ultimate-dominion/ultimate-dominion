@@ -223,7 +223,7 @@ contract CombatSystem is System {
             _endMatch(encounterId, randomNumber);
         } else {
             encounterData.currentTurn++;
-        CombatEncounter.set(encounterId, encounterData);
+            CombatEncounter.set(encounterId, encounterData);
         }
     }
 
@@ -341,6 +341,7 @@ contract CombatSystem is System {
 
         uint256 defenseTotal = ((defenseRoll % 1000) + defender.adjustedAgility) * DEFENSE_MODIFIER;
         attackLands = attackTotal > defenseTotal;
+
         if (attackLands) {
             crit = attackTotal / defenseTotal >= 2;
         }

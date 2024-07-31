@@ -32,8 +32,8 @@ import { useToast } from '../hooks/useToast';
 import { GAME_BOARD_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import {
+  type ActionOutcomeType,
   ActionType,
-  type BattleActionOutcome,
   type Character,
   type CombatDetails,
   type Monster,
@@ -42,7 +42,7 @@ import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 
 type MapNavigationContextType = {
-  battleActionOutcomes: BattleActionOutcome[];
+  actionOutcomes: ActionOutcomeType[];
   currentBattle: CombatDetails | null;
   isAttacking: boolean;
   isRefreshing: boolean;
@@ -58,7 +58,7 @@ type MapNavigationContextType = {
 };
 
 const MapNavigationContext = createContext<MapNavigationContextType>({
-  battleActionOutcomes: [],
+  actionOutcomes: [],
   currentBattle: null,
   isAttacking: false,
   isRefreshing: false,
@@ -537,7 +537,7 @@ export const MapNavigationProvider = ({
     ],
   );
 
-  const battleActionOutcomes = useEntityQuery([
+  const actionOutcomes = useEntityQuery([
     Has(ActionOutcome),
     HasValue(ActionOutcome, { attackerId: character?.characterId }),
   ])
@@ -573,14 +573,14 @@ export const MapNavigationProvider = ({
         miss: _actionOutcome.miss,
         timestamp: _actionOutcome.timestamp.toString(),
         weaponId: _actionOutcome.weaponId.toString(),
-      } as BattleActionOutcome;
+      } as ActionOutcomeType;
     })
     .filter(action => action.encounterId === currentBattle?.encounterId);
 
   return (
     <MapNavigationContext.Provider
       value={{
-        battleActionOutcomes,
+        actionOutcomes,
         currentBattle,
         isAttacking,
         isRefreshing: isFetchingEntities || isMoving,
