@@ -19,17 +19,23 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 // Import user types
 import { OrderStatus } from "./../common.sol";
 
+struct OrdersData {
+  address offerer;
+  uint256 offerCounter;
+  OrderStatus orderStatus;
+}
+
 library Orders {
   // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "UD", name: "Orders", typeId: RESOURCE_TABLE });`
   ResourceId constant _tableId = ResourceId.wrap(0x746255440000000000000000000000004f726465727300000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0001010001000000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0035030014200100000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint8)
-  Schema constant _valueSchema = Schema.wrap(0x0001010000000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (address, uint256, uint8)
+  Schema constant _valueSchema = Schema.wrap(0x00350300611f0000000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -45,8 +51,10 @@ library Orders {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](1);
-    fieldNames[0] = "orderStatus";
+    fieldNames = new string[](3);
+    fieldNames[0] = "offerer";
+    fieldNames[1] = "offerCounter";
+    fieldNames[2] = "orderStatus";
   }
 
   /**
@@ -64,13 +72,97 @@ library Orders {
   }
 
   /**
+   * @notice Get offerer.
+   */
+  function getOfferer(bytes32 orderHash) internal view returns (address offerer) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Get offerer.
+   */
+  function _getOfferer(bytes32 orderHash) internal view returns (address offerer) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Set offerer.
+   */
+  function setOfferer(bytes32 orderHash, address offerer) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((offerer)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set offerer.
+   */
+  function _setOfferer(bytes32 orderHash, address offerer) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((offerer)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get offerCounter.
+   */
+  function getOfferCounter(bytes32 orderHash) internal view returns (uint256 offerCounter) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get offerCounter.
+   */
+  function _getOfferCounter(bytes32 orderHash) internal view returns (uint256 offerCounter) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set offerCounter.
+   */
+  function setOfferCounter(bytes32 orderHash, uint256 offerCounter) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((offerCounter)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set offerCounter.
+   */
+  function _setOfferCounter(bytes32 orderHash, uint256 offerCounter) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((offerCounter)), _fieldLayout);
+  }
+
+  /**
    * @notice Get orderStatus.
    */
   function getOrderStatus(bytes32 orderHash) internal view returns (OrderStatus orderStatus) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = orderHash;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return OrderStatus(uint8(bytes1(_blob)));
   }
 
@@ -81,29 +173,7 @@ library Orders {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = orderHash;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return OrderStatus(uint8(bytes1(_blob)));
-  }
-
-  /**
-   * @notice Get orderStatus.
-   */
-  function get(bytes32 orderHash) internal view returns (OrderStatus orderStatus) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = orderHash;
-
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return OrderStatus(uint8(bytes1(_blob)));
-  }
-
-  /**
-   * @notice Get orderStatus.
-   */
-  function _get(bytes32 orderHash) internal view returns (OrderStatus orderStatus) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = orderHash;
-
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return OrderStatus(uint8(bytes1(_blob)));
   }
 
@@ -114,7 +184,7 @@ library Orders {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = orderHash;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked(uint8(orderStatus)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked(uint8(orderStatus)), _fieldLayout);
   }
 
   /**
@@ -124,27 +194,124 @@ library Orders {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = orderHash;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked(uint8(orderStatus)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked(uint8(orderStatus)), _fieldLayout);
   }
 
   /**
-   * @notice Set orderStatus.
+   * @notice Get the full data.
    */
-  function set(bytes32 orderHash, OrderStatus orderStatus) internal {
+  function get(bytes32 orderHash) internal view returns (OrdersData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = orderHash;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked(uint8(orderStatus)), _fieldLayout);
+    (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreSwitch.getRecord(
+      _tableId,
+      _keyTuple,
+      _fieldLayout
+    );
+    return decode(_staticData, _encodedLengths, _dynamicData);
   }
 
   /**
-   * @notice Set orderStatus.
+   * @notice Get the full data.
    */
-  function _set(bytes32 orderHash, OrderStatus orderStatus) internal {
+  function _get(bytes32 orderHash) internal view returns (OrdersData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = orderHash;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked(uint8(orderStatus)), _fieldLayout);
+    (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreCore.getRecord(
+      _tableId,
+      _keyTuple,
+      _fieldLayout
+    );
+    return decode(_staticData, _encodedLengths, _dynamicData);
+  }
+
+  /**
+   * @notice Set the full data using individual values.
+   */
+  function set(bytes32 orderHash, address offerer, uint256 offerCounter, OrderStatus orderStatus) internal {
+    bytes memory _staticData = encodeStatic(offerer, offerCounter, orderStatus);
+
+    EncodedLengths _encodedLengths;
+    bytes memory _dynamicData;
+
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
+  }
+
+  /**
+   * @notice Set the full data using individual values.
+   */
+  function _set(bytes32 orderHash, address offerer, uint256 offerCounter, OrderStatus orderStatus) internal {
+    bytes memory _staticData = encodeStatic(offerer, offerCounter, orderStatus);
+
+    EncodedLengths _encodedLengths;
+    bytes memory _dynamicData;
+
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
+  }
+
+  /**
+   * @notice Set the full data using the data struct.
+   */
+  function set(bytes32 orderHash, OrdersData memory _table) internal {
+    bytes memory _staticData = encodeStatic(_table.offerer, _table.offerCounter, _table.orderStatus);
+
+    EncodedLengths _encodedLengths;
+    bytes memory _dynamicData;
+
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
+  }
+
+  /**
+   * @notice Set the full data using the data struct.
+   */
+  function _set(bytes32 orderHash, OrdersData memory _table) internal {
+    bytes memory _staticData = encodeStatic(_table.offerer, _table.offerCounter, _table.orderStatus);
+
+    EncodedLengths _encodedLengths;
+    bytes memory _dynamicData;
+
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = orderHash;
+
+    StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
+  }
+
+  /**
+   * @notice Decode the tightly packed blob of static data using this table's field layout.
+   */
+  function decodeStatic(
+    bytes memory _blob
+  ) internal pure returns (address offerer, uint256 offerCounter, OrderStatus orderStatus) {
+    offerer = (address(Bytes.getBytes20(_blob, 0)));
+
+    offerCounter = (uint256(Bytes.getBytes32(_blob, 20)));
+
+    orderStatus = OrderStatus(uint8(Bytes.getBytes1(_blob, 52)));
+  }
+
+  /**
+   * @notice Decode the tightly packed blobs using this table's field layout.
+   * @param _staticData Tightly packed static fields.
+   *
+   *
+   */
+  function decode(
+    bytes memory _staticData,
+    EncodedLengths,
+    bytes memory
+  ) internal pure returns (OrdersData memory _table) {
+    (_table.offerer, _table.offerCounter, _table.orderStatus) = decodeStatic(_staticData);
   }
 
   /**
@@ -171,8 +338,12 @@ library Orders {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(OrderStatus orderStatus) internal pure returns (bytes memory) {
-    return abi.encodePacked(orderStatus);
+  function encodeStatic(
+    address offerer,
+    uint256 offerCounter,
+    OrderStatus orderStatus
+  ) internal pure returns (bytes memory) {
+    return abi.encodePacked(offerer, offerCounter, orderStatus);
   }
 
   /**
@@ -181,8 +352,12 @@ library Orders {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(OrderStatus orderStatus) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(orderStatus);
+  function encode(
+    address offerer,
+    uint256 offerCounter,
+    OrderStatus orderStatus
+  ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+    bytes memory _staticData = encodeStatic(offerer, offerCounter, orderStatus);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
