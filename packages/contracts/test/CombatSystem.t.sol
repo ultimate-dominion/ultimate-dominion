@@ -88,10 +88,16 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         StatsData memory endingStats = Stats.get(bobCharacterId);
         uint256 endingGold = goldToken.balanceOf(bob);
+        int256 bobEndingHp = Stats.get(bobCharacterId).currentHp;
 
-        assertNotEq(startingStats.currentHp, int256(Stats.get(entityId).baseHp));
-        assertGt(endingStats.experience, startingStats.experience);
-        assertGt(endingGold, startingGold);
+        if (bobEndingHp > 0) {
+            assertGt(endingStats.experience, startingStats.experience);
+            assertGt(endingGold, startingGold);
+        } else {
+            assertFalse(MatchEntity.getDied(entityId));
+        }
+
+        assertNotEq(startingStats.currentHp, Stats.get(bobCharacterId).currentHp);
         assertEq(MatchEntity.getEncounterId(bobCharacterId), bytes32(0));
     }
 

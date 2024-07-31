@@ -296,8 +296,6 @@ export default defineWorld({
         expDropped: "uint256",
         goldDropped: "uint256",
         itemsDropped: "uint256[]",
-        deadAttackers: "bytes32[]",
-        deadDefenders: "bytes32[]",
       },
       key: ["encounterId"],
       type: "offchainTable",

@@ -217,7 +217,7 @@ contract CombatSystem is System {
                 || deadDefenderCounter == encounterData.defenders.length
                 || encounterData.currentTurn == encounterData.maxTurns
         ) {
-            _endMatch(encounterId, randomNumber);
+            _endMatch(encounterId, randomNumber, deadDefenderCounter == encounterData.defenders.length);
         } else {
             // execute defender attacks
             for (uint256 i; i < encounterData.defenders.length; i++) {
@@ -393,7 +393,7 @@ contract CombatSystem is System {
 
     function _calculateMagicAttack() public {}
 
-    function _endMatch(bytes32 encounterId, uint256 randomNumber) internal {
+    function _endMatch(bytes32 encounterId, uint256 randomNumber, bool attackersWin) internal {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(CombatEncounter.getEnd(encounterId) == 0, "match already over");
 
@@ -416,16 +416,17 @@ contract CombatSystem is System {
         (uint256 expAmount, uint256 goldAmount, uint256[] memory itemsDropped) =
             IWorld(_world()).UD__distributeRewards(encounterId, randomNumber);
 
-        // CombatOutcomeData memory combatOutcome = CombatOutcomeData({
-        //     endTime: block.timestamp,
-        //     expDropped: expAmount,
-        //     goldDropped: goldAmount,
-        //     itemsDropped: itemsDropped,
-        // });
+        CombatOutcomeData memory combatOutcome = CombatOutcomeData({
+            endTime: block.timestamp,
+            attackersWin: attackersWin,
+            expDropped: expAmount,
+            goldDropped: goldAmount,
+            itemsDropped: itemsDropped
+        });
 
         for (uint256 i; i < encounterData.attackers.length; i++) {
             MatchEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
         }
-        // CombatOutcome.set(encounterId, combatOutcome);
+        CombatOutcome.set(encounterId, combatOutcome);
     }
 }
