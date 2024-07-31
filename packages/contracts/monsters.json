@@ -4,13 +4,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/1_giant_rat.json",
       "name": "Giant Rat",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 8,
         "armor": 1,
         "class": 0,
         "experience": 35,
         "hitPoints": 10,
         "intelligence": 4,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 1,
         "strength": 10
       }
@@ -19,13 +24,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/2_green_slime.json",
       "name": "Green Slime",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 2,
         "armor": 1,
         "class": 2,
         "experience": 30,
         "hitPoints": 8,
         "intelligence": 8,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 1,
         "strength": 2
       }
@@ -34,13 +44,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/3_kobold_scout.json",
       "name": "Kobold Scout",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 11,
         "armor": 1,
         "class": 1,
         "experience": 60,
         "hitPoints": 6,
         "intelligence": 6,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 2,
         "strength": 8
       }
@@ -49,13 +64,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/4_gray_ooze.json",
       "name": "Gray Ooze",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 4,
         "armor": 1,
         "class": 2,
         "experience": 55,
         "hitPoints": 9,
         "intelligence": 8,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 2,
         "strength": 2
       }
@@ -64,13 +84,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/5_cave_goblin.json",
       "name": "Cave Goblin",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 6,
         "armor": 1,
         "class": 0,
         "experience": 90,
         "hitPoints": 12,
         "intelligence": 6,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 3,
         "strength": 13
       }
@@ -79,13 +104,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/6_giant_bat.json",
       "name": "Giant Bat",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 12,
         "armor": 1,
         "class": 1,
         "experience": 85,
         "hitPoints": 10,
         "intelligence": 6,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 3,
         "strength": 8
       }
@@ -94,13 +124,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/7_skeleton.json",
       "name": "Skeleton",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 8,
         "armor": 1,
         "class": 0,
         "experience": 135,
         "hitPoints": 14,
         "intelligence": 7,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 4,
         "strength": 15
       }
@@ -109,13 +144,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/8_giant_spider.json",
       "name": "Giant Spider",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 13,
         "armor": 1,
         "class": 1,
         "experience": 155,
         "hitPoints": 12,
         "intelligence": 7,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 4,
         "strength": 12
       }
@@ -124,13 +164,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/9_fire_beetle.json",
       "name": "Fire Beetle",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 10,
         "armor": 1,
         "class": 2,
         "experience": 205,
         "hitPoints": 14,
         "intelligence": 12,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 5,
         "strength": 14
       }
@@ -139,13 +184,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/10_orc_grunt.json",
       "name": "Orc Grunt",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 9,
         "armor": 1,
         "class": 0,
         "experience": 215,
         "hitPoints": 18,
         "intelligence": 10,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 5,
         "strength": 18
       }
@@ -154,13 +204,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/11_cave_wraith.json",
       "name": "Cave Wraith",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 15,
         "armor": 1,
         "class": 2,
         "experience": 310,
         "hitPoints": 17,
         "intelligence": 18,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 6,
         "strength": 16
       }
@@ -169,13 +224,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/12_giant_centipede.json",
       "name": "Giant Centipede",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 16,
         "armor": 1,
         "class": 1,
         "experience": 300,
         "hitPoints": 15,
         "intelligence": 13,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 6,
         "strength": 18
       }
@@ -184,13 +244,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/13_cave_bear.json",
       "name": "Cave Bear",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 18,
         "armor": 1,
         "class": 0,
         "experience": 460,
         "hitPoints": 21,
         "intelligence": 14,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 7,
         "strength": 22
       }
@@ -199,13 +264,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/14_specter.json",
       "name": "Specter",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 16,
         "armor": 1,
         "class": 2,
         "experience": 440,
         "hitPoints": 18,
         "intelligence": 21,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 7,
         "strength": 16
       }
@@ -214,13 +284,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/15_giant_worm.json",
       "name": "Giant Worm",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 22,
         "armor": 1,
         "class": 1,
         "experience": 610,
         "hitPoints": 18,
         "intelligence": 14,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 8,
         "strength": 20
       }
@@ -229,13 +304,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/16_troll.json",
       "name": "Troll",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 17,
         "armor": 1,
         "class": 0,
         "experience": 625,
         "hitPoints": 24,
         "intelligence": 18,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 8,
         "strength": 25
       }
@@ -244,13 +324,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/17_magma_mephit.json",
       "name": "Magma Mephit",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 20,
         "armor": 1,
         "class": 2,
         "experience": 880,
         "hitPoints": 24,
         "intelligence": 25,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 9,
         "strength": 22
       }
@@ -259,13 +344,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/18_spirit_naga.json",
       "name": "Spirit Naga",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 25,
         "armor": 1,
         "class": 1,
         "experience": 900,
         "hitPoints": 22,
         "intelligence": 22,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 9,
         "strength": 22
       }
@@ -274,13 +364,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/19_werewolf.json",
       "name": "Werewolf",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 35,
         "armor": 1,
         "class": 1,
         "experience": 3600,
         "hitPoints": 28,
         "intelligence": 25,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 10,
         "strength": 26
       }
@@ -289,13 +384,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/20_umber_hulk.json",
       "name": "Umber Hulk",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 26,
         "armor": 1,
         "class": 0,
         "experience": 4000,
         "hitPoints": 34,
         "intelligence": 27,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 10,
         "strength": 34
       }
@@ -304,13 +404,18 @@
       "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/21_shadow_dragon.json",
       "name": "Shadow Dragon",
       "stats": {
+        "actions": [
+          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+        ],
         "agility": 32,
         "armor": 1,
         "class": 2,
         "experience": 4000,
         "hitPoints": 32,
         "intelligence": 36,
-        "inventory": [1],
+        "inventory": [
+          1
+        ],
         "level": 10,
         "strength": 30
       }

@@ -292,9 +292,12 @@ export default defineWorld({
       schema: {
         encounterId: "bytes32",
         endTime: "uint256",
+        attackersWin: "bool",
         expDropped: "uint256",
         goldDropped: "uint256",
         itemsDropped: "uint256[]",
+        deadAttackers: "bytes32[]",
+        deadDefenders: "bytes32[]",
       },
       key: ["encounterId"],
       type: "offchainTable",

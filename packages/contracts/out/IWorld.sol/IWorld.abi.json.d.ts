@@ -1107,6 +1107,11 @@ declare const abi: [
         "internalType": "struct MonsterStats",
         "components": [
           {
+            "name": "actions",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
             "name": "agility",
             "type": "uint256",
             "internalType": "uint256"
@@ -1172,6 +1177,11 @@ declare const abi: [
         "type": "tuple",
         "internalType": "struct MonsterStats",
         "components": [
+          {
+            "name": "actions",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
           {
             "name": "agility",
             "type": "uint256",

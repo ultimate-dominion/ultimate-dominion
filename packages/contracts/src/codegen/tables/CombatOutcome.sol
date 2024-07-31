@@ -18,9 +18,12 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 struct CombatOutcomeData {
   uint256 endTime;
+  bool attackersWin;
   uint256 expDropped;
   uint256 goldDropped;
   uint256[] itemsDropped;
+  bytes32[] deadAttackers;
+  bytes32[] deadDefenders;
 }
 
 library CombatOutcome {
@@ -28,12 +31,12 @@ library CombatOutcome {
   ResourceId constant _tableId = ResourceId.wrap(0x6f745544000000000000000000000000436f6d6261744f7574636f6d65000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0060030120202000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0061040320012020000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint256, uint256, uint256, uint256[])
-  Schema constant _valueSchema = Schema.wrap(0x006003011f1f1f81000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint256, bool, uint256, uint256, uint256[], bytes32[], bytes32[])
+  Schema constant _valueSchema = Schema.wrap(0x006104031f601f1f81c1c1000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -49,11 +52,14 @@ library CombatOutcome {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](4);
+    fieldNames = new string[](7);
     fieldNames[0] = "endTime";
-    fieldNames[1] = "expDropped";
-    fieldNames[2] = "goldDropped";
-    fieldNames[3] = "itemsDropped";
+    fieldNames[1] = "attackersWin";
+    fieldNames[2] = "expDropped";
+    fieldNames[3] = "goldDropped";
+    fieldNames[4] = "itemsDropped";
+    fieldNames[5] = "deadAttackers";
+    fieldNames[6] = "deadDefenders";
   }
 
   /**
@@ -91,13 +97,33 @@ library CombatOutcome {
   }
 
   /**
+   * @notice Set attackersWin.
+   */
+  function setAttackersWin(bytes32 encounterId, bool attackersWin) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = encounterId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((attackersWin)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set attackersWin.
+   */
+  function _setAttackersWin(bytes32 encounterId, bool attackersWin) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = encounterId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((attackersWin)), _fieldLayout);
+  }
+
+  /**
    * @notice Set expDropped.
    */
   function setExpDropped(bytes32 encounterId, uint256 expDropped) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((expDropped)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((expDropped)), _fieldLayout);
   }
 
   /**
@@ -107,7 +133,7 @@ library CombatOutcome {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((expDropped)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((expDropped)), _fieldLayout);
   }
 
   /**
@@ -117,7 +143,7 @@ library CombatOutcome {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((goldDropped)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((goldDropped)), _fieldLayout);
   }
 
   /**
@@ -127,7 +153,7 @@ library CombatOutcome {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((goldDropped)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((goldDropped)), _fieldLayout);
   }
 
   /**
@@ -136,14 +162,17 @@ library CombatOutcome {
   function set(
     bytes32 encounterId,
     uint256 endTime,
+    bool attackersWin,
     uint256 expDropped,
     uint256 goldDropped,
-    uint256[] memory itemsDropped
+    uint256[] memory itemsDropped,
+    bytes32[] memory deadAttackers,
+    bytes32[] memory deadDefenders
   ) internal {
-    bytes memory _staticData = encodeStatic(endTime, expDropped, goldDropped);
+    bytes memory _staticData = encodeStatic(endTime, attackersWin, expDropped, goldDropped);
 
-    EncodedLengths _encodedLengths = encodeLengths(itemsDropped);
-    bytes memory _dynamicData = encodeDynamic(itemsDropped);
+    EncodedLengths _encodedLengths = encodeLengths(itemsDropped, deadAttackers, deadDefenders);
+    bytes memory _dynamicData = encodeDynamic(itemsDropped, deadAttackers, deadDefenders);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
@@ -157,14 +186,17 @@ library CombatOutcome {
   function _set(
     bytes32 encounterId,
     uint256 endTime,
+    bool attackersWin,
     uint256 expDropped,
     uint256 goldDropped,
-    uint256[] memory itemsDropped
+    uint256[] memory itemsDropped,
+    bytes32[] memory deadAttackers,
+    bytes32[] memory deadDefenders
   ) internal {
-    bytes memory _staticData = encodeStatic(endTime, expDropped, goldDropped);
+    bytes memory _staticData = encodeStatic(endTime, attackersWin, expDropped, goldDropped);
 
-    EncodedLengths _encodedLengths = encodeLengths(itemsDropped);
-    bytes memory _dynamicData = encodeDynamic(itemsDropped);
+    EncodedLengths _encodedLengths = encodeLengths(itemsDropped, deadAttackers, deadDefenders);
+    bytes memory _dynamicData = encodeDynamic(itemsDropped, deadAttackers, deadDefenders);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
@@ -176,10 +208,10 @@ library CombatOutcome {
    * @notice Set the full data using the data struct.
    */
   function set(bytes32 encounterId, CombatOutcomeData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.endTime, _table.expDropped, _table.goldDropped);
+    bytes memory _staticData = encodeStatic(_table.endTime, _table.attackersWin, _table.expDropped, _table.goldDropped);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.itemsDropped);
-    bytes memory _dynamicData = encodeDynamic(_table.itemsDropped);
+    EncodedLengths _encodedLengths = encodeLengths(_table.itemsDropped, _table.deadAttackers, _table.deadDefenders);
+    bytes memory _dynamicData = encodeDynamic(_table.itemsDropped, _table.deadAttackers, _table.deadDefenders);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
@@ -191,10 +223,10 @@ library CombatOutcome {
    * @notice Set the full data using the data struct.
    */
   function _set(bytes32 encounterId, CombatOutcomeData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.endTime, _table.expDropped, _table.goldDropped);
+    bytes memory _staticData = encodeStatic(_table.endTime, _table.attackersWin, _table.expDropped, _table.goldDropped);
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.itemsDropped);
-    bytes memory _dynamicData = encodeDynamic(_table.itemsDropped);
+    EncodedLengths _encodedLengths = encodeLengths(_table.itemsDropped, _table.deadAttackers, _table.deadDefenders);
+    bytes memory _dynamicData = encodeDynamic(_table.itemsDropped, _table.deadAttackers, _table.deadDefenders);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = encounterId;
@@ -207,12 +239,14 @@ library CombatOutcome {
    */
   function decodeStatic(
     bytes memory _blob
-  ) internal pure returns (uint256 endTime, uint256 expDropped, uint256 goldDropped) {
+  ) internal pure returns (uint256 endTime, bool attackersWin, uint256 expDropped, uint256 goldDropped) {
     endTime = (uint256(Bytes.getBytes32(_blob, 0)));
 
-    expDropped = (uint256(Bytes.getBytes32(_blob, 32)));
+    attackersWin = (_toBool(uint8(Bytes.getBytes1(_blob, 32))));
 
-    goldDropped = (uint256(Bytes.getBytes32(_blob, 64)));
+    expDropped = (uint256(Bytes.getBytes32(_blob, 33)));
+
+    goldDropped = (uint256(Bytes.getBytes32(_blob, 65)));
   }
 
   /**
@@ -221,13 +255,29 @@ library CombatOutcome {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (uint256[] memory itemsDropped) {
+  )
+    internal
+    pure
+    returns (uint256[] memory itemsDropped, bytes32[] memory deadAttackers, bytes32[] memory deadDefenders)
+  {
     uint256 _start;
     uint256 _end;
     unchecked {
       _end = _encodedLengths.atIndex(0);
     }
     itemsDropped = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_uint256());
+
+    _start = _end;
+    unchecked {
+      _end += _encodedLengths.atIndex(1);
+    }
+    deadAttackers = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
+
+    _start = _end;
+    unchecked {
+      _end += _encodedLengths.atIndex(2);
+    }
+    deadDefenders = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
   }
 
   /**
@@ -241,9 +291,9 @@ library CombatOutcome {
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (CombatOutcomeData memory _table) {
-    (_table.endTime, _table.expDropped, _table.goldDropped) = decodeStatic(_staticData);
+    (_table.endTime, _table.attackersWin, _table.expDropped, _table.goldDropped) = decodeStatic(_staticData);
 
-    (_table.itemsDropped) = decodeDynamic(_encodedLengths, _dynamicData);
+    (_table.itemsDropped, _table.deadAttackers, _table.deadDefenders) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -270,18 +320,31 @@ library CombatOutcome {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(uint256 endTime, uint256 expDropped, uint256 goldDropped) internal pure returns (bytes memory) {
-    return abi.encodePacked(endTime, expDropped, goldDropped);
+  function encodeStatic(
+    uint256 endTime,
+    bool attackersWin,
+    uint256 expDropped,
+    uint256 goldDropped
+  ) internal pure returns (bytes memory) {
+    return abi.encodePacked(endTime, attackersWin, expDropped, goldDropped);
   }
 
   /**
    * @notice Tightly pack dynamic data lengths using this table's schema.
    * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
-  function encodeLengths(uint256[] memory itemsDropped) internal pure returns (EncodedLengths _encodedLengths) {
+  function encodeLengths(
+    uint256[] memory itemsDropped,
+    bytes32[] memory deadAttackers,
+    bytes32[] memory deadDefenders
+  ) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(itemsDropped.length * 32);
+      _encodedLengths = EncodedLengthsLib.pack(
+        itemsDropped.length * 32,
+        deadAttackers.length * 32,
+        deadDefenders.length * 32
+      );
     }
   }
 
@@ -289,8 +352,17 @@ library CombatOutcome {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(uint256[] memory itemsDropped) internal pure returns (bytes memory) {
-    return abi.encodePacked(EncodeArray.encode((itemsDropped)));
+  function encodeDynamic(
+    uint256[] memory itemsDropped,
+    bytes32[] memory deadAttackers,
+    bytes32[] memory deadDefenders
+  ) internal pure returns (bytes memory) {
+    return
+      abi.encodePacked(
+        EncodeArray.encode((itemsDropped)),
+        EncodeArray.encode((deadAttackers)),
+        EncodeArray.encode((deadDefenders))
+      );
   }
 
   /**
@@ -301,14 +373,17 @@ library CombatOutcome {
    */
   function encode(
     uint256 endTime,
+    bool attackersWin,
     uint256 expDropped,
     uint256 goldDropped,
-    uint256[] memory itemsDropped
+    uint256[] memory itemsDropped,
+    bytes32[] memory deadAttackers,
+    bytes32[] memory deadDefenders
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(endTime, expDropped, goldDropped);
+    bytes memory _staticData = encodeStatic(endTime, attackersWin, expDropped, goldDropped);
 
-    EncodedLengths _encodedLengths = encodeLengths(itemsDropped);
-    bytes memory _dynamicData = encodeDynamic(itemsDropped);
+    EncodedLengths _encodedLengths = encodeLengths(itemsDropped, deadAttackers, deadDefenders);
+    bytes memory _dynamicData = encodeDynamic(itemsDropped, deadAttackers, deadDefenders);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }
@@ -321,5 +396,17 @@ library CombatOutcome {
     _keyTuple[0] = encounterId;
 
     return _keyTuple;
+  }
+}
+
+/**
+ * @notice Cast a value to a bool.
+ * @dev Boolean values are encoded as uint8 (1 = true, 0 = false), but Solidity doesn't allow casting between uint8 and bool.
+ * @param value The uint8 value to convert.
+ * @return result The boolean value.
+ */
+function _toBool(uint8 value) pure returns (bool result) {
+  assembly {
+    result := value
   }
 }
