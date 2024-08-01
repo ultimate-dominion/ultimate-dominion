@@ -57,12 +57,12 @@ export const ActionsPanel = (): JSX.Element => {
   } = useCharacter();
   const {
     actionOutcomes,
+    aliveMonsters,
     currentBattle,
     isAttacking,
     isRefreshing: isRefreshingMap,
     isSpawned,
     monsterOponent,
-    monsters,
     onAttack,
     position,
   } = useMapNavigation();
@@ -106,7 +106,7 @@ export const ActionsPanel = (): JSX.Element => {
       );
     }
 
-    if ((position.x !== 0 || position.y !== 0) && monsters.length === 0) {
+    if ((position.x !== 0 || position.y !== 0) && aliveMonsters.length === 0) {
       return (
         <Typist
           avgTypingDelay={10}
@@ -124,7 +124,7 @@ export const ActionsPanel = (): JSX.Element => {
       );
     }
 
-    if ((position.x !== 0 || position.y !== 0) && monsters.length > 0) {
+    if ((position.x !== 0 || position.y !== 0) && aliveMonsters.length > 0) {
       return (
         <Typist
           avgTypingDelay={10}
@@ -143,7 +143,13 @@ export const ActionsPanel = (): JSX.Element => {
     }
 
     return '';
-  }, [isRefreshingCharacter, isRefreshingMap, isSpawned, monsters, position]);
+  }, [
+    aliveMonsters,
+    isRefreshingCharacter,
+    isRefreshingMap,
+    isSpawned,
+    position,
+  ]);
 
   return (
     <>

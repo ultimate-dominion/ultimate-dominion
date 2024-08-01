@@ -16,6 +16,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useWalletClient } from 'wagmi';
 
 import { ActionsPanel } from '../components/ActionsPanel';
+import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
 import { InfoModal } from '../components/InfoModal';
 import { MapPanel } from '../components/MapPanel';
 import { StatsPanel } from '../components/StatsPanel';
@@ -24,6 +25,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { useMUD } from '../contexts/MUDContext';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 
 export const GameBoard = (): JSX.Element => {
   const {
@@ -36,13 +38,19 @@ export const GameBoard = (): JSX.Element => {
     onOpen: onOpenOuterRealmsInfoModal,
     onClose: onCloseOuterRealmsInfoModal,
   } = useDisclosure();
+  const {
+    isOpen: isBattleOutcomeModalOpen,
+    onOpen: onOpenBattleOutcomeModal,
+    onClose: onCloseBattleOutcomeModal,
+  } = useDisclosure();
 
   const { data: externalWalletClient } = useWalletClient();
   const navigate = useNavigate();
   const { delegatorAddress, isSynced } = useMUD();
   const { character, equippedItems } = useCharacter();
-  const { position } = useMapNavigation();
+  const { lastestBattleOutcome, position } = useMapNavigation();
 
+  // Redirect to home if synced, but missing other requirements
   useEffect(() => {
     if (!isSynced) return;
 
@@ -59,12 +67,14 @@ export const GameBoard = (): JSX.Element => {
     }
   }, [character, delegatorAddress, externalWalletClient, isSynced, navigate]);
 
+  // Open equip info modal if character has no experience and no equipped items
   useEffect(() => {
     if (character?.experience === '0' && equippedItems?.length === 0) {
       onOpenEquipInfoModal();
     }
   }, [character, equippedItems, onOpenEquipInfoModal]);
 
+  // Open Outer Realms warning modal if character is level 1 and entered Outer Realms
   useEffect(() => {
     if (!(character && position)) return;
     const outerRealms = position.x === 5 || position.y === 5;
@@ -86,6 +96,19 @@ export const GameBoard = (): JSX.Element => {
     localStorage.setItem(outerRealmsSeenKey, 'true');
     onCloseOuterRealmsInfoModal();
   }, [character, onCloseOuterRealmsInfoModal]);
+
+  // Open battle outcome modal if there is a new battle outcome
+  useEffect(() => {
+    if (lastestBattleOutcome) {
+      const latestBattleOutcomeSeen = localStorage.getItem(
+        BATTLE_OUTCOME_SEEN_KEY,
+      );
+
+      if (latestBattleOutcomeSeen === lastestBattleOutcome.encounterId) return;
+
+      onOpenBattleOutcomeModal();
+    }
+  }, [onOpenBattleOutcomeModal, lastestBattleOutcome]);
 
   return (
     <Grid
@@ -200,6 +223,13 @@ export const GameBoard = (): JSX.Element => {
           </Text>
         </VStack>
       </InfoModal>
+      {lastestBattleOutcome && (
+        <BattleOutcomeModal
+          battleOutcome={lastestBattleOutcome}
+          isOpen={isBattleOutcomeModalOpen}
+          onClose={onCloseBattleOutcomeModal}
+        />
+      )}
     </Grid>
   );
 };
