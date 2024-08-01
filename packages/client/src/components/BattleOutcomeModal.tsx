@@ -38,7 +38,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     components: { Levels },
   } = useMUD();
   const { character } = useCharacter();
-  const { allMonsters, otherPlayers } = useMapNavigation();
+  const { allMonsters, otherCharactersOnTile } = useMapNavigation();
 
   const opponent = useMemo(() => {
     if (!character) return null;
@@ -54,15 +54,15 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
       return monsterOpponent;
     }
 
-    const characterOpponent = otherPlayers.find(
-      player => player.characterId === opponent,
+    const characterOpponent = otherCharactersOnTile.find(
+      c => c.characterId === opponent,
     );
     if (characterOpponent) {
       return characterOpponent;
     }
 
     return null;
-  }, [allMonsters, battleOutcome, character, otherPlayers]);
+  }, [allMonsters, battleOutcome, character, otherCharactersOnTile]);
 
   const onAcknowledge = useCallback(() => {
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
