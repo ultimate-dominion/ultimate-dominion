@@ -105,6 +105,7 @@ export const MapNavigationProvider = ({
       Stats,
     },
     delegatorAddress,
+    isSynced,
     network: { publicClient, worldContract },
     systemCalls: { endTurn, move, spawn },
   } = useMUD();
@@ -308,43 +309,44 @@ export const MapNavigationProvider = ({
 
   useEffect(() => {
     (async (): Promise<void> => {
-      if (
-        !(
-          allCharacterEntities &&
-          allMonsterEntities &&
-          delegatorAddress &&
-          position
-        )
-      )
-        return;
-
+      if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;
       setIsFetchingEntities(true);
+
       const _allCharacters =
         await getAllSpawnedCharacters(allCharacterEntities);
       setAllSpawnedCharacters(_allCharacters as Character[]);
 
-      const _otherPlayersOnTile = _allCharacters.filter(
-        c =>
-          c.position.x === position.x &&
-          c.position.y === position.y &&
-          c.owner !== delegatorAddress,
-      );
-      setOtherCharactersOnTile(_otherPlayersOnTile as Character[]);
-
       const _monsters = await getMonsters(allMonsterEntities);
       setMonsters(_monsters);
-
-      setIsFetchingEntities(false);
     })();
   }, [
     allCharacterEntities,
     allMonsterEntities,
     Characters,
-    delegatorAddress,
     getAllSpawnedCharacters,
     getMonsters,
-    position,
+    isSynced,
   ]);
+
+  useEffect(() => {
+    (async (): Promise<void> => {
+      if (allSpawnedCharacters.length > 0 && position) {
+        const _otherPlayersOnTile = (
+          allSpawnedCharacters as (Character & {
+            position: { x: number; y: number };
+          })[]
+        ).filter(
+          (c: Character & { position: { x: number; y: number } }) =>
+            c.position.x === position.x &&
+            c.position.y === position.y &&
+            c.owner !== delegatorAddress,
+        );
+        setOtherCharactersOnTile(_otherPlayersOnTile as Character[]);
+      }
+
+      setIsFetchingEntities(false);
+    })();
+  }, [allSpawnedCharacters, delegatorAddress, position]);
 
   const onSpawn = useCallback(async () => {
     try {

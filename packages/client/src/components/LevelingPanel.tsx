@@ -221,7 +221,7 @@ export const LevelingPanel = ({
       </Text>
       <VStack w="100%">
         <HStack justify="space-between" w="100%">
-          <Text>HP - Hit</Text>
+          <Text>HP - Hit Points</Text>
           <Text>
             {character.currentHp}/{character.baseHp}
           </Text>

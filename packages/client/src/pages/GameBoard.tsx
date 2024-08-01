@@ -69,10 +69,25 @@ export const GameBoard = (): JSX.Element => {
 
   // Open equip info modal if character has no experience and no equipped items
   useEffect(() => {
-    if (character?.experience === '0' && equippedItems?.length === 0) {
+    if (!(character && equippedItems)) return;
+
+    const equipInfoSeenKey = `equip-info-seen-${character.characterId}`;
+
+    const hasSeenEquipInfo = localStorage.getItem(equipInfoSeenKey);
+    if (hasSeenEquipInfo) return;
+
+    if (character.experience === '0' && equippedItems.length === 0) {
       onOpenEquipInfoModal();
     }
   }, [character, equippedItems, onOpenEquipInfoModal]);
+
+  const onAcknowledgeEquipInfo = useCallback(() => {
+    if (!character) return;
+
+    const equipInfoSeenKey = `equip-info-seen-${character.characterId}`;
+    localStorage.setItem(equipInfoSeenKey, 'true');
+    onCloseEquipInfoModal();
+  }, [character, onCloseEquipInfoModal]);
 
   // Open Outer Realms warning modal if character is level 1 and entered Outer Realms
   useEffect(() => {
@@ -184,7 +199,7 @@ export const GameBoard = (): JSX.Element => {
       <InfoModal
         heading="Welcome to the game board!"
         isOpen={isEquipInfoModalOpen}
-        onClose={onCloseEquipInfoModal}
+        onClose={onAcknowledgeEquipInfo}
       >
         <Text>
           In order to start battling, you must have at least 1 weapon equipped.
