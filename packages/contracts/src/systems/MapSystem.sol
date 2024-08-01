@@ -99,7 +99,7 @@ contract MapSystem is System {
             rng = LibChunks.get8Chunks(block.prevrandao);
         }
 
-        for (uint256 i; i < (rng[rng.length - 1] % 6); i++) {
+        for (uint256 i; i < (rng[0] % 6); i++) {
             SystemSwitch.call(
                 abi.encodeCall(
                     IMobSystem.UD__spawnMob, (availableMonsters[uint256(rng[i] % availableMonsters.length)], x, y)
