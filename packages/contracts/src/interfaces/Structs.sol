@@ -146,4 +146,5 @@ struct Order {
     Offer offer;
     Consideration consideration;
     bytes signature;
+    address offerer;
 }

@@ -238,10 +238,23 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__auctionHouseAddress",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__cancelOrder",
     "inputs": [
       {
-        "name": "_orderId",
+        "name": "_orderHash",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -528,6 +541,11 @@ declare const abi: [
             "name": "signature",
             "type": "bytes",
             "internalType": "bytes"
+          },
+          {
+            "name": "offerer",
+            "type": "address",
+            "internalType": "address"
           }
         ]
       }
@@ -866,7 +884,7 @@ declare const abi: [
       {
         "name": "consideration",
         "type": "tuple",
-        "internalType": "struct Consideration",
+        "internalType": "struct ConsiderationsData",
         "components": [
           {
             "name": "tokenType",
@@ -1471,7 +1489,7 @@ declare const abi: [
       {
         "name": "offer",
         "type": "tuple",
-        "internalType": "struct Offer",
+        "internalType": "struct OffersData",
         "components": [
           {
             "name": "tokenType",
@@ -1570,6 +1588,11 @@ declare const abi: [
             "name": "signature",
             "type": "bytes",
             "internalType": "bytes"
+          },
+          {
+            "name": "offerer",
+            "type": "address",
+            "internalType": "address"
           }
         ]
       }
