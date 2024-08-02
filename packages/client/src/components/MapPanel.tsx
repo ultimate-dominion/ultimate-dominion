@@ -87,7 +87,7 @@ export const MapPanel = (): JSX.Element => {
           )}
           <Text size="xs">
             Dark Cave - {allSpawnedCharacters.length} Player
-            {allSpawnedCharacters.length > 1 ? 's' : ''}
+            {allSpawnedCharacters.length === 1 ? '' : 's'}
           </Text>
         </Stack>
       </Box>

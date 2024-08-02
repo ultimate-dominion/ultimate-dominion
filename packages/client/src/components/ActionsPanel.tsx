@@ -159,12 +159,12 @@ export const ActionsPanel = (): JSX.Element => {
             Choose your move:
           </Text>
           {equippedItems.length === 0 && (
-            <Text color="red" fontWeight={700}>
+            <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
               You have no equipped items. In order to attack, you must go to
               your{' '}
               <Text
                 as={Link}
-                color="green"
+                color="blue"
                 to={`/characters/${character?.characterId}`}
                 _hover={{ textDecoration: 'underline' }}
               >
