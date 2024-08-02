@@ -8,7 +8,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useAccount, useWalletClient } from 'wagmi';
 
 import { useMUD } from '../contexts/MUDContext';
@@ -26,7 +26,13 @@ export const ConnectWalletModal = ({
 }): JSX.Element => {
   const { data: externalWalletClient } = useWalletClient();
   const { isConnected, address } = useAccount();
-  const { burnerAddress } = useMUD();
+  const { burnerAddress, delegatorAddress } = useMUD();
+
+  useEffect(() => {
+    if (delegatorAddress && isConnected) {
+      onClose();
+    }
+  }, [delegatorAddress, isConnected, onClose]);
 
   const bodyContent = useMemo(() => {
     if (address && externalWalletClient && isConnected) {

@@ -22,7 +22,7 @@ import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { useWalletClient } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -43,7 +43,7 @@ export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderSuccess, renderError } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
-  const { data: externalWalletClient } = useWalletClient();
+  const { isConnected } = useAccount();
   const {
     components: { ItemsBaseURI, ItemsTokenURI, UltimateDominionConfig },
     delegatorAddress,
@@ -309,25 +309,30 @@ export const CharacterCreation = (): JSX.Element => {
   }, [character, isCreating, isEnteringGame, isRollingStats]);
 
   useEffect(() => {
+    if (!isConnected) {
+      navigate(HOME_PATH);
+      window.location.reload();
+      return;
+    }
+
     if (character && rolledOnce) {
       setCharacterClass(character.entityClass);
+      return;
     }
 
     if (character?.locked) {
       navigate(GAME_BOARD_PATH);
-    }
-
-    if (!externalWalletClient) {
-      navigate(HOME_PATH);
+      return;
     }
 
     if (!delegatorAddress && isSynced) {
       navigate(HOME_PATH);
+      return;
     }
   }, [
     character,
     delegatorAddress,
-    externalWalletClient,
+    isConnected,
     isSynced,
     navigate,
     rolledOnce,

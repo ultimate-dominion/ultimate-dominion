@@ -13,7 +13,7 @@ import {
 import { useCallback, useEffect } from 'react';
 import { IoIosWarning } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
-import { useWalletClient } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
@@ -44,7 +44,7 @@ export const GameBoard = (): JSX.Element => {
     onClose: onCloseBattleOutcomeModal,
   } = useDisclosure();
 
-  const { data: externalWalletClient } = useWalletClient();
+  const { isConnected } = useAccount();
   const navigate = useNavigate();
   const { delegatorAddress, isSynced } = useMUD();
   const { character, equippedItems } = useCharacter();
@@ -52,20 +52,24 @@ export const GameBoard = (): JSX.Element => {
 
   // Redirect to home if synced, but missing other requirements
   useEffect(() => {
-    if (!isSynced) return;
-
-    if (!externalWalletClient) {
+    if (!isConnected) {
       navigate(HOME_PATH);
+      window.location.reload();
+      return;
     }
+
+    if (!isSynced) return;
 
     if (!delegatorAddress) {
       navigate(HOME_PATH);
+      return;
     }
 
     if (character?.locked) {
       navigate(GAME_BOARD_PATH);
+      return;
     }
-  }, [character, delegatorAddress, externalWalletClient, isSynced, navigate]);
+  }, [character, delegatorAddress, isConnected, isSynced, navigate]);
 
   // Open equip info modal if character has no experience and no equipped items
   useEffect(() => {
