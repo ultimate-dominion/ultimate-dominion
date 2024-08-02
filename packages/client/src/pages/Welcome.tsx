@@ -2,6 +2,7 @@ import {
   Button,
   Container,
   Heading,
+  Progress,
   Text,
   useDisclosure,
   VStack,
@@ -74,9 +75,10 @@ export const Welcome = (): JSX.Element => {
         </VStack>
 
         {syncProgress && syncProgress.step !== SyncStep.LIVE ? (
-          <Text>
-            {syncProgress.message} {Math.round(syncProgress.percentage)}%
-          </Text>
+          <VStack justify="center" w={{ base: '80%', sm: '50%' }}>
+            <Text>Loading {Math.round(syncProgress.percentage)}%</Text>
+            <Progress value={Math.round(syncProgress.percentage)} w="100%" />
+          </VStack>
         ) : (
           <Button onClick={onPlay}>Play</Button>
         )}
