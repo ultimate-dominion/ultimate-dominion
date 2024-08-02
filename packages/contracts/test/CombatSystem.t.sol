@@ -91,13 +91,14 @@ contract Test_CombatSystem is SetUp, GasReporter {
         int256 bobEndingHp = Stats.get(bobCharacterId).currentHp;
 
         if (bobEndingHp > 0) {
-            assertGt(endingStats.experience, startingStats.experience);
+            assertGt(endingStats.experience, startingStats.experience, "incorrect exp");
             assertGt(endingGold, startingGold);
+            assertNotEq(startingStats.currentHp, Stats.get(entityId).currentHp);
         } else {
-            assertFalse(MatchEntity.getDied(entityId));
+            assertNotEq(startingStats.currentHp, Stats.get(bobCharacterId).currentHp);
+            assertFalse(MatchEntity.getDied(entityId), "incorrect died");
         }
 
-        assertNotEq(startingStats.currentHp, Stats.get(bobCharacterId).currentHp);
         assertEq(MatchEntity.getEncounterId(bobCharacterId), bytes32(0));
     }
 

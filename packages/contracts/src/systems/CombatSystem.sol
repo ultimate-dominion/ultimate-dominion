@@ -23,6 +23,7 @@ import {
     CombatOutcomeData,
     Position,
     Mobs,
+    Spawned,
     MobsData,
     Counters,
     ActionOutcome,
@@ -54,6 +55,7 @@ contract CombatSystem is System {
     using Math for uint256;
     using Math for int256;
     // in pve the attackers are always players and the defenders are always mobs since there is no aggro system
+    // TODO switch attackers defenders to group 1 and group 2 and order according to agility
 
     function createMatch(EncounterType encounterType, bytes32[] memory attackers, bytes32[] memory defenders)
         public
@@ -66,6 +68,7 @@ contract CombatSystem is System {
             require(isValidPvE(attackers, defenders, x, y), "COMBAT SYSTEM: INVALID PVE");
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
+
             CombatEncounterData memory combatData = CombatEncounterData({
                 encounterType: encounterType,
                 start: startTime,
@@ -205,12 +208,16 @@ contract CombatSystem is System {
         uint256 deadAttackerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
             if (MatchEntity.getDied(encounterData.defenders[i])) {
+                _setSpawned(encounterData.attackers[i], false);
                 // CombatOutcome.
                 deadDefenderCounter++;
             }
         }
         for (uint256 i; i < encounterData.attackers.length; i++) {
-            if (MatchEntity.getDied(encounterData.attackers[i])) deadAttackerCounter++;
+            if (MatchEntity.getDied(encounterData.attackers[i])) {
+                _setSpawned(encounterData.attackers[i], false);
+                deadAttackerCounter++;
+            }
         }
         if (
             deadAttackerCounter == encounterData.attackers.length
@@ -232,11 +239,19 @@ contract CombatSystem is System {
                 randomNumber =
                     uint256(keccak256(abi.encode(prevRandao, defenderAction.attackerId, encounterData.currentTurn)));
 
-                _executeAction(defenderAction, randomNumber);
+                defenderAction = _executeAction(defenderAction, randomNumber);
+
+                ActionOutcome.set(encounterId, encounterData.currentTurn, i, defenderAction);
             }
 
             encounterData.currentTurn++;
             CombatEncounter.set(encounterId, encounterData);
+        }
+    }
+
+    function _setSpawned(bytes32 entityId, bool spawned) internal {
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            Spawned.set(entityId, spawned);
         }
     }
 
