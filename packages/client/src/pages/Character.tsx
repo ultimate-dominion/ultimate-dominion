@@ -33,6 +33,7 @@ import { FaHatWizard } from 'react-icons/fa';
 import { GiAxeSword, GiRogue } from 'react-icons/gi';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatEther, hexToString, zeroHash } from 'viem';
+import { useAccount } from 'wagmi';
 
 import { EditCharacterModal } from '../components/EditCharacterModal';
 import { ItemCard } from '../components/ItemCard';
@@ -42,7 +43,7 @@ import { LevelingPanel } from '../components/LevelingPanel';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { LEADERBOARD_PATH } from '../Routes';
+import { HOME_PATH, LEADERBOARD_PATH } from '../Routes';
 import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
   decodeCharacterId,
@@ -60,6 +61,7 @@ export const CharacterPage = (): JSX.Element => {
   const { characterId } = useParams();
   const { renderError } = useToast();
   const navigate = useNavigate();
+  const { isConnected } = useAccount();
 
   const {
     components: {
@@ -96,6 +98,13 @@ export const CharacterPage = (): JSX.Element => {
   const [items, setItems] = useState<Weapon[] | null>(null);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [selectedItem, setSelectedItem] = useState<Weapon | null>(null);
+
+  useEffect(() => {
+    if (!isConnected) {
+      navigate(HOME_PATH);
+      window.location.reload();
+    }
+  }, [isConnected, navigate]);
 
   const equippedWeapons =
     useComponentValue(CharacterEquipment, characterId as Entity | undefined)
@@ -331,10 +340,13 @@ export const CharacterPage = (): JSX.Element => {
   const levelPercent = useMemo(() => {
     if (!character) return 0;
 
-    const xpSinceLastLevel =
+    const xpEarnedSinceLastLevel =
       BigInt(character.experience) - currentLevelXpRequirement;
+    const xpNeededSinceLastLevel =
+      nextLevelXpRequirement - currentLevelXpRequirement;
+
     const percent =
-      (100 * Number(xpSinceLastLevel)) / Number(nextLevelXpRequirement);
+      (100 * Number(xpEarnedSinceLastLevel)) / Number(xpNeededSinceLastLevel);
     return percent > 100 ? 100 : percent;
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
@@ -471,9 +483,7 @@ export const CharacterPage = (): JSX.Element => {
                             : 'normal'
                         }
                       >
-                        {BigInt(character.experience) >= nextLevelXpRequirement
-                          ? nextLevelXpRequirement.toString()
-                          : character.experience}
+                        {character.experience}
                       </Text>
                       /{nextLevelXpRequirement.toString()}
                     </Text>

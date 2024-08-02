@@ -22,7 +22,7 @@ import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { useWalletClient } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -41,9 +41,9 @@ const STARTER_WEAPON_TOKEN_IDS = [BigInt(1), BigInt(2), BigInt(3)];
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
-  const { renderSuccess, renderError } = useToast();
+  const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
-  const { data: externalWalletClient } = useWalletClient();
+  const { isConnected } = useAccount();
   const {
     components: { ItemsBaseURI, ItemsTokenURI, UltimateDominionConfig },
     delegatorAddress,
@@ -154,7 +154,8 @@ export const CharacterCreation = (): JSX.Element => {
 
         if (!(avatar && description && name)) {
           setShowError(true);
-          throw new Error('Missing required fields.');
+          renderWarning('Missing required fields.');
+          return;
         }
 
         const avatarCid = await onUpload();
@@ -220,6 +221,7 @@ export const CharacterCreation = (): JSX.Element => {
       refreshCharacter,
       renderError,
       renderSuccess,
+      renderWarning,
     ],
   );
 
@@ -309,25 +311,30 @@ export const CharacterCreation = (): JSX.Element => {
   }, [character, isCreating, isEnteringGame, isRollingStats]);
 
   useEffect(() => {
+    if (!isConnected) {
+      navigate(HOME_PATH);
+      window.location.reload();
+      return;
+    }
+
     if (character && rolledOnce) {
       setCharacterClass(character.entityClass);
+      return;
     }
 
     if (character?.locked) {
       navigate(GAME_BOARD_PATH);
-    }
-
-    if (!externalWalletClient) {
-      navigate(HOME_PATH);
+      return;
     }
 
     if (!delegatorAddress && isSynced) {
       navigate(HOME_PATH);
+      return;
     }
   }, [
     character,
     delegatorAddress,
-    externalWalletClient,
+    isConnected,
     isSynced,
     navigate,
     rolledOnce,
@@ -615,7 +622,7 @@ export const CharacterCreation = (): JSX.Element => {
           </SimpleGrid>
           {!isSmallScreen && (
             <Box bottom={10} left={0} mt={16} pos="absolute" px={10} right={0}>
-              {showError && !rolledOnce && (
+              {character && !rolledOnce && showError && (
                 <Text color="red" fontSize="sm" mb={2} textAlign="center">
                   You must roll stats at least once before entering the game.
                 </Text>

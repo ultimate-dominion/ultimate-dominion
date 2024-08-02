@@ -46,6 +46,7 @@ type MapNavigationContextType = {
   actionOutcomes: ActionOutcomeType[];
   aliveMonsters: Monster[];
   allMonsters: Monster[];
+  allSpawnedCharacters: Character[];
   currentBattle: CombatDetails | null;
   isAttacking: boolean;
   isRefreshing: boolean;
@@ -56,7 +57,7 @@ type MapNavigationContextType = {
   onAttack: (itemId: string) => void;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSpawn: () => void;
-  otherPlayers: Character[];
+  otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
 };
 
@@ -64,6 +65,7 @@ const MapNavigationContext = createContext<MapNavigationContextType>({
   actionOutcomes: [],
   aliveMonsters: [],
   allMonsters: [],
+  allSpawnedCharacters: [],
   currentBattle: null,
   isAttacking: false,
   isRefreshing: false,
@@ -74,7 +76,7 @@ const MapNavigationContext = createContext<MapNavigationContextType>({
   onAttack: () => {},
   onMove: () => {},
   onSpawn: () => {},
-  otherPlayers: [],
+  otherCharactersOnTile: [],
   position: null,
 });
 
@@ -103,6 +105,7 @@ export const MapNavigationProvider = ({
       Stats,
     },
     delegatorAddress,
+    isSynced,
     network: { publicClient, worldContract },
     systemCalls: { endTurn, move, spawn },
   } = useMUD();
@@ -112,7 +115,12 @@ export const MapNavigationProvider = ({
   const [isMoving, setIsMoving] = useState(false);
   const [isFetchingEntities, setIsFetchingEntities] = useState(true);
 
-  const [otherPlayers, setOtherPlayers] = useState<Character[]>([]);
+  const [allSpawnedCharacters, setAllSpawnedCharacters] = useState<Character[]>(
+    [],
+  );
+  const [otherCharactersOnTile, setOtherCharactersOnTile] = useState<
+    Character[]
+  >([]);
   const [monsters, setMonsters] = useState<Monster[]>([]);
 
   const [isAttacking, setIsAttacking] = useState(false);
@@ -146,19 +154,21 @@ export const MapNavigationProvider = ({
   const allCharacterEntities = useEntityQuery([
     Has(Characters),
     Has(Spawned),
+    HasValue(Spawned, { spawned: true }),
     Has(Stats),
-    HasValue(Position, {
-      x: position?.x,
-      y: position?.y,
-    }),
+    Has(Position),
   ]);
 
-  const getOtherCharacters = useCallback(
-    async (entities: Entity[]): Promise<void> => {
-      if (!(delegatorAddress && publicClient && worldContract)) return;
+  const getAllSpawnedCharacters = useCallback(
+    async (
+      entities: Entity[],
+    ): Promise<(Character & { position: { x: number; y: number } })[]> => {
+      if (!(delegatorAddress && publicClient && worldContract)) return [];
 
       try {
-        const characters: Character[] = await Promise.all(
+        const characters: (Character & {
+          position: { x: number; y: number };
+        })[] = await Promise.all(
           entities.map(async (entity: Entity) => {
             const characterData = getComponentValueStrict(Characters, entity);
             const characterStats = getComponentValueStrict(Stats, entity);
@@ -191,6 +201,8 @@ export const MapNavigationProvider = ({
             )?.encounterId;
             const inBattle = !!encounterId && encounterId !== zeroHash;
 
+            const position = getComponentValueStrict(Position, entity);
+
             return {
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
@@ -207,18 +219,20 @@ export const MapNavigationProvider = ({
                 size: 32,
               }),
               owner: characterData.owner,
+              position: { x: position.x, y: position.y },
               strength: characterStats.strength.toString(),
               tokenId: tokenId.toString(),
-            } as Character;
+            } as Character & { position: { x: number; y: number } };
           }),
         );
 
-        setOtherPlayers(characters.filter(c => c.owner !== delegatorAddress));
+        return characters;
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Failed to fetch other players.',
           e,
         );
+        return [];
       }
     },
     [
@@ -227,6 +241,7 @@ export const MapNavigationProvider = ({
       delegatorAddress,
       GoldBalances,
       MatchEntity,
+      Position,
       publicClient,
       renderError,
       Stats,
@@ -235,7 +250,7 @@ export const MapNavigationProvider = ({
   );
 
   const getMonsters = useCallback(
-    async (entities: Entity[]): Promise<void> => {
+    async (entities: Entity[]): Promise<Monster[]> => {
       try {
         const monsterAndMobIds = entities.map(entity => {
           const entityBytes = hexToBytes(entity.toString() as `0x${string}`);
@@ -283,9 +298,10 @@ export const MapNavigationProvider = ({
           }),
         );
 
-        setMonsters(_monsters);
+        return _monsters;
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to fetch monsters.', e);
+        return [];
       }
     },
     [MatchEntity, Mobs, renderError, Stats],
@@ -293,20 +309,44 @@ export const MapNavigationProvider = ({
 
   useEffect(() => {
     (async (): Promise<void> => {
-      if (!(allCharacterEntities && allMonsterEntities)) return;
-
+      if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;
       setIsFetchingEntities(true);
-      await getOtherCharacters(allCharacterEntities);
-      await getMonsters(allMonsterEntities);
-      setIsFetchingEntities(false);
+
+      const _allCharacters =
+        await getAllSpawnedCharacters(allCharacterEntities);
+      setAllSpawnedCharacters(_allCharacters as Character[]);
+
+      const _monsters = await getMonsters(allMonsterEntities);
+      setMonsters(_monsters);
     })();
   }, [
     allCharacterEntities,
     allMonsterEntities,
     Characters,
+    getAllSpawnedCharacters,
     getMonsters,
-    getOtherCharacters,
+    isSynced,
   ]);
+
+  useEffect(() => {
+    (async (): Promise<void> => {
+      if (allSpawnedCharacters.length > 0 && position) {
+        const _otherPlayersOnTile = (
+          allSpawnedCharacters as (Character & {
+            position: { x: number; y: number };
+          })[]
+        ).filter(
+          (c: Character & { position: { x: number; y: number } }) =>
+            c.position.x === position.x &&
+            c.position.y === position.y &&
+            c.owner !== delegatorAddress,
+        );
+        setOtherCharactersOnTile(_otherPlayersOnTile as Character[]);
+      }
+
+      setIsFetchingEntities(false);
+    })();
+  }, [allSpawnedCharacters, delegatorAddress, position]);
 
   const onSpawn = useCallback(async () => {
     try {
@@ -625,6 +665,7 @@ export const MapNavigationProvider = ({
         actionOutcomes: currentBattleActionOutcomes,
         aliveMonsters: monsters.filter(m => Number(m.currentHp) > 0),
         allMonsters: monsters,
+        allSpawnedCharacters,
         currentBattle,
         isAttacking,
         isRefreshing: isFetchingEntities || isMoving,
@@ -635,7 +676,7 @@ export const MapNavigationProvider = ({
         onAttack,
         onMove,
         onSpawn,
-        otherPlayers,
+        otherCharactersOnTile,
         position: position ? { x: position.x, y: position.y } : null,
       }}
     >

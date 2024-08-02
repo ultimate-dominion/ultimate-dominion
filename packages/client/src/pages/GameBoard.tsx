@@ -13,7 +13,7 @@ import {
 import { useCallback, useEffect } from 'react';
 import { IoIosWarning } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
-import { useWalletClient } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
@@ -44,42 +44,65 @@ export const GameBoard = (): JSX.Element => {
     onClose: onCloseBattleOutcomeModal,
   } = useDisclosure();
 
-  const { data: externalWalletClient } = useWalletClient();
+  const { isConnected } = useAccount();
   const navigate = useNavigate();
-  const { delegatorAddress, isSynced } = useMUD();
+  const {
+    delegatorAddress,
+    isSynced,
+    network: { worldContract },
+  } = useMUD();
   const { character, equippedItems } = useCharacter();
   const { lastestBattleOutcome, position } = useMapNavigation();
 
   // Redirect to home if synced, but missing other requirements
   useEffect(() => {
-    if (!isSynced) return;
-
-    if (!externalWalletClient) {
+    if (!isConnected) {
       navigate(HOME_PATH);
+      window.location.reload();
+      return;
     }
+
+    if (!isSynced) return;
 
     if (!delegatorAddress) {
       navigate(HOME_PATH);
+      return;
     }
 
     if (character?.locked) {
       navigate(GAME_BOARD_PATH);
+      return;
     }
-  }, [character, delegatorAddress, externalWalletClient, isSynced, navigate]);
+  }, [character, delegatorAddress, isConnected, isSynced, navigate]);
 
   // Open equip info modal if character has no experience and no equipped items
   useEffect(() => {
-    if (character?.experience === '0' && equippedItems?.length === 0) {
+    if (!(character && equippedItems)) return;
+
+    const equipInfoSeenKey = `equip-info-seen-${worldContract}-${character.characterId}`;
+
+    const hasSeenEquipInfo = localStorage.getItem(equipInfoSeenKey);
+    if (hasSeenEquipInfo) return;
+
+    if (character.experience === '0' && equippedItems.length === 0) {
       onOpenEquipInfoModal();
     }
-  }, [character, equippedItems, onOpenEquipInfoModal]);
+  }, [character, equippedItems, onOpenEquipInfoModal, worldContract]);
+
+  const onAcknowledgeEquipInfo = useCallback(() => {
+    if (!character) return;
+
+    const equipInfoSeenKey = `equip-info-seen-${worldContract}-${character.characterId}`;
+    localStorage.setItem(equipInfoSeenKey, 'true');
+    onCloseEquipInfoModal();
+  }, [character, onCloseEquipInfoModal, worldContract]);
 
   // Open Outer Realms warning modal if character is level 1 and entered Outer Realms
   useEffect(() => {
     if (!(character && position)) return;
     const outerRealms = position.x === 5 || position.y === 5;
 
-    const outerRealmsSeenKey = `outer-realms-warning-seen-${character.characterId}`;
+    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract}-${character.characterId}`;
 
     const hasSeenWarning = localStorage.getItem(outerRealmsSeenKey);
     if (hasSeenWarning) return;
@@ -87,15 +110,15 @@ export const GameBoard = (): JSX.Element => {
     if (character.level === '1' && outerRealms) {
       onOpenOuterRealmsInfoModal();
     }
-  }, [character, onOpenOuterRealmsInfoModal, position]);
+  }, [character, onOpenOuterRealmsInfoModal, position, worldContract]);
 
   const onAcknowledgeOuterRealmsWarning = useCallback(() => {
     if (!character) return;
 
-    const outerRealmsSeenKey = `outer-realms-warning-seen-${character.characterId}`;
+    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract}-${character.characterId}`;
     localStorage.setItem(outerRealmsSeenKey, 'true');
     onCloseOuterRealmsInfoModal();
-  }, [character, onCloseOuterRealmsInfoModal]);
+  }, [character, onCloseOuterRealmsInfoModal, worldContract]);
 
   // Open battle outcome modal if there is a new battle outcome
   useEffect(() => {
@@ -144,7 +167,6 @@ export const GameBoard = (): JSX.Element => {
         border="2px solid"
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
-        overflowY="auto"
         position="relative"
         rowSpan={{ base: 4, lg: 6 }}
         rowStart={{ base: 4, lg: 7 }}
@@ -184,7 +206,7 @@ export const GameBoard = (): JSX.Element => {
       <InfoModal
         heading="Welcome to the game board!"
         isOpen={isEquipInfoModalOpen}
-        onClose={onCloseEquipInfoModal}
+        onClose={onAcknowledgeEquipInfo}
       >
         <Text>
           In order to start battling, you must have at least 1 weapon equipped.

@@ -54,11 +54,13 @@ export const StatsPanel = (): JSX.Element => {
   const levelPercent = useMemo(() => {
     if (!character) return 0;
 
-    const xpSinceLastLevel =
+    const xpEarnedSinceLastLevel =
       BigInt(character.experience) - currentLevelXpRequirement;
+    const xpNeededSinceLastLevel =
+      nextLevelXpRequirement - currentLevelXpRequirement;
 
     const percent =
-      (100 * Number(xpSinceLastLevel)) / Number(nextLevelXpRequirement);
+      (100 * Number(xpEarnedSinceLastLevel)) / Number(xpNeededSinceLastLevel);
     return percent > 100 ? 100 : percent;
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
@@ -154,9 +156,7 @@ export const StatsPanel = (): JSX.Element => {
               BigInt(experience) >= nextLevelXpRequirement ? 'bold' : 'normal'
             }
           >
-            {BigInt(experience) >= nextLevelXpRequirement
-              ? nextLevelXpRequirement.toString()
-              : experience}
+            {experience}
           </Text>
           /{nextLevelXpRequirement.toString()}
         </Text>

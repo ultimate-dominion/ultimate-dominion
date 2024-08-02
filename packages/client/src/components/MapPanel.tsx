@@ -17,13 +17,13 @@ const SAFE_ZONE_AREA = {
 
 export const MapPanel = (): JSX.Element => {
   const {
+    allSpawnedCharacters,
     currentBattle,
     isRefreshing,
     isSpawned,
     isSpawning,
     onMove,
     onSpawn,
-    otherPlayers,
     position,
   } = useMapNavigation();
 
@@ -86,8 +86,8 @@ export const MapPanel = (): JSX.Element => {
             </HStack>
           )}
           <Text size="xs">
-            Dark Cave - {otherPlayers.length + 1} Player
-            {otherPlayers.length + 1 > 1 ? 's' : ''}
+            Dark Cave - {allSpawnedCharacters.length} Player
+            {allSpawnedCharacters.length === 1 ? '' : 's'}
           </Text>
         </Stack>
       </Box>
