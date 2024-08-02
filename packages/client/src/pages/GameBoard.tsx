@@ -46,7 +46,11 @@ export const GameBoard = (): JSX.Element => {
 
   const { isConnected } = useAccount();
   const navigate = useNavigate();
-  const { delegatorAddress, isSynced } = useMUD();
+  const {
+    delegatorAddress,
+    isSynced,
+    network: { worldContract },
+  } = useMUD();
   const { character, equippedItems } = useCharacter();
   const { lastestBattleOutcome, position } = useMapNavigation();
 
@@ -75,7 +79,7 @@ export const GameBoard = (): JSX.Element => {
   useEffect(() => {
     if (!(character && equippedItems)) return;
 
-    const equipInfoSeenKey = `equip-info-seen-${character.characterId}`;
+    const equipInfoSeenKey = `equip-info-seen-${worldContract}-${character.characterId}`;
 
     const hasSeenEquipInfo = localStorage.getItem(equipInfoSeenKey);
     if (hasSeenEquipInfo) return;
@@ -83,22 +87,22 @@ export const GameBoard = (): JSX.Element => {
     if (character.experience === '0' && equippedItems.length === 0) {
       onOpenEquipInfoModal();
     }
-  }, [character, equippedItems, onOpenEquipInfoModal]);
+  }, [character, equippedItems, onOpenEquipInfoModal, worldContract]);
 
   const onAcknowledgeEquipInfo = useCallback(() => {
     if (!character) return;
 
-    const equipInfoSeenKey = `equip-info-seen-${character.characterId}`;
+    const equipInfoSeenKey = `equip-info-seen-${worldContract}-${character.characterId}`;
     localStorage.setItem(equipInfoSeenKey, 'true');
     onCloseEquipInfoModal();
-  }, [character, onCloseEquipInfoModal]);
+  }, [character, onCloseEquipInfoModal, worldContract]);
 
   // Open Outer Realms warning modal if character is level 1 and entered Outer Realms
   useEffect(() => {
     if (!(character && position)) return;
     const outerRealms = position.x === 5 || position.y === 5;
 
-    const outerRealmsSeenKey = `outer-realms-warning-seen-${character.characterId}`;
+    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract}-${character.characterId}`;
 
     const hasSeenWarning = localStorage.getItem(outerRealmsSeenKey);
     if (hasSeenWarning) return;
@@ -106,15 +110,15 @@ export const GameBoard = (): JSX.Element => {
     if (character.level === '1' && outerRealms) {
       onOpenOuterRealmsInfoModal();
     }
-  }, [character, onOpenOuterRealmsInfoModal, position]);
+  }, [character, onOpenOuterRealmsInfoModal, position, worldContract]);
 
   const onAcknowledgeOuterRealmsWarning = useCallback(() => {
     if (!character) return;
 
-    const outerRealmsSeenKey = `outer-realms-warning-seen-${character.characterId}`;
+    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract}-${character.characterId}`;
     localStorage.setItem(outerRealmsSeenKey, 'true');
     onCloseOuterRealmsInfoModal();
-  }, [character, onCloseOuterRealmsInfoModal]);
+  }, [character, onCloseOuterRealmsInfoModal, worldContract]);
 
   // Open battle outcome modal if there is a new battle outcome
   useEffect(() => {
@@ -163,7 +167,6 @@ export const GameBoard = (): JSX.Element => {
         border="2px solid"
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
-        overflowY="auto"
         position="relative"
         rowSpan={{ base: 4, lg: 6 }}
         rowStart={{ base: 4, lg: 7 }}
