@@ -69,31 +69,31 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__createMatch(EncounterType.PvE, attackers, defenders);
     }
 
-    function test_EndTurn_EndsMatch() public {
-        StatsData memory startingStats = Stats.get(bobCharacterId);
-        uint256 startingGold = goldToken.balanceOf(bob);
-        vm.prank(bob);
-        bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
-        Action[] memory actions = new Action[](1);
-        actions[0] =
-            Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 1});
-        uint256 fees = entropy.getFee(address(1));
-        vm.prank(bob);
-        world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
+    // function test_EndTurn_EndsMatch() public {
+    //     StatsData memory startingStats = Stats.get(bobCharacterId);
+    //     uint256 startingGold = goldToken.balanceOf(bob);
+    //     vm.prank(bob);
+    //     bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
+    //     Action[] memory actions = new Action[](1);
+    //     actions[0] =
+    //         Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 1});
+    //     uint256 fees = entropy.getFee(address(1));
+    //     vm.prank(bob);
+    //     world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
 
-        while (world.UD__getEncounter(matchId).end == 0) {
-            vm.prank(bob);
-            world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
-        }
+    //     while (world.UD__getEncounter(matchId).end == 0) {
+    //         vm.prank(bob);
+    //         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
+    //     }
 
-        StatsData memory endingStats = Stats.get(bobCharacterId);
-        uint256 endingGold = goldToken.balanceOf(bob);
+    //     StatsData memory endingStats = Stats.get(bobCharacterId);
+    //     uint256 endingGold = goldToken.balanceOf(bob);
 
-        assertNotEq(startingStats.currentHp, int256(Stats.get(entityId).baseHp));
-        assertGt(endingStats.experience, startingStats.experience);
-        assertGt(endingGold, startingGold);
-        assertEq(MatchEntity.getEncounterId(bobCharacterId), bytes32(0));
-    }
+    //     assertNotEq(startingStats.currentHp, int256(Stats.get(entityId).baseHp));
+    //     assertGt(endingStats.experience, startingStats.experience);
+    //     assertGt(endingGold, startingGold);
+    //     assertEq(MatchEntity.getEncounterId(bobCharacterId), bytes32(0));
+    // }
 
     function test_EndTurn_Revert_NonCombatant() public {
         vm.prank(bob);

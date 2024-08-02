@@ -15,10 +15,17 @@ import {_requireOwner, _requireAccess, _lootManagerSystemId} from "../utils.sol"
 import {_erc1155SystemId, _erc20SystemId } from "../utils.sol";
 import {ITEMS_NAMESPACE, WORLD_NAMESPACE, GOLD_NAMESPACE} from "../../constants.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
+import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { WorldContextConsumer } from "@latticexyz/world/src/WorldContext.sol";
 
-contract AuctionHouseSystem is System {
+
+contract AuctionHouseSystem is ERC1155Holder, System {
     uint256 MAX_INT = 2**256 - 1;
+
+    function supportsInterface(bytes4 interfaceId) public pure virtual override(ERC1155Holder, WorldContextConsumer) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
 
     /**
      * Create a new order for a desired NFT or Gold
@@ -49,9 +56,9 @@ contract AuctionHouseSystem is System {
         OffersData memory o = Offers.get(orderHash);
         ConsiderationsData memory c = Considerations.get(orderHash);
         // check that order is active
-        require(Orders.getOrderStatus(orderHash) == OrderStatus.Active);
+        require(Orders.getOrderStatus(orderHash) == OrderStatus.Active, "Order is not active");
         // check item balances
-        require(_balanceOf(o, _msgSender()) >= o.amount);
+        require(_balanceOf(orderHash, false, _msgSender()) >= c.amount, "Insufficient balance");
         // transfer consideration items to consideration recipient
         _transfer(orderHash, false, c.recipient, _msgSender());
         // transfer offer item to _msgSender()
@@ -59,6 +66,7 @@ contract AuctionHouseSystem is System {
         // set order status to fulfilled
         Orders.set(orderHash, _msgSender(), 0, OrderStatus.Fullfilled);
         // assert balances
+        return true;
         
     }
 
@@ -109,58 +117,35 @@ contract AuctionHouseSystem is System {
         OffersData memory o = Offers.get(orderHash);
         uint256 amount = isOffer ? o.amount : c.amount;
         TokenType tokenType = isOffer ? o.tokenType : c.tokenType;
+        uint256 identifier = isOffer ? o.identifier : c.identifier;
         bool isSelf = from == address(this);
+        address token = isOffer ? o.token : c.token;
         if(tokenType == TokenType.ERC20){
-            if(isSelf && IERC20(o.token).allowance(address(this), address(this)) != MAX_INT) {
-                 IERC20(o.token).approve(address(this), MAX_INT); 
+            if(isSelf && IERC20(token).allowance(address(this), address(this)) != MAX_INT) {
+                 IERC20(token).approve(address(this), MAX_INT); 
             }
-            IERC20(o.token).transferFrom(from, to, amount);
-            // IWorld(_world()).call(
-            // o.token,
-            // abi.encodeWithSignature(
-            //     //address from, address to, uint256 amount
-            //     "transferFrom(address,uint256)",
-            //     from,
-            //     to,
-            //     amount
-            // ));
+            IERC20(token).transferFrom(from, to, amount);
         }
         else if(tokenType == TokenType.ERC1155){
-            if(isSelf && IERC1155(o.token).isApprovedForAll(address(this), address(this)) != true) {
-                 IERC1155(o.token).setApprovalForAll(address(this), true); 
+            if(isSelf && IERC1155(token).isApprovedForAll(address(this), address(this)) != true) {
+                 IERC1155(token).setApprovalForAll(address(this), true); 
             }
-            IERC1155(o.token).safeTransferFrom(from, to, o.identifier, amount, "");
-            // IWorld(_world()).call(
-            // _erc1155SystemId(ITEMS_NAMESPACE),
-            // abi.encodeWithSignature(
-            //     //address from, address to, uint256 id, uint256 amount, bytes data
-            //     "safeTransferFrom(address,address,uint256,uint256,bytes)",
-            //     from,
-            //     to,
-            //     o.identifier,
-            //     amount,
-            //     ""
-            // ));
-
+            IERC1155(token).safeTransferFrom(from, to, identifier, amount, "");
         }
     }
-    function _balanceOf(OffersData memory offer, address owner) internal view returns(uint){
-        if(offer.tokenType == TokenType.ERC20){
+    function _balanceOf(bytes32 orderHash, bool isOffer, address owner) internal view returns(uint){
+        ConsiderationsData memory c = Considerations.get(orderHash);
+        OffersData memory o = Offers.get(orderHash);
+        TokenType tokenType = isOffer ? o.tokenType : c.tokenType;
+        address token = isOffer ? o.token : c.token;
+        uint256 identifier = isOffer ? o.identifier : c.identifier;
+        if(tokenType == TokenType.ERC20){
             //return ERC1155System.balanceOf(owner);
-            return IERC20(offer.token).balanceOf(owner);
+            return IERC20(token).balanceOf(owner);
 
         }
-        else if(offer.tokenType == TokenType.ERC1155){
-            return IERC1155(offer.token).balanceOf(owner, offer.identifier);
-
-            // IWorld(_world()).call(
-            // _erc20SystemId(GOLD_NAMESPACE),
-            // abi.encodeWithSignature(
-            //     //address owner, uint256 id
-            //     "balanceOf(address,uint256)",
-            //     owner,
-            //     offer.identifier
-            // ));
+        else if(tokenType == TokenType.ERC1155){
+            return IERC1155(token).balanceOf(owner, identifier);
         }
     }
 }

@@ -2377,6 +2377,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__supportsInterface",
+    "inputs": [
+      {
+        "name": "interfaceId",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "UD__unequipItem",
     "inputs": [
       {

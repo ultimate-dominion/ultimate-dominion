@@ -13,6 +13,8 @@ import { OrderStatus } from "@codegen/common.sol";
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IAuctionHouseSystem {
+  function UD__supportsInterface(bytes4 interfaceId) external pure returns (bool);
+
   function UD__createOrder(Order memory order) external returns (bytes32 _orderHash);
 
   function UD__fulfillOrder(bytes32 orderHash) external returns (bool fulfilled);
