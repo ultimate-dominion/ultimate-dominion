@@ -25,11 +25,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
 import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
+import { useAccount } from 'wagmi';
 
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { HOME_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import { Character, StatsClasses } from '../utils/types';
 
@@ -37,6 +40,8 @@ const PER_PAGE = 10;
 
 export const Leaderboard = (): JSX.Element => {
   const { renderError } = useToast();
+  const navigate = useNavigate();
+  const { isConnected } = useAccount();
 
   const {
     components: { Characters, CharactersTokenURI, GoldBalances, Stats },
@@ -53,6 +58,13 @@ export const Leaderboard = (): JSX.Element => {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState('1');
   const [pageLimit, setPageLimit] = useState(0);
+
+  useEffect(() => {
+    if (!isConnected) {
+      navigate(HOME_PATH);
+      window.location.reload();
+    }
+  }, [isConnected, navigate]);
 
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {
