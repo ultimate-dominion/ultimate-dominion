@@ -41,7 +41,7 @@ const STARTER_WEAPON_TOKEN_IDS = [BigInt(1), BigInt(2), BigInt(3)];
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
-  const { renderSuccess, renderError } = useToast();
+  const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { isConnected } = useAccount();
   const {
@@ -154,7 +154,8 @@ export const CharacterCreation = (): JSX.Element => {
 
         if (!(avatar && description && name)) {
           setShowError(true);
-          throw new Error('Missing required fields.');
+          renderWarning('Missing required fields.');
+          return;
         }
 
         const avatarCid = await onUpload();
@@ -220,6 +221,7 @@ export const CharacterCreation = (): JSX.Element => {
       refreshCharacter,
       renderError,
       renderSuccess,
+      renderWarning,
     ],
   );
 
@@ -620,7 +622,7 @@ export const CharacterCreation = (): JSX.Element => {
           </SimpleGrid>
           {!isSmallScreen && (
             <Box bottom={10} left={0} mt={16} pos="absolute" px={10} right={0}>
-              {showError && !rolledOnce && (
+              {character && !rolledOnce && showError && (
                 <Text color="red" fontSize="sm" mb={2} textAlign="center">
                   You must roll stats at least once before entering the game.
                 </Text>
