@@ -58,13 +58,14 @@ export type CharacterData = {
 };
 
 export type CombatOutcomeType = {
-  deadAttackers: Entity[];
-  deadDefenders: Entity[];
+  attackers: Entity[];
+  defenders: Entity[];
   encounterId: Entity;
   endTime: string;
   expDropped: string;
   goldDropped: string;
-  itemsDropped: Entity[];
+  itemsDropped: string[];
+  winner: Entity;
 };
 
 export type EntityStats = {
