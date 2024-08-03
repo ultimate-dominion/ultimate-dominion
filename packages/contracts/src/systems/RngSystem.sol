@@ -2,9 +2,16 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {RandomNumbers} from "@codegen/index.sol";
 import {
-    Characters, Counters, Stats, UltimateDominionConfig, StatsData, RngLogs, RngLogsData
+    RandomNumbers,
+    RandomNumbersData,
+    Characters,
+    Counters,
+    Stats,
+    UltimateDominionConfig,
+    StatsData,
+    RngLogs,
+    RngLogsData
 } from "@codegen/index.sol";
 import {Classes, RngRequestType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
@@ -41,6 +48,9 @@ contract RngSystem is System, IEntropyConsumer {
         payable
         returns (uint64 sequenceNumber)
     {
+        RandomNumbersData memory randomNumberData;
+        randomNumberData.arbitraryData = data;
+        randomNumberData.requestType = requestType;
         // NOTE: required for testing, since callback is coming before data is stored
         /////////////// TODO: remove for mainnet deployment //////
         if (block.chainid == 31337) {
@@ -48,8 +58,8 @@ contract RngSystem is System, IEntropyConsumer {
                 abi.encodeWithSelector(IEntropy.request.selector, _provider(), userRandomNumber, false)
             );
             uint64 _sequenceNumber = abi.decode(returnData, (uint64));
-            RandomNumbers.setArbitraryData(_sequenceNumber, data);
-            RandomNumbers.setRequestType(_sequenceNumber, requestType);
+
+            RandomNumbers.set(_sequenceNumber, randomNumberData);
         }
         /////////////////////////////////////////
 
@@ -82,8 +92,7 @@ contract RngSystem is System, IEntropyConsumer {
             rng = block.prevrandao;
         }
 
-        RandomNumbers.setArbitraryData(sequenceNumber, data);
-        RandomNumbers.setRequestType(sequenceNumber, requestType);
+        RandomNumbers.set(sequenceNumber, randomNumberData);
 
         entropyCallback(sequenceNumber, address(0), bytes32(rng));
     }

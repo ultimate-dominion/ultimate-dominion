@@ -205,7 +205,7 @@ export default defineWorld({
       key: ["sequenceNumber"],
       schema: {
         sequenceNumber: "uint64",
-        RequestType: "RngRequestType",
+        requestType: "RngRequestType",
         arbitraryData: "bytes",
       },
     },
