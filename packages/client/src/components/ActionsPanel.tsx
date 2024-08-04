@@ -11,7 +11,7 @@ export const ActionsPanel = (): JSX.Element => {
   const {
     isRefreshing: isRefreshingCharacter,
     character,
-    equippedItems,
+    equippedWeapons,
   } = useCharacter();
   const {
     actionOutcomes,
@@ -122,12 +122,12 @@ export const ActionsPanel = (): JSX.Element => {
 
   return (
     <Box maxH="100%" overflowY="auto" pb={4} ref={parentDivRef}>
-      {currentBattle && equippedItems && monsterOponent && (
+      {currentBattle && equippedWeapons && monsterOponent && (
         <VStack bgColor="white" position="sticky" spacing={0} top={0} w="100%">
           <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
             Choose your move:
           </Text>
-          {equippedItems.length === 0 && (
+          {equippedWeapons.length === 0 && (
             <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
               You have no equipped items. In order to attack, you must go to
               your{' '}
@@ -143,12 +143,12 @@ export const ActionsPanel = (): JSX.Element => {
             </Text>
           )}
           <HStack w="100%">
-            {equippedItems.map((item, index) => (
+            {equippedWeapons.map((item, index) => (
               <Button
                 borderLeft={index === 0 ? 'none' : '1px'}
                 borderRadius={0}
                 borderRight={
-                  index === equippedItems.length - 1 ? 'none' : '1px'
+                  index === equippedWeapons.length - 1 ? 'none' : '1px'
                 }
                 isLoading={isAttacking}
                 key={`equipped-item-${index}`}

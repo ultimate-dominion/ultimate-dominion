@@ -18,6 +18,7 @@ import { formatEther, hexToString, zeroHash } from 'viem';
 import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type {
+  Armor,
   Character,
   CharacterData,
   EntityStats,
@@ -28,14 +29,16 @@ import { useMUD } from './MUDContext';
 
 type CharacterContextType = {
   character: Character | null;
-  equippedItems: Weapon[] | null;
+  equippedArmor: Armor[];
+  equippedWeapons: Weapon[];
   isRefreshing: boolean;
   refreshCharacter: () => Promise<void>;
 };
 
 const CharacterContext = createContext<CharacterContextType>({
   character: null,
-  equippedItems: null,
+  equippedArmor: [],
+  equippedWeapons: [],
   isRefreshing: false,
   refreshCharacter: async () => {},
 });
@@ -67,7 +70,8 @@ export const CharacterProvider = ({
 
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [equippedItems, setEquippedItems] = useState<Weapon[] | null>(null);
+  const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
+  const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
 
   const fetchCharacterData = useCallback(async () => {
     if (!(delegatorAddress && publicClient && worldContract)) return;
@@ -167,14 +171,46 @@ export const CharacterProvider = ({
   ]);
 
   const fetchCharacterItems = useCallback(
-    async (_character: Character, _equippedWeapons: bigint[]) => {
+    async (
+      _character: Character,
+      _equippedArmor: bigint[],
+      _equippedWeapons: bigint[],
+    ) => {
       try {
+        if (_equippedArmor.length === 0) {
+          setEquippedArmor([]);
+          return;
+        }
         if (_equippedWeapons.length === 0) {
-          setEquippedItems([]);
+          setEquippedWeapons([]);
+        }
+
+        if (_equippedArmor.length + _equippedWeapons.length === 0) {
           return;
         }
 
-        const _items = _equippedWeapons
+        const _armor = _equippedArmor.map(tokenId => {
+          const tokenOwnersEntity = encodeEntity(
+            { owner: 'address', tokenId: 'uint256' },
+            {
+              owner: _character.owner as `0x${string}`,
+              tokenId: BigInt(tokenId),
+            },
+          );
+          const itemOwner = getComponentValueStrict(
+            ItemsOwners,
+            tokenOwnersEntity,
+          );
+
+          return {
+            balance: itemOwner.balance.toString(),
+            itemId: tokenOwnersEntity,
+            owner: _character.owner,
+            tokenId: tokenId.toString(),
+          };
+        });
+
+        const _weapons = _equippedWeapons
           .map(tokenId => {
             const tokenOwnersEntity = encodeEntity(
               { owner: 'address', tokenId: 'uint256' },
@@ -200,8 +236,53 @@ export const CharacterProvider = ({
             return Number(a.tokenId) - Number(b.tokenId);
           });
 
-        const fullItems = await Promise.all(
-          _items.map(async item => {
+        const fullArmor = await Promise.all(
+          _armor.map(async item => {
+            const itemTemplateStats =
+              await worldContract.read.UD__getArmorStats([
+                BigInt(item.tokenId),
+              ]);
+
+            const tokenIdEntity = encodeEntity(
+              { tokenId: 'uint256' },
+              { tokenId: BigInt(item.tokenId) },
+            );
+
+            const baseURI = getComponentValueStrict(
+              ItemsBaseURI,
+              singletonEntity,
+            ).uri;
+
+            const tokenURI = getComponentValueStrict(
+              ItemsTokenURI,
+              tokenIdEntity,
+            ).uri;
+
+            const metadata = await fetchMetadataFromUri(
+              uriToHttp(`${baseURI}${tokenURI}`)[0],
+            );
+
+            return {
+              ...metadata,
+              agiModifier: itemTemplateStats.agiModifier.toString(),
+              armorModifier: itemTemplateStats.armorModifier.toString(),
+              balance: item.balance,
+              classRestrictions: itemTemplateStats.classRestrictions.map(
+                (classRestriction: number) => classRestriction as StatsClasses,
+              ),
+              hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
+              intModifier: itemTemplateStats.intModifier.toString(),
+              itemId: item.itemId,
+              minLevel: itemTemplateStats.minLevel.toString(),
+              owner: item.owner,
+              strModifier: itemTemplateStats.strModifier.toString(),
+              tokenId: item.tokenId,
+            } as Armor;
+          }),
+        );
+
+        const fullWeapons = await Promise.all(
+          _weapons.map(async item => {
             const itemTemplateStats =
               await worldContract.read.UD__getWeaponStats([
                 BigInt(item.tokenId),
@@ -246,7 +327,8 @@ export const CharacterProvider = ({
           }),
         );
 
-        setEquippedItems(fullItems);
+        setEquippedArmor(fullArmor);
+        setEquippedWeapons(fullWeapons);
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Failed to fetch character data.',
@@ -261,10 +343,14 @@ export const CharacterProvider = ({
     if (!isSynced) return;
     (async (): Promise<void> => {
       if (!userCharacter) return;
-      const equippedWeapons =
-        getComponentValue(CharacterEquipment, userCharacter.characterId)
-          ?.equippedWeapons ?? [];
-      await fetchCharacterItems(userCharacter, equippedWeapons);
+
+      const { equippedArmor, equippedWeapons } =
+        getComponentValue(CharacterEquipment, userCharacter.characterId) ??
+        ({ equippedArmor: [], equippedWeapons: [] } as {
+          equippedArmor: bigint[];
+          equippedWeapons: bigint[];
+        });
+      await fetchCharacterItems(userCharacter, equippedArmor, equippedWeapons);
     })();
   }, [userCharacter, CharacterEquipment, fetchCharacterItems, isSynced]);
 
@@ -272,7 +358,8 @@ export const CharacterProvider = ({
     <CharacterContext.Provider
       value={{
         character: userCharacter,
-        equippedItems,
+        equippedArmor,
+        equippedWeapons,
         isRefreshing,
         refreshCharacter,
       }}

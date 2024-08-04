@@ -6,11 +6,12 @@ import {
   Center,
   Text,
 } from '@chakra-ui/react';
-import { GiRogue } from 'react-icons/gi';
+import { FaHatWizard } from 'react-icons/fa';
+import { GiAxeSword, GiRogue } from 'react-icons/gi';
 
-import type { Weapon } from '../utils/types';
+import { type Armor, StatsClasses, type Weapon } from '../utils/types';
 
-type ItemCardProps = Weapon & {
+type ItemCardProps = (Armor | Weapon) & {
   isEquipped?: boolean;
   onClick?: () => void;
 };
@@ -18,9 +19,10 @@ type ItemCardProps = Weapon & {
 export const ItemCard: React.FC<ItemCardProps> = ({
   isEquipped = false,
   onClick,
-  ...weapon
+  ...item
 }): JSX.Element => {
-  const { agiModifier, intModifier, strModifier, name } = weapon;
+  const { agiModifier, classRestrictions, intModifier, strModifier, name } =
+    item;
 
   return (
     <Card
@@ -50,13 +52,25 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         </Text>
 
         <Text size={{ base: '2xs', sm: 'sm' }}>
-          STR+{strModifier} AGI+{agiModifier} INT+{intModifier}
+          STR+{strModifier} AGI+{agiModifier} INT+
+          {intModifier}{' '}
+          {(item as Armor).armorModifier
+            ? `ARM+${(item as Armor).armorModifier}`
+            : ''}
         </Text>
       </CardBody>
 
       <CardFooter>
         <Center>
-          <GiRogue size={28} />
+          {classRestrictions.includes(StatsClasses.Warrior) && (
+            <GiAxeSword size={28} />
+          )}
+          {classRestrictions.includes(StatsClasses.Rogue) && (
+            <GiRogue size={28} />
+          )}
+          {classRestrictions.includes(StatsClasses.Mage) && (
+            <FaHatWizard size={28} />
+          )}
         </Center>
       </CardFooter>
     </Card>

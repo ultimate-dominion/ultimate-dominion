@@ -46,6 +46,24 @@ export type ActionOutcomeType = {
   weaponId: string;
 };
 
+export type Armor = ArmorStats &
+  Metadata & {
+    balance: string;
+    itemId: Entity;
+    owner: string;
+    tokenId: string;
+  };
+
+export type ArmorStats = {
+  agiModifier: string;
+  armorModifier: string;
+  classRestrictions: StatsClasses[];
+  hitPointModifier: string;
+  intModifier: string;
+  minLevel: string;
+  strModifier: string;
+};
+
 export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {

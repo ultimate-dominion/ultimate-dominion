@@ -1,4 +1,4 @@
-import { Text, VStack } from '@chakra-ui/react';
+import { Progress, Text, VStack } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { SyncStep } from '@latticexyz/store-sync';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
@@ -31,9 +31,11 @@ const AppRoutes: React.FC = () => {
   ) {
     return (
       <VStack justify="center" h="100%">
-        <Text>
-          {syncProgress.message} {Math.round(syncProgress.percentage)}%
-        </Text>
+        <Text>Loading {Math.round(syncProgress.percentage)}%</Text>
+        <Progress
+          value={Math.round(syncProgress.percentage)}
+          w={{ base: '80%', sm: '50%' }}
+        />
       </VStack>
     );
   }

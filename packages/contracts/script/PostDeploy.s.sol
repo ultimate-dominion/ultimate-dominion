@@ -254,6 +254,34 @@ contract PostDeploy is Script {
         uint256[] memory rogueItemIds = new uint256[](2);
         uint256[] memory mageItemIds = new uint256[](2);
 
+        for (uint256 i = 0; i < itemsData.armor.length; i++) {
+            ArmorTemplateDetails memory armorTemplate = itemsData.armor[i];
+
+            ArmorStats memory newArmor = ArmorStats({
+                agiModifier: armorTemplate.stats.agiModifier,
+                armorModifier: armorTemplate.stats.armorModifier,
+                classRestrictions: armorTemplate.stats.classRestrictions,
+                hitPointModifier: armorTemplate.stats.hitPointModifier,
+                intModifier: armorTemplate.stats.intModifier,
+                minLevel: armorTemplate.stats.minLevel,
+                strModifier: armorTemplate.stats.strModifier
+            });
+
+            uint256 starterArmorId = world.UD__createItem(
+                ItemType.Armor,
+                armorTemplate.initialSupply,
+                armorTemplate.dropChance,
+                abi.encode(newArmor),
+                armorTemplate.metadataUri
+            );
+
+            if (i == 0) {
+                warriorItemIds[0] = starterArmorId;
+                rogueItemIds[0] = starterArmorId;
+                mageItemIds[0] = starterArmorId;
+            }
+        }
+
         for (uint256 i = 0; i < itemsData.weapons.length; i++) {
             WeaponTemplateDetails memory weaponTemplate = itemsData.weapons[i];
 
@@ -268,7 +296,7 @@ contract PostDeploy is Script {
                 strModifier: weaponTemplate.stats.strModifier
             });
 
-            uint256 starterArmorId = world.UD__createItem(
+            uint256 starterWeaponId = world.UD__createItem(
                 ItemType.Weapon,
                 weaponTemplate.initialSupply,
                 weaponTemplate.dropChance,
@@ -277,43 +305,16 @@ contract PostDeploy is Script {
             );
 
             if (i == 0) {
-                warriorItemIds[1] = starterArmorId;
+                warriorItemIds[1] = starterWeaponId;
             }
             if (i == 1) {
-                rogueItemIds[1] = starterArmorId;
+                rogueItemIds[1] = starterWeaponId;
             }
             if (i == 2) {
-                mageItemIds[1] = starterArmorId;
+                mageItemIds[1] = starterWeaponId;
             }
         }
 
-        for (uint256 i = 0; i < itemsData.armor.length; i++) {
-            ArmorTemplateDetails memory armorTemplate = itemsData.armor[i];
-
-            ArmorStats memory newArmor = ArmorStats({
-                agiModifier: armorTemplate.stats.agiModifier,
-                armorModifier: armorTemplate.stats.armorModifier,
-                classRestrictions: armorTemplate.stats.classRestrictions,
-                hitPointModifier: armorTemplate.stats.hitPointModifier,
-                intModifier: armorTemplate.stats.intModifier,
-                minLevel: armorTemplate.stats.minLevel,
-                strModifier: armorTemplate.stats.strModifier
-            });
-
-            uint256 starterItemId = world.UD__createItem(
-                ItemType.Armor,
-                armorTemplate.initialSupply,
-                armorTemplate.dropChance,
-                abi.encode(newArmor),
-                armorTemplate.metadataUri
-            );
-
-            if (i == 0) {
-                warriorItemIds[0] = starterItemId;
-                rogueItemIds[0] = starterItemId;
-                mageItemIds[0] = starterItemId;
-            }
-        }
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = 1;
         amounts[1] = 1;
