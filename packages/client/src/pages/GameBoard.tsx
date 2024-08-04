@@ -79,7 +79,7 @@ export const GameBoard = (): JSX.Element => {
   useEffect(() => {
     if (!(character && equippedItems)) return;
 
-    const equipInfoSeenKey = `equip-info-seen-${worldContract}-${character.characterId}`;
+    const equipInfoSeenKey = `equip-info-seen-${worldContract.address}-${character.characterId}`;
 
     const hasSeenEquipInfo = localStorage.getItem(equipInfoSeenKey);
     if (hasSeenEquipInfo) return;
@@ -92,7 +92,7 @@ export const GameBoard = (): JSX.Element => {
   const onAcknowledgeEquipInfo = useCallback(() => {
     if (!character) return;
 
-    const equipInfoSeenKey = `equip-info-seen-${worldContract}-${character.characterId}`;
+    const equipInfoSeenKey = `equip-info-seen-${worldContract.address}-${character.characterId}`;
     localStorage.setItem(equipInfoSeenKey, 'true');
     onCloseEquipInfoModal();
   }, [character, onCloseEquipInfoModal, worldContract]);
@@ -102,7 +102,7 @@ export const GameBoard = (): JSX.Element => {
     if (!(character && position)) return;
     const outerRealms = position.x === 5 || position.y === 5;
 
-    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract}-${character.characterId}`;
+    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract.address}-${character.characterId}`;
 
     const hasSeenWarning = localStorage.getItem(outerRealmsSeenKey);
     if (hasSeenWarning) return;
@@ -115,7 +115,7 @@ export const GameBoard = (): JSX.Element => {
   const onAcknowledgeOuterRealmsWarning = useCallback(() => {
     if (!character) return;
 
-    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract}-${character.characterId}`;
+    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract.address}-${character.characterId}`;
     localStorage.setItem(outerRealmsSeenKey, 'true');
     onCloseOuterRealmsInfoModal();
   }, [character, onCloseOuterRealmsInfoModal, worldContract]);

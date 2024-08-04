@@ -16,8 +16,8 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import { getComponentValueStrict } from '@latticexyz/recs';
+import { useComponentValue, useEntityQuery } from '@latticexyz/react';
+import { getComponentValueStrict, Has } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
@@ -35,9 +35,7 @@ import {
   shortenAddress,
   uriToHttp,
 } from '../utils/helpers';
-import { StatsClasses, Weapon } from '../utils/types';
-
-const STARTER_WEAPON_TOKEN_IDS = [BigInt(1), BigInt(2), BigInt(3)];
+import { StatsClasses, type Weapon } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
@@ -45,7 +43,12 @@ export const CharacterCreation = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { isConnected } = useAccount();
   const {
-    components: { ItemsBaseURI, ItemsTokenURI, UltimateDominionConfig },
+    components: {
+      ItemsBaseURI,
+      ItemsTokenURI,
+      StarterItems,
+      UltimateDominionConfig,
+    },
     delegatorAddress,
     isSynced,
     network: { worldContract },
@@ -72,6 +75,13 @@ export const CharacterCreation = (): JSX.Element => {
   const [isRollingStats, setIsRollingStats] = useState(false);
   const [isEnteringGame, setIsEnteringGame] = useState(false);
 
+  const starterWeaponTokenIds = useEntityQuery([Has(StarterItems)]).map(
+    entity => {
+      const tokenId = getComponentValueStrict(StarterItems, entity).itemIds[1];
+      return tokenId;
+    },
+  );
+
   const { characterToken } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
@@ -85,7 +95,7 @@ export const CharacterCreation = (): JSX.Element => {
   const fetchStarterWeapons = useCallback(async () => {
     try {
       const _items: Weapon[] = await Promise.all(
-        STARTER_WEAPON_TOKEN_IDS.map(async tokenId => {
+        starterWeaponTokenIds.map(async tokenId => {
           const itemTemplateStats = await worldContract.read.UD__getWeaponStats(
             [tokenId],
           );
@@ -127,7 +137,13 @@ export const CharacterCreation = (): JSX.Element => {
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error fetching starter item.', e);
     }
-  }, [ItemsBaseURI, ItemsTokenURI, renderError, worldContract]);
+  }, [
+    ItemsBaseURI,
+    ItemsTokenURI,
+    renderError,
+    starterWeaponTokenIds,
+    worldContract,
+  ]);
 
   useEffect(() => {
     fetchStarterWeapons();
