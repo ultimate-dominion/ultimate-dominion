@@ -33,9 +33,7 @@ setup().then(async result => {
           <CharacterProvider>
             <App />
           </CharacterProvider>
-          {/* TODO: Bring back dev check before release */}
-          {/* {import.meta.env.DEV && <DevTools />} */}
-          <DevTools />
+          {import.meta.env.DEV && <DevTools />}
         </MUDProvider>
       </Web3Provider>
     </ChakraProvider>,

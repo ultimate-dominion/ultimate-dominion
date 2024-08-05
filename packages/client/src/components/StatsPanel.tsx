@@ -21,8 +21,10 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { LEADERBOARD_PATH } from '../Routes';
-import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
+import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { Level } from './Level';
+
+const MAX_EQUIPPED_ITEMS = MAX_EQUIPPED_ARMOR + MAX_EQUIPPED_WEAPONS;
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
@@ -30,7 +32,7 @@ export const StatsPanel = (): JSX.Element => {
   const {
     components: { Levels },
   } = useMUD();
-  const { character, equippedItems } = useCharacter();
+  const { character, equippedArmor, equippedWeapons } = useCharacter();
 
   const currentLevelXpRequirement =
     useComponentValue(
@@ -54,15 +56,22 @@ export const StatsPanel = (): JSX.Element => {
   const levelPercent = useMemo(() => {
     if (!character) return 0;
 
-    const xpSinceLastLevel =
+    const xpEarnedSinceLastLevel =
       BigInt(character.experience) - currentLevelXpRequirement;
+    const xpNeededSinceLastLevel =
+      nextLevelXpRequirement - currentLevelXpRequirement;
 
     const percent =
-      (100 * Number(xpSinceLastLevel)) / Number(nextLevelXpRequirement);
+      (100 * Number(xpEarnedSinceLastLevel)) / Number(xpNeededSinceLastLevel);
     return percent > 100 ? 100 : percent;
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
-  if (!(character && equippedItems)) {
+  const allItems = useMemo(
+    () => [...equippedArmor, ...equippedWeapons],
+    [equippedArmor, equippedWeapons],
+  );
+
+  if (!character) {
     return (
       <VStack h="100%" justify="center">
         <Spinner size="lg" />
@@ -154,9 +163,7 @@ export const StatsPanel = (): JSX.Element => {
               BigInt(experience) >= nextLevelXpRequirement ? 'bold' : 'normal'
             }
           >
-            {BigInt(experience) >= nextLevelXpRequirement
-              ? nextLevelXpRequirement.toString()
-              : experience}
+            {experience}
           </Text>
           /{nextLevelXpRequirement.toString()}
         </Text>
@@ -178,10 +185,10 @@ export const StatsPanel = (): JSX.Element => {
           <Text>Equipped Items</Text>
           <Spacer />
           <Text>
-            {equippedItems.length}/{MAX_EQUIPPED_WEAPONS}
+            {allItems.length}/{MAX_EQUIPPED_ITEMS}
           </Text>
         </HStack>
-        {equippedItems.map((item, index) => (
+        {allItems.map((item, index) => (
           <HStack
             fontSize="xs"
             justify="space-between"
@@ -201,7 +208,7 @@ export const StatsPanel = (): JSX.Element => {
           </HStack>
         ))}
         {Array.from({
-          length: MAX_EQUIPPED_WEAPONS - equippedItems.length,
+          length: MAX_EQUIPPED_ITEMS - allItems.length,
         }).map((_, index) => (
           <HStack
             key={`empty-weapon-${index}`}

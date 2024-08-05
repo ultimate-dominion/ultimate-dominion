@@ -144,11 +144,11 @@ contract EquipmentSystem is System {
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
         if (uint8(itemType) == 0) {
-            require(CharacterEquipment.lengthEquippedWeapons(characterId) < 3, "ITEMS: Too many weapons equipped");
+            require(CharacterEquipment.lengthEquippedWeapons(characterId) < 2, "ITEMS: Too many weapons equipped");
             CharacterEquipment.pushEquippedWeapons(characterId, itemId);
         }
         if (uint8(itemType) == 1) {
-            require(CharacterEquipment.lengthEquippedArmor(characterId) < 3, "ITEMS: Too many weapons equipped");
+            require(CharacterEquipment.lengthEquippedArmor(characterId) < 1, "ITEMS: Too much armor equipped");
             CharacterEquipment.pushEquippedArmor(characterId, itemId);
         }
 

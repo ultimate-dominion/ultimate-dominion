@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Divider,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -11,10 +12,14 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
+import { useMUD } from '../contexts/MUDContext';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 import { type CombatOutcomeType } from '../utils/types';
 
@@ -29,8 +34,11 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   onClose,
   battleOutcome,
 }): JSX.Element => {
+  const {
+    components: { Levels },
+  } = useMUD();
   const { character } = useCharacter();
-  const { allMonsters, otherPlayers } = useMapNavigation();
+  const { allMonsters, otherCharactersOnTile } = useMapNavigation();
 
   const opponent = useMemo(() => {
     if (!character) return null;
@@ -46,20 +54,34 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
       return monsterOpponent;
     }
 
-    const characterOpponent = otherPlayers.find(
-      player => player.characterId === opponent,
+    const characterOpponent = otherCharactersOnTile.find(
+      c => c.characterId === opponent,
     );
     if (characterOpponent) {
       return characterOpponent;
     }
 
     return null;
-  }, [allMonsters, battleOutcome, character, otherPlayers]);
+  }, [allMonsters, battleOutcome, character, otherCharactersOnTile]);
 
   const onAcknowledge = useCallback(() => {
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
     onClose();
   }, [battleOutcome.encounterId, onClose]);
+
+  const nextLevelXpRequirement =
+    useComponentValue(
+      Levels,
+      character
+        ? encodeEntity({ level: 'uint256' }, { level: BigInt(character.level) })
+        : undefined,
+    )?.experience ?? BigInt(0);
+
+  const canLevel = useMemo(() => {
+    if (!character) return false;
+    if (nextLevelXpRequirement === BigInt(0)) return false;
+    return BigInt(character.experience) >= nextLevelXpRequirement;
+  }, [character, nextLevelXpRequirement]);
 
   if (!character) {
     return <Box />;
@@ -75,15 +97,15 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
           {winner === character.characterId ? 'Victory!' : 'Defeat...'}
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4}>
-          <VStack alignItems="center" pb={8} spacing={4}>
+        <ModalBody p={4} textAlign="center">
+          <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
             <Text>
               {winner === character.characterId
                 ? `You defeated ${opponent?.name}!`
                 : `You lost to ${opponent?.name}.`}
             </Text>
             {winner === character.characterId && (
-              <Text textAlign="center">
+              <Text>
                 You earned{' '}
                 <Text as="span" color="green" fontWeight="bold">
                   {expDropped}
@@ -106,6 +128,36 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
               </Text>
             )}
           </VStack>
+          {canLevel && (
+            <VStack alignItems="center" pb={8} spacing={4}>
+              <Divider />
+              <Text fontWeight="bold">
+                You have enough experience to level up!
+              </Text>
+              <Text>
+                Leveling involves spending{' '}
+                <Text as="span" fontWeight="bold">
+                  2 ability points
+                </Text>{' '}
+                on your character&apos;s stats.
+              </Text>
+              <Text>
+                To level up, visit your{' '}
+                <Text
+                  as={Link}
+                  color="blue"
+                  to={`/characters/${character?.characterId}`}
+                  onClick={onAcknowledge}
+                  _hover={{
+                    textDecoration: 'underline',
+                  }}
+                >
+                  character page
+                </Text>
+                .
+              </Text>
+            </VStack>
+          )}
         </ModalBody>
         <ModalFooter>
           <Button onClick={onAcknowledge}>Continue</Button>

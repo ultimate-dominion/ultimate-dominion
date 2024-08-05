@@ -14,10 +14,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import type { Weapon } from '../utils/types';
+import type { Armor, Weapon } from '../utils/types';
 import { ItemCard } from './ItemCard';
 
-type ItemEquipModalProps = Weapon & {
+type ItemEquipModalProps = (Armor | Weapon) & {
   isEquipped: boolean;
   isOpen: boolean;
   onClose: () => void;
@@ -27,7 +27,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   isEquipped,
   isOpen,
   onClose,
-  ...weapon
+  ...item
 }): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
   const {
@@ -39,8 +39,8 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   const [isEquipping, setIsEquipping] = useState(false);
 
   const isOwner = useMemo(
-    () => character?.owner === weapon.owner,
-    [character, weapon.owner],
+    () => character?.owner === item.owner,
+    [character, item.owner],
   );
 
   const onEquipItem = useCallback(async () => {
@@ -56,7 +56,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       }
 
       const { error, success } = await equipItems(character.characterId, [
-        weapon.tokenId,
+        item.tokenId,
       ]);
 
       if (error && !success) {
@@ -64,7 +64,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       }
 
       await refreshCharacter();
-      renderSuccess(`${weapon.name} equipped successfully!`);
+      renderSuccess(`${item.name} equipped successfully!`);
       onClose();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to equip item.', e);
@@ -75,11 +75,11 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     character,
     delegatorAddress,
     equipItems,
+    item,
     onClose,
     refreshCharacter,
     renderError,
     renderSuccess,
-    weapon,
   ]);
 
   const onUnequipItem = useCallback(async () => {
@@ -96,7 +96,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
       const { error, success } = await unequipItem(
         character.characterId,
-        weapon.tokenId,
+        item.tokenId,
       );
 
       if (error && !success) {
@@ -104,7 +104,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       }
 
       await refreshCharacter();
-      renderSuccess(`${weapon.name} unequipped successfully!`);
+      renderSuccess(`${item.name} unequipped successfully!`);
       onClose();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to unequip item.', e);
@@ -114,12 +114,12 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   }, [
     character,
     delegatorAddress,
+    item,
     onClose,
     refreshCharacter,
     renderError,
     renderSuccess,
     unequipItem,
-    weapon,
   ]);
 
   if (isEquipped) {
@@ -137,7 +137,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             ) : (
               <Text mb={6}>Do you want to make an offer for this item?</Text>
             )}
-            <ItemCard {...weapon} />
+            <ItemCard {...item} />
           </ModalBody>
           <ModalFooter>
             <Button
@@ -169,7 +169,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
           ) : (
             <Text mb={6}>Do you want to make an offer for this item?</Text>
           )}
-          <ItemCard {...weapon} />
+          <ItemCard {...item} />
         </ModalBody>
         <ModalFooter>
           <Button

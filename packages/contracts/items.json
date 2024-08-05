@@ -3,10 +3,10 @@
     {
       "dropChance": 20000000,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "1_rags.json",
-      "name": "Rags",
+      "metadataUri": "1_leather_vest.json",
+      "name": "Leather Vest",
       "stats": {
-        "agiModifier": 0,
+        "agiModifier": -1,
         "armorModifier": 1,
         "classRestrictions": [],
         "hitPointModifier": 0,
@@ -16,54 +16,54 @@
       }
     }
   ],
-  "metadataUriPrefix": "ipfs://QmVUaqRpQJHyqugYd12Qf2iErNSoGvLF1cbeRHpmX8bChs/",
+  "metadataUriPrefix": "ipfs://QmPooDEwqeGh3Qszig7veD1yEoa6EoVyDUmLqWUZ1riiDS/",
   "weapons": [
     {
       "dropChance": 20000000,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "1_rusty_sword.json",
+      "metadataUri": "2_rusty_sword.json",
       "name": "Rusty Sword",
       "stats": {
-        "agiModifier": 4,
+        "agiModifier": 2,
         "classRestrictions": [0],
         "hitPointModifier": 6,
-        "intModifier": 5,
+        "intModifier": 1,
         "maxDamage": 2,
         "minDamage": 1,
         "minLevel": 1,
-        "strModifier": 3
+        "strModifier": 5
       }
     },
     {
       "dropChance": 20000000,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "2_cracked_dagger.json",
+      "metadataUri": "3_cracked_dagger.json",
       "name": "Cracked Dagger",
       "stats": {
         "agiModifier": 4,
         "classRestrictions": [1],
         "hitPointModifier": 6,
-        "intModifier": 5,
+        "intModifier": 2,
         "maxDamage": 2,
         "minDamage": 1,
         "minLevel": 1,
-        "strModifier": 3
+        "strModifier": 2
       }
     },
     {
       "dropChance": 20000000,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "3_cobbled_wand.json",
+      "metadataUri": "4_cobbled_wand.json",
       "name": "Cobbled Wand",
       "stats": {
-        "agiModifier": 4,
+        "agiModifier": 2,
         "classRestrictions": [2],
         "hitPointModifier": 6,
         "intModifier": 5,
         "maxDamage": 2,
         "minDamage": 1,
         "minLevel": 1,
-        "strModifier": 3
+        "strModifier": 1
       }
     }
   ]

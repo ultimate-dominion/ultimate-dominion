@@ -16,13 +16,13 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import { getComponentValueStrict } from '@latticexyz/recs';
+import { useComponentValue, useEntityQuery } from '@latticexyz/react';
+import { getComponentValueStrict, Has } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { useWalletClient } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -31,24 +31,28 @@ import { useUploadFile } from '../hooks/useUploadFile';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import {
+  decodeWeaponStats,
   fetchMetadataFromUri,
   shortenAddress,
   uriToHttp,
 } from '../utils/helpers';
-import { StatsClasses, Weapon } from '../utils/types';
-
-const STARTER_WEAPON_TOKEN_IDS = [BigInt(1), BigInt(2), BigInt(3)];
+import { StatsClasses, type Weapon } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
-  const { renderSuccess, renderError } = useToast();
+  const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
-  const { data: externalWalletClient } = useWalletClient();
+  const { isConnected } = useAccount();
   const {
-    components: { ItemsBaseURI, ItemsTokenURI, UltimateDominionConfig },
+    components: {
+      Items,
+      ItemsBaseURI,
+      ItemsTokenURI,
+      StarterItems,
+      UltimateDominionConfig,
+    },
     delegatorAddress,
     isSynced,
-    network: { worldContract },
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
@@ -72,6 +76,13 @@ export const CharacterCreation = (): JSX.Element => {
   const [isRollingStats, setIsRollingStats] = useState(false);
   const [isEnteringGame, setIsEnteringGame] = useState(false);
 
+  const starterWeaponTokenIds = useEntityQuery([Has(StarterItems)]).map(
+    entity => {
+      const tokenId = getComponentValueStrict(StarterItems, entity).itemIds[1];
+      return tokenId;
+    },
+  );
+
   const { characterToken } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
@@ -85,15 +96,14 @@ export const CharacterCreation = (): JSX.Element => {
   const fetchStarterWeapons = useCallback(async () => {
     try {
       const _items: Weapon[] = await Promise.all(
-        STARTER_WEAPON_TOKEN_IDS.map(async tokenId => {
-          const itemTemplateStats = await worldContract.read.UD__getWeaponStats(
-            [tokenId],
-          );
-
+        starterWeaponTokenIds.map(async tokenId => {
           const tokenIdEntity = encodeEntity(
             { tokenId: 'uint256' },
-            { tokenId: tokenId },
+            { tokenId },
           );
+
+          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+          const decodedWeaponStats = decodeWeaponStats(itemTemplate.stats);
 
           const baseURI = getComponentValueStrict(
             ItemsBaseURI,
@@ -110,14 +120,14 @@ export const CharacterCreation = (): JSX.Element => {
           );
 
           return {
-            agiModifier: itemTemplateStats.agiModifier.toString(),
-            classRestrictions: itemTemplateStats.classRestrictions,
-            hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
-            intModifier: itemTemplateStats.intModifier.toString(),
-            maxDamage: itemTemplateStats.maxDamage.toString(),
-            minDamage: itemTemplateStats.minDamage.toString(),
-            minLevel: itemTemplateStats.minLevel.toString(),
-            strModifier: itemTemplateStats.strModifier.toString(),
+            agiModifier: decodedWeaponStats.agiModifier,
+            classRestrictions: decodedWeaponStats.classRestrictions,
+            hitPointModifier: decodedWeaponStats.hitPointModifier,
+            intModifier: decodedWeaponStats.intModifier,
+            maxDamage: decodedWeaponStats.maxDamage,
+            minDamage: decodedWeaponStats.minDamage,
+            minLevel: decodedWeaponStats.minLevel,
+            strModifier: decodedWeaponStats.strModifier,
             ...fetachedMetadata,
           } as Weapon;
         }),
@@ -127,7 +137,7 @@ export const CharacterCreation = (): JSX.Element => {
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error fetching starter item.', e);
     }
-  }, [ItemsBaseURI, ItemsTokenURI, renderError, worldContract]);
+  }, [Items, ItemsBaseURI, ItemsTokenURI, renderError, starterWeaponTokenIds]);
 
   useEffect(() => {
     fetchStarterWeapons();
@@ -154,7 +164,8 @@ export const CharacterCreation = (): JSX.Element => {
 
         if (!(avatar && description && name)) {
           setShowError(true);
-          throw new Error('Missing required fields.');
+          renderWarning('Missing required fields.');
+          return;
         }
 
         const avatarCid = await onUpload();
@@ -220,6 +231,7 @@ export const CharacterCreation = (): JSX.Element => {
       refreshCharacter,
       renderError,
       renderSuccess,
+      renderWarning,
     ],
   );
 
@@ -309,25 +321,30 @@ export const CharacterCreation = (): JSX.Element => {
   }, [character, isCreating, isEnteringGame, isRollingStats]);
 
   useEffect(() => {
+    if (!isConnected) {
+      navigate(HOME_PATH);
+      window.location.reload();
+      return;
+    }
+
     if (character && rolledOnce) {
       setCharacterClass(character.entityClass);
+      return;
     }
 
     if (character?.locked) {
       navigate(GAME_BOARD_PATH);
-    }
-
-    if (!externalWalletClient) {
-      navigate(HOME_PATH);
+      return;
     }
 
     if (!delegatorAddress && isSynced) {
       navigate(HOME_PATH);
+      return;
     }
   }, [
     character,
     delegatorAddress,
-    externalWalletClient,
+    isConnected,
     isSynced,
     navigate,
     rolledOnce,
@@ -615,7 +632,7 @@ export const CharacterCreation = (): JSX.Element => {
           </SimpleGrid>
           {!isSmallScreen && (
             <Box bottom={10} left={0} mt={16} pos="absolute" px={10} right={0}>
-              {showError && !rolledOnce && (
+              {character && !rolledOnce && showError && (
                 <Text color="red" fontSize="sm" mb={2} textAlign="center">
                   You must roll stats at least once before entering the game.
                 </Text>

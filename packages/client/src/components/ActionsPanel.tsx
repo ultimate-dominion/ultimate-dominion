@@ -1,5 +1,5 @@
-import { Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
-import { useMemo } from 'react';
+import { Box, Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 // eslint-disable-next-line import/no-named-as-default
 import Typist from 'react-typist';
@@ -7,53 +7,11 @@ import Typist from 'react-typist';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
 
-// enum ActionEvents {
-//   Attack = 'attack',
-//   Defend = 'defend against',
-//   GainGold = 'gold',
-//   GainExperience = 'experience',
-// }
-
-// type BattleEvent = {
-//   type: ActionEvents;
-//   monster: string;
-//   amount: number;
-// };
-
-// type ResolutionEvent = {
-//   type: ActionEvents;
-//   amount: number;
-// };
-
-// const BATTLE_EVENTS: BattleEvent[] = [
-//   {
-//     type: ActionEvents.Defend,
-//     amount: 1,
-//     monster: 'Green Slime',
-//   },
-//   {
-//     type: ActionEvents.Attack,
-//     amount: 2,
-//     monster: 'Green Slime',
-//   },
-// ];
-
-// const RESOLUTION_EVENTS: ResolutionEvent[] = [
-//   {
-//     type: ActionEvents.GainGold,
-//     amount: 2,
-//   },
-//   {
-//     type: ActionEvents.GainExperience,
-//     amount: 3,
-//   },
-// ];
-
 export const ActionsPanel = (): JSX.Element => {
   const {
     isRefreshing: isRefreshingCharacter,
     character,
-    equippedItems,
+    equippedWeapons,
   } = useCharacter();
   const {
     actionOutcomes,
@@ -66,6 +24,17 @@ export const ActionsPanel = (): JSX.Element => {
     onAttack,
     position,
   } = useMapNavigation();
+
+  const parentDivRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (parentDivRef.current) {
+      parentDivRef.current.scrollTo({
+        behavior: 'smooth',
+        top: parentDivRef.current.scrollHeight,
+      });
+    }
+  }, [actionOutcomes]);
 
   const actionText = useMemo(() => {
     if (isRefreshingCharacter || isRefreshingMap) return '';
@@ -152,19 +121,19 @@ export const ActionsPanel = (): JSX.Element => {
   ]);
 
   return (
-    <>
-      {currentBattle && equippedItems && monsterOponent && (
+    <Box maxH="100%" overflowY="auto" pb={4} ref={parentDivRef}>
+      {currentBattle && equippedWeapons && monsterOponent && (
         <VStack bgColor="white" position="sticky" spacing={0} top={0} w="100%">
           <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
             Choose your move:
           </Text>
-          {equippedItems.length === 0 && (
-            <Text color="red" fontWeight={700}>
+          {equippedWeapons.length === 0 && (
+            <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
               You have no equipped items. In order to attack, you must go to
               your{' '}
               <Text
                 as={Link}
-                color="green"
+                color="blue"
                 to={`/characters/${character?.characterId}`}
                 _hover={{ textDecoration: 'underline' }}
               >
@@ -174,12 +143,12 @@ export const ActionsPanel = (): JSX.Element => {
             </Text>
           )}
           <HStack w="100%">
-            {equippedItems.map((item, index) => (
+            {equippedWeapons.map((item, index) => (
               <Button
                 borderLeft={index === 0 ? 'none' : '1px'}
                 borderRadius={0}
                 borderRight={
-                  index === equippedItems.length - 1 ? 'none' : '1px'
+                  index === equippedWeapons.length - 1 ? 'none' : '1px'
                 }
                 isLoading={isAttacking}
                 key={`equipped-item-${index}`}
@@ -244,41 +213,6 @@ export const ActionsPanel = (): JSX.Element => {
             );
           })}
       </Stack>
-      {/* <Stack>
-        {BATTLE_EVENTS.map((event, i) => (
-          <Text
-            key={`battle-event-${i}`}
-            size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-          >
-            You {event.type}{' '}
-            <Text as="span" color="green">
-              {event.monster}
-            </Text>{' '}
-            {event.type === ActionEvents.Attack ? 'for' : 'taking'}{' '}
-            <Text as="span" color="red">
-              {event.amount} damage
-            </Text>
-            .
-          </Text>
-        ))}
-      </Stack>
-      <Stack>
-        {RESOLUTION_EVENTS.map((event, i) => (
-          <Text
-            key={`resolution-event-${i}`}
-            size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-          >
-            You gain {event.amount}{' '}
-            <Text
-              as="span"
-              color={event.type === ActionEvents.GainGold ? 'yellow' : 'green'}
-            >
-              {event.type === ActionEvents.GainGold ? '$GOLD' : 'experience'}
-            </Text>
-            !
-          </Text>
-        ))}
-      </Stack> */}
-    </>
+    </Box>
   );
 };

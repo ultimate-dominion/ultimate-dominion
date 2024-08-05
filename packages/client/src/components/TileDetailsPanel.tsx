@@ -40,7 +40,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     currentBattle,
     isRefreshing,
     monsterOponent,
-    otherPlayers,
+    otherCharactersOnTile,
   } = useMapNavigation();
 
   const [isInitiating, setIsInitiating] = useState(false);
@@ -229,7 +229,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             Players
           </Text>
         </GridItem>
-        {otherPlayers.length > 0 && (
+        {otherCharactersOnTile.length > 0 && (
           <GridItem colSpan={1}>
             <Text mt={1} size={{ base: '2xs', lg: 'sm' }}>
               Safe Zone
@@ -256,28 +256,25 @@ export const TileDetailsPanel = (): JSX.Element => {
           )}
         </GridItem>
 
-        {otherPlayers.length > 0 && (
+        {otherCharactersOnTile.length > 0 && (
           <>
             <GridItem colSpan={1}>
-              {otherPlayers.length > 0 &&
-                otherPlayers.map((player, i) => (
-                  <PlayerRow
-                    key={`tile-player-${i}-${player.name}`}
-                    player={player}
-                  />
+              {otherCharactersOnTile.length > 0 &&
+                otherCharactersOnTile.map((c, i) => (
+                  <PlayerRow key={`tile-player-${i}-${c.name}`} player={c} />
                 ))}
             </GridItem>
             <GridItem colSpan={1}>
-              {otherPlayers.map((player, i) => (
+              {otherCharactersOnTile.map((c, i) => (
                 <PlayerLevelRow
-                  key={`tile-player-level-${i}-${player.name}`}
-                  player={player}
+                  key={`tile-player-level-${i}-${c.name}`}
+                  player={c}
                 />
               ))}
             </GridItem>
           </>
         )}
-        {otherPlayers.length === 0 && (
+        {otherCharactersOnTile.length === 0 && (
           <GridItem colSpan={2}>
             <Text size={{ base: '2xs', lg: 'sm' }}>
               No players in this area

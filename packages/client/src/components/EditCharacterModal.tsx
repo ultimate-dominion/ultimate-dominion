@@ -41,7 +41,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
   onClose,
   tokenId,
 }): JSX.Element => {
-  const { renderSuccess, renderError } = useToast();
+  const { renderError, renderSuccess, renderWarning } = useToast();
 
   const {
     delegatorAddress,
@@ -106,7 +106,8 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
 
         if (!((avatar || image) && newDescription && newName)) {
           setShowError(true);
-          throw new Error('Missing required fields.');
+          renderWarning('Missing required fields.');
+          return;
         }
 
         const avatarCid = await onUpload();
@@ -180,6 +181,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
       refreshCharacter,
       renderError,
       renderSuccess,
+      renderWarning,
       tokenId,
       updateTokenUri,
     ],
