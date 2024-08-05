@@ -16,13 +16,17 @@ import {
 import { formatEther, hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import {
+  decodeArmorStats,
+  decodeWeaponStats,
+  fetchMetadataFromUri,
+  uriToHttp,
+} from '../utils/helpers';
 import type {
   Armor,
   Character,
   CharacterData,
   EntityStats,
-  StatsClasses,
   Weapon,
 } from '../utils/types';
 import { useMUD } from './MUDContext';
@@ -55,6 +59,7 @@ export const CharacterProvider = ({
       CharacterEquipment,
       Characters,
       CharactersTokenURI,
+      Items,
       ItemsBaseURI,
       ItemsOwners,
       ItemsTokenURI,
@@ -238,15 +243,13 @@ export const CharacterProvider = ({
 
         const fullArmor = await Promise.all(
           _armor.map(async item => {
-            const itemTemplateStats =
-              await worldContract.read.UD__getArmorStats([
-                BigInt(item.tokenId),
-              ]);
-
             const tokenIdEntity = encodeEntity(
               { tokenId: 'uint256' },
               { tokenId: BigInt(item.tokenId) },
             );
+
+            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+            const decodedArmorStats = decodeArmorStats(itemTemplate.stats);
 
             const baseURI = getComponentValueStrict(
               ItemsBaseURI,
@@ -264,18 +267,16 @@ export const CharacterProvider = ({
 
             return {
               ...metadata,
-              agiModifier: itemTemplateStats.agiModifier.toString(),
-              armorModifier: itemTemplateStats.armorModifier.toString(),
+              agiModifier: decodedArmorStats.agiModifier,
+              armorModifier: decodedArmorStats.armorModifier,
               balance: item.balance,
-              classRestrictions: itemTemplateStats.classRestrictions.map(
-                (classRestriction: number) => classRestriction as StatsClasses,
-              ),
-              hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
-              intModifier: itemTemplateStats.intModifier.toString(),
+              classRestrictions: decodedArmorStats.classRestrictions,
+              hitPointModifier: decodedArmorStats.hitPointModifier,
+              intModifier: decodedArmorStats.intModifier,
               itemId: item.itemId,
-              minLevel: itemTemplateStats.minLevel.toString(),
+              minLevel: decodedArmorStats.minLevel,
               owner: item.owner,
-              strModifier: itemTemplateStats.strModifier.toString(),
+              strModifier: decodedArmorStats.strModifier,
               tokenId: item.tokenId,
             } as Armor;
           }),
@@ -283,15 +284,13 @@ export const CharacterProvider = ({
 
         const fullWeapons = await Promise.all(
           _weapons.map(async item => {
-            const itemTemplateStats =
-              await worldContract.read.UD__getWeaponStats([
-                BigInt(item.tokenId),
-              ]);
-
             const tokenIdEntity = encodeEntity(
               { tokenId: 'uint256' },
               { tokenId: BigInt(item.tokenId) },
             );
+
+            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+            const decodedWeaponStats = decodeWeaponStats(itemTemplate.stats);
 
             const baseURI = getComponentValueStrict(
               ItemsBaseURI,
@@ -309,19 +308,17 @@ export const CharacterProvider = ({
 
             return {
               ...metadata,
-              agiModifier: itemTemplateStats.agiModifier.toString(),
+              agiModifier: decodedWeaponStats.agiModifier,
               balance: item.balance,
-              classRestrictions: itemTemplateStats.classRestrictions.map(
-                (classRestriction: number) => classRestriction as StatsClasses,
-              ),
-              hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
-              intModifier: itemTemplateStats.intModifier.toString(),
+              classRestrictions: decodedWeaponStats.classRestrictions,
+              hitPointModifier: decodedWeaponStats.hitPointModifier,
+              intModifier: decodedWeaponStats.intModifier,
               itemId: item.itemId,
-              maxDamage: itemTemplateStats.maxDamage.toString(),
-              minDamage: itemTemplateStats.minDamage.toString(),
-              minLevel: itemTemplateStats.minLevel.toString(),
+              maxDamage: decodedWeaponStats.maxDamage,
+              minDamage: decodedWeaponStats.minDamage,
+              minLevel: decodedWeaponStats.minLevel,
               owner: item.owner,
-              strModifier: itemTemplateStats.strModifier.toString(),
+              strModifier: decodedWeaponStats.strModifier,
               tokenId: item.tokenId,
             } as Weapon;
           }),
@@ -336,7 +333,7 @@ export const CharacterProvider = ({
         );
       }
     },
-    [ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError, worldContract],
+    [Items, ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError],
   );
 
   useEffect(() => {

@@ -31,6 +31,7 @@ import { useUploadFile } from '../hooks/useUploadFile';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import {
+  decodeWeaponStats,
   fetchMetadataFromUri,
   shortenAddress,
   uriToHttp,
@@ -44,6 +45,7 @@ export const CharacterCreation = (): JSX.Element => {
   const { isConnected } = useAccount();
   const {
     components: {
+      Items,
       ItemsBaseURI,
       ItemsTokenURI,
       StarterItems,
@@ -51,7 +53,6 @@ export const CharacterCreation = (): JSX.Element => {
     },
     delegatorAddress,
     isSynced,
-    network: { worldContract },
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
@@ -96,14 +97,13 @@ export const CharacterCreation = (): JSX.Element => {
     try {
       const _items: Weapon[] = await Promise.all(
         starterWeaponTokenIds.map(async tokenId => {
-          const itemTemplateStats = await worldContract.read.UD__getWeaponStats(
-            [tokenId],
-          );
-
           const tokenIdEntity = encodeEntity(
             { tokenId: 'uint256' },
-            { tokenId: tokenId },
+            { tokenId },
           );
+
+          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+          const decodedWeaponStats = decodeWeaponStats(itemTemplate.stats);
 
           const baseURI = getComponentValueStrict(
             ItemsBaseURI,
@@ -120,14 +120,14 @@ export const CharacterCreation = (): JSX.Element => {
           );
 
           return {
-            agiModifier: itemTemplateStats.agiModifier.toString(),
-            classRestrictions: itemTemplateStats.classRestrictions,
-            hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
-            intModifier: itemTemplateStats.intModifier.toString(),
-            maxDamage: itemTemplateStats.maxDamage.toString(),
-            minDamage: itemTemplateStats.minDamage.toString(),
-            minLevel: itemTemplateStats.minLevel.toString(),
-            strModifier: itemTemplateStats.strModifier.toString(),
+            agiModifier: decodedWeaponStats.agiModifier,
+            classRestrictions: decodedWeaponStats.classRestrictions,
+            hitPointModifier: decodedWeaponStats.hitPointModifier,
+            intModifier: decodedWeaponStats.intModifier,
+            maxDamage: decodedWeaponStats.maxDamage,
+            minDamage: decodedWeaponStats.minDamage,
+            minLevel: decodedWeaponStats.minLevel,
+            strModifier: decodedWeaponStats.strModifier,
             ...fetachedMetadata,
           } as Weapon;
         }),
@@ -137,13 +137,7 @@ export const CharacterCreation = (): JSX.Element => {
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error fetching starter item.', e);
     }
-  }, [
-    ItemsBaseURI,
-    ItemsTokenURI,
-    renderError,
-    starterWeaponTokenIds,
-    worldContract,
-  ]);
+  }, [Items, ItemsBaseURI, ItemsTokenURI, renderError, starterWeaponTokenIds]);
 
   useEffect(() => {
     fetchStarterWeapons();

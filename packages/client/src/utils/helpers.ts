@@ -1,6 +1,44 @@
-import { hexToBigInt } from 'viem';
+import { decodeAbiParameters, hexToBigInt } from 'viem';
 
-import type { Metadata } from '../utils/types';
+import {
+  type ArmorStats,
+  type Metadata,
+  StatsClasses,
+  WeaponStats,
+} from '../utils/types';
+
+export const decodeArmorStats = (statsBytes: string): ArmorStats => {
+  const itemTemplateStats = decodeAbiParameters(
+    [
+      {
+        name: 'armorStats',
+        type: 'tuple',
+        components: [
+          { name: 'agiModifier', type: 'int256' },
+          { name: 'armorModifier', type: 'uint256' },
+          { name: 'classRestrictions', type: 'uint8[]' },
+          { name: 'hitPointModifier', type: 'int256' },
+          { name: 'intModifier', type: 'int256' },
+          { name: 'minLevel', type: 'uint256' },
+          { name: 'strModifier', type: 'int256' },
+        ],
+      },
+    ],
+    statsBytes as `0x${string}`,
+  )[0];
+
+  return {
+    agiModifier: itemTemplateStats.agiModifier.toString(),
+    armorModifier: itemTemplateStats.armorModifier.toString(),
+    classRestrictions: itemTemplateStats.classRestrictions.map(
+      (classRestriction: number) => classRestriction as StatsClasses,
+    ),
+    hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
+    intModifier: itemTemplateStats.intModifier.toString(),
+    minLevel: itemTemplateStats.minLevel.toString(),
+    strModifier: itemTemplateStats.strModifier.toString(),
+  };
+};
 
 export const decodeCharacterId = (
   characterId: `0x${string}`,
@@ -16,6 +54,41 @@ export const decodeCharacterId = (
   const ownerAddress = `0x${ownerAddressBigInt.toString(16).padStart(40, '0')}`;
 
   return { ownerAddress, characterTokenId: characterTokenId.toString() };
+};
+
+export const decodeWeaponStats = (statsBytes: string): WeaponStats => {
+  const itemTemplateStats = decodeAbiParameters(
+    [
+      {
+        name: 'weaponStats',
+        type: 'tuple',
+        components: [
+          { name: 'agiModifier', type: 'int256' },
+          { name: 'classRestrictions', type: 'uint8[]' },
+          { name: 'hitPointModifier', type: 'int256' },
+          { name: 'intModifier', type: 'int256' },
+          { name: 'maxDamage', type: 'uint256' },
+          { name: 'minDamage', type: 'uint256' },
+          { name: 'minLevel', type: 'uint256' },
+          { name: 'strModifier', type: 'int256' },
+        ],
+      },
+    ],
+    statsBytes as `0x${string}`,
+  )[0];
+
+  return {
+    agiModifier: itemTemplateStats.agiModifier.toString(),
+    classRestrictions: itemTemplateStats.classRestrictions.map(
+      (classRestriction: number) => classRestriction as StatsClasses,
+    ),
+    hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
+    intModifier: itemTemplateStats.intModifier.toString(),
+    maxDamage: itemTemplateStats.maxDamage.toString(),
+    minDamage: itemTemplateStats.minDamage.toString(),
+    minLevel: itemTemplateStats.minLevel.toString(),
+    strModifier: itemTemplateStats.strModifier.toString(),
+  };
 };
 
 export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
