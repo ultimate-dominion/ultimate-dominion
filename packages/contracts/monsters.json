@@ -14,7 +14,7 @@
         "hitPoints": 10,
         "intelligence": 4,
         "inventory": [
-          1
+          2
         ],
         "level": 1,
         "strength": 10
@@ -34,7 +34,7 @@
         "hitPoints": 8,
         "intelligence": 8,
         "inventory": [
-          1
+          2
         ],
         "level": 1,
         "strength": 2
@@ -54,7 +54,7 @@
         "hitPoints": 6,
         "intelligence": 6,
         "inventory": [
-          1
+          2
         ],
         "level": 2,
         "strength": 8
@@ -74,7 +74,7 @@
         "hitPoints": 9,
         "intelligence": 8,
         "inventory": [
-          1
+          2
         ],
         "level": 2,
         "strength": 2
@@ -94,7 +94,7 @@
         "hitPoints": 12,
         "intelligence": 6,
         "inventory": [
-          1
+          2
         ],
         "level": 3,
         "strength": 13
@@ -114,7 +114,7 @@
         "hitPoints": 10,
         "intelligence": 6,
         "inventory": [
-          1
+          2
         ],
         "level": 3,
         "strength": 8
@@ -134,7 +134,7 @@
         "hitPoints": 14,
         "intelligence": 7,
         "inventory": [
-          1
+          2
         ],
         "level": 4,
         "strength": 15
@@ -154,7 +154,7 @@
         "hitPoints": 12,
         "intelligence": 7,
         "inventory": [
-          1
+          2
         ],
         "level": 4,
         "strength": 12
@@ -174,7 +174,7 @@
         "hitPoints": 14,
         "intelligence": 12,
         "inventory": [
-          1
+          2
         ],
         "level": 5,
         "strength": 14
@@ -194,7 +194,7 @@
         "hitPoints": 18,
         "intelligence": 10,
         "inventory": [
-          1
+          2
         ],
         "level": 5,
         "strength": 18
@@ -214,7 +214,7 @@
         "hitPoints": 17,
         "intelligence": 18,
         "inventory": [
-          1
+          2
         ],
         "level": 6,
         "strength": 16
@@ -234,7 +234,7 @@
         "hitPoints": 15,
         "intelligence": 13,
         "inventory": [
-          1
+          2
         ],
         "level": 6,
         "strength": 18
@@ -254,7 +254,7 @@
         "hitPoints": 21,
         "intelligence": 14,
         "inventory": [
-          1
+          2
         ],
         "level": 7,
         "strength": 22
@@ -274,7 +274,7 @@
         "hitPoints": 18,
         "intelligence": 21,
         "inventory": [
-          1
+          2
         ],
         "level": 7,
         "strength": 16
@@ -294,7 +294,7 @@
         "hitPoints": 18,
         "intelligence": 14,
         "inventory": [
-          1
+          2
         ],
         "level": 8,
         "strength": 20
@@ -314,7 +314,7 @@
         "hitPoints": 24,
         "intelligence": 18,
         "inventory": [
-          1
+          2
         ],
         "level": 8,
         "strength": 25
@@ -334,7 +334,7 @@
         "hitPoints": 24,
         "intelligence": 25,
         "inventory": [
-          1
+          2
         ],
         "level": 9,
         "strength": 22
@@ -354,7 +354,7 @@
         "hitPoints": 22,
         "intelligence": 22,
         "inventory": [
-          1
+          2
         ],
         "level": 9,
         "strength": 22
@@ -374,7 +374,7 @@
         "hitPoints": 28,
         "intelligence": 25,
         "inventory": [
-          1
+          2
         ],
         "level": 10,
         "strength": 26
@@ -394,7 +394,7 @@
         "hitPoints": 34,
         "intelligence": 27,
         "inventory": [
-          1
+          2
         ],
         "level": 10,
         "strength": 34
@@ -414,7 +414,7 @@
         "hitPoints": 32,
         "intelligence": 36,
         "inventory": [
-          1
+          2
         ],
         "level": 10,
         "strength": 30
