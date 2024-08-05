@@ -202,13 +202,14 @@ contract CombatSystem is System {
             currentActionData = _executeAction(currentActionData, randomNumber);
             // emit action data to offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
+            encounterData.currentTurn++;
         }
 
         uint256 deadDefenderCounter;
         uint256 deadAttackerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
             if (MatchEntity.getDied(encounterData.defenders[i])) {
-                _setSpawned(encounterData.attackers[i], false);
+                _setSpawned(encounterData.defenders[i], false);
                 // CombatOutcome.
                 deadDefenderCounter++;
             }
@@ -242,9 +243,9 @@ contract CombatSystem is System {
                 defenderAction = _executeAction(defenderAction, randomNumber);
 
                 ActionOutcome.set(encounterId, encounterData.currentTurn, i, defenderAction);
+                encounterData.currentTurn++;
             }
 
-            encounterData.currentTurn++;
             CombatEncounter.set(encounterId, encounterData);
         }
     }
@@ -423,9 +424,7 @@ contract CombatSystem is System {
         bytes32 defenderTemp;
         for (uint256 i; i < encounterData.defenders.length; i++) {
             defenderTemp = encounterData.defenders[i];
-            if (MatchEntity.getDied(defenderTemp)) {
-                MatchEntity.setEncounterId(defenderTemp, bytes32(0));
-            }
+            MatchEntity.setEncounterId(defenderTemp, bytes32(0));
         }
 
         (uint256 expAmount, uint256 goldAmount, uint256[] memory itemsDropped) =

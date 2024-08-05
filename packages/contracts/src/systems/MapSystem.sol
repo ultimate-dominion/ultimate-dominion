@@ -8,6 +8,7 @@ import {
     MapConfig,
     Position,
     Spawned,
+    Stats,
     MobsByLevel,
     MatchEntity
 } from "../codegen/index.sol";
@@ -40,6 +41,8 @@ contract MapSystem is System {
 
         require(!Spawned.getSpawned(entityId), "Character already spawned");
 
+        uint256 baseHp = Stats.getBaseHp(entityId);
+        Stats.setCurrentHp(entityId, int256(baseHp));
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
