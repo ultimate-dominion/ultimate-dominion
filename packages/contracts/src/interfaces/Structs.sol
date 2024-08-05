@@ -93,7 +93,6 @@ struct AdjustedCombatStats {
     uint256 adjustedMaxHp;
     int256 currentHp;
     uint256 level;
-    uint256 class;
 }
 
 struct PhysicalAttackStats {
