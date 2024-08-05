@@ -24,14 +24,14 @@
       "metadataUri": "2_rusty_sword.json",
       "name": "Rusty Sword",
       "stats": {
-        "agiModifier": 4,
+        "agiModifier": 2,
         "classRestrictions": [0],
         "hitPointModifier": 6,
-        "intModifier": 5,
+        "intModifier": 1,
         "maxDamage": 2,
         "minDamage": 1,
         "minLevel": 1,
-        "strModifier": 3
+        "strModifier": 5
       }
     },
     {
@@ -43,11 +43,11 @@
         "agiModifier": 4,
         "classRestrictions": [1],
         "hitPointModifier": 6,
-        "intModifier": 5,
+        "intModifier": 2,
         "maxDamage": 2,
         "minDamage": 1,
         "minLevel": 1,
-        "strModifier": 3
+        "strModifier": 2
       }
     },
     {
@@ -56,14 +56,14 @@
       "metadataUri": "4_cobbled_wand.json",
       "name": "Cobbled Wand",
       "stats": {
-        "agiModifier": 4,
+        "agiModifier": 2,
         "classRestrictions": [2],
         "hitPointModifier": 6,
         "intModifier": 5,
         "maxDamage": 2,
         "minDamage": 1,
         "minLevel": 1,
-        "strModifier": 3
+        "strModifier": 1
       }
     }
   ]

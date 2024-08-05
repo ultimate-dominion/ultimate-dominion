@@ -46,7 +46,9 @@ import { useToast } from '../hooks/useToast';
 import { HOME_PATH, LEADERBOARD_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
+  decodeArmorStats,
   decodeCharacterId,
+  decodeWeaponStats,
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
@@ -445,7 +447,6 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       ItemsOwners,
       ItemsTokenURI,
     },
-    network: { worldContract },
   } = useMUD();
 
   const {
@@ -499,6 +500,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
               itemId: entity,
               itemType: itemTemplate.itemType,
               owner,
+              stats: itemTemplate.stats,
               tokenId: tokenId.toString(),
               tokenIdEntity,
             };
@@ -515,10 +517,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
         const fullArmor = await Promise.all(
           _armor.map(async item => {
-            const itemTemplateStats =
-              await worldContract.read.UD__getArmorStats([
-                BigInt(item.tokenId),
-              ]);
+            const decodedArmorStats = decodeArmorStats(item.stats);
 
             const baseURI = getComponentValueStrict(
               ItemsBaseURI,
@@ -536,16 +535,14 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
             return {
               ...metadata,
-              agiModifier: itemTemplateStats.agiModifier.toString(),
-              armorModifier: itemTemplateStats.armorModifier.toString(),
-              classRestrictions: itemTemplateStats.classRestrictions.map(
-                (classRestriction: number) => classRestriction as StatsClasses,
-              ),
-              hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
-              intModifier: itemTemplateStats.intModifier.toString(),
+              agiModifier: decodedArmorStats.agiModifier,
+              armorModifier: decodedArmorStats.armorModifier,
+              classRestrictions: decodedArmorStats.classRestrictions,
+              hitPointModifier: decodedArmorStats.hitPointModifier,
+              intModifier: decodedArmorStats.intModifier,
               itemId: item.itemId,
               owner: item.owner,
-              strModifier: itemTemplateStats.strModifier.toString(),
+              strModifier: decodedArmorStats.strModifier,
               tokenId: item.tokenId,
             } as Armor;
           }),
@@ -553,10 +550,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
         const fullWeapons = await Promise.all(
           _weapons.map(async item => {
-            const itemTemplateStats =
-              await worldContract.read.UD__getWeaponStats([
-                BigInt(item.tokenId),
-              ]);
+            const decodedWeaponStats = decodeWeaponStats(item.stats);
 
             const baseURI = getComponentValueStrict(
               ItemsBaseURI,
@@ -574,19 +568,17 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
             return {
               ...metadata,
-              agiModifier: itemTemplateStats.agiModifier.toString(),
+              agiModifier: decodedWeaponStats.agiModifier,
               balance: item.balance,
-              classRestrictions: itemTemplateStats.classRestrictions.map(
-                (classRestriction: number) => classRestriction as StatsClasses,
-              ),
-              hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
-              intModifier: itemTemplateStats.intModifier.toString(),
+              classRestrictions: decodedWeaponStats.classRestrictions,
+              hitPointModifier: decodedWeaponStats.hitPointModifier,
+              intModifier: decodedWeaponStats.intModifier,
               itemId: item.itemId,
-              maxDamage: itemTemplateStats.maxDamage.toString(),
-              minDamage: itemTemplateStats.minDamage.toString(),
-              minLevel: itemTemplateStats.minLevel.toString(),
+              maxDamage: decodedWeaponStats.maxDamage,
+              minDamage: decodedWeaponStats.minDamage,
+              minLevel: decodedWeaponStats.minLevel,
               owner: item.owner,
-              strModifier: itemTemplateStats.strModifier.toString(),
+              strModifier: decodedWeaponStats.strModifier,
               tokenId: item.tokenId,
             } as Weapon;
           }),
@@ -603,14 +595,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         setIsLoadingItems(false);
       }
     },
-    [
-      Items,
-      ItemsBaseURI,
-      ItemsOwners,
-      ItemsTokenURI,
-      renderError,
-      worldContract,
-    ],
+    [Items, ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError],
   );
 
   useEffect(() => {
