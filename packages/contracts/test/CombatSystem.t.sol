@@ -65,7 +65,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
         assertEq(world.UD__getEncounter(matchId).start, block.timestamp);
         vm.prank(bob);
-        vm.expectRevert("COMBAT SYSTEM: ENTITY OCCUPIED");
+        vm.expectRevert("COMBAT SYSTEM: INVALID ENTITY");
         world.UD__createMatch(EncounterType.PvE, attackers, defenders);
     }
 
@@ -76,7 +76,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
         actions[0] =
-            Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 1});
+            Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 2});
         uint256 fees = entropy.getFee(address(1));
         vm.prank(bob);
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);

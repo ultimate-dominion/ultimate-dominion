@@ -10,6 +10,7 @@ import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
     RandomNumbers,
     MatchEntity,
+    MatchEntityData,
     Stats,
     StatsData,
     Actions,
@@ -83,13 +84,18 @@ contract CombatSystem is System {
             CombatEncounter.set(encounterId, combatData);
         }
         if (uint8(encounterType) == 0) {}
+        MatchEntityData memory tempMatchData;
         for (uint256 i; i < defenders.length; i++) {
-            require(MatchEntity.getEncounterId(defenders[i]) == bytes32(0), "COMBAT SYSTEM: ENTITY OCCUPIED");
-            MatchEntity.setEncounterId(defenders[i], encounterId);
+            tempMatchData = MatchEntity.get(defenders[i]);
+            require(tempMatchData.encounterId == bytes32(0) && !tempMatchData.died, "COMBAT SYSTEM: INVALID ENTITY");
+            tempMatchData.encounterId = encounterId;
+            MatchEntity.set(defenders[i], tempMatchData);
         }
         for (uint256 i; i < attackers.length; i++) {
-            require(MatchEntity.getEncounterId(attackers[i]) == bytes32(0), "COMBAT SYSTEM: ENTITY OCCUPIED");
-            MatchEntity.setEncounterId(attackers[i], encounterId);
+            tempMatchData = MatchEntity.get(attackers[i]);
+            require(tempMatchData.encounterId == bytes32(0) && !tempMatchData.died, "COMBAT SYSTEM: INVALID ENTITY");
+            tempMatchData.encounterId = encounterId;
+            MatchEntity.set(attackers[i], tempMatchData);
         }
     }
 
@@ -242,7 +248,7 @@ contract CombatSystem is System {
 
                 defenderAction = _executeAction(defenderAction, randomNumber);
 
-                ActionOutcome.set(encounterId, encounterData.currentTurn, i, defenderAction);
+                ActionOutcome.set(encounterId, encounterData.currentTurn, i + actions.length, defenderAction);
                 encounterData.currentTurn++;
             }
 
@@ -424,7 +430,9 @@ contract CombatSystem is System {
         bytes32 defenderTemp;
         for (uint256 i; i < encounterData.defenders.length; i++) {
             defenderTemp = encounterData.defenders[i];
-            MatchEntity.setEncounterId(defenderTemp, bytes32(0));
+            if (!MatchEntity.getDied(defenderTemp)) {
+                MatchEntity.setEncounterId(defenderTemp, bytes32(0));
+            }
         }
 
         (uint256 expAmount, uint256 goldAmount, uint256[] memory itemsDropped) =
