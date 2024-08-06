@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     "address": "0xec49f248866357cc892edc7d90475e63c8cc33ee"
 =======
     "address": "0x1937f18ca0d96cd3c4a5b16ceb71adab9d1e178d"
@@ -17,6 +18,9 @@
 =======
     "address": "0xe3d2ab97ea2741457b3d9a368fb3dd59cac44082"
 >>>>>>> 637c285 (Almost functioning contracts)
+=======
+    "address": "0xbdf196a415bb992ca9c8ce50100cf95bedbe4f2e"
+>>>>>>> 615218c (working on the ui)
   },
   "84532": {
     "address": "0xdf2332face5011cf84e9a97e3903ab786cd2ac6e",
