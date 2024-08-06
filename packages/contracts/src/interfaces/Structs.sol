@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
-import {ItemType, Classes, Alignment} from "@codegen/common.sol";
+import {ItemType, Classes, Alignment, TokenType} from "@codegen/common.sol";
 
 struct WeaponStats {
     int256 agiModifier;
@@ -131,4 +131,27 @@ struct RewardDistributionTemps {
     uint256 totalItemsDropped;
     uint256 livingAttackers;
     uint256 cumulativeAttackerLevels;
+}
+////// Auction house /////////
+
+struct Offer {
+    TokenType tokenType;
+    address token;
+    uint256 identifier;
+    uint256 amount;
+}
+
+struct Consideration {
+    TokenType tokenType;
+    address token;
+    uint256 identifier;
+    uint256 amount;
+    address recipient;
+}
+
+struct Order {
+    Offer offer;
+    Consideration consideration;
+    bytes signature;
+    address offerer;
 }
