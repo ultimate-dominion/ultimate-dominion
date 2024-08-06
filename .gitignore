@@ -1,2 +1,5 @@
 node_modules
 .vercel
+packages/contracts/out/*
+packages/contracts/src/codegen
+pnpm-lock.yaml
