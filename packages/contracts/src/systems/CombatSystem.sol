@@ -194,7 +194,6 @@ contract CombatSystem is System {
 
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-
         // execute attacker actions
         for (uint256 i; i < actions.length; i++) {
             Action memory currentAction = actions[i];
@@ -210,7 +209,41 @@ contract CombatSystem is System {
             ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
             encounterData.currentTurn++;
         }
+        (bool matchEnded, bool attackersWin) = _checkForMatchEnd(encounterData);
+        if (matchEnded) {
+            _endMatch(encounterId, randomNumber, attackersWin);
+        } else {
+            // execute defender attacks
+            for (uint256 i; i < encounterData.defenders.length; i++) {
+                MonsterStats memory monsterStats = IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]);
+                ActionOutcomeData memory defenderAction = _getCurrentActionData(
+                    Action({
+                        attackerEntityId: encounterData.defenders[i],
+                        defenderEntityId: encounterData.attackers[i],
+                        actionId: monsterStats.actions[0],
+                        weaponId: monsterStats.inventory[0]
+                    })
+                );
+                randomNumber =
+                    uint256(keccak256(abi.encode(prevRandao, defenderAction.attackerId, encounterData.currentTurn)));
 
+                defenderAction = _executeAction(defenderAction, randomNumber);
+
+                ActionOutcome.set(encounterId, encounterData.currentTurn, i + actions.length, defenderAction);
+                encounterData.currentTurn++;
+            }
+            CombatEncounter.set(encounterId, encounterData);
+        }
+        (matchEnded, attackersWin) = _checkForMatchEnd(encounterData);
+        if (matchEnded) {
+            _endMatch(encounterId, randomNumber, attackersWin);
+        }
+    }
+
+    function _checkForMatchEnd(CombatEncounterData memory encounterData)
+        internal
+        returns (bool _matchEnded, bool _attackersWin)
+    {
         uint256 deadDefenderCounter;
         uint256 deadAttackerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
@@ -226,34 +259,14 @@ contract CombatSystem is System {
                 deadAttackerCounter++;
             }
         }
-        if (
+
+        _matchEnded = (
             deadAttackerCounter == encounterData.attackers.length
                 || deadDefenderCounter == encounterData.defenders.length
                 || encounterData.currentTurn == encounterData.maxTurns
-        ) {
-            _endMatch(encounterId, randomNumber, deadDefenderCounter == encounterData.defenders.length);
-        } else {
-            // execute defender attacks
-            for (uint256 i; i < encounterData.defenders.length; i++) {
-                ActionOutcomeData memory defenderAction = _getCurrentActionData(
-                    Action({
-                        attackerEntityId: encounterData.defenders[i],
-                        defenderEntityId: encounterData.attackers[i],
-                        actionId: IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]).actions[0],
-                        weaponId: IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]).inventory[0]
-                    })
-                );
-                randomNumber =
-                    uint256(keccak256(abi.encode(prevRandao, defenderAction.attackerId, encounterData.currentTurn)));
+        );
 
-                defenderAction = _executeAction(defenderAction, randomNumber);
-
-                ActionOutcome.set(encounterId, encounterData.currentTurn, i + actions.length, defenderAction);
-                encounterData.currentTurn++;
-            }
-
-            CombatEncounter.set(encounterId, encounterData);
-        }
+        _attackersWin = deadDefenderCounter == encounterData.defenders.length;
     }
 
     function _setSpawned(bytes32 entityId, bool spawned) internal {
