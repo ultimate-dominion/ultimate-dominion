@@ -16,8 +16,8 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue, useEntityQuery } from '@latticexyz/react';
-import { getComponentValueStrict, Has } from '@latticexyz/recs';
+import { useComponentValue } from '@latticexyz/react';
+import { getComponentValueStrict, Has, runQuery } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
@@ -76,13 +76,6 @@ export const CharacterCreation = (): JSX.Element => {
   const [isRollingStats, setIsRollingStats] = useState(false);
   const [isEnteringGame, setIsEnteringGame] = useState(false);
 
-  const starterWeaponTokenIds = useEntityQuery([Has(StarterItems)]).map(
-    entity => {
-      const tokenId = getComponentValueStrict(StarterItems, entity).itemIds[1];
-      return tokenId;
-    },
-  );
-
   const { characterToken } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
@@ -95,6 +88,14 @@ export const CharacterCreation = (): JSX.Element => {
 
   const fetchStarterWeapons = useCallback(async () => {
     try {
+      const starterWeaponTokenIds = Array.from(
+        runQuery([Has(StarterItems)]),
+      ).map(entity => {
+        const tokenId = getComponentValueStrict(StarterItems, entity)
+          .itemIds[1];
+        return tokenId;
+      });
+
       const _items: Weapon[] = await Promise.all(
         starterWeaponTokenIds.map(async tokenId => {
           const tokenIdEntity = encodeEntity(
@@ -137,7 +138,7 @@ export const CharacterCreation = (): JSX.Element => {
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error fetching starter item.', e);
     }
-  }, [Items, ItemsBaseURI, ItemsTokenURI, renderError, starterWeaponTokenIds]);
+  }, [Items, ItemsBaseURI, ItemsTokenURI, renderError, StarterItems]);
 
   useEffect(() => {
     fetchStarterWeapons();
