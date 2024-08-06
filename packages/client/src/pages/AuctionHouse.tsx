@@ -33,6 +33,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import { GiMagicLamp } from 'react-icons/gi';
 import { PiBackpackDuotone } from 'react-icons/pi';
+import { useNavigate } from 'react-router-dom';
 
 import { AuctionHouseCard } from '../components/AuctionHouseCard';
 import { ItemCard } from '../components/ItemCard';
@@ -41,10 +42,8 @@ import { ItemCardSkeleton } from '../components/Skeletons/ItemCardSkeleton';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { LEADERBOARD_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import { Character, ItemType, StatsClasses, Weapon } from '../utils/types';
-import { useNavigate } from 'react-router-dom';
+import { ItemType, StatsClasses, Weapon } from '../utils/types';
 const itemClasses = {
   warrior: ['Rusty Sword 🗡️'],
   rogue: ['Cracked Dagger 🔪'],
@@ -122,10 +121,9 @@ export const AuctionHouse = (): JSX.Element => {
           .sort((a, b) => {
             return Number(a.tokenId) - Number(b.tokenId);
           });
-        console.log(`Items: ${JSON.stringify(items)}`);
+
         const fullItems = await Promise.all(
           _items.map(async item => {
-            console.log(`Item: ${JSON.stringify(item)}`);
             const itemTemplateStats =
               await worldContract.read.UD__getWeaponStats([
                 BigInt(item.tokenId),
@@ -177,7 +175,6 @@ export const AuctionHouse = (): JSX.Element => {
       ItemsBaseURI,
       ItemsOwners,
       ItemsTokenURI,
-      items,
       renderError,
       worldContract.read,
     ],
