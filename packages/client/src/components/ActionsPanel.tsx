@@ -176,19 +176,32 @@ export const ActionsPanel = (): JSX.Element => {
                   key={`battle-action-${i}`}
                   stdTypingDelay={10}
                 >
-                  <Text
-                    key={`battle-action-${i}`}
-                    size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                  >
-                    You missed{' '}
-                    <Text as="span" color="green">
-                      {monsterOponent.name}
+                  {action.attackerId === character?.characterId ? (
+                    <Text
+                      key={`battle-action-${i}`}
+                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                    >
+                      You missed{' '}
+                      <Text as="span" color="green">
+                        {monsterOponent.name}
+                      </Text>
+                      .
                     </Text>
-                    .
-                  </Text>
+                  ) : (
+                    <Text
+                      key={`battle-action-${i}`}
+                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                    >
+                      <Text as="span" color="green">
+                        {monsterOponent.name}
+                      </Text>{' '}
+                      missed you.
+                    </Text>
+                  )}
                 </Typist>
               );
             }
+
             const critText = action.crit ? 'Critical hit! ' : '';
 
             return (
@@ -198,17 +211,31 @@ export const ActionsPanel = (): JSX.Element => {
                 key={`battle-action-${i}`}
                 stdTypingDelay={10}
               >
-                <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                  {critText}You attacked{' '}
-                  <Text as="span" color="green">
-                    {monsterOponent?.name}
-                  </Text>{' '}
-                  for{' '}
-                  <Text as="span" color="red">
-                    {action.attackerDamageDelt}
-                  </Text>{' '}
-                  damage.
-                </Text>
+                {action.attackerId === character?.characterId ? (
+                  <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                    {critText}You attacked{' '}
+                    <Text as="span" color="green">
+                      {monsterOponent?.name}
+                    </Text>{' '}
+                    for{' '}
+                    <Text as="span" color="red">
+                      {action.attackerDamageDelt}
+                    </Text>{' '}
+                    damage.
+                  </Text>
+                ) : (
+                  <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                    {critText}
+                    <Text as="span" color="green">
+                      {monsterOponent?.name}
+                    </Text>{' '}
+                    attacked you for{' '}
+                    <Text as="span" color="red">
+                      {action.attackerDamageDelt}
+                    </Text>{' '}
+                    damage.
+                  </Text>
+                )}
               </Typist>
             );
           })}

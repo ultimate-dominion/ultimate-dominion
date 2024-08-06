@@ -197,7 +197,7 @@ export function createSystemCalls(
         encounterId,
       );
 
-      let success = currentTurn === BigInt(previousTurn) + BigInt(1);
+      let success = currentTurn === BigInt(previousTurn) + BigInt(2);
 
       if (!success) {
         success = end !== BigInt(0);

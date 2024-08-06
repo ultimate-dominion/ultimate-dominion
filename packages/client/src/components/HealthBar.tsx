@@ -8,7 +8,8 @@ export const HealthBar = ({
   currentHp: string;
   baseHp: string;
 } & StackProps): JSX.Element => {
-  const health = (parseInt(currentHp) / parseInt(baseHp)) * 100;
+  const currentHpWithFloor = parseInt(currentHp) < 0 ? 0 : parseInt(currentHp);
+  const health = (currentHpWithFloor / parseInt(baseHp)) * 100;
 
   const barColor = health > 50 ? 'green' : health > 15 ? 'yellow' : 'red';
 
@@ -38,7 +39,7 @@ export const HealthBar = ({
         </Box>
       </Flex>
       <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
-        {currentHp} / {baseHp}
+        {currentHpWithFloor} / {baseHp}
       </Text>
     </VStack>
   );

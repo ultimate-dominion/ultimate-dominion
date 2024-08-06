@@ -310,6 +310,11 @@ export const MapNavigationProvider = ({
   useEffect(() => {
     (async (): Promise<void> => {
       if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;
+      if (!position || (position.x === 0 && position.y === 0)) {
+        setOtherCharactersOnTile([]);
+        setMonsters([]);
+        return;
+      }
       setIsFetchingEntities(true);
 
       const _allCharacters =
@@ -326,6 +331,7 @@ export const MapNavigationProvider = ({
     getAllSpawnedCharacters,
     getMonsters,
     isSynced,
+    position,
   ]);
 
   useEffect(() => {
@@ -367,12 +373,20 @@ export const MapNavigationProvider = ({
       }
 
       renderSuccess('Spawned!');
+      await refreshCharacter();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to spawn.', e);
     } finally {
       setIsSpawning(false);
     }
-  }, [character, delegatorAddress, renderError, renderSuccess, spawn]);
+  }, [
+    character,
+    delegatorAddress,
+    refreshCharacter,
+    renderError,
+    renderSuccess,
+    spawn,
+  ]);
 
   const allBattles = useEntityQuery([Has(CombatEncounter)])
     .map(entity => {
@@ -583,43 +597,46 @@ export const MapNavigationProvider = ({
     ],
   );
 
-  const allActionOutcomes = useEntityQuery([
-    Has(ActionOutcome),
-    HasValue(ActionOutcome, { attackerId: character?.characterId }),
-  ]).map(entity => {
-    const _actionOutcome = getComponentValueStrict(ActionOutcome, entity);
+  const allActionOutcomes = useEntityQuery([Has(ActionOutcome)])
+    .map(entity => {
+      const _actionOutcome = getComponentValueStrict(ActionOutcome, entity);
 
-    const { encounterId, currentTurn, actionNumber } = decodeEntity(
-      {
-        encounterId: 'bytes32',
-        currentTurn: 'uint256',
-        actionNumber: 'uint256',
-      },
-      entity,
+      const { encounterId, currentTurn, actionNumber } = decodeEntity(
+        {
+          encounterId: 'bytes32',
+          currentTurn: 'uint256',
+          actionNumber: 'uint256',
+        },
+        entity,
+      );
+
+      return {
+        attackerDamageDelt: formatUnits(
+          _actionOutcome.attackerDamageDelt,
+          5,
+        ).toString(),
+        attackerDied: _actionOutcome.attackerDied,
+        attackerId: _actionOutcome.attackerId.toString(),
+        actionId: _actionOutcome.actionId.toString(),
+        actionNumber: actionNumber.toString(),
+        blockNumber: _actionOutcome.blockNumber.toString(),
+        crit: _actionOutcome.crit,
+        currentTurn: currentTurn.toString(),
+        defenderDamageDelt: _actionOutcome.defenderDamageDelt.toString(),
+        defenderDied: _actionOutcome.defenderDied,
+        defenderId: _actionOutcome.defenderId.toString(),
+        encounterId: encounterId.toString(),
+        hit: _actionOutcome.hit,
+        miss: _actionOutcome.miss,
+        timestamp: _actionOutcome.timestamp.toString(),
+        weaponId: _actionOutcome.weaponId.toString(),
+      } as ActionOutcomeType;
+    })
+    .filter(
+      action =>
+        action.attackerId === character?.characterId ||
+        action.defenderId === character?.characterId,
     );
-
-    return {
-      attackerDamageDelt: formatUnits(
-        _actionOutcome.attackerDamageDelt,
-        5,
-      ).toString(),
-      attackerDied: _actionOutcome.attackerDied,
-      attackerId: _actionOutcome.attackerId.toString(),
-      actionId: _actionOutcome.actionId.toString(),
-      actionNumber: actionNumber.toString(),
-      blockNumber: _actionOutcome.blockNumber.toString(),
-      crit: _actionOutcome.crit,
-      currentTurn: currentTurn.toString(),
-      defenderDamageDelt: _actionOutcome.defenderDamageDelt.toString(),
-      defenderDied: _actionOutcome.defenderDied,
-      defenderId: _actionOutcome.defenderId.toString(),
-      encounterId: encounterId.toString(),
-      hit: _actionOutcome.hit,
-      miss: _actionOutcome.miss,
-      timestamp: _actionOutcome.timestamp.toString(),
-      weaponId: _actionOutcome.weaponId.toString(),
-    } as ActionOutcomeType;
-  });
 
   const currentBattleActionOutcomes = useMemo(
     () =>
