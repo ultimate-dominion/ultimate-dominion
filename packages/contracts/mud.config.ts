@@ -22,6 +22,8 @@ export default defineWorld({
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
     ActionType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
+    OrderStatus: ["Canceled", "Active", "Fullfilled"],
+    TokenType: ["NATIVE", "ERC20", "ERC721", "ERC1155"],
     StatusEffects: [
       "ToHitModifier",
       "DoT",
@@ -41,26 +43,6 @@ export default defineWorld({
         user: "address",
         isAdmin: "bool",
       },
-    },
-    AuctionHouseOrders: {
-      key: ["orderId"],
-      schema: {
-        orderId: "bytes32",
-        collection: "address",
-        tokenId: "uint256",
-        buyer: "address",
-        price: "uint256",
-      }
-    },
-    AuctionHouseSales: {
-      key: ["saleId"],
-      schema: {
-        saleId: "bytes32",
-        collection: "address",
-        tokenId: "uint256",
-        buyer: "address",
-        price: "uint256"
-      }
     },
     Characters: {
       key: ["characterId"],
@@ -304,6 +286,37 @@ export default defineWorld({
         items: "address",
       },
     },
+        ///////// AUCTION HOUSE ////////////
+        Orders: {
+          key: ["orderHash"],
+          schema: {
+            orderHash: "bytes32",
+            offerer: "address",
+            offerCounter: "uint256",
+            orderStatus: "OrderStatus",
+          },
+        },
+        Considerations: {
+          key: ["orderHash"],
+          schema: {
+            orderHash: "bytes32",
+            tokenType: "TokenType",
+            token: "address",
+            identifier: "uint256",
+            amount: "uint256",
+            recipient: "address",
+          },
+        },
+        Offers: {
+          key: ["orderHash"],
+          schema: {
+            orderHash: "bytes32",
+            tokenType: "TokenType",
+            token: "address",
+            identifier: "uint256",
+            amount: "uint256",
+          },
+        },
   },
   excludeSystems: ["RngSystem"],
 });

@@ -82,10 +82,25 @@ export const AuctionHouseItem = (): JSX.Element => {
   const [filter /*, setFilter*/] = useState({ filtered: 'all' });
   const [amount, setAmount] = useState(0n);
   const [allowance, setAllowance] = useState(0n);
-  const [
-    auctionHouseOrdersContractAddress,
-    setAuctionHouseOrdersContractAddress,
-  ] = useState('');
+  const [auctionContractAddress, setAuctionContractAddress] = useState('');
+  const [listing, setListings] = useState(
+    Array<{
+      orderId: Address;
+      collection: Address;
+      buyer: Address;
+      price: bigint;
+      tokenId: bigint;
+    }>,
+  );
+  const [offers, setOffers] = useState(
+    Array<{
+      orderId: Address;
+      collection: Address;
+      buyer: Address;
+      price: bigint;
+      tokenId: bigint;
+    }>,
+  );
   const [items, setItems] = useState(
     Array<{
       orderId: Address;
@@ -107,8 +122,8 @@ export const AuctionHouseItem = (): JSX.Element => {
     () =>
       async function () {
         const auctionHouseOrder =
-          await worldContract.read.UD__auctionHouseOrdersContractAddress();
-        setAuctionHouseOrdersContractAddress(auctionHouseOrder);
+          await worldContract.read.UD__auctionHouseAddress();
+        setAuctionContractAddress(auctionHouseOrder);
         if (userCharacter?.owner) {
           const allowance = await publicClient.readContract({
             address: goldToken as Address,
@@ -116,14 +131,14 @@ export const AuctionHouseItem = (): JSX.Element => {
             functionName: 'allowance',
             args: [
               userCharacter?.owner as Address,
-              auctionHouseOrdersContractAddress as Address,
+              auctionContractAddress as Address,
             ],
           });
           setAllowance(allowance);
         }
       },
     [
-      auctionHouseOrdersContractAddress,
+      auctionContractAddress,
       goldToken,
       publicClient,
       userCharacter?.owner,
@@ -137,7 +152,7 @@ export const AuctionHouseItem = (): JSX.Element => {
       abi: erc20Abi,
       functionName: 'approve',
       args: [
-        auctionHouseOrdersContractAddress, //userCharacter?.owner as Address,
+        auctionContractAddress, //userCharacter?.owner as Address,
         a, //auctionHouseOrdersContractAddress as Address,
       ],
     };
@@ -148,10 +163,24 @@ export const AuctionHouseItem = (): JSX.Element => {
   const bid = async function (a: bigint) {
     if (params.itemId) {
       if (allowance >= BigInt(a)) {
-        const orderId = await worldContract.write.UD__placeOrder([
-          itemsContract as Address,
-          BigInt(params.itemId),
-          BigInt(a),
+        const orderId = await worldContract.write.UD__createOrder([
+          {
+            signature: '' as Address,
+            offerer: '' as Address,
+            offer: {
+              tokenType: 1,
+              token: '' as Address,
+              identifier: 1n,
+              amount: 1n,
+            },
+            consideration: {
+              tokenType: 2,
+              token: '' as Address,
+              identifier: 1n,
+              amount: 1n,
+              recipient: '' as Address,
+            },
+          },
         ]);
         setItems([
           ...items,

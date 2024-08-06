@@ -41,38 +41,10 @@ import { ItemCardSkeleton } from '../components/Skeletons/ItemCardSkeleton';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { LEADERBOARD_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import { Character, ItemType, StatsClasses, Weapon } from '../utils/types';
-// import { Character } from '../utils/types';
-
-// const createDummyData = (num: number = 1) => {
-//   const result: Character[] = [];
-//   for (let i = 0; i < num; i++) {
-//     result[result.length] = {
-//       // characterClass: Math.floor(Math.random() * 3) as StatsClasses,
-//       characterId: (Math.random() + 1).toString(36).substring(7) as Entity,
-//       goldBalance: Math.floor(Math.random() * (1000 - 100) + 100) / 100 + '',
-//       locked: Math.random() < 0.5,
-//       owner: (Math.random() + 1).toString(36).substring(7),
-//       tokenId: i + '',
-//       agility: Math.floor(Math.random() * 10) + 1 + '',
-//       baseHitPoints: Math.floor(Math.random() * 10) + 1 + '',
-//       experience: Math.floor(Math.random() * 10) + 1 + '',
-//       intelligence: Math.floor(Math.random() * 10) + 1 + '',
-//       level: Math.floor(Math.random() * 10) + 1 + '',
-//       strength: Math.floor(Math.random() * 10) + 1 + '',
-//       description: (Math.random() + 1).toString(36).substring(7),
-//       image:
-//         'http://example.com/' + (Math.random() + 1).toString(36).substring(7),
-//       name: (Math.random() + 1).toString(36).substring(7),
-//     };
-//   }
-//   return result;
-// };
-
-// const DUMMY_CHARACTER: Character[] = createDummyData(50);
-// const PER_PAGE = 10;
-
+import { useNavigate } from 'react-router-dom';
 const itemClasses = {
   warrior: ['Rusty Sword 🗡️'],
   rogue: ['Cracked Dagger 🔪'],
@@ -80,11 +52,11 @@ const itemClasses = {
 };
 export const AuctionHouse = (): JSX.Element => {
   const { renderError } = useToast();
+  const navigate = useNavigate();
   const { character: userCharacter } = useCharacter();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = useRef();
 
-  // const [entries, setEntries] = useState(DUMMY_CHARACTER);
   const [filter, setFilter] = useState({ filtered: 'all' });
   const [query, setQuery] = useState('');
   const [items, setItems] = useState<Weapon[] | null>(null);
@@ -93,11 +65,13 @@ export const AuctionHouse = (): JSX.Element => {
   // const [pageLimit, setPageLimit] = useState(0);
   // const [total, setTotal] = useState(0);
   const rub = async function () {
-    const to = userCharacter?.characterId as `0x${string}`;
-    // (character?.owner as Address) ||
-    // ('0x147914732644F7F984783634db2085039FC2F190' as Address);
-    const item = BigInt(Math.floor(Math.random() * (3 - 1 + 1) + 1));
-    await worldContract.write.UD__adminDropItem([to, item, BigInt(1)]);
+    if (userCharacter) {
+      const to = userCharacter.characterId as `0x${string}`;
+      // (character?.owner as Address) ||
+      // ('0x147914732644F7F984783634db2085039FC2F190' as Address);
+      const item = BigInt(Math.floor(Math.random() * (3 - 1 + 1) + 1));
+      await worldContract.write.UD__adminDropItem([to, item, BigInt(1)]);
+    }
   };
   const {
     components: { Characters, Items, ItemsBaseURI, ItemsOwners, ItemsTokenURI },
@@ -105,14 +79,14 @@ export const AuctionHouse = (): JSX.Element => {
   } = useMUD();
 
   const fetchCharacterItems = useCallback(
-    async (_character: Character) => {
+    async (/*_character: Character*/) => {
       try {
         const _items = Array.from(runQuery([Has(ItemsOwners)]))
           .map(entity => {
-            const itemdBalance = getComponentValueStrict(
-              ItemsOwners,
-              entity,
-            ).balance;
+            // const itemdBalance = getComponentValueStrict(
+            //   ItemsOwners,
+            //   entity,
+            // ).balance;
 
             const { owner, tokenId } = decodeEntity(
               { owner: 'address', tokenId: 'uint256' },
@@ -127,7 +101,7 @@ export const AuctionHouse = (): JSX.Element => {
             const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
 
             return {
-              balance: itemdBalance.toString(),
+              // balance: itemdBalance.toString(),
               itemId: entity,
               itemType: itemTemplate.itemType,
               owner,
@@ -135,16 +109,23 @@ export const AuctionHouse = (): JSX.Element => {
               tokenIdEntity,
             };
           })
+          //remove duplicate objects
+          .filter(
+            (item1, i, arr) =>
+              arr.findIndex(item2 => item2.tokenId === item1.tokenId) === i,
+          )
           .filter(
             item =>
-              item.owner === _character.owner &&
+              // item.owner === _character.owner &&
               item.itemType === ItemType.Weapon,
           )
           .sort((a, b) => {
             return Number(a.tokenId) - Number(b.tokenId);
           });
+        console.log(`Items: ${JSON.stringify(items)}`);
         const fullItems = await Promise.all(
           _items.map(async item => {
+            console.log(`Item: ${JSON.stringify(item)}`);
             const itemTemplateStats =
               await worldContract.read.UD__getWeaponStats([
                 BigInt(item.tokenId),
@@ -167,7 +148,7 @@ export const AuctionHouse = (): JSX.Element => {
             return {
               ...metadata,
               agiModifier: itemTemplateStats.agiModifier.toString(),
-              balance: item.balance,
+              // balance: item.balance,
               classRestrictions: itemTemplateStats.classRestrictions.map(
                 (classRestriction: number) => classRestriction as StatsClasses,
               ),
@@ -196,6 +177,7 @@ export const AuctionHouse = (): JSX.Element => {
       ItemsBaseURI,
       ItemsOwners,
       ItemsTokenURI,
+      items,
       renderError,
       worldContract.read,
     ],
@@ -203,7 +185,9 @@ export const AuctionHouse = (): JSX.Element => {
 
   useEffect(() => {
     (async (): Promise<void> => {
-      await fetchCharacterItems(userCharacter!);
+      if (userCharacter) {
+        await fetchCharacterItems();
+      }
     })();
   }, [Characters, fetchCharacterItems, userCharacter]);
 
@@ -259,7 +243,7 @@ export const AuctionHouse = (): JSX.Element => {
                 description={''}
                 image={''}
                 name={''}
-                balance={''}
+                // balance={''}
                 itemId={'undefined'}
                 owner={''}
                 tokenId={''}
@@ -273,17 +257,24 @@ export const AuctionHouse = (): JSX.Element => {
       <Grid templateRows="repeat(10, 1fr)" templateColumns="repeat(5, 1fr)">
         <GridItem backgroundColor="mintcream" p={5} rowSpan={2} colSpan={5}>
           <Stack direction="row" my={5}>
-            <Stack direction="row">
+            <Stack direction="row" w="100%">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={rub}
+                visibility={userCharacter ? 'visible' : 'hidden'}
+              >
+                <GiMagicLamp />
+              </Button>
               <Button size="sm" ref={btnRef} onClick={onOpen}>
                 <PiBackpackDuotone />
-              </Button>
-              <Button size="sm" variant="outline" onClick={rub}>
-                <GiMagicLamp />
               </Button>
             </Stack>
             <Spacer />
             {userCharacter ? (
-              <Heading>{userCharacter?.goldBalance} $GOLD</Heading>
+              <Heading minW={200} textAlign="right">
+                {userCharacter?.goldBalance} $GOLD
+              </Heading>
             ) : (
               <Skeleton>
                 <Heading> $GOLD</Heading>
@@ -374,7 +365,10 @@ export const AuctionHouse = (): JSX.Element => {
                 .filter(item => itemClasses.warrior.indexOf(item.name) > -1)
                 .map(function (item, i) {
                   return (
-                    <GridItem key={i}>
+                    <GridItem
+                      key={i}
+                      onClick={() => navigate('/items/' + item.tokenId)}
+                    >
                       <AuctionHouseCard
                         name={item.name}
                         image="https://placehold.jp/500x500.png"
@@ -422,7 +416,10 @@ export const AuctionHouse = (): JSX.Element => {
                 .filter(item => itemClasses.rogue.indexOf(item.name) > -1)
                 .map(function (item, i) {
                   return (
-                    <GridItem key={i}>
+                    <GridItem
+                      key={i}
+                      onClick={() => navigate('/items/' + item.tokenId)}
+                    >
                       <AuctionHouseCard
                         name={item.name}
                         image="https://placehold.jp/500x500.png"
@@ -471,7 +468,10 @@ export const AuctionHouse = (): JSX.Element => {
                 ?.filter(item => itemClasses.mage.indexOf(item.name) > -1)
                 ?.map(function (item, i) {
                   return (
-                    <GridItem key={i}>
+                    <GridItem
+                      key={i}
+                      onClick={() => navigate('/items/' + item.tokenId)}
+                    >
                       <AuctionHouseCard
                         name={item.name}
                         image="https://placehold.jp/500x500.png"
@@ -493,14 +493,6 @@ export const AuctionHouse = (): JSX.Element => {
                 str={''}
               ></AuctionHouseCardSkeleton>
             )}
-            <AuctionHouseCardSkeleton
-              name={''}
-              image={''}
-              agi={''}
-              int={''}
-              hit={''}
-              str={''}
-            ></AuctionHouseCardSkeleton>
           </Grid>
         </GridItem>
       </Grid>
