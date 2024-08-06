@@ -1,2 +1,7 @@
 node_modules
 .vercel
+packages/contracts/broadcast
+packages/contracts/cache
+packages/contracts/deploys
+packages/contracts/out
+packages/contracts/src/codegen
