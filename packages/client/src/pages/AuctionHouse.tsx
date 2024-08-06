@@ -42,7 +42,6 @@ import { ItemCardSkeleton } from '../components/Skeletons/ItemCardSkeleton';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { LEADERBOARD_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import { ItemType, StatsClasses, Weapon } from '../utils/types';
 const itemClasses = {
@@ -122,10 +121,9 @@ export const AuctionHouse = (): JSX.Element => {
           .sort((a, b) => {
             return Number(a.tokenId) - Number(b.tokenId);
           });
-        console.log(`Items: ${JSON.stringify(items)}`);
+
         const fullItems = await Promise.all(
           _items.map(async item => {
-            console.log(`Item: ${JSON.stringify(item)}`);
             const itemTemplateStats =
               await worldContract.read.UD__getWeaponStats([
                 BigInt(item.tokenId),
@@ -177,7 +175,6 @@ export const AuctionHouse = (): JSX.Element => {
       ItemsBaseURI,
       ItemsOwners,
       ItemsTokenURI,
-      items,
       renderError,
       worldContract.read,
     ],
