@@ -14,6 +14,8 @@ import { IItemsSystem } from "./IItemsSystem.sol";
 import { ILootManagerSystem } from "./ILootManagerSystem.sol";
 import { IMapSystem } from "./IMapSystem.sol";
 import { IMobSystem } from "./IMobSystem.sol";
+import { IPvESystem } from "./IPvESystem.sol";
+import { IPvPSystem } from "./IPvPSystem.sol";
 import { IUltimateDominionConfigSystem } from "./IUltimateDominionConfigSystem.sol";
 
 /**
@@ -34,5 +36,7 @@ interface IWorld is
   ILootManagerSystem,
   IMapSystem,
   IMobSystem,
+  IPvESystem,
+  IPvPSystem,
   IUltimateDominionConfigSystem
 {}

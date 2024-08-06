@@ -171,10 +171,12 @@ contract PostDeploy is Script {
         //register mint function selector on world
         IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
 
+        // transfer erc20 contract ownership to the loot manager system
         world.transferOwnership(resourceIds.erc20NamespaceId, Systems.getSystem(resourceIds.lootManagerSystemId));
 
-        System systemContract = new ERC721System();
-        world.registerSystem(resourceIds.erc721SystemId, systemContract, true);
+        // System systemContract = new ERC721System();
+
+        // world.registerSystem(resourceIds.erc721SystemId, systemContract, true);
 
         NoTransferHook characterHook = new NoTransferHook();
 

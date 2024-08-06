@@ -187,9 +187,8 @@ export default defineWorld({
       },
       key: ["encounterId"],
     },
-
     // when an entity starts combat it creates a "match entity" for that encounter.
-    //when combat ends, the encounterId is set to zero, and the damage taken subtracted from the entities hp.
+    //when combat ends, the encounterId is set to zero
     MatchEntity: {
       key: ["matchEntityId"],
       schema: {
@@ -197,7 +196,6 @@ export default defineWorld({
         // by default this is bytes(0), if this entity is in an encounter it will be set,
         // if the mob survives its encounter this will be set back to bytes(0)
         encounterId: "bytes32",
-        damageTaken: "int256",
         died: "bool",
       },
     },
