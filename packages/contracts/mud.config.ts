@@ -120,6 +120,13 @@ export default defineWorld({
         equippedSpells: "bytes32[]",
       },
     },
+    PvPFlag: {
+      key: ["entityId"],
+      schema: {
+        entityId: "bytes32",
+        pvpFlag: "bool",
+      },
+    },
     Counters: {
       schema: {
         contractAddress: "address",
@@ -186,6 +193,13 @@ export default defineWorld({
         attackers: "bytes32[]",
       },
       key: ["encounterId"],
+    },
+    EncounterRandomness: {
+      key: ["encounterId"],
+      schema: {
+        encounterId: "bytes32",
+        currentRandomness: "uint256",
+      },
     },
     // when an entity starts combat it creates a "match entity" for that encounter.
     //when combat ends, the encounterId is set to zero

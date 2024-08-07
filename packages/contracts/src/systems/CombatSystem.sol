@@ -28,7 +28,8 @@ import {
     MobsData,
     Counters,
     ActionOutcome,
-    ActionOutcomeData
+    ActionOutcomeData,
+    PvPFlag
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {
@@ -83,7 +84,24 @@ contract CombatSystem is System {
 
             CombatEncounter.set(encounterId, combatData);
         }
-        if (uint8(encounterType) == 0) {}
+        if (uint8(encounterType) == 0) {
+            require(IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y), "COMBAT SYSTEM: INVALID PVP");
+            uint256 startTime = block.timestamp;
+            encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
+
+            CombatEncounterData memory combatData = CombatEncounterData({
+                encounterType: encounterType,
+                start: startTime,
+                end: 0,
+                rewardsDistributed: false,
+                currentTurn: 0,
+                maxTurns: DEFAULT_MAX_TURNS,
+                defenders: defenders,
+                attackers: attackers
+            });
+
+            CombatEncounter.set(encounterId, combatData);
+        }
         MatchEntityData memory tempMatchData;
         for (uint256 i; i < defenders.length; i++) {
             tempMatchData = MatchEntity.get(defenders[i]);
@@ -107,10 +125,16 @@ contract CombatSystem is System {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(encounterData.start != 0 && encounterData.end == 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
         require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
-        require(
-            IWorld(_world()).UD__getOwnerAddress(playerId) == _msgSender() && isParticipant(playerId, encounterId),
-            "COMBAT SYSTEM: NON-COMBATANT"
-        );
+        address playerAddress = IWorld(_world()).UD__getOwnerAddress(playerId);
+        require(playerAddress == _msgSender() && isParticipant(playerId, encounterId), "COMBAT SYSTEM: NON-COMBATANT");
+
+        if (uint8(encounterData.encounterType) == 0) {
+            if (encounterData.currentTurn % 2 == 0) {
+                require(isParticipant(playerAddress, encounterData.defenders), "Cannot end opponents turn");
+            } else {
+                require(isParticipant(playerAddress, encounterData.attackers), "Cannot end opponents turn");
+            }
+        }
         _queueActions(encounterId, actions);
     }
 
@@ -336,6 +360,7 @@ contract CombatSystem is System {
     function _calculateMagicAttack() public {}
 
     function endMatch(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
+        //make sure it's an authorized call
         _requireAccess(address(this), _msgSender());
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(CombatEncounter.getEnd(encounterId) == 0, "match already over");

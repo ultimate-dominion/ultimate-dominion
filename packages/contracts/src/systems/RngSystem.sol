@@ -11,13 +11,14 @@ import {
     UltimateDominionConfig,
     StatsData,
     RngLogs,
-    RngLogsData
+    RngLogsData,
+    CombatEncounter
 } from "@codegen/index.sol";
-import {Classes, RngRequestType} from "@codegen/common.sol";
+import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
-import {IWorld, IPvESystem} from "@world/IWorld.sol";
+import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import "forge-std/console2.sol";
@@ -121,7 +122,14 @@ contract RngSystem is System, IEntropyConsumer {
         } else if (uint8(requestType) == uint8(1)) {
             (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
             require(moves.length > 0, "RNG: Invalid moves");
-            _executePvECombat(randomNumber, encounterId, moves);
+            EncounterType encounterType = CombatEncounter.getEncounterType(encounterId);
+            if (encounterType == EncounterType.PvE) {
+                _executePvECombat(randomNumber, encounterId, moves);
+            } else if (encounterType == EncounterType.PvP) {
+                _executePvPCombat(randomNumber, encounterId, moves);
+            } else {
+                revert("RNG: Unrecognized Combat Type");
+            }
         } else {
             revert("RNG: Unrecognized request type");
         }
@@ -129,6 +137,10 @@ contract RngSystem is System, IEntropyConsumer {
 
     function _executePvECombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
         SystemSwitch.call(abi.encodeCall(IPvESystem.UD__executePvECombat, (randomNumber, encounterId, moves)));
+    }
+
+    function _executePvPCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
+        SystemSwitch.call(abi.encodeCall(IPvPSystem.UD__executePvPCombat, (randomNumber, encounterId, moves)));
     }
 
     function _storeStats(uint256 randomNumber, bytes32 characterId) internal {
