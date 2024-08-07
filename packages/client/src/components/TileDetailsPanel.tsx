@@ -16,8 +16,10 @@ import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
+import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
-import { useMapNavigation } from '../contexts/MapNavigationContext';
+import { useMap } from '../contexts/MapContext';
+import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import {
@@ -38,14 +40,9 @@ export const TileDetailsPanel = (): JSX.Element => {
     systemCalls: { createMatch },
   } = useMUD();
   const { character } = useCharacter();
-  const {
-    aliveMonsters,
-    actionOutcomes,
-    currentBattle,
-    isRefreshing,
-    monsterOponent,
-    otherCharactersOnTile,
-  } = useMapNavigation();
+  const { aliveMonsters, otherCharactersOnTile } = useMap();
+  const { actionOutcomes, currentBattle, monsterOponent } = useBattle();
+  const { isRefreshing } = useMovement();
 
   const [isInitiating, setIsInitiating] = useState(false);
   const [isUserHit, setIsUserHit] = useState(false);
@@ -64,7 +61,7 @@ export const TileDetailsPanel = (): JSX.Element => {
       }
     }
 
-    if (actionOutcomes[actionOutcomes.length - 1].attackerDamageDelt !== '0') {
+    if (actionOutcomes[actionOutcomes.length - 1]?.attackerDamageDelt !== '0') {
       setIsUserHit(true);
       setTimeout(() => {
         setIsUserHit(false);
@@ -90,7 +87,7 @@ export const TileDetailsPanel = (): JSX.Element => {
       }
     }
 
-    if (actionOutcomes[actionOutcomes.length - 2].attackerDamageDelt !== '0') {
+    if (actionOutcomes[actionOutcomes.length - 2]?.attackerDamageDelt !== '0') {
       setIsMonsterHit(true);
       setTimeout(() => {
         setIsMonsterHit(false);
@@ -202,6 +199,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             <HealthBar
               baseHp={monsterOponent.baseHp}
               currentHp={monsterOponent.currentHp}
+              level={monsterOponent.level}
               w="90%"
             />
             <VStack alignItems="start" px={4}>
@@ -220,6 +218,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             <HealthBar
               baseHp={character.baseHp}
               currentHp={character.currentHp}
+              level={character.level}
               w="90%"
             />
             <VStack alignItems="start" px={4}>

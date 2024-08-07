@@ -206,6 +206,9 @@ export const LevelingPanel = ({
     renderWarning,
   ]);
 
+  const currentHpWithFloor =
+    parseInt(character.currentHp) < 0 ? 0 : parseInt(character.currentHp);
+
   return (
     <VStack>
       <HStack justify="space-between" w="100%">
@@ -223,7 +226,7 @@ export const LevelingPanel = ({
         <HStack justify="space-between" w="100%">
           <Text>HP - Hit Points</Text>
           <Text>
-            {character.currentHp}/{character.baseHp}
+            {currentHpWithFloor}/{character.baseHp}
           </Text>
         </HStack>
 

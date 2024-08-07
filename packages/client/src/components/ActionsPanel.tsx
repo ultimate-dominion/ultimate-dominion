@@ -1,11 +1,21 @@
-import { Box, Button, HStack, Stack, Text, VStack } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Divider,
+  HStack,
+  Stack,
+  Text,
+  VStack,
+} from '@chakra-ui/react';
 import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 // eslint-disable-next-line import/no-named-as-default
 import Typist from 'react-typist';
 
+import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
-import { useMapNavigation } from '../contexts/MapNavigationContext';
+import { useMap } from '../contexts/MapContext';
+import { useMovement } from '../contexts/MovementContext';
 
 export const ActionsPanel = (): JSX.Element => {
   const {
@@ -13,17 +23,17 @@ export const ActionsPanel = (): JSX.Element => {
     character,
     equippedWeapons,
   } = useCharacter();
+  const { aliveMonsters, isSpawned, position } = useMap();
   const {
     actionOutcomes,
-    aliveMonsters,
     currentBattle,
     isAttacking,
-    isRefreshing: isRefreshingMap,
-    isSpawned,
+    lastestBattleOutcome,
     monsterOponent,
     onAttack,
-    position,
-  } = useMapNavigation();
+    onContinueToBattleOutcome,
+  } = useBattle();
+  const { isRefreshing: isRefreshingMap } = useMovement();
 
   const parentDivRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +45,11 @@ export const ActionsPanel = (): JSX.Element => {
       });
     }
   }, [actionOutcomes]);
+
+  const battleOver = useMemo(
+    () => currentBattle?.encounterId === lastestBattleOutcome?.encounterId,
+    [currentBattle, lastestBattleOutcome],
+  );
 
   const actionText = useMemo(() => {
     if (isRefreshingCharacter || isRefreshingMap) return '';
@@ -122,7 +137,7 @@ export const ActionsPanel = (): JSX.Element => {
 
   return (
     <Box maxH="100%" overflowY="auto" pb={4} ref={parentDivRef}>
-      {currentBattle && equippedWeapons && monsterOponent && (
+      {!battleOver && currentBattle && equippedWeapons && monsterOponent && (
         <VStack bgColor="white" position="sticky" spacing={0} top={0} w="100%">
           <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
             Choose your move:
@@ -240,6 +255,35 @@ export const ActionsPanel = (): JSX.Element => {
             );
           })}
       </Stack>
+      {battleOver && (
+        <Stack my={4} spacing={4}>
+          <Divider />
+          <Typist
+            avgTypingDelay={10}
+            cursor={{ show: false }}
+            stdTypingDelay={10}
+          >
+            <Text
+              fontWeight="bold"
+              size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+              textAlign="center"
+            >
+              {lastestBattleOutcome?.winner === character?.characterId
+                ? 'You won!'
+                : 'You lost...'}
+            </Text>
+          </Typist>
+          <HStack justifyContent="center">
+            <Button
+              onClick={() => onContinueToBattleOutcome(true)}
+              size="sm"
+              variant="outline"
+            >
+              View Results
+            </Button>
+          </HStack>
+        </Stack>
+      )}
     </Box>
   );
 };
