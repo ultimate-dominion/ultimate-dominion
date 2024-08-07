@@ -671,11 +671,8 @@ export const MapNavigationProvider = ({
       latestCompletedBattle.encounterId,
     );
     if (!combatOutcome) return null;
-    const combatActionOutcomes = allActionOutcomes.filter(
-      a => a.encounterId === latestCompletedBattle.encounterId,
-    );
 
-    const winner = combatActionOutcomes.find(a => a.attackerDied === false)
+    const winner = combatOutcome.attackersWin
       ? latestCompletedBattle.attackers[0]
       : latestCompletedBattle.defenders[0];
     if (!winner) return null;
@@ -690,7 +687,7 @@ export const MapNavigationProvider = ({
       itemsDropped: combatOutcome.itemsDropped.map(i => i.toString()),
       winner,
     };
-  }, [allActionOutcomes, allBattles, CombatOutcome]);
+  }, [allBattles, CombatOutcome]);
 
   return (
     <MapNavigationContext.Provider
