@@ -95,6 +95,7 @@ export const ActionsPanel = (): JSX.Element => {
         <Typist
           avgTypingDelay={10}
           cursor={{ show: false }}
+          startDelay={500}
           stdTypingDelay={10}
         >
           <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
@@ -255,7 +256,7 @@ export const ActionsPanel = (): JSX.Element => {
             );
           })}
       </Stack>
-      {battleOver && (
+      {battleOver && currentBattle && (
         <Stack my={4} spacing={4}>
           <Divider />
           <Typist

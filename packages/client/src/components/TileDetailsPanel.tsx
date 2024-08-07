@@ -40,7 +40,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     systemCalls: { createMatch },
   } = useMUD();
   const { character } = useCharacter();
-  const { aliveMonsters, otherCharactersOnTile } = useMap();
+  const { aliveMonsters, isSpawned, otherCharactersOnTile } = useMap();
   const { actionOutcomes, currentBattle, monsterOponent } = useBattle();
   const { isRefreshing } = useMovement();
 
@@ -138,6 +138,16 @@ export const TileDetailsPanel = (): JSX.Element => {
       <Flex alignItems="center" h="100%" justifyContent="center">
         <Spinner size="lg" />
       </Flex>
+    );
+  }
+
+  if (!(currentBattle && isSpawned)) {
+    return (
+      <Box>
+        <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+          You have not yet spawned to the map.
+        </Text>
+      </Box>
     );
   }
 
