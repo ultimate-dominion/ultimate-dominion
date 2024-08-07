@@ -230,11 +230,6 @@ declare const abi: [
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
-          },
-          {
-            "name": "class",
-            "type": "uint256",
-            "internalType": "uint256"
           }
         ]
       }
