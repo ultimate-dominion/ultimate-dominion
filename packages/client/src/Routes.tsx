@@ -5,6 +5,7 @@ import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { useMUD } from './contexts/MUDContext';
+import { Auction } from './pages/Auction';
 import { CharacterPage } from './pages/Character';
 import { CharacterCreation } from './pages/CharacterCreation';
 import { GameBoard } from './pages/GameBoard';
@@ -15,6 +16,7 @@ export const HOME_PATH = '/';
 export const CHARACTER_CREATION_PATH = '/character-creation';
 export const GAME_BOARD_PATH = '/game-board';
 export const LEADERBOARD_PATH = '/leaderboard';
+export const AUCTION_PATH = '/auction';
 
 const AppRoutes: React.FC = () => {
   const { pathname } = useLocation();
@@ -47,6 +49,7 @@ const AppRoutes: React.FC = () => {
       <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
       <Route path="/characters/:characterId" element={<CharacterPage />} />
       <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
+      <Route path={AUCTION_PATH} element={<Auction />} />
     </Routes>
   );
 };
