@@ -15,6 +15,7 @@ import {
     StarterItemsData,
     Characters,
     CharactersData,
+    Mobs,
     Stats,
     StatsData,
     CharacterEquipment,
@@ -38,7 +39,7 @@ import {
     _operatorApprovalTableId,
     _ownersTableId
 } from "@erc1155/utils.sol";
-import {AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {AdjustedCombatStats, MonsterStats} from "@interfaces/Structs.sol";
 import "forge-std/console2.sol";
 
 contract EquipmentSystem is System {
@@ -231,29 +232,40 @@ contract EquipmentSystem is System {
         StatsData memory entityStats = Stats.get(entityId);
         AdjustedCombatStats memory combatStats;
 
-        CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
-        //TODO add over/underflowProtection
-        combatStats.adjustedStrength = uint256(
-            int256(entityStats.strength) + equipmentStats.strBonus >= 0
-                ? int256(entityStats.strength) + equipmentStats.strBonus
-                : int256(0)
-        );
-        combatStats.adjustedAgility = uint256(
-            int256(entityStats.agility) + equipmentStats.agiBonus >= 0
-                ? int256(entityStats.agility) + equipmentStats.agiBonus
-                : int256(0)
-        );
-        combatStats.adjustedIntelligence = uint256(
-            int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
-                ? int256(entityStats.intelligence) + equipmentStats.intBonus
-                : int256(0)
-        );
-        combatStats.adjustedMaxHp = uint256(
-            int256(entityStats.baseHp) + equipmentStats.hpBonus >= 0
-                ? int256(entityStats.baseHp) + equipmentStats.hpBonus
-                : int256(1)
-        );
-        combatStats.currentHp = entityStats.currentHp;
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
+            //TODO add over/underflowProtection
+            combatStats.adjustedStrength = uint256(
+                int256(entityStats.strength) + equipmentStats.strBonus >= 0
+                    ? int256(entityStats.strength) + equipmentStats.strBonus
+                    : int256(0)
+            );
+            combatStats.adjustedAgility = uint256(
+                int256(entityStats.agility) + equipmentStats.agiBonus >= 0
+                    ? int256(entityStats.agility) + equipmentStats.agiBonus
+                    : int256(0)
+            );
+            combatStats.adjustedIntelligence = uint256(
+                int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
+                    ? int256(entityStats.intelligence) + equipmentStats.intBonus
+                    : int256(0)
+            );
+            combatStats.adjustedMaxHp = uint256(
+                int256(entityStats.baseHp) + equipmentStats.hpBonus >= 0
+                    ? int256(entityStats.baseHp) + equipmentStats.hpBonus
+                    : int256(1)
+            );
+            combatStats.currentHp = entityStats.currentHp;
+        } else {
+            combatStats.adjustedAgility = entityStats.agility;
+            combatStats.adjustedStrength = entityStats.strength;
+            combatStats.adjustedIntelligence = entityStats.intelligence;
+            combatStats.adjustedArmor =
+                abi.decode(Mobs.getMobStats(IWorld(_world()).UD__getMobId(entityId)), (MonsterStats)).armor;
+            combatStats.adjustedMaxHp = entityStats.baseHp;
+            combatStats.currentHp = entityStats.currentHp;
+            combatStats.level = entityStats.level;
+        }
         return combatStats;
     }
 

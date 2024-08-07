@@ -184,7 +184,6 @@ export const CharacterProvider = ({
       try {
         if (_equippedArmor.length === 0) {
           setEquippedArmor([]);
-          return;
         }
         if (_equippedWeapons.length === 0) {
           setEquippedWeapons([]);

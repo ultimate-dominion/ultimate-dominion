@@ -46,7 +46,9 @@ import {
     ArmorTemplateDetails,
     ArmorStats,
     PhysicalAttackStats,
-    StarterItems
+    StarterItems,
+    StarterActions,
+    PhysicalAttackTemplate
 } from "@interfaces/Structs.sol";
 
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
@@ -184,24 +186,27 @@ contract PostDeploy is Script {
         world.transferOwnership(resourceIds.erc721NamespaceId, characterSystemAddress);
 
         address items = _deployErc1155(world, ITEMS_NAMESPACE);
+
         UltimateDominionConfig.setItems(address(items));
         //allow entropy system to call callback on Combat system
         world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
         _createStarterItems();
+        _createActions();
         _createMonsters();
-
-        uint8[] memory classRestrictions = new uint8[](0);
-        PhysicalAttackStats memory basicAttack = PhysicalAttackStats({
-            bonusDamage: 0,
-            armorPenetration: 0,
-            attackModifierBonus: 0,
-            critChanceBonus: 0,
-            classRestrictions: classRestrictions
-        });
-        world.UD__createAction(ActionType.PhysicalAttack, abi.encode(basicAttack));
 
         setLevels();
         vm.stopBroadcast();
+    }
+
+    function _createActions() internal {
+        string memory json = vm.readFile("actions.json");
+        bytes memory data = vm.parseJson(json);
+
+        StarterActions memory actionsData = abi.decode(data, (StarterActions));
+
+        for (uint256 i; i < actionsData.physicalAttacks.length; i++) {
+            world.UD__createAction(ActionType.PhysicalAttack, abi.encode(actionsData.physicalAttacks[i].stats));
+        }
     }
 
     function _deployErc1155(IWorld _world, bytes14 itemsNamespace) internal returns (address) {
@@ -243,8 +248,6 @@ contract PostDeploy is Script {
     }
 
     function _createStarterItems() internal {
-        // string memory root = vm.projectRoot();
-        // string memory path = string.concat("items.json");
         string memory json = vm.readFile("items.json");
         bytes memory data = vm.parseJson(json);
 
@@ -343,7 +346,8 @@ contract PostDeploy is Script {
                 level: monsterTemplate.stats.level,
                 intelligence: monsterTemplate.stats.intelligence,
                 inventory: monsterTemplate.stats.inventory,
-                strength: monsterTemplate.stats.strength
+                strength: monsterTemplate.stats.strength,
+                actions: monsterTemplate.stats.actions
             });
 
             world.UD__createMob(MobType.Monster, abi.encode(newMonster), monsterTemplate.metadataUri);

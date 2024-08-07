@@ -205,7 +205,7 @@ export default defineWorld({
       key: ["sequenceNumber"],
       schema: {
         sequenceNumber: "uint64",
-        RequestType: "RngRequestType",
+        requestType: "RngRequestType",
         arbitraryData: "bytes",
       },
     },
@@ -292,6 +292,7 @@ export default defineWorld({
       schema: {
         encounterId: "bytes32",
         endTime: "uint256",
+        attackersWin: "bool",
         expDropped: "uint256",
         goldDropped: "uint256",
         itemsDropped: "uint256[]",

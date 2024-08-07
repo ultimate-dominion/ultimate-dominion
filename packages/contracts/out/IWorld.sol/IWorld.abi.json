@@ -230,11 +230,6 @@
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
-          },
-          {
-            "name": "class",
-            "type": "uint256",
-            "internalType": "uint256"
           }
         ]
       }
@@ -1107,6 +1102,11 @@
         "internalType": "struct MonsterStats",
         "components": [
           {
+            "name": "actions",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
             "name": "agility",
             "type": "uint256",
             "internalType": "uint256"
@@ -1172,6 +1172,11 @@
         "type": "tuple",
         "internalType": "struct MonsterStats",
         "components": [
+          {
+            "name": "actions",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
           {
             "name": "agility",
             "type": "uint256",

@@ -16,10 +16,16 @@ import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
+import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
-import { useMapNavigation } from '../contexts/MapNavigationContext';
+import { useMap } from '../contexts/MapContext';
+import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import {
+  CURRENT_BATTLE_MONSTER_TURN_KEY,
+  CURRENT_BATTLE_USER_TURN_KEY,
+} from '../utils/constants';
 import { type Character, EncounterType, type Monster } from '../utils/types';
 import { HealthBar } from './HealthBar';
 
@@ -34,39 +40,64 @@ export const TileDetailsPanel = (): JSX.Element => {
     systemCalls: { createMatch },
   } = useMUD();
   const { character } = useCharacter();
-  const {
-    aliveMonsters,
-    actionOutcomes,
-    currentBattle,
-    isRefreshing,
-    monsterOponent,
-    otherCharactersOnTile,
-  } = useMapNavigation();
+  const { aliveMonsters, isSpawned, otherCharactersOnTile } = useMap();
+  const { actionOutcomes, currentBattle, monsterOponent } = useBattle();
+  const { isRefreshing } = useMovement();
 
   const [isInitiating, setIsInitiating] = useState(false);
+  const [isUserHit, setIsUserHit] = useState(false);
   const [isMonsterHit, setIsMonsterHit] = useState(false);
 
   useEffect(() => {
     if (!(actionOutcomes[0] && currentBattle)) return;
 
-    const currentBattleTurnKey = 'current-battle-turn';
-    const currentBattleTurn = localStorage.getItem(currentBattleTurnKey);
+    const currentBattleMonsterTurn = localStorage.getItem(
+      CURRENT_BATTLE_MONSTER_TURN_KEY,
+    );
 
-    if (currentBattleTurn) {
-      if (currentBattleTurn === currentBattle.currentTurn) {
+    if (currentBattleMonsterTurn) {
+      if (currentBattleMonsterTurn === currentBattle.currentTurn) {
         return;
       }
     }
 
-    if (actionOutcomes[actionOutcomes.length - 1].attackerDamageDelt === '0')
-      return;
+    if (actionOutcomes[actionOutcomes.length - 1]?.attackerDamageDelt !== '0') {
+      setIsUserHit(true);
+      setTimeout(() => {
+        setIsUserHit(false);
+      }, 700);
 
-    setIsMonsterHit(true);
-    setTimeout(() => {
-      setIsMonsterHit(false);
-    }, 700);
+      localStorage.setItem(
+        CURRENT_BATTLE_MONSTER_TURN_KEY,
+        currentBattle.currentTurn,
+      );
+    }
+  }, [actionOutcomes, currentBattle]);
 
-    localStorage.setItem(currentBattleTurnKey, currentBattle.currentTurn);
+  useEffect(() => {
+    if (!(actionOutcomes[0] && currentBattle)) return;
+
+    const currentBattleDefenderTurn = localStorage.getItem(
+      CURRENT_BATTLE_USER_TURN_KEY,
+    );
+
+    if (currentBattleDefenderTurn) {
+      if (currentBattleDefenderTurn === currentBattle.currentTurn) {
+        return;
+      }
+    }
+
+    if (actionOutcomes[actionOutcomes.length - 2]?.attackerDamageDelt !== '0') {
+      setIsMonsterHit(true);
+      setTimeout(() => {
+        setIsMonsterHit(false);
+      }, 700);
+
+      localStorage.setItem(
+        CURRENT_BATTLE_USER_TURN_KEY,
+        currentBattle.currentTurn,
+      );
+    }
   }, [actionOutcomes, currentBattle]);
 
   const onInitiateCombat = useCallback(
@@ -107,6 +138,16 @@ export const TileDetailsPanel = (): JSX.Element => {
       <Flex alignItems="center" h="100%" justifyContent="center">
         <Spinner size="lg" />
       </Flex>
+    );
+  }
+
+  if (!currentBattle && !isSpawned) {
+    return (
+      <Box>
+        <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+          You have not yet spawned to the map.
+        </Text>
+      </Box>
     );
   }
 
@@ -155,7 +196,9 @@ export const TileDetailsPanel = (): JSX.Element => {
               {character.name}
             </Text>
             <Avatar
+              animation={isUserHit ? 'flicker .7s infinite' : 'none'}
               my={{ base: 1, lg: 5 }}
+              opacity={isUserHit ? 0 : 1}
               size={{ base: '2xs', lg: 'lg' }}
               src={character.image}
             />
@@ -166,6 +209,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             <HealthBar
               baseHp={monsterOponent.baseHp}
               currentHp={monsterOponent.currentHp}
+              level={monsterOponent.level}
               w="90%"
             />
             <VStack alignItems="start" px={4}>
@@ -184,6 +228,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             <HealthBar
               baseHp={character.baseHp}
               currentHp={character.currentHp}
+              level={character.level}
               w="90%"
             />
             <VStack alignItems="start" px={4}>

@@ -6,9 +6,11 @@ import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol
 import {IWorld} from "@world/IWorld.sol";
 import {Math} from "@libraries/Math.sol";
 import {LibChunks} from "@libraries/LibChunks.sol";
+import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
     RandomNumbers,
     MatchEntity,
+    MatchEntityData,
     Stats,
     StatsData,
     Actions,
@@ -22,6 +24,7 @@ import {
     CombatOutcomeData,
     Position,
     Mobs,
+    Spawned,
     MobsData,
     Counters,
     ActionOutcome,
@@ -53,6 +56,7 @@ contract CombatSystem is System {
     using Math for uint256;
     using Math for int256;
     // in pve the attackers are always players and the defenders are always mobs since there is no aggro system
+    // TODO switch attackers defenders to group 1 and group 2 and order according to agility
 
     function createMatch(EncounterType encounterType, bytes32[] memory attackers, bytes32[] memory defenders)
         public
@@ -65,6 +69,7 @@ contract CombatSystem is System {
             require(isValidPvE(attackers, defenders, x, y), "COMBAT SYSTEM: INVALID PVE");
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
+
             CombatEncounterData memory combatData = CombatEncounterData({
                 encounterType: encounterType,
                 start: startTime,
@@ -79,13 +84,18 @@ contract CombatSystem is System {
             CombatEncounter.set(encounterId, combatData);
         }
         if (uint8(encounterType) == 0) {}
+        MatchEntityData memory tempMatchData;
         for (uint256 i; i < defenders.length; i++) {
-            require(MatchEntity.getEncounterId(defenders[i]) == bytes32(0), "COMBAT SYSTEM: ENTITY OCCUPIED");
-            MatchEntity.setEncounterId(defenders[i], encounterId);
+            tempMatchData = MatchEntity.get(defenders[i]);
+            require(tempMatchData.encounterId == bytes32(0) && !tempMatchData.died, "COMBAT SYSTEM: INVALID ENTITY");
+            tempMatchData.encounterId = encounterId;
+            MatchEntity.set(defenders[i], tempMatchData);
         }
         for (uint256 i; i < attackers.length; i++) {
-            require(MatchEntity.getEncounterId(attackers[i]) == bytes32(0), "COMBAT SYSTEM: ENTITY OCCUPIED");
-            MatchEntity.setEncounterId(attackers[i], encounterId);
+            tempMatchData = MatchEntity.get(attackers[i]);
+            require(tempMatchData.encounterId == bytes32(0) && !tempMatchData.died, "COMBAT SYSTEM: INVALID ENTITY");
+            tempMatchData.encounterId = encounterId;
+            MatchEntity.set(attackers[i], tempMatchData);
         }
     }
 
@@ -95,7 +105,7 @@ contract CombatSystem is System {
         returns (bool _isValidPvE)
     {
         _isValidPvE = true;
-        for (uint256 i; i < attackers.length; i++) {
+        for (uint256 i; i < attackers.length;) {
             if (!IWorld(_world()).UD__isValidCharacterId(attackers[i])) {
                 _isValidPvE = false;
                 break;
@@ -104,9 +114,12 @@ contract CombatSystem is System {
                 _isValidPvE = false;
                 break;
             }
+            {
+                i++;
+            }
         }
         if (_isValidPvE) {
-            for (uint256 i; i < defenders.length; i++) {
+            for (uint256 i; i < defenders.length;) {
                 if (IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
                     _isValidPvE = false;
                     break;
@@ -114,6 +127,9 @@ contract CombatSystem is System {
                 if (!IWorld(_world()).UD__isAtPosition(defenders[i], x, y)) {
                     _isValidPvE = false;
                     break;
+                }
+                {
+                    i++;
                 }
             }
         }
@@ -172,63 +188,112 @@ contract CombatSystem is System {
     }
 
     function executeCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) public {
-        uint256 randomNumber = uint256(keccak256(abi.encode(prevRandao, encounterId)));
+        uint256 randomNumber;
         // ensure this is an authorised call from the entropy contract
         _requireAccess(address(this), _msgSender());
 
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-
+        // execute attacker actions
         for (uint256 i; i < actions.length; i++) {
             Action memory currentAction = actions[i];
 
-            ActionOutcomeData memory currentActionData = ActionOutcomeData({
-                actionId: currentAction.actionId,
-                weaponId: currentAction.weaponId,
-                attackerId: currentAction.attackerEntityId,
-                defenderId: currentAction.defenderEntityId,
-                hit: false,
-                miss: false,
-                crit: false,
-                attackerDamageDelt: 0,
-                defenderDamageDelt: 0,
-                attackerDied: false,
-                defenderDied: false,
-                blockNumber: block.number,
-                timestamp: block.timestamp
-            });
+            randomNumber =
+                uint256(keccak256(abi.encode(prevRandao, currentAction.attackerEntityId, encounterData.currentTurn)));
+
+            ActionOutcomeData memory currentActionData = _getCurrentActionData(currentAction);
 
             // execute action
             currentActionData = _executeAction(currentActionData, randomNumber);
-            if (currentActionData.defenderDied) {
-                MatchEntity.setDied(currentActionData.defenderId, true);
-            }
-            if (currentActionData.attackerDied) {
-                MatchEntity.setDied(currentActionData.attackerId, true);
-            }
-
             // emit action data to offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
+            encounterData.currentTurn++;
         }
+        (bool matchEnded, bool attackersWin) = _checkForMatchEnd(encounterData);
+        if (matchEnded) {
+            _endMatch(encounterId, randomNumber, attackersWin);
+        } else {
+            // execute defender attacks
+            for (uint256 i; i < encounterData.defenders.length; i++) {
+                MonsterStats memory monsterStats = IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]);
+                ActionOutcomeData memory defenderAction = _getCurrentActionData(
+                    Action({
+                        attackerEntityId: encounterData.defenders[i],
+                        defenderEntityId: encounterData.attackers[i],
+                        actionId: monsterStats.actions[0],
+                        weaponId: monsterStats.inventory[0]
+                    })
+                );
+                randomNumber =
+                    uint256(keccak256(abi.encode(prevRandao, defenderAction.attackerId, encounterData.currentTurn)));
 
+                defenderAction = _executeAction(defenderAction, randomNumber);
+
+                ActionOutcome.set(encounterId, encounterData.currentTurn, i + actions.length, defenderAction);
+                encounterData.currentTurn++;
+            }
+            CombatEncounter.set(encounterId, encounterData);
+            (matchEnded, attackersWin) = _checkForMatchEnd(encounterData);
+            if (matchEnded) {
+                _endMatch(encounterId, randomNumber, attackersWin);
+            }
+        }
+    }
+
+    function _checkForMatchEnd(CombatEncounterData memory encounterData)
+        internal
+        returns (bool _matchEnded, bool _attackersWin)
+    {
         uint256 deadDefenderCounter;
         uint256 deadAttackerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
-            if (MatchEntity.getDied(encounterData.defenders[i])) deadDefenderCounter++;
+            if (MatchEntity.getDied(encounterData.defenders[i])) {
+                _setSpawned(encounterData.defenders[i], false);
+                // CombatOutcome.
+                deadDefenderCounter++;
+            }
         }
         for (uint256 i; i < encounterData.attackers.length; i++) {
-            if (MatchEntity.getDied(encounterData.attackers[i])) deadAttackerCounter++;
+            if (MatchEntity.getDied(encounterData.attackers[i])) {
+                _setSpawned(encounterData.attackers[i], false);
+                deadAttackerCounter++;
+            }
         }
-        if (
+
+        _matchEnded = (
             deadAttackerCounter == encounterData.attackers.length
                 || deadDefenderCounter == encounterData.defenders.length
                 || encounterData.currentTurn == encounterData.maxTurns
-        ) {
-            _endMatch(encounterId, randomNumber);
-        } else {
-            encounterData.currentTurn++;
-            CombatEncounter.set(encounterId, encounterData);
+        );
+
+        _attackersWin = deadDefenderCounter == encounterData.defenders.length;
+    }
+
+    function _setSpawned(bytes32 entityId, bool spawned) internal {
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            Spawned.set(entityId, spawned);
         }
+    }
+
+    function _getCurrentActionData(Action memory currentAction)
+        internal
+        returns (ActionOutcomeData memory currentActionData)
+    {
+        currentActionData = ActionOutcomeData({
+            actionId: currentAction.actionId,
+            weaponId: currentAction.weaponId,
+            attackerId: currentAction.attackerEntityId,
+            defenderId: currentAction.defenderEntityId,
+            hit: false,
+            miss: false,
+            crit: false,
+            attackerDamageDelt: 0,
+            defenderDamageDelt: 0,
+            attackerDied: false,
+            defenderDied: false,
+            blockNumber: block.number,
+            timestamp: block.timestamp
+        });
     }
 
     function _queueActions(bytes32 encounterId, Action[] memory actions) internal {
@@ -241,33 +306,43 @@ contract CombatSystem is System {
         internal
         returns (ActionOutcomeData memory)
     {
-        // get action data
-        ActionsData memory actionData = Actions.get(actionOutcomeData.actionId);
-        require(actionData.actionStats.length != 0, "action does not exist");
-        //decode action data according to type
-        if (uint8(actionData.actionType) == 1) {
-            // get attack stats
-            PhysicalAttackStats memory attackStats = abi.decode(actionData.actionStats, (PhysicalAttackStats));
-            // calculate damage
-            (actionOutcomeData.attackerDamageDelt, actionOutcomeData.hit, actionOutcomeData.crit) =
-            _calculatePhysicalAttack(
-                attackStats,
-                actionOutcomeData.attackerId,
-                actionOutcomeData.defenderId,
-                actionOutcomeData.weaponId,
-                randomNumber
-            );
-            // if hit deduct damage
-            if (actionOutcomeData.hit) {
-                int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
-                    - int256(actionOutcomeData.attackerDamageDelt / int256(ATTACK_MODIFIER));
-                if (currentHp <= 0) actionOutcomeData.defenderDied = true;
-                Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
-            }
-        } else {
-            revert("action type not recognized");
-        }
+        // if the defender is alive and attacks is alive, execute the action
+        if (!MatchEntity.getDied(actionOutcomeData.attackerId) && !MatchEntity.getDied(actionOutcomeData.defenderId)) {
+            // get action data
+            ActionsData memory actionData = Actions.get(actionOutcomeData.actionId);
 
+            require(actionData.actionStats.length != 0, "action does not exist");
+            //decode action data according to type
+            if (uint8(actionData.actionType) == 1) {
+                // get attack stats
+                PhysicalAttackStats memory attackStats = abi.decode(actionData.actionStats, (PhysicalAttackStats));
+                // calculate damage
+                (actionOutcomeData.attackerDamageDelt, actionOutcomeData.hit, actionOutcomeData.crit) =
+                _calculatePhysicalAttack(
+                    attackStats,
+                    actionOutcomeData.attackerId,
+                    actionOutcomeData.defenderId,
+                    actionOutcomeData.weaponId,
+                    randomNumber
+                );
+                // if hit deduct damage
+                if (actionOutcomeData.hit) {
+                    int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
+                        - int256(actionOutcomeData.attackerDamageDelt / int256(ATTACK_MODIFIER));
+                    if (currentHp <= 0) actionOutcomeData.defenderDied = true;
+                    Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
+                }
+            } else {
+                revert("action type not recognized");
+            }
+
+            if (actionOutcomeData.defenderDied) {
+                MatchEntity.setDied(actionOutcomeData.defenderId, true);
+            }
+            if (actionOutcomeData.attackerDied) {
+                MatchEntity.setDied(actionOutcomeData.attackerId, true);
+            }
+        }
         return actionOutcomeData;
     }
 
@@ -353,7 +428,7 @@ contract CombatSystem is System {
 
     function _calculateMagicAttack() public {}
 
-    function _endMatch(bytes32 encounterId, uint256 randomNumber) internal {
+    function _endMatch(bytes32 encounterId, uint256 randomNumber, bool attackersWin) internal {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(CombatEncounter.getEnd(encounterId) == 0, "match already over");
 
@@ -368,7 +443,7 @@ contract CombatSystem is System {
         bytes32 defenderTemp;
         for (uint256 i; i < encounterData.defenders.length; i++) {
             defenderTemp = encounterData.defenders[i];
-            if (MatchEntity.getDied(defenderTemp)) {
+            if (!MatchEntity.getDied(defenderTemp)) {
                 MatchEntity.setEncounterId(defenderTemp, bytes32(0));
             }
         }
@@ -378,6 +453,7 @@ contract CombatSystem is System {
 
         CombatOutcomeData memory combatOutcome = CombatOutcomeData({
             endTime: block.timestamp,
+            attackersWin: attackersWin,
             expDropped: expAmount,
             goldDropped: goldAmount,
             itemsDropped: itemsDropped

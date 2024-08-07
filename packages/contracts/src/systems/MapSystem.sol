@@ -2,12 +2,15 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
+import {IWorld} from "@world/IWorld.sol";
 import {
     Characters,
     EntitiesAtPosition,
+    CharacterEquipment,
     MapConfig,
     Position,
     Spawned,
+    Stats,
     MobsByLevel,
     MatchEntity
 } from "../codegen/index.sol";
@@ -39,10 +42,21 @@ contract MapSystem is System {
         require(_msgSender() == owner, "Only the owner can spawn a character");
 
         require(!Spawned.getSpawned(entityId), "Character already spawned");
-
+        uint256 baseHp = Stats.getBaseHp(entityId);
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            int256 currentHp = int256(baseHp) + CharacterEquipment.getHpBonus(entityId);
+            if (currentHp > 0) {
+                Stats.setCurrentHp(entityId, currentHp);
+            } else {
+                Stats.setCurrentHp(entityId, 1);
+            }
+        } else {
+            Stats.setCurrentHp(entityId, int256(baseHp));
+        }
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
+        MatchEntity.setDied(entityId, false);
     }
 
     function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
@@ -88,7 +102,7 @@ contract MapSystem is System {
                 index++;
             }
         }
-        
+
         require(availableMonsters.length > 0, "No monsters available for this distance");
 
         uint32[] memory rng;

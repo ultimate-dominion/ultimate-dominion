@@ -20,7 +20,7 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 import { RngRequestType } from "./../common.sol";
 
 struct RandomNumbersData {
-  RngRequestType RequestType;
+  RngRequestType requestType;
   bytes arbitraryData;
 }
 
@@ -51,7 +51,7 @@ library RandomNumbers {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](2);
-    fieldNames[0] = "RequestType";
+    fieldNames[0] = "requestType";
     fieldNames[1] = "arbitraryData";
   }
 
@@ -70,9 +70,9 @@ library RandomNumbers {
   }
 
   /**
-   * @notice Get RequestType.
+   * @notice Get requestType.
    */
-  function getRequestType(uint64 sequenceNumber) internal view returns (RngRequestType RequestType) {
+  function getRequestType(uint64 sequenceNumber) internal view returns (RngRequestType requestType) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(sequenceNumber));
 
@@ -81,9 +81,9 @@ library RandomNumbers {
   }
 
   /**
-   * @notice Get RequestType.
+   * @notice Get requestType.
    */
-  function _getRequestType(uint64 sequenceNumber) internal view returns (RngRequestType RequestType) {
+  function _getRequestType(uint64 sequenceNumber) internal view returns (RngRequestType requestType) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(sequenceNumber));
 
@@ -92,23 +92,23 @@ library RandomNumbers {
   }
 
   /**
-   * @notice Set RequestType.
+   * @notice Set requestType.
    */
-  function setRequestType(uint64 sequenceNumber, RngRequestType RequestType) internal {
+  function setRequestType(uint64 sequenceNumber, RngRequestType requestType) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(sequenceNumber));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked(uint8(RequestType)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked(uint8(requestType)), _fieldLayout);
   }
 
   /**
-   * @notice Set RequestType.
+   * @notice Set requestType.
    */
-  function _setRequestType(uint64 sequenceNumber, RngRequestType RequestType) internal {
+  function _setRequestType(uint64 sequenceNumber, RngRequestType requestType) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(sequenceNumber));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked(uint8(RequestType)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked(uint8(requestType)), _fieldLayout);
   }
 
   /**
@@ -306,8 +306,8 @@ library RandomNumbers {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(uint64 sequenceNumber, RngRequestType RequestType, bytes memory arbitraryData) internal {
-    bytes memory _staticData = encodeStatic(RequestType);
+  function set(uint64 sequenceNumber, RngRequestType requestType, bytes memory arbitraryData) internal {
+    bytes memory _staticData = encodeStatic(requestType);
 
     EncodedLengths _encodedLengths = encodeLengths(arbitraryData);
     bytes memory _dynamicData = encodeDynamic(arbitraryData);
@@ -321,8 +321,8 @@ library RandomNumbers {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(uint64 sequenceNumber, RngRequestType RequestType, bytes memory arbitraryData) internal {
-    bytes memory _staticData = encodeStatic(RequestType);
+  function _set(uint64 sequenceNumber, RngRequestType requestType, bytes memory arbitraryData) internal {
+    bytes memory _staticData = encodeStatic(requestType);
 
     EncodedLengths _encodedLengths = encodeLengths(arbitraryData);
     bytes memory _dynamicData = encodeDynamic(arbitraryData);
@@ -337,7 +337,7 @@ library RandomNumbers {
    * @notice Set the full data using the data struct.
    */
   function set(uint64 sequenceNumber, RandomNumbersData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.RequestType);
+    bytes memory _staticData = encodeStatic(_table.requestType);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.arbitraryData);
     bytes memory _dynamicData = encodeDynamic(_table.arbitraryData);
@@ -352,7 +352,7 @@ library RandomNumbers {
    * @notice Set the full data using the data struct.
    */
   function _set(uint64 sequenceNumber, RandomNumbersData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.RequestType);
+    bytes memory _staticData = encodeStatic(_table.requestType);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.arbitraryData);
     bytes memory _dynamicData = encodeDynamic(_table.arbitraryData);
@@ -366,8 +366,8 @@ library RandomNumbers {
   /**
    * @notice Decode the tightly packed blob of static data using this table's field layout.
    */
-  function decodeStatic(bytes memory _blob) internal pure returns (RngRequestType RequestType) {
-    RequestType = RngRequestType(uint8(Bytes.getBytes1(_blob, 0)));
+  function decodeStatic(bytes memory _blob) internal pure returns (RngRequestType requestType) {
+    requestType = RngRequestType(uint8(Bytes.getBytes1(_blob, 0)));
   }
 
   /**
@@ -396,7 +396,7 @@ library RandomNumbers {
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (RandomNumbersData memory _table) {
-    (_table.RequestType) = decodeStatic(_staticData);
+    (_table.requestType) = decodeStatic(_staticData);
 
     (_table.arbitraryData) = decodeDynamic(_encodedLengths, _dynamicData);
   }
@@ -425,8 +425,8 @@ library RandomNumbers {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(RngRequestType RequestType) internal pure returns (bytes memory) {
-    return abi.encodePacked(RequestType);
+  function encodeStatic(RngRequestType requestType) internal pure returns (bytes memory) {
+    return abi.encodePacked(requestType);
   }
 
   /**
@@ -455,10 +455,10 @@ library RandomNumbers {
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
   function encode(
-    RngRequestType RequestType,
+    RngRequestType requestType,
     bytes memory arbitraryData
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(RequestType);
+    bytes memory _staticData = encodeStatic(requestType);
 
     EncodedLengths _encodedLengths = encodeLengths(arbitraryData);
     bytes memory _dynamicData = encodeDynamic(arbitraryData);

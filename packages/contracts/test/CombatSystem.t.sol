@@ -65,7 +65,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
         assertEq(world.UD__getEncounter(matchId).start, block.timestamp);
         vm.prank(bob);
-        vm.expectRevert("COMBAT SYSTEM: ENTITY OCCUPIED");
+        vm.expectRevert("COMBAT SYSTEM: INVALID ENTITY");
         world.UD__createMatch(EncounterType.PvE, attackers, defenders);
     }
 
@@ -76,7 +76,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
         actions[0] =
-            Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 1});
+            Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 2});
         uint256 fees = entropy.getFee(address(1));
         vm.prank(bob);
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
@@ -88,10 +88,17 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         StatsData memory endingStats = Stats.get(bobCharacterId);
         uint256 endingGold = goldToken.balanceOf(bob);
+        int256 bobEndingHp = Stats.get(bobCharacterId).currentHp;
 
-        assertNotEq(startingStats.currentHp, int256(Stats.get(entityId).baseHp));
-        assertGt(endingStats.experience, startingStats.experience);
-        assertGt(endingGold, startingGold);
+        if (bobEndingHp > 0) {
+            assertGt(endingStats.experience, startingStats.experience, "incorrect exp");
+            assertGt(endingGold, startingGold);
+            assertNotEq(startingStats.currentHp, Stats.get(entityId).currentHp);
+        } else {
+            assertNotEq(startingStats.currentHp, Stats.get(bobCharacterId).currentHp);
+            assertFalse(MatchEntity.getDied(entityId), "incorrect died");
+        }
+
         assertEq(MatchEntity.getEncounterId(bobCharacterId), bytes32(0));
     }
 
