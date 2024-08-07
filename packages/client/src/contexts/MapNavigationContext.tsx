@@ -30,6 +30,10 @@ import {
 
 import { useToast } from '../hooks/useToast';
 import { GAME_BOARD_PATH } from '../Routes';
+import {
+  CURRENT_BATTLE_MONSTER_TURN_KEY,
+  CURRENT_BATTLE_USER_TURN_KEY,
+} from '../utils/constants';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import {
   type ActionOutcomeType,
@@ -420,6 +424,7 @@ export const MapNavigationProvider = ({
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
       try {
+        if (!isSpawned) return;
         if (currentBattle) return;
         setIsMoving(true);
 
@@ -481,7 +486,15 @@ export const MapNavigationProvider = ({
         setIsMoving(false);
       }
     },
-    [character, currentBattle, delegatorAddress, move, position, renderError],
+    [
+      character,
+      currentBattle,
+      delegatorAddress,
+      isSpawned,
+      move,
+      position,
+      renderError,
+    ],
   );
 
   const monsterOponent = useMemo(() => {
@@ -577,6 +590,9 @@ export const MapNavigationProvider = ({
         if (error && !success) {
           throw new Error(error);
         }
+
+        localStorage.removeItem(CURRENT_BATTLE_MONSTER_TURN_KEY);
+        localStorage.removeItem(CURRENT_BATTLE_USER_TURN_KEY);
 
         await refreshCharacter();
       } catch (e) {

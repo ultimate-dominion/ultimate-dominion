@@ -20,6 +20,10 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMapNavigation } from '../contexts/MapNavigationContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import {
+  CURRENT_BATTLE_MONSTER_TURN_KEY,
+  CURRENT_BATTLE_USER_TURN_KEY,
+} from '../utils/constants';
 import { type Character, EncounterType, type Monster } from '../utils/types';
 import { HealthBar } from './HealthBar';
 
@@ -44,29 +48,59 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useMapNavigation();
 
   const [isInitiating, setIsInitiating] = useState(false);
+  const [isUserHit, setIsUserHit] = useState(false);
   const [isMonsterHit, setIsMonsterHit] = useState(false);
 
   useEffect(() => {
     if (!(actionOutcomes[0] && currentBattle)) return;
 
-    const currentBattleTurnKey = 'current-battle-turn';
-    const currentBattleTurn = localStorage.getItem(currentBattleTurnKey);
+    const currentBattleMonsterTurn = localStorage.getItem(
+      CURRENT_BATTLE_MONSTER_TURN_KEY,
+    );
 
-    if (currentBattleTurn) {
-      if (currentBattleTurn === currentBattle.currentTurn) {
+    if (currentBattleMonsterTurn) {
+      if (currentBattleMonsterTurn === currentBattle.currentTurn) {
         return;
       }
     }
 
-    if (actionOutcomes[actionOutcomes.length - 1].attackerDamageDelt === '0')
-      return;
+    if (actionOutcomes[actionOutcomes.length - 1].attackerDamageDelt !== '0') {
+      setIsUserHit(true);
+      setTimeout(() => {
+        setIsUserHit(false);
+      }, 700);
 
-    setIsMonsterHit(true);
-    setTimeout(() => {
-      setIsMonsterHit(false);
-    }, 700);
+      localStorage.setItem(
+        CURRENT_BATTLE_MONSTER_TURN_KEY,
+        currentBattle.currentTurn,
+      );
+    }
+  }, [actionOutcomes, currentBattle]);
 
-    localStorage.setItem(currentBattleTurnKey, currentBattle.currentTurn);
+  useEffect(() => {
+    if (!(actionOutcomes[0] && currentBattle)) return;
+
+    const currentBattleDefenderTurn = localStorage.getItem(
+      CURRENT_BATTLE_USER_TURN_KEY,
+    );
+
+    if (currentBattleDefenderTurn) {
+      if (currentBattleDefenderTurn === currentBattle.currentTurn) {
+        return;
+      }
+    }
+
+    if (actionOutcomes[actionOutcomes.length - 2].attackerDamageDelt !== '0') {
+      setIsMonsterHit(true);
+      setTimeout(() => {
+        setIsMonsterHit(false);
+      }, 700);
+
+      localStorage.setItem(
+        CURRENT_BATTLE_USER_TURN_KEY,
+        currentBattle.currentTurn,
+      );
+    }
   }, [actionOutcomes, currentBattle]);
 
   const onInitiateCombat = useCallback(
@@ -155,7 +189,9 @@ export const TileDetailsPanel = (): JSX.Element => {
               {character.name}
             </Text>
             <Avatar
+              animation={isUserHit ? 'flicker .7s infinite' : 'none'}
               my={{ base: 1, lg: 5 }}
+              opacity={isUserHit ? 0 : 1}
               size={{ base: '2xs', lg: 'lg' }}
               src={character.image}
             />
