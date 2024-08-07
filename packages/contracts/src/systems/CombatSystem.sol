@@ -233,10 +233,10 @@ contract CombatSystem is System {
                 encounterData.currentTurn++;
             }
             CombatEncounter.set(encounterId, encounterData);
-        }
-        (matchEnded, attackersWin) = _checkForMatchEnd(encounterData);
-        if (matchEnded) {
-            _endMatch(encounterId, randomNumber, attackersWin);
+            (matchEnded, attackersWin) = _checkForMatchEnd(encounterData);
+            if (matchEnded) {
+                _endMatch(encounterId, randomNumber, attackersWin);
+            }
         }
     }
 

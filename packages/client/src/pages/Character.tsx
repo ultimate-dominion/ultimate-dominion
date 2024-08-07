@@ -364,7 +364,7 @@ export const CharacterPage = (): JSX.Element => {
                       >
                         {character.experience}
                       </Text>
-                      /{nextLevelXpRequirement.toString()}
+                      /{nextLevelXpRequirement.toString()} XP
                     </Text>
                   </Box>
                   <Spacer />

@@ -56,6 +56,7 @@ contract MapSystem is System {
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
+        MatchEntity.setDied(entityId, false);
     }
 
     function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
