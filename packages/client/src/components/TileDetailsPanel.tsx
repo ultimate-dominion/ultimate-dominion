@@ -141,7 +141,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (!(currentBattle && isSpawned)) {
+  if (!currentBattle && !isSpawned) {
     return (
       <Box>
         <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
