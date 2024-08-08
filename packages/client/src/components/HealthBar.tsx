@@ -1,19 +1,31 @@
 import { Box, Flex, StackProps, Text, VStack } from '@chakra-ui/react';
 
 export const HealthBar = ({
-  currentHp,
   baseHp,
+  currentHp,
+  level,
   ...stackProps
 }: {
-  currentHp: string;
   baseHp: string;
+  currentHp: string;
+  level?: string;
 } & StackProps): JSX.Element => {
-  const health = (parseInt(currentHp) / parseInt(baseHp)) * 100;
+  const currentHpWithFloor = parseInt(currentHp) < 0 ? 0 : parseInt(currentHp);
+  const health = (currentHpWithFloor / parseInt(baseHp)) * 100;
 
   const barColor = health > 50 ? 'green' : health > 15 ? 'yellow' : 'red';
 
   return (
     <VStack alignItems="end" spacing={0.5} {...stackProps}>
+      {level && (
+        <Text
+          alignSelf="start"
+          fontWeight="bold"
+          size={{ base: '3xs', md: '2xs' }}
+        >
+          Lvl {level}
+        </Text>
+      )}
       <Flex
         border="2px solid black"
         width="100%"
@@ -38,7 +50,7 @@ export const HealthBar = ({
         </Box>
       </Flex>
       <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
-        {currentHp} / {baseHp}
+        {currentHpWithFloor} / {baseHp}
       </Text>
     </VStack>
   );

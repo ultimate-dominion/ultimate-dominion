@@ -17,8 +17,9 @@ import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
+import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
-import { useMapNavigation } from '../contexts/MapNavigationContext';
+import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 import { type CombatOutcomeType } from '../utils/types';
@@ -38,7 +39,8 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     components: { Levels },
   } = useMUD();
   const { character } = useCharacter();
-  const { allMonsters, otherCharactersOnTile } = useMapNavigation();
+  const { allMonsters, otherCharactersOnTile } = useMap();
+  const { onContinueToBattleOutcome } = useBattle();
 
   const opponent = useMemo(() => {
     if (!character) return null;
@@ -66,8 +68,9 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
 
   const onAcknowledge = useCallback(() => {
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
+    onContinueToBattleOutcome(false);
     onClose();
-  }, [battleOutcome.encounterId, onClose]);
+  }, [battleOutcome.encounterId, onContinueToBattleOutcome, onClose]);
 
   const nextLevelXpRequirement =
     useComponentValue(
@@ -90,7 +93,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const { expDropped, goldDropped, itemsDropped, winner } = battleOutcome;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onAcknowledge}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader textAlign="center">
