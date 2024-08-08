@@ -39,6 +39,9 @@ contract Test_CombatSystem is SetUp, GasReporter {
     function setUp() public override {
         super.setUp();
         vm.prank(deployer);
+        world.UD__setAdmin(address(this), true);
+
+        vm.prank(deployer);
         world.grantAccess(_mobSystemId("UD"), address(this));
 
         entityId = world.UD__spawnMob(1, 0, 0);
@@ -66,10 +69,21 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_createMatchPvP() public {
-        vm.prank(alice);
-        world.UD__setPvpFlag(alicesCharacterId, true);
+        // spawn characters
         vm.prank(bob);
-        world.UD__setPvpFlag(bobCharacterId, true);
+        world.UD__spawn(bobCharacterId);
+        vm.prank(alice);
+        world.UD__spawn(alicesCharacterId);
+
+        // cannot teleport entities from spawn point
+        vm.prank(bob);
+        world.UD__move(bobCharacterId, 0, 1);
+        vm.prank(alice);
+        world.UD__move(alicesCharacterId, 0, 1);
+
+        // move entities to pvp zone
+        world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
+        world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
 
         vm.prank(bob);
         bytes32 matchId = world.UD__createMatch(EncounterType.PvP, attackers, pvpDefenders);
@@ -79,22 +93,14 @@ contract Test_CombatSystem is SetUp, GasReporter {
         assertEq(encounterData.attackers[0], bobCharacterId);
     }
 
-    function test_CreateMatchPvP_Revert_NotFlagged() public {
-        vm.prank(bob);
-        world.UD__setPvpFlag(bobCharacterId, true);
-
+    function test_CreateMatchPvP_Revert_WrongPosition() public {
+        // expect revert because both characters are in the safe zone
         vm.expectRevert();
         vm.prank(alice);
         world.UD__createMatch(EncounterType.PvP, attackers, pvpDefenders);
-
-        vm.prank(bob);
-        world.UD__setPvpFlag(bobCharacterId, false);
-
-        vm.prank(alice);
-        world.UD__setPvpFlag(alicesCharacterId, true);
     }
 
-    function test_createMatch_Revert_Entities_Wrong_Position() public {
+    function test_createPvEMatch_Revert_Entities_Wrong_Position() public {
         entityId2 = world.UD__spawnMob(1, 0, 1);
         defenders[0] = entityId2;
         vm.prank(bob);

@@ -62,6 +62,39 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__adminMoveEntity",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "currentX",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "currentY",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__adminSetCombatEncounter",
     "inputs": [
       {
@@ -1227,6 +1260,30 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getEntityPosition",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getEntropy",
     "inputs": [],
     "outputs": [
@@ -1998,25 +2055,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__isFlaggedForPvp",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_isFlaggedForPvp",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__isItemOwner",
     "inputs": [
       {
@@ -2344,6 +2382,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__removeEntityFromBoard",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__rollStats",
     "inputs": [
       {
@@ -2376,24 +2427,6 @@ declare const abi: [
       },
       {
         "name": "adminState",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__setPvpFlag",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "flag",
         "type": "bool",
         "internalType": "bool"
       }

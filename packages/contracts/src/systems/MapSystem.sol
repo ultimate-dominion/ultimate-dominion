@@ -17,6 +17,7 @@ import {
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
+import {_requireAccess} from "../utils.sol";
 
 contract MapSystem is System {
     using LibChunks for uint256;
@@ -73,7 +74,7 @@ contract MapSystem is System {
         }
     }
 
-    function getEntityPositon(bytes32 entityId) public view returns (uint16 x, uint16 y) {
+    function getEntityPosition(bytes32 entityId) public view returns (uint16 x, uint16 y) {
         (x, y) = Position.get(entityId);
     }
 
@@ -148,6 +149,26 @@ contract MapSystem is System {
         return a >= b ? a : b;
     }
 
+    function removeEntityFromBoard(bytes32 entityId) public {
+        _requireAccess(address(this), _msgSender());
+        (uint16 currentX, uint16 currentY) = getEntityPosition(entityId);
+        bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
+        bool entityWasAtPosition;
+        for (uint256 i; i < entAtPos.length;) {
+            if (entAtPos[i] == entityId) {
+                entityWasAtPosition = true;
+                bytes32 lastEnt = entAtPos[entAtPos.length - 1];
+                EntitiesAtPosition.updateEntities(currentX, currentY, i, lastEnt);
+                EntitiesAtPosition.popEntities(currentX, currentY);
+                break;
+            }
+            {
+                i++;
+            }
+        }
+        require(entityWasAtPosition, "Entity not at position");
+    }
+
     function _moveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) internal {
         bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
         bool entityWasAtPosition;
@@ -163,7 +184,7 @@ contract MapSystem is System {
                 i++;
             }
         }
-        require(entityWasAtPosition, "Entity was not at that position");
+        require(entityWasAtPosition, "Entity not at position");
         Position.set(entityId, x, y);
         EntitiesAtPosition.pushEntities(x, y, entityId);
     }

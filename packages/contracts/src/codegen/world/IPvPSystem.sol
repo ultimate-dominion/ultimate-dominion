@@ -18,9 +18,5 @@ interface IPvPSystem {
     uint16 y
   ) external view returns (bool _isValidPvP);
 
-  function UD__isFlaggedForPvp(bytes32 entityId) external view returns (bool _isFlaggedForPvp);
-
-  function UD__setPvpFlag(bytes32 entityId, bool flag) external;
-
   function UD__executePvPCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) external;
 }
