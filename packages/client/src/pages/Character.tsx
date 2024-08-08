@@ -537,6 +537,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
               ...metadata,
               agiModifier: decodedArmorStats.agiModifier,
               armorModifier: decodedArmorStats.armorModifier,
+              balance: item.balance,
               classRestrictions: decodedArmorStats.classRestrictions,
               hitPointModifier: decodedArmorStats.hitPointModifier,
               intModifier: decodedArmorStats.intModifier,

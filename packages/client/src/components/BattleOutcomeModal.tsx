@@ -223,6 +223,8 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   useEffect(() => {
     if (battleOutcome.itemsDropped.length > 0 && isOpen) {
       fetchLootedItems(battleOutcome.itemsDropped);
+    } else {
+      setIsLoadingItems(false);
     }
   }, [battleOutcome, fetchLootedItems, isOpen]);
 
