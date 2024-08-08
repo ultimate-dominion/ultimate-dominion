@@ -76,7 +76,7 @@ contract CombatSystem is System {
                 start: startTime,
                 end: 0,
                 rewardsDistributed: false,
-                currentTurn: 0,
+                currentTurn: 1,
                 maxTurns: DEFAULT_MAX_TURNS,
                 defenders: defenders,
                 attackers: attackers
@@ -94,7 +94,7 @@ contract CombatSystem is System {
                 start: startTime,
                 end: 0,
                 rewardsDistributed: false,
-                currentTurn: 0,
+                currentTurn: 1,
                 maxTurns: DEFAULT_MAX_TURNS,
                 defenders: defenders,
                 attackers: attackers
@@ -125,15 +125,19 @@ contract CombatSystem is System {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(encounterData.start != 0 && encounterData.end == 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
         require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
+
         address playerAddress = IWorld(_world()).UD__getOwnerAddress(playerId);
-        require(playerAddress == _msgSender() && isParticipant(playerId, encounterId), "COMBAT SYSTEM: NON-COMBATANT");
 
         if (uint8(encounterData.encounterType) == 0) {
             if (encounterData.currentTurn % 2 == 0) {
-                require(isParticipant(playerAddress, encounterData.defenders), "Cannot end opponents turn");
+                require(isParticipant(playerAddress, encounterData.defenders), "Cannot end attackers turn");
             } else {
-                require(isParticipant(playerAddress, encounterData.attackers), "Cannot end opponents turn");
+                require(isParticipant(playerAddress, encounterData.attackers), "Cannot end defenders turn");
             }
+        } else {
+            require(
+                playerAddress == _msgSender() && isParticipant(playerId, encounterId), "COMBAT SYSTEM: NON-COMBATANT"
+            );
         }
         _queueActions(encounterId, actions);
     }
@@ -399,6 +403,15 @@ contract CombatSystem is System {
 
         for (uint256 i; i < encounterData.attackers.length; i++) {
             MatchEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
+            if (!IWorld(_world()).UD__isValidCharacterId(encounterData.attackers[i])) {
+                IWorld(_world()).UD__removeEntityFromBoard(encounterData.attackers[i]);
+            }
+        }
+        for (uint256 i; i < encounterData.defenders.length; i++) {
+            MatchEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+            if (!IWorld(_world()).UD__isValidCharacterId(encounterData.defenders[i])) {
+                IWorld(_world()).UD__removeEntityFromBoard(encounterData.defenders[i]);
+            }
         }
         CombatOutcome.set(encounterId, combatOutcome);
     }

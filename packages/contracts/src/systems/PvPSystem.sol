@@ -114,6 +114,7 @@ contract PvPSystem is System {
         uint256 randomNumber;
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        ActionOutcomeData memory currentActionData;
         // execute attacker actions
         for (uint256 i; i < actions.length; i++) {
             Action memory currentAction = actions[i];
@@ -121,15 +122,18 @@ contract PvPSystem is System {
             randomNumber =
                 uint256(keccak256(abi.encode(prevRandao, currentAction.attackerEntityId, encounterData.currentTurn)));
 
-            ActionOutcomeData memory currentActionData = _getCurrentActionData(currentAction);
+            currentActionData = _getCurrentActionData(currentAction);
 
             // execute action
             currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
             // emit action data to offchain table
+
             ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
-            encounterData.currentTurn++;
         }
 
+        encounterData.currentTurn++;
+
+        CombatEncounter.set(encounterId, encounterData);
         (bool matchEnded, bool attackersWin) = IWorld(_world()).UD__checkForMatchEnd(encounterData);
 
         if (matchEnded) {

@@ -110,8 +110,9 @@ contract PvESystem is System {
             currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
             // emit action data to offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
-            encounterData.currentTurn++;
         }
+
+        encounterData.currentTurn++;
 
         (bool matchEnded, bool attackersWin) = IWorld(_world()).UD__checkForMatchEnd(encounterData);
 
@@ -136,8 +137,8 @@ contract PvESystem is System {
                 defenderAction = IWorld(_world()).UD__executeAction(defenderAction, randomNumber);
 
                 ActionOutcome.set(encounterId, encounterData.currentTurn, i + actions.length, defenderAction);
-                encounterData.currentTurn++;
             }
+
             CombatEncounter.set(encounterId, encounterData);
 
             (matchEnded, attackersWin) = IWorld(_world()).UD__checkForMatchEnd(encounterData);

@@ -131,7 +131,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__executePvECombat(1000000000, keccak256(abi.encode("11111")), actions);
     }
 
-    function test_EndTurn_EndsMatch() public {
+    function test_EndTurn_EndsPvEMatch() public {
         StatsData memory startingStats = Stats.get(bobCharacterId);
         uint256 startingGold = goldToken.balanceOf(bob);
         vm.prank(bob);
@@ -162,6 +162,81 @@ contract Test_CombatSystem is SetUp, GasReporter {
         }
 
         assertEq(MatchEntity.getEncounterId(bobCharacterId), bytes32(0));
+    }
+
+    function test_EndTurn_EndsPvPMatch() public {
+        StatsData memory startingBobStats = Stats.get(bobCharacterId);
+        StatsData memory startingAliceStats = Stats.get(alicesCharacterId);
+        uint256 startingGold = goldToken.balanceOf(bob);
+
+        // spawn characters
+        vm.prank(bob);
+        world.UD__spawn(bobCharacterId);
+        vm.prank(alice);
+        world.UD__spawn(alicesCharacterId);
+
+        // cannot teleport entities from spawn point
+        vm.prank(bob);
+        world.UD__move(bobCharacterId, 0, 1);
+        vm.prank(alice);
+        world.UD__move(alicesCharacterId, 0, 1);
+
+        // move entities to pvp zone
+        world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
+        world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
+
+        vm.prank(bob);
+        bytes32 matchId = world.UD__createMatch(EncounterType.PvP, attackers, pvpDefenders);
+
+        Action[] memory bobActions = new Action[](1);
+        Action[] memory aliceActions = new Action[](1);
+
+        vm.prank(bob);
+
+        // bob's move
+        bobActions[0] = Action({
+            attackerEntityId: bobCharacterId,
+            defenderEntityId: alicesCharacterId,
+            actionId: basicAttackId,
+            weaponId: 2
+        });
+
+        uint256 fees = 0; // entropy.getFee(address(1));
+
+        //alice's move
+
+        aliceActions[0] = Action({
+            attackerEntityId: alicesCharacterId,
+            defenderEntityId: bobCharacterId,
+            actionId: basicAttackId,
+            weaponId: 2
+        });
+
+        while (world.UD__getEncounter(matchId).end == 0) {
+            vm.prank(bob);
+            world.UD__endTurn{value: fees}(matchId, bobCharacterId, bobActions);
+            // break if bob wins
+            if (world.UD__getEncounter(matchId).end != 0) {
+                break;
+            }
+            // bob's move
+            vm.prank(alice);
+            world.UD__endTurn{value: fees}(matchId, alicesCharacterId, aliceActions);
+        }
+
+        StatsData memory endingBobStats = Stats.get(bobCharacterId);
+        StatsData memory endingAliceStats = Stats.get(alicesCharacterId);
+        uint256 endingGold = goldToken.balanceOf(bob);
+        int256 bobEndingHp = Stats.get(bobCharacterId).currentHp;
+
+        if (bobEndingHp > 0) {
+            assertNotEq(startingAliceStats.currentHp, endingAliceStats.currentHp);
+        } else {
+            assertNotEq(startingBobStats.currentHp, endingBobStats.currentHp);
+        }
+
+        assertEq(MatchEntity.getEncounterId(bobCharacterId), bytes32(0));
+        assertEq(MatchEntity.getEncounterId(alicesCharacterId), bytes32(0));
     }
 
     function test_EndTurn_Revert_NonCombatant() public {
