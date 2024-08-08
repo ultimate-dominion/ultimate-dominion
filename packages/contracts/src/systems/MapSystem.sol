@@ -23,6 +23,7 @@ contract MapSystem is System {
 
     function move(bytes32 entityId, uint16 x, uint16 y) public {
         address owner = Characters.getOwner(entityId);
+        require(IWorld(_world()).UD__isValidCharacterId(entityId), "Can Only move characters");
         require(_msgSender() == owner, "Only the owner can move a character");
         require(Spawned.getSpawned(entityId), "Character not spawned");
         require(MatchEntity.getEncounterId(entityId) == bytes32(0), "Cannot move while in an encounter.");
@@ -70,6 +71,10 @@ contract MapSystem is System {
         if (j == x && k == y) {
             _isAtPosition = true;
         }
+    }
+
+    function getEntityPositon(bytes32 entityId) public view returns (uint16 x, uint16 y) {
+        (x, y) = Position.get(entityId);
     }
 
     function _spawnOnTileEnter(uint16 x, uint16 y) internal {

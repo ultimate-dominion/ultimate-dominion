@@ -60,12 +60,21 @@ contract PvPSystem is System {
         returns (bool _isValidPvP)
     {
         _isValidPvP = true;
+        uint16 entityX;
+        uint16 entityY;
         for (uint256 i; i < attackers.length;) {
-            if (!IWorld(_world()).UD__isValidCharacterId(attackers[i]) || !isFlaggedForPvp(attackers[i])) {
+            (entityX, entityY) = IWorld(_world()).UD__getEntityPosition(attackers[i]);
+            if (!IWorld(_world()).UD__isValidCharacterId(attackers[i])) {
                 _isValidPvP = false;
                 break;
             }
-            if (!IWorld(_world()).UD__isAtPosition(attackers[i], x, y)) {
+            if (entityX != x || entityY != y) {
+                _isValidPvP = false;
+                break;
+            }
+            if (entityx >= 5 || entityY >= 5) {
+                // intentionally left empty
+            } else {
                 _isValidPvP = false;
                 break;
             }
@@ -75,11 +84,18 @@ contract PvPSystem is System {
         }
         if (_isValidPvP) {
             for (uint256 i; i < defenders.length;) {
-                if (!IWorld(_world()).UD__isValidCharacterId(defenders[i]) || !isFlaggedForPvp(defenders[i])) {
+                (entityX, entityY) = IWorld(_world()).UD__getEntityPosition(defenders[i]);
+                if (!IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
                     _isValidPvP = false;
                     break;
                 }
-                if (!IWorld(_world()).UD__isAtPosition(defenders[i], x, y)) {
+                if (entityX != x || entityY != y) {
+                    _isValidPvP = false;
+                    break;
+                }
+                if (entityx >= 5 || entityY >= 5) {
+                    // intentionally left empty
+                } else {
                     _isValidPvP = false;
                     break;
                 }
@@ -89,15 +105,6 @@ contract PvPSystem is System {
             }
         }
         return _isValidPvP;
-    }
-
-    function isFlaggedForPvp(bytes32 entityId) public view returns (bool _isFlaggedForPvp) {
-        return PvPFlag.get(entityId);
-    }
-
-    function setPvpFlag(bytes32 entityId, bool flag) public {
-        require(_msgSender() == IWorld(_world()).UD__getOwnerAddress(entityId), "PvP: Cannot Flag another player");
-        PvPFlag.setPvpFlag(entityId, flag);
     }
 
     function executePvPCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) public {
