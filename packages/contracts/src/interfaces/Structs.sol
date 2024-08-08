@@ -139,6 +139,7 @@ struct QuestEntity {
 struct RewardDistributionTemps {
     bytes32 defenderTemp;
     bytes32 entityIdTemp;
+    uint256 defenderLevelTemp;
     uint256 totalItemsDropped;
     uint256 livingAttackers;
     uint256 cumulativeAttackerLevels;

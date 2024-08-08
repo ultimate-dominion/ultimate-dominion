@@ -53,8 +53,11 @@ contract MapSystem is System {
         } else {
             Stats.setCurrentHp(entityId, int256(baseHp));
         }
+        // set character position to home point
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
+
+        MatchEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
     }
 

@@ -87,10 +87,10 @@ contract RngSystem is System, IEntropyConsumer {
         uint256 rng;
         uint256 timesCalled;
         if (block.chainid == 31337) {
-            rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled) ** 8)));
+            rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled + 1234567) ** 8)));
             timesCalled++;
         } else {
-            rng = block.prevrandao;
+            rng = uint256(keccak256(abi.encode(block.prevrandao, userRandomNumber)));
         }
 
         RandomNumbers.set(sequenceNumber, randomNumberData);
@@ -106,11 +106,11 @@ contract RngSystem is System, IEntropyConsumer {
         address, /*_providerAddress*/
         bytes32 randomNumber
     ) internal override {
-        _storeFullfilment(sequenceNumber, uint256(randomNumber));
+        _fullfillEntropy(sequenceNumber, uint256(randomNumber));
         emit RNGFulfilled(randomNumber);
     }
 
-    function _storeFullfilment(uint64 sequenceNumber, uint256 randomNumber) internal {
+    function _fullfillEntropy(uint64 sequenceNumber, uint256 randomNumber) internal {
         RngRequestType requestType = RandomNumbers.getRequestType(sequenceNumber);
         bytes memory _data = RandomNumbers.getArbitraryData(sequenceNumber);
 

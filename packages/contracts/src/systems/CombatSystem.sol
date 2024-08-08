@@ -207,6 +207,7 @@ contract CombatSystem is System {
 
     function _getCurrentActionData(Action memory currentAction)
         internal
+        view
         returns (ActionOutcomeData memory currentActionData)
     {
         currentActionData = ActionOutcomeData({
@@ -237,8 +238,8 @@ contract CombatSystem is System {
         returns (ActionOutcomeData memory)
     {
         _requireAccess(address(this), _msgSender());
-        // if the defender is alive and attacks is alive, execute the action
-        if (!MatchEntity.getDied(actionOutcomeData.attackerId) && !MatchEntity.getDied(actionOutcomeData.defenderId)) {
+        // if the defender is alive and attacker is alive, execute the action
+        if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
             // get action data
             ActionsData memory actionData = Actions.get(actionOutcomeData.actionId);
 
@@ -256,12 +257,15 @@ contract CombatSystem is System {
                     actionOutcomeData.weaponId,
                     randomNumber
                 );
+
                 // if hit deduct damage
                 if (actionOutcomeData.hit) {
                     int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
                         - int256(actionOutcomeData.attackerDamageDelt / int256(ATTACK_MODIFIER));
                     if (currentHp <= 0) actionOutcomeData.defenderDied = true;
                     Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
+                } else {
+                    actionOutcomeData.miss = true;
                 }
             } else {
                 revert("action type not recognized");
@@ -344,12 +348,11 @@ contract CombatSystem is System {
         AdjustedCombatStats memory defender
     ) internal view returns (bool attackLands, bool crit) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        uint256 attackTotal = (
-            Math.add(attacker.adjustedAgility, attackStats.attackModifierBonus) + (attackRoll % 1000)
-        ) * (TO_HIT_MODIFIER);
+        uint256 attackTotal = (Math.add(attacker.adjustedAgility, attackStats.attackModifierBonus) + (attackRoll % 100))
+            * (TO_HIT_MODIFIER);
         // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
 
-        uint256 defenseTotal = ((defenseRoll % 1000) + defender.adjustedAgility) * DEFENSE_MODIFIER;
+        uint256 defenseTotal = ((defenseRoll % 100) + defender.adjustedAgility) * DEFENSE_MODIFIER;
         attackLands = attackTotal > defenseTotal;
 
         if (attackLands) {
@@ -380,10 +383,12 @@ contract CombatSystem is System {
                 MatchEntity.setEncounterId(defenderTemp, bytes32(0));
             }
         }
-
-        (uint256 expAmount, uint256 goldAmount, uint256[] memory itemsDropped) =
-            IWorld(_world()).UD__distributeRewards(encounterId, randomNumber);
-
+        uint256 expAmount;
+        uint256 goldAmount;
+        uint256[] memory itemsDropped;
+        if (uint8(encounterData.encounterType) == uint8(1)) {
+            (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePveRewards(encounterId, randomNumber);
+        } else {}
         CombatOutcomeData memory combatOutcome = CombatOutcomeData({
             endTime: block.timestamp,
             attackersWin: attackersWin,

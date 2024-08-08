@@ -234,7 +234,7 @@ contract EquipmentSystem is System {
 
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
-            //TODO add over/underflowProtection
+
             combatStats.adjustedStrength = uint256(
                 int256(entityStats.strength) + equipmentStats.strBonus >= 0
                     ? int256(entityStats.strength) + equipmentStats.strBonus

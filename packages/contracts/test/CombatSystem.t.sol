@@ -57,7 +57,12 @@ contract Test_CombatSystem is SetUp, GasReporter {
     function test_createMatch_PvE() public {
         vm.prank(bob);
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
-        assertEq(world.UD__getEncounter(matchId).start, block.timestamp);
+        CombatEncounterData memory encounterData = world.UD__getEncounter(matchId);
+        assertEq(encounterData.start, block.timestamp);
+        assertEq(encounterData.end, 0);
+        assertEq(encounterData.attackers[0], bobCharacterId);
+        assertEq(encounterData.defenders[0], entityId);
+        assertEq(encounterData.attackers.length, encounterData.defenders.length);
     }
 
     function test_createMatchPvP() public {
@@ -74,12 +79,27 @@ contract Test_CombatSystem is SetUp, GasReporter {
         assertEq(encounterData.attackers[0], bobCharacterId);
     }
 
+    function test_CreateMatchPvP_Revert_NotFlagged() public {
+        vm.prank(bob);
+        world.UD__setPvpFlag(bobCharacterId, true);
+
+        vm.expectRevert();
+        vm.prank(alice);
+        world.UD__createMatch(EncounterType.PvP, attackers, pvpDefenders);
+
+        vm.prank(bob);
+        world.UD__setPvpFlag(bobCharacterId, false);
+
+        vm.prank(alice);
+        world.UD__setPvpFlag(alicesCharacterId, true);
+    }
+
     function test_createMatch_Revert_Entities_Wrong_Position() public {
         entityId2 = world.UD__spawnMob(1, 0, 1);
         defenders[0] = entityId2;
         vm.prank(bob);
         vm.expectRevert("COMBAT SYSTEM: INVALID PVE");
-        bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
+        world.UD__createMatch(EncounterType.PvE, attackers, defenders);
     }
 
     function test_CreateMatch_Revert_ENTITY_OCCUPIED() public {
@@ -92,8 +112,6 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_EndTurn_Revert_No_Access() public {
-        StatsData memory startingStats = Stats.get(bobCharacterId);
-        uint256 startingGold = goldToken.balanceOf(bob);
         vm.prank(bob);
         bytes32 matchId = world.UD__createMatch(EncounterType.PvE, attackers, defenders);
         vm.expectRevert();
@@ -115,7 +133,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         Action[] memory actions = new Action[](1);
         actions[0] =
             Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 2});
-        uint256 fees = entropy.getFee(address(1));
+        uint256 fees = 0; // entropy.getFee(address(1));
         vm.prank(bob);
         world.UD__endTurn{value: fees}(matchId, bobCharacterId, actions);
 

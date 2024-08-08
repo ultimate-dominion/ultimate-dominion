@@ -17,7 +17,12 @@ interface ILootManagerSystem {
 
   function UD__dropItems(bytes32[] memory characterIds, uint256[] memory itemIds, uint256[] memory amounts) external;
 
-  function UD__distributeRewards(
+  function UD__distributePvpRewards(
+    bytes32 encounterId,
+    uint256 randomNumber
+  ) external returns (uint256 _expAmount, uint256 _goldAmount, uint256[] memory _itemIdsDropped);
+
+  function UD__distributePveRewards(
     bytes32 encounterId,
     uint256 randomNumber
   ) external returns (uint256 _expAmount, uint256 _goldAmount, uint256[] memory _itemIdsDropped);

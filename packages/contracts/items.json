@@ -25,7 +25,9 @@
       "name": "Rusty Sword",
       "stats": {
         "agiModifier": 2,
-        "classRestrictions": [0],
+        "classRestrictions": [
+          0
+        ],
         "hitPointModifier": 6,
         "intModifier": 1,
         "maxDamage": 2,
@@ -41,7 +43,9 @@
       "name": "Cracked Dagger",
       "stats": {
         "agiModifier": 4,
-        "classRestrictions": [1],
+        "classRestrictions": [
+          1
+        ],
         "hitPointModifier": 6,
         "intModifier": 2,
         "maxDamage": 2,
@@ -57,7 +61,9 @@
       "name": "Cobbled Wand",
       "stats": {
         "agiModifier": 2,
-        "classRestrictions": [2],
+        "classRestrictions": [
+          2
+        ],
         "hitPointModifier": 6,
         "intModifier": 5,
         "maxDamage": 2,

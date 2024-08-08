@@ -161,8 +161,8 @@ contract CharacterSystem is System {
 
     function levelCharacter(bytes32 characterId, StatsData memory desiredStats) public onlyOwner(characterId) {
         StatsData memory stats = Stats.get(characterId);
-        uint256 availibleLevel = getCurrentAvailableLevel(stats.experience);
-        if (availibleLevel > stats.level) {
+        uint256 availableLevel = getCurrentAvailableLevel(stats.experience);
+        if (availableLevel > stats.level) {
             stats.level++;
         }
         uint256 strChange = desiredStats.strength - stats.strength;
@@ -174,14 +174,13 @@ contract CharacterSystem is System {
             (strChange + agiChange + intChange + hpChange) == ABILITY_POINTS_PER_LEVEL,
             "CHARACTER SYSTEM: INVALID STAT CHANGE"
         );
-        // bonus single hp every 5 levels
-        if (stats.level % 5 == 0) {
-            stats.baseHp++;
+        if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
+            stats.baseHp += 1;
         }
+        stats.baseHp += 1;
         stats.strength = desiredStats.strength;
         stats.agility = desiredStats.agility;
         stats.intelligence = desiredStats.intelligence;
-        stats.baseHp = desiredStats.baseHp;
 
         Stats.set(characterId, stats);
     }
