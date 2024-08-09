@@ -13,19 +13,19 @@ import { Action } from "@interfaces/Structs.sol";
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IEncounterSystem {
-  function UD__createMatch(
+  function UD__createEncounter(
     EncounterType encounterType,
     bytes32[] memory attackers,
     bytes32[] memory defenders
   ) external returns (bytes32 encounterId);
 
-  function UD__checkForMatchEnd(
+  function UD__checkForEncounterEnd(
     CombatEncounterData memory encounterData
-  ) external view returns (bool _matchEnded, bool _attackersWin);
+  ) external view returns (bool _encounterEnded, bool _attackersWin);
 
   function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) external payable;
 
-  function UD__endMatch(bytes32 encounterId, uint256 randomNumber, bool attackersWin) external;
+  function UD__endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) external;
 
   function UD__isParticipant(bytes32 playerId, bytes32 encounterId) external view returns (bool _isParticipant);
 

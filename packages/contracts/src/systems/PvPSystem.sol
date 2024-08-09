@@ -9,8 +9,8 @@ import {LibChunks} from "@libraries/LibChunks.sol";
 import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
     RandomNumbers,
-    MatchEntity,
-    MatchEntityData,
+    EncounterEntity,
+    EncounterEntityData,
     Stats,
     StatsData,
     Actions,
@@ -134,11 +134,11 @@ contract PvPSystem is System {
         encounterData.currentTurn++;
 
         CombatEncounter.set(encounterId, encounterData);
-        (bool matchEnded, bool attackersWin) = IWorld(_world()).UD__checkForMatchEnd(encounterData);
+        (bool encounterEnded, bool attackersWin) = IWorld(_world()).UD__checkForEncounterEnd(encounterData);
 
-        if (matchEnded) {
+        if (encounterEnded) {
             _setCharacterSpawns(encounterData);
-            IWorld(_world()).UD__endMatch(encounterId, randomNumber, attackersWin);
+            IWorld(_world()).UD__endEncounter(encounterId, randomNumber, attackersWin);
         }
     }
 

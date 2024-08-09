@@ -31,7 +31,7 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const {
     delegatorAddress,
-    systemCalls: { createMatch },
+    systemCalls: { createEncounter },
   } = useMUD();
   const { character } = useCharacter();
   const {
@@ -82,7 +82,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           throw new Error('Missing delegation.');
         }
 
-        const { error, success } = await createMatch(
+        const { error, success } = await createEncounter(
           EncounterType.PvE,
           [character.characterId],
           [monster.monsterId],
@@ -99,7 +99,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         setIsInitiating(false);
       }
     },
-    [character, createMatch, delegatorAddress, renderError, renderSuccess],
+    [character, createEncounter, delegatorAddress, renderError, renderSuccess],
   );
 
   if (!currentBattle && isRefreshing) {

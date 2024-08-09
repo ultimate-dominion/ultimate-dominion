@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {RandomNumbers, Position, EntitiesAtPosition, MatchEntity, MobsByLevel} from "@codegen/index.sol";
+import {RandomNumbers, Position, EntitiesAtPosition, EncounterEntity, MobsByLevel} from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
 import {Mobs, MobsData} from "@tables/Mobs.sol";
@@ -32,7 +32,7 @@ contract MobSystem is System {
 
     function createMobs(MobType[] memory mobTypes, bytes[] memory stats, string[] memory mobMetadataURIs) public {
         uint256 len = mobTypes.length;
-        require(mobMetadataURIs.length == len && stats.length == len, "MOB SYSTEM: Array length mismatch");
+        require(mobMetadataURIs.length == len && stats.length == len, "MOB SYSTEM: Array length misencounter");
         for (uint256 i; i < len; i++) {
             createMob(mobTypes[i], stats[i], mobMetadataURIs[i]);
         }

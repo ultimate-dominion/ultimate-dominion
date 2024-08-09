@@ -94,7 +94,7 @@ export function createSystemCalls(
     Stats,
   }: ClientComponents,
 ) {
-  const createMatch = async (
+  const createEncounter = async (
     encounterType: EncounterType,
     attackers: string[],
     defenders: string[],
@@ -109,10 +109,10 @@ export function createSystemCalls(
           attackers as `0x${string}`[],
           defenders as `0x${string}`[],
         ],
-        functionName: 'UD__createMatch',
+        functionName: 'UD__createEncounter',
       });
 
-      const tx = await worldContract.write.UD__createMatch([
+      const tx = await worldContract.write.UD__createEncounter([
         encounterType,
         attackers as `0x${string}`[],
         defenders as `0x${string}`[],
@@ -135,7 +135,7 @@ export function createSystemCalls(
       })[0];
 
       return {
-        error: success ? undefined : 'Failed to create match.',
+        error: success ? undefined : 'Failed to create encounter.',
         success,
       };
     } catch (e) {
@@ -635,7 +635,7 @@ export function createSystemCalls(
   };
 
   return {
-    createMatch,
+    createEncounter,
     endTurn,
     enterGame,
     equipItems,

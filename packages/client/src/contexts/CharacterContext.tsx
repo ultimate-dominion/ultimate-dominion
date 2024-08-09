@@ -64,7 +64,7 @@ export const CharacterProvider = ({
       ItemsOwners,
       ItemsTokenURI,
       GoldBalances,
-      MatchEntity,
+      EncounterEntity,
       Stats,
     },
     delegatorAddress,
@@ -98,7 +98,10 @@ export const CharacterProvider = ({
       const goldBalance =
         getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
 
-      const encounterId = getComponentValue(MatchEntity, entity)?.encounterId;
+      const encounterId = getComponentValue(
+        EncounterEntity,
+        entity,
+      )?.encounterId;
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
       return {
@@ -146,7 +149,7 @@ export const CharacterProvider = ({
     CharactersTokenURI,
     delegatorAddress,
     GoldBalances,
-    MatchEntity,
+    EncounterEntity,
     publicClient,
     Stats,
     worldContract,

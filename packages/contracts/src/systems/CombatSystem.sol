@@ -9,8 +9,8 @@ import {LibChunks} from "@libraries/LibChunks.sol";
 import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
     RandomNumbers,
-    MatchEntity,
-    MatchEntityData,
+    EncounterEntity,
+    EncounterEntityData,
     Stats,
     StatsData,
     Actions,
@@ -96,17 +96,17 @@ contract CombatSystem is System {
             }
 
             if (actionOutcomeData.defenderDied) {
-                MatchEntity.setDied(actionOutcomeData.defenderId, true);
+                EncounterEntity.setDied(actionOutcomeData.defenderId, true);
             }
             if (actionOutcomeData.attackerDied) {
-                MatchEntity.setDied(actionOutcomeData.attackerId, true);
+                EncounterEntity.setDied(actionOutcomeData.attackerId, true);
             }
         }
         return actionOutcomeData;
     }
 
     function getDied(bytes32 entityId) public view returns (bool isDied) {
-        return MatchEntity.getDied(entityId);
+        return EncounterEntity.getDied(entityId);
     }
 
     function getEncounter(bytes32 encounterId) public view returns (CombatEncounterData memory) {

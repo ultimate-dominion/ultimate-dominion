@@ -98,7 +98,7 @@ export const MapNavigationProvider = ({
       CombatEncounter,
       CombatOutcome,
       GoldBalances,
-      MatchEntity,
+      EncounterEntity,
       Mobs,
       Position,
       Spawned,
@@ -196,7 +196,7 @@ export const MapNavigationProvider = ({
             );
 
             const encounterId = getComponentValue(
-              MatchEntity,
+              EncounterEntity,
               entity,
             )?.encounterId;
             const inBattle = !!encounterId && encounterId !== zeroHash;
@@ -240,7 +240,7 @@ export const MapNavigationProvider = ({
       CharactersTokenURI,
       delegatorAddress,
       GoldBalances,
-      MatchEntity,
+      EncounterEntity,
       Position,
       publicClient,
       renderError,
@@ -270,7 +270,7 @@ export const MapNavigationProvider = ({
             );
             const monsterStats = getComponentValueStrict(Stats, monsterId);
             const encounterId = getComponentValue(
-              MatchEntity,
+              EncounterEntity,
               monsterId,
             )?.encounterId;
             const inBattle = !!encounterId && encounterId !== zeroHash;
@@ -304,7 +304,7 @@ export const MapNavigationProvider = ({
         return [];
       }
     },
-    [MatchEntity, Mobs, renderError, Stats],
+    [EncounterEntity, Mobs, renderError, Stats],
   );
 
   useEffect(() => {

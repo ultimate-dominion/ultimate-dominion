@@ -72,7 +72,7 @@ export const CharacterPage = (): JSX.Element => {
       CharactersTokenURI,
       GoldBalances,
       Levels,
-      MatchEntity,
+      EncounterEntity,
       Stats,
     },
     isSynced,
@@ -130,7 +130,7 @@ export const CharacterPage = (): JSX.Element => {
       );
 
       const encounterId = getComponentValue(
-        MatchEntity,
+        EncounterEntity,
         characterId as Entity,
       )?.encounterId;
       const inBattle = !!encounterId && encounterId !== zeroHash;
@@ -172,7 +172,7 @@ export const CharacterPage = (): JSX.Element => {
     Characters,
     CharactersTokenURI,
     GoldBalances,
-    MatchEntity,
+    EncounterEntity,
     renderError,
     Stats,
     publicClient,

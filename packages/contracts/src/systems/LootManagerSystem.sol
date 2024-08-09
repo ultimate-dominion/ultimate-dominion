@@ -23,7 +23,7 @@ import {
     CombatEncounter,
     CombatEncounterData,
     Mobs,
-    MatchEntity
+    EncounterEntity
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
@@ -148,7 +148,7 @@ contract LootManagerSystem is System {
 
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         RewardDistributionTemps memory distTemps;
-        require(encounterData.end != 0 && encounterData.rewardsDistributed == false, "Invalid Match");
+        require(encounterData.end != 0 && encounterData.rewardsDistributed == false, "Invalid Encounter");
 
         // check dead attackers and defenders
         StatsData memory statsTemp;
@@ -173,10 +173,10 @@ contract LootManagerSystem is System {
                 ? true
                 : (distTemps.cumulativeAttackerLevels - distTemps.defenderLevelTemp) <= 5;
 
-            if (MatchEntity.getDied(distTemps.defenderTemp) && correctLevelSpread) {
+            if (EncounterEntity.getDied(distTemps.defenderTemp) && correctLevelSpread) {
                 _expAmount += Stats.getExperience(distTemps.defenderTemp);
                 _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
-                MatchEntity.setEncounterId(distTemps.defenderTemp, bytes32(0));
+                EncounterEntity.setEncounterId(distTemps.defenderTemp, bytes32(0));
 
                 // get dropped items into temporary array
 

@@ -99,7 +99,7 @@ contract ItemsSystem is System {
         uint256 len = itemTypes.length;
         require(
             supply.length == len && itemMetadataURIs.length == len && stats.length == len,
-            "ITEMS: Array length mismatch"
+            "ITEMS: Array length misencounter"
         );
 
         for (uint256 i; i < len; i++) {
@@ -139,7 +139,7 @@ contract ItemsSystem is System {
 
     function setStarterItems(Classes class, uint256[] memory itemIds, uint256[] memory amounts) public {
         _requireOwner(address(this), _msgSender());
-        require(itemIds.length == amounts.length, "ITEMS: Length mismatch");
+        require(itemIds.length == amounts.length, "ITEMS: Length misencounter");
         StarterItems.set(class, itemIds, amounts);
     }
 

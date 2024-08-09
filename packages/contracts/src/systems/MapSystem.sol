@@ -12,7 +12,7 @@ import {
     Spawned,
     Stats,
     MobsByLevel,
-    MatchEntity
+    EncounterEntity
 } from "../codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IMobSystem} from "@world/IWorld.sol";
@@ -27,7 +27,7 @@ contract MapSystem is System {
         require(IWorld(_world()).UD__isValidCharacterId(entityId), "Can Only move characters");
         require(_msgSender() == owner, "Only the owner can move a character");
         require(Spawned.getSpawned(entityId), "Character not spawned");
-        require(MatchEntity.getEncounterId(entityId) == bytes32(0), "Cannot move while in an encounter.");
+        require(EncounterEntity.getEncounterId(entityId) == bytes32(0), "Cannot move while in an encounter.");
 
         (uint16 currentX, uint16 currentY) = Position.get(entityId);
         (uint16 height, uint16 width) = MapConfig.get();
@@ -59,7 +59,7 @@ contract MapSystem is System {
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
 
-        MatchEntity.setDied(entityId, false);
+        EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
     }
 

@@ -201,12 +201,12 @@ export default defineWorld({
         currentRandomness: "uint256",
       },
     },
-    // when an entity starts combat it creates a "match entity" for that encounter.
+    // when an entity starts combat it creates a "encounter entity" for that encounter.
     //when combat ends, the encounterId is set to zero
-    MatchEntity: {
-      key: ["matchEntityId"],
+    EncounterEntity: {
+      key: ["encounterEntityId"],
       schema: {
-        matchEntityId: "bytes32",
+        encounterEntityId: "bytes32",
         // by default this is bytes(0), if this entity is in an encounter it will be set,
         // if the mob survives its encounter this will be set back to bytes(0)
         encounterId: "bytes32",

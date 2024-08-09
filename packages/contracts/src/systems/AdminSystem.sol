@@ -6,7 +6,7 @@ import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {
     RandomNumbers,
-    MatchEntity,
+    EncounterEntity,
     ActionsData,
     Actions,
     Stats,
@@ -34,7 +34,7 @@ contract AdminSystem is System {
     }
 
     function adminClearBattleState(bytes32 entityId) public onlyAdmin {
-        MatchEntity.setEncounterId(entityId, bytes32(0));
+        EncounterEntity.setEncounterId(entityId, bytes32(0));
     }
 
     function adminSetCombatEncounter(bytes32 encounterId, CombatEncounterData memory encounterData) public onlyAdmin {
