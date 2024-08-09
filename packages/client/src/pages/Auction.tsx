@@ -66,26 +66,10 @@ export const Auction = (): JSX.Element => {
     Weapon: WeaponStats | null;
     Armor: ArmorStats | null;
   }
-  interface Order {
-    orderHash: string;
-    orderStatus: string;
-    offer: OfferData;
-    consideration: ConsiderationData;
-  }
-  interface OfferData {
-    amount: string;
-    identifier: string;
-    token: string;
-    tokenType: string;
-  }
-  interface ConsiderationData {
-    amount: string;
-    identifier: string;
-    token: string;
-    tokenType: string;
-  }
+
   const { character: userCharacter } = useCharacter();
   const [items, setItems] = useState<Item[] | null>(null);
+  // const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
   const [goldAllowance, setGoldAllowance] = useState<bigint | null>(null);
   const [itemAllowance, setItemAllowance] = useState<boolean | null>(null);
   const [auctionContractAddress, setAuctionContractAddress] = useState('');
@@ -98,7 +82,6 @@ export const Auction = (): JSX.Element => {
       ItemsBaseURI,
       ItemsOwners,
       ItemsTokenURI,
-      Offers,
     },
     network: { worldContract, publicClient },
   } = useMUD();
@@ -111,37 +94,6 @@ export const Auction = (): JSX.Element => {
     singletonEntity,
   ) ?? { items: null };
 
-  const fetchOrders = useCallback(async () => {
-    await Promise.all(
-      Array.from(runQuery([Has(Offers)])).map(async orderHash => {
-        const offerData = await worldContract.read.UD__getOffer([
-          orderHash as Address,
-        ]);
-        const considerationData = await worldContract.read.UD__getConsideration(
-          [orderHash as Address],
-        );
-        const orderStatus = await worldContract.read.UD__getOrderStatus([
-          orderHash as Address,
-        ]);
-        return {
-          orderHash: orderHash.toString(),
-          orderStatus: orderStatus.toString(),
-          offer: {
-            amount: offerData.amount.toString(),
-            identifier: offerData.identifier.toString(),
-            token: offerData.token.toString(),
-            tokenType: offerData.tokenType.toString(),
-          } as OfferData,
-          consideration: {
-            amount: considerationData.amount.toString(),
-            identifier: considerationData.identifier.toString(),
-            token: considerationData.token.toString(),
-            tokenType: considerationData.tokenType.toString(),
-          } as ConsiderationData,
-        } as Order;
-      }),
-    );
-  }, [Offers, worldContract.read]);
   const fetchItems = useCallback(async () => {
     const _items = Array.from(runQuery([Has(ItemsOwners)]))
       .map(entity => {
@@ -242,14 +194,32 @@ export const Auction = (): JSX.Element => {
         return itemData;
       }),
     );
-
+    // const allItemsCopy = JSON.parse(JSON.stringify(allItems)).sort(
+    //   (entryA, entryB) => {
+    //     switch (sort.sorted) {
+    //       case 'byGold':
+    //         return sort.reversed
+    //           ? Number(entryA.goldBalance) - Number(entryB.goldBalance)
+    //           : Number(entryB.goldBalance) - Number(entryA.goldBalance);
+    //       case 'byLevel':
+    //         return sort.reversed
+    //           ? Number(entryA.level) - Number(entryB.level)
+    //           : Number(entryB.level) - Number(entryA.level);
+    //       case 'byStats':
+    //         return sort.reversed
+    //           ? Number(entryA.experience) - Number(entryB.experience)
+    //           : Number(entryB.experience) - Number(entryA.experience);
+    //       default:
+    //         return Number(entryB.goldBalance) - Number(entryA.goldBalance);
+    //     }
+    //   },
+    // );
     setItems(allItems);
   }, [Items, ItemsBaseURI, ItemsOwners, ItemsTokenURI, worldContract.read]);
 
   useEffect(() => {
     (async function () {
       await fetchItems();
-      await fetchOrders();
       setAuctionContractAddress(
         await worldContract.read.UD__auctionHouseAddress(),
       );
@@ -285,7 +255,6 @@ export const Auction = (): JSX.Element => {
     Characters,
     auctionContractAddress,
     fetchItems,
-    fetchOrders,
     goldAllowance,
     goldToken,
     itemAllowance,

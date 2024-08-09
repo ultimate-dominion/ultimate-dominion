@@ -26,7 +26,6 @@ export const AuctionRow = ({
   name,
   strength,
   floor,
-  high,
 }: {
   agility: string;
   baseHp: string;
@@ -76,11 +75,6 @@ export const AuctionRow = ({
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
             <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
-            <Center>
-              {entityClass == StatsClasses.Warrior && <GiAxeSword size={15} />}
-              {entityClass == StatsClasses.Rogue && <GiRogue size={15} />}
-              {entityClass == StatsClasses.Mage && <FaHatWizard size={15} />}
-            </Center>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
             HP {baseHp} • STR {strength} • AGI
@@ -113,7 +107,11 @@ export const AuctionRow = ({
             textAlign="center"
             w="100%"
           >
-            {Number(high).toLocaleString()}
+            <Center>
+              {entityClass == StatsClasses.Warrior && <GiAxeSword size={15} />}
+              {entityClass == StatsClasses.Rogue && <GiRogue size={15} />}
+              {entityClass == StatsClasses.Mage && <FaHatWizard size={15} />}
+            </Center>
           </Text>
         </HStack>
         <Box display={{ base: 'none', md: 'block' }} w="50px">

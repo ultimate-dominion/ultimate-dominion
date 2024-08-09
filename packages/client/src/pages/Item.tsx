@@ -28,11 +28,13 @@ import {
   encodeEntity,
   singletonEntity,
 } from '@latticexyz/store-sync/recs';
+import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 // import { Entity } from '@latticexyz/recs';
 import { useCallback, useEffect, useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Address, erc20Abi } from 'viem';
+import { Address, erc20Abi, parseEther } from 'viem';
+import { useWalletClient } from 'wagmi';
 
 import { ItemCard } from '../components/ItemCard';
 import { OrderRow } from '../components/OrderRow';
@@ -77,7 +79,9 @@ const erc1155abi = [
   },
 ];
 export const Item = (): JSX.Element => {
-  const { /*renderSuccess,*/ renderError } = useToast();
+  const { data: externalWalletClient } = useWalletClient();
+
+  const { renderSuccess, renderError } = useToast();
   const navigate = useNavigate();
   const params = useParams();
   //   const [filter, setFilter] = useState({ filtered: 'all' });
@@ -109,6 +113,7 @@ export const Item = (): JSX.Element => {
     recipient: string;
   }
   const { character: userCharacter } = useCharacter();
+  const [isSelling, setIsSelling] = useState(false);
   const [offerAmount, setOfferAmount] = useState(1);
   const [offerPrice, setOfferPrice] = useState(1);
   const [listingAmount, setListingAmount] = useState(1);
@@ -143,37 +148,62 @@ export const Item = (): JSX.Element => {
   ) ?? { items: null };
 
   const _sell = async function (
-    wanted: Item | number,
-    offered: Item | number,
+    wanted: Item | bigint,
+    offered: Item | bigint,
     purchaser: Character,
     amount: bigint,
   ) {
-    return await worldContract.write.UD__createOrder([
-      {
-        signature: '' as Address,
-        offerer: purchaser.owner as Address,
-        offer: {
-          tokenType: typeof offered === 'number' ? 1 : 2,
-          token:
-            typeof offered === 'number'
-              ? (goldToken as Address)
-              : (itemsContract as Address),
-          identifier:
-            typeof offered === 'number' ? 0n : BigInt(offered.TokenId),
-          amount: typeof offered === 'number' ? offered : amount,
-        },
-        consideration: {
-          tokenType: typeof wanted === 'number' ? 1 : 2,
-          token:
-            typeof wanted === 'number'
-              ? (goldToken as Address)
-              : (itemsContract as Address),
-          identifier: typeof wanted === 'number' ? 0n : BigInt(wanted.TokenId),
-          amount: typeof wanted === 'number' ? wanted : amount,
-          recipient: purchaser.owner as Address,
-        },
-      },
-    ]);
+    if (!externalWalletClient) {
+      renderError('Wallet not connected.');
+      return;
+    }
+    try {
+      setIsSelling(true);
+
+      const { request } = await publicClient.simulateContract({
+        address: worldContract.address,
+        abi: worldAbi,
+        functionName: 'UD__createOrder',
+        account: externalWalletClient.account,
+        args: [
+          {
+            signature: '' as Address,
+            offerer: purchaser.owner as Address,
+            offer: {
+              tokenType: typeof offered === 'number' ? 1 : 2,
+              token:
+                typeof offered === 'number'
+                  ? (goldToken as Address)
+                  : (itemsContract as Address),
+              identifier:
+                typeof offered === 'number'
+                  ? 0n
+                  : BigInt((offered as Item).TokenId),
+              amount: typeof offered === 'number' ? offered : amount,
+            },
+            consideration: {
+              tokenType: typeof wanted === 'number' ? 1 : 2,
+              token:
+                typeof wanted === 'number'
+                  ? (goldToken as Address)
+                  : (itemsContract as Address),
+              identifier:
+                typeof wanted === 'number'
+                  ? 0n
+                  : BigInt((wanted as Item).TokenId),
+              amount: typeof wanted === 'number' ? wanted : amount,
+              recipient: purchaser.owner as Address,
+            },
+          },
+        ],
+      });
+      await externalWalletClient?.writeContract(request);
+      renderSuccess('Order placed successfully!');
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Error placing order.', e);
+    } finally {
+      setIsSelling(false);
+    }
   };
   const sellItem = async function (
     amount: string | number,
@@ -182,7 +212,8 @@ export const Item = (): JSX.Element => {
     if (
       !params.itemId ||
       goldAllowance == null ||
-      goldAllowance < BigInt(price) * BigInt(amount)
+      goldAllowance <
+        parseEther(price.toString()) * parseEther(amount.toString())
     ) {
       renderError('Approve more funds in your wallet details');
     } else if (items && userCharacter) {
@@ -573,6 +604,7 @@ export const Item = (): JSX.Element => {
               <Button
                 w="100%"
                 onClick={() => orderItem(offerPrice, offerAmount)}
+                isLoading={isSelling}
                 size="sm"
                 variant="solid"
               >
@@ -605,7 +637,7 @@ export const Item = (): JSX.Element => {
                               from={order.consideration.recipient}
                               orderHash={order.orderHash}
                               offer={Number(order.offer.amount)}
-                              consideration={Number(order.consideration.amount)}
+                              consideration={order.consideration.amount}
                               considerationItem={'$GOLD'}
                               offerItem={items[0][itemType]?.name.replace(
                                 /[\p{Emoji}\u200d]+/gu,
@@ -726,6 +758,7 @@ export const Item = (): JSX.Element => {
                             listingAmount.toString(),
                           )
                         }
+                        isLoading={isSelling}
                         size="sm"
                         variant="solid"
                       >

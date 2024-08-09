@@ -7,12 +7,16 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
+import { useState } from 'react';
 import { BiPurchaseTagAlt } from 'react-icons/bi';
-import { MdOutlineCancelPresentation } from 'react-icons/md';
+import { FaTimes } from 'react-icons/fa';
 import { Address } from 'viem';
+import { useWalletClient } from 'wagmi';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 
 export const OrderRow = ({
   from,
@@ -33,11 +37,61 @@ export const OrderRow = ({
   recipient: string;
 }): JSX.Element => {
   const { character: userCharacter } = useCharacter();
+  const { data: externalWalletClient } = useWalletClient();
 
   const {
-    network: { worldContract },
+    network: { publicClient, worldContract },
   } = useMUD();
+  const { renderSuccess, renderError } = useToast();
 
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isFilling, setIsFilling] = useState(false);
+
+  const cancelOrder = async function () {
+    if (!externalWalletClient) {
+      renderError('Wallet not connected.');
+      return;
+    }
+    try {
+      setIsCancelling(true);
+      const { request } = await publicClient.simulateContract({
+        address: worldContract.address,
+        abi: worldAbi,
+        functionName: 'UD__cancelOrder',
+        args: [orderHash as Address],
+        account: externalWalletClient.account,
+      });
+      await externalWalletClient.writeContract(request);
+      renderSuccess('Order canceled successfully!');
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Error cancelling order.', e);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const fillOrder = async function () {
+    if (!externalWalletClient) {
+      renderError('Wallet not connected.');
+      return;
+    }
+    try {
+      setIsFilling(true);
+      const { request } = await publicClient.simulateContract({
+        address: worldContract.address,
+        abi: worldAbi,
+        functionName: 'UD__fulfillOrder',
+        args: [orderHash as Address],
+        account: externalWalletClient.account,
+      });
+      await externalWalletClient?.writeContract(request);
+      renderSuccess('Order filled successfully!');
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Error cancelling order.', e);
+    } finally {
+      setIsFilling(false);
+    }
+  };
   return (
     <Flex
       border="2px solid"
@@ -104,19 +158,17 @@ export const OrderRow = ({
               variant="ghost"
               backgroundColor="red"
               color="white"
-              onClick={() => {
-                worldContract.write.UD__cancelOrder([orderHash as Address]);
-              }}
+              isLoading={isCancelling}
+              onClick={() => cancelOrder()}
             >
-              <MdOutlineCancelPresentation />
+              <FaTimes />
             </Button>
           ) : (
             <Button
               p={3}
               variant="solid"
-              onClick={() => {
-                worldContract.write.UD__fulfillOrder([orderHash as Address]);
-              }}
+              isLoading={isFilling}
+              onClick={() => fillOrder()}
             >
               <BiPurchaseTagAlt />
             </Button>
