@@ -26,8 +26,8 @@ export const ActionsPanel = (): JSX.Element => {
   const { aliveMonsters, isSpawned, position } = useMap();
   const {
     actionOutcomes,
+    attackingItemId,
     currentBattle,
-    isAttacking,
     lastestBattleOutcome,
     monsterOponent,
     onAttack,
@@ -158,15 +158,18 @@ export const ActionsPanel = (): JSX.Element => {
               and equip at least 1 item.
             </Text>
           )}
-          <HStack w="100%">
+          <HStack spacing={0} w="100%">
             {equippedWeapons.map((item, index) => (
               <Button
-                borderLeft={index === 0 ? 'none' : '1px'}
+                borderLeft={index === 0 ? 'none' : '2px'}
                 borderRadius={0}
                 borderRight={
-                  index === equippedWeapons.length - 1 ? 'none' : '1px'
+                  index === 0 || index === equippedWeapons.length - 1
+                    ? 'none'
+                    : '2px'
                 }
-                isLoading={isAttacking}
+                isDisabled={attackingItemId !== null}
+                isLoading={attackingItemId === item.tokenId}
                 key={`equipped-item-${index}`}
                 loadingText="Attacking..."
                 onClick={() => onAttack(item.tokenId)}

@@ -37,9 +37,9 @@ import { useMUD } from './MUDContext';
 
 type BattleContextType = {
   actionOutcomes: ActionOutcomeType[];
+  attackingItemId: null | string;
   continueToBattleOutcome: boolean;
   currentBattle: CombatDetails | null;
-  isAttacking: boolean;
   lastestBattleOutcome: CombatOutcomeType | null;
   monsterOponent: Monster | null;
   onAttack: (itemId: string) => void;
@@ -48,9 +48,9 @@ type BattleContextType = {
 
 const BattleContext = createContext<BattleContextType>({
   actionOutcomes: [],
+  attackingItemId: null,
   continueToBattleOutcome: false,
   currentBattle: null,
-  isAttacking: false,
   lastestBattleOutcome: null,
   monsterOponent: null,
   onAttack: () => {},
@@ -73,7 +73,7 @@ export const BattleProvider = ({
   const { character, refreshCharacter } = useCharacter();
   const { allMonsters } = useMap();
 
-  const [isAttacking, setIsAttacking] = useState(false);
+  const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
 
   const allBattles = useEntityQuery([Has(CombatEncounter)])
@@ -206,7 +206,7 @@ export const BattleProvider = ({
   const onAttack = useCallback(
     async (itemId: string) => {
       try {
-        setIsAttacking(true);
+        setAttackingItemId(itemId);
 
         if (!delegatorAddress) {
           throw new Error('Missing delegation.');
@@ -255,7 +255,7 @@ export const BattleProvider = ({
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to attack.', e);
       } finally {
-        setIsAttacking(false);
+        setAttackingItemId(null);
       }
     },
     [
@@ -274,9 +274,9 @@ export const BattleProvider = ({
     <BattleContext.Provider
       value={{
         actionOutcomes: currentBattleActionOutcomes,
+        attackingItemId,
         continueToBattleOutcome,
         currentBattle,
-        isAttacking,
         lastestBattleOutcome,
         monsterOponent,
         onAttack,

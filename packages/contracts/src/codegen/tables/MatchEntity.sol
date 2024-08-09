@@ -18,7 +18,6 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 struct MatchEntityData {
   bytes32 encounterId;
-  int256 damageTaken;
   bool died;
 }
 
@@ -27,12 +26,12 @@ library MatchEntity {
   ResourceId constant _tableId = ResourceId.wrap(0x746255440000000000000000000000004d61746368456e746974790000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0041030020200100000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0021020020010000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (bytes32, int256, bool)
-  Schema constant _valueSchema = Schema.wrap(0x004103005f3f6000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bytes32, bool)
+  Schema constant _valueSchema = Schema.wrap(0x002102005f600000000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -48,10 +47,9 @@ library MatchEntity {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](3);
+    fieldNames = new string[](2);
     fieldNames[0] = "encounterId";
-    fieldNames[1] = "damageTaken";
-    fieldNames[2] = "died";
+    fieldNames[1] = "died";
   }
 
   /**
@@ -111,55 +109,13 @@ library MatchEntity {
   }
 
   /**
-   * @notice Get damageTaken.
-   */
-  function getDamageTaken(bytes32 matchEntityId) internal view returns (int256 damageTaken) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = matchEntityId;
-
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
-    return (int256(uint256(bytes32(_blob))));
-  }
-
-  /**
-   * @notice Get damageTaken.
-   */
-  function _getDamageTaken(bytes32 matchEntityId) internal view returns (int256 damageTaken) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = matchEntityId;
-
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
-    return (int256(uint256(bytes32(_blob))));
-  }
-
-  /**
-   * @notice Set damageTaken.
-   */
-  function setDamageTaken(bytes32 matchEntityId, int256 damageTaken) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = matchEntityId;
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((damageTaken)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set damageTaken.
-   */
-  function _setDamageTaken(bytes32 matchEntityId, int256 damageTaken) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = matchEntityId;
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((damageTaken)), _fieldLayout);
-  }
-
-  /**
    * @notice Get died.
    */
   function getDied(bytes32 matchEntityId) internal view returns (bool died) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = matchEntityId;
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (_toBool(uint8(bytes1(_blob))));
   }
 
@@ -170,7 +126,7 @@ library MatchEntity {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = matchEntityId;
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (_toBool(uint8(bytes1(_blob))));
   }
 
@@ -181,7 +137,7 @@ library MatchEntity {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = matchEntityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((died)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((died)), _fieldLayout);
   }
 
   /**
@@ -191,7 +147,7 @@ library MatchEntity {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = matchEntityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((died)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((died)), _fieldLayout);
   }
 
   /**
@@ -227,8 +183,8 @@ library MatchEntity {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(bytes32 matchEntityId, bytes32 encounterId, int256 damageTaken, bool died) internal {
-    bytes memory _staticData = encodeStatic(encounterId, damageTaken, died);
+  function set(bytes32 matchEntityId, bytes32 encounterId, bool died) internal {
+    bytes memory _staticData = encodeStatic(encounterId, died);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -242,8 +198,8 @@ library MatchEntity {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(bytes32 matchEntityId, bytes32 encounterId, int256 damageTaken, bool died) internal {
-    bytes memory _staticData = encodeStatic(encounterId, damageTaken, died);
+  function _set(bytes32 matchEntityId, bytes32 encounterId, bool died) internal {
+    bytes memory _staticData = encodeStatic(encounterId, died);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -258,7 +214,7 @@ library MatchEntity {
    * @notice Set the full data using the data struct.
    */
   function set(bytes32 matchEntityId, MatchEntityData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.encounterId, _table.damageTaken, _table.died);
+    bytes memory _staticData = encodeStatic(_table.encounterId, _table.died);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -273,7 +229,7 @@ library MatchEntity {
    * @notice Set the full data using the data struct.
    */
   function _set(bytes32 matchEntityId, MatchEntityData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.encounterId, _table.damageTaken, _table.died);
+    bytes memory _staticData = encodeStatic(_table.encounterId, _table.died);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -287,12 +243,10 @@ library MatchEntity {
   /**
    * @notice Decode the tightly packed blob of static data using this table's field layout.
    */
-  function decodeStatic(bytes memory _blob) internal pure returns (bytes32 encounterId, int256 damageTaken, bool died) {
+  function decodeStatic(bytes memory _blob) internal pure returns (bytes32 encounterId, bool died) {
     encounterId = (Bytes.getBytes32(_blob, 0));
 
-    damageTaken = (int256(uint256(Bytes.getBytes32(_blob, 32))));
-
-    died = (_toBool(uint8(Bytes.getBytes1(_blob, 64))));
+    died = (_toBool(uint8(Bytes.getBytes1(_blob, 32))));
   }
 
   /**
@@ -306,7 +260,7 @@ library MatchEntity {
     EncodedLengths,
     bytes memory
   ) internal pure returns (MatchEntityData memory _table) {
-    (_table.encounterId, _table.damageTaken, _table.died) = decodeStatic(_staticData);
+    (_table.encounterId, _table.died) = decodeStatic(_staticData);
   }
 
   /**
@@ -333,8 +287,8 @@ library MatchEntity {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(bytes32 encounterId, int256 damageTaken, bool died) internal pure returns (bytes memory) {
-    return abi.encodePacked(encounterId, damageTaken, died);
+  function encodeStatic(bytes32 encounterId, bool died) internal pure returns (bytes memory) {
+    return abi.encodePacked(encounterId, died);
   }
 
   /**
@@ -343,12 +297,8 @@ library MatchEntity {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(
-    bytes32 encounterId,
-    int256 damageTaken,
-    bool died
-  ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(encounterId, damageTaken, died);
+  function encode(bytes32 encounterId, bool died) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+    bytes memory _staticData = encodeStatic(encounterId, died);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

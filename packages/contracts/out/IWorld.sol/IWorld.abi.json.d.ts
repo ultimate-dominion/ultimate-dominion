@@ -238,6 +238,72 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__checkForMatchEnd",
+    "inputs": [
+      {
+        "name": "encounterData",
+        "type": "tuple",
+        "internalType": "struct CombatEncounterData",
+        "components": [
+          {
+            "name": "encounterType",
+            "type": "uint8",
+            "internalType": "enum EncounterType"
+          },
+          {
+            "name": "start",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "end",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "rewardsDistributed",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "currentTurn",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxTurns",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "defenders",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "attackers",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_matchEnded",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "_attackersWin",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__checkRequirements",
     "inputs": [
       {
@@ -439,7 +505,41 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__distributeRewards",
+    "name": "UD__distributePveRewards",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_expAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_goldAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_itemIdsDropped",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__distributePvpRewards",
     "inputs": [
       {
         "name": "encounterId",
@@ -537,6 +637,29 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__endMatch",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "attackersWin",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__endTurn",
     "inputs": [
       {
@@ -613,7 +736,210 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__executeCombat",
+    "name": "UD__executeAction",
+    "inputs": [
+      {
+        "name": "actionOutcomeData",
+        "type": "tuple",
+        "internalType": "struct ActionOutcomeData",
+        "components": [
+          {
+            "name": "actionId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "weaponId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "attackerId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "defenderId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "hit",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "miss",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "crit",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "attackerDamageDelt",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "defenderDamageDelt",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "attackerDied",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "defenderDied",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "blockNumber",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct ActionOutcomeData",
+        "components": [
+          {
+            "name": "actionId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "weaponId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "attackerId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "defenderId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "hit",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "miss",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "crit",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "attackerDamageDelt",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "defenderDamageDelt",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "attackerDied",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "defenderDied",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "blockNumber",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__executePvECombat",
+    "inputs": [
+      {
+        "name": "prevRandao",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actions",
+        "type": "tuple[]",
+        "internalType": "struct Action[]",
+        "components": [
+          {
+            "name": "attackerEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "defenderEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "actionId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "weaponId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__executePvPCombat",
     "inputs": [
       {
         "name": "prevRandao",
@@ -797,6 +1123,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getDied",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isDied",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getEncounter",
     "inputs": [
       {
@@ -807,7 +1152,7 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "_encounterData",
+        "name": "",
         "type": "tuple",
         "internalType": "struct CombatEncounterData",
         "components": [
@@ -1501,6 +1846,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getSystemAddress",
+    "inputs": [
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getTotalSupply",
     "inputs": [
       {
@@ -1626,6 +1990,25 @@ declare const abi: [
     "outputs": [
       {
         "name": "_isEquipped",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isFlaggedForPvp",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isFlaggedForPvp",
         "type": "bool",
         "internalType": "bool"
       }
@@ -1802,6 +2185,40 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__isValidPvP",
+    "inputs": [
+      {
+        "name": "attackers",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "defenders",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isValidPvP",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__issueStarterItems",
     "inputs": [
       {
@@ -1959,6 +2376,24 @@ declare const abi: [
       },
       {
         "name": "adminState",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setPvpFlag",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "flag",
         "type": "bool",
         "internalType": "bool"
       }

@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 library ArrayManagers {
     // takes empty positions out of a bytes32 memory array;
-    function trimBytes32Array(bytes32[] memory arrayToTrim) public view returns (bytes32[] memory trimmedArray) {
+    function trimBytes32Array(bytes32[] memory arrayToTrim) public pure returns (bytes32[] memory trimmedArray) {
         uint256 numberOfNonZeroPositions;
 
         for (uint256 i; i < arrayToTrim.length; i++) {
@@ -28,7 +28,7 @@ library ArrayManagers {
     }
 
     // takes empty positions out of a uint256 memory array;
-    function trimUint256Array(uint256[] memory arrayToTrim) public view returns (uint256[] memory trimmedArray) {
+    function trimUint256Array(uint256[] memory arrayToTrim) public pure returns (uint256[] memory trimmedArray) {
         uint256 numberOfNonZeroPositions;
 
         for (uint256 i; i < arrayToTrim.length; i++) {

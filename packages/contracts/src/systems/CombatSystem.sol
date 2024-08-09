@@ -28,7 +28,8 @@ import {
     MobsData,
     Counters,
     ActionOutcome,
-    ActionOutcomeData
+    ActionOutcomeData,
+    PvPFlag
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {
@@ -66,7 +67,7 @@ contract CombatSystem is System {
         (uint16 x, uint16 y) = Position.get(attackers[0]);
 
         if (uint256(encounterType) == 1) {
-            require(isValidPvE(attackers, defenders, x, y), "COMBAT SYSTEM: INVALID PVE");
+            require(IWorld(_world()).UD__isValidPvE(attackers, defenders, x, y), "COMBAT SYSTEM: INVALID PVE");
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
 
@@ -83,7 +84,24 @@ contract CombatSystem is System {
 
             CombatEncounter.set(encounterId, combatData);
         }
-        if (uint8(encounterType) == 0) {}
+        if (uint8(encounterType) == 0) {
+            require(IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y), "COMBAT SYSTEM: INVALID PVP");
+            uint256 startTime = block.timestamp;
+            encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
+
+            CombatEncounterData memory combatData = CombatEncounterData({
+                encounterType: encounterType,
+                start: startTime,
+                end: 0,
+                rewardsDistributed: false,
+                currentTurn: 0,
+                maxTurns: DEFAULT_MAX_TURNS,
+                defenders: defenders,
+                attackers: attackers
+            });
+
+            CombatEncounter.set(encounterId, combatData);
+        }
         MatchEntityData memory tempMatchData;
         for (uint256 i; i < defenders.length; i++) {
             tempMatchData = MatchEntity.get(defenders[i]);
@@ -99,43 +117,6 @@ contract CombatSystem is System {
         }
     }
 
-    function isValidPvE(bytes32[] memory attackers, bytes32[] memory defenders, uint16 x, uint16 y)
-        public
-        view
-        returns (bool _isValidPvE)
-    {
-        _isValidPvE = true;
-        for (uint256 i; i < attackers.length;) {
-            if (!IWorld(_world()).UD__isValidCharacterId(attackers[i])) {
-                _isValidPvE = false;
-                break;
-            }
-            if (!IWorld(_world()).UD__isAtPosition(attackers[i], x, y)) {
-                _isValidPvE = false;
-                break;
-            }
-            {
-                i++;
-            }
-        }
-        if (_isValidPvE) {
-            for (uint256 i; i < defenders.length;) {
-                if (IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
-                    _isValidPvE = false;
-                    break;
-                }
-                if (!IWorld(_world()).UD__isAtPosition(defenders[i], x, y)) {
-                    _isValidPvE = false;
-                    break;
-                }
-                {
-                    i++;
-                }
-            }
-        }
-        return _isValidPvE;
-    }
-
     /**
      * @param encounterId the bytes32 id of the encounter
      * @param actions : for a pve encounter player actions are calculated first and the mobs.
@@ -144,10 +125,16 @@ contract CombatSystem is System {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(encounterData.start != 0 && encounterData.end == 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
         require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
-        require(
-            IWorld(_world()).UD__getOwnerAddress(playerId) == _msgSender() && isParticipant(playerId, encounterId),
-            "COMBAT SYSTEM: NON-COMBATANT"
-        );
+        address playerAddress = IWorld(_world()).UD__getOwnerAddress(playerId);
+        require(playerAddress == _msgSender() && isParticipant(playerId, encounterId), "COMBAT SYSTEM: NON-COMBATANT");
+
+        if (uint8(encounterData.encounterType) == 0) {
+            if (encounterData.currentTurn % 2 == 0) {
+                require(isParticipant(playerAddress, encounterData.defenders), "Cannot end opponents turn");
+            } else {
+                require(isParticipant(playerAddress, encounterData.attackers), "Cannot end opponents turn");
+            }
+        }
         _queueActions(encounterId, actions);
     }
 
@@ -187,75 +174,20 @@ contract CombatSystem is System {
         }
     }
 
-    function executeCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) public {
-        uint256 randomNumber;
-        // ensure this is an authorised call from the entropy contract
-        _requireAccess(address(this), _msgSender());
-
-        //get encounter data
-        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        // execute attacker actions
-        for (uint256 i; i < actions.length; i++) {
-            Action memory currentAction = actions[i];
-
-            randomNumber =
-                uint256(keccak256(abi.encode(prevRandao, currentAction.attackerEntityId, encounterData.currentTurn)));
-
-            ActionOutcomeData memory currentActionData = _getCurrentActionData(currentAction);
-
-            // execute action
-            currentActionData = _executeAction(currentActionData, randomNumber);
-            // emit action data to offchain table
-            ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
-            encounterData.currentTurn++;
-        }
-        (bool matchEnded, bool attackersWin) = _checkForMatchEnd(encounterData);
-        if (matchEnded) {
-            _endMatch(encounterId, randomNumber, attackersWin);
-        } else {
-            // execute defender attacks
-            for (uint256 i; i < encounterData.defenders.length; i++) {
-                MonsterStats memory monsterStats = IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]);
-                ActionOutcomeData memory defenderAction = _getCurrentActionData(
-                    Action({
-                        attackerEntityId: encounterData.defenders[i],
-                        defenderEntityId: encounterData.attackers[i],
-                        actionId: monsterStats.actions[0],
-                        weaponId: monsterStats.inventory[0]
-                    })
-                );
-                randomNumber =
-                    uint256(keccak256(abi.encode(prevRandao, defenderAction.attackerId, encounterData.currentTurn)));
-
-                defenderAction = _executeAction(defenderAction, randomNumber);
-
-                ActionOutcome.set(encounterId, encounterData.currentTurn, i + actions.length, defenderAction);
-                encounterData.currentTurn++;
-            }
-            CombatEncounter.set(encounterId, encounterData);
-            (matchEnded, attackersWin) = _checkForMatchEnd(encounterData);
-            if (matchEnded) {
-                _endMatch(encounterId, randomNumber, attackersWin);
-            }
-        }
-    }
-
-    function _checkForMatchEnd(CombatEncounterData memory encounterData)
-        internal
+    function checkForMatchEnd(CombatEncounterData memory encounterData)
+        public
+        view
         returns (bool _matchEnded, bool _attackersWin)
     {
         uint256 deadDefenderCounter;
         uint256 deadAttackerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
-            if (MatchEntity.getDied(encounterData.defenders[i])) {
-                _setSpawned(encounterData.defenders[i], false);
-                // CombatOutcome.
+            if (getDied(encounterData.defenders[i])) {
                 deadDefenderCounter++;
             }
         }
         for (uint256 i; i < encounterData.attackers.length; i++) {
-            if (MatchEntity.getDied(encounterData.attackers[i])) {
-                _setSpawned(encounterData.attackers[i], false);
+            if (getDied(encounterData.attackers[i])) {
                 deadAttackerCounter++;
             }
         }
@@ -269,14 +201,13 @@ contract CombatSystem is System {
         _attackersWin = deadDefenderCounter == encounterData.defenders.length;
     }
 
-    function _setSpawned(bytes32 entityId, bool spawned) internal {
-        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
-            Spawned.set(entityId, spawned);
-        }
+    function getDied(bytes32 entityId) public view returns (bool isDied) {
+        return MatchEntity.getDied(entityId);
     }
 
     function _getCurrentActionData(Action memory currentAction)
         internal
+        view
         returns (ActionOutcomeData memory currentActionData)
     {
         currentActionData = ActionOutcomeData({
@@ -302,12 +233,13 @@ contract CombatSystem is System {
         );
     }
 
-    function _executeAction(ActionOutcomeData memory actionOutcomeData, uint256 randomNumber)
-        internal
+    function executeAction(ActionOutcomeData memory actionOutcomeData, uint256 randomNumber)
+        public
         returns (ActionOutcomeData memory)
     {
-        // if the defender is alive and attacks is alive, execute the action
-        if (!MatchEntity.getDied(actionOutcomeData.attackerId) && !MatchEntity.getDied(actionOutcomeData.defenderId)) {
+        _requireAccess(address(this), _msgSender());
+        // if the defender is alive and attacker is alive, execute the action
+        if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
             // get action data
             ActionsData memory actionData = Actions.get(actionOutcomeData.actionId);
 
@@ -325,12 +257,15 @@ contract CombatSystem is System {
                     actionOutcomeData.weaponId,
                     randomNumber
                 );
+
                 // if hit deduct damage
                 if (actionOutcomeData.hit) {
                     int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
                         - int256(actionOutcomeData.attackerDamageDelt / int256(ATTACK_MODIFIER));
                     if (currentHp <= 0) actionOutcomeData.defenderDied = true;
                     Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
+                } else {
+                    actionOutcomeData.miss = true;
                 }
             } else {
                 revert("action type not recognized");
@@ -401,7 +336,7 @@ contract CombatSystem is System {
         }
     }
 
-    function getEncounter(bytes32 encounterId) public view returns (CombatEncounterData memory _encounterData) {
+    function getEncounter(bytes32 encounterId) public view returns (CombatEncounterData memory) {
         return CombatEncounter.get(encounterId);
     }
 
@@ -413,12 +348,11 @@ contract CombatSystem is System {
         AdjustedCombatStats memory defender
     ) internal view returns (bool attackLands, bool crit) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        uint256 attackTotal = (
-            Math.add(attacker.adjustedAgility, attackStats.attackModifierBonus) + (attackRoll % 1000)
-        ) * (TO_HIT_MODIFIER);
+        uint256 attackTotal = (Math.add(attacker.adjustedAgility, attackStats.attackModifierBonus) + (attackRoll % 100))
+            * (TO_HIT_MODIFIER);
         // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
 
-        uint256 defenseTotal = ((defenseRoll % 1000) + defender.adjustedAgility) * DEFENSE_MODIFIER;
+        uint256 defenseTotal = ((defenseRoll % 100) + defender.adjustedAgility) * DEFENSE_MODIFIER;
         attackLands = attackTotal > defenseTotal;
 
         if (attackLands) {
@@ -428,7 +362,9 @@ contract CombatSystem is System {
 
     function _calculateMagicAttack() public {}
 
-    function _endMatch(bytes32 encounterId, uint256 randomNumber, bool attackersWin) internal {
+    function endMatch(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
+        //make sure it's an authorized call
+        _requireAccess(address(this), _msgSender());
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         require(CombatEncounter.getEnd(encounterId) == 0, "match already over");
 
@@ -447,10 +383,12 @@ contract CombatSystem is System {
                 MatchEntity.setEncounterId(defenderTemp, bytes32(0));
             }
         }
-
-        (uint256 expAmount, uint256 goldAmount, uint256[] memory itemsDropped) =
-            IWorld(_world()).UD__distributeRewards(encounterId, randomNumber);
-
+        uint256 expAmount;
+        uint256 goldAmount;
+        uint256[] memory itemsDropped;
+        if (uint8(encounterData.encounterType) == uint8(1)) {
+            (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePveRewards(encounterId, randomNumber);
+        } else {}
         CombatOutcomeData memory combatOutcome = CombatOutcomeData({
             endTime: block.timestamp,
             attackersWin: attackersWin,

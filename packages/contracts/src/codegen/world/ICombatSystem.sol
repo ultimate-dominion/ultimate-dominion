@@ -5,7 +5,7 @@ pragma solidity >=0.8.24;
 
 import { EncounterType } from "@codegen/common.sol";
 import { Action } from "@interfaces/Structs.sol";
-import { CombatEncounterData } from "@codegen/index.sol";
+import { CombatEncounterData, ActionOutcomeData } from "@codegen/index.sol";
 
 /**
  * @title ICombatSystem
@@ -19,13 +19,6 @@ interface ICombatSystem {
     bytes32[] memory defenders
   ) external returns (bytes32 encounterId);
 
-  function UD__isValidPvE(
-    bytes32[] memory attackers,
-    bytes32[] memory defenders,
-    uint16 x,
-    uint16 y
-  ) external view returns (bool _isValidPvE);
-
   function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) external payable;
 
   function UD__isParticipant(bytes32 playerId, bytes32 encounterId) external view returns (bool _isParticipant);
@@ -35,9 +28,20 @@ interface ICombatSystem {
     bytes32[] memory participants
   ) external view returns (bool _isParticipant);
 
-  function UD__executeCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) external;
+  function UD__checkForMatchEnd(
+    CombatEncounterData memory encounterData
+  ) external view returns (bool _matchEnded, bool _attackersWin);
 
-  function UD__getEncounter(bytes32 encounterId) external view returns (CombatEncounterData memory _encounterData);
+  function UD__getDied(bytes32 entityId) external view returns (bool isDied);
+
+  function UD__executeAction(
+    ActionOutcomeData memory actionOutcomeData,
+    uint256 randomNumber
+  ) external returns (ActionOutcomeData memory);
+
+  function UD__getEncounter(bytes32 encounterId) external view returns (CombatEncounterData memory);
 
   function UD___calculateMagicAttack() external;
+
+  function UD__endMatch(bytes32 encounterId, uint256 randomNumber, bool attackersWin) external;
 }
