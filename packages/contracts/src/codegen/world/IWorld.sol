@@ -9,6 +9,7 @@ import { IActionSystem } from "./IActionSystem.sol";
 import { IAdminSystem } from "./IAdminSystem.sol";
 import { ICharacterSystem } from "./ICharacterSystem.sol";
 import { ICombatSystem } from "./ICombatSystem.sol";
+import { IEncounterSystem } from "./IEncounterSystem.sol";
 import { IEquipmentSystem } from "./IEquipmentSystem.sol";
 import { IItemsSystem } from "./IItemsSystem.sol";
 import { ILootManagerSystem } from "./ILootManagerSystem.sol";
@@ -31,6 +32,7 @@ interface IWorld is
   IAdminSystem,
   ICharacterSystem,
   ICombatSystem,
+  IEncounterSystem,
   IEquipmentSystem,
   IItemsSystem,
   ILootManagerSystem,
