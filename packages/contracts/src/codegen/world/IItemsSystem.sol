@@ -20,6 +20,8 @@ interface IItemsSystem {
     string memory itemMetadataURI
   ) external returns (uint256);
 
+  function UD__resupplyLootManager(uint256 itemId, uint256 newSupply) external;
+
   function UD__createItems(
     ItemType[] memory itemTypes,
     uint256[] memory supply,

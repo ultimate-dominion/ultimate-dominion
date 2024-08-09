@@ -2395,6 +2395,24 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__resupplyLootManager",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "newSupply",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__rollStats",
     "inputs": [
       {

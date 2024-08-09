@@ -56,7 +56,7 @@ contract ItemsSystem is System {
         // create new item struct
         ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, stats: stats});
 
-        // mint supply to this contract
+        // mint supply to lootManager contract
         IWorld(_world()).call(
             _erc1155SystemId(ITEMS_NAMESPACE),
             abi.encodeWithSignature(
@@ -74,6 +74,21 @@ contract ItemsSystem is System {
         Items.set(itemId, newItem);
 
         return itemId;
+    }
+
+    function resupplyLootManager(uint256 itemId, uint256 newSupply) public {
+        require(getTotalSupply(itemId) != 0, "No existing supply");
+        // mint supply to lootManager contract
+        IWorld(_world()).call(
+            _erc1155SystemId(ITEMS_NAMESPACE),
+            abi.encodeWithSignature(
+                "mint(address,uint256,uint256,bytes)",
+                Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE)),
+                itemId,
+                newSupply,
+                ""
+            )
+        );
     }
 
     function createItems(

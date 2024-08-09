@@ -57,10 +57,6 @@ contract AdminSystem is System {
         Stats.set(entityId, desiredStats);
     }
 
-    function getSystemAddress(ResourceId systemId) public view returns (address) {
-        return Systems.getSystem(systemId);
-    }
-
     function adminMoveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) public onlyAdmin {
         bytes32[] memory entAtPos = IWorld(_world()).UD__getEntitiesAtPosition(currentX, currentY);
         bool entityWasAtPosition;
@@ -79,5 +75,9 @@ contract AdminSystem is System {
         require(entityWasAtPosition, "Entity not at position");
         Position.set(entityId, x, y);
         EntitiesAtPosition.pushEntities(x, y, entityId);
+    }
+
+    function getSystemAddress(ResourceId systemId) public view returns (address) {
+        return Systems.getSystem(systemId);
     }
 }
