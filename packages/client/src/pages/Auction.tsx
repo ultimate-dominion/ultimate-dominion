@@ -1,11 +1,15 @@
-import { Button, Grid, GridItem, Stack, Text } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
 import {
-  getComponentValueStrict,
-  Has,
-  HasValue,
-  runQuery,
-} from '@latticexyz/recs';
+  Box,
+  Button,
+  Flex,
+  Grid,
+  GridItem,
+  HStack,
+  Stack,
+  Text,
+} from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
+import { getComponentValueStrict, Has, runQuery } from '@latticexyz/recs';
 import {
   decodeEntity,
   encodeEntity,
@@ -13,16 +17,15 @@ import {
 } from '@latticexyz/store-sync/recs';
 // import { Entity } from '@latticexyz/recs';
 import { useCallback, useEffect, useState } from 'react';
-import { Address, erc20Abi, parseEther } from 'viem';
+import { Address, erc20Abi } from 'viem';
 
+import { AuctionRow } from '../components/AuctionRow';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import {
   Armor,
   ArmorStats,
-  Character,
   ItemType,
   StatsClasses,
   Weapon,
@@ -55,8 +58,6 @@ const erc1155abi = [
   },
 ];
 export const Auction = (): JSX.Element => {
-  const { /*renderSuccess,*/ renderError } = useToast();
-
   //   const [filter, setFilter] = useState({ filtered: 'all' });
   //   const [query, setQuery] = useState('');
   interface Item {
@@ -88,7 +89,6 @@ export const Auction = (): JSX.Element => {
   const [goldAllowance, setGoldAllowance] = useState<bigint | null>(null);
   const [itemAllowance, setItemAllowance] = useState<boolean | null>(null);
   const [auctionContractAddress, setAuctionContractAddress] = useState('');
-  const [orders, setOrders] = useState<Order[] | null>(null);
 
   const {
     components: {
@@ -110,106 +110,36 @@ export const Auction = (): JSX.Element => {
     UltimateDominionConfig,
     singletonEntity,
   ) ?? { items: null };
-  const _sell = async function (
-    wanted: Item | number,
-    offered: Item | number,
-    purchaser: Character,
-    amount: bigint,
-  ) {
-    return await worldContract.write.UD__createOrder([
-      {
-        signature: '' as Address,
-        offerer: purchaser.owner as Address,
-        offer: {
-          tokenType: typeof offered === 'number' ? 1 : 2,
-          token:
-            typeof offered === 'number'
-              ? (goldToken as Address)
-              : (itemsContract as Address),
-          identifier:
-            typeof offered === 'number' ? 0n : BigInt(offered.TokenId),
-          amount: typeof offered === 'number' ? offered : amount,
-        },
-        consideration: {
-          tokenType: typeof wanted === 'number' ? 1 : 2,
-          token:
-            typeof wanted === 'number'
-              ? (goldToken as Address)
-              : (itemsContract as Address),
-          identifier: typeof wanted === 'number' ? 0n : BigInt(wanted.TokenId),
-          amount: typeof wanted === 'number' ? wanted : amount,
-          recipient: purchaser.owner as Address,
-        },
-      },
-    ]);
-  };
-  const sellItem = async function (
-    tokenId: string,
-    amount: string,
-    price: string,
-  ) {
-    if (
-      goldAllowance == null ||
-      goldAllowance < BigInt(price) * BigInt(amount)
-    ) {
-      renderError('Approve more funds in your wallet details');
-    } else if (items && userCharacter) {
-      _sell(
-        Number(price),
-        items.filter(x => x.TokenId == tokenId)[0],
-        userCharacter,
-        BigInt(amount),
-      );
-    }
-  };
-  // const orderItem = async function (
-  //   tokenId: string,
-  //   amount: string,
-  //   price: string,
-  // ) {
-  //   if (goldAllowance == null || goldAllowance < price * amount) {
-  //     renderError('Approve more funds in your wallet details');
-  //   } else if (items && userCharacter) {
-  //     _sell(
-  //       items.filter(x => x.TokenId == tokenId)[0],
-  //       Number(price),
-  //       userCharacter,
-  //       BigInt(amount),
-  //     );
-  //   }
-  // };
+
   const fetchOrders = useCallback(async () => {
-    setOrders(
-      await Promise.all(
-        Array.from(runQuery([Has(Offers)])).map(async orderHash => {
-          const offerData = await worldContract.read.UD__getOffer([
-            orderHash as Address,
-          ]);
-          const considerationData =
-            await worldContract.read.UD__getConsideration([
-              orderHash as Address,
-            ]);
-          const orderStatus = await worldContract.read.UD__getOrderStatus([
-            orderHash as Address,
-          ]);
-          return {
-            orderHash: orderHash.toString(),
-            orderStatus: orderStatus.toString(),
-            offer: {
-              amount: offerData.amount.toString(),
-              identifier: offerData.identifier.toString(),
-              token: offerData.token.toString(),
-              tokenType: offerData.tokenType.toString(),
-            } as OfferData,
-            consideration: {
-              amount: considerationData.amount.toString(),
-              identifier: considerationData.identifier.toString(),
-              token: considerationData.token.toString(),
-              tokenType: considerationData.tokenType.toString(),
-            } as ConsiderationData,
-          } as Order;
-        }),
-      ),
+    await Promise.all(
+      Array.from(runQuery([Has(Offers)])).map(async orderHash => {
+        const offerData = await worldContract.read.UD__getOffer([
+          orderHash as Address,
+        ]);
+        const considerationData = await worldContract.read.UD__getConsideration(
+          [orderHash as Address],
+        );
+        const orderStatus = await worldContract.read.UD__getOrderStatus([
+          orderHash as Address,
+        ]);
+        return {
+          orderHash: orderHash.toString(),
+          orderStatus: orderStatus.toString(),
+          offer: {
+            amount: offerData.amount.toString(),
+            identifier: offerData.identifier.toString(),
+            token: offerData.token.toString(),
+            tokenType: offerData.tokenType.toString(),
+          } as OfferData,
+          consideration: {
+            amount: considerationData.amount.toString(),
+            identifier: considerationData.identifier.toString(),
+            token: considerationData.token.toString(),
+            tokenType: considerationData.tokenType.toString(),
+          } as ConsiderationData,
+        } as Order;
+      }),
     );
   }, [Offers, worldContract.read]);
   const fetchItems = useCallback(async () => {
@@ -323,7 +253,8 @@ export const Auction = (): JSX.Element => {
       setAuctionContractAddress(
         await worldContract.read.UD__auctionHouseAddress(),
       );
-      if (goldAllowance == null && auctionContractAddress && userCharacter) {
+
+      if (auctionContractAddress && userCharacter) {
         setGoldAllowance(
           await publicClient.readContract({
             address: goldToken as Address,
@@ -366,92 +297,140 @@ export const Auction = (): JSX.Element => {
   ]);
   return (
     <Stack>
-      <Text>1. Display all weapons and armor. (Name, image, stats)</Text>
-      <Grid
-        templateColumns="repeat(4, 1fr)"
-        templateRows="repeat(1, 4fr)"
-        gap={1}
-      >
-        {items?.map((item, i) => (
-          <GridItem key={'weapon-' + i} colSpan={1} border="solid 1px">
-            <Text>
-              Name: {item[ItemType[item.ItemType] as keyof Item]?.name}
-            </Text>
-            <Text>Type: {ItemType[item.ItemType]}</Text>
-            <Text>
-              Image: {item[ItemType[item.ItemType] as keyof Item]?.image}
-            </Text>
-            <Text>
-              Description:{' '}
-              {item[ItemType[item.ItemType] as keyof Item]?.description}
-            </Text>
-          </GridItem>
-        ))}
-      </Grid>
-      <Text>2. Popup if Gold/Item allowance is too low </Text>
-      {goldAllowance != null && (
-        <Text>Gold Allowance: {goldAllowance.toString()} </Text>
-      )}
-      {itemAllowance != null && (
-        <Text>Item Allowance: {itemAllowance.toString()} </Text>
-      )}
+      {items &&
+        Object.values(ItemType)
+          .filter(key => !isNaN(Number(ItemType[key])))
+          .filter(
+            key =>
+              items?.filter(item => item.ItemType == ItemType[key])?.length > 0,
+          )
+          .sort()
+          .map((k, i) => {
+            return (
+              <Stack key={i}>
+                <Text size={{ base: 'lg', lg: 'xl' }} fontWeight="bold" my={5}>
+                  {k == 'Armor' ? `${k}` : `${k}s`}
+                </Text>
+                <Flex justify="space-between" w="100%">
+                  <Text>
+                    {
+                      items?.filter(item => item.ItemType == ItemType[k])
+                        ?.length
+                    }{' '}
+                    Items
+                  </Text>
 
-      <Text>3. Place order (weapon/armor and price) </Text>
-      <Text>
-        {Array.from(
-          runQuery([
-            Has(ItemsOwners),
-            HasValue(ItemsOwners, { owner: userCharacter?.owner }),
-          ]),
-        )}
-      </Text>
-
-      {items && (
-        <Button
-          onClick={() =>
-            sellItem(items[0].TokenId, '1', parseEther('1').toString())
-          }
-        >
-          Order
-        </Button>
-      )}
-
-      <Text>4. Display Orders (weapon/armor and price) </Text>
-      <Grid
-        templateColumns="repeat(1, 1fr)"
-        templateRows="repeat(1, 4fr)"
-        gap={1}
-      >
-        {orders?.map((order, i) => (
-          <GridItem key={'orders-' + i} colSpan={1} border="solid 1px">
-            <Text>Hash: {order.orderHash}</Text>
-            <Text>
-              Status:{' '}
-              {['canceled', 'active', 'fulfilled'][Number(order.orderStatus)]}
-            </Text>
-            <Text>
-              Looking for: {order.consideration.amount}
-              {order.consideration.token == goldToken
-                ? ' $GOLD'
-                : items?.find(
-                    item => item.TokenId == order.consideration.identifier,
-                  )?.Weapon?.name ||
-                  items?.find(
-                    item => item.TokenId == order.consideration.identifier,
-                  )?.Armor?.name}
-            </Text>
-            <Text>
-              Offering:{' '}
-              {order.offer.token == goldToken
-                ? 'Gold'
-                : items?.find(item => item.TokenId == order.offer.identifier)
-                    ?.Weapon?.name ||
-                  items?.find(item => item.TokenId == order.offer.identifier)
-                    ?.Armor?.name}
-            </Text>
-          </GridItem>
-        ))}
-      </Grid>
+                  <HStack>
+                    <HStack
+                      w={{
+                        base: '130px',
+                        sm: '215px',
+                        md: '300px',
+                        lg: '450px',
+                      }}
+                    >
+                      <Button
+                        display={{ base: 'none', lg: 'flex' }}
+                        // fontWeight={sort.sorted == 'byStats' ? 'bold' : 'normal'}
+                        // onClick={() =>
+                        //   setSort({
+                        //     sorted: 'byStats',
+                        //     reversed: !sort.reversed,
+                        //   })
+                        // }
+                        p={1}
+                        size={{ base: '2xs', lg: 'sm' }}
+                        variant="ghost"
+                        w="100%"
+                      >
+                        <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
+                          Floor Price
+                        </Text>
+                        {/* {sort.sorted == 'byStats' && sort.reversed && <FaSortAmountUp />}
+              {sort.sorted == 'byStats' && !sort.reversed && (
+                <FaSortAmountDown />
+              )}
+              {sort.sorted != 'byStats' && <FaSortAmountDown color="grey" />} */}
+                      </Button>
+                      <Button
+                        // fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
+                        // onClick={() =>
+                        //   setSort({
+                        //     sorted: 'byLevel',
+                        //     reversed: !sort.reversed,
+                        //   })
+                        // }
+                        p={1}
+                        size={{ base: '2xs', lg: 'sm' }}
+                        variant="ghost"
+                        w="100%"
+                      >
+                        <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
+                          Level
+                        </Text>
+                        {/* {sort.sorted == 'byLevel' && sort.reversed && <FaSortAmountUp />}
+              {sort.sorted == 'byLevel' && !sort.reversed && (
+                <FaSortAmountDown />
+              )}
+              {sort.sorted != 'byLevel' && <FaSortAmountDown color="grey" />} */}
+                      </Button>
+                      <Button
+                        // fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
+                        // onClick={() =>
+                        //   setSort({
+                        //     sorted: 'byGold',
+                        //     reversed: !sort.reversed,
+                        //   })
+                        // }
+                        p={1}
+                        size={{ base: '2xs', lg: 'sm' }}
+                        variant="ghost"
+                        w="100%"
+                      >
+                        <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
+                          Class
+                        </Text>
+                        {/* {sort.sorted == 'byGold' && sort.reversed && <FaSortAmountUp />}
+              {sort.sorted == 'byGold' && !sort.reversed && (
+                <FaSortAmountDown />
+              )}
+              {sort.sorted != 'byGold' && <FaSortAmountDown color="grey" />} */}
+                      </Button>
+                    </HStack>
+                    <Box display={{ base: 'none', md: 'block' }} w="50px" />
+                  </HStack>
+                </Flex>
+                <Grid
+                  templateColumns="repeat(1, 1fr)"
+                  templateRows="repeat(1, 4fr)"
+                  gap={1}
+                  my={5}
+                >
+                  {items
+                    ?.filter(x => x.ItemType == ItemType[k])
+                    ?.map((item, i) => {
+                      const _item = item[ItemType[item.ItemType] as keyof Item];
+                      return (
+                        <GridItem key={'orders-' + i} colSpan={1}>
+                          <AuctionRow
+                            emoji={(_item?.name as string).match(
+                              /[\p{Emoji}\u200d]+/gu,
+                            )}
+                            baseHp={_item?.hitPointModifier}
+                            strength={_item?.strModifier}
+                            agility={_item?.agiModifier}
+                            intelligence={_item?.intModifier}
+                            itemId={_item?.tokenId}
+                            floor={1}
+                            high={2}
+                          ></AuctionRow>
+                        </GridItem>
+                      );
+                    })}
+                </Grid>
+              </Stack>
+            );
+          })}
     </Stack>
   );
 };

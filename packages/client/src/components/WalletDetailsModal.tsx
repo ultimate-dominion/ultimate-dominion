@@ -235,7 +235,7 @@ export const WalletDetailsModal = ({
   ]);
   const onGoldAllowance = useCallback(async () => {
     try {
-      if (!(externalWalletBalance && externalWalletClient)) {
+      if (!externalWalletClient) {
         throw new Error('No external wallet client found.');
       }
 
@@ -263,7 +263,6 @@ export const WalletDetailsModal = ({
       setIsApprovingGold(false);
     }
   }, [
-    externalWalletBalance,
     externalWalletClient,
     goldAllowance,
     goldToken,
@@ -274,7 +273,7 @@ export const WalletDetailsModal = ({
   ]);
   const onItemsApproved = useCallback(async () => {
     try {
-      if (!(externalWalletBalance && externalWalletClient)) {
+      if (!externalWalletClient) {
         throw new Error('No external wallet client found.');
       }
 
@@ -297,7 +296,6 @@ export const WalletDetailsModal = ({
       setIsApprovingItems(false);
     }
   }, [
-    externalWalletBalance,
     externalWalletClient,
     itemAllowed,
     itemsContract,

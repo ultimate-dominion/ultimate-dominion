@@ -9,6 +9,7 @@ import { Auction } from './pages/Auction';
 import { CharacterPage } from './pages/Character';
 import { CharacterCreation } from './pages/CharacterCreation';
 import { GameBoard } from './pages/GameBoard';
+import { Item } from './pages/Item';
 import { Leaderboard } from './pages/Leaderboard';
 import { Welcome } from './pages/Welcome';
 
@@ -17,6 +18,7 @@ export const CHARACTER_CREATION_PATH = '/character-creation';
 export const GAME_BOARD_PATH = '/game-board';
 export const LEADERBOARD_PATH = '/leaderboard';
 export const AUCTION_PATH = '/auction';
+export const ITEM_PATH = '/item/:itemId';
 
 const AppRoutes: React.FC = () => {
   const { pathname } = useLocation();
@@ -50,6 +52,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/characters/:characterId" element={<CharacterPage />} />
       <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
       <Route path={AUCTION_PATH} element={<Auction />} />
+      <Route path={ITEM_PATH} element={<Item />} />
     </Routes>
   );
 };
