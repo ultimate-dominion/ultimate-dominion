@@ -83,6 +83,23 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
     }
 
+    function test_resupplyLootManager() public {
+        uint256 tokenId = 1;
+        uint256 resupplyAmount = 100;
+        uint256 startingSupply = world.UD__getTotalSupply(tokenId);
+
+        vm.prank(deployer);
+        world.UD__resupplyLootManager(tokenId, resupplyAmount);
+        uint256 endingSupply = world.UD__getTotalSupply(tokenId);
+        assertEq(endingSupply, resupplyAmount + startingSupply);
+    }
+
+    function test_resupplyLootManager_Revert_NoAccess() public {
+        vm.expectRevert();
+        vm.prank(bob);
+        world.UD__resupplyLootManager(1, 1000);
+    }
+
     function test_GetTotalSupply() public {
         uint8[] memory restrictions = new uint8[](0);
         WeaponStats memory weaponStats = WeaponStats({

@@ -41,10 +41,6 @@ import {
 import "forge-std/console2.sol";
 
 contract ItemsSystem is System {
-    function _items() internal view returns (IERC1155System items) {
-        items = IERC1155System(UltimateDominionConfig.getItems());
-    }
-
     function createItem(
         ItemType itemType,
         uint256 supply,
@@ -52,6 +48,7 @@ contract ItemsSystem is System {
         bytes memory stats,
         string memory itemMetadataURI
     ) public returns (uint256) {
+        _requireAccess(address(this), _msgSender());
         uint256 itemId = _incrementItemsCounter();
         // create new item struct
         ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, stats: stats});
@@ -77,6 +74,7 @@ contract ItemsSystem is System {
     }
 
     function resupplyLootManager(uint256 itemId, uint256 newSupply) public {
+        _requireAccess(address(this), _msgSender());
         require(getTotalSupply(itemId) != 0, "No existing supply");
         // mint supply to lootManager contract
         IWorld(_world()).call(
@@ -147,6 +145,10 @@ contract ItemsSystem is System {
 
     function isItemOwner(uint256 itemId, address account) public view returns (bool) {
         return Owners.getBalance(_ownersTableId(ITEMS_NAMESPACE), account, itemId) > 0;
+    }
+
+    function _items() internal view returns (IERC1155System items) {
+        items = IERC1155System(UltimateDominionConfig.getItems());
     }
 
     // function getArmourStats(uint256 itemId)public view returns(){}
