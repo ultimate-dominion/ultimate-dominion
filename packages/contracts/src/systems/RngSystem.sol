@@ -2,15 +2,23 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {RandomNumbers} from "@codegen/index.sol";
 import {
-    Characters, Counters, Stats, UltimateDominionConfig, StatsData, RngLogs, RngLogsData
+    RandomNumbers,
+    RandomNumbersData,
+    Characters,
+    Counters,
+    Stats,
+    UltimateDominionConfig,
+    StatsData,
+    RngLogs,
+    RngLogsData,
+    CombatEncounter
 } from "@codegen/index.sol";
-import {Classes, RngRequestType} from "@codegen/common.sol";
+import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
-import {IWorld, ICombatSystem} from "@world/IWorld.sol";
+import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import "forge-std/console2.sol";
@@ -41,6 +49,9 @@ contract RngSystem is System, IEntropyConsumer {
         payable
         returns (uint64 sequenceNumber)
     {
+        RandomNumbersData memory randomNumberData;
+        randomNumberData.arbitraryData = data;
+        randomNumberData.requestType = requestType;
         // NOTE: required for testing, since callback is coming before data is stored
         /////////////// TODO: remove for mainnet deployment //////
         if (block.chainid == 31337) {
@@ -48,8 +59,8 @@ contract RngSystem is System, IEntropyConsumer {
                 abi.encodeWithSelector(IEntropy.request.selector, _provider(), userRandomNumber, false)
             );
             uint64 _sequenceNumber = abi.decode(returnData, (uint64));
-            RandomNumbers.setArbitraryData(_sequenceNumber, data);
-            RandomNumbers.setRequestType(_sequenceNumber, requestType);
+
+            RandomNumbers.set(_sequenceNumber, randomNumberData);
         }
         /////////////////////////////////////////
 
@@ -76,14 +87,13 @@ contract RngSystem is System, IEntropyConsumer {
         uint256 rng;
         uint256 timesCalled;
         if (block.chainid == 31337) {
-            rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled) ** 8)));
+            rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled + 1234567) ** 8)));
             timesCalled++;
         } else {
-            rng = block.prevrandao;
+            rng = uint256(keccak256(abi.encode(block.prevrandao, userRandomNumber)));
         }
 
-        RandomNumbers.setArbitraryData(sequenceNumber, data);
-        RandomNumbers.setRequestType(sequenceNumber, requestType);
+        RandomNumbers.set(sequenceNumber, randomNumberData);
 
         entropyCallback(sequenceNumber, address(0), bytes32(rng));
     }
@@ -96,11 +106,11 @@ contract RngSystem is System, IEntropyConsumer {
         address, /*_providerAddress*/
         bytes32 randomNumber
     ) internal override {
-        _storeFullfilment(sequenceNumber, uint256(randomNumber));
+        _fullfillEntropy(sequenceNumber, uint256(randomNumber));
         emit RNGFulfilled(randomNumber);
     }
 
-    function _storeFullfilment(uint64 sequenceNumber, uint256 randomNumber) internal {
+    function _fullfillEntropy(uint64 sequenceNumber, uint256 randomNumber) internal {
         RngRequestType requestType = RandomNumbers.getRequestType(sequenceNumber);
         bytes memory _data = RandomNumbers.getArbitraryData(sequenceNumber);
 
@@ -112,14 +122,25 @@ contract RngSystem is System, IEntropyConsumer {
         } else if (uint8(requestType) == uint8(1)) {
             (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
             require(moves.length > 0, "RNG: Invalid moves");
-            _executeCombat(randomNumber, encounterId, moves);
+            EncounterType encounterType = CombatEncounter.getEncounterType(encounterId);
+            if (encounterType == EncounterType.PvE) {
+                _executePvECombat(randomNumber, encounterId, moves);
+            } else if (encounterType == EncounterType.PvP) {
+                _executePvPCombat(randomNumber, encounterId, moves);
+            } else {
+                revert("RNG: Unrecognized Combat Type");
+            }
         } else {
             revert("RNG: Unrecognized request type");
         }
     }
 
-    function _executeCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
-        SystemSwitch.call(abi.encodeCall(ICombatSystem.UD__executeCombat, (randomNumber, encounterId, moves)));
+    function _executePvECombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
+        SystemSwitch.call(abi.encodeCall(IPvESystem.UD__executePvECombat, (randomNumber, encounterId, moves)));
+    }
+
+    function _executePvPCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
+        SystemSwitch.call(abi.encodeCall(IPvPSystem.UD__executePvPCombat, (randomNumber, encounterId, moves)));
     }
 
     function _storeStats(uint256 randomNumber, bytes32 characterId) internal {

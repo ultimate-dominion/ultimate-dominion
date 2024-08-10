@@ -58,8 +58,11 @@ contract Test_MobSystem is SetUp, GasReporter {
         vm.startPrank(deployer);
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;
+        bytes32[] memory _actions = new bytes32[](1);
+        _actions[0] = 0x8e4790c4376784a8480f4c5c2ef75e690c34f7175ad627d12a16d71037369861;
 
         MonsterStats memory newMonster = MonsterStats({
+            actions: _actions,
             agility: 1,
             armor: 1,
             class: Classes.Warrior,

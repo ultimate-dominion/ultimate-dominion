@@ -95,16 +95,22 @@ contract LootManagerSystem is System {
         internal
         returns (uint256[] memory)
     {
+        console2.log("Calculating item drop");
         uint256 mobId = IWorld(_world()).UD__getMobId(entityId);
         MonsterStats memory monsterStats = abi.decode(Mobs.getMobStats(mobId), (MonsterStats));
+
         uint256[] memory itemIdsDropped = new uint256[](monsterStats.inventory.length);
         uint256 totalItemsDropped;
+        uint256 tempItemId;
         // drop items
         for (uint256 i; i < monsterStats.inventory.length; i++) {
-            uint256 dropChance = Items.getDropChance(monsterStats.inventory[i]);
-            if (randomNumber % 100_000 > dropChance) {
-                IWorld(_world()).UD__dropItem(characterId, monsterStats.inventory[i], 1);
-                itemIdsDropped[i] = monsterStats.inventory[i];
+            tempItemId = monsterStats.inventory[i];
+            uint256 dropChance = Items.getDropChance(tempItemId);
+
+            if (randomNumber % 100_000_000 > dropChance) {
+                console2.log("ITEM DROPPED", tempItemId);
+                IWorld(_world()).UD__dropItem(characterId, tempItemId, 1);
+                itemIdsDropped[i] = tempItemId;
                 totalItemsDropped++;
             }
         }
@@ -127,7 +133,14 @@ contract LootManagerSystem is System {
         return itemsDropped;
     }
 
-    function distributeRewards(bytes32 encounterId, uint256 randomNumber)
+    function distributePvpRewards(bytes32 encounterId, uint256 randomNumber)
+        public
+        returns (uint256 _expAmount, uint256 _goldAmount, uint256[] memory _itemIdsDropped)
+    {
+        _requireAccess(address(this), _msgSender());
+    }
+
+    function distributePveRewards(bytes32 encounterId, uint256 randomNumber)
         public
         returns (uint256 _expAmount, uint256 _goldAmount, uint256[] memory _itemIdsDropped)
     {
@@ -138,9 +151,6 @@ contract LootManagerSystem is System {
         require(encounterData.end != 0 && encounterData.rewardsDistributed == false, "Invalid Match");
 
         // check dead attackers and defenders
-        distTemps.cumulativeAttackerLevels;
-        distTemps.livingAttackers;
-
         StatsData memory statsTemp;
 
         for (uint256 i; i < encounterData.attackers.length; i++) {
@@ -153,35 +163,35 @@ contract LootManagerSystem is System {
 
         //if cumulative attacker levels is >= 5 levels above the monster level no gold reward.
         //  for this calculation level is calculated from exp not from actual leveled levels
-        distTemps.defenderTemp;
+
         bytes[] memory itemsDroppedTemp = new bytes[](encounterData.defenders.length);
-        distTemps.totalItemsDropped;
+
         for (uint256 i; i < encounterData.defenders.length; i++) {
             distTemps.defenderTemp = encounterData.defenders[i];
-            if (MatchEntity.getDied(distTemps.defenderTemp)) {
+            distTemps.defenderLevelTemp = Stats.getLevel(distTemps.defenderTemp);
+            bool correctLevelSpread = distTemps.defenderLevelTemp > distTemps.cumulativeAttackerLevels
+                ? true
+                : (distTemps.cumulativeAttackerLevels - distTemps.defenderLevelTemp) <= 5;
+
+            if (MatchEntity.getDied(distTemps.defenderTemp) && correctLevelSpread) {
                 _expAmount += Stats.getExperience(distTemps.defenderTemp);
                 _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
                 MatchEntity.setEncounterId(distTemps.defenderTemp, bytes32(0));
 
                 // get dropped items into temporary array
-                uint256[] memory itemsCalc = _calculateItemDrop(
+
+                _itemIdsDropped = _calculateItemDrop(
                     randomNumber,
                     distTemps.defenderTemp,
                     encounterData.attackers[randomNumber % encounterData.attackers.length]
                 );
-                // add length to total items
-                distTemps.totalItemsDropped += itemsCalc.length;
-                // encode and add to items dropped array
-                itemsDroppedTemp[i] = abi.encode(itemsCalc);
             }
         }
-
-        _itemIdsDropped = _trimDroppedItemIds(distTemps.totalItemsDropped, itemsDroppedTemp);
 
         // drop gold reward calculated from the level of mob to player journey wallet (can mint tokens when he returns to 0,0).
         // if dead player, drop transfer 50% of un-banked gold to world contract
         // distribute loot
-        distTemps.entityIdTemp;
+
         for (uint256 i; i < encounterData.attackers.length; i++) {
             distTemps.entityIdTemp = encounterData.attackers[i];
             if (IWorld(_world()).UD__isValidCharacterId(distTemps.entityIdTemp)) {

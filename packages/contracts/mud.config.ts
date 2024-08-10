@@ -122,6 +122,13 @@ export default defineWorld({
         equippedSpells: "bytes32[]",
       },
     },
+    PvPFlag: {
+      key: ["entityId"],
+      schema: {
+        entityId: "bytes32",
+        pvpFlag: "bool",
+      },
+    },
     Counters: {
       schema: {
         contractAddress: "address",
@@ -189,9 +196,15 @@ export default defineWorld({
       },
       key: ["encounterId"],
     },
-
+    EncounterRandomness: {
+      key: ["encounterId"],
+      schema: {
+        encounterId: "bytes32",
+        currentRandomness: "uint256",
+      },
+    },
     // when an entity starts combat it creates a "match entity" for that encounter.
-    //when combat ends, the encounterId is set to zero, and the damage taken subtracted from the entities hp.
+    //when combat ends, the encounterId is set to zero
     MatchEntity: {
       key: ["matchEntityId"],
       schema: {
@@ -199,7 +212,6 @@ export default defineWorld({
         // by default this is bytes(0), if this entity is in an encounter it will be set,
         // if the mob survives its encounter this will be set back to bytes(0)
         encounterId: "bytes32",
-        damageTaken: "int256",
         died: "bool",
       },
     },
@@ -207,7 +219,7 @@ export default defineWorld({
       key: ["sequenceNumber"],
       schema: {
         sequenceNumber: "uint64",
-        RequestType: "RngRequestType",
+        requestType: "RngRequestType",
         arbitraryData: "bytes",
       },
     },
@@ -325,6 +337,7 @@ export default defineWorld({
       schema: {
         encounterId: "bytes32",
         endTime: "uint256",
+        attackersWin: "bool",
         expDropped: "uint256",
         goldDropped: "uint256",
         itemsDropped: "uint256[]",

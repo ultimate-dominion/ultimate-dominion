@@ -36,6 +36,16 @@ struct StarterItems {
     WeaponTemplateDetails[] weapons;
 }
 
+struct StarterActions {
+    PhysicalAttackTemplate[] physicalAttacks;
+}
+
+struct PhysicalAttackTemplate {
+    bytes32 actionId;
+    string name;
+    PhysicalAttackStats stats;
+}
+
 struct ArmorStats {
     int256 agiModifier;
     uint256 armorModifier;
@@ -47,6 +57,8 @@ struct ArmorStats {
 }
 
 struct MonsterStats {
+    // availible action ids
+    bytes32[] actions;
     //base to hit number for this mob for physical attacks = agility * physicalAttackConversion
     uint256 agility;
     // damage reduction: subtracted from total damage
@@ -81,19 +93,18 @@ struct AdjustedCombatStats {
     uint256 adjustedMaxHp;
     int256 currentHp;
     uint256 level;
-    uint256 class;
 }
 
 struct PhysicalAttackStats {
-    // additional damage on top of item damage
-    int256 bonusDamage;
     // base armor penetration
     int256 armorPenetration;
     //bonus chance to hit
     int256 attackModifierBonus;
+    // additional damage on top of item damage
+    int256 bonusDamage;
+    uint8[] classRestrictions;
     // crit chance
     int256 critChanceBonus;
-    uint8[] classRestrictions;
 }
 
 struct Action {
@@ -128,6 +139,7 @@ struct QuestEntity {
 struct RewardDistributionTemps {
     bytes32 defenderTemp;
     bytes32 entityIdTemp;
+    uint256 defenderLevelTemp;
     uint256 totalItemsDropped;
     uint256 livingAttackers;
     uint256 cumulativeAttackerLevels;
