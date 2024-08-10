@@ -33,7 +33,7 @@ import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import { useCallback, useEffect, useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Address, erc20Abi, parseEther } from 'viem';
+import { Address, erc20Abi, formatEther, maxUint256, parseEther } from 'viem';
 import { useWalletClient } from 'wagmi';
 
 import { ItemCard } from '../components/ItemCard';
@@ -113,6 +113,8 @@ export const Item = (): JSX.Element => {
     recipient: string;
   }
   const { character: userCharacter } = useCharacter();
+  const [floor, setFloor] = useState(maxUint256);
+  const [ceiling, setCeiling] = useState(0n);
   const [isSelling, setIsSelling] = useState(false);
   const [offerAmount, setOfferAmount] = useState(1);
   const [offerPrice, setOfferPrice] = useState(1);
@@ -159,43 +161,43 @@ export const Item = (): JSX.Element => {
     }
     try {
       setIsSelling(true);
-
+      const args = [
+        {
+          signature: '' as Address,
+          offerer: purchaser.owner as Address,
+          offer: {
+            tokenType: typeof offered === 'bigint' ? 1 : 3,
+            token:
+              typeof offered === 'bigint'
+                ? (goldToken as Address)
+                : (itemsContract as Address),
+            identifier:
+              typeof offered === 'bigint'
+                ? 0n
+                : BigInt((offered as Item).TokenId),
+            amount: typeof offered === 'bigint' ? offered : amount,
+          },
+          consideration: {
+            tokenType: typeof wanted === 'bigint' ? 1 : 3,
+            token:
+              typeof wanted === 'bigint'
+                ? (goldToken as Address)
+                : (itemsContract as Address),
+            identifier:
+              typeof wanted === 'bigint'
+                ? 0n
+                : BigInt((wanted as Item).TokenId),
+            amount: typeof wanted === 'bigint' ? wanted : amount,
+            recipient: purchaser.owner as Address,
+          },
+        },
+      ];
       const { request } = await publicClient.simulateContract({
         address: worldContract.address,
         abi: worldAbi,
         functionName: 'UD__createOrder',
         account: externalWalletClient.account,
-        args: [
-          {
-            signature: '' as Address,
-            offerer: purchaser.owner as Address,
-            offer: {
-              tokenType: typeof offered === 'number' ? 1 : 2,
-              token:
-                typeof offered === 'number'
-                  ? (goldToken as Address)
-                  : (itemsContract as Address),
-              identifier:
-                typeof offered === 'number'
-                  ? 0n
-                  : BigInt((offered as Item).TokenId),
-              amount: typeof offered === 'number' ? offered : amount,
-            },
-            consideration: {
-              tokenType: typeof wanted === 'number' ? 1 : 2,
-              token:
-                typeof wanted === 'number'
-                  ? (goldToken as Address)
-                  : (itemsContract as Address),
-              identifier:
-                typeof wanted === 'number'
-                  ? 0n
-                  : BigInt((wanted as Item).TokenId),
-              amount: typeof wanted === 'number' ? wanted : amount,
-              recipient: purchaser.owner as Address,
-            },
-          },
-        ],
+        args: args,
       });
       await externalWalletClient?.writeContract(request);
       renderSuccess('Order placed successfully!');
@@ -211,14 +213,14 @@ export const Item = (): JSX.Element => {
   ) {
     if (
       !params.itemId ||
-      goldAllowance == null ||
-      goldAllowance <
-        parseEther(price.toString()) * parseEther(amount.toString())
+      inventory == null ||
+      !inventory[0].Balance ||
+      Number(amount) > inventory[0].Balance
     ) {
-      renderError('Approve more funds in your wallet details');
+      renderError('You do not have enough items to sell');
     } else if (items && userCharacter) {
       _sell(
-        Number(price),
+        parseEther(price.toString()),
         items.filter(x => x.TokenId == params.itemId)[0],
         userCharacter,
         BigInt(amount),
@@ -229,13 +231,13 @@ export const Item = (): JSX.Element => {
     if (
       !params.itemId ||
       goldAllowance == null ||
-      goldAllowance < BigInt(price) * BigInt(amount)
+      goldAllowance < parseEther(price.toString())
     ) {
       renderError('Approve more funds in your wallet details');
     } else if (items && userCharacter) {
       _sell(
         items.filter(x => x.TokenId == params.itemId)[0],
-        Number(price),
+        parseEther(price.toString()),
         userCharacter,
         BigInt(amount),
       );
@@ -316,6 +318,25 @@ export const Item = (): JSX.Element => {
           const orderStatus = await worldContract.read.UD__getOrderStatus([
             orderHash as Address,
           ]);
+          if (considerationData.token == goldToken) {
+            setFloor(
+              BigInt(
+                considerationData.amount / offerData.amount < floor
+                  ? considerationData.amount / offerData.amount
+                  : floor,
+              ),
+            );
+          }
+          if (offerData.token == goldToken) {
+            setCeiling(
+              BigInt(
+                offerData.amount / considerationData.amount > ceiling
+                  ? offerData.amount / considerationData.amount
+                  : ceiling,
+              ),
+            );
+          }
+
           return {
             orderHash: orderHash.toString(),
             orderStatus: orderStatus.toString(),
@@ -336,7 +357,7 @@ export const Item = (): JSX.Element => {
         }),
       ),
     );
-  }, [Offers, worldContract.read]);
+  }, [Offers, ceiling, floor, goldToken, worldContract.read]);
   const fetchItems = useCallback(async () => {
     const _items = Array.from(runQuery([Has(ItemsOwners)]))
       .map(entity => {
@@ -575,7 +596,29 @@ export const Item = (): JSX.Element => {
                     <Text>INT</Text>
                   </GridItem>
                 </Skeleton>
-              )}
+              )}{' '}
+              <GridItem>
+                <HStack>
+                  <Text>Floor Price</Text>
+                  <Spacer></Spacer>
+                  <Text>
+                    {formatEther(floor.toString()).toString() == '0'
+                      ? 'not enough data'
+                      : formatEther(floor.toString()).toString()}
+                  </Text>
+                </HStack>
+              </GridItem>
+              <GridItem>
+                <HStack>
+                  <Text>Cieling Price</Text>
+                  <Spacer></Spacer>
+                  <Text>
+                    {formatEther(ceiling.toString()).toString() == '0'
+                      ? 'not enough data'
+                      : formatEther(ceiling.toString()).toString()}
+                  </Text>
+                </HStack>
+              </GridItem>{' '}
             </Grid>
             <Spacer></Spacer>
             <Stack>
@@ -603,12 +646,12 @@ export const Item = (): JSX.Element => {
               </Stack>
               <Button
                 w="100%"
-                onClick={() => orderItem(offerPrice, offerAmount)}
+                onClick={() => orderItem(offerAmount, offerPrice)}
                 isLoading={isSelling}
                 size="sm"
                 variant="solid"
               >
-                Offer {offerPrice * offerAmount} $GOLD for {offerAmount} item
+                Offer {offerPrice} $GOLD for {offerAmount} item
               </Button>
             </Stack>
           </GridItem>
@@ -637,7 +680,9 @@ export const Item = (): JSX.Element => {
                               from={order.consideration.recipient}
                               orderHash={order.orderHash}
                               offer={Number(order.offer.amount)}
-                              consideration={order.consideration.amount}
+                              consideration={formatEther(
+                                order.consideration.amount,
+                              )}
                               considerationItem={'$GOLD'}
                               offerItem={items[0][itemType]?.name.replace(
                                 /[\p{Emoji}\u200d]+/gu,
@@ -661,14 +706,14 @@ export const Item = (): JSX.Element => {
                               item.consideration.token == itemsContract &&
                               item.consideration.identifier == params.itemId,
                           )
-                          .filter(item => item.orderStatus == 1)
+                          .filter(item => item.orderStatus == '1')
                           .map((order, i) => (
                             <OrderRow
                               key={`order-${i}`}
                               from={order.consideration.recipient}
                               orderHash={order.orderHash}
-                              consideration={Number(order.offer.amount)}
-                              offer={Number(order.consideration.amount)}
+                              consideration={Number(order.consideration.amount)}
+                              offer={formatEther(order.offer.amount).toString()}
                               offerItem={'$GOLD'}
                               considerationItem={items[0][
                                 itemType
@@ -687,6 +732,7 @@ export const Item = (): JSX.Element => {
                       {items != null &&
                       inventory != null &&
                       inventory.length > 0 &&
+                      inventory[0].Balance > 0 &&
                       itemType != null ? (
                         <ItemCard
                           name={items[0][itemType].name}
@@ -704,7 +750,9 @@ export const Item = (): JSX.Element => {
                         ''
                       )}
                       <Center>
-                        {inventory && inventory.length > 0 ? (
+                        {inventory &&
+                        inventory.length > 0 &&
+                        inventory[0]?.Balance > 0 ? (
                           <Avatar
                             name={' '}
                             size="lg"
@@ -723,7 +771,9 @@ export const Item = (): JSX.Element => {
                       </Center>
                     </Stack>
                   </Center>
-                  {inventory && inventory.length > 0 ? (
+                  {inventory &&
+                  inventory.length > 0 &&
+                  inventory[0].Balance > 0 ? (
                     <Stack>
                       <Stack direction="row" mb={2} mt={8} w="100%">
                         <InputGroup size="lg" w="100%">
@@ -754,16 +804,16 @@ export const Item = (): JSX.Element => {
                         w="100%"
                         onClick={() =>
                           sellItem(
-                            listingPrice.toString(),
                             listingAmount.toString(),
+                            listingPrice.toString(),
                           )
                         }
                         isLoading={isSelling}
                         size="sm"
                         variant="solid"
                       >
-                        List {listingAmount} of your item for{' '}
-                        {listingPrice * listingAmount} $GOLD
+                        List {listingAmount} of your item for {listingPrice}{' '}
+                        $GOLD
                       </Button>
                     </Stack>
                   ) : (

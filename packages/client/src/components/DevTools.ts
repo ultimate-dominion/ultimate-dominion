@@ -3,6 +3,7 @@ import auctionSystemAbi from 'contracts/out/AuctionSystem.sol/AuctionSystem.abi.
 import characterSystemAbi from 'contracts/out/CharacterSystem.sol/CharacterSystem.abi.json';
 import combatSystemAbi from 'contracts/out/CombatSystem.sol/CombatSystem.abi.json';
 import equipmentSystemAbi from 'contracts/out/EquipmentSystem.sol/EquipmentSystem.abi.json';
+import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import mapSystemAbi from 'contracts/out/MapSystem.sol/MapSystem.abi.json';
 import { useEffect, useMemo } from 'react';
 
@@ -20,6 +21,7 @@ export function DevTools(): null {
       ...equipmentSystemAbi,
       ...mapSystemAbi,
       ...auctionSystemAbi,
+      ...worldAbi,
     ],
     [network.worldContract.abi],
   );

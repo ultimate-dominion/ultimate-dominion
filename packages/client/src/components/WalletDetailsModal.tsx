@@ -114,7 +114,7 @@ export const WalletDetailsModal = ({
     string | null
   >(null);
 
-  const [goldAllowance, setGoldAllowance] = useState<string>('1');
+  const [goldAllowance, setGoldAllowance] = useState<string>('100');
   const [isApprovingGold, setIsApprovingGold] = useState(false);
   const [goldErrorMessage, setGoldErrorMessage] = useState<string | null>(null);
 
@@ -135,7 +135,7 @@ export const WalletDetailsModal = ({
     if (isOpen) {
       setDepositAmount('0');
       setWithdrawAmount('0');
-      setGoldAllowance('1');
+      setGoldAllowance('100');
       if (externalWalletClient && itemsApprovedInitial == null) {
         (async function () {
           const auction = await worldContract.read.UD__auctionHouseAddress();

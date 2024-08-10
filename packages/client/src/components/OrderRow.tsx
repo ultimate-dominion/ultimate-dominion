@@ -14,7 +14,6 @@ import { FaTimes } from 'react-icons/fa';
 import { Address } from 'viem';
 import { useWalletClient } from 'wagmi';
 
-import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 
@@ -36,7 +35,6 @@ export const OrderRow = ({
   emoji: string;
   recipient: string;
 }): JSX.Element => {
-  const { character: userCharacter } = useCharacter();
   const { data: externalWalletClient } = useWalletClient();
 
   const {
@@ -124,55 +122,29 @@ export const OrderRow = ({
         </VStack>
       </Flex>
       <HStack>
-        <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
-          {/* <Text
-            display={{ base: 'none', lg: 'block' }}
-            fontWeight={500}
-            size={{ base: 'xs', lg: 'md' }}
-            textAlign="center"
-            w="100%"
+        <Stack display={{ base: 'none', md: 'block' }} w="100px">
+          <Button
+            ml={1}
+            p={3}
+            size="sm"
+            variant="solid"
+            isLoading={isFilling}
+            onClick={() => fillOrder()}
           >
-            {Number(floor).toLocaleString()}
-          </Text>
-          <Text
-            fontWeight={500}
-            size={{ base: 'xs', lg: 'md' }}
-            textAlign="center"
-            w="100%"
+            <BiPurchaseTagAlt />
+          </Button>{' '}
+          <Button
+            ml={1}
+            p={3}
+            size="sm"
+            variant="ghost"
+            backgroundColor="red"
+            color="white"
+            isLoading={isCancelling}
+            onClick={() => cancelOrder()}
           >
-            {level}
-          </Text>
-          <Text
-            fontWeight={500}
-            size={{ base: 'xs', lg: 'md' }}
-            textAlign="center"
-            w="100%"
-          >
-            {Number(high).toLocaleString()}
-          </Text> */}
-        </HStack>
-        <Stack display={{ base: 'none', md: 'block' }} w="50px">
-          {from == userCharacter?.owner ? (
-            <Button
-              p={3}
-              variant="ghost"
-              backgroundColor="red"
-              color="white"
-              isLoading={isCancelling}
-              onClick={() => cancelOrder()}
-            >
-              <FaTimes />
-            </Button>
-          ) : (
-            <Button
-              p={3}
-              variant="solid"
-              isLoading={isFilling}
-              onClick={() => fillOrder()}
-            >
-              <BiPurchaseTagAlt />
-            </Button>
-          )}
+            <FaTimes />
+          </Button>
         </Stack>
       </HStack>
     </Flex>

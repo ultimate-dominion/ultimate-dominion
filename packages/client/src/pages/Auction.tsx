@@ -17,6 +17,7 @@ import {
 } from '@latticexyz/store-sync/recs';
 // import { Entity } from '@latticexyz/recs';
 import { useCallback, useEffect, useState } from 'react';
+import { FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { Address, erc20Abi } from 'viem';
 
 import { AuctionRow } from '../components/AuctionRow';
@@ -65,11 +66,17 @@ export const Auction = (): JSX.Element => {
     TokenId: string;
     Weapon: WeaponStats | null;
     Armor: ArmorStats | null;
+    Price: bigint;
+    Level: bigint;
+    Class: string;
   }
 
   const { character: userCharacter } = useCharacter();
   const [items, setItems] = useState<Item[] | null>(null);
-  // const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
+  const [sorts, setSorts] = useState([
+    { class: 'Armor', sorted: 'byPrice', reversed: false },
+    { class: 'Weapon', sorted: 'ByClass', reversed: false },
+  ]);
   const [goldAllowance, setGoldAllowance] = useState<bigint | null>(null);
   const [itemAllowance, setItemAllowance] = useState<boolean | null>(null);
   const [auctionContractAddress, setAuctionContractAddress] = useState('');
@@ -130,6 +137,9 @@ export const Auction = (): JSX.Element => {
           ItemType: item.itemType as ItemType,
           Weapon: null as WeaponStats | null,
           Armor: null as ArmorStats | null,
+          Price: BigInt(0),
+          Level: BigInt(0),
+          Class: 'Mage',
         };
         const baseURI = getComponentValueStrict(
           ItemsBaseURI,
@@ -149,6 +159,25 @@ export const Auction = (): JSX.Element => {
             const w = await worldContract.read.UD__getWeaponStats([
               BigInt(item.tokenId),
             ]);
+            const highestStat = Math.max(
+              ...Object.values({
+                a: Number(w.agiModifier.toString()),
+                i: Number(w.intModifier.toString()),
+                s: Number(w.strModifier.toString()),
+              }),
+            );
+            itemData.Class =
+              w.strModifier.toString() == highestStat.toString()
+                ? 'Warrior'
+                : itemData.Class;
+            itemData.Class =
+              w.agiModifier.toString() == highestStat.toString()
+                ? 'Rogue'
+                : itemData.Class;
+            itemData.Class =
+              w.intModifier.toString() == highestStat.toString()
+                ? 'Mage'
+                : itemData.Class;
             itemData.Weapon = {
               ...metadata,
               agiModifier: w.agiModifier.toString(),
@@ -171,6 +200,26 @@ export const Auction = (): JSX.Element => {
             const a = await worldContract.read.UD__getArmorStats([
               BigInt(item.tokenId),
             ]);
+            const highestStat = Math.max(
+              ...Object.values({
+                a: Number(a.agiModifier.toString()),
+                i: Number(a.intModifier.toString()),
+                s: Number(a.strModifier.toString()),
+              }),
+            );
+            itemData.Class =
+              a.strModifier.toString() == highestStat.toString()
+                ? 'Warrior'
+                : itemData.Class;
+            itemData.Class =
+              a.agiModifier.toString() == highestStat.toString()
+                ? 'Rogue'
+                : itemData.Class;
+            itemData.Class =
+              a.intModifier.toString() == highestStat.toString()
+                ? 'Mage'
+                : itemData.Class;
+
             itemData.Armor = {
               ...metadata,
               armorModifier: a.armorModifier.toString(),
@@ -194,28 +243,48 @@ export const Auction = (): JSX.Element => {
         return itemData;
       }),
     );
-    // const allItemsCopy = JSON.parse(JSON.stringify(allItems)).sort(
-    //   (entryA, entryB) => {
-    //     switch (sort.sorted) {
-    //       case 'byGold':
-    //         return sort.reversed
-    //           ? Number(entryA.goldBalance) - Number(entryB.goldBalance)
-    //           : Number(entryB.goldBalance) - Number(entryA.goldBalance);
-    //       case 'byLevel':
-    //         return sort.reversed
-    //           ? Number(entryA.level) - Number(entryB.level)
-    //           : Number(entryB.level) - Number(entryA.level);
-    //       case 'byStats':
-    //         return sort.reversed
-    //           ? Number(entryA.experience) - Number(entryB.experience)
-    //           : Number(entryB.experience) - Number(entryA.experience);
-    //       default:
-    //         return Number(entryB.goldBalance) - Number(entryA.goldBalance);
-    //     }
-    //   },
-    // );
-    setItems(allItems);
-  }, [Items, ItemsBaseURI, ItemsOwners, ItemsTokenURI, worldContract.read]);
+    let sorted = Array<Item>();
+    for (let i = 0; i < sorts.length; i++) {
+      const sort = sorts[i];
+      sorted = [
+        ...sorted,
+        ...allItems
+          .filter(x => ItemType[x.ItemType] == sort.class)
+          .sort((entryA, entryB) => {
+            let result = false;
+            switch (sort.sorted) {
+              case 'byPrice':
+                result = sort.reversed
+                  ? BigInt(entryA.Price) >= BigInt(entryB.Price)
+                  : BigInt(entryB.Price) < BigInt(entryA.Price);
+                break;
+              case 'byLevel':
+                result = sort.reversed
+                  ? BigInt(entryA.Level) >= BigInt(entryB.Level)
+                  : BigInt(entryB.Level) < BigInt(entryA.Level);
+                break;
+              case 'byClass':
+                result = sort.reversed
+                  ? entryA.Class.localeCompare(entryB.Class) > 0
+                  : entryB.Class.localeCompare(entryA.Class) > 0;
+                break;
+              default:
+                result = BigInt(entryB.Price) >= BigInt(entryA.Price);
+            }
+            return result ? 1 : -1;
+          }),
+      ];
+    }
+    setItems(sorted);
+    // setItems(allItems)
+  }, [
+    Items,
+    ItemsBaseURI,
+    ItemsOwners,
+    ItemsTokenURI,
+    sorts,
+    worldContract.read,
+  ]);
 
   useEffect(() => {
     (async function () {
@@ -273,7 +342,6 @@ export const Auction = (): JSX.Element => {
             key =>
               items?.filter(item => item.ItemType == ItemType[key])?.length > 0,
           )
-          .sort()
           .map((k, i) => {
             return (
               <Stack key={i}>
@@ -300,13 +368,25 @@ export const Auction = (): JSX.Element => {
                     >
                       <Button
                         display={{ base: 'none', lg: 'flex' }}
-                        // fontWeight={sort.sorted == 'byStats' ? 'bold' : 'normal'}
-                        // onClick={() =>
-                        //   setSort({
-                        //     sorted: 'byStats',
-                        //     reversed: !sort.reversed,
-                        //   })
-                        // }
+                        fontWeight={
+                          sorts.filter(sort => sort.class == k)[0].sorted ==
+                          'byPrice'
+                            ? 'bold'
+                            : 'normal'
+                        }
+                        onClick={() =>
+                          setSorts(
+                            sorts.map(sort =>
+                              sort.class == k
+                                ? {
+                                    ...sort,
+                                    sorted: 'byPrice',
+                                    reversed: !sort.reversed,
+                                  }
+                                : sort,
+                            ),
+                          )
+                        }
                         p={1}
                         size={{ base: '2xs', lg: 'sm' }}
                         variant="ghost"
@@ -315,20 +395,37 @@ export const Auction = (): JSX.Element => {
                         <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
                           Floor Price
                         </Text>
-                        {/* {sort.sorted == 'byStats' && sort.reversed && <FaSortAmountUp />}
-              {sort.sorted == 'byStats' && !sort.reversed && (
-                <FaSortAmountDown />
-              )}
-              {sort.sorted != 'byStats' && <FaSortAmountDown color="grey" />} */}
+                        {(function () {
+                          const s = sorts.filter(sort => sort.class == k)[0];
+                          if (s.sorted == 'byPrice' && s.reversed) {
+                            return <FaSortAmountUp />;
+                          }
+                          if (s.sorted == 'byPrice' && !s.reversed) {
+                            return <FaSortAmountDown />;
+                          }
+                          return <FaSortAmountDown color="grey" />;
+                        })()}{' '}
                       </Button>
                       <Button
-                        // fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
-                        // onClick={() =>
-                        //   setSort({
-                        //     sorted: 'byLevel',
-                        //     reversed: !sort.reversed,
-                        //   })
-                        // }
+                        fontWeight={
+                          sorts.filter(sort => sort.class == k)[0].sorted ==
+                          'byLevel'
+                            ? 'bold'
+                            : 'normal'
+                        }
+                        onClick={() =>
+                          setSorts(
+                            sorts.map(sort =>
+                              sort.class == k
+                                ? {
+                                    ...sort,
+                                    sorted: 'byLevel',
+                                    reversed: !sort.reversed,
+                                  }
+                                : sort,
+                            ),
+                          )
+                        }
                         p={1}
                         size={{ base: '2xs', lg: 'sm' }}
                         variant="ghost"
@@ -337,20 +434,37 @@ export const Auction = (): JSX.Element => {
                         <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
                           Level
                         </Text>
-                        {/* {sort.sorted == 'byLevel' && sort.reversed && <FaSortAmountUp />}
-              {sort.sorted == 'byLevel' && !sort.reversed && (
-                <FaSortAmountDown />
-              )}
-              {sort.sorted != 'byLevel' && <FaSortAmountDown color="grey" />} */}
+                        {(function () {
+                          const s = sorts.filter(sort => sort.class == k)[0];
+                          if (s.sorted == 'byLevel' && s.reversed) {
+                            return <FaSortAmountUp />;
+                          }
+                          if (s.sorted == 'byLevel' && !s.reversed) {
+                            return <FaSortAmountDown />;
+                          }
+                          return <FaSortAmountDown color="grey" />;
+                        })()}{' '}
                       </Button>
                       <Button
-                        // fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
-                        // onClick={() =>
-                        //   setSort({
-                        //     sorted: 'byGold',
-                        //     reversed: !sort.reversed,
-                        //   })
-                        // }
+                        fontWeight={
+                          sorts.filter(sort => sort.class == k)[0].sorted ==
+                          'byClass'
+                            ? 'bold'
+                            : 'normal'
+                        }
+                        onClick={() =>
+                          setSorts(
+                            sorts.map(sort =>
+                              sort.class == k
+                                ? {
+                                    ...sort,
+                                    sorted: 'byClass',
+                                    reversed: !sort.reversed,
+                                  }
+                                : sort,
+                            ),
+                          )
+                        }
                         p={1}
                         size={{ base: '2xs', lg: 'sm' }}
                         variant="ghost"
@@ -359,11 +473,16 @@ export const Auction = (): JSX.Element => {
                         <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
                           Class
                         </Text>
-                        {/* {sort.sorted == 'byGold' && sort.reversed && <FaSortAmountUp />}
-              {sort.sorted == 'byGold' && !sort.reversed && (
-                <FaSortAmountDown />
-              )}
-              {sort.sorted != 'byGold' && <FaSortAmountDown color="grey" />} */}
+                        {(function () {
+                          const s = sorts.filter(sort => sort.class == k)[0];
+                          if (s.sorted == 'byClass' && s.reversed) {
+                            return <FaSortAmountUp />;
+                          }
+                          if (s.sorted == 'byClass' && !s.reversed) {
+                            return <FaSortAmountDown />;
+                          }
+                          return <FaSortAmountDown color="grey" />;
+                        })()}
                       </Button>
                     </HStack>
                     <Box display={{ base: 'none', md: 'block' }} w="50px" />
@@ -390,8 +509,9 @@ export const Auction = (): JSX.Element => {
                             agility={_item?.agiModifier}
                             intelligence={_item?.intModifier}
                             itemId={_item?.tokenId}
-                            floor={1}
-                            high={2}
+                            floor={item.Price}
+                            level={item.Level}
+                            itemClass={item.Class}
                           ></AuctionRow>
                         </GridItem>
                       );

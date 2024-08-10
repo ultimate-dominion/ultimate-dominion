@@ -13,19 +13,17 @@ import { GiAxeSword, GiRogue } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
-import { StatsClasses } from '../utils/types';
-
 export const AuctionRow = ({
   agility,
   baseHp,
   itemId,
   emoji,
-  entityClass,
   intelligence,
   level,
   name,
   strength,
   floor,
+  itemClass,
 }: {
   agility: string;
   baseHp: string;
@@ -40,6 +38,7 @@ export const AuctionRow = ({
   strength: string;
   floor: string;
   high: string;
+  itemClass: string;
 }): JSX.Element => {
   const navigate = useNavigate();
 
@@ -99,7 +98,7 @@ export const AuctionRow = ({
             textAlign="center"
             w="100%"
           >
-            {level}
+            {Number(level).toLocaleString()}
           </Text>
           <Text
             fontWeight={500}
@@ -108,9 +107,9 @@ export const AuctionRow = ({
             w="100%"
           >
             <Center>
-              {entityClass == StatsClasses.Warrior && <GiAxeSword size={15} />}
-              {entityClass == StatsClasses.Rogue && <GiRogue size={15} />}
-              {entityClass == StatsClasses.Mage && <FaHatWizard size={15} />}
+              {itemClass == 'Warrior' && <GiAxeSword size={15} />}
+              {itemClass == 'Rogue' && <GiRogue size={15} />}
+              {itemClass == 'Mage' && <FaHatWizard size={15} />}
             </Center>
           </Text>
         </HStack>

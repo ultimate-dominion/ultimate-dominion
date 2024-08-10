@@ -32,10 +32,14 @@ contract AuctionSystem is ERC1155Holder, System {
      * @param order An order
      */
     function createOrder(Order memory order) public returns (bytes32 _orderHash) {
+        require(order.offerer == _msgSender(), "You cannot offer someone else's items");
         // create OffersData
         OffersData memory newOffer = OffersData({tokenType: order.offer.tokenType, token: order.offer.token, identifier: order.offer.identifier, amount: order.offer.amount});
         // create ConsiderationsData
         ConsiderationsData memory newConsideration = ConsiderationsData({tokenType: order.consideration.tokenType, token: order.consideration.token, identifier: order.consideration.identifier, amount: order.consideration.amount, recipient: order.consideration.recipient});
+        require(order.offer.tokenType == TokenType.ERC20 || order.offer.tokenType == TokenType.ERC1155, "Token not accepted");
+        require(order.consideration.tokenType == TokenType.ERC20 || order.consideration.tokenType == TokenType.ERC1155, "Token not accepted");
+        require(order.offer.tokenType != order.consideration.tokenType, "Cannot trade the same type");
         // create order Hash out of offer and consideration data and the Counter for the offerer
         uint256 offerCounter = Counters.getCounter(order.offerer, 0) + 1;
         Counters.setCounter(order.consideration.recipient, 0, (offerCounter));
@@ -122,15 +126,16 @@ contract AuctionSystem is ERC1155Holder, System {
         address token = isOffer ? o.token : c.token;
         if(tokenType == TokenType.ERC20){
             if(isSelf && IERC20(token).allowance(address(this), address(this)) != MAX_INT) {
-                 IERC20(token).approve(address(this), MAX_INT); 
+                IERC20(token).approve(address(this), MAX_INT); 
             }
             IERC20(token).transferFrom(from, to, amount);
         }
         else if(tokenType == TokenType.ERC1155){
             if(isSelf && IERC1155(token).isApprovedForAll(address(this), address(this)) != true) {
-                 IERC1155(token).setApprovalForAll(address(this), true); 
+                IERC1155(token).setApprovalForAll(address(this), true); 
             }
             IERC1155(token).safeTransferFrom(from, to, identifier, amount, "");
+
         }
     }
     function _balanceOf(bytes32 orderHash, bool isOffer, address owner) internal view returns(uint){
