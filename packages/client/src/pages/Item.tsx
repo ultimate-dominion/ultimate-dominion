@@ -602,7 +602,7 @@ export const Item = (): JSX.Element => {
                   <Text>Floor Price</Text>
                   <Spacer></Spacer>
                   <Text>
-                    {formatEther(floor.toString()).toString() == '0'
+                    {floor.toString().toString() == maxUint256.toString()
                       ? 'not enough data'
                       : formatEther(floor.toString()).toString()}
                   </Text>
