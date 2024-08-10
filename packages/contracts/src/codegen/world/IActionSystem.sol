@@ -12,4 +12,6 @@ import { ActionType } from "@codegen/common.sol";
  */
 interface IActionSystem {
   function UD__createAction(ActionType actionType, bytes memory actionStats) external returns (bytes32 actionId);
+
+  function UD__checkActionRestrictions(bytes32 entityId, bytes32 actionId) external view returns (bool);
 }

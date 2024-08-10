@@ -83,6 +83,10 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
     }
 
+    function test_getItemBalance() public {
+        assertEq(world.UD__getItemBalance(bobCharacterId, 1), 1);
+    }
+
     function test_resupplyLootManager() public {
         uint256 tokenId = 1;
         uint256 resupplyAmount = 100;

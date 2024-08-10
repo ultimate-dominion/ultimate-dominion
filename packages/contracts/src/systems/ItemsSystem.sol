@@ -107,6 +107,11 @@ contract ItemsSystem is System {
         }
     }
 
+    function getItemBalance(bytes32 entityId, uint256 itemId) public view returns (uint256 _balance) {
+        address ownerAddress = IWorld(_world()).UD__getOwnerAddress(entityId);
+        _balance = _items().balanceOf(ownerAddress, itemId);
+    }
+
     function getTotalSupply(uint256 tokenId) public view returns (uint256 _supply) {
         _supply = TotalSupply.getTotalSupply(_totalSupplyTableId(ITEMS_NAMESPACE), tokenId);
     }

@@ -19,6 +19,4 @@ interface ICombatSystem {
   function UD__getDied(bytes32 entityId) external view returns (bool isDied);
 
   function UD__getEncounter(bytes32 encounterId) external view returns (CombatEncounterData memory);
-
-  function UD___calculateMagicAttack() external;
 }

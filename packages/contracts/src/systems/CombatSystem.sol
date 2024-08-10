@@ -35,6 +35,7 @@ import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common
 import {
     MonsterStats,
     WeaponStats,
+    MagicAttackStats,
     NPCStats,
     Action,
     PhysicalAttackStats,
@@ -75,6 +76,28 @@ contract CombatSystem is System {
                 // calculate damage
                 (actionOutcomeData.attackerDamageDelt, actionOutcomeData.hit, actionOutcomeData.crit) =
                 _calculatePhysicalAttack(
+                    attackStats,
+                    actionOutcomeData.attackerId,
+                    actionOutcomeData.defenderId,
+                    actionOutcomeData.weaponId,
+                    randomNumber
+                );
+
+                // if hit deduct damage
+                if (actionOutcomeData.hit) {
+                    int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
+                        - int256(actionOutcomeData.attackerDamageDelt / int256(ATTACK_MODIFIER));
+                    if (currentHp <= 0) actionOutcomeData.defenderDied = true;
+                    Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
+                } else {
+                    actionOutcomeData.miss = true;
+                }
+            } else if (uint8(actionData.actionType) == 2) {
+                // get attack stats
+                MagicAttackStats memory attackStats = abi.decode(actionData.actionStats, (MagicAttackStats));
+                // calculate damage
+                (actionOutcomeData.attackerDamageDelt, actionOutcomeData.hit, actionOutcomeData.crit) =
+                _calculateMagicAttack(
                     attackStats,
                     actionOutcomeData.attackerId,
                     actionOutcomeData.defenderId,
@@ -206,9 +229,103 @@ contract CombatSystem is System {
         attackLands = attackTotal > defenseTotal;
 
         if (attackLands) {
-            crit = attackTotal / defenseTotal >= 2;
+            crit = uint256(int256(attackTotal) + attackStats.critChanceBonus) >= (90 * TO_HIT_MODIFIER);
         }
     }
 
-    function _calculateMagicAttack() public {}
+    function _calculateMagicAttack(
+        MagicAttackStats memory attackStats,
+        bytes32 attackerId,
+        bytes32 defenderId,
+        uint256 weaponId,
+        uint256 randomNumber
+    ) internal returns (int256 damage, bool hit, bool crit) {
+        // get attacker
+        AdjustedCombatStats memory attacker = IWorld(_world()).UD__applyEquipmentBonuses(attackerId);
+        //get defender
+        AdjustedCombatStats memory defender = IWorld(_world()).UD__applyEquipmentBonuses(defenderId);
+
+        if (defender.currentHp > 0) {
+            uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
+            (hit, crit) = _calculateMagicAttackModifier(
+                uint256(rnChunks[0]), uint256(rnChunks[1]), attackStats, attacker, defender
+            );
+
+            if (hit) {
+                damage = _calculateMagicDamage(attackStats, rnChunks, attacker, defender);
+                if (crit) {
+                    console2.log("CRIT!");
+                    damage = damage * int256(CRIT_MODIFIER);
+                    crit = true;
+                }
+            } else {
+                console2.log("MISS!");
+                damage = 0;
+                hit = false;
+            }
+        } else {
+            damage = 0;
+            hit = false;
+            crit = false;
+        }
+    }
+
+    function _calculateMagicDamage(
+        MagicAttackStats memory attackStats,
+        uint64[] memory rnChunks,
+        AdjustedCombatStats memory attacker,
+        AdjustedCombatStats memory defender
+    ) internal returns (int256 _damage) {
+        if (attackStats.minDamage > 0 && attackStats.maxDamage > 0) {
+            _damage = (
+                (
+                    attackStats.bonusDamage
+                        + int256(
+                            uint256(rnChunks[2]) % uint256(attackStats.maxDamage) <= uint256(attackStats.minDamage)
+                                ? attackStats.minDamage
+                                : int256(uint256(rnChunks[2]) % uint256(attackStats.maxDamage))
+                        ) + int256(attacker.adjustedIntelligence / 4)
+                ) * int256(ATTACK_MODIFIER)
+            )
+                - int256(
+                    (
+                        int256(defender.adjustedIntelligence) > 0
+                            ? uint256(int256(defender.adjustedIntelligence))
+                            : uint256(1)
+                    ) * DEFENSE_MODIFIER
+                );
+        } else if (attackStats.minDamage < 0 && attackStats.maxDamage < 0) {
+            _damage = (
+                (
+                    attackStats.bonusDamage
+                        + int256(
+                            uint256(rnChunks[2]) % uint256(attackStats.maxDamage) <= uint256(attackStats.minDamage)
+                                ? attackStats.minDamage
+                                : -int256(uint256(rnChunks[2]) % uint256(attackStats.maxDamage))
+                        ) - int256(attacker.adjustedIntelligence / 4)
+                ) * int256(ATTACK_MODIFIER)
+            );
+        }
+    }
+
+    function _calculateMagicAttackModifier(
+        uint256 attackRoll,
+        uint256 defenseRoll,
+        MagicAttackStats memory attackStats,
+        AdjustedCombatStats memory attacker,
+        AdjustedCombatStats memory defender
+    ) internal view returns (bool attackLands, bool crit) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+        uint256 attackTotal = (
+            Math.add(attacker.adjustedIntelligence, attackStats.attackModifierBonus) + (attackRoll % 100)
+        ) * (TO_HIT_MODIFIER);
+        // attacker.IntelladjustedIntelligence + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
+
+        uint256 defenseTotal = ((defenseRoll % 100) + defender.adjustedIntelligence) * DEFENSE_MODIFIER;
+        attackLands = attackTotal > defenseTotal;
+
+        if (attackLands) {
+            crit = uint256(int256(attackTotal) + attackStats.critChanceBonus) >= (90 * TO_HIT_MODIFIER);
+        }
+    }
 }

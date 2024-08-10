@@ -137,6 +137,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
+
         actions[0] =
             Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 2});
         uint256 fees = 0; // entropy.getFee(address(1));
@@ -192,7 +193,6 @@ contract Test_CombatSystem is SetUp, GasReporter {
         Action[] memory aliceActions = new Action[](1);
 
         vm.prank(bob);
-
         // bob's move
         bobActions[0] = Action({
             attackerEntityId: bobCharacterId,

@@ -5,7 +5,7 @@
       "name": "Giant Rat",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 4,
         "armor": 1,
@@ -25,7 +25,7 @@
       "name": "Green Slime",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 2,
         "armor": 1,
@@ -45,7 +45,7 @@
       "name": "Kobold Scout",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 11,
         "armor": 1,
@@ -65,7 +65,7 @@
       "name": "Gray Ooze",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 4,
         "armor": 1,
@@ -85,7 +85,7 @@
       "name": "Cave Goblin",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 6,
         "armor": 1,
@@ -105,7 +105,7 @@
       "name": "Giant Bat",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 12,
         "armor": 1,
@@ -125,7 +125,7 @@
       "name": "Skeleton",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 8,
         "armor": 1,
@@ -145,7 +145,7 @@
       "name": "Giant Spider",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 13,
         "armor": 1,
@@ -165,7 +165,7 @@
       "name": "Fire Beetle",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 10,
         "armor": 1,
@@ -185,7 +185,7 @@
       "name": "Orc Grunt",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 9,
         "armor": 1,
@@ -205,7 +205,7 @@
       "name": "Cave Wraith",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 15,
         "armor": 1,
@@ -225,7 +225,7 @@
       "name": "Giant Centipede",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 16,
         "armor": 1,
@@ -245,7 +245,7 @@
       "name": "Cave Bear",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 18,
         "armor": 1,
@@ -265,7 +265,7 @@
       "name": "Specter",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 16,
         "armor": 1,
@@ -285,7 +285,7 @@
       "name": "Giant Worm",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 22,
         "armor": 1,
@@ -305,7 +305,7 @@
       "name": "Troll",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 17,
         "armor": 1,
@@ -325,7 +325,7 @@
       "name": "Magma Mephit",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 20,
         "armor": 1,
@@ -345,7 +345,7 @@
       "name": "Spirit Naga",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 25,
         "armor": 1,
@@ -365,7 +365,7 @@
       "name": "Werewolf",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 35,
         "armor": 1,
@@ -385,7 +385,7 @@
       "name": "Umber Hulk",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 26,
         "armor": 1,
@@ -405,7 +405,7 @@
       "name": "Shadow Dragon",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0"
         ],
         "agility": 32,
         "armor": 1,

@@ -30,6 +30,8 @@ interface IItemsSystem {
     string[] memory itemMetadataURIs
   ) external;
 
+  function UD__getItemBalance(bytes32 entityId, uint256 itemId) external view returns (uint256 _balance);
+
   function UD__getTotalSupply(uint256 tokenId) external view returns (uint256 _supply);
 
   function UD__getStarterItems(Classes class) external view returns (StarterItemsData memory data);

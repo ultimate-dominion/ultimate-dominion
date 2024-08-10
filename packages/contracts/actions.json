@@ -1,14 +1,33 @@
 {
+    "magicAttacks": [
+        {
+            "actionId": "0x86e3404b8e126ac0af57b52bf09036c0592ece3556b0e34fdaf3686fd7ae8209",
+            "name": "basic magic attack",
+            "stats": {
+                "attackModifierBonus": 0,
+                "bonusDamage": 0,
+                "classrestrictions": [
+                    2
+                ],
+                "critChanceBonus": 0,
+                "itemRestrictions": [],
+                "statusEffects": [],
+                "minDamage": 1,
+                "maxDamage": 5
+            }
+        }
+    ],
     "physicalAttacks": [
         {
-            "actionId": "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d",
+            "actionId": "0x17eac27cd9863e2a8475ec5e5317aeeef5fbba887ac93c5a5c5401dea3a219d0",
             "name": "basic weapon attack",
             "stats": {
                 "armorPenetration": 0,
                 "attackModifierBonus": 0,
                 "bonusDamage": 0,
                 "classrestrictions": [],
-                "critChanceBonus": 0
+                "critChanceBonus": 0,
+                "statusEffects": []
             }
         }
     ]

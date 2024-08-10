@@ -37,7 +37,14 @@ struct StarterItems {
 }
 
 struct StarterActions {
+    MagicAttackTemplate[] magicAttacks;
     PhysicalAttackTemplate[] physicalAttacks;
+}
+
+struct MagicAttackTemplate {
+    bytes32 actionId;
+    string name;
+    MagicAttackStats stats;
 }
 
 struct PhysicalAttackTemplate {
@@ -105,6 +112,25 @@ struct PhysicalAttackStats {
     uint8[] classRestrictions;
     // crit chance
     int256 critChanceBonus;
+    // status effects applied by this attack empty if none
+    bytes32[] statusEffects;
+}
+
+struct StatusEffect {
+    // if this is a combat effect, must include number of turns it lasts for
+    bool combatEffect;
+    // number of turns this is valid for, 0 if non combat effect
+    uint8 turns;
+    // if non-combat effect this is the amount of time this effect is valid for
+    uint256 timeout;
+    int256 attackModifierEffect;
+    int256 damageEffect;
+    int256 strengthEffect;
+    int256 agilityEffect;
+    int256 intelligenceEffect;
+    int256 baseHitPointEffect;
+    // items that can cause this status effect
+    uint256[] itemRestrictions;
 }
 
 struct Action {
@@ -115,12 +141,19 @@ struct Action {
 }
 
 struct MagicAttackStats {
-    // additional damage on top of item damage
-    uint256 bonusDamage;
-    // list of items that can deal this attack
-    uint256[] requiredItems;
-    // base armor penetration
-    uint256 armorPenetration;
+    //bonus chance to hit
+    int256 attackModifierBonus;
+    int256 bonusDamage;
+    // list of classes that can use this attack
+    uint8[] classRestrictions;
+    int256 critChanceBonus;
+    // items that can cause this attack (leave empty if item not required)
+    uint256[] itemRestrictions;
+    // status effects applied by this attack
+    bytes32[] statusEffects;
+    // damage delt by this attack (can be negative for heals)
+    int256 minDamage;
+    int256 maxDamage;
 }
 
 struct NPCStats {

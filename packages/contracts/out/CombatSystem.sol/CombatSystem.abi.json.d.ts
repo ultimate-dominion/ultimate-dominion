@@ -1,13 +1,6 @@
 declare const abi: [
   {
     "type": "function",
-    "name": "_calculateMagicAttack",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "_msgSender",
     "inputs": [],
     "outputs": [
