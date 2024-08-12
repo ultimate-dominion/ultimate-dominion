@@ -21,8 +21,9 @@ import { InfoModal } from '../components/InfoModal';
 import { MapPanel } from '../components/MapPanel';
 import { StatsPanel } from '../components/StatsPanel';
 import { TileDetailsPanel } from '../components/TileDetailsPanel';
+import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
-import { useMapNavigation } from '../contexts/MapNavigationContext';
+import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
@@ -52,7 +53,8 @@ export const GameBoard = (): JSX.Element => {
     network: { worldContract },
   } = useMUD();
   const { character, equippedWeapons } = useCharacter();
-  const { lastestBattleOutcome, position } = useMapNavigation();
+  const { position } = useMap();
+  const { continueToBattleOutcome, lastestBattleOutcome } = useBattle();
 
   // Redirect to home if synced, but missing other requirements
   useEffect(() => {
@@ -123,6 +125,8 @@ export const GameBoard = (): JSX.Element => {
   // Open battle outcome modal if there is a new battle outcome
   useEffect(() => {
     if (lastestBattleOutcome) {
+      if (!continueToBattleOutcome) return;
+
       const latestBattleOutcomeSeen = localStorage.getItem(
         BATTLE_OUTCOME_SEEN_KEY,
       );
@@ -131,7 +135,7 @@ export const GameBoard = (): JSX.Element => {
 
       onOpenBattleOutcomeModal();
     }
-  }, [onOpenBattleOutcomeModal, lastestBattleOutcome]);
+  }, [continueToBattleOutcome, onOpenBattleOutcomeModal, lastestBattleOutcome]);
 
   return (
     <Grid

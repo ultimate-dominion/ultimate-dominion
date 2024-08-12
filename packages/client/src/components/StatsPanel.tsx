@@ -14,8 +14,8 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
-import { GiRogue } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
+import { MdBackpack } from 'react-icons/md';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -91,6 +91,8 @@ export const StatsPanel = (): JSX.Element => {
     strength,
   } = character;
 
+  const currentHpWithFloor = parseInt(currentHp) < 0 ? 0 : parseInt(currentHp);
+
   return (
     <VStack alignItems="start" h="100%" p={2} spacing={4}>
       <HStack
@@ -117,7 +119,7 @@ export const StatsPanel = (): JSX.Element => {
         </GridItem>
         <GridItem>
           <Text>
-            {currentHp}/{baseHp}
+            {currentHpWithFloor}/{baseHp}
           </Text>
         </GridItem>
         <GridItem>
@@ -165,7 +167,7 @@ export const StatsPanel = (): JSX.Element => {
           >
             {experience}
           </Text>
-          /{nextLevelXpRequirement.toString()}
+          /{nextLevelXpRequirement.toString()} XP
         </Text>
       </HStack>
 
@@ -203,7 +205,7 @@ export const StatsPanel = (): JSX.Element => {
               size="sm"
               variant="ghost"
             >
-              <GiRogue size={12} />
+              <MdBackpack size={12} />
             </Button>
           </HStack>
         ))}
