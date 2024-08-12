@@ -49,7 +49,7 @@ const validateConfig = () => {
       throw new Error(
         `CHAIN_NAME_TO_ID[${
           CHAIN_ID_TO_LABEL[chain.id]
-        }] is not set or does not encounter ${chain.id}`,
+        }] is not set or does not match ${chain.id}`,
       );
     }
   });
