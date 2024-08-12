@@ -161,25 +161,32 @@ export const Item = (): JSX.Element => {
     }
     try {
       setIsSelling(true);
+      // this is covering both selling an item for gold or gold for an item
+      // wanted is either an item or a bigint (representing a gold amount)
       const args = [
         {
           signature: '' as Address,
           offerer: purchaser.owner as Address,
           offer: {
+            // 1 is ERC20 in the contracts. 3 is ERC1155
             tokenType: typeof offered === 'bigint' ? 1 : 3,
             token:
               typeof offered === 'bigint'
                 ? (goldToken as Address)
                 : (itemsContract as Address),
+            // Identifier will be ignored if it's a bigint (representing gold), otherwise it represents the ERC1155 token ID
             identifier:
               typeof offered === 'bigint'
                 ? 0n
                 : BigInt((offered as Item).TokenId),
+            // Amount is the amount of the ERC1155 token that is offered. For ERC20, use the offered value
             amount: typeof offered === 'bigint' ? offered : amount,
           },
           consideration: {
+            // 1 is ERC20 in the contracts. 3 is ERC1155
             tokenType: typeof wanted === 'bigint' ? 1 : 3,
             token:
+              // Identifier will be ignored if it's a bigint (representing gold), otherwise it represents the ERC1155 token ID
               typeof wanted === 'bigint'
                 ? (goldToken as Address)
                 : (itemsContract as Address),
@@ -187,6 +194,7 @@ export const Item = (): JSX.Element => {
               typeof wanted === 'bigint'
                 ? 0n
                 : BigInt((wanted as Item).TokenId),
+            // Amount is the amount of the ERC1155 token that is wanted. For ERC20, use the offered value
             amount: typeof wanted === 'bigint' ? wanted : amount,
             recipient: purchaser.owner as Address,
           },
