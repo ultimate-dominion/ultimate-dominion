@@ -108,10 +108,10 @@ export const CharacterProvider = ({
         agility: characterStats?.agility.toString() ?? '0',
         baseHp: characterStats?.baseHp.toString() ?? '0',
         currentHp: characterStats?.currentHp.toString() ?? '0',
-        characterId: entity,
         entityClass: characterStats?.class ?? 0,
         experience: characterStats?.experience.toString() ?? '0',
         goldBalance: formatEther(goldBalance).toString(),
+        id: entity,
         inBattle,
         intelligence: characterStats?.intelligence.toString() ?? '0',
         level: characterStats?.level.toString() ?? '0',
@@ -344,7 +344,7 @@ export const CharacterProvider = ({
       if (!userCharacter) return;
 
       const { equippedArmor, equippedWeapons } =
-        getComponentValue(CharacterEquipment, userCharacter.characterId) ??
+        getComponentValue(CharacterEquipment, userCharacter.id) ??
         ({ equippedArmor: [], equippedWeapons: [] } as {
           equippedArmor: bigint[];
           equippedWeapons: bigint[];

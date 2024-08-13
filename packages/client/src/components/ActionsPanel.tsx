@@ -29,9 +29,9 @@ export const ActionsPanel = (): JSX.Element => {
     attackingItemId,
     currentBattle,
     lastestBattleOutcome,
-    monsterOponent,
     onAttack,
     onContinueToBattleOutcome,
+    opponent,
   } = useBattle();
   const { isRefreshing: isRefreshingMap } = useMovement();
 
@@ -138,7 +138,7 @@ export const ActionsPanel = (): JSX.Element => {
 
   return (
     <Box maxH="100%" overflowY="auto" pb={4} ref={parentDivRef}>
-      {!battleOver && currentBattle && equippedWeapons && monsterOponent && (
+      {!battleOver && currentBattle && equippedWeapons && opponent && (
         <VStack bgColor="white" position="sticky" spacing={0} top={0} w="100%">
           <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
             Choose your move:
@@ -150,7 +150,7 @@ export const ActionsPanel = (): JSX.Element => {
               <Text
                 as={Link}
                 color="blue"
-                to={`/characters/${character?.characterId}`}
+                to={`/characters/${character?.id}`}
                 _hover={{ textDecoration: 'underline' }}
               >
                 character page
@@ -185,7 +185,7 @@ export const ActionsPanel = (): JSX.Element => {
       <Stack p={{ base: 2, lg: 4 }}>
         {!currentBattle && actionText}
 
-        {monsterOponent &&
+        {opponent &&
           actionOutcomes.map((action, i) => {
             if (action.miss) {
               return (
@@ -195,14 +195,14 @@ export const ActionsPanel = (): JSX.Element => {
                   key={`battle-action-${i}`}
                   stdTypingDelay={10}
                 >
-                  {action.attackerId === character?.characterId ? (
+                  {action.attackerId === character?.id ? (
                     <Text
                       key={`battle-action-${i}`}
                       size={{ base: 'xs', sm: 'sm', lg: 'md' }}
                     >
                       You missed{' '}
                       <Text as="span" color="green">
-                        {monsterOponent.name}
+                        {opponent.name}
                       </Text>
                       .
                     </Text>
@@ -212,7 +212,7 @@ export const ActionsPanel = (): JSX.Element => {
                       size={{ base: 'xs', sm: 'sm', lg: 'md' }}
                     >
                       <Text as="span" color="green">
-                        {monsterOponent.name}
+                        {opponent.name}
                       </Text>{' '}
                       missed you.
                     </Text>
@@ -230,11 +230,11 @@ export const ActionsPanel = (): JSX.Element => {
                 key={`battle-action-${i}`}
                 stdTypingDelay={10}
               >
-                {action.attackerId === character?.characterId ? (
+                {action.attackerId === character?.id ? (
                   <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                     {critText}You attacked{' '}
                     <Text as="span" color="green">
-                      {monsterOponent?.name}
+                      {opponent?.name}
                     </Text>{' '}
                     for{' '}
                     <Text as="span" color="red">
@@ -246,7 +246,7 @@ export const ActionsPanel = (): JSX.Element => {
                   <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                     {critText}
                     <Text as="span" color="green">
-                      {monsterOponent?.name}
+                      {opponent?.name}
                     </Text>{' '}
                     attacked you for{' '}
                     <Text as="span" color="red">
@@ -272,7 +272,7 @@ export const ActionsPanel = (): JSX.Element => {
               size={{ base: 'xs', sm: 'sm', lg: 'md' }}
               textAlign="center"
             >
-              {lastestBattleOutcome?.winner === character?.characterId
+              {lastestBattleOutcome?.winner === character?.id
                 ? 'You won!'
                 : 'You lost...'}
             </Text>

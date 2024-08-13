@@ -13,8 +13,6 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 import { GiCrossedSwords } from 'react-icons/gi';
-import { IoIosArrowForward } from 'react-icons/io';
-import { useNavigate } from 'react-router-dom';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -41,7 +39,7 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useMUD();
   const { character } = useCharacter();
   const { aliveMonsters, isSpawned, otherCharactersOnTile } = useMap();
-  const { actionOutcomes, currentBattle, monsterOponent } = useBattle();
+  const { actionOutcomes, currentBattle, opponent } = useBattle();
   const { isRefreshing } = useMovement();
 
   const [isInitiating, setIsInitiating] = useState(false);
@@ -101,7 +99,7 @@ export const TileDetailsPanel = (): JSX.Element => {
   }, [actionOutcomes, currentBattle]);
 
   const onInitiateCombat = useCallback(
-    async (monster: Monster) => {
+    async (opponent: Character | Monster, encounterType: EncounterType) => {
       try {
         setIsInitiating(true);
 
@@ -114,9 +112,9 @@ export const TileDetailsPanel = (): JSX.Element => {
         }
 
         const { error, success } = await createEncounter(
-          EncounterType.PvE,
-          [character.characterId],
-          [monster.monsterId],
+          encounterType,
+          [character.id],
+          [opponent.id],
         );
 
         if (error && !success) {
@@ -151,7 +149,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (character && currentBattle && monsterOponent) {
+  if (character && currentBattle && opponent) {
     return (
       <VStack mt={4}>
         <style>
@@ -166,23 +164,41 @@ export const TileDetailsPanel = (): JSX.Element => {
         `}
         </style>
         <HStack alignItems="start" w="100%">
-          <VStack w="48%">
-            <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-              {isDesktop
-                ? monsterOponent.name.slice(0, -3)
-                : monsterOponent.name}
-            </Text>
-            {isDesktop && (
-              <Text
-                animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
-                fontSize="68px"
-                opacity={isMonsterHit ? 0 : 1}
-                transition="opacity 0.1s ease-in-out"
-              >
-                {monsterOponent.name.slice(-3)}
+          {currentBattle.encounterType === EncounterType.PvE ? (
+            <VStack w="48%">
+              <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+                {isDesktop ? opponent.name.slice(0, -3) : opponent.name}
               </Text>
-            )}
-          </VStack>
+              {isDesktop && (
+                <Text
+                  animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
+                  fontSize="68px"
+                  opacity={isMonsterHit ? 0 : 1}
+                  transition="opacity 0.1s ease-in-out"
+                >
+                  {opponent.name.slice(-3)}
+                </Text>
+              )}
+            </VStack>
+          ) : (
+            <Stack
+              alignItems="center"
+              direction={{ base: 'row', lg: 'column' }}
+              justify={{ base: 'center', lg: 'start' }}
+              w="48%"
+            >
+              <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+                {opponent.name}
+              </Text>
+              <Avatar
+                animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
+                my={{ base: 1, lg: 5 }}
+                opacity={isMonsterHit ? 0 : 1}
+                size={{ base: '2xs', lg: 'lg' }}
+                src={opponent.image}
+              />
+            </Stack>
+          )}
           <VStack mt={{ base: 0, lg: 14 }} w="4%">
             <GiCrossedSwords color="red" size={isDesktop ? 40 : 28} />
           </VStack>
@@ -207,20 +223,20 @@ export const TileDetailsPanel = (): JSX.Element => {
         <HStack alignItems="start" w="100%">
           <VStack spacing={{ base: 0, lg: 2 }} w="48%">
             <HealthBar
-              baseHp={monsterOponent.baseHp}
-              currentHp={monsterOponent.currentHp}
-              level={monsterOponent.level}
+              baseHp={opponent.baseHp}
+              currentHp={opponent.currentHp}
+              level={opponent.level}
               w="90%"
             />
             <VStack alignItems="start" px={4}>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Agility: {monsterOponent.agility}
+                Agility: {opponent.agility}
               </Text>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Intelligence: {monsterOponent.intelligence}
+                Intelligence: {opponent.intelligence}
               </Text>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Strength: {monsterOponent.strength}
+                Strength: {opponent.strength}
               </Text>
             </VStack>
           </VStack>
@@ -274,24 +290,18 @@ export const TileDetailsPanel = (): JSX.Element => {
             Players
           </Text>
         </GridItem>
-        {otherCharactersOnTile.length > 0 && (
-          <GridItem colSpan={1}>
-            <Text mt={1} size={{ base: '2xs', lg: 'sm' }}>
-              Safe Zone
-            </Text>
-          </GridItem>
-        )}
       </Grid>
       <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
         <GridItem colSpan={2}>
           {aliveMonsters.length > 0 &&
             aliveMonsters.map((monster, i) => (
-              <MonsterRow
+              <OpponentRow
+                encounterType={EncounterType.PvE}
                 key={`tile-monster-${i}-${monster.name}`}
-                monster={monster}
                 onClick={() => {
-                  onInitiateCombat(monster);
+                  onInitiateCombat(monster, EncounterType.PvE);
                 }}
+                opponent={monster}
               />
             ))}
           {aliveMonsters.length === 0 && (
@@ -301,50 +311,45 @@ export const TileDetailsPanel = (): JSX.Element => {
           )}
         </GridItem>
 
-        {otherCharactersOnTile.length > 0 && (
-          <>
-            <GridItem colSpan={1}>
-              {otherCharactersOnTile.length > 0 &&
-                otherCharactersOnTile.map((c, i) => (
-                  <PlayerRow key={`tile-player-${i}-${c.name}`} player={c} />
-                ))}
-            </GridItem>
-            <GridItem colSpan={1}>
-              {otherCharactersOnTile.map((c, i) => (
-                <PlayerLevelRow
-                  key={`tile-player-level-${i}-${c.name}`}
-                  player={c}
-                />
-              ))}
-            </GridItem>
-          </>
-        )}
-        {otherCharactersOnTile.length === 0 && (
-          <GridItem colSpan={2}>
+        <GridItem colSpan={2}>
+          {otherCharactersOnTile.length > 0 &&
+            otherCharactersOnTile.map((player, i) => (
+              <OpponentRow
+                encounterType={EncounterType.PvP}
+                key={`tile-player-${i}-${player.name}`}
+                onClick={() => {
+                  onInitiateCombat(player, EncounterType.PvP);
+                }}
+                opponent={player}
+              />
+            ))}
+          {otherCharactersOnTile.length === 0 && (
             <Text size={{ base: '2xs', lg: 'sm' }}>
               No players in this area
             </Text>
-          </GridItem>
-        )}
+          )}
+        </GridItem>
       </Grid>
     </Box>
   );
 };
 
-const MONSTER_COLORS = {
+const OPPONENT_COLORS = {
   [0]: 'red',
   [1]: 'yellow',
   [2]: 'green',
 };
 
-const MonsterRow = ({
-  monster,
+const OpponentRow = ({
+  encounterType,
+  opponent,
   onClick,
 }: {
-  monster: Monster;
+  encounterType: EncounterType;
+  opponent: Character | Monster;
   onClick: () => void;
 }) => {
-  const { inBattle, level, name } = monster;
+  const { inBattle, level, name } = opponent;
 
   return (
     <HStack
@@ -366,13 +371,18 @@ const MonsterRow = ({
         cursor: inBattle ? 'not-allowed' : 'pointer',
       }}
     >
-      <Text
-        color={MONSTER_COLORS[monster.entityClass]}
-        filter={inBattle ? 'grayscale(100%)' : 'none'}
-        size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
-      >
-        {name}
-      </Text>
+      <HStack justifyContent="start" spacing={4}>
+        <Text
+          color={OPPONENT_COLORS[opponent.entityClass]}
+          filter={inBattle ? 'grayscale(100%)' : 'none'}
+          size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+        >
+          {name}
+        </Text>
+        {encounterType === EncounterType.PvP && (
+          <Avatar size="xs" src={opponent.image} />
+        )}
+      </HStack>
       {!inBattle && (
         <Text
           fontWeight="bold"
@@ -386,43 +396,6 @@ const MonsterRow = ({
           (In battle...)
         </Text>
       )}
-    </HStack>
-  );
-};
-
-const PlayerRow = ({ player }: { player: Character }) => {
-  const { name } = player;
-
-  return (
-    <HStack h={ROW_HEIGHT} justifyContent="start" spacing={4}>
-      <Text size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}>{name}</Text>
-      <Avatar size="xs" src={player.image} />
-    </HStack>
-  );
-};
-
-const PlayerLevelRow = ({ player }: { player: Character }) => {
-  const navigate = useNavigate();
-  const isMobile = useBreakpointValue({ base: true, md: false });
-
-  return (
-    <HStack
-      h={ROW_HEIGHT}
-      onClick={() => navigate(`/characters/${player.characterId}`)}
-    >
-      <Flex
-        alignItems="center"
-        as="button"
-        borderBottom="1px solid transparent"
-        fontWeight="bold"
-        gap={2}
-        _hover={{ borderBottom: '1px solid', cursor: 'pointer' }}
-      >
-        <Text size={{ base: '4xs', sm: '3xs', md: 'xs', lg: 'sm' }}>
-          Level {player.level}
-        </Text>
-        <IoIosArrowForward size={isMobile ? 10 : 20} />
-      </Flex>
     </HStack>
   );
 };

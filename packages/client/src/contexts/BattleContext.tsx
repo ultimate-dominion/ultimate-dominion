@@ -27,6 +27,7 @@ import {
 import {
   type ActionOutcomeType,
   ActionType,
+  type Character,
   type CombatDetails,
   type CombatOutcomeType,
   type Monster,
@@ -41,9 +42,9 @@ type BattleContextType = {
   continueToBattleOutcome: boolean;
   currentBattle: CombatDetails | null;
   lastestBattleOutcome: CombatOutcomeType | null;
-  monsterOponent: Monster | null;
   onAttack: (itemId: string) => void;
   onContinueToBattleOutcome: (cont: boolean) => void;
+  opponent: Character | Monster | null;
 };
 
 const BattleContext = createContext<BattleContextType>({
@@ -52,9 +53,9 @@ const BattleContext = createContext<BattleContextType>({
   continueToBattleOutcome: false,
   currentBattle: null,
   lastestBattleOutcome: null,
-  monsterOponent: null,
   onAttack: () => {},
   onContinueToBattleOutcome: () => {},
+  opponent: null,
 });
 
 export type BattleProviderProps = {
@@ -71,7 +72,7 @@ export const BattleProvider = ({
     systemCalls: { endTurn },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
-  const { allMonsters } = useMap();
+  const { allMonsters, otherCharactersOnTile } = useMap();
 
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
@@ -94,8 +95,8 @@ export const BattleProvider = ({
     .filter(
       encounter =>
         character &&
-        (encounter?.attackers.includes(character.characterId) ||
-          encounter?.defenders.includes(character.characterId)),
+        (encounter?.attackers.includes(character.id) ||
+          encounter?.defenders.includes(character.id)),
     );
 
   const onContinueToBattleOutcome = useCallback((cont: boolean) => {
@@ -144,15 +145,27 @@ export const BattleProvider = ({
     };
   }, [allBattles, CombatOutcome]);
 
-  const monsterOponent = useMemo(() => {
+  const opponent = useMemo(() => {
     if (!currentBattle) return null;
 
-    return (
-      allMonsters.find(monster =>
-        currentBattle.defenders.includes(monster.monsterId),
-      ) ?? null
+    let possibleOpponent: Character | Monster | undefined = allMonsters.find(
+      monster => currentBattle.defenders.includes(monster.id),
     );
-  }, [allMonsters, currentBattle]);
+
+    if (!possibleOpponent) {
+      possibleOpponent = otherCharactersOnTile.find(char =>
+        currentBattle.defenders.includes(char.id),
+      );
+    }
+
+    if (!possibleOpponent) {
+      possibleOpponent = otherCharactersOnTile.find(char =>
+        currentBattle.attackers.includes(char.id),
+      );
+    }
+
+    return possibleOpponent ?? null;
+  }, [allMonsters, currentBattle, otherCharactersOnTile]);
 
   const allActionOutcomes = useEntityQuery([Has(ActionOutcome)])
     .map(entity => {
@@ -191,8 +204,8 @@ export const BattleProvider = ({
     })
     .filter(
       action =>
-        action.attackerId === character?.characterId ||
-        action.defenderId === character?.characterId,
+        action.attackerId === character?.id ||
+        action.defenderId === character?.id,
     );
 
   const currentBattleActionOutcomes = useMemo(
@@ -220,8 +233,8 @@ export const BattleProvider = ({
           throw new Error('Battle not found.');
         }
 
-        if (!monsterOponent) {
-          throw new Error('Monster not found.');
+        if (!opponent) {
+          throw new Error('Opponent not found.');
         }
 
         const basicAttackId = Array.from(
@@ -237,8 +250,8 @@ export const BattleProvider = ({
 
         const { error, success } = await endTurn(
           currentBattle.encounterId,
-          character.characterId,
-          monsterOponent.monsterId,
+          character.id,
+          opponent.id,
           basicAttackId,
           itemId,
           currentBattle.currentTurn,
@@ -264,7 +277,7 @@ export const BattleProvider = ({
       currentBattle,
       delegatorAddress,
       endTurn,
-      monsterOponent,
+      opponent,
       refreshCharacter,
       renderError,
     ],
@@ -278,9 +291,9 @@ export const BattleProvider = ({
         continueToBattleOutcome,
         currentBattle,
         lastestBattleOutcome,
-        monsterOponent,
         onAttack,
         onContinueToBattleOutcome,
+        opponent,
       }}
     >
       {children}

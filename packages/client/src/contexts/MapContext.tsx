@@ -16,16 +16,14 @@ import {
   useEffect,
   useState,
 } from 'react';
-import {
-  bytesToHex,
-  formatEther,
-  hexToBytes,
-  hexToString,
-  zeroHash,
-} from 'viem';
+import { formatEther, hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import {
+  decodeMonsterId,
+  fetchMetadataFromUri,
+  uriToHttp,
+} from '../utils/helpers';
 import { type Character, type Monster } from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
@@ -93,7 +91,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     Position,
     encodeEntity(
       { characterId: 'uint256' },
-      { characterId: BigInt(character?.characterId ?? 0) },
+      { characterId: BigInt(character?.id ?? 0) },
     ),
   );
 
@@ -101,7 +99,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     Spawned,
     encodeEntity(
       { characterId: 'uint256' },
-      { characterId: BigInt(character?.characterId ?? 0) },
+      { characterId: BigInt(character?.id ?? 0) },
     ),
   )?.spawned;
 
@@ -171,10 +169,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
               baseHp: characterStats.baseHp.toString(),
-              characterId: entity,
+              currentHp: characterStats.currentHp.toString(),
               entityClass: characterStats.class,
               experience: characterStats.experience.toString(),
               goldBalance: formatEther(goldBalance as bigint).toString(),
+              id: entity,
               inBattle,
               intelligence: characterStats.intelligence.toString(),
               level: characterStats.level.toString(),
@@ -216,26 +215,17 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const getMonsters = useCallback(
     async (entities: Entity[]): Promise<Monster[]> => {
       try {
-        const monsterAndMobIds = entities.map(entity => {
-          const entityBytes = hexToBytes(entity.toString() as `0x${string}`);
-          const mobIdBytes = entityBytes.slice(0, 4);
-          return {
-            mobId: BigInt(bytesToHex(mobIdBytes)).toString(),
-            monsterId: entity,
-          };
-        });
-
         const _monsters: Monster[] = await Promise.all(
-          monsterAndMobIds.map(async monsterAndMobId => {
-            const { monsterId, mobId } = monsterAndMobId;
+          entities.map(async entity => {
+            const { mobId } = decodeMonsterId(entity as `0x${string}`);
             const mobData = getComponentValueStrict(
               Mobs,
               encodeEntity({ mobId: 'uint256' }, { mobId: BigInt(mobId) }),
             );
-            const monsterStats = getComponentValueStrict(Stats, monsterId);
+            const monsterStats = getComponentValueStrict(Stats, entity);
             const encounterId = getComponentValue(
               EncounterEntity,
-              monsterId,
+              entity,
             )?.encounterId;
             const inBattle = !!encounterId && encounterId !== zeroHash;
 
@@ -251,11 +241,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               currentHp: monsterStats.currentHp.toString(),
               entityClass: monsterStats.class,
               experience: monsterStats.experience.toString(),
+              id: entity,
               inBattle,
               intelligence: monsterStats.intelligence.toString(),
               level: monsterStats.level.toString(),
               mobId,
-              monsterId,
               strength: monsterStats.strength.toString(),
               ...fetachedMetadata,
             };
@@ -330,7 +320,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const { error, success } = await spawn(character.characterId);
+      const { error, success } = await spawn(character.id);
 
       if (error && !success) {
         throw new Error(error);

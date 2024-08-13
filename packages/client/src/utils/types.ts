@@ -67,8 +67,8 @@ export type ArmorStats = {
 export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
-  characterId: Entity;
   goldBalance: string;
+  id: Entity;
   inBattle: boolean;
   locked: boolean;
   owner: string;
@@ -116,9 +116,9 @@ export type Metadata = {
 
 export type Monster = Metadata &
   EntityStats & {
+    id: Entity;
     inBattle: boolean;
     mobId: string;
-    monsterId: Entity;
   };
 
 export type Weapon = WeaponStats &
