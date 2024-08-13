@@ -126,11 +126,12 @@ contract PvPSystem is System {
 
             // execute action
             currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
-            // emit action data to offchain table
 
+            // emit action data to offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
         }
 
+        encounterData.currentTurnTimer = block.timestamp;
         encounterData.currentTurn++;
 
         CombatEncounter.set(encounterId, encounterData);

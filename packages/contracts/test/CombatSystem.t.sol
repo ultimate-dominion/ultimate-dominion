@@ -104,6 +104,60 @@ contract Test_CombatSystem is SetUp, GasReporter {
         assertEq(encounterData.attackers[0], bobCharacterId);
     }
 
+    function test_PvPTimer() public {
+        // spawn characters
+        vm.prank(bob);
+        world.UD__spawn(bobCharacterId);
+        vm.prank(alice);
+        world.UD__spawn(alicesCharacterId);
+
+        // cannot teleport entities from spawn point
+        vm.prank(bob);
+        world.UD__move(bobCharacterId, 0, 1);
+        vm.prank(alice);
+        world.UD__move(alicesCharacterId, 0, 1);
+
+        // move entities to pvp zone
+        world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
+        world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
+
+        // if alice creates the encounter and has lower agi, she should still be the defender
+        vm.prank(alice);
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, pvpDefenders, attackers);
+
+        Action[] memory bobActions = new Action[](1);
+        Action[] memory aliceActions = new Action[](1);
+
+        vm.prank(bob);
+        // bob's move
+        bobActions[0] = Action({
+            attackerEntityId: bobCharacterId,
+            defenderEntityId: alicesCharacterId,
+            actionId: basicAttackId,
+            weaponId: 2
+        });
+
+        //alice's move
+
+        aliceActions[0] = Action({
+            attackerEntityId: alicesCharacterId,
+            defenderEntityId: bobCharacterId,
+            actionId: basicAttackId,
+            weaponId: 2
+        });
+
+        uint256 fees = 0; // entropy.getFee(address(1));
+
+        //assert alice is a defender
+        assertEq(alicesCharacterId, world.UD__getEncounter(encounterId).defenders[0]);
+        // alice should move 1st even though she is defender if combat timer is out
+        vm.warp(block.timestamp + 31);
+        vm.prank(alice);
+        world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+        vm.prank(bob);
+        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
+    }
+
     function test_CreateEncounterPvP_Revert_WrongPosition() public {
         // expect revert because both characters are in the safe zone
         vm.expectRevert();

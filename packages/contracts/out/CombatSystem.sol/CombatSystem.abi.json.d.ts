@@ -257,6 +257,11 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
+            "name": "currentTurnTimer",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
             "name": "maxTurns",
             "type": "uint256",
             "internalType": "uint256"

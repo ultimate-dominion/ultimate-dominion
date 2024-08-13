@@ -29,7 +29,8 @@ import {
     Counters,
     ActionOutcome,
     ActionOutcomeData,
-    PvPFlag
+    PvPData,
+    PvPDataData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {
@@ -82,6 +83,7 @@ contract EncounterSystem is System {
                 end: 0,
                 rewardsDistributed: false,
                 currentTurn: 1,
+                currentTurnTimer: block.timestamp,
                 maxTurns: DEFAULT_MAX_TURNS,
                 attackersAreMobs: attackersAreMobs,
                 defenders: defenders,
@@ -102,6 +104,7 @@ contract EncounterSystem is System {
                 end: 0,
                 rewardsDistributed: false,
                 currentTurn: 1,
+                currentTurnTimer: block.timestamp,
                 maxTurns: DEFAULT_MAX_TURNS,
                 attackersAreMobs: false,
                 defenders: defenders,
@@ -171,21 +174,45 @@ contract EncounterSystem is System {
      */
     function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) public payable {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        require(encounterData.start != 0 && encounterData.end == 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
-        require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
-
         address playerAddress = IWorld(_world()).UD__getOwnerAddress(playerId);
 
+        require(encounterData.start != 0 && encounterData.end == 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
+        require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
+        require(playerAddress == _msgSender() && isParticipant(playerId, encounterId), "COMBAT SYSTEM: NON-COMBATANT");
+
+        // check valid pvp turns
         if (uint8(encounterData.encounterType) == 0) {
+            // should be defender turn
             if (encounterData.currentTurn % 2 == 0) {
-                require(isParticipant(playerAddress, encounterData.defenders), "Cannot end attackers turn");
+                // if timestamp is less than timeout
+                if (encounterData.currentTurnTimer + 30 < block.timestamp) {
+                    // check that player action is for defender
+                    require(isParticipant(playerId, encounterId), "COMBAT SYSTEM: INVALID CALLER");
+
+                    // if player is attacker add +1 to current turn
+                    if (isParticipant(playerAddress, encounterData.attackers)) {
+                        encounterData.currentTurn += 1;
+                        CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
+                    }
+                } else {
+                    require(isParticipant(playerAddress, encounterData.defenders), "Cannot end defenders turn");
+                }
             } else {
-                require(isParticipant(playerAddress, encounterData.attackers), "Cannot end defenders turn");
+                // should be attacker turn unless defender has timed out
+                if (encounterData.currentTurnTimer + 30 < block.timestamp) {
+                    // allow either player to end the turn.
+                    require(isParticipant(playerId, encounterId), "COMBAT SYSTEM: INVALID CALLER");
+                    // if playerId is of a defender added 1 to current turn
+                    // if player is attacker add +1 to current turn
+                    if (isParticipant(playerAddress, encounterData.defenders)) {
+                        encounterData.currentTurn += 1;
+                        CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
+                    }
+                } else {
+                    // check that player action is for attacker
+                    require(isParticipant(playerAddress, encounterData.attackers), "Cannot end attackers turn");
+                }
             }
-        } else {
-            require(
-                playerAddress == _msgSender() && isParticipant(playerId, encounterId), "COMBAT SYSTEM: NON-COMBATANT"
-            );
         }
         _queueActions(encounterId, actions);
     }
