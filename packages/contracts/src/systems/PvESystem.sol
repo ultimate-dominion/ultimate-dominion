@@ -154,8 +154,11 @@ contract PvESystem is System {
         _numberOfExecutedActions = encounterData.defenders.length;
 
         for (uint256 i; i < _numberOfExecutedActions; i++) {
-            MonsterStats memory monsterStats = IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]);
-            ActionOutcomeData memory defenderAction = _getCurrentActionData(
+            MonsterStats memory monsterStats = encounterData.attackersAreMobs
+                ? IWorld(_world()).UD__getMonsterStats(encounterData.attackers[i])
+                : IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]);
+
+            ActionOutcomeData memory mobAction = _getCurrentActionData(
                 Action({
                     attackerEntityId: encounterData.defenders[i],
                     defenderEntityId: encounterData.attackers[i],
@@ -163,12 +166,11 @@ contract PvESystem is System {
                     weaponId: monsterStats.inventory[0]
                 })
             );
-            randomNumber =
-                uint256(keccak256(abi.encode(randomness, defenderAction.attackerId, encounterData.currentTurn)));
+            randomNumber = uint256(keccak256(abi.encode(randomness, mobAction.attackerId, encounterData.currentTurn)));
 
-            defenderAction = IWorld(_world()).UD__executeAction(defenderAction, randomNumber);
+            mobAction = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
 
-            ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, defenderAction);
+            ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, mobAction);
         }
     }
 

@@ -174,6 +174,8 @@ struct RewardDistributionTemps {
     bytes32 entityIdTemp;
     uint256 defenderLevelTemp;
     uint256 totalItemsDropped;
-    uint256 livingAttackers;
+    uint256 livingPlayers;
     uint256 cumulativeAttackerLevels;
+    bytes32[] players;
+    bytes32[] monsters;
 }
