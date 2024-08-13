@@ -591,9 +591,14 @@ export const Item = (): JSX.Element => {
                 {items[0][itemType]?.name.replace(/[\p{Emoji}\u200d]+/gu, '')}
               </Heading>
             ) : (
-              <Skeleton>
-                <Heading>...</Heading>
-              </Skeleton>
+              <Stack gap={5}>
+                <Skeleton>
+                  <Heading>...</Heading>
+                </Skeleton>
+                <Skeleton>
+                  <Box minHeight={200}></Box>
+                </Skeleton>
+              </Stack>
             )}
             <Center my={5}>
               {items != null && itemType != null ? (
@@ -657,67 +662,85 @@ export const Item = (): JSX.Element => {
               ) : (
                 <Skeleton>
                   <GridItem>
-                    <Text>INT</Text>
+                    <Box minH={200}></Box>
                   </GridItem>
                 </Skeleton>
               )}{' '}
               <GridItem>
-                <HStack>
-                  <Text>Floor Price</Text>
-                  <Spacer></Spacer>
-                  <Text>
-                    {floor.toString().toString() == maxUint256.toString()
-                      ? 'not enough data'
-                      : formatEther(floor.toString()).toString()}
-                  </Text>
-                </HStack>
+                {items ? (
+                  <HStack>
+                    <Text>Floor Price</Text>
+                    <Spacer></Spacer>
+                    <Text>
+                      {floor.toString() == maxUint256.toString()
+                        ? 'not enough data'
+                        : formatEther(floor.toString()).toString()}
+                    </Text>
+                  </HStack>
+                ) : (
+                  <Skeleton>
+                    <Box minHeight={10} mt={2}></Box>
+                  </Skeleton>
+                )}
               </GridItem>
               <GridItem>
-                <HStack>
-                  <Text>Cieling Price</Text>
-                  <Spacer></Spacer>
-                  <Text>
-                    {formatEther(ceiling.toString()).toString() == '0'
-                      ? 'not enough data'
-                      : formatEther(ceiling.toString()).toString()}
-                  </Text>
-                </HStack>
-              </GridItem>{' '}
+                {items ? (
+                  <HStack>
+                    <Text>Cieling Price</Text>
+                    <Spacer></Spacer>
+                    <Text>
+                      {formatEther(ceiling.toString()).toString() == '0'
+                        ? 'not enough data'
+                        : formatEther(ceiling.toString()).toString()}
+                    </Text>
+                  </HStack>
+                ) : (
+                  <Skeleton>
+                    <Box minH={10} mt={2}></Box>
+                  </Skeleton>
+                )}
+              </GridItem>
             </Grid>
             <Spacer></Spacer>
-            <Stack>
-              <Stack direction="row" mb={2} mt={8} w="100%">
-                <InputGroup size="lg" w="100%">
-                  <InputLeftAddon>Amount</InputLeftAddon>
-                  <Input
-                    onChange={e => setOfferAmount(e.target.value)}
-                    placeholder="0.00"
-                    type="number"
-                    min={0}
-                    value={offerAmount.toString()}
-                  />
-                </InputGroup>
-                <InputGroup size="lg" w="100%">
-                  <InputLeftAddon>Price</InputLeftAddon>
-                  <Input
-                    onChange={e => setOfferPrice(e.target.value)}
-                    placeholder="0.00"
-                    type="number"
-                    min={0}
-                    value={offerPrice.toString()}
-                  />
-                </InputGroup>
+            {items ? (
+              <Stack>
+                <Stack direction="row" mb={2} mt={8} w="100%">
+                  <InputGroup size="lg" w="100%">
+                    <InputLeftAddon>Amount</InputLeftAddon>
+                    <Input
+                      onChange={e => setOfferAmount(e.target.value)}
+                      placeholder="0.00"
+                      type="number"
+                      min={0}
+                      value={offerAmount.toString()}
+                    />
+                  </InputGroup>
+                  <InputGroup size="lg" w="100%">
+                    <InputLeftAddon>Price</InputLeftAddon>
+                    <Input
+                      onChange={e => setOfferPrice(e.target.value)}
+                      placeholder="0.00"
+                      type="number"
+                      min={0}
+                      value={offerPrice.toString()}
+                    />
+                  </InputGroup>
+                </Stack>
+                <Button
+                  w="100%"
+                  onClick={() => orderItem(offerAmount, offerPrice)}
+                  isLoading={isSettingAllowances || isSelling}
+                  size="sm"
+                  variant="solid"
+                >
+                  Offer {offerPrice} $GOLD for {offerAmount} item
+                </Button>
               </Stack>
-              <Button
-                w="100%"
-                onClick={() => orderItem(offerAmount, offerPrice)}
-                isLoading={isSettingAllowances || isSelling}
-                size="sm"
-                variant="solid"
-              >
-                Offer {offerPrice} $GOLD for {offerAmount} item
-              </Button>
-            </Stack>
+            ) : (
+              <Skeleton>
+                <Box minHeight={100} mt={2}></Box>
+              </Skeleton>
+            )}
           </GridItem>
           <GridItem p={5} rowSpan={8} colSpan={{ base: 5, lg: 10 }} order={3}>
             <Tabs variant="enclosed" size="lg">
@@ -791,99 +814,107 @@ export const Item = (): JSX.Element => {
                   </Stack>
                 </TabPanel>
                 <TabPanel>
-                  <Center>
-                    <Stack direction="row">
-                      {items != null &&
-                      inventory != null &&
-                      inventory.length > 0 &&
-                      inventory[0].Balance > 0 &&
-                      itemType != null ? (
-                        <ItemCard
-                          name={items[0][itemType].name}
-                          classRestrictions={
-                            items[0][itemType].classRestrictions
-                          }
-                          image={`x${inventory[0]?.Balance}`}
-                          strModifier={items[0][itemType].strModifier}
-                          agiModifier={items[0][itemType].agiModifier}
-                          intModifier={items[0][itemType].intModifier}
-                          {...inventory[0][itemType]}
-                          isEquipped={false}
-                        />
-                      ) : (
-                        ''
-                      )}
-                      <Center>
-                        {inventory &&
-                        inventory.length > 0 &&
-                        inventory[0]?.Balance > 0 ? (
-                          <Avatar
-                            name={' '}
-                            size="lg"
-                            w={100}
-                            h={100}
-                            background="grey300"
-                          >
-                            <FaTimes />
-                            {inventory[0]?.Balance < 1000
-                              ? inventory[0].Balance
-                              : '999+'}
-                          </Avatar>
-                        ) : (
-                          ''
-                        )}
-                      </Center>
-                    </Stack>
-                  </Center>
-                  {inventory &&
-                  inventory.length > 0 &&
-                  inventory[0].Balance > 0 ? (
+                  {items ? (
                     <Stack>
-                      <Stack direction="row" mb={2} mt={8} w="100%">
-                        <InputGroup size="lg" w="100%">
-                          <InputLeftAddon>Amount</InputLeftAddon>
-                          <Input
-                            onChange={e => setListingAmount(e.target.value)}
-                            placeholder="0.00"
-                            type="number"
-                            min={0}
-                            step={1}
-                            max={Number(inventory[0]?.Balance)}
-                            value={listingAmount.toString()}
-                          />
-                        </InputGroup>
-                        <InputGroup size="lg" w="100%">
-                          <InputLeftAddon>Price</InputLeftAddon>
-                          <Input
-                            onChange={e => setListingPrice(e.target.value)}
-                            placeholder="0.00"
-                            type="number"
-                            min={0}
-                            value={listingPrice.toString()}
-                          />
-                        </InputGroup>
-                      </Stack>
-                      <Spacer></Spacer>
-                      <Button
-                        w="100%"
-                        onClick={() =>
-                          sellItem(
-                            listingAmount.toString(),
-                            listingPrice.toString(),
-                          )
-                        }
-                        isLoading={isSettingAllowances || isSelling}
-                        size="sm"
-                        variant="solid"
-                      >
-                        List {listingAmount} of your item for {listingPrice}{' '}
-                        $GOLD
-                      </Button>
+                      <Center>
+                        <Stack direction="row">
+                          {items != null &&
+                          inventory != null &&
+                          inventory.length > 0 &&
+                          inventory[0].Balance > 0 &&
+                          itemType != null ? (
+                            <ItemCard
+                              name={items[0][itemType].name}
+                              classRestrictions={
+                                items[0][itemType].classRestrictions
+                              }
+                              image={`x${inventory[0]?.Balance}`}
+                              strModifier={items[0][itemType].strModifier}
+                              agiModifier={items[0][itemType].agiModifier}
+                              intModifier={items[0][itemType].intModifier}
+                              {...inventory[0][itemType]}
+                              isEquipped={false}
+                            />
+                          ) : (
+                            ''
+                          )}
+                          <Center>
+                            {inventory &&
+                            inventory.length > 0 &&
+                            inventory[0]?.Balance > 0 ? (
+                              <Avatar
+                                name={' '}
+                                size="lg"
+                                w={100}
+                                h={100}
+                                background="grey300"
+                              >
+                                <FaTimes />
+                                {inventory[0]?.Balance < 1000
+                                  ? inventory[0].Balance
+                                  : '999+'}
+                              </Avatar>
+                            ) : (
+                              ''
+                            )}
+                          </Center>
+                        </Stack>
+                      </Center>
+                      {inventory &&
+                      inventory.length > 0 &&
+                      inventory[0].Balance > 0 ? (
+                        <Stack>
+                          <Stack direction="row" mb={2} mt={8} w="100%">
+                            <InputGroup size="lg" w="100%">
+                              <InputLeftAddon>Amount</InputLeftAddon>
+                              <Input
+                                onChange={e => setListingAmount(e.target.value)}
+                                placeholder="0.00"
+                                type="number"
+                                min={0}
+                                step={1}
+                                max={Number(inventory[0]?.Balance)}
+                                value={listingAmount.toString()}
+                              />
+                            </InputGroup>
+                            <InputGroup size="lg" w="100%">
+                              <InputLeftAddon>Price</InputLeftAddon>
+                              <Input
+                                onChange={e => setListingPrice(e.target.value)}
+                                placeholder="0.00"
+                                type="number"
+                                min={0}
+                                value={listingPrice.toString()}
+                              />
+                            </InputGroup>
+                          </Stack>
+                          <Spacer></Spacer>
+                          <Button
+                            w="100%"
+                            onClick={() =>
+                              sellItem(
+                                listingAmount.toString(),
+                                listingPrice.toString(),
+                              )
+                            }
+                            isLoading={isSettingAllowances || isSelling}
+                            size="sm"
+                            variant="solid"
+                          >
+                            List {listingAmount} of your item for {listingPrice}{' '}
+                            $GOLD
+                          </Button>
+                        </Stack>
+                      ) : (
+                        <Center my={5}>
+                          <Text>None Owned</Text>
+                        </Center>
+                      )}
                     </Stack>
                   ) : (
-                    <Center my={5}>
-                      <Text>None Owned</Text>
-                    </Center>
+                    <Skeleton>
+                      <Box minH={200}></Box>
+                    </Skeleton>
                   )}
                 </TabPanel>
               </TabPanels>
