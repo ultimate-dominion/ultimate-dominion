@@ -134,7 +134,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bobActions[0] = Action({
             attackerEntityId: bobCharacterId,
             defenderEntityId: alicesCharacterId,
-            actionId: basicAttackId,
+            actionId: basicMagicAttackId,
             weaponId: 2
         });
 
@@ -170,7 +170,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         entityId2 = world.UD__spawnMob(1, 0, 1);
         defenders[0] = entityId2;
         vm.prank(bob);
-        vm.expectRevert("COMBAT SYSTEM: INVALID PVE");
+        vm.expectRevert("ENCOUNTER SYSTEM: INVALID PVE");
         world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
     }
 
@@ -179,7 +179,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         assertEq(world.UD__getEncounter(encounterId).start, block.timestamp);
         vm.prank(bob);
-        vm.expectRevert("COMBAT SYSTEM: INVALID ENTITY");
+        vm.expectRevert("ENCOUNTER SYSTEM: INVALID ENTITY");
         world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
     }
 
@@ -263,7 +263,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bobActions[0] = Action({
             attackerEntityId: bobCharacterId,
             defenderEntityId: alicesCharacterId,
-            actionId: basicAttackId,
+            actionId: basicMagicAttackId,
             weaponId: 2
         });
 
@@ -312,7 +312,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         actions[0] =
             Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 1});
         uint256 fees = entropy.getFee(address(1));
-        vm.expectRevert("COMBAT SYSTEM: NON-COMBATANT");
+        vm.expectRevert("ENCOUNTER SYSTEM: NON-COMBATANT");
         world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
     }
 }

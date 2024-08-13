@@ -207,16 +207,22 @@ contract PostDeploy is Script {
         StarterActions memory actionsData = abi.decode(data, (StarterActions));
 
         for (uint256 i; i < actionsData.physicalAttacks.length; i++) {
-            bytes32 newActionId =
-                world.UD__createAction(ActionType.PhysicalAttack, abi.encode(actionsData.physicalAttacks[i].stats));
+            bytes32 newActionId = world.UD__createAction(
+                ActionType.PhysicalAttack,
+                actionsData.physicalAttacks[i].name,
+                abi.encode(actionsData.physicalAttacks[i].stats)
+            );
             console2.log("Physical action id: ", i + 1);
             console2.logBytes32(newActionId);
             require(newActionId == actionsData.physicalAttacks[i].actionId, "Physical action Id mismatch");
         }
 
         for (uint256 i; i < actionsData.magicAttacks.length; i++) {
-            bytes32 newActionId =
-                world.UD__createAction(ActionType.PhysicalAttack, abi.encode(actionsData.magicAttacks[i].stats));
+            bytes32 newActionId = world.UD__createAction(
+                ActionType.PhysicalAttack,
+                actionsData.magicAttacks[i].name,
+                abi.encode(actionsData.magicAttacks[i].stats)
+            );
             console2.log("Magic action Id ", i + 1);
             console2.logBytes32(newActionId);
             require(newActionId == actionsData.magicAttacks[i].actionId, "Magical action Id mismatch");

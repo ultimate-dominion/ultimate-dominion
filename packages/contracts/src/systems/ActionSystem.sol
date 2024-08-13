@@ -22,9 +22,12 @@ import {UltimateDominionConfig} from "@codegen/index.sol";
 import {DEFAULT_MAX_TURNS} from "../../constants.sol";
 
 contract ActionSystem is System {
-    function createAction(ActionType actionType, bytes memory actionStats) public returns (bytes32 actionId) {
+    function createAction(ActionType actionType, string memory name, bytes memory actionStats)
+        public
+        returns (bytes32 actionId)
+    {
         _requireOwner(address(this), _msgSender());
-        actionId = keccak256(actionStats);
+        actionId = keccak256(abi.encode(name));
         require(
             Actions.getActionStats(actionId).length == 0 && uint8(Actions.getActionType(actionId)) == uint8(0),
             "Action already exists"

@@ -149,11 +149,11 @@ struct MagicAttackStats {
     int256 critChanceBonus;
     // items that can cause this attack (leave empty if item not required)
     uint256[] itemRestrictions;
-    // status effects applied by this attack
-    bytes32[] statusEffects;
     // damage delt by this attack (can be negative for heals)
     int256 minDamage;
     int256 maxDamage;
+    // status effects applied by this attack
+    bytes32[] statusEffects;
 }
 
 struct NPCStats {

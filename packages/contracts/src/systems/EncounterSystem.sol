@@ -62,7 +62,8 @@ contract EncounterSystem is System {
         returns (bytes32 encounterId)
     {
         require(
-            isParticipant(_msgSender(), group1) || isParticipant(_msgSender(), group2), "COMBAT SYSTEM: INVALID SENDER"
+            isParticipant(_msgSender(), group1) || isParticipant(_msgSender(), group2),
+            "ENCOUNTER SYSTEM: INVALID SENDER"
         );
         (uint16 x, uint16 y) = Position.get(group1[0]);
 
@@ -71,7 +72,7 @@ contract EncounterSystem is System {
 
         if (uint256(encounterType) == 1) {
             (bool isValidPvE, bool attackersAreMobs) = IWorld(_world()).UD__isValidPvE(attackers, defenders, x, y);
-            require(isValidPvE, "COMBAT SYSTEM: INVALID PVE");
+            require(isValidPvE, "ENCOUNTER SYSTEM: INVALID PVE");
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
 
@@ -92,7 +93,7 @@ contract EncounterSystem is System {
         }
 
         if (uint8(encounterType) == 0) {
-            require(IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y), "COMBAT SYSTEM: INVALID PVP");
+            require(IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y), "ENCOUNTER SYSTEM: INVALID PVP");
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
 
@@ -120,7 +121,7 @@ contract EncounterSystem is System {
             // check that entity is not already in an encounter and is not dead
             require(
                 tempEncounterEntityData.encounterId == bytes32(0) && !tempEncounterEntityData.died,
-                "COMBAT SYSTEM: INVALID ENTITY"
+                "ENCOUNTER SYSTEM: INVALID ENTITY"
             );
             tempEncounterEntityData.encounterId = encounterId;
             EncounterEntity.set(attackers[i], tempEncounterEntityData);
@@ -132,7 +133,7 @@ contract EncounterSystem is System {
             // check that entity is not already in an encounter and is not dead
             require(
                 tempEncounterEntityData.encounterId == bytes32(0) && !tempEncounterEntityData.died,
-                "COMBAT SYSTEM: INVALID ENTITY"
+                "ENCOUNTER SYSTEM: INVALID ENTITY"
             );
             tempEncounterEntityData.encounterId = encounterId;
             EncounterEntity.set(defenders[i], tempEncounterEntityData);
@@ -174,18 +175,20 @@ contract EncounterSystem is System {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         address playerAddress = IWorld(_world()).UD__getOwnerAddress(playerId);
 
-        require(encounterData.start != 0 && encounterData.end == 0, "COMBAT SYSTEM: INVALID ENCOUNTER");
-        require(encounterData.currentTurn < encounterData.maxTurns, "COMBAT SYSTEM: EXPIRED ENCOUNTER");
-        require(playerAddress == _msgSender() && isParticipant(playerId, encounterId), "COMBAT SYSTEM: NON-COMBATANT");
+        require(encounterData.start != 0 && encounterData.end == 0, "ENCOUNTER SYSTEM: INVALID ENCOUNTER");
+        require(encounterData.currentTurn < encounterData.maxTurns, "ENCOUNTER SYSTEM: EXPIRED ENCOUNTER");
+        require(
+            playerAddress == _msgSender() && isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: NON-COMBATANT"
+        );
 
         // check valid pvp turns
         if (uint8(encounterData.encounterType) == 0) {
             // should be defender turn
             if (encounterData.currentTurn % 2 == 0) {
                 // if timestamp is less than timeout
-                if (encounterData.currentTurnTimer + 30 < block.timestamp) {
+                if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
                     // check that player action is for defender
-                    require(isParticipant(playerId, encounterId), "COMBAT SYSTEM: INVALID CALLER");
+                    require(isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER");
 
                     // if player is attacker add +1 to current turn
                     if (isParticipant(playerAddress, encounterData.attackers)) {
@@ -197,9 +200,9 @@ contract EncounterSystem is System {
                 }
             } else {
                 // should be attacker turn unless defender has timed out
-                if (encounterData.currentTurnTimer + 30 < block.timestamp) {
+                if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
                     // allow either player to end the turn.
-                    require(isParticipant(playerId, encounterId), "COMBAT SYSTEM: INVALID CALLER");
+                    require(isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER");
                     // if playerId is of a defender added 1 to current turn
                     // if player is attacker add +1 to current turn
                     if (isParticipant(playerAddress, encounterData.defenders)) {
