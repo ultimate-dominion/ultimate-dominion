@@ -150,7 +150,11 @@ contract MapSystem is System {
     }
 
     function removeEntityFromBoard(bytes32 entityId) public {
-        _requireAccess(address(this), _msgSender());
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            require(IWorld(_world()).UD__isValidOwner(entityId, _msgSender()), "Cannot remove another player");
+        } else {
+            _requireAccess(address(this), _msgSender());
+        }
         (uint16 currentX, uint16 currentY) = getEntityPosition(entityId);
         bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
         bool entityWasAtPosition;
