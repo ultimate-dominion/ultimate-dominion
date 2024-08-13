@@ -151,7 +151,12 @@ contract MapSystem is System {
 
     function removeEntityFromBoard(bytes32 entityId) public {
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
-            require(IWorld(_world()).UD__isValidOwner(entityId, _msgSender()), "Cannot remove another player");
+            bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
+            if (senderIsOwner) {
+                // if sender is owner execute removal
+            } else {
+                _requireAccess(address(this), _msgSender());
+            }
         } else {
             _requireAccess(address(this), _msgSender());
         }
@@ -170,6 +175,7 @@ contract MapSystem is System {
                 i++;
             }
         }
+        Position.set(entityId, 0, 0);
         require(entityWasAtPosition, "Entity not at position");
     }
 
