@@ -149,18 +149,17 @@ export const BattleProvider = ({
     if (!currentBattle) return null;
 
     let possibleOpponent: Character | Monster | undefined = allMonsters.find(
-      monster => currentBattle.defenders.includes(monster.id),
+      monster =>
+        [...currentBattle.attackers, ...currentBattle.defenders].includes(
+          monster.id,
+        ),
     );
 
     if (!possibleOpponent) {
       possibleOpponent = otherCharactersOnTile.find(char =>
-        currentBattle.defenders.includes(char.id),
-      );
-    }
-
-    if (!possibleOpponent) {
-      possibleOpponent = otherCharactersOnTile.find(char =>
-        currentBattle.attackers.includes(char.id),
+        [...currentBattle.attackers, ...currentBattle.defenders].includes(
+          char.id,
+        ),
       );
     }
 

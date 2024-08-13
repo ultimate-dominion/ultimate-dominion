@@ -125,10 +125,16 @@ export function createSystemCalls(
         ]),
       ).filter(entity => {
         const encounter = getComponentValue(CombatEncounter, entity);
+
+        if (!encounter) return false;
+        const encounterParticipants = encounter.attackers.concat(
+          encounter.defenders,
+        );
         return (
-          encounter &&
-          encounter.attackers.some(attacker => attackers.includes(attacker)) &&
-          encounter.defenders.some(defender => defenders.includes(defender))
+          encounterParticipants.some(attacker =>
+            attackers.includes(attacker),
+          ) &&
+          encounterParticipants.some(defender => defenders.includes(defender))
         );
       })[0];
 
