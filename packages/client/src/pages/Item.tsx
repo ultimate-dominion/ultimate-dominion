@@ -61,6 +61,30 @@ const erc1155abi = [
         type: 'address',
       },
       {
+        internalType: 'uint256',
+        name: 'id',
+        type: 'uint256',
+      },
+    ],
+    name: 'balanceOf',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+      {
         internalType: 'address',
         name: 'operator',
         type: 'address',
@@ -123,8 +147,9 @@ export const Item = (): JSX.Element => {
   const [inventory, setInventory] = useState<Item[] | null>(null);
   const [itemType, setItemType] = useState<string | null>(null);
   const [items, setItems] = useState<Item[] | null>(null);
+  const [isSettingAllowances, setIsSettingAllowances] = useState(false);
   const [goldAllowance, setGoldAllowance] = useState<bigint | null>(null);
-  const [itemAllowance, setItemAllowance] = useState<boolean | null>(null);
+  const [itemAllowance, setItemAllowance] = useState<bigint | null>(null);
   const [auctionContractAddress, setAuctionContractAddress] = useState('');
   const [orders, setOrders] = useState<Order[] | null>(null);
 
@@ -149,14 +174,71 @@ export const Item = (): JSX.Element => {
     singletonEntity,
   ) ?? { items: null };
 
+  const getAllowances = async function (wanted: Item | bigint) {
+    if (!externalWalletClient) {
+      renderError('Wallet not connected.');
+      return false;
+    }
+    try {
+      setIsSettingAllowances(true);
+      if (typeof wanted == 'bigint') {
+        const allowance = await publicClient.readContract({
+          address: goldToken as Address,
+          abi: erc20Abi,
+          functionName: 'allowance',
+          args: [
+            externalWalletClient.account.address,
+            auctionContractAddress as Address,
+          ],
+        });
+        const balance = await publicClient.readContract({
+          address: goldToken as Address,
+          abi: erc20Abi,
+          functionName: 'balanceOf',
+          args: [externalWalletClient.account.address],
+        });
+        setGoldAllowance(allowance > balance ? balance : allowance);
+      } else {
+        const allowance = (await publicClient.readContract({
+          address: itemsContract as Address,
+          abi: erc1155abi,
+          functionName: 'isApprovedForAll',
+          args: [
+            externalWalletClient.account.address,
+            auctionContractAddress as Address,
+          ],
+        })) as boolean;
+        const balance = (await publicClient.readContract({
+          address: itemsContract as Address,
+          abi: erc1155abi,
+          functionName: 'balanceOf',
+          args: [externalWalletClient.account.address, wanted.TokenId],
+        })) as bigint;
+        setItemAllowance(allowance == true ? balance : 0n);
+      }
+      return true;
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Error reading allowances.', e);
+    } finally {
+      setIsSettingAllowances(false);
+    }
+  };
   const _sell = async function (
     wanted: Item | bigint,
     offered: Item | bigint,
     purchaser: Character,
     amount: bigint,
   ) {
-    if (!externalWalletClient) {
-      renderError('Wallet not connected.');
+    const allowances = await getAllowances(offered);
+    if (!allowances) {
+      return;
+    }
+    if (typeof offered == 'bigint' && (goldAllowance || 0) < offered) {
+      renderError('Insufficient allowance or GOLD balance.');
+      return;
+    }
+    if (typeof offered != 'bigint' && (itemAllowance || 0) < amount) {
+      renderError('Insufficient balance or not allowed to spend the item.');
       return;
     }
     try {
@@ -204,7 +286,7 @@ export const Item = (): JSX.Element => {
         address: worldContract.address,
         abi: worldAbi,
         functionName: 'UD__createOrder',
-        account: externalWalletClient.account,
+        account: externalWalletClient?.account,
         args: args,
       });
       await externalWalletClient?.writeContract(request);
@@ -236,12 +318,8 @@ export const Item = (): JSX.Element => {
     }
   };
   const orderItem = async function (amount: string, price: string) {
-    if (
-      !params.itemId ||
-      goldAllowance == null ||
-      goldAllowance < parseEther(price.toString())
-    ) {
-      renderError('Approve more funds in your wallet details');
+    if (!params.itemId) {
+      renderError('Item error');
     } else if (items && userCharacter) {
       _sell(
         items.filter(x => x.TokenId == params.itemId)[0],
@@ -306,8 +384,6 @@ export const Item = (): JSX.Element => {
         setInventory(_items);
       } catch (e) {
         renderError('Failed to fetch character data.', e);
-      } finally {
-        // setIsLoadingItems(false);
       }
     },
     [Items, ItemsOwners, itemType, params.itemId, renderError],
@@ -326,7 +402,10 @@ export const Item = (): JSX.Element => {
           const orderStatus = await worldContract.read.UD__getOrderStatus([
             orderHash as Address,
           ]);
-          if (considerationData.token == goldToken) {
+          if (
+            considerationData.token == goldToken &&
+            offerData.identifier.toString() == params.itemId
+          ) {
             setFloor(
               BigInt(
                 considerationData.amount / offerData.amount < floor
@@ -335,7 +414,10 @@ export const Item = (): JSX.Element => {
               ),
             );
           }
-          if (offerData.token == goldToken) {
+          if (
+            offerData.token == goldToken &&
+            considerationData.identifier.toString() == params.itemId
+          ) {
             setCeiling(
               BigInt(
                 offerData.amount / considerationData.amount > ceiling
@@ -365,7 +447,7 @@ export const Item = (): JSX.Element => {
         }),
       ),
     );
-  }, [Offers, ceiling, floor, goldToken, worldContract.read]);
+  }, [Offers, ceiling, floor, goldToken, params.itemId, worldContract.read]);
   const fetchItems = useCallback(async () => {
     const _items = Array.from(runQuery([Has(ItemsOwners)]))
       .map(entity => {
@@ -478,32 +560,6 @@ export const Item = (): JSX.Element => {
       await fetchOrders();
       if (userCharacter && itemType) {
         await fetchCharacterItems(userCharacter);
-      }
-      if (auctionContractAddress && userCharacter) {
-        setGoldAllowance(
-          await publicClient.readContract({
-            address: goldToken as Address,
-            abi: erc20Abi,
-            functionName: 'allowance',
-            args: [
-              userCharacter?.owner as Address,
-              auctionContractAddress as Address,
-            ],
-          }),
-        );
-      }
-      if (itemAllowance == null && auctionContractAddress && userCharacter) {
-        setItemAllowance(
-          (await publicClient.readContract({
-            address: itemsContract as Address,
-            abi: erc1155abi,
-            functionName: 'isApprovedForAll',
-            args: [
-              userCharacter?.owner as Address,
-              auctionContractAddress as Address,
-            ],
-          })) as boolean,
-        );
       }
     })();
   }, [
@@ -655,7 +711,7 @@ export const Item = (): JSX.Element => {
               <Button
                 w="100%"
                 onClick={() => orderItem(offerAmount, offerPrice)}
-                isLoading={isSelling}
+                isLoading={isSettingAllowances || isSelling}
                 size="sm"
                 variant="solid"
               >
@@ -668,7 +724,7 @@ export const Item = (): JSX.Element => {
               <TabList>
                 <Tab>Listing</Tab>
                 <Tab>Offers</Tab>
-                <Tab>Owned</Tab>
+                <Tab>Inventory</Tab>
               </TabList>
               <TabPanels>
                 <TabPanel>
@@ -816,7 +872,7 @@ export const Item = (): JSX.Element => {
                             listingPrice.toString(),
                           )
                         }
-                        isLoading={isSelling}
+                        isLoading={isSettingAllowances || isSelling}
                         size="sm"
                         variant="solid"
                       >

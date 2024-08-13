@@ -401,6 +401,11 @@ export const WalletDetailsModal = ({
                     Withdraw
                   </Button>
                 </HStack>
+                <Text fontWeight={700} size="sm">
+                  To use the Auction House, you will need to set an allowance
+                  for how much gold can be spent and allow the spending of your
+                  items.
+                </Text>
                 <HStack>
                   <FormControl isInvalid={!!withdrawErrorMessage}>
                     <FormLabel fontSize="xs">
