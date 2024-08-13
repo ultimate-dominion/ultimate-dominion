@@ -53,7 +53,7 @@ export const GameBoard = (): JSX.Element => {
     network: { worldContract },
   } = useMUD();
   const { character, equippedWeapons } = useCharacter();
-  const { position } = useMap();
+  const { inSafetyZone, position } = useMap();
   const { continueToBattleOutcome, lastestBattleOutcome } = useBattle();
 
   // Redirect to home if synced, but missing other requirements
@@ -102,17 +102,22 @@ export const GameBoard = (): JSX.Element => {
   // Open Outer Realms warning modal if character is level 1 and entered Outer Realms
   useEffect(() => {
     if (!(character && position)) return;
-    const outerRealms = position.x === 5 || position.y === 5;
 
     const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract.address}-${character.id}`;
 
     const hasSeenWarning = localStorage.getItem(outerRealmsSeenKey);
     if (hasSeenWarning) return;
 
-    if (character.level === '1' && outerRealms) {
+    if (character.level === '1' && !inSafetyZone) {
       onOpenOuterRealmsInfoModal();
     }
-  }, [character, onOpenOuterRealmsInfoModal, position, worldContract]);
+  }, [
+    character,
+    inSafetyZone,
+    onOpenOuterRealmsInfoModal,
+    position,
+    worldContract,
+  ]);
 
   const onAcknowledgeOuterRealmsWarning = useCallback(() => {
     if (!character) return;

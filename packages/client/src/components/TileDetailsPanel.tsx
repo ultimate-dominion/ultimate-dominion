@@ -9,10 +9,12 @@ import {
   Stack,
   Text,
   useBreakpointValue,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 import { GiCrossedSwords } from 'react-icons/gi';
+import { IoIosWarning } from 'react-icons/io';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -26,19 +28,26 @@ import {
 } from '../utils/constants';
 import { type Character, EncounterType, type Monster } from '../utils/types';
 import { HealthBar } from './HealthBar';
+import { InfoModal } from './InfoModal';
 
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const TileDetailsPanel = (): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const {
+    isOpen: isSafetyZoneInfoModalOpen,
+    onClose: onCloseSafetyZoneInfoModal,
+    onOpen: onOpenSafetyZoneInfoModal,
+  } = useDisclosure();
 
   const {
     delegatorAddress,
     systemCalls: { createEncounter },
   } = useMUD();
   const { character } = useCharacter();
-  const { aliveMonsters, isSpawned, otherCharactersOnTile } = useMap();
+  const { aliveMonsters, inSafetyZone, isSpawned, otherCharactersOnTile } =
+    useMap();
   const { actionOutcomes, currentBattle, opponent } = useBattle();
   const { isRefreshing } = useMovement();
 
@@ -285,9 +294,13 @@ export const TileDetailsPanel = (): JSX.Element => {
             Monsters
           </Text>
         </GridItem>
-        <GridItem colSpan={1}>
+        <GridItem colSpan={2}>
           <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
             Players
+            <Text as="span" size="sm">
+              {' '}
+              {inSafetyZone ? '(Safety Zone)' : '(Outer Realms)'}
+            </Text>
           </Text>
         </GridItem>
       </Grid>
@@ -317,9 +330,11 @@ export const TileDetailsPanel = (): JSX.Element => {
               <OpponentRow
                 encounterType={EncounterType.PvP}
                 key={`tile-player-${i}-${player.name}`}
-                onClick={() => {
-                  onInitiateCombat(player, EncounterType.PvP);
-                }}
+                onClick={() =>
+                  inSafetyZone
+                    ? onOpenSafetyZoneInfoModal()
+                    : onInitiateCombat(player, EncounterType.PvP)
+                }
                 opponent={player}
               />
             ))}
@@ -330,6 +345,29 @@ export const TileDetailsPanel = (): JSX.Element => {
           )}
         </GridItem>
       </Grid>
+      <InfoModal
+        heading="Cannot Battle in the Safety Zone"
+        isOpen={isSafetyZoneInfoModalOpen}
+        onClose={onCloseSafetyZoneInfoModal}
+      >
+        <VStack p={4} spacing={4}>
+          <IoIosWarning color="orange" size={40} />
+          <Text mt={4}>
+            You are currently in the{' '}
+            <Text as="span" fontWeight={700}>
+              Safety Zone
+            </Text>
+            .
+          </Text>
+          <Text textAlign="center">
+            In order to battle other players, you must enter the{' '}
+            <Text as="span" fontWeight={700}>
+              Outer Realms
+            </Text>
+            .
+          </Text>
+        </VStack>
+      </InfoModal>
     </Box>
   );
 };

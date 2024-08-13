@@ -14,6 +14,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import { formatEther, hexToString, zeroHash } from 'viem';
@@ -32,6 +33,7 @@ type MapContextType = {
   aliveMonsters: Monster[];
   allMonsters: Monster[];
   allSpawnedCharacters: Character[];
+  inSafetyZone: boolean;
   isFetchingEntities: boolean;
   isSpawned: boolean;
   isSpawning: boolean;
@@ -44,6 +46,7 @@ const MapContext = createContext<MapContextType>({
   aliveMonsters: [],
   allMonsters: [],
   allSpawnedCharacters: [],
+  inSafetyZone: false,
   isFetchingEntities: false,
   isSpawned: false,
   isSpawning: false,
@@ -94,6 +97,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       { characterId: BigInt(character?.id ?? 0) },
     ),
   );
+
+  const inSafetyZone = useMemo(() => {
+    if (!position) return false;
+    return position.x < 5 && position.y < 5;
+  }, [position]);
 
   const isSpawned = !!useComponentValue(
     Spawned,
@@ -348,6 +356,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         aliveMonsters: monsters.filter(m => Number(m.currentHp) > 0),
         allMonsters: monsters,
         allSpawnedCharacters,
+        inSafetyZone,
         isFetchingEntities,
         isSpawned,
         isSpawning,
