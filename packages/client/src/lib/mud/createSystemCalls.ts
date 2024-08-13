@@ -20,10 +20,8 @@ import {
   Address,
   BaseError,
   ContractFunctionRevertedError,
-  getContract,
   InsufficientFundsError,
   keccak256,
-  parseAbiItem,
   stringToHex,
   toBytes,
 } from 'viem';
@@ -164,8 +162,6 @@ export function createSystemCalls(
         },
       ];
 
-      const fee = await getFee();
-
       await publicClient.simulateContract({
         abi: worldContract.abi,
         account: delegatorAddress,
@@ -176,19 +172,13 @@ export function createSystemCalls(
           actions,
         ],
         functionName: 'UD__endTurn',
-        value: fee,
       });
 
-      const tx = await worldContract.write.UD__endTurn(
-        [
-          encounterId.toString() as `0x${string}`,
-          playerId.toString() as `0x${string}`,
-          actions,
-        ],
-        {
-          value: fee,
-        },
-      );
+      const tx = await worldContract.write.UD__endTurn([
+        encounterId.toString() as `0x${string}`,
+        playerId.toString() as `0x${string}`,
+        actions,
+      ]);
 
       await waitForTransaction(tx);
 
@@ -197,7 +187,7 @@ export function createSystemCalls(
         encounterId,
       );
 
-      let success = currentTurn === BigInt(previousTurn) + BigInt(1);
+      let success = currentTurn === BigInt(previousTurn) + BigInt(2);
 
       if (!success) {
         success = end !== BigInt(0);
@@ -444,8 +434,6 @@ export function createSystemCalls(
     characterClass: StatsClasses,
   ): SystemCallReturn => {
     try {
-      const fee = await getFee();
-
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
 
@@ -459,19 +447,13 @@ export function createSystemCalls(
           characterClass,
         ],
         functionName: 'UD__rollStats',
-        value: fee,
       });
 
-      const tx = await worldContract.write.UD__rollStats(
-        [
-          userRandomNumber,
-          characterEntity.toString() as `0x${string}`,
-          characterClass,
-        ],
-        {
-          value: fee,
-        },
-      );
+      const tx = await worldContract.write.UD__rollStats([
+        userRandomNumber,
+        characterEntity.toString() as `0x${string}`,
+        characterClass,
+      ]);
 
       const { blockNumber } = await waitForTransaction(tx);
 
@@ -615,24 +597,24 @@ export function createSystemCalls(
     }
   };
 
-  const getFee = async () => {
-    const entropyAddress = await worldContract.read.UD__getEntropy();
-    const providerAddress = await worldContract.read.UD__getPythProvider();
+  // const getFee = async () => {
+  //   const entropyAddress = await worldContract.read.UD__getEntropy();
+  //   const providerAddress = await worldContract.read.UD__getPythProvider();
 
-    const entropyContract = getContract({
-      address: entropyAddress,
-      abi: [
-        parseAbiItem(
-          'function getFee(address provider) view returns (uint256)',
-        ),
-      ],
-      client: publicClient,
-    });
+  //   const entropyContract = getContract({
+  //     address: entropyAddress,
+  //     abi: [
+  //       parseAbiItem(
+  //         'function getFee(address provider) view returns (uint256)',
+  //       ),
+  //     ],
+  //     client: publicClient,
+  //   });
 
-    const fee = await entropyContract.read.getFee([providerAddress]);
+  //   const fee = await entropyContract.read.getFee([providerAddress]);
 
-    return fee;
-  };
+  //   return fee;
+  // };
 
   return {
     createEncounter,

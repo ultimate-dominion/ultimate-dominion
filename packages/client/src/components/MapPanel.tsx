@@ -8,7 +8,9 @@ import {
 } from 'react-icons/io';
 import { TbDirectionArrows } from 'react-icons/tb';
 
-import { useMapNavigation } from '../contexts/MapNavigationContext';
+import { useBattle } from '../contexts/BattleContext';
+import { useMap } from '../contexts/MapContext';
+import { useMovement } from '../contexts/MovementContext';
 
 const SAFE_ZONE_AREA = {
   topLeft: { x: 0, y: 4 },
@@ -16,16 +18,10 @@ const SAFE_ZONE_AREA = {
 };
 
 export const MapPanel = (): JSX.Element => {
-  const {
-    allSpawnedCharacters,
-    currentBattle,
-    isRefreshing,
-    isSpawned,
-    isSpawning,
-    onMove,
-    onSpawn,
-    position,
-  } = useMapNavigation();
+  const { allSpawnedCharacters, isSpawned, isSpawning, onSpawn, position } =
+    useMap();
+  const { currentBattle } = useBattle();
+  const { isRefreshing, onMove } = useMovement();
 
   return (
     <Stack

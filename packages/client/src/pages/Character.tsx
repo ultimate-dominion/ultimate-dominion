@@ -364,7 +364,7 @@ export const CharacterPage = (): JSX.Element => {
                       >
                         {character.experience}
                       </Text>
-                      /{nextLevelXpRequirement.toString()}
+                      /{nextLevelXpRequirement.toString()} XP
                     </Text>
                   </Box>
                   <Spacer />
@@ -537,6 +537,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
               ...metadata,
               agiModifier: decodedArmorStats.agiModifier,
               armorModifier: decodedArmorStats.armorModifier,
+              balance: item.balance,
               classRestrictions: decodedArmorStats.classRestrictions,
               hitPointModifier: decodedArmorStats.hitPointModifier,
               intModifier: decodedArmorStats.intModifier,

@@ -9,19 +9,35 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Spinner,
   Text,
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useMemo } from 'react';
+import { getComponentValueStrict } from '@latticexyz/recs';
+import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
-import { useMapNavigation } from '../contexts/MapNavigationContext';
+import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
-import { type CombatOutcomeType } from '../utils/types';
+import {
+  decodeArmorStats,
+  decodeWeaponStats,
+  fetchMetadataFromUri,
+  uriToHttp,
+} from '../utils/helpers';
+import {
+  type Armor,
+  type CombatOutcomeType,
+  ItemType,
+  type Weapon,
+} from '../utils/types';
+import { ItemCard } from './ItemCard';
 
 type BattleOutcomeModalProps = {
   isOpen: boolean;
@@ -34,11 +50,17 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   onClose,
   battleOutcome,
 }): JSX.Element => {
+  const { renderError } = useToast();
   const {
-    components: { Levels },
+    components: { Items, ItemsBaseURI, ItemsTokenURI, Levels },
   } = useMUD();
   const { character } = useCharacter();
-  const { allMonsters, otherCharactersOnTile } = useMapNavigation();
+  const { allMonsters, otherCharactersOnTile } = useMap();
+  const { onContinueToBattleOutcome } = useBattle();
+
+  const [armor, setArmor] = useState<Armor[]>([]);
+  const [weapons, setWeapons] = useState<Weapon[]>([]);
+  const [isLoadingItems, setIsLoadingItems] = useState(true);
 
   const opponent = useMemo(() => {
     if (!character) return null;
@@ -66,8 +88,9 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
 
   const onAcknowledge = useCallback(() => {
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
+    onContinueToBattleOutcome(false);
     onClose();
-  }, [battleOutcome.encounterId, onClose]);
+  }, [battleOutcome.encounterId, onContinueToBattleOutcome, onClose]);
 
   const nextLevelXpRequirement =
     useComponentValue(
@@ -83,14 +106,136 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     return BigInt(character.experience) >= nextLevelXpRequirement;
   }, [character, nextLevelXpRequirement]);
 
+  const fetchLootedItems = useCallback(
+    async (_lootedItems: string[]) => {
+      try {
+        const _items = _lootedItems
+          .map(tokenId => {
+            const tokenIdEntity = encodeEntity(
+              { tokenId: 'uint256' },
+              { tokenId: BigInt(tokenId) },
+            );
+
+            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+
+            return {
+              balance: '1',
+              itemId: tokenIdEntity,
+              itemType: itemTemplate.itemType,
+              owner: '',
+              stats: itemTemplate.stats,
+              tokenId: tokenId.toString(),
+              tokenIdEntity,
+            };
+          })
+          .sort((a, b) => {
+            return Number(a.tokenId) - Number(b.tokenId);
+          });
+
+        const _armor = _items.filter(item => item.itemType === ItemType.Armor);
+        const _weapons = _items.filter(
+          item => item.itemType === ItemType.Weapon,
+        );
+
+        const fullArmor = await Promise.all(
+          _armor.map(async item => {
+            const decodedArmorStats = decodeArmorStats(item.stats);
+
+            const baseURI = getComponentValueStrict(
+              ItemsBaseURI,
+              singletonEntity,
+            ).uri;
+
+            const tokenURI = getComponentValueStrict(
+              ItemsTokenURI,
+              item.tokenIdEntity,
+            ).uri;
+
+            const metadata = await fetchMetadataFromUri(
+              uriToHttp(`${baseURI}${tokenURI}`)[0],
+            );
+
+            return {
+              ...metadata,
+              agiModifier: decodedArmorStats.agiModifier,
+              armorModifier: decodedArmorStats.armorModifier,
+              classRestrictions: decodedArmorStats.classRestrictions,
+              hitPointModifier: decodedArmorStats.hitPointModifier,
+              intModifier: decodedArmorStats.intModifier,
+              itemId: item.itemId,
+              owner: item.owner,
+              strModifier: decodedArmorStats.strModifier,
+              tokenId: item.tokenId,
+            } as Armor;
+          }),
+        );
+
+        const fullWeapons = await Promise.all(
+          _weapons.map(async item => {
+            const decodedWeaponStats = decodeWeaponStats(item.stats);
+
+            const baseURI = getComponentValueStrict(
+              ItemsBaseURI,
+              singletonEntity,
+            ).uri;
+
+            const tokenURI = getComponentValueStrict(
+              ItemsTokenURI,
+              item.tokenIdEntity,
+            ).uri;
+
+            const metadata = await fetchMetadataFromUri(
+              uriToHttp(`${baseURI}${tokenURI}`)[0],
+            );
+
+            return {
+              ...metadata,
+              agiModifier: decodedWeaponStats.agiModifier,
+              balance: item.balance,
+              classRestrictions: decodedWeaponStats.classRestrictions,
+              hitPointModifier: decodedWeaponStats.hitPointModifier,
+              intModifier: decodedWeaponStats.intModifier,
+              itemId: item.itemId,
+              maxDamage: decodedWeaponStats.maxDamage,
+              minDamage: decodedWeaponStats.minDamage,
+              minLevel: decodedWeaponStats.minLevel,
+              owner: item.owner,
+              strModifier: decodedWeaponStats.strModifier,
+              tokenId: item.tokenId,
+            } as Weapon;
+          }),
+        );
+
+        setArmor(fullArmor);
+        setWeapons(fullWeapons);
+      } catch (e) {
+        renderError(
+          (e as Error)?.message ?? 'Failed to fetch looted items.',
+          e,
+        );
+      } finally {
+        setIsLoadingItems(false);
+      }
+    },
+    [Items, ItemsBaseURI, ItemsTokenURI, renderError],
+  );
+
+  useEffect(() => {
+    if (battleOutcome.itemsDropped.length > 0 && isOpen) {
+      fetchLootedItems(battleOutcome.itemsDropped);
+    } else {
+      setIsLoadingItems(false);
+    }
+  }, [battleOutcome, fetchLootedItems, isOpen]);
+
   if (!character) {
     return <Box />;
   }
 
-  const { expDropped, goldDropped, itemsDropped, winner } = battleOutcome;
+  const { expDropped, goldDropped, winner } = battleOutcome;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onAcknowledge}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader textAlign="center">
@@ -117,15 +262,23 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 $GOLD.
               </Text>
             )}
-            {itemsDropped.length > 0 && (
-              <Text>
-                You looted the following items:
-                <ul>
-                  {itemsDropped.map(item => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </Text>
+            {isLoadingItems ? (
+              <Spinner />
+            ) : (
+              <>
+                {armor.length > 0 && (
+                  <Text fontWeight="bold">Looted Armor:</Text>
+                )}
+                {armor.map(item => (
+                  <ItemCard key={item.tokenId} {...item} />
+                ))}
+                {weapons.length > 0 && (
+                  <Text fontWeight="bold">Looted Weapons:</Text>
+                )}
+                {weapons.map(item => (
+                  <ItemCard key={item.tokenId} {...item} />
+                ))}
+              </>
             )}
           </VStack>
           {canLevel && (

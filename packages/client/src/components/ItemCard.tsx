@@ -21,8 +21,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   onClick,
   ...item
 }): JSX.Element => {
-  const { agiModifier, classRestrictions, intModifier, strModifier, name } =
-    item;
+  const {
+    agiModifier,
+    balance,
+    classRestrictions,
+    intModifier,
+    strModifier,
+    name,
+  } = item;
 
   return (
     <Card
@@ -49,6 +55,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       <CardBody>
         <Text fontWeight="bold" size={{ base: 'xs', sm: 'md' }}>
           {name.slice(0, -3)}
+          <Text as="span" size="xs">
+            {' '}
+            x {balance}
+          </Text>
         </Text>
 
         <Text size={{ base: '2xs', sm: 'sm' }}>
