@@ -1,9 +1,10 @@
 out/*
-!out/IWorld.sol
+!out/AuctionSystem.sol
 !out/CharacterSystem.sol
 !out/CombatSystem.sol
 !out/EquipmentSystem.sol
 !out/MapSystem.sol
+!out/IWorld.sol
 cache/
 node_modules/
 bindings/
