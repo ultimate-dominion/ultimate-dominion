@@ -52,6 +52,16 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__enterGame(alicesCharacterId);
         vm.stopPrank();
 
+        // alice has lower agi to go second
+        StatsData memory alicesStats = world.UD__getStats(alicesCharacterId);
+        alicesStats.agility = 9;
+        world.UD__adminSetStats(alicesCharacterId, alicesStats);
+
+        // bob has higher agi to go first
+        StatsData memory BobStats = world.UD__getStats(bobCharacterId);
+        BobStats.agility = 10;
+        world.UD__adminSetStats(bobCharacterId, BobStats);
+
         defenders.push(entityId);
         attackers.push(bobCharacterId);
         pvpDefenders.push(alicesCharacterId);
@@ -85,12 +95,67 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
         world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
 
-        vm.prank(bob);
-        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, attackers, pvpDefenders);
+        // if alice creates the encounter and has lower agi, she should still be the defender
+        vm.prank(alice);
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, pvpDefenders, attackers);
         CombatEncounterData memory encounterData = world.UD__getEncounter(encounterId);
         assertEq(encounterData.start, block.timestamp);
         assertEq(encounterData.defenders[0], alicesCharacterId);
         assertEq(encounterData.attackers[0], bobCharacterId);
+    }
+
+    function test_PvPTimer() public {
+        // spawn characters
+        vm.prank(bob);
+        world.UD__spawn(bobCharacterId);
+        vm.prank(alice);
+        world.UD__spawn(alicesCharacterId);
+
+        // cannot teleport entities from spawn point
+        vm.prank(bob);
+        world.UD__move(bobCharacterId, 0, 1);
+        vm.prank(alice);
+        world.UD__move(alicesCharacterId, 0, 1);
+
+        // move entities to pvp zone
+        world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
+        world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
+
+        // if alice creates the encounter and has lower agi, she should still be the defender
+        vm.prank(alice);
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, pvpDefenders, attackers);
+
+        Action[] memory bobActions = new Action[](1);
+        Action[] memory aliceActions = new Action[](1);
+
+        vm.prank(bob);
+        // bob's move
+        bobActions[0] = Action({
+            attackerEntityId: bobCharacterId,
+            defenderEntityId: alicesCharacterId,
+            actionId: basicAttackId,
+            weaponId: 2
+        });
+
+        //alice's move
+
+        aliceActions[0] = Action({
+            attackerEntityId: alicesCharacterId,
+            defenderEntityId: bobCharacterId,
+            actionId: basicAttackId,
+            weaponId: 2
+        });
+
+        uint256 fees = 0; // entropy.getFee(address(1));
+
+        //assert alice is a defender
+        assertEq(alicesCharacterId, world.UD__getEncounter(encounterId).defenders[0]);
+        // alice should move 1st even though she is defender if combat timer is out
+        vm.warp(block.timestamp + 31);
+        vm.prank(alice);
+        world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+        vm.prank(bob);
+        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
     }
 
     function test_CreateEncounterPvP_Revert_WrongPosition() public {

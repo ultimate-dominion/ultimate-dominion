@@ -56,23 +56,34 @@ contract PvESystem is System {
     function isValidPvE(bytes32[] memory attackers, bytes32[] memory defenders, uint16 x, uint16 y)
         public
         view
-        returns (bool _isValidPvE)
+        returns (bool _isValidPvE, bool _attackersAreMobs)
     {
         _isValidPvE = true;
-        for (uint256 i; i < attackers.length;) {
+        _attackersAreMobs;
+        for (uint256 i; i < attackers.length; i++) {
             if (!IWorld(_world()).UD__isValidCharacterId(attackers[i])) {
-                _isValidPvE = false;
-                break;
+                _attackersAreMobs = true;
             }
             if (!IWorld(_world()).UD__isAtPosition(attackers[i], x, y)) {
                 _isValidPvE = false;
                 break;
             }
-            {
-                i++;
-            }
         }
-        if (_isValidPvE) {
+        if (_attackersAreMobs && _isValidPvE) {
+            for (uint256 i; i < defenders.length;) {
+                if (!IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
+                    _isValidPvE = false;
+                    break;
+                }
+                if (!IWorld(_world()).UD__isAtPosition(defenders[i], x, y)) {
+                    _isValidPvE = false;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        } else if (!_attackersAreMobs && _isValidPvE) {
             for (uint256 i; i < defenders.length;) {
                 if (IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
                     _isValidPvE = false;
@@ -87,29 +98,22 @@ contract PvESystem is System {
                 }
             }
         }
-        return _isValidPvE;
+        return (_isValidPvE, _attackersAreMobs);
     }
 
-    function executePvECombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) public {
+    function executePvECombat(uint256 randomness, bytes32 encounterId, Action[] memory actions) public {
         // ensure this is an authorised call from the entropy contract
         _requireAccess(address(this), _msgSender());
 
-        uint256 randomNumber;
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        // execute attacker actions
-        for (uint256 i; i < actions.length; i++) {
-            Action memory currentAction = actions[i];
-
-            randomNumber =
-                uint256(keccak256(abi.encode(prevRandao, currentAction.attackerEntityId, encounterData.currentTurn)));
-
-            ActionOutcomeData memory currentActionData = _getCurrentActionData(currentAction);
-
-            // execute action
-            currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
-            // emit action data to offchain table
-            ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
+        uint256 numberOfExecutedActions;
+        if (encounterData.attackersAreMobs) {
+            // execute mob attacks
+            numberOfExecutedActions = _executeMobAttack(encounterId, encounterData, randomness, 0);
+        } else {
+            //execute player attack
+            numberOfExecutedActions = _executePlayerAttack(encounterId, encounterData, actions, randomness, 0);
         }
 
         encounterData.currentTurn++;
@@ -118,25 +122,14 @@ contract PvESystem is System {
 
         if (encounterEnded) {
             _setCharacterSpawns(encounterData);
-            IWorld(_world()).UD__endEncounter(encounterId, randomNumber, attackersWin);
+            IWorld(_world()).UD__endEncounter(encounterId, randomness, attackersWin);
         } else {
-            // execute defender attacks
-            for (uint256 i; i < encounterData.defenders.length; i++) {
-                MonsterStats memory monsterStats = IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]);
-                ActionOutcomeData memory defenderAction = _getCurrentActionData(
-                    Action({
-                        attackerEntityId: encounterData.defenders[i],
-                        defenderEntityId: encounterData.attackers[i],
-                        actionId: monsterStats.actions[0],
-                        weaponId: monsterStats.inventory[0]
-                    })
-                );
-                randomNumber =
-                    uint256(keccak256(abi.encode(prevRandao, defenderAction.attackerId, encounterData.currentTurn)));
-
-                defenderAction = IWorld(_world()).UD__executeAction(defenderAction, randomNumber);
-
-                ActionOutcome.set(encounterId, encounterData.currentTurn, i + actions.length, defenderAction);
+            if (encounterData.attackersAreMobs) {
+                //execute player attack
+                _executePlayerAttack(encounterId, encounterData, actions, randomness, numberOfExecutedActions);
+            } else {
+                // execute mob attacks
+                _executeMobAttack(encounterId, encounterData, randomness, numberOfExecutedActions);
             }
 
             CombatEncounter.set(encounterId, encounterData);
@@ -145,8 +138,62 @@ contract PvESystem is System {
 
             if (encounterEnded) {
                 _setCharacterSpawns(encounterData);
-                IWorld(_world()).UD__endEncounter(encounterId, randomNumber, attackersWin);
+                IWorld(_world()).UD__endEncounter(encounterId, randomness, attackersWin);
             }
+        }
+    }
+
+    function _executeMobAttack(
+        bytes32 encounterId,
+        CombatEncounterData memory encounterData,
+        uint256 randomness,
+        uint256 numberOfExecutedActions
+    ) internal returns (uint256 _numberOfExecutedActions) {
+        uint256 randomNumber;
+
+        _numberOfExecutedActions = encounterData.defenders.length;
+
+        for (uint256 i; i < _numberOfExecutedActions; i++) {
+            MonsterStats memory monsterStats = IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]);
+            ActionOutcomeData memory defenderAction = _getCurrentActionData(
+                Action({
+                    attackerEntityId: encounterData.defenders[i],
+                    defenderEntityId: encounterData.attackers[i],
+                    actionId: monsterStats.actions[0],
+                    weaponId: monsterStats.inventory[0]
+                })
+            );
+            randomNumber =
+                uint256(keccak256(abi.encode(randomness, defenderAction.attackerId, encounterData.currentTurn)));
+
+            defenderAction = IWorld(_world()).UD__executeAction(defenderAction, randomNumber);
+
+            ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, defenderAction);
+        }
+    }
+
+    function _executePlayerAttack(
+        bytes32 encounterId,
+        CombatEncounterData memory encounterData,
+        Action[] memory actions,
+        uint256 randomness,
+        uint256 numberOfExecutedActions
+    ) internal returns (uint256 _numberOfExecutedActions) {
+        uint256 randomNumber;
+        _numberOfExecutedActions = actions.length;
+        // execute attacker actions
+        for (uint256 i; i < _numberOfExecutedActions; i++) {
+            Action memory currentAction = actions[i];
+
+            randomNumber =
+                uint256(keccak256(abi.encode(randomness, currentAction.attackerEntityId, encounterData.currentTurn)));
+
+            ActionOutcomeData memory currentActionData = _getCurrentActionData(currentAction);
+
+            // execute action
+            currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
+            // emit action data to offchain table
+            ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, currentActionData);
         }
     }
 

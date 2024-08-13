@@ -15,8 +15,8 @@ import { Action } from "@interfaces/Structs.sol";
 interface IEncounterSystem {
   function UD__createEncounter(
     EncounterType encounterType,
-    bytes32[] memory attackers,
-    bytes32[] memory defenders
+    bytes32[] memory group1,
+    bytes32[] memory group2
   ) external returns (bytes32 encounterId);
 
   function UD__checkForEncounterEnd(

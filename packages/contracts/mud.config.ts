@@ -185,21 +185,16 @@ export default defineWorld({
         rewardsDistributed: "bool",
         // the current turn.  starts at 0
         currentTurn: "uint256",
+        currentTurnTimer: "uint256",
         // the max number of turns. default is 15 for pve
         maxTurns: "uint256",
+        attackersAreMobs: "bool",
         // array of monsterIds if pve playerIds if pvp
         defenders: "bytes32[]",
         // array of playerIds
         attackers: "bytes32[]",
       },
       key: ["encounterId"],
-    },
-    EncounterRandomness: {
-      key: ["encounterId"],
-      schema: {
-        encounterId: "bytes32",
-        currentRandomness: "uint256",
-      },
     },
     // when an entity starts combat it creates a "encounter entity" for that encounter.
     //when combat ends, the encounterId is set to zero
