@@ -187,6 +187,7 @@ export default defineWorld({
         currentTurn: "uint256",
         // the max number of turns. default is 15 for pve
         maxTurns: "uint256",
+        attackersAreMobs: "bool",
         // array of monsterIds if pve playerIds if pvp
         defenders: "bytes32[]",
         // array of playerIds

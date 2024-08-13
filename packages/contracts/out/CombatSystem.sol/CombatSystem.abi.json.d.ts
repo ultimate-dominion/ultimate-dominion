@@ -262,6 +262,11 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
+            "name": "attackersAreMobs",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
             "name": "defenders",
             "type": "bytes32[]",
             "internalType": "bytes32[]"

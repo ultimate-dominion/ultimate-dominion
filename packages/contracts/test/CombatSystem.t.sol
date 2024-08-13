@@ -52,6 +52,16 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__enterGame(alicesCharacterId);
         vm.stopPrank();
 
+        // alice has lower agi to go second
+        StatsData memory alicesStats = world.UD__getStats(alicesCharacterId);
+        alicesStats.agility = 9;
+        world.UD__adminSetStats(alicesCharacterId, alicesStats);
+
+        // bob has higher agi to go first
+        StatsData memory BobStats = world.UD__getStats(bobCharacterId);
+        BobStats.agility = 10;
+        world.UD__adminSetStats(bobCharacterId, BobStats);
+
         defenders.push(entityId);
         attackers.push(bobCharacterId);
         pvpDefenders.push(alicesCharacterId);
@@ -85,8 +95,9 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
         world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
 
-        vm.prank(bob);
-        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, attackers, pvpDefenders);
+        // if alice creates the encounter and has lower agi, she should still be the defender
+        vm.prank(alice);
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, pvpDefenders, attackers);
         CombatEncounterData memory encounterData = world.UD__getEncounter(encounterId);
         assertEq(encounterData.start, block.timestamp);
         assertEq(encounterData.defenders[0], alicesCharacterId);

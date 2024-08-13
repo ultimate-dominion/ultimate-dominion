@@ -131,6 +131,11 @@
             "internalType": "uint256"
           },
           {
+            "name": "attackersAreMobs",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
             "name": "defenders",
             "type": "bytes32[]",
             "internalType": "bytes32[]"
@@ -326,6 +331,11 @@
             "internalType": "uint256"
           },
           {
+            "name": "attackersAreMobs",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
             "name": "defenders",
             "type": "bytes32[]",
             "internalType": "bytes32[]"
@@ -410,12 +420,12 @@
         "internalType": "enum EncounterType"
       },
       {
-        "name": "attackers",
+        "name": "group1",
         "type": "bytes32[]",
         "internalType": "bytes32[]"
       },
       {
-        "name": "defenders",
+        "name": "group2",
         "type": "bytes32[]",
         "internalType": "bytes32[]"
       }
@@ -947,7 +957,7 @@
     "name": "UD__executePvECombat",
     "inputs": [
       {
-        "name": "prevRandao",
+        "name": "randomness",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -1235,6 +1245,11 @@
             "name": "maxTurns",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "attackersAreMobs",
+            "type": "bool",
+            "internalType": "bool"
           },
           {
             "name": "defenders",
@@ -2256,6 +2271,11 @@
     "outputs": [
       {
         "name": "_isValidPvE",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "_attackersAreMobs",
         "type": "bool",
         "internalType": "bool"
       }
