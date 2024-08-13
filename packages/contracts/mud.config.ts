@@ -196,15 +196,6 @@ export default defineWorld({
       },
       key: ["encounterId"],
     },
-    PvPData: {
-      key: ["encounterId"],
-      schema: {
-        encounterId: "bytes32",
-        currentRandomness: "uint256",
-        currentTurn: "uint256",
-        currentTurnTimer: "uint256",
-      },
-    },
     // when an entity starts combat it creates a "encounter entity" for that encounter.
     //when combat ends, the encounterId is set to zero
     EncounterEntity: {

@@ -28,9 +28,7 @@ import {
     MobsData,
     Counters,
     ActionOutcome,
-    ActionOutcomeData,
-    PvPData,
-    PvPDataData
+    ActionOutcomeData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {

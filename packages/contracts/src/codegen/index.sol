@@ -20,7 +20,6 @@ import { StarterItems, StarterItemsData } from "./tables/StarterItems.sol";
 import { Name } from "./tables/Name.sol";
 import { NameExists } from "./tables/NameExists.sol";
 import { CombatEncounter, CombatEncounterData } from "./tables/CombatEncounter.sol";
-import { PvPData, PvPDataData } from "./tables/PvPData.sol";
 import { EncounterEntity, EncounterEntityData } from "./tables/EncounterEntity.sol";
 import { RandomNumbers, RandomNumbersData } from "./tables/RandomNumbers.sol";
 import { Position } from "./tables/Position.sol";
