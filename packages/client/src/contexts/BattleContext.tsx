@@ -27,6 +27,7 @@ import {
 import {
   type ActionOutcomeType,
   ActionType,
+  type Character,
   type CombatDetails,
   type CombatOutcomeType,
   type Monster,
@@ -41,9 +42,10 @@ type BattleContextType = {
   continueToBattleOutcome: boolean;
   currentBattle: CombatDetails | null;
   lastestBattleOutcome: CombatOutcomeType | null;
-  monsterOponent: Monster | null;
-  onAttack: (itemId: string) => void;
+  onAttack: (itemId: string, currentTurn: string) => void;
   onContinueToBattleOutcome: (cont: boolean) => void;
+  opponent: Character | Monster | null;
+  userCharacterForBattleRendering: Character | null;
 };
 
 const BattleContext = createContext<BattleContextType>({
@@ -52,9 +54,10 @@ const BattleContext = createContext<BattleContextType>({
   continueToBattleOutcome: false,
   currentBattle: null,
   lastestBattleOutcome: null,
-  monsterOponent: null,
   onAttack: () => {},
   onContinueToBattleOutcome: () => {},
+  opponent: null,
+  userCharacterForBattleRendering: null,
 });
 
 export type BattleProviderProps = {
@@ -70,8 +73,8 @@ export const BattleProvider = ({
     delegatorAddress,
     systemCalls: { endTurn },
   } = useMUD();
-  const { character, refreshCharacter } = useCharacter();
-  const { allMonsters } = useMap();
+  const { character } = useCharacter();
+  const { allMonsters, allCharacters } = useMap();
 
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
@@ -83,6 +86,7 @@ export const BattleProvider = ({
       return {
         attackers: encounter.attackers as Entity[],
         currentTurn: encounter.currentTurn.toString(),
+        currentTurnTimer: encounter.currentTurnTimer.toString(),
         defenders: encounter.defenders as Entity[],
         encounterId: entity,
         encounterType: encounter.encounterType,
@@ -94,8 +98,8 @@ export const BattleProvider = ({
     .filter(
       encounter =>
         character &&
-        (encounter?.attackers.includes(character.characterId) ||
-          encounter?.defenders.includes(character.characterId)),
+        (encounter?.attackers.includes(character.id) ||
+          encounter?.defenders.includes(character.id)),
     );
 
   const onContinueToBattleOutcome = useCallback((cont: boolean) => {
@@ -144,15 +148,34 @@ export const BattleProvider = ({
     };
   }, [allBattles, CombatOutcome]);
 
-  const monsterOponent = useMemo(() => {
-    if (!currentBattle) return null;
+  const opponent = useMemo(() => {
+    if (!(character && currentBattle)) return null;
 
-    return (
-      allMonsters.find(monster =>
-        currentBattle.defenders.includes(monster.monsterId),
-      ) ?? null
+    let possibleOpponent: Character | Monster | undefined = allMonsters.find(
+      monster =>
+        [...currentBattle.attackers, ...currentBattle.defenders].includes(
+          monster.id,
+        ),
     );
-  }, [allMonsters, currentBattle]);
+
+    if (!possibleOpponent) {
+      possibleOpponent = allCharacters
+        .filter(c => c.id !== character.id)
+        .find(char =>
+          [...currentBattle.attackers, ...currentBattle.defenders].includes(
+            char.id,
+          ),
+        );
+    }
+
+    return possibleOpponent ?? null;
+  }, [allCharacters, allMonsters, character, currentBattle]);
+
+  const userCharacterForBattleRendering = useMemo(() => {
+    if (!character) return null;
+
+    return allCharacters.find(char => char.id === character.id) ?? null;
+  }, [allCharacters, character]);
 
   const allActionOutcomes = useEntityQuery([Has(ActionOutcome)])
     .map(entity => {
@@ -191,8 +214,8 @@ export const BattleProvider = ({
     })
     .filter(
       action =>
-        action.attackerId === character?.characterId ||
-        action.defenderId === character?.characterId,
+        action.attackerId === character?.id ||
+        action.defenderId === character?.id,
     );
 
   const currentBattleActionOutcomes = useMemo(
@@ -204,7 +227,7 @@ export const BattleProvider = ({
   );
 
   const onAttack = useCallback(
-    async (itemId: string) => {
+    async (itemId: string, currentTurn: string) => {
       try {
         setAttackingItemId(itemId);
 
@@ -220,8 +243,8 @@ export const BattleProvider = ({
           throw new Error('Battle not found.');
         }
 
-        if (!monsterOponent) {
-          throw new Error('Monster not found.');
+        if (!opponent) {
+          throw new Error('Opponent not found.');
         }
 
         const basicAttackId = Array.from(
@@ -237,11 +260,11 @@ export const BattleProvider = ({
 
         const { error, success } = await endTurn(
           currentBattle.encounterId,
-          character.characterId,
-          monsterOponent.monsterId,
+          character.id,
+          opponent.id,
           basicAttackId,
           itemId,
-          currentBattle.currentTurn,
+          currentTurn,
         );
 
         if (error && !success) {
@@ -250,8 +273,6 @@ export const BattleProvider = ({
 
         localStorage.removeItem(CURRENT_BATTLE_MONSTER_TURN_KEY);
         localStorage.removeItem(CURRENT_BATTLE_USER_TURN_KEY);
-
-        await refreshCharacter();
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to attack.', e);
       } finally {
@@ -264,8 +285,7 @@ export const BattleProvider = ({
       currentBattle,
       delegatorAddress,
       endTurn,
-      monsterOponent,
-      refreshCharacter,
+      opponent,
       renderError,
     ],
   );
@@ -278,9 +298,10 @@ export const BattleProvider = ({
         continueToBattleOutcome,
         currentBattle,
         lastestBattleOutcome,
-        monsterOponent,
         onAttack,
         onContinueToBattleOutcome,
+        opponent,
+        userCharacterForBattleRendering,
       }}
     >
       {children}

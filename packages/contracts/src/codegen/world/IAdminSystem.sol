@@ -24,5 +24,7 @@ interface IAdminSystem {
 
   function UD__adminSetStats(bytes32 entityId, StatsData memory desiredStats) external;
 
+  function UD__adminMoveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) external;
+
   function UD__getSystemAddress(ResourceId systemId) external view returns (address);
 }

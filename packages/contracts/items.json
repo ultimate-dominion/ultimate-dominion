@@ -28,7 +28,7 @@
         "classRestrictions": [],
         "hitPointModifier": 0,
         "intModifier": 1,
-        "maxDamage": 2,
+        "maxDamage": 5,
         "minDamage": 1,
         "minLevel": 1,
         "strModifier": 5
@@ -44,7 +44,7 @@
         "classRestrictions": [],
         "hitPointModifier": 0,
         "intModifier": 2,
-        "maxDamage": 2,
+        "maxDamage": 3,
         "minDamage": 1,
         "minLevel": 1,
         "strModifier": 2

@@ -45,7 +45,7 @@ const AppRoutes: React.FC = () => {
       <Route path={HOME_PATH} element={<Welcome />} />
       <Route path={CHARACTER_CREATION_PATH} element={<CharacterCreation />} />
       <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
-      <Route path="/characters/:characterId" element={<CharacterPage />} />
+      <Route path="/characters/:id" element={<CharacterPage />} />
       <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
     </Routes>
   );

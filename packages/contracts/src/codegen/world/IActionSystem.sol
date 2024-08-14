@@ -11,5 +11,11 @@ import { ActionType } from "@codegen/common.sol";
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IActionSystem {
-  function UD__createAction(ActionType actionType, bytes memory actionStats) external returns (bytes32 actionId);
+  function UD__createAction(
+    ActionType actionType,
+    string memory name,
+    bytes memory actionStats
+  ) external returns (bytes32 actionId);
+
+  function UD__checkActionRestrictions(bytes32 entityId, bytes32 actionId) external view returns (bool);
 }

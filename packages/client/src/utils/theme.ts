@@ -157,6 +157,14 @@ const Progress = {
         bg: 'green',
       },
     },
+    timer: {
+      filledTrack: {
+        bg: 'blue',
+      },
+      track: {
+        borderRadius: 0,
+      },
+    },
   },
 };
 
@@ -210,6 +218,7 @@ export const theme = extendTheme({
   },
   colors: {
     black: '#000',
+    blue: '#0B5ED7',
     green: '#0BA789',
     grey300: '#E6E6E6',
     grey400: '#D1D1D1',

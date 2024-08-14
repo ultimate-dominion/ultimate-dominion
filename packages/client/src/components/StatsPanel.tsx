@@ -97,7 +97,7 @@ export const StatsPanel = (): JSX.Element => {
     <VStack alignItems="start" h="100%" p={2} spacing={4}>
       <HStack
         as="button"
-        onClick={() => navigate(`/characters/${character.characterId}`)}
+        onClick={() => navigate(`/characters/${character.id}`)}
         spacing={4}
         _hover={{ cursor: 'pointer', textDecoration: 'underline' }}
       >
@@ -174,7 +174,7 @@ export const StatsPanel = (): JSX.Element => {
       {BigInt(experience) >= nextLevelXpRequirement && (
         <Button
           alignSelf="center"
-          onClick={() => navigate(`/characters/${character.characterId}`)}
+          onClick={() => navigate(`/characters/${character.id}`)}
           size="xs"
           variant="gold"
         >
@@ -200,7 +200,7 @@ export const StatsPanel = (): JSX.Element => {
           >
             <Text>{item.name}</Text>
             <Button
-              onClick={() => navigate(`/characters/${character.characterId}`)}
+              onClick={() => navigate(`/characters/${character.id}`)}
               p="0 2px"
               size="sm"
               variant="ghost"
@@ -221,7 +221,7 @@ export const StatsPanel = (): JSX.Element => {
           >
             <Text>Empty Slot</Text>
             <Button
-              onClick={() => navigate(`/characters/${character.characterId}`)}
+              onClick={() => navigate(`/characters/${character.id}`)}
               p="0 2px"
               size="sm"
               variant="ghost"

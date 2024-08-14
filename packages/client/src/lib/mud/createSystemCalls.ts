@@ -92,7 +92,7 @@ export function createSystemCalls(
     Stats,
   }: ClientComponents,
 ) {
-  const createMatch = async (
+  const createEncounter = async (
     encounterType: EncounterType,
     attackers: string[],
     defenders: string[],
@@ -107,10 +107,10 @@ export function createSystemCalls(
           attackers as `0x${string}`[],
           defenders as `0x${string}`[],
         ],
-        functionName: 'UD__createMatch',
+        functionName: 'UD__createEncounter',
       });
 
-      const tx = await worldContract.write.UD__createMatch([
+      const tx = await worldContract.write.UD__createEncounter([
         encounterType,
         attackers as `0x${string}`[],
         defenders as `0x${string}`[],
@@ -125,15 +125,21 @@ export function createSystemCalls(
         ]),
       ).filter(entity => {
         const encounter = getComponentValue(CombatEncounter, entity);
+
+        if (!encounter) return false;
+        const encounterParticipants = encounter.attackers.concat(
+          encounter.defenders,
+        );
         return (
-          encounter &&
-          encounter.attackers.some(attacker => attackers.includes(attacker)) &&
-          encounter.defenders.some(defender => defenders.includes(defender))
+          encounterParticipants.some(attacker =>
+            attackers.includes(attacker),
+          ) &&
+          encounterParticipants.some(defender => defenders.includes(defender))
         );
       })[0];
 
       return {
-        error: success ? undefined : 'Failed to create match.',
+        error: success ? undefined : 'Failed to create encounter.',
         success,
       };
     } catch (e) {
@@ -187,7 +193,7 @@ export function createSystemCalls(
         encounterId,
       );
 
-      let success = currentTurn === BigInt(previousTurn) + BigInt(2);
+      let success = currentTurn === BigInt(previousTurn) + BigInt(1);
 
       if (!success) {
         success = end !== BigInt(0);
@@ -617,7 +623,7 @@ export function createSystemCalls(
   // };
 
   return {
-    createMatch,
+    createEncounter,
     endTurn,
     enterGame,
     equipItems,

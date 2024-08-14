@@ -9,8 +9,8 @@ import {LibChunks} from "@libraries/LibChunks.sol";
 import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
     RandomNumbers,
-    MatchEntity,
-    MatchEntityData,
+    EncounterEntity,
+    EncounterEntityData,
     Stats,
     StatsData,
     Actions,
@@ -60,12 +60,21 @@ contract PvPSystem is System {
         returns (bool _isValidPvP)
     {
         _isValidPvP = true;
+        uint16 entityX;
+        uint16 entityY;
         for (uint256 i; i < attackers.length;) {
-            if (!IWorld(_world()).UD__isValidCharacterId(attackers[i]) || !isFlaggedForPvp(attackers[i])) {
+            (entityX, entityY) = IWorld(_world()).UD__getEntityPosition(attackers[i]);
+            if (!IWorld(_world()).UD__isValidCharacterId(attackers[i])) {
                 _isValidPvP = false;
                 break;
             }
-            if (!IWorld(_world()).UD__isAtPosition(attackers[i], x, y)) {
+            if (entityX != x || entityY != y) {
+                _isValidPvP = false;
+                break;
+            }
+            if (entityX >= 5 || entityY >= 5) {
+                // intentionally left empty
+            } else {
                 _isValidPvP = false;
                 break;
             }
@@ -75,11 +84,18 @@ contract PvPSystem is System {
         }
         if (_isValidPvP) {
             for (uint256 i; i < defenders.length;) {
-                if (!IWorld(_world()).UD__isValidCharacterId(defenders[i]) || !isFlaggedForPvp(defenders[i])) {
+                (entityX, entityY) = IWorld(_world()).UD__getEntityPosition(defenders[i]);
+                if (!IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
                     _isValidPvP = false;
                     break;
                 }
-                if (!IWorld(_world()).UD__isAtPosition(defenders[i], x, y)) {
+                if (entityX != x || entityY != y) {
+                    _isValidPvP = false;
+                    break;
+                }
+                if (entityX >= 5 || entityY >= 5) {
+                    // intentionally left empty
+                } else {
                     _isValidPvP = false;
                     break;
                 }
@@ -91,15 +107,6 @@ contract PvPSystem is System {
         return _isValidPvP;
     }
 
-    function isFlaggedForPvp(bytes32 entityId) public view returns (bool _isFlaggedForPvp) {
-        return PvPFlag.get(entityId);
-    }
-
-    function setPvpFlag(bytes32 entityId, bool flag) public {
-        require(_msgSender() == IWorld(_world()).UD__getOwnerAddress(entityId), "PvP: Cannot Flag another player");
-        PvPFlag.setPvpFlag(entityId, flag);
-    }
-
     function executePvPCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) public {
         // ensure this is an authorised call from the entropy contract
         _requireAccess(address(this), _msgSender());
@@ -107,6 +114,7 @@ contract PvPSystem is System {
         uint256 randomNumber;
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        ActionOutcomeData memory currentActionData;
         // execute attacker actions
         for (uint256 i; i < actions.length; i++) {
             Action memory currentAction = actions[i];
@@ -114,20 +122,24 @@ contract PvPSystem is System {
             randomNumber =
                 uint256(keccak256(abi.encode(prevRandao, currentAction.attackerEntityId, encounterData.currentTurn)));
 
-            ActionOutcomeData memory currentActionData = _getCurrentActionData(currentAction);
+            currentActionData = _getCurrentActionData(currentAction);
 
             // execute action
             currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
+
             // emit action data to offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
-            encounterData.currentTurn++;
         }
 
-        (bool matchEnded, bool attackersWin) = IWorld(_world()).UD__checkForMatchEnd(encounterData);
+        encounterData.currentTurnTimer = block.timestamp;
+        encounterData.currentTurn++;
 
-        if (matchEnded) {
+        CombatEncounter.set(encounterId, encounterData);
+        (bool encounterEnded, bool attackersWin) = IWorld(_world()).UD__checkForEncounterEnd(encounterData);
+
+        if (encounterEnded) {
             _setCharacterSpawns(encounterData);
-            IWorld(_world()).UD__endMatch(encounterId, randomNumber, attackersWin);
+            IWorld(_world()).UD__endEncounter(encounterId, randomNumber, attackersWin);
         }
     }
 

@@ -41,10 +41,6 @@ import {
 import "forge-std/console2.sol";
 
 contract ItemsSystem is System {
-    function _items() internal view returns (IERC1155System items) {
-        items = IERC1155System(UltimateDominionConfig.getItems());
-    }
-
     function createItem(
         ItemType itemType,
         uint256 supply,
@@ -52,11 +48,12 @@ contract ItemsSystem is System {
         bytes memory stats,
         string memory itemMetadataURI
     ) public returns (uint256) {
+        _requireOwner(address(this), _msgSender());
         uint256 itemId = _incrementItemsCounter();
         // create new item struct
         ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, stats: stats});
 
-        // mint supply to this contract
+        // mint supply to lootManager contract
         IWorld(_world()).call(
             _erc1155SystemId(ITEMS_NAMESPACE),
             abi.encodeWithSignature(
@@ -76,6 +73,22 @@ contract ItemsSystem is System {
         return itemId;
     }
 
+    function resupplyLootManager(uint256 itemId, uint256 newSupply) public {
+        _requireAccess(address(this), _msgSender());
+        require(getTotalSupply(itemId) != 0, "No existing supply");
+        // mint supply to lootManager contract
+        IWorld(_world()).call(
+            _erc1155SystemId(ITEMS_NAMESPACE),
+            abi.encodeWithSignature(
+                "mint(address,uint256,uint256,bytes)",
+                Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE)),
+                itemId,
+                newSupply,
+                ""
+            )
+        );
+    }
+
     function createItems(
         ItemType[] memory itemTypes,
         uint256[] memory supply,
@@ -86,12 +99,17 @@ contract ItemsSystem is System {
         uint256 len = itemTypes.length;
         require(
             supply.length == len && itemMetadataURIs.length == len && stats.length == len,
-            "ITEMS: Array length mismatch"
+            "ITEMS: Array length misencounter"
         );
 
         for (uint256 i; i < len; i++) {
             createItem(itemTypes[i], supply[i], dropChances[i], stats[i], itemMetadataURIs[i]);
         }
+    }
+
+    function getItemBalance(bytes32 entityId, uint256 itemId) public view returns (uint256 _balance) {
+        address ownerAddress = IWorld(_world()).UD__getOwnerAddress(entityId);
+        _balance = _items().balanceOf(ownerAddress, itemId);
     }
 
     function getTotalSupply(uint256 tokenId) public view returns (uint256 _supply) {
@@ -126,12 +144,16 @@ contract ItemsSystem is System {
 
     function setStarterItems(Classes class, uint256[] memory itemIds, uint256[] memory amounts) public {
         _requireOwner(address(this), _msgSender());
-        require(itemIds.length == amounts.length, "ITEMS: Length mismatch");
+        require(itemIds.length == amounts.length, "ITEMS: Length misencounter");
         StarterItems.set(class, itemIds, amounts);
     }
 
     function isItemOwner(uint256 itemId, address account) public view returns (bool) {
         return Owners.getBalance(_ownersTableId(ITEMS_NAMESPACE), account, itemId) > 0;
+    }
+
+    function _items() internal view returns (IERC1155System items) {
+        items = IERC1155System(UltimateDominionConfig.getItems());
     }
 
     // function getArmourStats(uint256 itemId)public view returns(){}
