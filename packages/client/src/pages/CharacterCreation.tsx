@@ -248,10 +248,7 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const { error, success } = await rollStats(
-        character.characterId,
-        characterClass,
-      );
+      const { error, success } = await rollStats(character.id, characterClass);
 
       if (error && !success) {
         throw new Error(error);
@@ -292,7 +289,7 @@ export const CharacterCreation = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const { error, success } = await enterGame(character.characterId);
+      const { error, success } = await enterGame(character.id);
 
       if (error && !success) {
         throw new Error(error);
