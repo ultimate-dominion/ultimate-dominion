@@ -3,6 +3,7 @@ import {
   Button,
   Divider,
   HStack,
+  Progress,
   Stack,
   Text,
   VStack,
@@ -245,7 +246,15 @@ export const ActionsPanel = (): JSX.Element => {
               and equip at least 1 item.
             </Text>
           )}
-          <HStack spacing={0} w="100%">
+          <HStack position="relative" spacing={0} w="100%">
+            <Progress
+              position="absolute"
+              size="xs"
+              top={-1}
+              value={(turnTimeLeft / 32) * 100}
+              variant="timer"
+              w="100%"
+            />
             {equippedWeapons.map((item, index) => (
               <Button
                 borderLeft={index === 0 ? 'none' : '2px'}
