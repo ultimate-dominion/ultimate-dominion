@@ -100,6 +100,7 @@ export type EntityStats = {
 export type CombatDetails = {
   attackers: Entity[];
   currentTurn: string;
+  currentTurnTimer: string;
   defenders: Entity[];
   encounterId: Entity;
   encounterType: EncounterType;

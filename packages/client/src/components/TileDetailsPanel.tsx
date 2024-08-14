@@ -48,7 +48,12 @@ export const TileDetailsPanel = (): JSX.Element => {
   const { character } = useCharacter();
   const { inSafetyZone, isSpawned, monstersOnTile, otherCharactersOnTile } =
     useMap();
-  const { actionOutcomes, currentBattle, opponent } = useBattle();
+  const {
+    actionOutcomes,
+    currentBattle,
+    opponent,
+    userCharacterForBattleRendering,
+  } = useBattle();
   const { isRefreshing } = useMovement();
 
   const [isInitiating, setIsInitiating] = useState(false);
@@ -158,7 +163,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (character && currentBattle && opponent) {
+  if (currentBattle && opponent && userCharacterForBattleRendering) {
     return (
       <VStack mt={4}>
         <style>
@@ -218,14 +223,14 @@ export const TileDetailsPanel = (): JSX.Element => {
             w="48%"
           >
             <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-              {character.name}
+              {userCharacterForBattleRendering.name}
             </Text>
             <Avatar
               animation={isUserHit ? 'flicker .7s infinite' : 'none'}
               my={{ base: 1, lg: 5 }}
               opacity={isUserHit ? 0 : 1}
               size={{ base: '2xs', lg: 'lg' }}
-              src={character.image}
+              src={userCharacterForBattleRendering.image}
             />
           </Stack>
         </HStack>
@@ -251,20 +256,20 @@ export const TileDetailsPanel = (): JSX.Element => {
           </VStack>
           <VStack spacing={{ base: 0, lg: 2 }} w="48%">
             <HealthBar
-              baseHp={character.baseHp}
-              currentHp={character.currentHp}
-              level={character.level}
+              baseHp={userCharacterForBattleRendering.baseHp}
+              currentHp={userCharacterForBattleRendering.currentHp}
+              level={userCharacterForBattleRendering.level}
               w="90%"
             />
             <VStack alignItems="start" px={4}>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Agility: {character.agility}
+                Agility: {userCharacterForBattleRendering.agility}
               </Text>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Intelligence: {character.intelligence}
+                Intelligence: {userCharacterForBattleRendering.intelligence}
               </Text>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Strength: {character.strength}
+                Strength: {userCharacterForBattleRendering.strength}
               </Text>
             </VStack>
           </VStack>

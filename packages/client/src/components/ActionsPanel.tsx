@@ -7,7 +7,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 // eslint-disable-next-line import/no-named-as-default
 import Typist from 'react-typist';
@@ -35,6 +35,8 @@ export const ActionsPanel = (): JSX.Element => {
     opponent,
   } = useBattle();
   const { isRefreshing: isRefreshingMap } = useMovement();
+
+  const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
 
   const parentDivRef = useRef<HTMLDivElement>(null);
 
@@ -157,13 +159,77 @@ export const ActionsPanel = (): JSX.Element => {
     return false;
   }, [character, currentBattle]);
 
+  const turnEndTime = useMemo(() => {
+    if (!currentBattle) return 0;
+
+    const _turnEndTime =
+      (BigInt(currentBattle.currentTurnTimer) + BigInt(32)) * BigInt(1000);
+
+    return Number(_turnEndTime);
+  }, [currentBattle]);
+
+  useEffect(() => {
+    if (turnEndTime - Date.now() < 0) {
+      setTurnTimeLeft(0);
+    } else {
+      setTurnTimeLeft(Math.floor((turnEndTime - Date.now()) / 1000));
+    }
+
+    const interval = setInterval(() => {
+      if (turnEndTime - Date.now() < 0) {
+        setTurnTimeLeft(0);
+        return;
+      }
+      setTurnTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [turnEndTime, turnTimeLeft]);
+
+  const canAttack = useMemo(() => {
+    if (!currentBattle) return false;
+
+    if (currentBattle.encounterType === EncounterType.PvE) {
+      return true;
+    }
+
+    if (userTurn) {
+      return true;
+    }
+
+    if (turnTimeLeft === 0) {
+      return true;
+    }
+
+    return false;
+  }, [currentBattle, userTurn, turnTimeLeft]);
+
   return (
     <Box maxH="100%" overflowY="auto" pb={4} ref={parentDivRef}>
       {!battleOver && currentBattle && equippedWeapons && opponent && (
         <VStack bgColor="white" position="sticky" spacing={0} top={0} w="100%">
-          <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
-            {userTurn ? 'Choose your move:' : `Opponent's turn...`}
-          </Text>
+          {userTurn && (
+            <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
+              <Text as="span" fontWeight="bold">
+                Choose your move!
+              </Text>{' '}
+              You have {turnTimeLeft} seconds before your opponent can attack.
+            </Text>
+          )}
+          {!userTurn && !canAttack && (
+            <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
+              It is your opponent&apos;s turn. But you can attack in{' '}
+              {turnTimeLeft} seconds.
+            </Text>
+          )}
+          {!userTurn && canAttack && (
+            <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
+              Your opponent took too long to make a move.{' '}
+              <Text as="span" fontWeight={700}>
+                You can now attack!
+              </Text>
+            </Text>
+          )}
           {equippedWeapons.length === 0 && (
             <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
               You have no equipped items. In order to attack, you must go to
@@ -189,11 +255,20 @@ export const ActionsPanel = (): JSX.Element => {
                     ? 'none'
                     : '2px'
                 }
-                isDisabled={attackingItemId !== null || !userTurn}
+                isDisabled={attackingItemId !== null || !canAttack}
                 isLoading={attackingItemId === item.tokenId}
                 key={`equipped-item-${index}`}
                 loadingText="Attacking..."
-                onClick={() => onAttack(item.tokenId)}
+                onClick={() =>
+                  onAttack(
+                    item.tokenId,
+                    userTurn
+                      ? currentBattle.currentTurn
+                      : (
+                          BigInt(currentBattle.currentTurn) + BigInt(1)
+                        ).toString(),
+                  )
+                }
                 variant="outline"
                 w="100%"
               >
