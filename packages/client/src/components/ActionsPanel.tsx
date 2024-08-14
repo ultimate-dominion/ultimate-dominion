@@ -16,6 +16,7 @@ import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
+import { EncounterType } from '../utils/types';
 
 export const ActionsPanel = (): JSX.Element => {
   const {
@@ -136,12 +137,32 @@ export const ActionsPanel = (): JSX.Element => {
     position,
   ]);
 
+  const userTurn = useMemo(() => {
+    if (!(character && currentBattle)) return false;
+
+    if (currentBattle.encounterType === EncounterType.PvE) {
+      return true;
+    }
+
+    const attackersTurn = Number(currentBattle.currentTurn) % 2 === 1;
+
+    if (attackersTurn && currentBattle.attackers.includes(character?.id)) {
+      return true;
+    }
+
+    if (!attackersTurn && currentBattle.defenders.includes(character?.id)) {
+      return true;
+    }
+
+    return false;
+  }, [character, currentBattle]);
+
   return (
     <Box maxH="100%" overflowY="auto" pb={4} ref={parentDivRef}>
       {!battleOver && currentBattle && equippedWeapons && opponent && (
         <VStack bgColor="white" position="sticky" spacing={0} top={0} w="100%">
           <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
-            Choose your move:
+            {userTurn ? 'Choose your move:' : `Opponent's turn...`}
           </Text>
           {equippedWeapons.length === 0 && (
             <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
@@ -168,7 +189,7 @@ export const ActionsPanel = (): JSX.Element => {
                     ? 'none'
                     : '2px'
                 }
-                isDisabled={attackingItemId !== null}
+                isDisabled={attackingItemId !== null || !userTurn}
                 isLoading={attackingItemId === item.tokenId}
                 key={`equipped-item-${index}`}
                 loadingText="Attacking..."
