@@ -95,7 +95,6 @@ contract LootManagerSystem is System {
         internal
         returns (uint256[] memory)
     {
-        console2.log("Calculating item drop");
         uint256 mobId = IWorld(_world()).UD__getMobId(entityId);
         MonsterStats memory monsterStats = abi.decode(Mobs.getMobStats(mobId), (MonsterStats));
 
@@ -162,7 +161,7 @@ contract LootManagerSystem is System {
         }
         for (uint256 i; i < distTemps.players.length; i++) {
             statsTemp = Stats.get(distTemps.players[i]);
-            distTemps.cumulativeAttackerLevels += statsTemp.level;
+            distTemps.cumulativePlayerLevels += statsTemp.level;
             if (statsTemp.currentHp > 0) {
                 distTemps.livingPlayers++;
             }
@@ -174,22 +173,24 @@ contract LootManagerSystem is System {
         bytes[] memory itemsDroppedTemp = new bytes[](distTemps.monsters.length);
 
         for (uint256 i; i < distTemps.monsters.length; i++) {
-            distTemps.defenderTemp = distTemps.monsters[i];
-            distTemps.defenderLevelTemp = Stats.getLevel(distTemps.defenderTemp);
-            bool correctLevelSpread = distTemps.defenderLevelTemp > distTemps.cumulativeAttackerLevels
+            distTemps.monsterTemp = distTemps.monsters[i];
+            distTemps.defenderLevelTemp = Stats.getLevel(distTemps.monsterTemp);
+            bool correctLevelSpread = distTemps.defenderLevelTemp > distTemps.cumulativePlayerLevels
                 ? true
-                : (distTemps.cumulativeAttackerLevels - distTemps.defenderLevelTemp) <= 5;
+                : (distTemps.cumulativePlayerLevels - distTemps.defenderLevelTemp) <= 5;
 
-            if (EncounterEntity.getDied(distTemps.defenderTemp) && correctLevelSpread) {
-                _expAmount += Stats.getExperience(distTemps.defenderTemp);
+            if (EncounterEntity.getDied(distTemps.monsterTemp) && correctLevelSpread) {
+                _expAmount += Stats.getExperience(distTemps.monsterTemp);
                 _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
-                EncounterEntity.setEncounterId(distTemps.defenderTemp, bytes32(0));
+                EncounterEntity.setEncounterId(distTemps.monsterTemp, bytes32(0));
 
                 // get dropped items into temporary array
+                bytes32 playerToDropTo = distTemps.players[randomNumber % distTemps.players.length];
 
-                _itemIdsDropped = _calculateItemDrop(
-                    randomNumber, distTemps.defenderTemp, distTemps.players[randomNumber % distTemps.players.length]
-                );
+                // if player is still alive drop item
+                if (!EncounterEntity.getDied(playerToDropTo)) {
+                    _itemIdsDropped = _calculateItemDrop(randomNumber, distTemps.monsterTemp, playerToDropTo);
+                }
             }
         }
 

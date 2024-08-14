@@ -232,11 +232,17 @@ contract EncounterSystem is System {
             encounterData.end = block.timestamp;
         }
 
-        bytes32 defenderTemp;
+        bytes32 entityTemp;
         for (uint256 i; i < encounterData.defenders.length; i++) {
-            defenderTemp = encounterData.defenders[i];
-            if (!EncounterEntity.getDied(defenderTemp)) {
-                EncounterEntity.setEncounterId(defenderTemp, bytes32(0));
+            entityTemp = encounterData.defenders[i];
+            if (EncounterEntity.getDied(entityTemp)) {
+                IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
+            }
+        }
+        for (uint256 i; i < encounterData.attackers.length; i++) {
+            entityTemp = encounterData.attackers[i];
+            if (EncounterEntity.getDied(entityTemp)) {
+                IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
             }
         }
         uint256 expAmount;
@@ -255,21 +261,9 @@ contract EncounterSystem is System {
 
         for (uint256 i; i < encounterData.attackers.length; i++) {
             EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
-            if (
-                !IWorld(_world()).UD__isValidCharacterId(encounterData.attackers[i])
-                    && Stats.getCurrentHp(encounterData.attackers[i]) <= 0
-            ) {
-                IWorld(_world()).UD__removeEntityFromBoard(encounterData.attackers[i]);
-            }
         }
         for (uint256 i; i < encounterData.defenders.length; i++) {
             EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
-            if (
-                !IWorld(_world()).UD__isValidCharacterId(encounterData.defenders[i])
-                    && Stats.getCurrentHp(encounterData.attackers[i]) <= 0
-            ) {
-                IWorld(_world()).UD__removeEntityFromBoard(encounterData.defenders[i]);
-            }
         }
         CombatOutcome.set(encounterId, combatOutcome);
     }
