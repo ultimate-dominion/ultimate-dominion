@@ -160,8 +160,8 @@ contract PvESystem is System {
 
             ActionOutcomeData memory mobAction = _getCurrentActionData(
                 Action({
-                    attackerEntityId: encounterData.defenders[i],
-                    defenderEntityId: encounterData.attackers[i],
+                    attackerEntityId: encounterData.attackers[i],
+                    defenderEntityId: encounterData.defenders[i],
                     actionId: monsterStats.actions[0],
                     weaponId: monsterStats.inventory[0]
                 })
