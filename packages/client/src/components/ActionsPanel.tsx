@@ -209,52 +209,67 @@ export const ActionsPanel = (): JSX.Element => {
     <Box maxH="100%" overflowY="auto" pb={4} ref={parentDivRef}>
       {!battleOver && currentBattle && equippedWeapons && opponent && (
         <VStack bgColor="white" position="sticky" spacing={0} top={0} w="100%">
-          {userTurn && (
+          {currentBattle.encounterType === EncounterType.PvE && (
             <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
               <Text as="span" fontWeight="bold">
                 Choose your move!
-              </Text>{' '}
-              You have {turnTimeLeft} seconds before your opponent can attack.
-            </Text>
-          )}
-          {!userTurn && !canAttack && (
-            <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
-              It is your opponent&apos;s turn. But you can attack in{' '}
-              {turnTimeLeft} seconds.
-            </Text>
-          )}
-          {!userTurn && canAttack && (
-            <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
-              Your opponent took too long to make a move.{' '}
-              <Text as="span" fontWeight={700}>
-                You can now attack!
               </Text>
             </Text>
           )}
-          {equippedWeapons.length === 0 && (
-            <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
-              You have no equipped items. In order to attack, you must go to
-              your{' '}
-              <Text
-                as={Link}
-                color="blue"
-                to={`/characters/${character?.id}`}
-                _hover={{ textDecoration: 'underline' }}
-              >
-                character page
-              </Text>{' '}
-              and equip at least 1 item.
-            </Text>
+
+          {currentBattle.encounterType === EncounterType.PvP && (
+            <>
+              {userTurn && (
+                <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
+                  <Text as="span" fontWeight="bold">
+                    Choose your move!
+                  </Text>{' '}
+                  You have {turnTimeLeft} seconds before your opponent can
+                  attack.
+                </Text>
+              )}
+              {!userTurn && !canAttack && (
+                <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
+                  It is your opponent&apos;s turn. But you can attack in{' '}
+                  {turnTimeLeft} seconds.
+                </Text>
+              )}
+              {!userTurn && canAttack && (
+                <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
+                  Your opponent took too long to make a move.{' '}
+                  <Text as="span" fontWeight={700}>
+                    You can now attack!
+                  </Text>
+                </Text>
+              )}
+              {equippedWeapons.length === 0 && (
+                <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
+                  You have no equipped items. In order to attack, you must go to
+                  your{' '}
+                  <Text
+                    as={Link}
+                    color="blue"
+                    to={`/characters/${character?.id}`}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    character page
+                  </Text>{' '}
+                  and equip at least 1 item.
+                </Text>
+              )}
+            </>
           )}
           <HStack position="relative" spacing={0} w="100%">
-            <Progress
-              position="absolute"
-              size="xs"
-              top={-1}
-              value={(turnTimeLeft / 32) * 100}
-              variant="timer"
-              w="100%"
-            />
+            {currentBattle.encounterType === EncounterType.PvP && (
+              <Progress
+                position="absolute"
+                size="xs"
+                top={-1}
+                value={(turnTimeLeft / 32) * 100}
+                variant="timer"
+                w="100%"
+              />
+            )}
             {equippedWeapons.map((item, index) => (
               <Button
                 borderLeft={index === 0 ? 'none' : '2px'}
@@ -271,7 +286,8 @@ export const ActionsPanel = (): JSX.Element => {
                 onClick={() =>
                   onAttack(
                     item.tokenId,
-                    userTurn
+                    userTurn ||
+                      currentBattle.encounterType === EncounterType.PvE
                       ? currentBattle.currentTurn
                       : (
                           BigInt(currentBattle.currentTurn) + BigInt(1)
