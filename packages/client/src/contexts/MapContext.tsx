@@ -30,26 +30,26 @@ import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 
 type MapContextType = {
-  aliveMonsters: Monster[];
   allMonsters: Monster[];
   allSpawnedCharacters: Character[];
   inSafetyZone: boolean;
   isFetchingEntities: boolean;
   isSpawned: boolean;
   isSpawning: boolean;
+  monstersOnTile: Monster[];
   onSpawn: () => void;
   otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
 };
 
 const MapContext = createContext<MapContextType>({
-  aliveMonsters: [],
   allMonsters: [],
   allSpawnedCharacters: [],
   inSafetyZone: false,
   isFetchingEntities: false,
   isSpawned: false,
   isSpawning: false,
+  monstersOnTile: [],
   onSpawn: () => {},
   otherCharactersOnTile: [],
   position: null,
@@ -88,7 +88,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [otherCharactersOnTile, setOtherCharactersOnTile] = useState<
     Character[]
   >([]);
-  const [monsters, setMonsters] = useState<Monster[]>([]);
+  const [allMonsters, setAllMonsters] = useState<Monster[]>([]);
+  const [monstersOnTile, setMonstersOnTile] = useState<Monster[]>([]);
 
   const position = useComponentValue(
     Position,
@@ -115,10 +116,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     Has(Spawned),
     Has(Stats),
     Not(Characters),
-    HasValue(Position, {
-      x: position?.x,
-      y: position?.y,
-    }),
+    Has(Position),
   ]);
 
   const allCharacterEntities = useEntityQuery([
@@ -171,7 +169,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             )?.encounterId;
             const inBattle = !!encounterId && encounterId !== zeroHash;
 
-            const position = getComponentValueStrict(Position, entity);
+            const _position = getComponentValueStrict(Position, entity);
 
             return {
               ...fetachedMetadata,
@@ -190,7 +188,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
                 size: 32,
               }),
               owner: characterData.owner,
-              position: { x: position.x, y: position.y },
+              position: { x: _position.x, y: _position.y },
               strength: characterStats.strength.toString(),
               tokenId: tokenId.toString(),
             } as Character & { position: { x: number; y: number } };
@@ -221,44 +219,50 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   );
 
   const getMonsters = useCallback(
-    async (entities: Entity[]): Promise<Monster[]> => {
+    async (
+      entities: Entity[],
+    ): Promise<(Monster & { position: { x: number; y: number } })[]> => {
       try {
-        const _monsters: Monster[] = await Promise.all(
-          entities.map(async entity => {
-            const { mobId } = decodeMonsterId(entity as `0x${string}`);
-            const mobData = getComponentValueStrict(
-              Mobs,
-              encodeEntity({ mobId: 'uint256' }, { mobId: BigInt(mobId) }),
-            );
-            const monsterStats = getComponentValueStrict(Stats, entity);
-            const encounterId = getComponentValue(
-              EncounterEntity,
-              entity,
-            )?.encounterId;
-            const inBattle = !!encounterId && encounterId !== zeroHash;
+        const _monsters: (Monster & { position: { x: number; y: number } })[] =
+          await Promise.all(
+            entities.map(async entity => {
+              const { mobId } = decodeMonsterId(entity as `0x${string}`);
+              const mobData = getComponentValueStrict(
+                Mobs,
+                encodeEntity({ mobId: 'uint256' }, { mobId: BigInt(mobId) }),
+              );
+              const monsterStats = getComponentValueStrict(Stats, entity);
+              const encounterId = getComponentValue(
+                EncounterEntity,
+                entity,
+              )?.encounterId;
+              const inBattle = !!encounterId && encounterId !== zeroHash;
 
-            const { mobMetadata: metadataURI } = mobData;
+              const { mobMetadata: metadataURI } = mobData;
 
-            const fetachedMetadata = await fetchMetadataFromUri(
-              uriToHttp(metadataURI)[0],
-            );
+              const fetachedMetadata = await fetchMetadataFromUri(
+                uriToHttp(metadataURI)[0],
+              );
 
-            return {
-              agility: monsterStats.agility.toString(),
-              baseHp: monsterStats.baseHp.toString(),
-              currentHp: monsterStats.currentHp.toString(),
-              entityClass: monsterStats.class,
-              experience: monsterStats.experience.toString(),
-              id: entity,
-              inBattle,
-              intelligence: monsterStats.intelligence.toString(),
-              level: monsterStats.level.toString(),
-              mobId,
-              strength: monsterStats.strength.toString(),
-              ...fetachedMetadata,
-            };
-          }),
-        );
+              const _position = getComponentValueStrict(Position, entity);
+
+              return {
+                agility: monsterStats.agility.toString(),
+                baseHp: monsterStats.baseHp.toString(),
+                currentHp: monsterStats.currentHp.toString(),
+                entityClass: monsterStats.class,
+                experience: monsterStats.experience.toString(),
+                id: entity,
+                inBattle,
+                intelligence: monsterStats.intelligence.toString(),
+                level: monsterStats.level.toString(),
+                mobId,
+                position: { x: _position.x, y: _position.y },
+                strength: monsterStats.strength.toString(),
+                ...fetachedMetadata,
+              } as Monster & { position: { x: number; y: number } };
+            }),
+          );
 
         return _monsters;
       } catch (e) {
@@ -266,7 +270,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         return [];
       }
     },
-    [EncounterEntity, Mobs, renderError, Stats],
+    [EncounterEntity, Mobs, Position, renderError, Stats],
   );
 
   useEffect(() => {
@@ -274,7 +278,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;
       if (!position || (position.x === 0 && position.y === 0)) {
         setOtherCharactersOnTile([]);
-        setMonsters([]);
+        setMonstersOnTile([]);
         return;
       }
       setIsFetchingEntities(true);
@@ -284,7 +288,15 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       setAllSpawnedCharacters(_allCharacters as Character[]);
 
       const _monsters = await getMonsters(allMonsterEntities);
-      setMonsters(_monsters);
+      setAllMonsters(_monsters);
+      setMonstersOnTile(
+        _monsters.filter(
+          m =>
+            Number(m.currentHp) > 0 &&
+            m.position.x === position.x &&
+            m.position.y === position.y,
+        ),
+      );
     })();
   }, [
     allCharacterEntities,
@@ -353,13 +365,13 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   return (
     <MapContext.Provider
       value={{
-        aliveMonsters: monsters.filter(m => Number(m.currentHp) > 0),
-        allMonsters: monsters,
+        allMonsters,
         allSpawnedCharacters,
         inSafetyZone,
         isFetchingEntities,
         isSpawned,
         isSpawning,
+        monstersOnTile,
         onSpawn,
         otherCharactersOnTile,
         position: position ? { x: position.x, y: position.y } : null,

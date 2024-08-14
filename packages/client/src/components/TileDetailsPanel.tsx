@@ -46,7 +46,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     systemCalls: { createEncounter },
   } = useMUD();
   const { character } = useCharacter();
-  const { aliveMonsters, inSafetyZone, isSpawned, otherCharactersOnTile } =
+  const { inSafetyZone, isSpawned, monstersOnTile, otherCharactersOnTile } =
     useMap();
   const { actionOutcomes, currentBattle, opponent } = useBattle();
   const { isRefreshing } = useMovement();
@@ -306,8 +306,8 @@ export const TileDetailsPanel = (): JSX.Element => {
       </Grid>
       <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
         <GridItem colSpan={2}>
-          {aliveMonsters.length > 0 &&
-            aliveMonsters.map((monster, i) => (
+          {monstersOnTile.length > 0 &&
+            monstersOnTile.map((monster, i) => (
               <OpponentRow
                 encounterType={EncounterType.PvE}
                 key={`tile-monster-${i}-${monster.name}`}
@@ -317,7 +317,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                 opponent={monster}
               />
             ))}
-          {aliveMonsters.length === 0 && (
+          {monstersOnTile.length === 0 && (
             <Text size={{ base: '2xs', lg: 'sm' }}>
               No monsters in this area
             </Text>

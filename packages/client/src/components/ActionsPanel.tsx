@@ -23,7 +23,7 @@ export const ActionsPanel = (): JSX.Element => {
     character,
     equippedWeapons,
   } = useCharacter();
-  const { aliveMonsters, isSpawned, position } = useMap();
+  const { isSpawned, monstersOnTile, position } = useMap();
   const {
     actionOutcomes,
     attackingItemId,
@@ -90,7 +90,7 @@ export const ActionsPanel = (): JSX.Element => {
       );
     }
 
-    if ((position.x !== 0 || position.y !== 0) && aliveMonsters.length === 0) {
+    if ((position.x !== 0 || position.y !== 0) && monstersOnTile.length === 0) {
       return (
         <Typist
           avgTypingDelay={10}
@@ -109,7 +109,7 @@ export const ActionsPanel = (): JSX.Element => {
       );
     }
 
-    if ((position.x !== 0 || position.y !== 0) && aliveMonsters.length > 0) {
+    if ((position.x !== 0 || position.y !== 0) && monstersOnTile.length > 0) {
       return (
         <Typist
           avgTypingDelay={10}
@@ -129,10 +129,10 @@ export const ActionsPanel = (): JSX.Element => {
 
     return '';
   }, [
-    aliveMonsters,
     isRefreshingCharacter,
     isRefreshingMap,
     isSpawned,
+    monstersOnTile,
     position,
   ]);
 
