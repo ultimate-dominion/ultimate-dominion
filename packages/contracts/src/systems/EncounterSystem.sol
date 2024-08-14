@@ -255,13 +255,19 @@ contract EncounterSystem is System {
 
         for (uint256 i; i < encounterData.attackers.length; i++) {
             EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
-            if (!IWorld(_world()).UD__isValidCharacterId(encounterData.attackers[i])) {
+            if (
+                !IWorld(_world()).UD__isValidCharacterId(encounterData.attackers[i])
+                    && Stats.getCurrentHp(encounterData.attackers[i]) <= 0
+            ) {
                 IWorld(_world()).UD__removeEntityFromBoard(encounterData.attackers[i]);
             }
         }
         for (uint256 i; i < encounterData.defenders.length; i++) {
             EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
-            if (!IWorld(_world()).UD__isValidCharacterId(encounterData.defenders[i])) {
+            if (
+                !IWorld(_world()).UD__isValidCharacterId(encounterData.defenders[i])
+                    && Stats.getCurrentHp(encounterData.attackers[i]) <= 0
+            ) {
                 IWorld(_world()).UD__removeEntityFromBoard(encounterData.defenders[i]);
             }
         }

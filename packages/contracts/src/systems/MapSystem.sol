@@ -40,8 +40,7 @@ contract MapSystem is System {
     }
 
     function spawn(bytes32 entityId) public {
-        address owner = Characters.getOwner(entityId);
-        require(_msgSender() == owner, "Only the owner can spawn a character");
+        require(IWorld(_world()).UD__isValidOwner(entityId, _msgSender()), "Only the owner can spawn a character");
 
         require(!Spawned.getSpawned(entityId), "Character already spawned");
         uint256 baseHp = Stats.getBaseHp(entityId);
@@ -61,7 +60,6 @@ contract MapSystem is System {
 
         EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
-        EncounterEntity.setDied(entityId, false);
     }
 
     function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
@@ -154,9 +152,10 @@ contract MapSystem is System {
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             if (senderIsOwner) {
-                // if sender is owner execute removal
+                Spawned.setSpawned(entityId, false);
             } else {
                 _requireAccess(address(this), _msgSender());
+                Spawned.setSpawned(entityId, false);
             }
         } else {
             _requireAccess(address(this), _msgSender());

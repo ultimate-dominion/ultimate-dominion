@@ -252,11 +252,12 @@ export default defineWorld({
         locked: "bool",
         goldToken: "address",
         characterToken: "address",
-        randcastAdapter: "address",
         items: "address",
+        randcastAdapter: "address",
+        subscriptionId: "bytes32",
       },
     },
-    ///////////////////////// OFFCHAIN TABLES//////////////////
+    ///////////////////////// OFFCHAIN TABLES //////////////////
     RngLogs: {
       key: ["requestId"],
       schema: {

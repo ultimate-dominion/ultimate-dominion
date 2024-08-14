@@ -19,25 +19,28 @@ import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IConsumerWrapper} from "@interfaces/IConsumerWrapper.sol";
 import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
-import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import "forge-std/console2.sol";
 
-contract RngSystem is System, IConsumerWrapper {
+contract RngSystem is System {
     using LibChunks for uint256;
 
     event RNGFulfilled(bytes32 randomNumber);
 
-    function _entropy() internal view returns (IEntropy entropy) {
-        entropy = IEntropy(UltimateDominionConfig.getEntropy());
+    function _randcast() internal view returns (IEntropy entropy) {
+        entropy = IConsumerWrapper(getRandcastAdapter());
     }
 
-    function getEntropy() internal view override returns (address) {
-        return UltimateDominionConfig.getEntropy();
+    function getRandcastAdapter() public view returns (address) {
+        return UltimateDominionConfig.getRandcastAdapter();
+    }
+
+    function subscriptionId() public view returns (bytes32) {
+        return UltimateDominionConfig.getSubscriptionId();
     }
 
     function getFee() public view returns (uint128) {
-        return _entropy().getFee(_provider());
+        return _randcast().getFee(_provider());
     }
 
     function _provider() internal view returns (address provider) {
@@ -47,7 +50,7 @@ contract RngSystem is System, IConsumerWrapper {
     function getRng(bytes32 userRandomNumber, RngRequestType requestType, bytes memory data)
         public
         payable
-        returns (uint64 sequenceNumber)
+        returns (bytes32 requestId)
     {
         RandomNumbersData memory randomNumberData;
         randomNumberData.arbitraryData = data;
@@ -55,8 +58,10 @@ contract RngSystem is System, IConsumerWrapper {
         // NOTE: required for testing, since callback is coming before data is stored
         /////////////// TODO: remove for mainnet deployment //////
         if (block.chainid == 31337) {
-            (, bytes memory returnData) = address(_entropy()).staticcall(
-                abi.encodeWithSelector(IEntropy.request.selector, _provider(), userRandomNumber, false)
+            (, bytes memory returnData) = address(_randcast()).staticcall(
+                abi.encodeWithSelector(
+                    IConsumerWrapper.getRandomNumber.selector, subscriptionId(), userRandomNumber, false
+                )
             );
             uint64 _sequenceNumber = abi.decode(returnData, (uint64));
 
@@ -65,15 +70,15 @@ contract RngSystem is System, IConsumerWrapper {
         /////////////////////////////////////////
 
         // pay the fees and request a random number from entropy
-        // sequenceNumber = _entropy().requestWithCallback{value: requestFee}(_provider(), userRandomNumber);
+        // requestId = _randcast().getRandomNumberWithCallback{value: requestFee}(_provider(), userRandomNumber);
 
         //prevrando entropy
-        sequenceNumber = uint64(_incrementCounter(1));
+        requestId = bytes32(_incrementCounter(1));
 
         RngLogsData memory rngLog = RngLogsData({
             sequenceNumber: sequenceNumber,
             provider: _provider(),
-            entropy: address(_entropy()),
+            entropy: address(_randcast()),
             // fee: requestFee,
             fee: 0,
             requestType: requestType,
@@ -95,11 +100,11 @@ contract RngSystem is System, IConsumerWrapper {
 
         RandomNumbers.set(sequenceNumber, randomNumberData);
 
-        entropyCallback(sequenceNumber, address(0), bytes32(rng));
+        fullfillRandomness(sequenceNumber, address(0), bytes32(rng));
     }
 
-    function entropyCallback(
-        uint64 sequenceNumber,
+    function fullfillRandomness(
+        bytes32 requestId,
         // If your app uses multiple providers, you can use this argument
         // to distinguish which one is calling the app back. This app only
         // uses one provider so this argument is not used.

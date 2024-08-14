@@ -133,6 +133,16 @@ struct StatusEffect {
     uint256[] itemRestrictions;
 }
 
+struct RandomnessRequestParams {
+    RequestType requestType;
+    bytes params;
+    uint64 subId;
+    uint256 seed;
+    uint16 requestConfirmations;
+    uint32 callbackGasLimit;
+    uint256 callbackMaxGasPrice;
+}
+
 struct Action {
     bytes32 attackerEntityId;
     bytes32 defenderEntityId;
