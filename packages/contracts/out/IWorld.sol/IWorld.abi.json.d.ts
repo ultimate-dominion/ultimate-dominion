@@ -406,6 +406,11 @@ declare const abi: [
         "internalType": "enum ActionType"
       },
       {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
         "name": "actionStats",
         "type": "bytes",
         "internalType": "bytes"

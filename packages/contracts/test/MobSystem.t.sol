@@ -116,4 +116,6 @@ contract Test_MobSystem is SetUp, GasReporter {
         assertLt(ents.length, 7);
         assertEq(ents[0], bobCharacterId);
     }
+
+    function test_removeEntity() public {}
 }

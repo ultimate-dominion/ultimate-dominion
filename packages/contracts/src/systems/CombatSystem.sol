@@ -196,6 +196,7 @@ contract CombatSystem is System {
                                 : uint256(1)
                         ) * DEFENSE_MODIFIER
                     );
+                console2.log("HIT!");
                 if (crit) {
                     console2.log("CRIT!");
                     damage = damage * int256(CRIT_MODIFIER);
@@ -225,8 +226,8 @@ contract CombatSystem is System {
             * (TO_HIT_MODIFIER);
         // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
 
-        uint256 defenseTotal = ((defenseRoll % 100) + defender.adjustedAgility) * DEFENSE_MODIFIER;
-        attackLands = attackTotal > defenseTotal;
+        uint256 defenseTotal = ((defenseRoll % 80) + defender.adjustedAgility) * DEFENSE_MODIFIER;
+        attackLands = attackTotal >= defenseTotal;
 
         if (attackLands) {
             crit = uint256(int256(attackTotal) + attackStats.critChanceBonus) >= (90 * TO_HIT_MODIFIER);

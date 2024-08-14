@@ -150,7 +150,16 @@ contract MapSystem is System {
     }
 
     function removeEntityFromBoard(bytes32 entityId) public {
-        _requireAccess(address(this), _msgSender());
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
+            if (senderIsOwner) {
+                // if sender is owner execute removal
+            } else {
+                _requireAccess(address(this), _msgSender());
+            }
+        } else {
+            _requireAccess(address(this), _msgSender());
+        }
         (uint16 currentX, uint16 currentY) = getEntityPosition(entityId);
         bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
         bool entityWasAtPosition;
@@ -166,6 +175,7 @@ contract MapSystem is System {
                 i++;
             }
         }
+        Position.set(entityId, 0, 0);
         require(entityWasAtPosition, "Entity not at position");
     }
 

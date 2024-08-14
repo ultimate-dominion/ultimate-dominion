@@ -73,37 +73,13 @@ contract SetUp is Test {
 
         bytes32[] memory statusEffects = new bytes32[](0);
 
-        basicAttackId = keccak256(
-            abi.encode(
-                PhysicalAttackStats({
-                    armorPenetration: 0,
-                    attackModifierBonus: 0,
-                    bonusDamage: 0,
-                    classRestrictions: classRestrictions,
-                    critChanceBonus: 0,
-                    statusEffects: statusEffects
-                })
-            )
-        );
+        basicAttackId = keccak256(abi.encode("basic weapon attack"));
 
         uint8[] memory newClassRestrictions = new uint8[](1);
-        newClassRestrictions[0] = 2;
+        newClassRestrictions[0] = uint8(2);
         uint256[] memory itemRestrictions = new uint256[](0);
 
-        basicMagicAttackId = keccak256(
-            abi.encode(
-                MagicAttackStats({
-                    attackModifierBonus: 0,
-                    bonusDamage: 0,
-                    classRestrictions: newClassRestrictions,
-                    critChanceBonus: 0,
-                    itemRestrictions: itemRestrictions,
-                    statusEffects: statusEffects,
-                    minDamage: 1,
-                    maxDamage: 5
-                })
-            )
-        );
+        basicMagicAttackId = keccak256(abi.encode("basic magic attack"));
 
         vm.label(alice, "alice");
         vm.label(bob, "bob");
@@ -121,7 +97,7 @@ contract SetUp is Test {
         vm.startPrank(bob);
         bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
         uint256 fees = entropy.getFee(address(1));
-        world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Rogue);
+        world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Mage);
         world.UD__enterGame(bobCharacterId);
         vm.stopPrank();
     }

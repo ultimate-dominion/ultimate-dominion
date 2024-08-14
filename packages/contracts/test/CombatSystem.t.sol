@@ -44,8 +44,8 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(deployer);
         world.grantAccess(_mobSystemId("UD"), address(this));
 
-        entityId = world.UD__spawnMob(1, 0, 0);
-        entityId2 = world.UD__spawnMob(1, 0, 0);
+        entityId = world.UD__spawnMob(1, 0, 1);
+        entityId2 = world.UD__spawnMob(1, 0, 1);
 
         vm.startPrank(alice);
         world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
@@ -62,35 +62,35 @@ contract Test_CombatSystem is SetUp, GasReporter {
         BobStats.agility = 10;
         world.UD__adminSetStats(bobCharacterId, BobStats);
 
-        defenders.push(entityId);
-        attackers.push(bobCharacterId);
-        pvpDefenders.push(alicesCharacterId);
-    }
-
-    function test_createEncounter_PvE() public {
-        vm.prank(bob);
-        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
-        CombatEncounterData memory encounterData = world.UD__getEncounter(encounterId);
-        assertEq(encounterData.start, block.timestamp);
-        assertEq(encounterData.end, 0);
-        assertEq(encounterData.attackers[0], bobCharacterId);
-        assertEq(encounterData.defenders[0], entityId);
-        assertEq(encounterData.attackers.length, encounterData.defenders.length);
-    }
-
-    function test_createEncounterPvP() public {
         // spawn characters
         vm.prank(bob);
         world.UD__spawn(bobCharacterId);
         vm.prank(alice);
         world.UD__spawn(alicesCharacterId);
 
-        // cannot teleport entities from spawn point
         vm.prank(bob);
         world.UD__move(bobCharacterId, 0, 1);
         vm.prank(alice);
         world.UD__move(alicesCharacterId, 0, 1);
 
+        defenders.push(entityId);
+        attackers.push(bobCharacterId);
+        pvpDefenders.push(alicesCharacterId);
+    }
+
+    function test_createEncounter_PvE() public {
+        // defender should have higher agi so attacker should be entity id
+        vm.prank(bob);
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
+        CombatEncounterData memory encounterData = world.UD__getEncounter(encounterId);
+        assertEq(encounterData.start, block.timestamp);
+        assertEq(encounterData.end, 0);
+        assertEq(encounterData.attackers[0], entityId);
+        assertEq(encounterData.defenders[0], bobCharacterId);
+        assertEq(encounterData.attackers.length, encounterData.defenders.length);
+    }
+
+    function test_createEncounterPvP() public {
         // move entities to pvp zone
         world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
         world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
@@ -105,18 +105,6 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_PvPTimer() public {
-        // spawn characters
-        vm.prank(bob);
-        world.UD__spawn(bobCharacterId);
-        vm.prank(alice);
-        world.UD__spawn(alicesCharacterId);
-
-        // cannot teleport entities from spawn point
-        vm.prank(bob);
-        world.UD__move(bobCharacterId, 0, 1);
-        vm.prank(alice);
-        world.UD__move(alicesCharacterId, 0, 1);
-
         // move entities to pvp zone
         world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
         world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
@@ -133,7 +121,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bobActions[0] = Action({
             attackerEntityId: bobCharacterId,
             defenderEntityId: alicesCharacterId,
-            actionId: basicAttackId,
+            actionId: basicMagicAttackId,
             weaponId: 2
         });
 
@@ -166,10 +154,10 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_createPvEEncounter_Revert_Entities_Wrong_Position() public {
-        entityId2 = world.UD__spawnMob(1, 0, 1);
+        entityId2 = world.UD__spawnMob(1, 1, 1);
         defenders[0] = entityId2;
         vm.prank(bob);
-        vm.expectRevert("COMBAT SYSTEM: INVALID PVE");
+        vm.expectRevert("ENCOUNTER SYSTEM: INVALID PVE");
         world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
     }
 
@@ -178,7 +166,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         assertEq(world.UD__getEncounter(encounterId).start, block.timestamp);
         vm.prank(bob);
-        vm.expectRevert("COMBAT SYSTEM: INVALID ENTITY");
+        vm.expectRevert("ENCOUNTER SYSTEM: INVALID ENTITY");
         world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
     }
 
@@ -203,8 +191,12 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
 
-        actions[0] =
-            Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 2});
+        actions[0] = Action({
+            attackerEntityId: bobCharacterId,
+            defenderEntityId: entityId,
+            actionId: basicMagicAttackId,
+            weaponId: 2
+        });
         uint256 fees = 0; // entropy.getFee(address(1));
         vm.prank(bob);
         world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
@@ -222,9 +214,24 @@ contract Test_CombatSystem is SetUp, GasReporter {
             assertGt(endingStats.experience, startingStats.experience, "incorrect exp");
             assertGt(endingGold, startingGold);
             assertNotEq(startingStats.currentHp, Stats.get(entityId).currentHp);
+            bytes32[] memory entities = world.UD__getEntitiesAtPosition(0, 1);
+            bool entityIsAtPosition;
+            for (uint256 i; i < entities.length; i++) {
+                if (entityId == entities[i]) entityIsAtPosition == true;
+            }
+            assertFalse(entityIsAtPosition);
+            (uint16 entityX, uint16 entityY) = world.UD__getEntityPosition(entityId);
+            assertEq(entityX, 0);
+            assertEq(entityY, 0);
         } else {
             assertNotEq(startingStats.currentHp, Stats.get(bobCharacterId).currentHp);
             assertFalse(EncounterEntity.getDied(entityId), "incorrect died");
+            bytes32[] memory entities = world.UD__getEntitiesAtPosition(0, 1);
+            bool entityIsAtPosition;
+            for (uint256 i; i < entities.length; i++) {
+                if (bobCharacterId == entities[i]) entityIsAtPosition == true;
+            }
+            assertFalse(entityIsAtPosition);
         }
 
         assertEq(EncounterEntity.getEncounterId(bobCharacterId), bytes32(0));
@@ -235,17 +242,17 @@ contract Test_CombatSystem is SetUp, GasReporter {
         StatsData memory startingAliceStats = Stats.get(alicesCharacterId);
         uint256 startingGold = goldToken.balanceOf(bob);
 
-        // spawn characters
-        vm.prank(bob);
-        world.UD__spawn(bobCharacterId);
-        vm.prank(alice);
-        world.UD__spawn(alicesCharacterId);
+        // // spawn characters
+        // vm.prank(bob);
+        // world.UD__spawn(bobCharacterId);
+        // vm.prank(alice);
+        // world.UD__spawn(alicesCharacterId);
 
-        // cannot teleport entities from spawn point
-        vm.prank(bob);
-        world.UD__move(bobCharacterId, 0, 1);
-        vm.prank(alice);
-        world.UD__move(alicesCharacterId, 0, 1);
+        // // cannot teleport entities from spawn point
+        // vm.prank(bob);
+        // world.UD__move(bobCharacterId, 0, 1);
+        // vm.prank(alice);
+        // world.UD__move(alicesCharacterId, 0, 1);
 
         // move entities to pvp zone
         world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
@@ -262,7 +269,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bobActions[0] = Action({
             attackerEntityId: bobCharacterId,
             defenderEntityId: alicesCharacterId,
-            actionId: basicAttackId,
+            actionId: basicMagicAttackId,
             weaponId: 2
         });
 
@@ -311,7 +318,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         actions[0] =
             Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 1});
         uint256 fees = entropy.getFee(address(1));
-        vm.expectRevert("COMBAT SYSTEM: NON-COMBATANT");
+        vm.expectRevert("ENCOUNTER SYSTEM: NON-COMBATANT");
         world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
     }
 }
