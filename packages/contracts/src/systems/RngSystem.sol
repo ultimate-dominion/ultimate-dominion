@@ -17,13 +17,13 @@ import {
 import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
-import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
+import {IConsumerWrapper} from "@interfaces/IConsumerWrapper.sol";
 import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import "forge-std/console2.sol";
 
-contract RngSystem is System, IEntropyConsumer {
+contract RngSystem is System, IConsumerWrapper {
     using LibChunks for uint256;
 
     event RNGFulfilled(bytes32 randomNumber);

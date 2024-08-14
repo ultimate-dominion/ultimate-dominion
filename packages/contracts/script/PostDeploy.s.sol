@@ -94,16 +94,18 @@ contract PostDeploy is Script {
         // Start broadcasting transactions from the deployer account
         vm.startBroadcast(deployerPrivateKey);
         if (block.chainid == 31337) {
-            // Set entropy contracts
+            // Set mock Vrng contracts for anvil
             address mockEntropy = address(new MockEntropy());
-            UltimateDominionConfig.setEntropy(mockEntropy);
-            UltimateDominionConfig.setPythProvider(address(1));
+            UltimateDominionConfig.setRandcastAdapter(mockEntropy);
+            // redstone garnet
         } else if (block.chainid == 84532) {
-            UltimateDominionConfig.setEntropy(0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c);
-            UltimateDominionConfig.setPythProvider(0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344);
+            UltimateDominionConfig.setRandcastAdapter(0x323488A9Ad7463081F109468B4E50a5084e91295);
+            //redstone mainnet
         } else if (block.chainid == 8453) {
-            UltimateDominionConfig.setEntropy(0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb);
-            UltimateDominionConfig.setPythProvider(0x52DeaA1c84233F7bb8C8A45baeDE41091c616506);
+            UltimateDominionConfig.setRandcastAdapter(0x6F8bA6Ab1BAf1833a88ca42E7b71c4fbE76b759D);
+            // op sepolia
+        } else if (block.chainid == 11155420) {
+            UltimateDominionConfig.setRandcastAdapter(0x25Aed37669a783Bb5dE1D40279C7Fe5339C13F5D);
         }
 
         uint16 height = uint16(10);
