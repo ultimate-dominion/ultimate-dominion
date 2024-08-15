@@ -54,7 +54,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const {
     components: { Items, ItemsBaseURI, ItemsTokenURI, Levels },
   } = useMUD();
-  const { character } = useCharacter();
+  const { character, refreshCharacter } = useCharacter();
   const { allMonsters, otherCharactersOnTile } = useMap();
   const { onContinueToBattleOutcome } = useBattle();
 
@@ -65,19 +65,19 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const opponent = useMemo(() => {
     if (!character) return null;
     const opponent =
-      character.characterId === battleOutcome.defenders[0]
+      character.id === battleOutcome.defenders[0]
         ? battleOutcome.attackers[0]
         : battleOutcome.defenders[0];
 
     const monsterOpponent = allMonsters.find(
-      monster => monster.monsterId === opponent,
+      monster => monster.id === opponent,
     );
     if (monsterOpponent) {
       return monsterOpponent;
     }
 
     const characterOpponent = otherCharactersOnTile.find(
-      c => c.characterId === opponent,
+      c => c.id === opponent,
     );
     if (characterOpponent) {
       return characterOpponent;
@@ -89,8 +89,14 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const onAcknowledge = useCallback(() => {
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
     onContinueToBattleOutcome(false);
+    refreshCharacter();
     onClose();
-  }, [battleOutcome.encounterId, onContinueToBattleOutcome, onClose]);
+  }, [
+    battleOutcome.encounterId,
+    onContinueToBattleOutcome,
+    onClose,
+    refreshCharacter,
+  ]);
 
   const nextLevelXpRequirement =
     useComponentValue(
@@ -239,17 +245,17 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader textAlign="center">
-          {winner === character.characterId ? 'Victory!' : 'Defeat...'}
+          {winner === character.id ? 'Victory!' : 'Defeat...'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody p={4} textAlign="center">
           <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
             <Text>
-              {winner === character.characterId
+              {winner === character.id
                 ? `You defeated ${opponent?.name}!`
                 : `You lost to ${opponent?.name}.`}
             </Text>
-            {winner === character.characterId && (
+            {winner === character.id && (
               <Text>
                 You earned{' '}
                 <Text as="span" color="green" fontWeight="bold">
@@ -299,7 +305,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 <Text
                   as={Link}
                   color="blue"
-                  to={`/characters/${character?.characterId}`}
+                  to={`/characters/${character?.id}`}
                   onClick={onAcknowledge}
                   _hover={{
                     textDecoration: 'underline',

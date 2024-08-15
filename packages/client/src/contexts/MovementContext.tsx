@@ -95,11 +95,7 @@ export const MovementProvider = ({
             break;
         }
 
-        const { error, success } = await move(
-          character.characterId,
-          newX,
-          newY,
-        );
+        const { error, success } = await move(character.id, newX, newY);
 
         if (error && !success) {
           throw new Error(error);
