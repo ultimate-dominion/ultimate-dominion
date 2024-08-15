@@ -8,6 +8,8 @@
     "clean": "forge clean && rimraf src/codegen",
     "deploy:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337",
     "deploy:testnet-base": "DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000\" --profile=base-sepolia",
+    "deploy:garnet": "mud deploy --profile=garnet",
+    "deploy:redstone": "mud deploy --profile=redstone",
     "dev": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337",
     "lint": "pnpm run prettier && pnpm run solhint",
     "lint:fix": "pnpm run prettier && pnpm lint:sol-tests --fix  && yarn lint:sol-logic --fix",
