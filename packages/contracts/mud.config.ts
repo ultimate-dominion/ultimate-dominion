@@ -203,7 +203,6 @@ export default defineWorld({
       schema: {
         encounterEntityId: "bytes32",
         // by default this is bytes(0), if this entity is in an encounter it will be set,
-        // if the mob survives its encounter this will be set back to bytes(0)
         encounterId: "bytes32",
         died: "bool",
       },
