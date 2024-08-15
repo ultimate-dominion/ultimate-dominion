@@ -39,7 +39,15 @@ export const decodeArmorStats = (statsBytes: string): ArmorStats => {
     strModifier: itemTemplateStats.strModifier.toString(),
   };
 };
+export const getEmoji = (name: string): string => {
+  return name
+    ? name.match(/[\p{Emoji}\u200d]+/gu)?.toString() || ''
+    : name || '';
+};
 
+export const removeEmoji = (name: string): string => {
+  return name ? name.replace(/[\p{Emoji}\u200d]+/gu, '') || '' : name || '';
+};
 export const decodeCharacterId = (
   characterId: `0x${string}`,
 ): {

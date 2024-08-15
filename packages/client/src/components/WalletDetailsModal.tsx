@@ -26,53 +26,10 @@ import { useAccount, useBalance, useWalletClient } from 'wagmi';
 
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { ERC_1155ABI } from '../utils/constants';
 import { shortenAddress } from '../utils/helpers';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { CopyText } from './CopyText';
-const erc1155abi = [
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'operator',
-        type: 'address',
-      },
-      {
-        internalType: 'bool',
-        name: 'approved',
-        type: 'bool',
-      },
-    ],
-    name: 'setApprovalForAll',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'account',
-        type: 'address',
-      },
-      {
-        internalType: 'address',
-        name: 'operator',
-        type: 'address',
-      },
-    ],
-    name: 'isApprovedForAll',
-    outputs: [
-      {
-        internalType: 'bool',
-        name: '',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-];
 export const WalletDetailsModal = ({
   isOpen,
   onClose,
@@ -141,7 +98,7 @@ export const WalletDetailsModal = ({
           const auction = await worldContract.read.UD__auctionHouseAddress();
           const t = await publicClient.readContract({
             address: itemsContract as Address,
-            abi: erc1155abi,
+            abi: ERC_1155ABI,
             functionName: 'isApprovedForAll',
             args: [externalWalletClient.account.address, auction as Address],
           });
@@ -282,7 +239,7 @@ export const WalletDetailsModal = ({
 
       const { request } = await publicClient.simulateContract({
         address: itemsContract as Address,
-        abi: erc1155abi,
+        abi: ERC_1155ABI,
         functionName: 'setApprovalForAll',
         args: [auction as Address, !itemAllowed],
       });
@@ -404,7 +361,7 @@ export const WalletDetailsModal = ({
                 <HStack>
                   <FormControl isInvalid={!!withdrawErrorMessage}>
                     <FormLabel fontSize="xs">
-                      Set Auction House Gold Allowance
+                      Set Auction House gold allowance
                     </FormLabel>
                     {!!goldErrorMessage && (
                       <FormHelperText color="red" fontSize="xs" mb={2}>
@@ -431,11 +388,11 @@ export const WalletDetailsModal = ({
                 <HStack>
                   <FormControl isInvalid={!!withdrawErrorMessage}>
                     <FormLabel fontSize="xs">
-                      Set Auction House Item Approval
+                      Set Auction House item approval
                     </FormLabel>
                     {!itemsApprovedInitial ? (
                       <Skeleton>
-                        <Switch></Switch>
+                        <Switch />
                       </Skeleton>
                     ) : (
                       <Switch

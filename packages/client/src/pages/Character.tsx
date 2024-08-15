@@ -43,7 +43,7 @@ import { LevelingPanel } from '../components/LevelingPanel';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { AUCTION_PATH, HOME_PATH, LEADERBOARD_PATH } from '../Routes';
+import { AUCTION_HOUSE_PATH, HOME_PATH, LEADERBOARD_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
   decodeArmorStats,
@@ -383,7 +383,7 @@ export const CharacterPage = (): JSX.Element => {
                   w="100%"
                   onClick={() => {
                     if (isOwner) {
-                      navigate(AUCTION_PATH);
+                      navigate(AUCTION_HOUSE_PATH);
                     }
                   }}
                 >

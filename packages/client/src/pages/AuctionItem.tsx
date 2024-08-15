@@ -29,9 +29,7 @@ import {
   singletonEntity,
 } from '@latticexyz/store-sync/recs';
 import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
-// import { Entity } from '@latticexyz/recs';
 import { useCallback, useEffect, useState } from 'react';
-import { FaTimes } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Address, erc20Abi, formatEther, maxUint256, parseEther } from 'viem';
 import { useWalletClient } from 'wagmi';
@@ -41,88 +39,44 @@ import { OrderRow } from '../components/OrderRow';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { AUCTION_PATH } from '../Routes';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import { AUCTION_HOUSE_PATH } from '../Routes';
+import { ERC_1155ABI } from '../utils/constants';
 import {
-  Armor,
+  fetchMetadataFromUri,
+  getEmoji,
+  removeEmoji,
+  uriToHttp,
+} from '../utils/helpers';
+import {
   ArmorStats,
   Character,
+  ConsiderationData,
+  Item,
   ItemType,
+  OfferData,
+  Order,
   StatsClasses,
-  Weapon,
   WeaponStats,
 } from '../utils/types';
-const erc1155abi = [
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'account',
-        type: 'address',
-      },
-      {
-        internalType: 'address',
-        name: 'operator',
-        type: 'address',
-      },
-    ],
-    name: 'isApprovedForAll',
-    outputs: [
-      {
-        internalType: 'bool',
-        name: '',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-];
-export const Item = (): JSX.Element => {
+
+export const AuctionItem = (): JSX.Element => {
   const { data: externalWalletClient } = useWalletClient();
 
   const { renderSuccess, renderError } = useToast();
   const navigate = useNavigate();
   const params = useParams();
-  //   const [filter, setFilter] = useState({ filtered: 'all' });
-  //   const [query, setQuery] = useState('');
-  interface Item {
-    ItemType: ItemType;
-    TokenId: string;
-    Weapon: WeaponStats | null;
-    Armor: ArmorStats | null;
-    Balance: number | null;
-  }
-  interface Order {
-    orderHash: string;
-    orderStatus: string;
-    offer: OfferData;
-    consideration: ConsiderationData;
-  }
-  interface OfferData {
-    amount: string;
-    identifier: string;
-    token: string;
-    tokenType: string;
-  }
-  interface ConsiderationData {
-    amount: string;
-    identifier: string;
-    token: string;
-    tokenType: string;
-    recipient: string;
-  }
+
   const { character: userCharacter } = useCharacter();
+  const [current, setCurrent] = useState<Item | null>(null);
+  const [currentBalance, setCurrentBalance] = useState('0');
   const [floor, setFloor] = useState(maxUint256);
   const [ceiling, setCeiling] = useState(0n);
   const [isSelling, setIsSelling] = useState(false);
-  const [offerAmount, setOfferAmount] = useState(1);
-  const [offerPrice, setOfferPrice] = useState(1);
-  const [listingAmount, setListingAmount] = useState(1);
-  const [listingPrice, setListingPrice] = useState(1);
-  const [inventory, setInventory] = useState<Item[] | null>(null);
+  const [offerAmount, setOfferAmount] = useState('1');
+  const [offerPrice, setOfferPrice] = useState('1');
+  const [listingAmount, setListingAmount] = useState('1');
+  const [listingPrice, setListingPrice] = useState('1');
   const [itemType, setItemType] = useState<string | null>(null);
-  const [items, setItems] = useState<Item[] | null>(null);
   const [goldAllowance, setGoldAllowance] = useState<bigint | null>(null);
   const [itemAllowance, setItemAllowance] = useState<boolean | null>(null);
   const [auctionContractAddress, setAuctionContractAddress] = useState('');
@@ -163,49 +117,48 @@ export const Item = (): JSX.Element => {
       setIsSelling(true);
       // this is covering both selling an item for gold or gold for an item
       // wanted is either an item or a bigint (representing a gold amount)
-      const args = [
-        {
-          signature: '' as Address,
-          offerer: purchaser.owner as Address,
-          offer: {
-            // 1 is ERC20 in the contracts. 3 is ERC1155
-            tokenType: typeof offered === 'bigint' ? 1 : 3,
-            token:
-              typeof offered === 'bigint'
-                ? (goldToken as Address)
-                : (itemsContract as Address),
-            // Identifier will be ignored if it's a bigint (representing gold), otherwise it represents the ERC1155 token ID
-            identifier:
-              typeof offered === 'bigint'
-                ? 0n
-                : BigInt((offered as Item).TokenId),
-            // Amount is the amount of the ERC1155 token that is offered. For ERC20, use the offered value
-            amount: typeof offered === 'bigint' ? offered : amount,
-          },
-          consideration: {
-            // 1 is ERC20 in the contracts. 3 is ERC1155
-            tokenType: typeof wanted === 'bigint' ? 1 : 3,
-            token:
-              // Identifier will be ignored if it's a bigint (representing gold), otherwise it represents the ERC1155 token ID
-              typeof wanted === 'bigint'
-                ? (goldToken as Address)
-                : (itemsContract as Address),
-            identifier:
-              typeof wanted === 'bigint'
-                ? 0n
-                : BigInt((wanted as Item).TokenId),
-            // Amount is the amount of the ERC1155 token that is wanted. For ERC20, use the offered value
-            amount: typeof wanted === 'bigint' ? wanted : amount,
-            recipient: purchaser.owner as Address,
-          },
-        },
-      ];
       const { request } = await publicClient.simulateContract({
         address: worldContract.address,
         abi: worldAbi,
         functionName: 'UD__createOrder',
         account: externalWalletClient.account,
-        args: args,
+        args: [
+          {
+            signature: '' as Address,
+            offerer: purchaser.owner as Address,
+            offer: {
+              // 1 is ERC20 in the contracts. 3 is ERC1155
+              tokenType: typeof offered === 'bigint' ? 1 : 3,
+              token:
+                typeof offered === 'bigint'
+                  ? (goldToken as Address)
+                  : (itemsContract as Address),
+              // Identifier will be ignored if it's a bigint (representing gold), otherwise it represents the ERC1155 token ID
+              identifier:
+                typeof offered === 'bigint'
+                  ? 0n
+                  : BigInt((offered as Item).tokenId),
+              // Amount is the amount of the ERC1155 token that is offered. For ERC20, use the offered value
+              amount: typeof offered === 'bigint' ? offered : amount,
+            },
+            consideration: {
+              // 1 is ERC20 in the contracts. 3 is ERC1155
+              tokenType: typeof wanted === 'bigint' ? 1 : 3,
+              token:
+                // Identifier will be ignored if it's a bigint (representing gold), otherwise it represents the ERC1155 token ID
+                typeof wanted === 'bigint'
+                  ? (goldToken as Address)
+                  : (itemsContract as Address),
+              identifier:
+                typeof wanted === 'bigint'
+                  ? 0n
+                  : BigInt((wanted as Item).tokenId),
+              // Amount is the amount of the ERC1155 token that is wanted. For ERC20, use the offered value
+              amount: typeof wanted === 'bigint' ? wanted : amount,
+              recipient: purchaser.owner as Address,
+            },
+          },
+        ],
       });
       await externalWalletClient?.writeContract(request);
       renderSuccess('Order placed successfully!');
@@ -221,15 +174,14 @@ export const Item = (): JSX.Element => {
   ) {
     if (
       !params.itemId ||
-      inventory == null ||
-      !inventory[0].Balance ||
-      Number(amount) > inventory[0].Balance
+      !currentBalance ||
+      Number(amount) > Number(currentBalance)
     ) {
       renderError('You do not have enough items to sell');
-    } else if (items && userCharacter) {
+    } else if (current && userCharacter) {
       _sell(
         parseEther(price.toString()),
-        items.filter(x => x.TokenId == params.itemId)[0],
+        current,
         userCharacter,
         BigInt(amount),
       );
@@ -242,21 +194,22 @@ export const Item = (): JSX.Element => {
       goldAllowance < parseEther(price.toString())
     ) {
       renderError('Approve more funds in your wallet details');
-    } else if (items && userCharacter) {
+    } else if (current && userCharacter) {
       _sell(
-        items.filter(x => x.TokenId == params.itemId)[0],
+        current,
         parseEther(price.toString()),
         userCharacter,
         BigInt(amount),
       );
     }
   };
+
   const fetchCharacterItems = useCallback(
     async (character: Character) => {
       try {
-        const _items = Array.from(runQuery([Has(ItemsOwners)]))
+        Array.from(runQuery([Has(ItemsOwners)]))
           .map(entity => {
-            const itemdBalance = getComponentValueStrict(
+            const itemBalance = getComponentValueStrict(
               ItemsOwners,
               entity,
             ).balance;
@@ -274,7 +227,7 @@ export const Item = (): JSX.Element => {
             const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
 
             return {
-              balance: itemdBalance.toString(),
+              balance: itemBalance.toString(),
               itemId: entity,
               itemType: itemTemplate.itemType,
               owner,
@@ -293,24 +246,32 @@ export const Item = (): JSX.Element => {
             return Number(a.tokenId) - Number(b.tokenId);
           })
           .map(item => {
-            const result = {
-              ItemType: item.itemType,
-              TokenId: item.tokenId,
-              Balance: Number(item.balance),
-              Weapon: null,
-              Armor: null,
-            } as Item;
-            result[ItemType[item.itemType]] = item;
-            return result;
+            setCurrentBalance(item.balance.toString());
+            switch (ItemType[item.itemType]) {
+              case 'Weapon': {
+                setCurrent({
+                  ...current,
+                } as Item);
+                break;
+              }
+              case 'Armor': {
+                setCurrent({
+                  ...current,
+                } as Item);
+                break;
+              }
+              default:
+                break;
+            }
+            return item;
           });
-        setInventory(_items);
       } catch (e) {
         renderError('Failed to fetch character data.', e);
       } finally {
-        // setIsLoadingItems(false);
+        /* empty */
       }
     },
-    [Items, ItemsOwners, itemType, params.itemId, renderError],
+    [Items, ItemsOwners, current, itemType, params.itemId, renderError],
   );
   const fetchOrders = useCallback(async () => {
     setOrders(
@@ -366,7 +327,7 @@ export const Item = (): JSX.Element => {
       ),
     );
   }, [Offers, ceiling, floor, goldToken, worldContract.read]);
-  const fetchItems = useCallback(async () => {
+  const fetchCurrent = useCallback(async () => {
     const _items = Array.from(runQuery([Has(ItemsOwners)]))
       .map(entity => {
         const { owner, tokenId } = decodeEntity(
@@ -378,7 +339,6 @@ export const Item = (): JSX.Element => {
 
         const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
         return {
-          // balance: itemdBalance.toString(),
           itemId: entity,
           itemType: itemTemplate.itemType,
           owner,
@@ -387,7 +347,7 @@ export const Item = (): JSX.Element => {
         };
       })
       .filter(item => item.tokenId == params.itemId);
-    const allItems = await Promise.all(
+    await Promise.all(
       _items.map(async item => {
         setItemType(ItemType[item.itemType]);
         const itemData = {
@@ -414,43 +374,57 @@ export const Item = (): JSX.Element => {
             const w = await worldContract.read.UD__getWeaponStats([
               BigInt(item.tokenId),
             ]);
-            itemData.Weapon = {
+            setCurrent({
               ...metadata,
-              agiModifier: w.agiModifier.toString(),
-              classRestrictions: w.classRestrictions.map(
-                (classRestriction: number) => classRestriction as StatsClasses,
-              ),
-              hitPointModifier: w.hitPointModifier.toString(),
-              intModifier: w.intModifier.toString(),
               itemId: item.itemId,
-              maxDamage: w.maxDamage.toString(),
-              minDamage: w.minDamage.toString(),
-              minLevel: w.minLevel.toString(),
-              owner: item.owner,
-              strModifier: w.strModifier.toString(),
+              itemType: item.itemType,
               tokenId: item.tokenId,
-            } as Weapon;
+              class: 1,
+              stats: (itemData.Weapon = {
+                agiModifier: w.agiModifier.toString(),
+                classRestrictions: w.classRestrictions.map(
+                  (classRestriction: number) =>
+                    classRestriction as StatsClasses,
+                ),
+                hitPointModifier: w.hitPointModifier.toString(),
+                intModifier: w.intModifier.toString(),
+                itemId: item.itemId,
+                maxDamage: w.maxDamage.toString(),
+                minDamage: w.minDamage.toString(),
+                minLevel: w.minLevel.toString(),
+                owner: item.owner,
+                strModifier: w.strModifier.toString(),
+                tokenId: item.tokenId,
+              } as WeaponStats),
+            });
             break;
           }
           case ItemType.Armor: {
             const a = await worldContract.read.UD__getArmorStats([
               BigInt(item.tokenId),
             ]);
-            itemData.Armor = {
+            setCurrent({
               ...metadata,
-              armorModifier: a.armorModifier.toString(),
-              agiModifier: a.agiModifier.toString(),
-              classRestrictions: a.classRestrictions.map(
-                (classRestriction: number) => classRestriction as StatsClasses,
-              ),
-              hitPointModifier: a.hitPointModifier.toString(),
-              intModifier: a.intModifier.toString(),
               itemId: item.itemId,
-              minLevel: a.minLevel.toString(),
-              owner: item.owner,
-              strModifier: a.strModifier.toString(),
+              itemType: item.itemType,
               tokenId: item.tokenId,
-            } as Armor;
+              class: 1,
+              stats: {
+                armorModifier: a.armorModifier.toString(),
+                agiModifier: a.agiModifier.toString(),
+                classRestrictions: a.classRestrictions.map(
+                  (classRestriction: number) =>
+                    classRestriction as StatsClasses,
+                ),
+                hitPointModifier: a.hitPointModifier.toString(),
+                intModifier: a.intModifier.toString(),
+                itemId: item.itemId,
+                minLevel: a.minLevel.toString(),
+                owner: item.owner,
+                strModifier: a.strModifier.toString(),
+                tokenId: item.tokenId,
+              } as ArmorStats,
+            });
             break;
           }
           default:
@@ -459,8 +433,6 @@ export const Item = (): JSX.Element => {
         return itemData;
       }),
     );
-
-    setItems(allItems);
   }, [
     Items,
     ItemsBaseURI,
@@ -474,9 +446,9 @@ export const Item = (): JSX.Element => {
       setAuctionContractAddress(
         await worldContract.read.UD__auctionHouseAddress(),
       );
-      await fetchItems();
+      await fetchCurrent();
       await fetchOrders();
-      if (userCharacter && itemType) {
+      if (userCharacter && itemType && current) {
         await fetchCharacterItems(userCharacter);
       }
       if (auctionContractAddress && userCharacter) {
@@ -496,7 +468,7 @@ export const Item = (): JSX.Element => {
         setItemAllowance(
           (await publicClient.readContract({
             address: itemsContract as Address,
-            abi: erc1155abi,
+            abi: ERC_1155ABI,
             functionName: 'isApprovedForAll',
             args: [
               userCharacter?.owner as Address,
@@ -509,8 +481,9 @@ export const Item = (): JSX.Element => {
   }, [
     Characters,
     auctionContractAddress,
+    current,
     fetchCharacterItems,
-    fetchItems,
+    fetchCurrent,
     fetchOrders,
     goldAllowance,
     goldToken,
@@ -530,9 +503,9 @@ export const Item = (): JSX.Element => {
           templateColumns={{ base: 'repeat(5, 1fr)', lg: 'repeat(10, 1fr)' }}
         >
           <GridItem p={5} rowSpan={2} colSpan={5}>
-            {items != null && itemType != null ? (
+            {current != null ? (
               <Heading textAlign="center">
-                {items[0][itemType]?.name.replace(/[\p{Emoji}\u200d]+/gu, '')}
+                {current?.name.replace(/[\p{Emoji}\u200d]+/gu, '')}
               </Heading>
             ) : (
               <Skeleton>
@@ -540,16 +513,14 @@ export const Item = (): JSX.Element => {
               </Skeleton>
             )}
             <Center my={5}>
-              {items != null && itemType != null ? (
+              {current != null ? (
                 <Avatar
                   borderRadius={0}
                   size="2xl"
                   name={' '}
                   backgroundColor="transparent"
                 >
-                  {(items[0][itemType]?.name as string).match(
-                    /[\p{Emoji}\u200d]+/gu,
-                  )}
+                  {(current?.name as string).match(/[\p{Emoji}\u200d]+/gu)}
                 </Avatar>
               ) : (
                 <Skeleton>
@@ -557,8 +528,8 @@ export const Item = (): JSX.Element => {
                 </Skeleton>
               )}
             </Center>
-            {items != null && itemType != null ? (
-              <Text>{items[0][itemType]?.description}</Text>
+            {current != null && current.description != null ? (
+              <Text>{current?.description}</Text>
             ) : (
               <Skeleton></Skeleton>
             )}
@@ -566,7 +537,7 @@ export const Item = (): JSX.Element => {
               w="100%"
               mt={5}
               size="sm"
-              onClick={() => navigate(AUCTION_PATH)}
+              onClick={() => navigate(AUCTION_HOUSE_PATH)}
               variant="outline"
             >
               Back to Auction House
@@ -575,26 +546,23 @@ export const Item = (): JSX.Element => {
           <GridItem p={5} rowSpan={2} colSpan={5}>
             <Stack></Stack>
             <Grid templateColumns="repeat(, 1fr)">
-              {items != null && itemType != null ? (
-                [...Object.keys(items[0][itemType])]
-                  .filter(
-                    x =>
-                      [
-                        'name',
-                        'description',
-                        'owner',
-                        'image',
-                        'tokenId',
-                        'itemId',
-                        'classRestrictions',
-                      ].indexOf(x) == -1,
+              {current != null && current.stats != null ? (
+                [...Object.keys({ ...current.stats })]
+                  .filter(key =>
+                    ['itemId', 'owner'].indexOf(key) > -1 ? false : true,
                   )
                   .map((key, i) => (
                     <GridItem key={`detail-${i}`}>
                       <HStack>
                         <Text textTransform="capitalize">{key}</Text>
                         <Spacer></Spacer>
-                        <Text>{items[0][itemType][key]}</Text>
+                        <Text>
+                          {current.stats
+                            ? current.stats[
+                                key as keyof (WeaponStats | ArmorStats)
+                              ]
+                            : ''}
+                        </Text>
                       </HStack>
                     </GridItem>
                   ))
@@ -610,9 +578,9 @@ export const Item = (): JSX.Element => {
                   <Text>Floor Price</Text>
                   <Spacer></Spacer>
                   <Text>
-                    {floor.toString().toString() == maxUint256.toString()
+                    {floor.toString() == maxUint256.toString()
                       ? 'not enough data'
-                      : formatEther(floor.toString()).toString()}
+                      : formatEther(floor).toString()}
                   </Text>
                 </HStack>
               </GridItem>
@@ -621,9 +589,9 @@ export const Item = (): JSX.Element => {
                   <Text>Cieling Price</Text>
                   <Spacer></Spacer>
                   <Text>
-                    {formatEther(ceiling.toString()).toString() == '0'
+                    {formatEther(ceiling).toString() == '0'
                       ? 'not enough data'
-                      : formatEther(ceiling.toString()).toString()}
+                      : formatEther(ceiling).toString()}
                   </Text>
                 </HStack>
               </GridItem>{' '}
@@ -654,7 +622,9 @@ export const Item = (): JSX.Element => {
               </Stack>
               <Button
                 w="100%"
-                onClick={() => orderItem(offerAmount, offerPrice)}
+                onClick={() =>
+                  orderItem(offerAmount.toString(), offerPrice.toString())
+                }
                 isLoading={isSelling}
                 size="sm"
                 variant="solid"
@@ -673,7 +643,7 @@ export const Item = (): JSX.Element => {
               <TabPanels>
                 <TabPanel>
                   <Stack gap={2}>
-                    {orders != null && itemType != null && items != null
+                    {orders != null && itemType != null
                       ? orders
                           .filter(
                             item =>
@@ -681,24 +651,20 @@ export const Item = (): JSX.Element => {
                               item.consideration.token == goldToken &&
                               item.offer.identifier == params.itemId,
                           )
-                          .filter(item => item.orderStatus == 1)
+                          .filter(item => item.orderStatus == '1')
                           .map((order, i) => (
                             <OrderRow
                               key={`order-${i}`}
                               from={order.consideration.recipient}
                               orderHash={order.orderHash}
-                              offer={Number(order.offer.amount)}
+                              offer={order.offer.amount}
                               consideration={formatEther(
-                                order.consideration.amount,
+                                BigInt(order.consideration.amount),
                               )}
                               considerationItem={'$GOLD'}
-                              offerItem={items[0][itemType]?.name.replace(
-                                /[\p{Emoji}\u200d]+/gu,
-                                '',
-                              )}
-                              emoji={(items[0][itemType]?.name as string).match(
-                                /[\p{Emoji}\u200d]+/gu,
-                              )}
+                              offerItem={removeEmoji(current?.name as string)}
+                              emoji={getEmoji(current?.name as string)}
+                              recipient={order.consideration.recipient}
                             ></OrderRow>
                           ))
                       : ''}
@@ -706,7 +672,7 @@ export const Item = (): JSX.Element => {
                 </TabPanel>
                 <TabPanel>
                   <Stack gap={2}>
-                    {orders != null && itemType != null && items != null
+                    {orders != null && itemType != null && current != null
                       ? orders
                           .filter(
                             item =>
@@ -720,15 +686,14 @@ export const Item = (): JSX.Element => {
                               key={`order-${i}`}
                               from={order.consideration.recipient}
                               orderHash={order.orderHash}
-                              consideration={Number(order.consideration.amount)}
-                              offer={formatEther(order.offer.amount).toString()}
+                              consideration={order.consideration.amount}
+                              offer={formatEther(
+                                BigInt(order.offer.amount),
+                              ).toString()}
                               offerItem={'$GOLD'}
-                              considerationItem={items[0][
-                                itemType
-                              ]?.name.replace(/[\p{Emoji}\u200d]+/gu, '')}
-                              emoji={(items[0][itemType]?.name as string).match(
-                                /[\p{Emoji}\u200d]+/gu,
-                              )}
+                              considerationItem={removeEmoji(current.name)}
+                              emoji={getEmoji(current.name)}
+                              recipient={order.consideration.recipient}
                             ></OrderRow>
                           ))
                       : ''}
@@ -737,51 +702,30 @@ export const Item = (): JSX.Element => {
                 <TabPanel>
                   <Center>
                     <Stack direction="row">
-                      {items != null &&
-                      inventory != null &&
-                      inventory.length > 0 &&
-                      inventory[0].Balance > 0 &&
-                      itemType != null ? (
+                      {BigInt(currentBalance) > 0n &&
+                      current != null &&
+                      current.stats != null &&
+                      userCharacter != null &&
+                      userCharacter.owner != null ? (
                         <ItemCard
-                          name={items[0][itemType].name}
-                          classRestrictions={
-                            items[0][itemType].classRestrictions
-                          }
-                          image={`x${inventory[0]?.Balance}`}
-                          strModifier={items[0][itemType].strModifier}
-                          agiModifier={items[0][itemType].agiModifier}
-                          intModifier={items[0][itemType].intModifier}
-                          {...inventory[0][itemType]}
+                          {...current}
+                          {...current.stats}
+                          owner={userCharacter.owner}
+                          balance={currentBalance}
+                          name={current.name}
+                          classRestrictions={current.stats.classRestrictions}
+                          image={`x${currentBalance}`}
+                          strModifier={current.stats.strModifier}
+                          agiModifier={current.stats.agiModifier}
+                          intModifier={current.stats.intModifier}
                           isEquipped={false}
                         />
                       ) : (
                         ''
                       )}
-                      <Center>
-                        {inventory &&
-                        inventory.length > 0 &&
-                        inventory[0]?.Balance > 0 ? (
-                          <Avatar
-                            name={' '}
-                            size="lg"
-                            w={100}
-                            h={100}
-                            background="grey300"
-                          >
-                            <FaTimes />
-                            {inventory[0]?.Balance < 1000
-                              ? inventory[0].Balance
-                              : '999+'}
-                          </Avatar>
-                        ) : (
-                          ''
-                        )}
-                      </Center>
                     </Stack>
                   </Center>
-                  {inventory &&
-                  inventory.length > 0 &&
-                  inventory[0].Balance > 0 ? (
+                  {BigInt(currentBalance) > 0n ? (
                     <Stack>
                       <Stack direction="row" mb={2} mt={8} w="100%">
                         <InputGroup size="lg" w="100%">
@@ -792,7 +736,7 @@ export const Item = (): JSX.Element => {
                             type="number"
                             min={0}
                             step={1}
-                            max={Number(inventory[0]?.Balance)}
+                            max={Number(currentBalance)}
                             value={listingAmount.toString()}
                           />
                         </InputGroup>

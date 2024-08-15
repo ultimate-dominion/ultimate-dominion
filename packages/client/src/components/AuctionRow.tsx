@@ -13,31 +13,30 @@ import { GiAxeSword, GiRogue } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
+import { ITEM_PATH } from '../Routes';
 export const AuctionRow = ({
-  agility,
-  baseHp,
-  itemId,
-  emoji,
-  intelligence,
-  level,
   name,
-  strength,
+  agiModifier,
+  hitPointModifier,
+  intModifier,
+  minLevel,
+  strModifier,
+  emoji,
+  itemId,
   floor,
   itemClass,
 }: {
-  agility: string;
-  baseHp: string;
-  characterId: string;
-  emoji: string;
-  entityClass: string;
-  image: string;
-  intelligence: string;
-  goldBalance: string;
-  level: string;
   name: string;
-  strength: string;
+  image: string;
+  description: string;
+  agiModifier: string;
+  hitPointModifier: string;
+  intModifier: string;
+  minLevel: string;
+  strModifier: string;
+  emoji: string;
+  itemId: string;
   floor: string;
-  high: string;
   itemClass: string;
 }): JSX.Element => {
   const navigate = useNavigate();
@@ -48,7 +47,7 @@ export const AuctionRow = ({
       borderColor="grey400"
       borderRadius={2}
       justify="space-between"
-      onClick={() => navigate(`/item/${itemId}`)}
+      onClick={() => navigate(`${ITEM_PATH}${itemId}`)}
       w="100%"
       _hover={{
         cursor: 'pointer',
@@ -76,8 +75,8 @@ export const AuctionRow = ({
             <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            HP {baseHp} • STR {strength} • AGI
-            {agility} • INT {intelligence}
+            HP {hitPointModifier} • STR {strModifier} • AGI
+            {agiModifier} • INT {intModifier}
           </Text>
         </VStack>
       </Flex>
@@ -98,7 +97,7 @@ export const AuctionRow = ({
             textAlign="center"
             w="100%"
           >
-            {Number(level).toLocaleString()}
+            {Number(minLevel).toLocaleString()}
           </Text>
           <Text
             fontWeight={500}
@@ -107,9 +106,9 @@ export const AuctionRow = ({
             w="100%"
           >
             <Center>
-              {itemClass == 'Warrior' && <GiAxeSword size={15} />}
-              {itemClass == 'Rogue' && <GiRogue size={15} />}
-              {itemClass == 'Mage' && <FaHatWizard size={15} />}
+              {itemClass == '0' && <GiAxeSword size={15} />}
+              {itemClass == '1' && <GiRogue size={15} />}
+              {itemClass == '2' && <FaHatWizard size={15} />}
             </Center>
           </Text>
         </HStack>

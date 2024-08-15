@@ -28,9 +28,9 @@ export const OrderRow = ({
 }: {
   from: string;
   orderHash: string;
-  consideration: number;
+  consideration: string;
   considerationItem: string;
-  offer: number;
+  offer: string;
   offerItem: string;
   emoji: string;
   recipient: string;
@@ -117,7 +117,8 @@ export const OrderRow = ({
             </Center> */}
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            {consideration} {considerationItem} x {offer} {offerItem}
+            Wants {consideration} {considerationItem.trim()} for {offer}{' '}
+            {offerItem.trim()}
           </Text>
         </VStack>
       </Flex>

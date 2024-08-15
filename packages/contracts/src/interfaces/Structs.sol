@@ -144,6 +144,7 @@ struct RewardDistributionTemps {
     uint256 livingAttackers;
     uint256 cumulativeAttackerLevels;
 }
+
 ////// Auction house /////////
 
 struct Offer {
