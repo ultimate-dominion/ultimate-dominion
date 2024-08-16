@@ -383,9 +383,6 @@ export const AuctionHouse = (): JSX.Element => {
         </HStack>
       </Stack>
       <Flex justify="space-between" w="100%">
-        <Text>
-          Sort: {sort.sorted}, {sort.reversed ? 'desc' : 'asc'}
-        </Text>
         <Text>Items {entries.length}</Text>
         <HStack>
           <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
