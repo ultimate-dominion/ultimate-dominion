@@ -498,20 +498,31 @@ export const AuctionItem = (): JSX.Element => {
   return (
     <Stack>
       <Box>
+        <Button
+          mt={5}
+          size="sm"
+          onClick={() => navigate(AUCTION_HOUSE_PATH)}
+          variant="outline"
+        >
+          Back to Auction House
+        </Button>
         <Grid
           templateRows="repeat(10, 1fr)"
           templateColumns={{ base: 'repeat(5, 1fr)', lg: 'repeat(10, 1fr)' }}
         >
           <GridItem p={5} rowSpan={2} colSpan={5}>
-            {current != null ? (
-              <Heading textAlign="center">
-                {current?.name.replace(/[\p{Emoji}\u200d]+/gu, '')}
-              </Heading>
-            ) : (
-              <Skeleton>
-                <Heading>...</Heading>
-              </Skeleton>
-            )}
+            <HStack>
+              {current != null ? (
+                <Heading textAlign="center">
+                  {current?.name.replace(/[\p{Emoji}\u200d]+/gu, '')}
+                </Heading>
+              ) : (
+                <Skeleton>
+                  <Heading>...</Heading>
+                </Skeleton>
+              )}
+            </HStack>
+
             <Center my={5}>
               {current != null ? (
                 <Avatar
@@ -533,15 +544,6 @@ export const AuctionItem = (): JSX.Element => {
             ) : (
               <Skeleton></Skeleton>
             )}
-            <Button
-              w="100%"
-              mt={5}
-              size="sm"
-              onClick={() => navigate(AUCTION_HOUSE_PATH)}
-              variant="outline"
-            >
-              Back to Auction House
-            </Button>
           </GridItem>
           <GridItem p={5} rowSpan={2} colSpan={5}>
             <Stack></Stack>
@@ -555,7 +557,7 @@ export const AuctionItem = (): JSX.Element => {
                     <GridItem key={`detail-${i}`}>
                       <HStack>
                         <Text textTransform="capitalize">{key}</Text>
-                        <Spacer></Spacer>
+                        <Spacer />
                         <Text>
                           {current.stats
                             ? current.stats[
@@ -596,7 +598,7 @@ export const AuctionItem = (): JSX.Element => {
                 </HStack>
               </GridItem>{' '}
             </Grid>
-            <Spacer></Spacer>
+            <Spacer />
             <Stack>
               <Stack direction="row" mb={2} mt={8} w="100%">
                 <InputGroup size="lg" w="100%">
@@ -665,7 +667,7 @@ export const AuctionItem = (): JSX.Element => {
                               offerItem={removeEmoji(current?.name as string)}
                               emoji={getEmoji(current?.name as string)}
                               recipient={order.consideration.recipient}
-                            ></OrderRow>
+                            />
                           ))
                       : ''}
                   </Stack>
@@ -694,7 +696,7 @@ export const AuctionItem = (): JSX.Element => {
                               considerationItem={removeEmoji(current.name)}
                               emoji={getEmoji(current.name)}
                               recipient={order.consideration.recipient}
-                            ></OrderRow>
+                            />
                           ))
                       : ''}
                   </Stack>

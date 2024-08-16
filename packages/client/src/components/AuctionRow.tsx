@@ -22,7 +22,7 @@ export const AuctionRow = ({
   minLevel,
   strModifier,
   emoji,
-  itemId,
+  tokenId,
   floor,
   itemClass,
 }: {
@@ -35,7 +35,7 @@ export const AuctionRow = ({
   minLevel: string;
   strModifier: string;
   emoji: string;
-  itemId: string;
+  tokenId: string;
   floor: string;
   itemClass: string;
 }): JSX.Element => {
@@ -47,7 +47,7 @@ export const AuctionRow = ({
       borderColor="grey400"
       borderRadius={2}
       justify="space-between"
-      onClick={() => navigate(`${ITEM_PATH}${itemId}`)}
+      onClick={() => navigate(`${ITEM_PATH}${tokenId}`)}
       w="100%"
       _hover={{
         cursor: 'pointer',
@@ -75,30 +75,13 @@ export const AuctionRow = ({
             <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            HP {hitPointModifier} • STR {strModifier} • AGI
-            {agiModifier} • INT {intModifier}
+            HP {hitPointModifier} • STR {strModifier} • AGI {agiModifier} • INT{' '}
+            {intModifier}
           </Text>
         </VStack>
       </Flex>
       <HStack>
         <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
-          <Text
-            display={{ base: 'none', lg: 'block' }}
-            fontWeight={500}
-            size={{ base: 'xs', lg: 'md' }}
-            textAlign="center"
-            w="100%"
-          >
-            {Number(floor).toLocaleString()}
-          </Text>
-          <Text
-            fontWeight={500}
-            size={{ base: 'xs', lg: 'md' }}
-            textAlign="center"
-            w="100%"
-          >
-            {Number(minLevel).toLocaleString()}
-          </Text>
           <Text
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
@@ -110,6 +93,23 @@ export const AuctionRow = ({
               {itemClass == '1' && <GiRogue size={15} />}
               {itemClass == '2' && <FaHatWizard size={15} />}
             </Center>
+          </Text>
+          <Text
+            fontWeight={500}
+            size={{ base: 'xs', lg: 'md' }}
+            textAlign="center"
+            w="100%"
+          >
+            {Number(minLevel).toLocaleString()}
+          </Text>
+          <Text
+            display={{ base: 'none', lg: 'block' }}
+            fontWeight={500}
+            size={{ base: 'xs', lg: 'md' }}
+            textAlign="center"
+            w="100%"
+          >
+            {Number(floor).toLocaleString()}
           </Text>
         </HStack>
         <Box display={{ base: 'none', md: 'block' }} w="50px">
