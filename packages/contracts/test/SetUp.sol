@@ -8,7 +8,8 @@ import {MudTest} from "@latticexyz/world/test/MudTest.t.sol";
 import {getKeysWithValue} from "@latticexyz/world-modules/src/modules/keyswithvalue/getKeysWithValue.sol";
 import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {IWorld} from "@codegen/world/IWorld.sol";
-import {IEntropy} from "@pythnetwork/IEntropy.sol";
+import {IAdapter} from "@interfaces/IAdapter.sol";
+import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
@@ -29,7 +30,7 @@ contract SetUp is Test {
     uint256 public userNonce = 0;
     IWorld public world;
     address public worldAddress;
-    IEntropy public entropy;
+    IAdapter public entropy;
 
     IERC20Mintable public goldToken;
     IERC721Mintable public characterToken;
@@ -50,7 +51,7 @@ contract SetUp is Test {
         StoreSwitch.setStoreAddress(worldAddress);
 
         world = IWorld(worldAddress);
-        entropy = IEntropy(world.UD__getEntropy());
+        entropy = IAdapter(world.UD__getRandcastAdapter());
         alice = getUser();
         bob = getUser();
         goldToken = IERC20Mintable(world.UD__getGoldToken());
@@ -96,7 +97,7 @@ contract SetUp is Test {
 
         vm.startPrank(bob);
         bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
-        uint256 fees = entropy.getFee(address(1));
+        uint256 fees = IRngSystem(worldAddress).estimateFee();
         world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Mage);
         world.UD__enterGame(bobCharacterId);
         vm.stopPrank();

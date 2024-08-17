@@ -12,82 +12,87 @@ import {
     StatsData,
     RngLogs,
     RngLogsData,
-    CombatEncounter
+    CombatEncounter,
+    RngNonces
 } from "@codegen/index.sol";
 import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
+import "@libraries/StringAndUintConverter.sol" as StringAndUintConverter;
+import {IAdapter} from "@interfaces/IAdapter.sol";
 import {Action} from "@interfaces/Structs.sol";
-import {IConsumerWrapper} from "@interfaces/IConsumerWrapper.sol";
+import {_RANDOMNESS_PLACEHOLDER, _MAX_GAS_LIMIT} from "../../constants.sol";
 import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
+import {_requireAccess} from "../utils.sol";
 import "forge-std/console2.sol";
 
 contract RngSystem is System {
     using LibChunks for uint256;
 
-    event RNGFulfilled(bytes32 randomNumber);
+    event RNGFulfilled(uint256 randomNumber);
 
-    function _randcast() internal view returns (IEntropy entropy) {
-        entropy = IConsumerWrapper(getRandcastAdapter());
+    function _randcast() internal view returns (IAdapter randcast) {
+        randcast = IAdapter(getRandcastAdapter());
     }
 
     function getRandcastAdapter() public view returns (address) {
         return UltimateDominionConfig.getRandcastAdapter();
     }
 
-    function subscriptionId() public view returns (bytes32) {
-        return UltimateDominionConfig.getSubscriptionId();
-    }
-
-    function getFee() public view returns (uint128) {
-        return _randcast().getFee(_provider());
-    }
-
-    function _provider() internal view returns (address provider) {
-        provider = UltimateDominionConfig.getPythProvider();
+    function subscriptionId() public view returns (uint64) {
+        return _randcast().getCurrentSubId();
     }
 
     function getRng(bytes32 userRandomNumber, RngRequestType requestType, bytes memory data)
         public
         payable
-        returns (bytes32 requestId)
+        returns (bytes32 _requestId)
     {
         RandomNumbersData memory randomNumberData;
         randomNumberData.arbitraryData = data;
         randomNumberData.requestType = requestType;
+
+        uint32 callbackGas = estimateCallbackGas();
+        uint256 requestFee = estimateFee();
+
+        IAdapter.RandomnessRequestParams memory randomnessParams = IAdapter.RandomnessRequestParams({
+            requestType: IAdapter.RequestType.Randomness,
+            params: "",
+            subId: subscriptionId(),
+            seed: uint256(userRandomNumber),
+            requestConfirmations: uint16(1),
+            callbackGasLimit: callbackGas,
+            callbackMaxGasPrice: tx.gasprice * 3
+        });
         // NOTE: required for testing, since callback is coming before data is stored
         /////////////// TODO: remove for mainnet deployment //////
         if (block.chainid == 31337) {
             (, bytes memory returnData) = address(_randcast()).staticcall(
-                abi.encodeWithSelector(
-                    IConsumerWrapper.getRandomNumber.selector, subscriptionId(), userRandomNumber, false
-                )
+                abi.encodeWithSelector(IAdapter.requestRandomness.selector, subscriptionId(), "", false)
             );
-            uint64 _sequenceNumber = abi.decode(returnData, (uint64));
+            _requestId = abi.decode(returnData, (bytes32));
 
-            RandomNumbers.set(_sequenceNumber, randomNumberData);
+            RandomNumbers.set(_requestId, randomNumberData);
         }
         /////////////////////////////////////////
 
         // pay the fees and request a random number from entropy
-        // requestId = _randcast().getRandomNumberWithCallback{value: requestFee}(_provider(), userRandomNumber);
+        _requestId = _randcast().requestRandomness(randomnessParams);
 
-        //prevrando entropy
-        requestId = bytes32(_incrementCounter(1));
+        // //prevrando entropy
+        // requestId = bytes32(_incrementCounter(1));
 
         RngLogsData memory rngLog = RngLogsData({
-            sequenceNumber: sequenceNumber,
-            provider: _provider(),
-            entropy: address(_randcast()),
-            // fee: requestFee,
-            fee: 0,
+            subscriptionId: subscriptionId(),
+            adapter: getRandcastAdapter(),
+            fee: requestFee,
             requestType: requestType,
             randomNumber: 0,
             userRandomNumber: userRandomNumber,
             data: data
         });
 
-        RngLogs.set(sequenceNumber, rngLog);
+        RngLogs.set(_requestId, rngLog);
 
         uint256 rng;
         uint256 timesCalled;
@@ -98,28 +103,217 @@ contract RngSystem is System {
             rng = uint256(keccak256(abi.encode(block.prevrandao, userRandomNumber)));
         }
 
-        RandomNumbers.set(sequenceNumber, randomNumberData);
-
-        fullfillRandomness(sequenceNumber, address(0), bytes32(rng));
+        RandomNumbers.set(_requestId, randomNumberData);
     }
 
-    function fullfillRandomness(
-        bytes32 requestId,
-        // If your app uses multiple providers, you can use this argument
-        // to distinguish which one is calling the app back. This app only
-        // uses one provider so this argument is not used.
-        address, /*_providerAddress*/
-        bytes32 randomNumber
-    ) internal override {
-        _fullfillEntropy(sequenceNumber, uint256(randomNumber));
+    function estimateFee() public returns (uint256 _fee) {
+        IAdapter.Subscription memory sub = _getSubscription(subscriptionId());
+        if (sub.freeRequestCount == 0) {
+            _fee = _randcast().estimatePaymentAmountInETH(estimateCallbackGas(), 550000, 0, tx.gasprice * 3, 3);
+        }
+    }
+
+    function _calculateTierFee(uint64 reqCount, uint256 lastRequestTimestamp, uint64 reqCountInCurrentPeriod)
+        internal
+        view
+        returns (uint32 tierFee)
+    {
+        // Use the new struct here.
+        IAdapter.FeeConfig memory feeConfig = _getFlatFeeConfig();
+        uint64 reqCountCalc;
+        if (feeConfig.isFlatFeePromotionEnabledPermanently) {
+            reqCountCalc = reqCount;
+        } else if (
+            feeConfig
+                //solhint-disable-next-line not-rely-on-time
+                .flatFeePromotionStartTimestamp <= block.timestamp
+            //solhint-disable-next-line not-rely-on-time
+            && block.timestamp <= feeConfig.flatFeePromotionEndTimestamp
+        ) {
+            if (lastRequestTimestamp < feeConfig.flatFeePromotionStartTimestamp) {
+                reqCountCalc = 1;
+            } else {
+                reqCountCalc = reqCountInCurrentPeriod + 1;
+            }
+        }
+        return _randcast().estimateFeeTier(reqCountCalc) * feeConfig.flatFeePromotionGlobalPercentage / 100;
+    }
+
+    function _getFlatFeeConfig() internal view returns (IAdapter.FeeConfig memory feeConfig) {
+        {
+            (, bytes memory point) =
+            // solhint-disable-next-line avoid-low-level-calls
+             address(_randcast()).staticcall(abi.encodeWithSelector(IAdapter.getFlatFeeConfig.selector));
+            uint16 flatFeePromotionGlobalPercentage;
+            bool isFlatFeePromotionEnabledPermanently;
+            uint256 flatFeePromotionStartTimestamp;
+            uint256 flatFeePromotionEndTimestamp;
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                flatFeePromotionGlobalPercentage := mload(add(point, 320))
+                isFlatFeePromotionEnabledPermanently := mload(add(point, 352))
+                flatFeePromotionStartTimestamp := mload(add(point, 384))
+                flatFeePromotionEndTimestamp := mload(add(point, 416))
+            }
+            feeConfig = IAdapter.FeeConfig(
+                flatFeePromotionGlobalPercentage,
+                isFlatFeePromotionEnabledPermanently,
+                flatFeePromotionStartTimestamp,
+                flatFeePromotionEndTimestamp
+            );
+        }
+    }
+
+    function _getSubscription(uint64 subId) internal view returns (IAdapter.Subscription memory sub) {
+        (
+            ,
+            ,
+            sub.balance,
+            sub.inflightCost,
+            sub.reqCount,
+            sub.freeRequestCount,
+            ,
+            sub.reqCountInCurrentPeriod,
+            sub.lastRequestTimestamp
+        ) = _randcast().getSubscription(subId);
+    }
+
+    function estimateCallbackGas() public returns (uint32 _callbackGas) {
+        _callbackGas = _dryRunCallbackToEstimateGas(IAdapter.RequestType.Randomness, "") + 30_000;
+    }
+
+    function _dryRunCallbackToEstimateGas(IAdapter.RequestType randcastRequestType, bytes memory params)
+        internal
+        returns (uint32)
+    {
+        // This should be identical to adapter generated requestId.
+        bytes32 requestId = _nextRequestId(subscriptionId());
+        // Prepares the message call of callback function according to request type
+        bytes memory data;
+        if (randcastRequestType == IAdapter.RequestType.Randomness) {
+            data = abi.encodeWithSelector(this.getRng.selector, requestId, _RANDOMNESS_PLACEHOLDER);
+            // } else if (randcastRequestType == IAdapter.RequestType.RandomWords) {
+            //     uint32 numWords = abi.decode(params, (uint32));
+            //     uint256[] memory randomWords = new uint256[](numWords);
+            //     for (uint256 i = 0; i < numWords; i++) {
+            //         randomWords[i] = uint256(keccak256(abi.encode(_RANDOMNESS_PLACEHOLDER, i)));
+            //     }
+            //     data = abi.encodeWithSelector(this.rawFulfillRandomWords.selector, requestId, randomWords);
+            // } else if (randcastRequestType == IAdapter.RequestType.Shuffling) {
+            //     uint32 upper = abi.decode(params, (uint32));
+            //     uint256[] memory arr = new uint256[](upper);
+            //     for (uint256 k = 0; k < upper; k++) {
+            //         arr[k] = k;
+            //     }
+            //     data = abi.encodeWithSelector(this.rawFulfillShuffledArray.selector, requestId, arr);
+        }
+
+        // We don't want message call for estimating gas to take effect, therefore success should be false,
+        // and result should be the reverted reason, which in fact is gas used we encoded to string.
+        (bool success, bytes memory result) =
+        // solhint-disable-next-line avoid-low-level-calls
+         address(this).call(abi.encodeWithSelector(this.requiredTxGas.selector, address(this), 0, data));
+
+        // This will be 0 if message call for callback fails,
+        // we pass this message to tell user that callback implementation need to be checked.
+        uint256 gasUsed = _parseGasUsed(result);
+
+        if (gasUsed > _MAX_GAS_LIMIT) {
+            revert("GasLimitTooBig");
+        }
+
+        require(!success && gasUsed != 0, "fulfillRandomness dry-run failed");
+
+        return uint32(gasUsed);
+    }
+
+    function _makeRandcastInputSeed(uint256 userSeed, uint64 subId, address requester, uint256 nonce)
+        internal
+        view
+        returns (uint256)
+    {
+        return uint256(keccak256(abi.encode(block.chainid, userSeed, subId, requester, nonce)));
+    }
+
+    function _nextRequestId(uint64 subId) internal returns (bytes32) {
+        subId = subId == 0 ? _randcast().getLastSubscription(address(this)) : subId;
+        if (subId == 0) {
+            revert("NoSubscriptionBound");
+        }
+        uint256 rawSeed = _makeRandcastInputSeed(0, subId, address(this), getNonce(subId));
+        return _makeRequestId(rawSeed);
+    }
+
+    function _makeRequestId(uint256 inputSeed) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(inputSeed));
+    }
+
+    function getNonce(uint64 subId) public returns (uint256) {
+        uint256 currentNonce = RngNonces.getNonce(subId);
+        uint256 newNonce = currentNonce + 1;
+        RngNonces.setNonce(subId, newNonce);
+        return newNonce;
+    }
+
+    function createSubscription() external returns (uint64 _subscriptionId) {
+        _requireAccess(address(this), _msgSender());
+        _subscriptionId = _randcast().createSubscription();
+        UltimateDominionConfig.setSubscriptionId(_subscriptionId);
+    }
+
+    /**
+     * @notice Estimates gas used by actually calling that function then reverting with the gas used as string
+     * @param to Destination address
+     * @param value Ether value
+     * @param data Data payload
+     */
+    function requiredTxGas(address to, uint256 value, bytes calldata data) external returns (uint256) {
+        uint256 startGas = gasleft();
+        // We don't provide an error message here, as we use it to return the estimate
+        // solhint-disable-next-line reason-string
+        require(_executeCall(to, value, data, gasleft()));
+        uint256 requiredGas = startGas - gasleft();
+        string memory s = StringAndUintConverter.uintToString(requiredGas);
+        // Convert response to string and return via error message
+        revert(s);
+    }
+
+    function _executeCall(address to, uint256 value, bytes memory data, uint256 txGas)
+        internal
+        returns (bool success)
+    {
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            success := call(txGas, to, value, add(data, 0x20), mload(data), 0, 0)
+        }
+    }
+
+    /**
+     * @notice Parses the gas used from the revert msg
+     * @param _returnData the return data of requiredTxGas
+     */
+    function _parseGasUsed(bytes memory _returnData) internal pure returns (uint256) {
+        // If the _res length is less than 68, then the transaction failed silently (without a revert message)
+        if (_returnData.length < 68) return 0; //"Transaction reverted silently";
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            // Slice the sighash.
+            _returnData := add(_returnData, 0x04)
+        }
+        return StringAndUintConverter.stringToUint(abi.decode(_returnData, (string))); // All that remains is the revert string
+    }
+
+    function _fullfillRandomness(bytes32 requestId, uint256 randomNumber) internal {
+        _fullfillEntropy(requestId, randomNumber);
         emit RNGFulfilled(randomNumber);
     }
 
-    function _fullfillEntropy(uint64 sequenceNumber, uint256 randomNumber) internal {
-        RngRequestType requestType = RandomNumbers.getRequestType(sequenceNumber);
-        bytes memory _data = RandomNumbers.getArbitraryData(sequenceNumber);
+    function _fullfillEntropy(bytes32 requestId, uint256 randomNumber) internal {
+        RngRequestType requestType = RandomNumbers.getRequestType(requestId);
+        bytes memory _data = RandomNumbers.getArbitraryData(requestId);
 
-        RngLogs.setRandomNumber(_getCounter(1), randomNumber);
+        RngLogs.setRandomNumber(requestId, randomNumber);
 
         if (uint8(requestType) == uint8(0)) {
             bytes32 characterId = abi.decode(_data, (bytes32));

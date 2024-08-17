@@ -16,12 +16,12 @@ contract UltimateDominionConfigSystem is System {
         _goldToken = UltimateDominionConfig.getGoldToken();
     }
 
-    function getEntropy() public view returns (address _entropy) {
-        _entropy = UltimateDominionConfig.getEntropy();
+    function getRandcastAdapter() public view returns (address _entropy) {
+        _entropy = UltimateDominionConfig.getRandcastAdapter();
     }
 
-    function getPythProvider() public view returns (address _provider) {
-        _provider = UltimateDominionConfig.getPythProvider();
+    function getSubscriptionId() public view returns (uint64 _subscriptionId) {
+        _subscriptionId = UltimateDominionConfig.getSubscriptionId();
     }
 
     function getItemsContract() public view returns (address _erc1155) {

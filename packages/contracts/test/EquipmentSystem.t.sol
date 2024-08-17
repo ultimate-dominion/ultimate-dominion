@@ -4,6 +4,7 @@ import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType} from "@codegen/common.sol";
 import {StatsData} from "@tables/Stats.sol";
 import "forge-std/console2.sol";
+import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig, StarterItemsData} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
@@ -79,7 +80,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_unequipItem() public {
-        uint256 fees = entropy.getFee(address(1));
+        uint256 fees = IRngSystem(worldAddress).estimateFee();
         vm.startPrank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);

@@ -597,7 +597,7 @@ export function createSystemCalls(
     }
   };
 
-  // const getFee = async () => {
+  // const estimateFee = async () => {
   //   const entropyAddress = await worldContract.read.UD__getEntropy();
   //   const providerAddress = await worldContract.read.UD__getPythProvider();
 
@@ -605,13 +605,13 @@ export function createSystemCalls(
   //     address: entropyAddress,
   //     abi: [
   //       parseAbiItem(
-  //         'function getFee(address provider) view returns (uint256)',
+  //         'function estimateFee(address provider) view returns (uint256)',
   //       ),
   //     ],
   //     client: publicClient,
   //   });
 
-  //   const fee = await entropyContract.read.getFee([providerAddress]);
+  //   const fee = await entropyContract.read.estimateFee([providerAddress]);
 
   //   return fee;
   // };

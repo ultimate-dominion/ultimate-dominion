@@ -22,6 +22,7 @@ import { NameExists } from "./tables/NameExists.sol";
 import { CombatEncounter, CombatEncounterData } from "./tables/CombatEncounter.sol";
 import { EncounterEntity, EncounterEntityData } from "./tables/EncounterEntity.sol";
 import { RandomNumbers, RandomNumbersData } from "./tables/RandomNumbers.sol";
+import { RngNonces } from "./tables/RngNonces.sol";
 import { Position } from "./tables/Position.sol";
 import { EntitiesAtPosition } from "./tables/EntitiesAtPosition.sol";
 import { UltimateDominionConfig, UltimateDominionConfigData } from "./tables/UltimateDominionConfig.sol";

@@ -208,11 +208,18 @@ export default defineWorld({
       },
     },
     RandomNumbers: {
-      key: ["sequenceNumber"],
+      key: ["requestId"],
       schema: {
-        sequenceNumber: "uint64",
+        requestId: "bytes32",
         requestType: "RngRequestType",
         arbitraryData: "bytes",
+      },
+    },
+    RngNonces: {
+      key: ["subId"],
+      schema: {
+        subId: "uint64",
+        nonce: "uint256",
       },
     },
     /**
@@ -253,17 +260,16 @@ export default defineWorld({
         characterToken: "address",
         items: "address",
         randcastAdapter: "address",
-        subscriptionId: "bytes32",
+        subscriptionId: "uint64",
       },
     },
     ///////////////////////// OFFCHAIN TABLES //////////////////
     RngLogs: {
       key: ["requestId"],
       schema: {
-        requestId: "uint256",
-        sequenceNumber: "uint64",
-        provider: "address",
-        entropy: "address",
+        requestId: "bytes32",
+        subscriptionId: "uint64",
+        adapter: "address",
         fee: "uint256",
         requestType: "RngRequestType",
         randomNumber: "uint256",

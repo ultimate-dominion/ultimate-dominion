@@ -2,6 +2,7 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes} from "@codegen/common.sol";
+import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {StatsData, StarterItemsData} from "@codegen/index.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
 import {IERC721Metadata} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Metadata.sol";
@@ -30,7 +31,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
     function test_RollStats() public {
         startGasReport("rolls stats for a character");
 
-        uint256 fees = entropy.getFee(address(1));
+        uint256 fees = IRngSystem(worldAddress).estimateFee();
         vm.prank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         vm.warp(block.number + 1);
@@ -45,7 +46,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
     }
 
     function test_RollStats_Revert_GameStarted() public {
-        uint256 fees = entropy.getFee(address(1));
+        uint256 fees = IRngSystem(worldAddress).estimateFee();
         vm.startPrank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
@@ -56,7 +57,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
     function test_EnterGame() public {
         startGasReport("enters a character into the game");
 
-        uint256 fees = entropy.getFee(address(1));
+        uint256 fees = IRngSystem(worldAddress).estimateFee();
         vm.startPrank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);

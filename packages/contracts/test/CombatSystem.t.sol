@@ -4,6 +4,7 @@ import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, EncounterType} from "@codegen/common.sol";
 import {StatsData, Stats} from "@tables/Stats.sol";
 import {EncounterEntity} from "@tables/EncounterEntity.sol";
+import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import "forge-std/console2.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
@@ -134,7 +135,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             weaponId: 2
         });
 
-        uint256 fees = 0; // entropy.getFee(address(1));
+        uint256 fees = 0; // IRngSystem(worldAddress).estimateFee();
 
         //assert alice is a defender
         assertEq(alicesCharacterId, world.UD__getEncounter(encounterId).defenders[0]);
@@ -197,7 +198,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             actionId: basicMagicAttackId,
             weaponId: 2
         });
-        uint256 fees = 0; // entropy.getFee(address(1));
+        uint256 fees = 0; // IRngSystem(worldAddress).estimateFee();
         vm.prank(bob);
         world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
 
@@ -273,7 +274,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             weaponId: 2
         });
 
-        uint256 fees = 0; // entropy.getFee(address(1));
+        uint256 fees = 0; // IRngSystem(worldAddress).estimateFee();
 
         //alice's move
 
@@ -317,7 +318,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         Action[] memory actions = new Action[](1);
         actions[0] =
             Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 1});
-        uint256 fees = entropy.getFee(address(1));
+        uint256 fees = IRngSystem(worldAddress).estimateFee();
         vm.expectRevert("ENCOUNTER SYSTEM: NON-COMBATANT");
         world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
     }

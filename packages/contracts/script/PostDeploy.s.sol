@@ -21,8 +21,8 @@ import {ERC20MetadataData} from "@latticexyz/world-modules/src/modules/erc20-pup
 import {ERC20System} from "@latticexyz/world-modules/src/modules/erc20-puppet/ERC20System.sol";
 import {registerERC20} from "@latticexyz/world-modules/src/modules/erc20-puppet/registerERC20.sol";
 import {System} from "@latticexyz/world/src/System.sol";
-
-import {MockEntropy} from "@test/mocks/MockEntropy.sol";
+import {IAdapter} from "@interfaces/IAdapter.sol";
+import {AdapterForTest} from "@test/mocks/AdapterForTest.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {UltimateDominionConfig, Levels, MapConfig, Admin} from "@codegen/index.sol";
 import {CharacterSystem} from "@systems/CharacterSystem.sol";
@@ -95,8 +95,8 @@ contract PostDeploy is Script {
         vm.startBroadcast(deployerPrivateKey);
         if (block.chainid == 31337) {
             // Set mock Vrng contracts for anvil
-            address mockEntropy = address(new MockEntropy());
-            UltimateDominionConfig.setRandcastAdapter(mockEntropy);
+            address adapterForTest = address(new AdapterForTest());
+            UltimateDominionConfig.setRandcastAdapter(adapterForTest);
             // redstone garnet
         } else if (block.chainid == 84532) {
             UltimateDominionConfig.setRandcastAdapter(0x323488A9Ad7463081F109468B4E50a5084e91295);
@@ -118,6 +118,9 @@ contract PostDeploy is Script {
         world.installModule(new PuppetModule(), new bytes(0));
 
         _addRngSystem();
+
+        // create randcast subscription
+        IAdapter(address(world)).createSubscription();
 
         // install gold module
         IERC20Mintable goldToken = registerERC20(
@@ -193,7 +196,7 @@ contract PostDeploy is Script {
 
         UltimateDominionConfig.setItems(address(items));
         //allow entropy system to call callback on Combat system
-        world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
+        world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getRandcastAdapter());
         _createStarterItems();
         _createActions();
         _createMonsters();
@@ -256,17 +259,14 @@ contract PostDeploy is Script {
             resourceIds.rngSystemId, "getRng(bytes32,uint8,bytes)", "getRng(bytes32,uint8,bytes)"
         );
         world.registerRootFunctionSelector(
-            resourceIds.rngSystemId,
-            "entropyCallback(uint64,address,bytes32)",
-            "entropyCallback(uint64,address,bytes32)"
+            resourceIds.rngSystemId, "fullfillRandomness(bytes32,uint256)", "fullfillRandomness(bytes32,uint256)"
         );
         world.registerRootFunctionSelector(
-            resourceIds.rngSystemId,
-            "_entropyCallback(uint64,address,bytes32)",
-            "_entropyCallback(uint64,address,bytes32)"
+            resourceIds.rngSystemId, "_fullfillRandomness(bytes32,uint256)", "_fullfillRandomness(bytes32,uint256)"
         );
-        world.registerRootFunctionSelector(resourceIds.rngSystemId, "getFee()", "getFee()");
+        world.registerRootFunctionSelector(resourceIds.rngSystemId, "estimateFee()", "estimateFee()");
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "getEntropy()", "getEntropy()");
+        world.registerRootFunctionSelector(resourceIds.rngSystemId, "createSubscription()", "createSubscription()");
     }
 
     function _createStarterItems() internal {

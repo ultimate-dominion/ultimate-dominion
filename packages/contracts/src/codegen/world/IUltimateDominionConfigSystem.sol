@@ -13,9 +13,9 @@ interface IUltimateDominionConfigSystem {
 
   function UD__getGoldToken() external view returns (address _goldToken);
 
-  function UD__getEntropy() external view returns (address _entropy);
+  function UD__getRandcastAdapter() external view returns (address _entropy);
 
-  function UD__getPythProvider() external view returns (address _provider);
+  function UD__getSubscriptionId() external view returns (uint64 _subscriptionId);
 
   function UD__getItemsContract() external view returns (address _erc1155);
 

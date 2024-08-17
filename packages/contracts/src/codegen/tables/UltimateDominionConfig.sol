@@ -20,9 +20,9 @@ struct UltimateDominionConfigData {
   bool locked;
   address goldToken;
   address characterToken;
-  address entropy;
-  address pythProvider;
   address items;
+  address randcastAdapter;
+  uint64 subscriptionId;
 }
 
 library UltimateDominionConfig {
@@ -30,12 +30,12 @@ library UltimateDominionConfig {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000556c74696d617465446f6d696e696f6e);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0065060001141414141400000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0059060001141414140800000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (bool, address, address, address, address, address)
-  Schema constant _valueSchema = Schema.wrap(0x0065060060616161616100000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bool, address, address, address, address, uint64)
+  Schema constant _valueSchema = Schema.wrap(0x0059060060616161610700000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -54,9 +54,9 @@ library UltimateDominionConfig {
     fieldNames[0] = "locked";
     fieldNames[1] = "goldToken";
     fieldNames[2] = "characterToken";
-    fieldNames[3] = "entropy";
-    fieldNames[4] = "pythProvider";
-    fieldNames[5] = "items";
+    fieldNames[3] = "items";
+    fieldNames[4] = "randcastAdapter";
+    fieldNames[5] = "subscriptionId";
   }
 
   /**
@@ -188,88 +188,12 @@ library UltimateDominionConfig {
   }
 
   /**
-   * @notice Get entropy.
-   */
-  function getEntropy() internal view returns (address entropy) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
-
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
-    return (address(bytes20(_blob)));
-  }
-
-  /**
-   * @notice Get entropy.
-   */
-  function _getEntropy() internal view returns (address entropy) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
-
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
-    return (address(bytes20(_blob)));
-  }
-
-  /**
-   * @notice Set entropy.
-   */
-  function setEntropy(address entropy) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((entropy)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set entropy.
-   */
-  function _setEntropy(address entropy) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((entropy)), _fieldLayout);
-  }
-
-  /**
-   * @notice Get pythProvider.
-   */
-  function getPythProvider() internal view returns (address pythProvider) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
-
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
-    return (address(bytes20(_blob)));
-  }
-
-  /**
-   * @notice Get pythProvider.
-   */
-  function _getPythProvider() internal view returns (address pythProvider) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
-
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
-    return (address(bytes20(_blob)));
-  }
-
-  /**
-   * @notice Set pythProvider.
-   */
-  function setPythProvider(address pythProvider) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((pythProvider)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set pythProvider.
-   */
-  function _setPythProvider(address pythProvider) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((pythProvider)), _fieldLayout);
-  }
-
-  /**
    * @notice Get items.
    */
   function getItems() internal view returns (address items) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -279,7 +203,7 @@ library UltimateDominionConfig {
   function _getItems() internal view returns (address items) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -289,7 +213,7 @@ library UltimateDominionConfig {
   function setItems(address items) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((items)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((items)), _fieldLayout);
   }
 
   /**
@@ -298,7 +222,83 @@ library UltimateDominionConfig {
   function _setItems(address items) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((items)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((items)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get randcastAdapter.
+   */
+  function getRandcastAdapter() internal view returns (address randcastAdapter) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Get randcastAdapter.
+   */
+  function _getRandcastAdapter() internal view returns (address randcastAdapter) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Set randcastAdapter.
+   */
+  function setRandcastAdapter(address randcastAdapter) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((randcastAdapter)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set randcastAdapter.
+   */
+  function _setRandcastAdapter(address randcastAdapter) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((randcastAdapter)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get subscriptionId.
+   */
+  function getSubscriptionId() internal view returns (uint64 subscriptionId) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    return (uint64(bytes8(_blob)));
+  }
+
+  /**
+   * @notice Get subscriptionId.
+   */
+  function _getSubscriptionId() internal view returns (uint64 subscriptionId) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    return (uint64(bytes8(_blob)));
+  }
+
+  /**
+   * @notice Set subscriptionId.
+   */
+  function setSubscriptionId(uint64 subscriptionId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((subscriptionId)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set subscriptionId.
+   */
+  function _setSubscriptionId(uint64 subscriptionId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((subscriptionId)), _fieldLayout);
   }
 
   /**
@@ -336,11 +336,11 @@ library UltimateDominionConfig {
     bool locked,
     address goldToken,
     address characterToken,
-    address entropy,
-    address pythProvider,
-    address items
+    address items,
+    address randcastAdapter,
+    uint64 subscriptionId
   ) internal {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items);
+    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, items, randcastAdapter, subscriptionId);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -357,11 +357,11 @@ library UltimateDominionConfig {
     bool locked,
     address goldToken,
     address characterToken,
-    address entropy,
-    address pythProvider,
-    address items
+    address items,
+    address randcastAdapter,
+    uint64 subscriptionId
   ) internal {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items);
+    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, items, randcastAdapter, subscriptionId);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -379,9 +379,9 @@ library UltimateDominionConfig {
       _table.locked,
       _table.goldToken,
       _table.characterToken,
-      _table.entropy,
-      _table.pythProvider,
-      _table.items
+      _table.items,
+      _table.randcastAdapter,
+      _table.subscriptionId
     );
 
     EncodedLengths _encodedLengths;
@@ -400,9 +400,9 @@ library UltimateDominionConfig {
       _table.locked,
       _table.goldToken,
       _table.characterToken,
-      _table.entropy,
-      _table.pythProvider,
-      _table.items
+      _table.items,
+      _table.randcastAdapter,
+      _table.subscriptionId
     );
 
     EncodedLengths _encodedLengths;
@@ -425,9 +425,9 @@ library UltimateDominionConfig {
       bool locked,
       address goldToken,
       address characterToken,
-      address entropy,
-      address pythProvider,
-      address items
+      address items,
+      address randcastAdapter,
+      uint64 subscriptionId
     )
   {
     locked = (_toBool(uint8(Bytes.getBytes1(_blob, 0))));
@@ -436,11 +436,11 @@ library UltimateDominionConfig {
 
     characterToken = (address(Bytes.getBytes20(_blob, 21)));
 
-    entropy = (address(Bytes.getBytes20(_blob, 41)));
+    items = (address(Bytes.getBytes20(_blob, 41)));
 
-    pythProvider = (address(Bytes.getBytes20(_blob, 61)));
+    randcastAdapter = (address(Bytes.getBytes20(_blob, 61)));
 
-    items = (address(Bytes.getBytes20(_blob, 81)));
+    subscriptionId = (uint64(Bytes.getBytes8(_blob, 81)));
   }
 
   /**
@@ -458,9 +458,9 @@ library UltimateDominionConfig {
       _table.locked,
       _table.goldToken,
       _table.characterToken,
-      _table.entropy,
-      _table.pythProvider,
-      _table.items
+      _table.items,
+      _table.randcastAdapter,
+      _table.subscriptionId
     ) = decodeStatic(_staticData);
   }
 
@@ -490,11 +490,11 @@ library UltimateDominionConfig {
     bool locked,
     address goldToken,
     address characterToken,
-    address entropy,
-    address pythProvider,
-    address items
+    address items,
+    address randcastAdapter,
+    uint64 subscriptionId
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(locked, goldToken, characterToken, entropy, pythProvider, items);
+    return abi.encodePacked(locked, goldToken, characterToken, items, randcastAdapter, subscriptionId);
   }
 
   /**
@@ -507,11 +507,11 @@ library UltimateDominionConfig {
     bool locked,
     address goldToken,
     address characterToken,
-    address entropy,
-    address pythProvider,
-    address items
+    address items,
+    address randcastAdapter,
+    uint64 subscriptionId
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, entropy, pythProvider, items);
+    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, items, randcastAdapter, subscriptionId);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

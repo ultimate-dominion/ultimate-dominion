@@ -20,9 +20,8 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 import { RngRequestType } from "./../common.sol";
 
 struct RngLogsData {
-  uint64 sequenceNumber;
-  address provider;
-  address entropy;
+  uint64 subscriptionId;
+  address adapter;
   uint256 fee;
   RngRequestType requestType;
   uint256 randomNumber;
@@ -35,12 +34,12 @@ library RngLogs {
   ResourceId constant _tableId = ResourceId.wrap(0x6f745544000000000000000000000000526e674c6f6773000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0091070108141420012020000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x007d060108142001202000000000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of (uint256)
-  Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint64, address, address, uint256, uint8, uint256, bytes32, bytes)
-  Schema constant _valueSchema = Schema.wrap(0x009107010761611f001f5fc40000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (bytes32)
+  Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint64, address, uint256, uint8, uint256, bytes32, bytes)
+  Schema constant _valueSchema = Schema.wrap(0x007d060107611f001f5fc4000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -56,15 +55,14 @@ library RngLogs {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](8);
-    fieldNames[0] = "sequenceNumber";
-    fieldNames[1] = "provider";
-    fieldNames[2] = "entropy";
-    fieldNames[3] = "fee";
-    fieldNames[4] = "requestType";
-    fieldNames[5] = "randomNumber";
-    fieldNames[6] = "userRandomNumber";
-    fieldNames[7] = "data";
+    fieldNames = new string[](7);
+    fieldNames[0] = "subscriptionId";
+    fieldNames[1] = "adapter";
+    fieldNames[2] = "fee";
+    fieldNames[3] = "requestType";
+    fieldNames[4] = "randomNumber";
+    fieldNames[5] = "userRandomNumber";
+    fieldNames[6] = "data";
   }
 
   /**
@@ -82,174 +80,145 @@ library RngLogs {
   }
 
   /**
-   * @notice Set sequenceNumber.
+   * @notice Set subscriptionId.
    */
-  function setSequenceNumber(uint256 requestId, uint64 sequenceNumber) internal {
+  function setSubscriptionId(bytes32 requestId, uint64 subscriptionId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((sequenceNumber)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((subscriptionId)), _fieldLayout);
   }
 
   /**
-   * @notice Set sequenceNumber.
+   * @notice Set subscriptionId.
    */
-  function _setSequenceNumber(uint256 requestId, uint64 sequenceNumber) internal {
+  function _setSubscriptionId(bytes32 requestId, uint64 subscriptionId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((sequenceNumber)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((subscriptionId)), _fieldLayout);
   }
 
   /**
-   * @notice Set provider.
+   * @notice Set adapter.
    */
-  function setProvider(uint256 requestId, address provider) internal {
+  function setAdapter(bytes32 requestId, address adapter) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((provider)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((adapter)), _fieldLayout);
   }
 
   /**
-   * @notice Set provider.
+   * @notice Set adapter.
    */
-  function _setProvider(uint256 requestId, address provider) internal {
+  function _setAdapter(bytes32 requestId, address adapter) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((provider)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set entropy.
-   */
-  function setEntropy(uint256 requestId, address entropy) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((entropy)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set entropy.
-   */
-  function _setEntropy(uint256 requestId, address entropy) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((entropy)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((adapter)), _fieldLayout);
   }
 
   /**
    * @notice Set fee.
    */
-  function setFee(uint256 requestId, uint256 fee) internal {
+  function setFee(bytes32 requestId, uint256 fee) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((fee)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((fee)), _fieldLayout);
   }
 
   /**
    * @notice Set fee.
    */
-  function _setFee(uint256 requestId, uint256 fee) internal {
+  function _setFee(bytes32 requestId, uint256 fee) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((fee)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((fee)), _fieldLayout);
   }
 
   /**
    * @notice Set requestType.
    */
-  function setRequestType(uint256 requestId, RngRequestType requestType) internal {
+  function setRequestType(bytes32 requestId, RngRequestType requestType) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked(uint8(requestType)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked(uint8(requestType)), _fieldLayout);
   }
 
   /**
    * @notice Set requestType.
    */
-  function _setRequestType(uint256 requestId, RngRequestType requestType) internal {
+  function _setRequestType(bytes32 requestId, RngRequestType requestType) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked(uint8(requestType)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked(uint8(requestType)), _fieldLayout);
   }
 
   /**
    * @notice Set randomNumber.
    */
-  function setRandomNumber(uint256 requestId, uint256 randomNumber) internal {
+  function setRandomNumber(bytes32 requestId, uint256 randomNumber) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((randomNumber)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((randomNumber)), _fieldLayout);
   }
 
   /**
    * @notice Set randomNumber.
    */
-  function _setRandomNumber(uint256 requestId, uint256 randomNumber) internal {
+  function _setRandomNumber(bytes32 requestId, uint256 randomNumber) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((randomNumber)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((randomNumber)), _fieldLayout);
   }
 
   /**
    * @notice Set userRandomNumber.
    */
-  function setUserRandomNumber(uint256 requestId, bytes32 userRandomNumber) internal {
+  function setUserRandomNumber(bytes32 requestId, bytes32 userRandomNumber) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((userRandomNumber)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((userRandomNumber)), _fieldLayout);
   }
 
   /**
    * @notice Set userRandomNumber.
    */
-  function _setUserRandomNumber(uint256 requestId, bytes32 userRandomNumber) internal {
+  function _setUserRandomNumber(bytes32 requestId, bytes32 userRandomNumber) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((userRandomNumber)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((userRandomNumber)), _fieldLayout);
   }
 
   /**
    * @notice Set the full data using individual values.
    */
   function set(
-    uint256 requestId,
-    uint64 sequenceNumber,
-    address provider,
-    address entropy,
+    bytes32 requestId,
+    uint64 subscriptionId,
+    address adapter,
     uint256 fee,
     RngRequestType requestType,
     uint256 randomNumber,
     bytes32 userRandomNumber,
     bytes memory data
   ) internal {
-    bytes memory _staticData = encodeStatic(
-      sequenceNumber,
-      provider,
-      entropy,
-      fee,
-      requestType,
-      randomNumber,
-      userRandomNumber
-    );
+    bytes memory _staticData = encodeStatic(subscriptionId, adapter, fee, requestType, randomNumber, userRandomNumber);
 
     EncodedLengths _encodedLengths = encodeLengths(data);
     bytes memory _dynamicData = encodeDynamic(data);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -258,31 +227,22 @@ library RngLogs {
    * @notice Set the full data using individual values.
    */
   function _set(
-    uint256 requestId,
-    uint64 sequenceNumber,
-    address provider,
-    address entropy,
+    bytes32 requestId,
+    uint64 subscriptionId,
+    address adapter,
     uint256 fee,
     RngRequestType requestType,
     uint256 randomNumber,
     bytes32 userRandomNumber,
     bytes memory data
   ) internal {
-    bytes memory _staticData = encodeStatic(
-      sequenceNumber,
-      provider,
-      entropy,
-      fee,
-      requestType,
-      randomNumber,
-      userRandomNumber
-    );
+    bytes memory _staticData = encodeStatic(subscriptionId, adapter, fee, requestType, randomNumber, userRandomNumber);
 
     EncodedLengths _encodedLengths = encodeLengths(data);
     bytes memory _dynamicData = encodeDynamic(data);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -290,11 +250,10 @@ library RngLogs {
   /**
    * @notice Set the full data using the data struct.
    */
-  function set(uint256 requestId, RngLogsData memory _table) internal {
+  function set(bytes32 requestId, RngLogsData memory _table) internal {
     bytes memory _staticData = encodeStatic(
-      _table.sequenceNumber,
-      _table.provider,
-      _table.entropy,
+      _table.subscriptionId,
+      _table.adapter,
       _table.fee,
       _table.requestType,
       _table.randomNumber,
@@ -305,7 +264,7 @@ library RngLogs {
     bytes memory _dynamicData = encodeDynamic(_table.data);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -313,11 +272,10 @@ library RngLogs {
   /**
    * @notice Set the full data using the data struct.
    */
-  function _set(uint256 requestId, RngLogsData memory _table) internal {
+  function _set(bytes32 requestId, RngLogsData memory _table) internal {
     bytes memory _staticData = encodeStatic(
-      _table.sequenceNumber,
-      _table.provider,
-      _table.entropy,
+      _table.subscriptionId,
+      _table.adapter,
       _table.fee,
       _table.requestType,
       _table.randomNumber,
@@ -328,7 +286,7 @@ library RngLogs {
     bytes memory _dynamicData = encodeDynamic(_table.data);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -342,28 +300,25 @@ library RngLogs {
     internal
     pure
     returns (
-      uint64 sequenceNumber,
-      address provider,
-      address entropy,
+      uint64 subscriptionId,
+      address adapter,
       uint256 fee,
       RngRequestType requestType,
       uint256 randomNumber,
       bytes32 userRandomNumber
     )
   {
-    sequenceNumber = (uint64(Bytes.getBytes8(_blob, 0)));
+    subscriptionId = (uint64(Bytes.getBytes8(_blob, 0)));
 
-    provider = (address(Bytes.getBytes20(_blob, 8)));
+    adapter = (address(Bytes.getBytes20(_blob, 8)));
 
-    entropy = (address(Bytes.getBytes20(_blob, 28)));
+    fee = (uint256(Bytes.getBytes32(_blob, 28)));
 
-    fee = (uint256(Bytes.getBytes32(_blob, 48)));
+    requestType = RngRequestType(uint8(Bytes.getBytes1(_blob, 60)));
 
-    requestType = RngRequestType(uint8(Bytes.getBytes1(_blob, 80)));
+    randomNumber = (uint256(Bytes.getBytes32(_blob, 61)));
 
-    randomNumber = (uint256(Bytes.getBytes32(_blob, 81)));
-
-    userRandomNumber = (Bytes.getBytes32(_blob, 113));
+    userRandomNumber = (Bytes.getBytes32(_blob, 93));
   }
 
   /**
@@ -390,9 +345,8 @@ library RngLogs {
     bytes memory _dynamicData
   ) internal pure returns (RngLogsData memory _table) {
     (
-      _table.sequenceNumber,
-      _table.provider,
-      _table.entropy,
+      _table.subscriptionId,
+      _table.adapter,
       _table.fee,
       _table.requestType,
       _table.randomNumber,
@@ -405,9 +359,9 @@ library RngLogs {
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(uint256 requestId) internal {
+  function deleteRecord(bytes32 requestId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -415,9 +369,9 @@ library RngLogs {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(uint256 requestId) internal {
+  function _deleteRecord(bytes32 requestId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -427,15 +381,14 @@ library RngLogs {
    * @return The static data, encoded into a sequence of bytes.
    */
   function encodeStatic(
-    uint64 sequenceNumber,
-    address provider,
-    address entropy,
+    uint64 subscriptionId,
+    address adapter,
     uint256 fee,
     RngRequestType requestType,
     uint256 randomNumber,
     bytes32 userRandomNumber
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(sequenceNumber, provider, entropy, fee, requestType, randomNumber, userRandomNumber);
+    return abi.encodePacked(subscriptionId, adapter, fee, requestType, randomNumber, userRandomNumber);
   }
 
   /**
@@ -464,24 +417,15 @@ library RngLogs {
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
   function encode(
-    uint64 sequenceNumber,
-    address provider,
-    address entropy,
+    uint64 subscriptionId,
+    address adapter,
     uint256 fee,
     RngRequestType requestType,
     uint256 randomNumber,
     bytes32 userRandomNumber,
     bytes memory data
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(
-      sequenceNumber,
-      provider,
-      entropy,
-      fee,
-      requestType,
-      randomNumber,
-      userRandomNumber
-    );
+    bytes memory _staticData = encodeStatic(subscriptionId, adapter, fee, requestType, randomNumber, userRandomNumber);
 
     EncodedLengths _encodedLengths = encodeLengths(data);
     bytes memory _dynamicData = encodeDynamic(data);
@@ -492,9 +436,9 @@ library RngLogs {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(uint256 requestId) internal pure returns (bytes32[] memory) {
+  function encodeKeyTuple(bytes32 requestId) internal pure returns (bytes32[] memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
+    _keyTuple[0] = requestId;
 
     return _keyTuple;
   }

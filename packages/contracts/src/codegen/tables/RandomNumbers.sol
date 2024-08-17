@@ -31,8 +31,8 @@ library RandomNumbers {
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0001010101000000000000000000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of (uint64)
-  Schema constant _keySchema = Schema.wrap(0x0008010007000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (bytes32)
+  Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
   // Hex-encoded value schema of (uint8, bytes)
   Schema constant _valueSchema = Schema.wrap(0x0001010100c40000000000000000000000000000000000000000000000000000);
 
@@ -42,7 +42,7 @@ library RandomNumbers {
    */
   function getKeyNames() internal pure returns (string[] memory keyNames) {
     keyNames = new string[](1);
-    keyNames[0] = "sequenceNumber";
+    keyNames[0] = "requestId";
   }
 
   /**
@@ -72,9 +72,9 @@ library RandomNumbers {
   /**
    * @notice Get requestType.
    */
-  function getRequestType(uint64 sequenceNumber) internal view returns (RngRequestType requestType) {
+  function getRequestType(bytes32 requestId) internal view returns (RngRequestType requestType) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return RngRequestType(uint8(bytes1(_blob)));
@@ -83,9 +83,9 @@ library RandomNumbers {
   /**
    * @notice Get requestType.
    */
-  function _getRequestType(uint64 sequenceNumber) internal view returns (RngRequestType requestType) {
+  function _getRequestType(bytes32 requestId) internal view returns (RngRequestType requestType) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return RngRequestType(uint8(bytes1(_blob)));
@@ -94,9 +94,9 @@ library RandomNumbers {
   /**
    * @notice Set requestType.
    */
-  function setRequestType(uint64 sequenceNumber, RngRequestType requestType) internal {
+  function setRequestType(bytes32 requestId, RngRequestType requestType) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked(uint8(requestType)), _fieldLayout);
   }
@@ -104,9 +104,9 @@ library RandomNumbers {
   /**
    * @notice Set requestType.
    */
-  function _setRequestType(uint64 sequenceNumber, RngRequestType requestType) internal {
+  function _setRequestType(bytes32 requestId, RngRequestType requestType) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked(uint8(requestType)), _fieldLayout);
   }
@@ -114,9 +114,9 @@ library RandomNumbers {
   /**
    * @notice Get arbitraryData.
    */
-  function getArbitraryData(uint64 sequenceNumber) internal view returns (bytes memory arbitraryData) {
+  function getArbitraryData(bytes32 requestId) internal view returns (bytes memory arbitraryData) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 0);
     return (bytes(_blob));
@@ -125,9 +125,9 @@ library RandomNumbers {
   /**
    * @notice Get arbitraryData.
    */
-  function _getArbitraryData(uint64 sequenceNumber) internal view returns (bytes memory arbitraryData) {
+  function _getArbitraryData(bytes32 requestId) internal view returns (bytes memory arbitraryData) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 0);
     return (bytes(_blob));
@@ -136,9 +136,9 @@ library RandomNumbers {
   /**
    * @notice Set arbitraryData.
    */
-  function setArbitraryData(uint64 sequenceNumber, bytes memory arbitraryData) internal {
+  function setArbitraryData(bytes32 requestId, bytes memory arbitraryData) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, bytes((arbitraryData)));
   }
@@ -146,9 +146,9 @@ library RandomNumbers {
   /**
    * @notice Set arbitraryData.
    */
-  function _setArbitraryData(uint64 sequenceNumber, bytes memory arbitraryData) internal {
+  function _setArbitraryData(bytes32 requestId, bytes memory arbitraryData) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreCore.setDynamicField(_tableId, _keyTuple, 0, bytes((arbitraryData)));
   }
@@ -156,9 +156,9 @@ library RandomNumbers {
   /**
    * @notice Get the length of arbitraryData.
    */
-  function lengthArbitraryData(uint64 sequenceNumber) internal view returns (uint256) {
+  function lengthArbitraryData(bytes32 requestId) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 0);
     unchecked {
@@ -169,9 +169,9 @@ library RandomNumbers {
   /**
    * @notice Get the length of arbitraryData.
    */
-  function _lengthArbitraryData(uint64 sequenceNumber) internal view returns (uint256) {
+  function _lengthArbitraryData(bytes32 requestId) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 0);
     unchecked {
@@ -183,9 +183,9 @@ library RandomNumbers {
    * @notice Get an item of arbitraryData.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function getItemArbitraryData(uint64 sequenceNumber, uint256 _index) internal view returns (bytes memory) {
+  function getItemArbitraryData(bytes32 requestId, uint256 _index) internal view returns (bytes memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     unchecked {
       bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 1, (_index + 1) * 1);
@@ -197,9 +197,9 @@ library RandomNumbers {
    * @notice Get an item of arbitraryData.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function _getItemArbitraryData(uint64 sequenceNumber, uint256 _index) internal view returns (bytes memory) {
+  function _getItemArbitraryData(bytes32 requestId, uint256 _index) internal view returns (bytes memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     unchecked {
       bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 1, (_index + 1) * 1);
@@ -210,9 +210,9 @@ library RandomNumbers {
   /**
    * @notice Push a slice to arbitraryData.
    */
-  function pushArbitraryData(uint64 sequenceNumber, bytes memory _slice) internal {
+  function pushArbitraryData(bytes32 requestId, bytes memory _slice) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 0, bytes((_slice)));
   }
@@ -220,9 +220,9 @@ library RandomNumbers {
   /**
    * @notice Push a slice to arbitraryData.
    */
-  function _pushArbitraryData(uint64 sequenceNumber, bytes memory _slice) internal {
+  function _pushArbitraryData(bytes32 requestId, bytes memory _slice) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreCore.pushToDynamicField(_tableId, _keyTuple, 0, bytes((_slice)));
   }
@@ -230,9 +230,9 @@ library RandomNumbers {
   /**
    * @notice Pop a slice from arbitraryData.
    */
-  function popArbitraryData(uint64 sequenceNumber) internal {
+  function popArbitraryData(bytes32 requestId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 0, 1);
   }
@@ -240,9 +240,9 @@ library RandomNumbers {
   /**
    * @notice Pop a slice from arbitraryData.
    */
-  function _popArbitraryData(uint64 sequenceNumber) internal {
+  function _popArbitraryData(bytes32 requestId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreCore.popFromDynamicField(_tableId, _keyTuple, 0, 1);
   }
@@ -250,9 +250,9 @@ library RandomNumbers {
   /**
    * @notice Update a slice of arbitraryData at `_index`.
    */
-  function updateArbitraryData(uint64 sequenceNumber, uint256 _index, bytes memory _slice) internal {
+  function updateArbitraryData(bytes32 requestId, uint256 _index, bytes memory _slice) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     unchecked {
       bytes memory _encoded = bytes((_slice));
@@ -263,9 +263,9 @@ library RandomNumbers {
   /**
    * @notice Update a slice of arbitraryData at `_index`.
    */
-  function _updateArbitraryData(uint64 sequenceNumber, uint256 _index, bytes memory _slice) internal {
+  function _updateArbitraryData(bytes32 requestId, uint256 _index, bytes memory _slice) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     unchecked {
       bytes memory _encoded = bytes((_slice));
@@ -276,9 +276,9 @@ library RandomNumbers {
   /**
    * @notice Get the full data.
    */
-  function get(uint64 sequenceNumber) internal view returns (RandomNumbersData memory _table) {
+  function get(bytes32 requestId) internal view returns (RandomNumbersData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreSwitch.getRecord(
       _tableId,
@@ -291,9 +291,9 @@ library RandomNumbers {
   /**
    * @notice Get the full data.
    */
-  function _get(uint64 sequenceNumber) internal view returns (RandomNumbersData memory _table) {
+  function _get(bytes32 requestId) internal view returns (RandomNumbersData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreCore.getRecord(
       _tableId,
@@ -306,14 +306,14 @@ library RandomNumbers {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(uint64 sequenceNumber, RngRequestType requestType, bytes memory arbitraryData) internal {
+  function set(bytes32 requestId, RngRequestType requestType, bytes memory arbitraryData) internal {
     bytes memory _staticData = encodeStatic(requestType);
 
     EncodedLengths _encodedLengths = encodeLengths(arbitraryData);
     bytes memory _dynamicData = encodeDynamic(arbitraryData);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -321,14 +321,14 @@ library RandomNumbers {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(uint64 sequenceNumber, RngRequestType requestType, bytes memory arbitraryData) internal {
+  function _set(bytes32 requestId, RngRequestType requestType, bytes memory arbitraryData) internal {
     bytes memory _staticData = encodeStatic(requestType);
 
     EncodedLengths _encodedLengths = encodeLengths(arbitraryData);
     bytes memory _dynamicData = encodeDynamic(arbitraryData);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -336,14 +336,14 @@ library RandomNumbers {
   /**
    * @notice Set the full data using the data struct.
    */
-  function set(uint64 sequenceNumber, RandomNumbersData memory _table) internal {
+  function set(bytes32 requestId, RandomNumbersData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.requestType);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.arbitraryData);
     bytes memory _dynamicData = encodeDynamic(_table.arbitraryData);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -351,14 +351,14 @@ library RandomNumbers {
   /**
    * @notice Set the full data using the data struct.
    */
-  function _set(uint64 sequenceNumber, RandomNumbersData memory _table) internal {
+  function _set(bytes32 requestId, RandomNumbersData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.requestType);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.arbitraryData);
     bytes memory _dynamicData = encodeDynamic(_table.arbitraryData);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -404,9 +404,9 @@ library RandomNumbers {
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(uint64 sequenceNumber) internal {
+  function deleteRecord(bytes32 requestId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -414,9 +414,9 @@ library RandomNumbers {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(uint64 sequenceNumber) internal {
+  function _deleteRecord(bytes32 requestId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -469,9 +469,9 @@ library RandomNumbers {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(uint64 sequenceNumber) internal pure returns (bytes32[] memory) {
+  function encodeKeyTuple(bytes32 requestId) internal pure returns (bytes32[] memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(sequenceNumber));
+    _keyTuple[0] = requestId;
 
     return _keyTuple;
   }

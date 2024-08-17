@@ -3,6 +3,7 @@ pragma solidity >=0.8.24;
 
 import {ItemType, Classes, Alignment} from "@codegen/common.sol";
 
+/////////////////// Items ///////////////////////
 struct WeaponStats {
     int256 agiModifier;
     uint8[] classRestrictions;
@@ -10,6 +11,16 @@ struct WeaponStats {
     int256 intModifier;
     uint256 maxDamage;
     uint256 minDamage;
+    uint256 minLevel;
+    int256 strModifier;
+}
+
+struct ArmorStats {
+    int256 agiModifier;
+    uint256 armorModifier;
+    uint8[] classRestrictions;
+    int256 hitPointModifier;
+    int256 intModifier;
     uint256 minLevel;
     int256 strModifier;
 }
@@ -41,6 +52,8 @@ struct StarterActions {
     PhysicalAttackTemplate[] physicalAttacks;
 }
 
+////////// ACTIONS ////////////////////////////
+
 struct MagicAttackTemplate {
     bytes32 actionId;
     string name;
@@ -51,55 +64,6 @@ struct PhysicalAttackTemplate {
     bytes32 actionId;
     string name;
     PhysicalAttackStats stats;
-}
-
-struct ArmorStats {
-    int256 agiModifier;
-    uint256 armorModifier;
-    uint8[] classRestrictions;
-    int256 hitPointModifier;
-    int256 intModifier;
-    uint256 minLevel;
-    int256 strModifier;
-}
-
-struct MonsterStats {
-    // availible action ids
-    bytes32[] actions;
-    //base to hit number for this mob for physical attacks = agility * physicalAttackConversion
-    uint256 agility;
-    // damage reduction: subtracted from total damage
-    uint256 armor;
-    // monster's class
-    Classes class;
-    // the amount of experience this monster is worth
-    uint256 experience;
-    // hit points
-    uint256 hitPoints;
-    // base to hit modifier for magical Attacks = inteligence * magicDefenseConversion
-    uint256 intelligence;
-    // item ids of potential drops
-    uint256[] inventory;
-    // monster level
-    uint256 level;
-    // base damage = strength * damangeConversion
-    uint256 strength;
-}
-
-struct MonsterTemplateDetails {
-    string metadataUri;
-    string name;
-    MonsterStats stats;
-}
-
-struct AdjustedCombatStats {
-    uint256 adjustedStrength;
-    uint256 adjustedAgility;
-    uint256 adjustedIntelligence;
-    uint256 adjustedArmor;
-    uint256 adjustedMaxHp;
-    int256 currentHp;
-    uint256 level;
 }
 
 struct PhysicalAttackStats {
@@ -133,14 +97,14 @@ struct StatusEffect {
     uint256[] itemRestrictions;
 }
 
-struct RandomnessRequestParams {
-    RequestType requestType;
-    bytes params;
-    uint64 subId;
-    uint256 seed;
-    uint16 requestConfirmations;
-    uint32 callbackGasLimit;
-    uint256 callbackMaxGasPrice;
+struct AdjustedCombatStats {
+    uint256 adjustedStrength;
+    uint256 adjustedAgility;
+    uint256 adjustedIntelligence;
+    uint256 adjustedArmor;
+    uint256 adjustedMaxHp;
+    int256 currentHp;
+    uint256 level;
 }
 
 struct Action {
@@ -165,11 +129,35 @@ struct MagicAttackStats {
     // status effects applied by this attack
     bytes32[] statusEffects;
 }
+////////////////////////////////////// MOBS /////////////////////////////////
 
-struct NPCStats {
+struct MonsterTemplateDetails {
+    string metadataUri;
     string name;
-    bytes32[] storyPathIds;
-    Alignment alignment;
+    MonsterStats stats;
+}
+
+struct MonsterStats {
+    // availible action ids
+    bytes32[] actions;
+    //base to hit number for this mob for physical attacks = agility * physicalAttackConversion
+    uint256 agility;
+    // damage reduction: subtracted from total damage
+    uint256 armor;
+    // monster's class
+    Classes class;
+    // the amount of experience this monster is worth
+    uint256 experience;
+    // hit points
+    uint256 hitPoints;
+    // base to hit modifier for magical Attacks = inteligence * magicDefenseConversion
+    uint256 intelligence;
+    // item ids of potential drops
+    uint256[] inventory;
+    // monster level
+    uint256 level;
+    // base damage = strength * damangeConversion
+    uint256 strength;
 }
 
 struct QuestEntity {
@@ -179,6 +167,13 @@ struct QuestEntity {
     uint256 currentStep;
 }
 
+struct NPCStats {
+    string name;
+    bytes32[] storyPathIds;
+    Alignment alignment;
+}
+
+/////////////////////  System Temps ////////////////////////
 struct RewardDistributionTemps {
     bytes32 monsterTemp;
     bytes32 entityIdTemp;
