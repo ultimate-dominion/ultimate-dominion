@@ -416,7 +416,13 @@ declare const abi: [
         "internalType": "enum Classes"
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "requestId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "stateMutability": "payable"
   },
   {

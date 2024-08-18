@@ -123,12 +123,18 @@ contract CharacterSystem is System {
         public
         payable
         onlyOwner(characterId)
+        returns (bytes32 requestId)
     {
         require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
         RngRequestType requestType = RngRequestType.CharacterStats;
         Stats.setClass(characterId, class);
         // use systemSwitch to call rng system
-        SystemSwitch.call(abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, abi.encode(characterId))));
+        requestId = abi.decode(
+            SystemSwitch.call(
+                abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, abi.encode(characterId)))
+            ),
+            (bytes32)
+        );
     }
 
     function enterGame(bytes32 characterId) public onlyOwner(characterId) {

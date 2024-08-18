@@ -10,6 +10,6 @@ import "forge-std/console2.sol";
 
 contract Test_RngSystem is SetUp {
     function test_estimateFee() public {
-        assertEq(IRngSystem(address(world)).estimateFee(), 100000);
+        assertEq(IRngSystem(address(world)).estimateFee(), 1000000000);
     }
 }

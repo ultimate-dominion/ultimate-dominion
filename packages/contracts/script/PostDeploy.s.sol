@@ -73,6 +73,8 @@ struct ResourceIds {
     ResourceId combatSystemId;
     ResourceId lootManagerSystemId;
     ResourceId adminSystemId;
+    ResourceId pvpSystemId;
+    ResourceId pveSystemId;
 }
 
 contract PostDeploy is Script {
@@ -159,6 +161,10 @@ contract PostDeploy is Script {
             resourceIds.itemsSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "ItemsSystem"});
             resourceIds.lootManagerSystemId = _lootManagerSystemId("UD");
+            resourceIds.pvpSystemId =
+                WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "PvPSystem"});
+            resourceIds.pveSystemId =
+                WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "PvESystem"});
         }
 
         address characterSystemAddress = Systems.getSystem(resourceIds.characterSystemId);
@@ -197,6 +203,8 @@ contract PostDeploy is Script {
         UltimateDominionConfig.setItems(address(items));
         //allow entropy system to call callback on Combat system
         world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getRandcastAdapter());
+        world.grantAccess(resourceIds.pvpSystemId, UltimateDominionConfig.getRandcastAdapter());
+        world.grantAccess(resourceIds.pveSystemId, UltimateDominionConfig.getRandcastAdapter());
         _createStarterItems();
         _createActions();
         _createMonsters();
@@ -259,14 +267,17 @@ contract PostDeploy is Script {
             resourceIds.rngSystemId, "getRng(bytes32,uint8,bytes)", "getRng(bytes32,uint8,bytes)"
         );
         world.registerRootFunctionSelector(
-            resourceIds.rngSystemId, "fullfillRandomness(bytes32,uint256)", "fullfillRandomness(bytes32,uint256)"
+            resourceIds.rngSystemId, "fulfillRandomness(bytes32,uint256)", "fulfillRandomness(bytes32,uint256)"
         );
         world.registerRootFunctionSelector(
-            resourceIds.rngSystemId, "_fullfillRandomness(bytes32,uint256)", "_fullfillRandomness(bytes32,uint256)"
+            resourceIds.rngSystemId, "_fulfillRandomness(bytes32,uint256)", "_fulfillRandomness(bytes32,uint256)"
         );
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "estimateFee()", "estimateFee()");
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "getEntropy()", "getEntropy()");
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "createSubscription()", "createSubscription()");
+        world.registerRootFunctionSelector(
+            resourceIds.rngSystemId, "requiredTxGas(address,uint256,bytes)", "requiredTxGas(address,uint256,bytes)"
+        );
     }
 
     function _createStarterItems() internal {

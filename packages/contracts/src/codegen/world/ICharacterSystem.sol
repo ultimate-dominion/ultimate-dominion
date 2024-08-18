@@ -32,7 +32,11 @@ interface ICharacterSystem {
     string memory tokenUri
   ) external returns (bytes32 characterId);
 
-  function UD__rollStats(bytes32 userRandomNumber, bytes32 characterId, Classes class) external payable;
+  function UD__rollStats(
+    bytes32 userRandomNumber,
+    bytes32 characterId,
+    Classes class
+  ) external payable returns (bytes32 requestId);
 
   function UD__enterGame(bytes32 characterId) external;
 

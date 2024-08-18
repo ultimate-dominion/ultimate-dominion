@@ -19,6 +19,7 @@ import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import "@libraries/StringAndUintConverter.sol" as StringAndUintConverter;
 import {IAdapter} from "@interfaces/IAdapter.sol";
+import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {_RANDOMNESS_PLACEHOLDER, _MAX_GAS_LIMIT} from "../../constants.sol";
 import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
@@ -26,7 +27,7 @@ import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol
 import {_requireAccess} from "../utils.sol";
 import "forge-std/console2.sol";
 
-contract RngSystem is System {
+contract RngSystem is System, IRngSystem {
     using LibChunks for uint256;
 
     event RNGFulfilled(uint256 randomNumber);
@@ -35,7 +36,7 @@ contract RngSystem is System {
         randcast = IAdapter(getRandcastAdapter());
     }
 
-    function getRandcastAdapter() public view returns (address) {
+    function getRandcastAdapter() internal view override returns (address) {
         return UltimateDominionConfig.getRandcastAdapter();
     }
 
@@ -44,8 +45,9 @@ contract RngSystem is System {
     }
 
     function getRng(bytes32 userRandomNumber, RngRequestType requestType, bytes memory data)
-        public
+        external
         payable
+        override
         returns (bytes32 _requestId)
     {
         RandomNumbersData memory randomNumberData;
@@ -67,20 +69,15 @@ contract RngSystem is System {
         // NOTE: required for testing, since callback is coming before data is stored
         /////////////// TODO: remove for mainnet deployment //////
         if (block.chainid == 31337) {
-            (, bytes memory returnData) = address(_randcast()).staticcall(
-                abi.encodeWithSelector(IAdapter.requestRandomness.selector, subscriptionId(), "", false)
-            );
-            _requestId = abi.decode(returnData, (bytes32));
+            // (, bytes memory returnData) = address(_randcast()).staticcall(
+            //     abi.encodeWithSelector(IAdapter.requestRandomness.selector, randomnessParams)
+            // );
+            _requestId = keccak256(abi.encodePacked(block.timestamp, "test")); //abi.decode(returnData, (bytes32));
 
             RandomNumbers.set(_requestId, randomNumberData);
         }
-        /////////////////////////////////////////
-
-        // pay the fees and request a random number from entropy
+        // pay the fees and request a random number from arpa
         _requestId = _randcast().requestRandomness(randomnessParams);
-
-        // //prevrando entropy
-        // requestId = bytes32(_incrementCounter(1));
 
         RngLogsData memory rngLog = RngLogsData({
             subscriptionId: subscriptionId(),
@@ -106,7 +103,7 @@ contract RngSystem is System {
         RandomNumbers.set(_requestId, randomNumberData);
     }
 
-    function estimateFee() public returns (uint256 _fee) {
+    function estimateFee() public override returns (uint256 _fee) {
         IAdapter.Subscription memory sub = _getSubscription(subscriptionId());
         if (sub.freeRequestCount == 0) {
             _fee = _randcast().estimatePaymentAmountInETH(estimateCallbackGas(), 550000, 0, tx.gasprice * 3, 3);
@@ -179,7 +176,13 @@ contract RngSystem is System {
     }
 
     function estimateCallbackGas() public returns (uint32 _callbackGas) {
-        _callbackGas = _dryRunCallbackToEstimateGas(IAdapter.RequestType.Randomness, "") + 30_000;
+        _callbackGas = 200000; //_dryRunCallbackToEstimateGas(IAdapter.RequestType.Randomness, "") + 30_000;
+    }
+
+    function createSubscription() external virtual override returns (uint64 _subscriptionId) {
+        _requireAccess(address(this), _msgSender());
+        _subscriptionId = _randcast().createSubscription();
+        UltimateDominionConfig.setSubscriptionId(_subscriptionId);
     }
 
     function _dryRunCallbackToEstimateGas(IAdapter.RequestType randcastRequestType, bytes memory params)
@@ -191,7 +194,7 @@ contract RngSystem is System {
         // Prepares the message call of callback function according to request type
         bytes memory data;
         if (randcastRequestType == IAdapter.RequestType.Randomness) {
-            data = abi.encodeWithSelector(this.getRng.selector, requestId, _RANDOMNESS_PLACEHOLDER);
+            data = abi.encodeWithSignature("_fulfillRandomness(bytes32,uint256)", requestId, _RANDOMNESS_PLACEHOLDER);
             // } else if (randcastRequestType == IAdapter.RequestType.RandomWords) {
             //     uint32 numWords = abi.decode(params, (uint32));
             //     uint256[] memory randomWords = new uint256[](numWords);
@@ -206,13 +209,21 @@ contract RngSystem is System {
             //         arr[k] = k;
             //     }
             //     data = abi.encodeWithSelector(this.rawFulfillShuffledArray.selector, requestId, arr);
+        } else {
+            revert("Unrecognized request type");
         }
 
         // We don't want message call for estimating gas to take effect, therefore success should be false,
         // and result should be the reverted reason, which in fact is gas used we encoded to string.
-        (bool success, bytes memory result) =
-        // solhint-disable-next-line avoid-low-level-calls
-         address(this).call(abi.encodeWithSelector(this.requiredTxGas.selector, address(this), 0, data));
+        bool success;
+        (bytes memory result) = SystemSwitch.call(abi.encodeCall(this.requiredTxGas, (address(this), 0, data)));
+        // if call returns a result sucess is true
+        if (result.length != 0) {
+            success = true;
+        }
+        // (bool success, bytes memory result) =
+        // // solhint-disable-next-line avoid-low-level-calls
+        //  address(this).call(abi.encodeWithSelector(this.requiredTxGas.selector, address(this), 0, data));
 
         // This will be 0 if message call for callback fails,
         // we pass this message to tell user that callback implementation need to be checked.
@@ -255,12 +266,6 @@ contract RngSystem is System {
         return newNonce;
     }
 
-    function createSubscription() external returns (uint64 _subscriptionId) {
-        _requireAccess(address(this), _msgSender());
-        _subscriptionId = _randcast().createSubscription();
-        UltimateDominionConfig.setSubscriptionId(_subscriptionId);
-    }
-
     /**
      * @notice Estimates gas used by actually calling that function then reverting with the gas used as string
      * @param to Destination address
@@ -283,9 +288,10 @@ contract RngSystem is System {
         returns (bool success)
     {
         // solhint-disable-next-line no-inline-assembly
-        assembly {
-            success := call(txGas, to, value, add(data, 0x20), mload(data), 0, 0)
-        }
+        // assembly {
+        //     success := call(txGas, to, value, add(data, 0x20), mload(data), 0, 0)
+        // }
+        (bytes memory result) = SystemSwitch.call(data);
     }
 
     /**
@@ -304,7 +310,7 @@ contract RngSystem is System {
         return StringAndUintConverter.stringToUint(abi.decode(_returnData, (string))); // All that remains is the revert string
     }
 
-    function _fullfillRandomness(bytes32 requestId, uint256 randomNumber) internal {
+    function fulfillRandomness(bytes32 requestId, uint256 randomNumber) internal override {
         _fullfillEntropy(requestId, randomNumber);
         emit RNGFulfilled(randomNumber);
     }
