@@ -109,6 +109,10 @@ contract PostDeploy is Script {
             // op sepolia
         } else if (block.chainid == 11155420) {
             UltimateDominionConfig.setRandcastAdapter(0x25Aed37669a783Bb5dE1D40279C7Fe5339C13F5D);
+        } else if (block.chainid == 17069) {
+            UltimateDominionConfig.setRandcastAdapter(0x323488A9Ad7463081F109468B4E50a5084e91295);
+        } else if (block.chainid == 690) {
+            UltimateDominionConfig.setRandcastAdapter(0x5D7bb19fC0856f5bc74b66f2c7b0258c1aeafD7f);
         }
 
         uint16 height = uint16(10);
