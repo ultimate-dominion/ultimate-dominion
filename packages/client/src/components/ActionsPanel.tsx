@@ -34,9 +34,11 @@ export const ActionsPanel = (): JSX.Element => {
   const { isRefreshing } = useMovement();
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
+  const [actionButtonFocus, setActionButtonFocus] = useState<number>(0);
 
   const parentDivRef = useRef<HTMLDivElement>(null);
-  const actionButtonRef = useRef<HTMLButtonElement>(null);
+  const actionButton1Ref = useRef<HTMLButtonElement>(null);
+  const actionButton2Ref = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (parentDivRef.current) {
@@ -46,10 +48,36 @@ export const ActionsPanel = (): JSX.Element => {
       });
     }
 
-    if (actionButtonRef.current) {
-      actionButtonRef.current.focus();
+    if (actionButton1Ref.current) {
+      actionButton1Ref.current.focus();
+      setActionButtonFocus(0);
     }
   }, [actionOutcomes]);
+
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'ArrowLeft':
+          if (actionButtonFocus === 1 && actionButton2Ref.current) {
+            actionButton1Ref.current?.focus();
+            setActionButtonFocus(0);
+          }
+          break;
+        case 'ArrowRight':
+          if (actionButtonFocus === 0 && actionButton1Ref.current) {
+            actionButton2Ref.current?.focus();
+            setActionButtonFocus(1);
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', listener);
+    // eslint-disable-next-line consistent-return
+    return () => window.removeEventListener('keydown', listener);
+  }, [actionButtonFocus]);
 
   const battleOver = useMemo(
     () => currentBattle?.encounterId === lastestBattleOutcome?.encounterId,
@@ -210,7 +238,7 @@ export const ActionsPanel = (): JSX.Element => {
                         ).toString(),
                   )
                 }
-                ref={index === 0 ? actionButtonRef : undefined}
+                ref={index === 0 ? actionButton1Ref : actionButton2Ref}
                 variant="outline"
                 w="100%"
               >
