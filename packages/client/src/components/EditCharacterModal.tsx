@@ -33,8 +33,8 @@ type EditCharacterModalProps = Character & {
 };
 
 export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
-  characterId,
   description,
+  id,
   image,
   isOpen,
   name,
@@ -149,7 +149,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
           );
 
         const { error, success } = await updateTokenUri(
-          characterId,
+          id,
           characterMetadataCid,
           tokenId,
         );
@@ -169,9 +169,9 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
     },
     [
       avatar,
-      characterId,
       delegatorAddress,
       description,
+      id,
       image,
       name,
       newDescription,

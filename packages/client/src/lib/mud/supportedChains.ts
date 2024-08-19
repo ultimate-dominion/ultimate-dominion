@@ -10,7 +10,7 @@
  *
  */
 
-import { MUDChain, mudFoundry } from '@latticexyz/common/chains';
+import { garnet, MUDChain, mudFoundry } from '@latticexyz/common/chains';
 
 import { DEFAULT_CHAIN_ID } from '../web3';
 
@@ -37,7 +37,7 @@ export const baseSepolia = {
   },
 };
 
-const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, mudFoundry];
+const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, garnet, mudFoundry];
 
 const getSupportedChains = () => {
   if (import.meta.env.DEV) {
@@ -46,7 +46,7 @@ const getSupportedChains = () => {
     );
   }
 
-  return [baseSepolia];
+  return [garnet];
 };
 
 /*

@@ -183,7 +183,7 @@ export const WalletDetailsModal = ({
                 <Text size="sm">Balance: {burnerBalance}</Text>
                 <Text fontWeight={700} size="sm">
                   Do not deposit any funds into this account that you are not
-                  willing to lose. We recommend no more than 0.005 ETH at a
+                  willing to lose. We recommend no more than 0.0005 ETH at a
                   time.
                 </Text>
                 <HStack>

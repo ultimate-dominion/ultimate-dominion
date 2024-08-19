@@ -55,9 +55,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         throw new Error('Missing delegation.');
       }
 
-      const { error, success } = await equipItems(character.characterId, [
-        item.tokenId,
-      ]);
+      const { error, success } = await equipItems(character.id, [item.tokenId]);
 
       if (error && !success) {
         throw new Error(error);
@@ -94,10 +92,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         throw new Error('Missing delegation.');
       }
 
-      const { error, success } = await unequipItem(
-        character.characterId,
-        item.tokenId,
-      );
+      const { error, success } = await unequipItem(character.id, item.tokenId);
 
       if (error && !success) {
         throw new Error(error);
