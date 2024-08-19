@@ -36,6 +36,7 @@ export const ActionsPanel = (): JSX.Element => {
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
 
   const parentDivRef = useRef<HTMLDivElement>(null);
+  const actionButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (parentDivRef.current) {
@@ -43,6 +44,10 @@ export const ActionsPanel = (): JSX.Element => {
         behavior: 'smooth',
         top: parentDivRef.current.scrollHeight,
       });
+    }
+
+    if (actionButtonRef.current) {
+      actionButtonRef.current.focus();
     }
   }, [actionOutcomes]);
 
@@ -205,6 +210,7 @@ export const ActionsPanel = (): JSX.Element => {
                         ).toString(),
                   )
                 }
+                ref={index === 0 ? actionButtonRef : undefined}
                 variant="outline"
                 w="100%"
               >
