@@ -25,7 +25,7 @@ import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
-import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 
 export const GameBoard = (): JSX.Element => {
@@ -71,8 +71,8 @@ export const GameBoard = (): JSX.Element => {
       return;
     }
 
-    if (character?.locked) {
-      navigate(GAME_BOARD_PATH);
+    if (!character?.locked) {
+      navigate(CHARACTER_CREATION_PATH);
       return;
     }
   }, [character, delegatorAddress, isConnected, isSynced, navigate]);
