@@ -52,7 +52,7 @@ export const GameBoard = (): JSX.Element => {
     isSynced,
     network: { worldContract },
   } = useMUD();
-  const { character, equippedWeapons } = useCharacter();
+  const { character, equippedWeapons, isRefreshing } = useCharacter();
   const { inSafetyZone, position } = useMap();
   const { continueToBattleOutcome, lastestBattleOutcome } = useBattle();
 
@@ -71,11 +71,18 @@ export const GameBoard = (): JSX.Element => {
       return;
     }
 
-    if (!character?.locked) {
+    if (!character?.locked && !isRefreshing) {
       navigate(CHARACTER_CREATION_PATH);
       return;
     }
-  }, [character, delegatorAddress, isConnected, isSynced, navigate]);
+  }, [
+    character,
+    delegatorAddress,
+    isConnected,
+    isRefreshing,
+    isSynced,
+    navigate,
+  ]);
 
   // Open equip info modal if character has no experience and no equipped items
   useEffect(() => {
