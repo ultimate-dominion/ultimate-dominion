@@ -12,4 +12,13 @@ contract Test_RngSystem is SetUp {
     function test_estimateFee() public {
         assertEq(IRngSystem(address(world)).estimateFee(), 1000000000);
     }
+
+    function test_fundSubscription() public {
+        uint256 mockAdapterBalanceBefore = world.UD__getRandcastAdapter().balance;
+        uint256 fundingAmount = 100000000;
+        vm.prank(bob);
+        IRngSystem(address(world)).fundSubscription{value: fundingAmount}();
+        uint256 mockAdapterBalanceAfter = world.UD__getRandcastAdapter().balance;
+        assertEq(mockAdapterBalanceAfter, mockAdapterBalanceBefore + fundingAmount);
+    }
 }

@@ -11,6 +11,7 @@ abstract contract IRngSystem {
         returns (bytes32 _requestId);
     function estimateFee() external virtual returns (uint256);
     function createSubscription() external virtual returns (uint64);
+    function fundSubscription() external payable virtual;
     function getRandcastAdapter() internal virtual returns (address);
 
     function _fulfillRandomness(bytes32 requestId, uint256 randomness) external {

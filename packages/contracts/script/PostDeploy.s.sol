@@ -278,6 +278,7 @@ contract PostDeploy is Script {
         world.registerRootFunctionSelector(
             resourceIds.rngSystemId, "requiredTxGas(address,uint256,bytes)", "requiredTxGas(address,uint256,bytes)"
         );
+        world.registerRootFunctionSelector(resourceIds.rngSystemId, "fundSubscription()", "fundSubscription()");
     }
 
     function _createStarterItems() internal {

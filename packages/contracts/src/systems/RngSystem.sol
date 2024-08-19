@@ -110,6 +110,10 @@ contract RngSystem is System, IRngSystem {
         }
     }
 
+    function fundSubscription() public payable override {
+        _randcast().fundSubscription{value: _msgValue()}(subscriptionId());
+    }
+
     function _calculateTierFee(uint64 reqCount, uint256 lastRequestTimestamp, uint64 reqCountInCurrentPeriod)
         internal
         view
@@ -175,7 +179,7 @@ contract RngSystem is System, IRngSystem {
         ) = _randcast().getSubscription(subId);
     }
 
-    function estimateCallbackGas() public returns (uint32 _callbackGas) {
+    function estimateCallbackGas() public pure returns (uint32 _callbackGas) {
         _callbackGas = 200000; //_dryRunCallbackToEstimateGas(IAdapter.RequestType.Randomness, "") + 30_000;
     }
 
