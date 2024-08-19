@@ -22,6 +22,7 @@ import {ERC20System} from "@latticexyz/world-modules/src/modules/erc20-puppet/ER
 import {registerERC20} from "@latticexyz/world-modules/src/modules/erc20-puppet/registerERC20.sol";
 import {System} from "@latticexyz/world/src/System.sol";
 import {IAdapter} from "@interfaces/IAdapter.sol";
+import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {AdapterForTest} from "@test/mocks/AdapterForTest.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {UltimateDominionConfig, Levels, MapConfig, Admin} from "@codegen/index.sol";
@@ -123,6 +124,8 @@ contract PostDeploy is Script {
 
         // create randcast subscription
         IAdapter(address(world)).createSubscription();
+        // fund the subscription from deployer wallet with .001 eth;
+        IRngSystem(address(world)).fundSubscription{value: 0.001 ether}();
 
         // install gold module
         IERC20Mintable goldToken = registerERC20(

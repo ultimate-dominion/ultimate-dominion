@@ -139,12 +139,15 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         //assert alice is a defender
         assertEq(alicesCharacterId, world.UD__getEncounter(encounterId).defenders[0]);
-        // alice should move 1st even though she is defender if combat timer is out
+        // expect revert because it's not alice's turn
+        vm.expectRevert();
+        vm.prank(alice);
+        world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+
+        // warp ahead to after pvp timeout, alice should now be able to make a move
         vm.warp(block.timestamp + 31);
         vm.prank(alice);
         world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
-        vm.prank(bob);
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
     }
 
     function test_CreateEncounterPvP_Revert_WrongPosition() public {
