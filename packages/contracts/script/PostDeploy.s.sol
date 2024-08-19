@@ -123,7 +123,7 @@ contract PostDeploy is Script {
         _addRngSystem();
 
         // create randcast subscription
-        IAdapter(address(world)).createSubscription();
+        IAdapter(UltimateDominionConfig.getRandcastAdapter()).createSubscription();
         // fund the subscription from deployer wallet with .001 eth;
         IRngSystem(address(world)).fundSubscription{value: 0.001 ether}();
 
