@@ -1,3 +1,4 @@
+import { garnet } from '@latticexyz/common/chains';
 import { anvil, baseSepolia, Chain } from 'wagmi/chains';
 
 export const WALLET_CONNECT_PROJECT_ID = import.meta.env
@@ -6,14 +7,16 @@ export const WALLET_CONNECT_PROJECT_ID = import.meta.env
 export const CHAIN_NAME_TO_ID: { [key: string]: number } = {
   Anvil: anvil.id,
   'Base Sepolia': baseSepolia.id,
+  'Garnet Holesky': garnet.id,
 };
 
 export const CHAIN_ID_TO_LABEL: { [key: number]: string } = {
   [anvil.id]: 'Anvil',
   [baseSepolia.id]: 'Base Sepolia',
+  [garnet.id]: 'Garnet Holesky',
 };
 
-const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, anvil];
+const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, garnet, anvil];
 
 export const DEFAULT_CHAIN_ID = import.meta.env.VITE_CHAIN_ID
   ? Number(import.meta.env.VITE_CHAIN_ID)
@@ -26,7 +29,7 @@ const getSupportedChains = (): readonly [Chain, ...Chain[]] => {
     ) as unknown as [Chain];
   }
 
-  return [baseSepolia] as const;
+  return [garnet] as const;
 };
 
 export const SUPPORTED_CHAINS: readonly [Chain, ...Chain[]] =
@@ -49,7 +52,7 @@ const validateConfig = () => {
       throw new Error(
         `CHAIN_NAME_TO_ID[${
           CHAIN_ID_TO_LABEL[chain.id]
-        }] is not set or does not encounter ${chain.id}`,
+        }] is not set or does not match ${chain.id}`,
       );
     }
   });
