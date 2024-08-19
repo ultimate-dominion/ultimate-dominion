@@ -284,6 +284,7 @@ export const ActionsPanel = (): JSX.Element => {
           )}
         {!currentBattle &&
           !isRefreshing &&
+          isSpawned &&
           (position?.x !== 0 || position?.y !== 0) &&
           monstersOnTile.length === 0 && (
             <Typist
