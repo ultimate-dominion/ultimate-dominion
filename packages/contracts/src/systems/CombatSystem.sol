@@ -4,7 +4,7 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {Math} from "@libraries/Math.sol";
+import {Math, WAD} from "@libraries/Math.sol";
 import {LibChunks} from "@libraries/LibChunks.sol";
 import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
@@ -179,23 +179,7 @@ contract CombatSystem is System {
             );
 
             if (hit) {
-                damage = (
-                    (
-                        attackStats.bonusDamage
-                            + int256(
-                                uint256(rnChunks[2]) % weapon.maxDamage <= weapon.minDamage
-                                    ? weapon.minDamage
-                                    : uint256(rnChunks[2]) % weapon.maxDamage
-                            ) + int256(attacker.adjustedStrength / 4)
-                    ) * int256(ATTACK_MODIFIER)
-                )
-                    - int256(
-                        (
-                            int256(defender.adjustedArmor) - attackStats.armorPenetration > 0
-                                ? uint256(int256(defender.adjustedArmor) - attackStats.armorPenetration)
-                                : uint256(1)
-                        ) * DEFENSE_MODIFIER
-                    );
+                damage = _calculatePhysicalDamage(rnChunks[2], weapon, attack);
                 console2.log("HIT!");
                 if (crit) {
                     console2.log("CRIT!");
@@ -214,6 +198,27 @@ contract CombatSystem is System {
         }
     }
 
+    function _calculatePhysicalDamage(uint64 roll, WeaponStats memory weapon, PhysicalAttackStats memory attackStats)
+        internal
+        pure
+        returns (uint256 _damage)
+    {
+        uint256 weaponDamage = uint256(roll ^ 8) % weapon.maxDamage <= weapon.minDamage
+            ? weapon.minDamage
+            : uint256(roll ^ 8) % weapon.maxDamage;
+        uint256 armorDefenseModifier = (
+            defender.adjustedArmor - attackStats.armorPenetration > 0
+                ? int256(defender.adjustedArmor) - attackStats.armorPenetration
+                : int256(0)
+        ) * DEFENSE_MODIFIER;
+
+        _damage = (
+                (roll % attackStats.bonusDamage       // .5% increase per strength point
+                    + int256(weaponDamage) + int256(((attacker.adjustedStrength * 50) / 100));
+            ) * int256(ATTACK_MODIFIER)
+        ) - armorDefenseModifier;
+    }
+
     function _calculatePhysicalAttackModifier(
         uint256 attackRoll,
         uint256 defenseRoll,
@@ -222,16 +227,24 @@ contract CombatSystem is System {
         AdjustedCombatStats memory defender
     ) internal view returns (bool attackLands, bool crit) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        uint256 attackTotal = (Math.add(attacker.adjustedAgility, attackStats.attackModifierBonus) + (attackRoll % 100))
-            * (TO_HIT_MODIFIER);
+        uint256 attackTotal = getAgiltiyModifier(attacker.adjustedAgility, attackStats.attackModifierBonus)
+            * (((attackRoll ^ 8) % 1000)) * TO_HIT_MODIFIER;
         // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
-
-        uint256 defenseTotal = ((defenseRoll % 80) + defender.adjustedAgility) * DEFENSE_MODIFIER;
+        console2.log("Attack Total", (attackRoll ^ 8) % 1000);
+        uint256 defenseTotal =
+            (((defenseRoll ^ 8) % 600) * getAgiltiyModifier(defender.adjustedAgility, 0)) * DEFENSE_MODIFIER;
+        console2.log("defense Total", (defenseRoll ^ 8) % 600);
         attackLands = attackTotal >= defenseTotal;
 
         if (attackLands) {
-            crit = uint256(int256(attackTotal) + attackStats.critChanceBonus) >= (90 * TO_HIT_MODIFIER);
+            console2.log("crit chance", uint256(int256(attackTotal) + attackStats.critChanceBonus));
+            console2.log("defense crit", defenseTotal * 9);
+            crit = uint256(int256(attackTotal) + attackStats.critChanceBonus) >= defenseTotal * 9;
         }
+    }
+
+    function getAgiltiyModifier(uint256 agility, int256 modifierBonus) internal pure returns (uint256 multiplier) {
+        multiplier = Math.add((agility / 2), modifierBonus) * WAD;
     }
 
     function _calculateMagicAttack(
@@ -318,11 +331,11 @@ contract CombatSystem is System {
     ) internal view returns (bool attackLands, bool crit) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         uint256 attackTotal = (
-            Math.add(attacker.adjustedIntelligence, attackStats.attackModifierBonus) + (attackRoll % 100)
+            Math.add((attacker.adjustedIntelligence / 2), attackStats.attackModifierBonus) + ((attackRoll ^ 8) % 1000)
         ) * (TO_HIT_MODIFIER);
         // attacker.IntelladjustedIntelligence + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
 
-        uint256 defenseTotal = ((defenseRoll % 100) + defender.adjustedIntelligence) * DEFENSE_MODIFIER;
+        uint256 defenseTotal = (((defenseRoll ^ 8) % 800) + defender.adjustedIntelligence) * DEFENSE_MODIFIER;
         attackLands = attackTotal > defenseTotal;
 
         if (attackLands) {
