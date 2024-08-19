@@ -483,6 +483,9 @@ export const CharacterCreation = (): JSX.Element => {
             p={{ base: 4, sm: 10 }}
             pos="relative"
           >
+            <Heading mb={6} size="sm" textAlign="left">
+              Create Your Character
+            </Heading>
             <VStack spacing={8}>
               <Stack
                 alignItems="start"
@@ -589,7 +592,7 @@ export const CharacterCreation = (): JSX.Element => {
         >
           <VStack alignItems="left" spacing={6}>
             <Heading size="sm" textAlign="left">
-              Choose your Character
+              Choose Your Class
             </Heading>
             <ButtonGroup justifyContent="space-between">
               <Button
