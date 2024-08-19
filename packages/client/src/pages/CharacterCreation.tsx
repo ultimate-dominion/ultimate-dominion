@@ -514,7 +514,7 @@ export const CharacterCreation = (): JSX.Element => {
                     <Input
                       accept=".png, .jpg, .jpeg, .webp, .svg"
                       id="avatarInput"
-                      isDisabled={isUploaded}
+                      isDisabled={isCreating || isUploaded}
                       onChange={e =>
                         e.target.files?.[0] && setAvatar(e.target.files?.[0])
                       }
@@ -523,7 +523,7 @@ export const CharacterCreation = (): JSX.Element => {
                     />
                     <Button
                       alignSelf="start"
-                      isDisabled={isCreating}
+                      isDisabled={isCreating || isUploaded}
                       isLoading={isUploading}
                       loadingText="Uploading..."
                       onClick={onUploadAvatar}

@@ -589,7 +589,7 @@ export function createSystemCalls(
         tokenIdEntity,
       ).tokenURI;
 
-      const success = newMetadataURI === `ipfs://${characterMetadataCid}`;
+      const success = newMetadataURI === characterMetadataCid;
 
       return {
         error: success ? undefined : 'Failed to update token URI.',
