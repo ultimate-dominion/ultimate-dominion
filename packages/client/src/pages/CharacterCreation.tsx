@@ -421,6 +421,7 @@ export const CharacterCreation = (): JSX.Element => {
                 <VStack w="100%">
                   <FormControl isInvalid={showError && !name}>
                     <Input
+                      isDisabled={isCreating}
                       maxLength={15}
                       onChange={e => setName(e.target.value)}
                       placeholder="Name"
@@ -437,6 +438,7 @@ export const CharacterCreation = (): JSX.Element => {
                     <Input
                       accept=".png, .jpg, .jpeg, .webp, .svg"
                       id="avatarInput"
+                      isDisabled={isUploaded}
                       onChange={e =>
                         e.target.files?.[0] && setAvatar(e.target.files?.[0])
                       }
@@ -445,7 +447,7 @@ export const CharacterCreation = (): JSX.Element => {
                     />
                     <Button
                       alignSelf="start"
-                      isDisabled={isUploaded}
+                      isDisabled={isCreating}
                       isLoading={isUploading}
                       loadingText="Uploading..."
                       onClick={onUploadAvatar}
@@ -465,6 +467,7 @@ export const CharacterCreation = (): JSX.Element => {
               <FormControl isInvalid={showError && !description}>
                 <Textarea
                   height="200px"
+                  isDisabled={isCreating}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="Bio"
                   value={description}
