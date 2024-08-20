@@ -580,6 +580,11 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "Slice_OutOfBounds",
     "inputs": [
       {

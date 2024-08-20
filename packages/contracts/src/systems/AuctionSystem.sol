@@ -18,9 +18,9 @@ import {IERC1155} from "@erc1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { WorldContextConsumer } from "@latticexyz/world/src/WorldContext.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-
-contract AuctionSystem is ERC1155Holder, System {
+contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
     uint256 MAX_INT = 2**256 - 1;
 
     function supportsInterface(bytes4 interfaceId) public pure virtual override(ERC1155Holder, WorldContextConsumer) returns (bool) {
@@ -31,15 +31,16 @@ contract AuctionSystem is ERC1155Holder, System {
      * Create a new order for a desired NFT or Gold
      * @param order An order
      */
-    function createOrder(Order memory order) public returns (bytes32 _orderHash) {
+    function createOrder(Order memory order) public nonReentrant returns (bytes32 _orderHash) {
         require(order.offerer == _msgSender(), "You cannot offer someone else's items");
+        require(order.consideration.recipient == _msgSender(), "You cannot purchase an item for someone else");
         // create OffersData
         OffersData memory newOffer = OffersData({tokenType: order.offer.tokenType, token: order.offer.token, identifier: order.offer.identifier, amount: order.offer.amount});
         // create ConsiderationsData
         ConsiderationsData memory newConsideration = ConsiderationsData({tokenType: order.consideration.tokenType, token: order.consideration.token, identifier: order.consideration.identifier, amount: order.consideration.amount, recipient: order.consideration.recipient});
         require(order.offer.tokenType == TokenType.ERC20 || order.offer.tokenType == TokenType.ERC1155, "Token not accepted");
         require(order.consideration.tokenType == TokenType.ERC20 || order.consideration.tokenType == TokenType.ERC1155, "Token not accepted");
-        require(order.offer.tokenType != order.consideration.tokenType, "Cannot trade the same type");
+        require(order.offer.tokenType != order.consideration.tokenType, "Cannot cross trade");
         // create order Hash out of offer and consideration data and the Counter for the offerer
         uint256 offerCounter = Counters.getCounter(order.offerer, 0) + 1;
         Counters.setCounter(order.consideration.recipient, 0, (offerCounter));
@@ -52,11 +53,9 @@ contract AuctionSystem is ERC1155Holder, System {
         _transfer(_orderHash, true, address(this), order.offerer);
         // store order in order table
         Orders.set(_orderHash, order.offerer, 0, OrderStatus.Active);
-
-        // set orderStatus to pending
     }
 
-    function fulfillOrder(bytes32 orderHash) public returns (bool fulfilled) {
+    function fulfillOrder(bytes32 orderHash) public nonReentrant returns (bool fulfilled)  {
         OffersData memory o = Offers.get(orderHash);
         ConsiderationsData memory c = Considerations.get(orderHash);
         // check that order is active
@@ -75,7 +74,7 @@ contract AuctionSystem is ERC1155Holder, System {
     }
 
     // cancels an order transfers offers out of escrow
-    function cancelOrder(bytes32 _orderHash) public returns (bool) {
+    function cancelOrder(bytes32 _orderHash) public nonReentrant returns (bool) {
         // check that _msgSender is the person who created the order
         ConsiderationsData memory c = getConsideration(_orderHash);
         require(_msgSender() == c.recipient);
@@ -102,7 +101,7 @@ contract AuctionSystem is ERC1155Holder, System {
         orderHash = keccak256(abi.encode(getCounter(order.offerer), order.offer, order.consideration));
     }
 
-    function getOffer(bytes32 orderHash) public view returns (OffersData memory offer) {
+    function getOffer(bytes32 orderHash) external view returns (OffersData memory offer) {
         return Offers.get(orderHash);
     }
 
@@ -116,7 +115,7 @@ contract AuctionSystem is ERC1155Holder, System {
     function auctionHouseAddress() external view returns (address){
         return address(this);
     }
-    function _transfer(bytes32 orderHash, bool isOffer, address to, address from) internal {
+    function _transfer(bytes32 orderHash, bool isOffer, address to, address from) internal nonReentrant {
         ConsiderationsData memory c = Considerations.get(orderHash);
         OffersData memory o = Offers.get(orderHash);
         uint256 amount = isOffer ? o.amount : c.amount;
@@ -125,17 +124,24 @@ contract AuctionSystem is ERC1155Holder, System {
         bool isSelf = from == address(this);
         address token = isOffer ? o.token : c.token;
         if(tokenType == TokenType.ERC20){
+            // could be problematic
             if(isSelf && IERC20(token).allowance(address(this), address(this)) != MAX_INT) {
                 IERC20(token).approve(address(this), MAX_INT); 
             }
             IERC20(token).transferFrom(from, to, amount);
+            return;
         }
         else if(tokenType == TokenType.ERC1155){
+            // could be problematic
             if(isSelf && IERC1155(token).isApprovedForAll(address(this), address(this)) != true) {
                 IERC1155(token).setApprovalForAll(address(this), true); 
             }
             IERC1155(token).safeTransferFrom(from, to, identifier, amount, "");
+            return;
 
+        }
+        else{
+            revert("Token type is not supported");
         }
     }
     function _balanceOf(bytes32 orderHash, bool isOffer, address owner) internal view returns(uint){
@@ -145,7 +151,6 @@ contract AuctionSystem is ERC1155Holder, System {
         address token = isOffer ? o.token : c.token;
         uint256 identifier = isOffer ? o.identifier : c.identifier;
         if(tokenType == TokenType.ERC20){
-            //return ERC1155System.balanceOf(owner);
             return IERC20(token).balanceOf(owner);
 
         }
