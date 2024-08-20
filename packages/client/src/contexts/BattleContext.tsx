@@ -21,7 +21,7 @@ import { formatEther, formatUnits } from 'viem';
 import { useToast } from '../hooks/useToast';
 import {
   BATTLE_OUTCOME_SEEN_KEY,
-  CURRENT_BATTLE_MONSTER_TURN_KEY,
+  CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
 import {
@@ -271,7 +271,7 @@ export const BattleProvider = ({
           throw new Error(error);
         }
 
-        localStorage.removeItem(CURRENT_BATTLE_MONSTER_TURN_KEY);
+        localStorage.removeItem(CURRENT_BATTLE_OPPONENT_TURN_KEY);
         localStorage.removeItem(CURRENT_BATTLE_USER_TURN_KEY);
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to attack.', e);

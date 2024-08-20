@@ -23,7 +23,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import {
-  CURRENT_BATTLE_MONSTER_TURN_KEY,
+  CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
 import { type Character, EncounterType, type Monster } from '../utils/types';
@@ -61,45 +61,59 @@ export const TileDetailsPanel = (): JSX.Element => {
   const [isMonsterHit, setIsMonsterHit] = useState(false);
 
   useEffect(() => {
-    if (!(actionOutcomes[0] && currentBattle)) return;
+    if (!(actionOutcomes[0] && currentBattle && opponent)) return;
 
-    const currentBattleMonsterTurn = localStorage.getItem(
-      CURRENT_BATTLE_MONSTER_TURN_KEY,
+    const actionIndex = actionOutcomes.findLastIndex(
+      action => action.attackerId === opponent.id,
     );
 
-    if (currentBattleMonsterTurn) {
-      if (currentBattleMonsterTurn === currentBattle.currentTurn) {
+    const currentBattleOpponentTurn = localStorage.getItem(
+      CURRENT_BATTLE_OPPONENT_TURN_KEY,
+    );
+
+    if (currentBattleOpponentTurn) {
+      if (currentBattleOpponentTurn === actionIndex.toString()) {
         return;
       }
     }
 
-    if (actionOutcomes[actionOutcomes.length - 1]?.attackerDamageDelt !== '0') {
+    if (
+      actionOutcomes[actionIndex]?.attackerDamageDelt !== '0' &&
+      actionIndex - Number(currentBattle.currentTurn) <= 2
+    ) {
       setIsUserHit(true);
       setTimeout(() => {
         setIsUserHit(false);
       }, 700);
 
       localStorage.setItem(
-        CURRENT_BATTLE_MONSTER_TURN_KEY,
-        currentBattle.currentTurn,
+        CURRENT_BATTLE_OPPONENT_TURN_KEY,
+        actionIndex.toString(),
       );
     }
-  }, [actionOutcomes, currentBattle]);
+  }, [actionOutcomes, currentBattle, opponent]);
 
   useEffect(() => {
-    if (!(actionOutcomes[0] && currentBattle)) return;
+    if (!(actionOutcomes[0] && character && currentBattle)) return;
+
+    const actionIndex = actionOutcomes.findLastIndex(
+      action => action.attackerId === character.id,
+    );
 
     const currentBattleDefenderTurn = localStorage.getItem(
       CURRENT_BATTLE_USER_TURN_KEY,
     );
 
     if (currentBattleDefenderTurn) {
-      if (currentBattleDefenderTurn === currentBattle.currentTurn) {
+      if (currentBattleDefenderTurn === actionIndex.toString()) {
         return;
       }
     }
 
-    if (actionOutcomes[actionOutcomes.length - 2]?.attackerDamageDelt !== '0') {
+    if (
+      actionOutcomes[actionIndex]?.attackerDamageDelt !== '0' &&
+      actionIndex - Number(currentBattle.currentTurn) <= 2
+    ) {
       setIsMonsterHit(true);
       setTimeout(() => {
         setIsMonsterHit(false);
@@ -107,10 +121,10 @@ export const TileDetailsPanel = (): JSX.Element => {
 
       localStorage.setItem(
         CURRENT_BATTLE_USER_TURN_KEY,
-        currentBattle.currentTurn,
+        actionIndex.toString(),
       );
     }
-  }, [actionOutcomes, currentBattle]);
+  }, [actionOutcomes, character, currentBattle]);
 
   const onInitiateCombat = useCallback(
     async (opponent: Character | Monster, encounterType: EncounterType) => {
