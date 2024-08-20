@@ -338,6 +338,11 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "IntOverflow",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "Slice_OutOfBounds",
     "inputs": [
       {

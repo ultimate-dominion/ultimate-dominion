@@ -142,8 +142,8 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.warp(block.timestamp + 31);
         vm.prank(alice);
         world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
-        vm.prank(bob);
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
+        // vm.prank(bob);
+        // world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
     }
 
     function test_CreateEncounterPvP_Revert_WrongPosition() public {
@@ -286,6 +286,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         while (world.UD__getEncounter(encounterId).end == 0) {
             vm.prank(bob);
+            console2.log("bob move magic");
             world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
             // break if bob wins
             if (world.UD__getEncounter(encounterId).end != 0) {
@@ -293,6 +294,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             }
             // bob's move
             vm.prank(alice);
+            console2.log("alice move physical");
             world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
         }
 

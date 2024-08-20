@@ -219,9 +219,7 @@ contract PostDeploy is Script {
 
         for (uint256 i; i < actionsData.magicAttacks.length; i++) {
             bytes32 newActionId = world.UD__createAction(
-                ActionType.PhysicalAttack,
-                actionsData.magicAttacks[i].name,
-                abi.encode(actionsData.magicAttacks[i].stats)
+                ActionType.MagicAttack, actionsData.magicAttacks[i].name, abi.encode(actionsData.magicAttacks[i].stats)
             );
             console2.log("Magic action Id ", i + 1);
             console2.logBytes32(newActionId);
