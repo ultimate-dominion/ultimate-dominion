@@ -123,11 +123,18 @@ contract PostDeploy is Script {
         _addRngSystem();
 
         // create randcast subscription
-        IAdapter(UltimateDominionConfig.getRandcastAdapter()).createSubscription();
+        if (IAdapter(UltimateDominionConfig.getRandcastAdapter()).getLastSubscription(address(world)) == 0) {
+            uint64 subscriptionId = IAdapter(UltimateDominionConfig.getRandcastAdapter()).createSubscription();
+            UltimateDominionConfig.setSubscriptionId(subscriptionId);
+        } else {
+            uint64 subscriptionId =
+                IAdapter(UltimateDominionConfig.getRandcastAdapter()).getLastSubscription(address(world));
+            UltimateDominionConfig.setSubscriptionId(subscriptionId);
+        }
         // fund the subscription from deployer wallet with .001 eth;
         IRngSystem(address(world)).fundSubscription{value: 0.001 ether}();
 
-        IRngSystem(address(world)).addConsumer(UltimateDominionConfig.getSubscriptionId());
+        IRngSystem(address(world)).addConsumer(subscriptionId);
 
         // install gold module
         IERC20Mintable goldToken = registerERC20(
