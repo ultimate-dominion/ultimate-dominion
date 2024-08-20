@@ -273,7 +273,7 @@ contract PostDeploy is Script {
             resourceIds.rngSystemId, "fulfillRandomness(bytes32,uint256)", "fulfillRandomness(bytes32,uint256)"
         );
         world.registerRootFunctionSelector(
-            resourceIds.rngSystemId, "_fulfillRandomness(bytes32,uint256)", "_fulfillRandomness(bytes32,uint256)"
+            resourceIds.rngSystemId, "rawFulfillRandomness(bytes32,uint256)", "rawFulfillRandomness(bytes32,uint256)"
         );
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "estimateFee()", "estimateFee()");
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "getEntropy()", "getEntropy()");

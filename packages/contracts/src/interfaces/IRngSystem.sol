@@ -14,7 +14,7 @@ abstract contract IRngSystem {
     function fundSubscription() external payable virtual;
     function getRandcastAdapter() internal virtual returns (address);
 
-    function _fulfillRandomness(bytes32 requestId, uint256 randomness) external {
+    function rawFulfillRandomness(bytes32 requestId, uint256 randomness) external {
         address randcastAdapter = getRandcastAdapter();
         require(randcastAdapter != address(0), "Randcast Adapter address not set");
         require(msg.sender == randcastAdapter, "Only Randcast Adapter can call this function");
