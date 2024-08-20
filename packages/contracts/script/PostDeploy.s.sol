@@ -133,7 +133,7 @@ contract PostDeploy is Script {
         }
 
         IAdapter(UltimateDominionConfig.getRandcastAdapter()).addConsumer(
-            UltimateDominionConfig.getSubscriptionId(), Systems.getSystem(resourceIds.rngSystemId)
+            UltimateDominionConfig.getSubscriptionId(), address(world)
         );
 
         // fund the subscription from deployer wallet with .001 eth;
