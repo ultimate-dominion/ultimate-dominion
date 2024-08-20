@@ -110,11 +110,6 @@ contract RngSystem is System, IRngSystem {
         }
     }
 
-    function addConsumer(uint64 subscriptionId) public override {
-        _requireAccess(address(this), _msgSender());
-        _randcast().addConsumer(subscriptionId, address(this));
-    }
-
     function fundSubscription() public payable override {
         _randcast().fundSubscription{value: _msgValue()}(subscriptionId());
     }

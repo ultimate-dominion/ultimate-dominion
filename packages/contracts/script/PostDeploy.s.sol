@@ -131,10 +131,13 @@ contract PostDeploy is Script {
                 IAdapter(UltimateDominionConfig.getRandcastAdapter()).getLastSubscription(address(world));
             UltimateDominionConfig.setSubscriptionId(subscriptionId);
         }
+
+        IAdapter(UltimateDominionConfig.getRandcastAdapter()).addConsumer(
+            UltimateDominionConfig.getSubscriptionId(), Systems.getSystem(resourceIds.rngSystemId)
+        );
+
         // fund the subscription from deployer wallet with .001 eth;
         IRngSystem(address(world)).fundSubscription{value: 0.001 ether}();
-
-        IRngSystem(address(world)).addConsumer(UltimateDominionConfig.getSubscriptionId());
 
         // install gold module
         IERC20Mintable goldToken = registerERC20(
@@ -290,7 +293,6 @@ contract PostDeploy is Script {
             resourceIds.rngSystemId, "requiredTxGas(address,uint256,bytes)", "requiredTxGas(address,uint256,bytes)"
         );
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "fundSubscription()", "fundSubscription()");
-        world.registerRootFunctionSelector(resourceIds.rngSystemId, "addConsumer(uint64)", "addConsumer(uint64)");
     }
 
     function _createStarterItems() internal {
