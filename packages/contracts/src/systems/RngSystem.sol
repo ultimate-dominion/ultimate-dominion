@@ -56,10 +56,10 @@ contract RngSystem is System, IRngSystem {
 
         uint32 callbackGas = estimateCallbackGas();
         uint256 requestFee = estimateFee();
-
+        bytes memory randcastParams;
         IAdapter.RandomnessRequestParams memory randomnessParams = IAdapter.RandomnessRequestParams({
             requestType: IAdapter.RequestType.Randomness,
-            params: "",
+            params: randcastParams,
             subId: subscriptionId(),
             seed: uint256(userRandomNumber),
             requestConfirmations: uint16(1),

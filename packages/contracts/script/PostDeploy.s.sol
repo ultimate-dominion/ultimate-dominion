@@ -101,18 +101,14 @@ contract PostDeploy is Script {
             address adapterForTest = address(new AdapterForTest());
             UltimateDominionConfig.setRandcastAdapter(adapterForTest);
             // redstone garnet
-        } else if (block.chainid == 84532) {
+        } else if (block.chainid == 17069) {
             UltimateDominionConfig.setRandcastAdapter(0x323488A9Ad7463081F109468B4E50a5084e91295);
             //redstone mainnet
-        } else if (block.chainid == 8453) {
-            UltimateDominionConfig.setRandcastAdapter(0x6F8bA6Ab1BAf1833a88ca42E7b71c4fbE76b759D);
+        } else if (block.chainid == 690) {
+            UltimateDominionConfig.setRandcastAdapter(0x5D7bb19fC0856f5bc74b66f2c7b0258c1aeafD7f);
             // op sepolia
         } else if (block.chainid == 11155420) {
             UltimateDominionConfig.setRandcastAdapter(0x25Aed37669a783Bb5dE1D40279C7Fe5339C13F5D);
-        } else if (block.chainid == 17069) {
-            UltimateDominionConfig.setRandcastAdapter(0x323488A9Ad7463081F109468B4E50a5084e91295);
-        } else if (block.chainid == 690) {
-            UltimateDominionConfig.setRandcastAdapter(0x5D7bb19fC0856f5bc74b66f2c7b0258c1aeafD7f);
         }
 
         uint16 height = uint16(10);
