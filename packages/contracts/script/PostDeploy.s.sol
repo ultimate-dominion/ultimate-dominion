@@ -134,7 +134,7 @@ contract PostDeploy is Script {
         // fund the subscription from deployer wallet with .001 eth;
         IRngSystem(address(world)).fundSubscription{value: 0.001 ether}();
 
-        IRngSystem(address(world)).addConsumer(subscriptionId);
+        IRngSystem(address(world)).addConsumer(UltimateDominionConfig.getSubscriptionId());
 
         // install gold module
         IERC20Mintable goldToken = registerERC20(
