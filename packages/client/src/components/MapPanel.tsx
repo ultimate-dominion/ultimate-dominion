@@ -93,6 +93,7 @@ export const MapPanel = (): JSX.Element => {
         />
       ) : (
         <Button
+          isDisabled={!!currentBattle}
           isLoading={isSpawning}
           loadingText="Spawning..."
           mt={{ base: 0, lg: 8 }}

@@ -290,39 +290,44 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   useEffect(() => {
     (async (): Promise<void> => {
       if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;
-      if (!position || (position.x === 0 && position.y === 0)) {
-        setOtherCharactersOnTile([]);
-        setMonstersOnTile([]);
-        return;
-      }
-      setIsFetchingEntities(true);
 
       const _allCharacters = await getAllCharacters(allCharacterEntities);
       setAllCharacters(_allCharacters as Character[]);
 
       const _monsters = await getMonsters(allMonsterEntities);
       setAllMonsters(_monsters);
-      setMonstersOnTile(
-        _monsters.filter(
-          m =>
-            Number(m.currentHp) > 0 &&
-            m.position.x === position.x &&
-            m.position.y === position.y,
-        ),
-      );
     })();
   }, [
     allCharacterEntities,
     allMonsterEntities,
-    Characters,
     getAllCharacters,
     getMonsters,
     isSynced,
-    position,
   ]);
 
   useEffect(() => {
     (async (): Promise<void> => {
+      if (!position || (position.x === 0 && position.y === 0)) {
+        setOtherCharactersOnTile([]);
+        setMonstersOnTile([]);
+      }
+
+      if (allMonsters.length > 0 && position) {
+        setMonstersOnTile(
+          (
+            allMonsters as (Monster & {
+              isSpawned: boolean;
+              position: { x: number; y: number };
+            })[]
+          ).filter(
+            m =>
+              Number(m.currentHp) > 0 &&
+              m.position.x === position.x &&
+              m.position.y === position.y,
+          ),
+        );
+      }
+
       if (allCharacters.length > 0 && position) {
         const _otherPlayersOnTile = (
           allCharacters as (Character & {
@@ -346,7 +351,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
       setIsFetchingEntities(false);
     })();
-  }, [allCharacters, character, delegatorAddress, position]);
+  }, [allCharacters, allMonsters, character, delegatorAddress, position]);
 
   const onSpawn = useCallback(async () => {
     try {
