@@ -21,8 +21,6 @@ import { WorldContextConsumer } from "@latticexyz/world/src/WorldContext.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
-    uint256 MAX_INT = 2**256 - 1;
-
     function supportsInterface(bytes4 interfaceId) public pure virtual override(ERC1155Holder, WorldContextConsumer) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
@@ -124,18 +122,11 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
         bool isSelf = from == address(this);
         address token = isOffer ? o.token : c.token;
         if(tokenType == TokenType.ERC20){
-            // could be problematic
-            if(isSelf && IERC20(token).allowance(address(this), address(this)) != MAX_INT) {
-                IERC20(token).approve(address(this), MAX_INT); 
-            }
-            IERC20(token).transferFrom(from, to, amount);
+            if(isSelf){ IERC20(token).transfer(to, amount);}
+            else {IERC20(token).transferFrom(from, to, amount);}
             return;
         }
         else if(tokenType == TokenType.ERC1155){
-            // could be problematic
-            if(isSelf && IERC1155(token).isApprovedForAll(address(this), address(this)) != true) {
-                IERC1155(token).setApprovalForAll(address(this), true); 
-            }
             IERC1155(token).safeTransferFrom(from, to, identifier, amount, "");
             return;
 
