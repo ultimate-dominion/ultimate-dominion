@@ -14,7 +14,8 @@ uint256 constant DEFAULT_MAX_TURNS = 15;
 uint256 constant TO_HIT_MODIFIER = 100_000;
 uint256 constant DEFENSE_MODIFIER = 100_000;
 uint256 constant ATTACK_MODIFIER = 100_000;
-uint256 constant CRIT_MODIFIER = 2;
+uint256 constant CRIT_MULTIPLIER = 2;
+uint256 constant CRIT_MODIFIER = 8;
 
 //Gold Drop constants
 uint256 constant BASE_GOLD_DROP = 1e15; //

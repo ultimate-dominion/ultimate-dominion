@@ -4,7 +4,7 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {Math} from "@libraries/Math.sol";
+import {Math, WAD} from "@libraries/Math.sol";
 import {LibChunks} from "@libraries/LibChunks.sol";
 import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
@@ -50,6 +50,7 @@ import {
     DEFENSE_MODIFIER,
     ATTACK_MODIFIER,
     CRIT_MODIFIER,
+    CRIT_MULTIPLIER,
     BASE_GOLD_DROP
 } from "../../constants.sol";
 import "forge-std/console2.sol";
@@ -199,7 +200,7 @@ contract CombatSystem is System {
                 console2.log("HIT!");
                 if (crit) {
                     console2.log("CRIT!");
-                    damage = damage * int256(CRIT_MODIFIER);
+                    damage = damage * int256(CRIT_MULTIPLIER);
                     crit = true;
                 }
             } else {
@@ -222,20 +223,25 @@ contract CombatSystem is System {
         AdjustedCombatStats memory defender
     ) internal view returns (bool attackLands, bool crit) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        uint256 attackTotal = getAgiltiyModifier(attacker.adjustedAgility, attackStats.attackModifierBonus)
-            * (((attackRoll ^ 8) % 1000)) * TO_HIT_MODIFIER;
+        uint256 attackTotal = (
+            getStatModifier(attacker.adjustedAgility, attackStats.attackModifierBonus) * (((attackRoll ^ 8) % 1000))
+        ) / WAD * TO_HIT_MODIFIER;
         // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
         console2.log("Attack Total", (attackRoll ^ 8) % 1000);
         uint256 defenseTotal =
-            (((defenseRoll ^ 8) % 600) * getAgiltiyModifier(defender.adjustedAgility, 0)) * DEFENSE_MODIFIER;
+            ((((defenseRoll ^ 8) % 600) * getStatModifier(defender.adjustedAgility, 0)) / WAD) * DEFENSE_MODIFIER;
         console2.log("defense Total", (defenseRoll ^ 8) % 600);
         attackLands = attackTotal >= defenseTotal;
 
         if (attackLands) {
             console2.log("crit chance", uint256(int256(attackTotal) + attackStats.critChanceBonus));
-            console2.log("defense crit", defenseTotal * 9);
-            crit = uint256(int256(attackTotal) + attackStats.critChanceBonus) >= defenseTotal * 9;
+            console2.log("defense crit", defenseTotal * CRIT_MODIFIER);
+            crit = uint256(int256(attackTotal) + attackStats.critChanceBonus) >= defenseTotal * CRIT_MODIFIER;
         }
+    }
+
+    function getStatModifier(uint256 agility, int256 modifierBonus) internal pure returns (uint256 multiplier) {
+        multiplier = Math.add((agility / 2), modifierBonus) * WAD;
     }
 
     function _calculateMagicAttack(
@@ -260,7 +266,7 @@ contract CombatSystem is System {
                 damage = _calculateMagicDamage(attackStats, rnChunks, attacker, defender);
                 if (crit) {
                     console2.log("CRIT!");
-                    damage = damage * int256(CRIT_MODIFIER);
+                    damage = damage * int256(CRIT_MULTIPLIER);
                     crit = true;
                 }
             } else {
@@ -321,19 +327,21 @@ contract CombatSystem is System {
         AdjustedCombatStats memory defender
     ) internal view returns (bool attackLands, bool crit) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        uint256 attackTotal = getIntelligenceModifier(attacker.adjustedIntelligence, attackStats.attackModifierBonus)
-            * (((attackRoll ^ 8) % 1000)) * TO_HIT_MODIFIER;
+        uint256 attackTotal = (
+            getStatModifier(attacker.adjustedIntelligence, attackStats.attackModifierBonus)
+                * (((attackRoll ^ 8) % 1000)) / WAD
+        ) * TO_HIT_MODIFIER;
         // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
         console2.log("Attack Total", (attackRoll ^ 8) % 1000);
         uint256 defenseTotal =
-            (((defenseRoll ^ 8) % 600) * getIntelligenceModifier(defender.adjustedIntelligence, 0)) * DEFENSE_MODIFIER;
+            ((((defenseRoll ^ 8) % 600) * getStatModifier(defender.adjustedIntelligence, 0)) / WAD) * DEFENSE_MODIFIER;
         console2.log("defense Total", (defenseRoll ^ 8) % 600);
         attackLands = attackTotal >= defenseTotal;
 
         if (attackLands) {
             console2.log("crit chance", uint256(int256(attackTotal) + attackStats.critChanceBonus));
-            console2.log("defense crit", defenseTotal * 9);
-            crit = uint256(int256(attackTotal) + attackStats.critChanceBonus) >= defenseTotal * 9;
+            console2.log("defense crit", defenseTotal * CRIT_MODIFIER);
+            crit = uint256(int256(attackTotal) + attackStats.critChanceBonus) >= defenseTotal * CRIT_MODIFIER;
         }
     }
 }
