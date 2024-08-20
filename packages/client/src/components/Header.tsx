@@ -1,7 +1,7 @@
 import { Box, Button, Heading, Stack } from '@chakra-ui/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 
 const PAGES_WITHOUT_HEADER = [HOME_PATH];
 
@@ -37,7 +37,13 @@ export const Header = ({
       </Button>
       <Heading
         as="button"
-        onClick={() => navigate(GAME_BOARD_PATH)}
+        onClick={() =>
+          navigate(
+            pathname === CHARACTER_CREATION_PATH
+              ? CHARACTER_CREATION_PATH
+              : GAME_BOARD_PATH,
+          )
+        }
         size={{ base: 'sm', sm: 'md' }}
         textAlign={{ base: 'left', lg: 'right' }}
       >

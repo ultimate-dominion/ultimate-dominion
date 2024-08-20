@@ -41,7 +41,7 @@ export const WalletDetailsModal = ({
     burnerBalance,
     network: { walletClient },
   } = useMUD();
-  const { data: externalWalletBalance } = useBalance({
+  const { data: externalWalletBalance, refetch } = useBalance({
     address: externalWalletClient?.account.address,
   });
 
@@ -67,8 +67,9 @@ export const WalletDetailsModal = ({
     if (isOpen) {
       setDepositAmount('0');
       setWithdrawAmount('0');
+      refetch();
     }
-  }, [isOpen]);
+  }, [isOpen, refetch]);
 
   const onDeposit = useCallback(async () => {
     try {
@@ -94,6 +95,7 @@ export const WalletDetailsModal = ({
       });
 
       setDepositAmount('0');
+      await refetch();
       renderSuccess('Funds deposited successfully!');
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error depositing funds.', e);
@@ -105,6 +107,7 @@ export const WalletDetailsModal = ({
     depositAmount,
     externalWalletBalance,
     externalWalletClient,
+    refetch,
     renderError,
     renderSuccess,
   ]);

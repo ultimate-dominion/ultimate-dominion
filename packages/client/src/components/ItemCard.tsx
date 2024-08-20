@@ -1,9 +1,12 @@
 import {
+  Box,
   Card,
   CardBody,
   CardFooter,
   CardHeader,
   Center,
+  HStack,
+  Stack,
   Text,
 } from '@chakra-ui/react';
 import { FaHatWizard } from 'react-icons/fa';
@@ -84,5 +87,37 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         </Center>
       </CardFooter>
     </Card>
+  );
+};
+
+export const ItemCardSmall: React.FC<ItemCardProps> = ({
+  ...item
+}): JSX.Element => {
+  return (
+    <HStack border="1px solid" borderColor="grey400" w="100%">
+      <Stack
+        alignItems="center"
+        bgColor="grey400"
+        h="50px"
+        justifyContent="center"
+        w="50px"
+      >
+        <Text color="white" fontSize="2xl">
+          {item.name.slice(-3)}
+        </Text>
+      </Stack>
+      <Box>
+        <Text size="xs">{item.name.slice(0, -3)}</Text>
+        <Text size="xs">
+          STR+
+          {item.strModifier} AGI+
+          {item.agiModifier} INT+
+          {item.intModifier}
+          {(item as Armor).armorModifier
+            ? ` ARM+${(item as Armor).armorModifier}`
+            : ''}
+        </Text>
+      </Box>
+    </HStack>
   );
 };
