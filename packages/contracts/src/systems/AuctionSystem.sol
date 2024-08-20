@@ -15,8 +15,11 @@ import {_requireOwner, _requireAccess, _lootManagerSystemId} from "../utils.sol"
 import {_erc1155SystemId, _erc20SystemId } from "../utils.sol";
 import {ITEMS_NAMESPACE, WORLD_NAMESPACE, GOLD_NAMESPACE} from "../../constants.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
+
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
 import { WorldContextConsumer } from "@latticexyz/world/src/WorldContext.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
@@ -74,6 +77,7 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
     // cancels an order transfers offers out of escrow
     function cancelOrder(bytes32 _orderHash) public nonReentrant returns (bool) {
         // check that _msgSender is the person who created the order
+        require(getOrderStatus(_orderHash) == OrderStatus.Active, 'Order is not active');
         ConsiderationsData memory c = getConsideration(_orderHash);
         require(_msgSender() == c.recipient);
         // change the status to canceled
@@ -129,7 +133,10 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
         else if(tokenType == TokenType.ERC1155){
             IERC1155(token).safeTransferFrom(from, to, identifier, amount, "");
             return;
-
+        }
+        else if(tokenType == TokenType.ERC721){
+            IERC721(token).transferFrom(from, to, amount);
+            return;
         }
         else{
             revert("Token type is not supported");

@@ -101,8 +101,9 @@ contract Test_AuctionSystem is SetUp, GasReporter {
         assertEq(gold.balanceOf(auctionHouse),   0);
 
     }
-    function test_cancelOrderForERC1155() public {
-        startGasReport("cancels an order for an item");
+
+    function test_cancelOrderForERC1155Twice() public {
+        startGasReport("cancels an order for an item twice");
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 9 ether;
@@ -121,6 +122,69 @@ contract Test_AuctionSystem is SetUp, GasReporter {
         bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
         // have userA cancel their order
         world.UD__cancelOrder(userAOrder);
+        endGasReport();
+        assertEq(items.balanceOf(userA, 1),   0);
+        assertEq(gold.balanceOf(userA),   amount);
+        assertEq(items.balanceOf(auctionHouse, 1),   0);
+        assertEq(gold.balanceOf(auctionHouse),   0);
+
+    }
+    function test_cancelOrderForERC20Twice() public {
+        startGasReport("attempts to cancel an order for gold twice");
+        IERC20 gold = IERC20(world.UD__getGoldToken());
+        IERC1155 items = IERC1155(world.UD__getItemsContract());
+        uint256 amount = 1;
+        address auctionHouse = world.UD__auctionHouseAddress();
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+        // give userA an item
+        world.UD__adminDropItem(userACharacterID, 1, 1);
+        console.log(items.balanceOf(userA, 1));
+        // have userA set max allowance for their item
+        vm.startPrank(userA);
+        items.setApprovalForAll(auctionHouse, true);        
+        // have userA create an order
+        Offer memory oA = Offer({tokenType:  TokenType.ERC1155, token: world.UD__getItemsContract(), identifier: 1, amount: amount});
+        Consideration memory cA = Consideration({tokenType: TokenType.ERC20, token: world.UD__getGoldToken(), identifier: 0, amount: 1 ether, recipient: userA});
+        bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
+        console.log(auctionHouse);
+        world.UD__cancelOrder(userAOrder);
+        vm.expectRevert(bytes("Order is not active"));
+        world.UD__cancelOrder(userAOrder);
+
+        endGasReport();
+        assertEq(items.balanceOf(userA, 1),   1);
+        assertEq(gold.balanceOf(userA),   0);
+        assertEq(items.balanceOf(auctionHouse, 1),   0);
+        assertEq(gold.balanceOf(auctionHouse),   0);
+
+    }
+
+
+    function test_cancelOrderForERC1155() public {
+        startGasReport("attempts to cancel an order for an item");
+        IERC20 gold = IERC20(world.UD__getGoldToken());
+        IERC1155 items = IERC1155(world.UD__getItemsContract());
+        uint256 amount = 9 ether;
+        address auctionHouse = world.UD__auctionHouseAddress();
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+        // give userA gold
+        world.UD__dropGold(userACharacterID, amount);
+        // have userA set max allowance for their gold
+        vm.startPrank(userA);
+        gold.approve(auctionHouse, MAX_INT);
+        // have userA create an order
+        Offer memory oA = Offer({tokenType:  TokenType.ERC20, token: world.UD__getGoldToken(), identifier: 0, amount: amount});
+        Consideration memory cA = Consideration({tokenType: TokenType.ERC1155, token: world.UD__getItemsContract(), identifier: 1, amount: 1, recipient: userA});
+        bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
+        // have userA cancel their order
+        world.UD__cancelOrder(userAOrder);
+        vm.expectRevert(bytes("Order is not active"));
+        world.UD__cancelOrder(userAOrder);
+
         endGasReport();
         assertEq(items.balanceOf(userA, 1),   0);
         assertEq(gold.balanceOf(userA),   amount);
@@ -188,43 +252,45 @@ contract Test_AuctionSystem is SetUp, GasReporter {
         world.UD__fulfillOrder(userAOrder);
         endGasReport();
     }
-    // function test_fulfillOrderForERC1155() public {
-    //     startGasReport("fulfills an order for an item");
-    //     IERC20 gold = IERC20(world.UD__getGoldToken());
-    //     IERC1155 items = IERC1155(world.UD__getItemsContract());
-    //     uint256 amount = 9 ether;
-    //     address auctionHouse = world.UD__auctionHouseAddress();
-    //     // create userA
-    //     address userA = makeAddr("userA");
-    //     bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
-    //     // give userA gold
-    //     world.UD__dropGold(userACharacterID, amount);
-    //     // have userA set max allowance for their gold
-    //     vm.startPrank(userA);
-    //     gold.approve(auctionHouse, MAX_INT);
-    //     // have userA create an order
-    //     Offer memory oA = Offer({tokenType:  TokenType.ERC20, token: world.UD__getGoldToken(), identifier: 0, amount: amount});
-    //     Consideration memory cA = Consideration({tokenType: TokenType.ERC1155, token: world.UD__getItemsContract(), identifier: 1, amount: 1, recipient: userA});
-    //     bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
-    //     vm.stopPrank();
-    //     // create user B
-    //     address userB = makeAddr("userB");
-    //     bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("UserB"), "test_Character_URI");
-    //     world.UD__adminDropItem(userBCharacterID, 1, 1);
-    //     vm.startPrank(userB);
-    //     // give userB an item
-    //     items.setApprovalForAll(auctionHouse, true);
-    //     // have userB create fulfill the order for userA's gold
-    //     world.UD__fulfillOrder(userAOrder);
-    //     endGasReport();
-    //     assertEq(items.balanceOf(userA, 1),   1);
-    //     assertEq(gold.balanceOf(userA),   0);
-    //     assertEq(items.balanceOf(userB, 1),   0);
-    //     assertEq(gold.balanceOf(userB),   amount);
-    //     assertEq(items.balanceOf(auctionHouse, 1),   0);
-    //     assertEq(gold.balanceOf(auctionHouse),   0);
+    function test_fulfillOrderForERC1155Twice() public {
+        startGasReport("attempts to fulfill an order for an item twice");
+        IERC20 gold = IERC20(world.UD__getGoldToken());
+        IERC1155 items = IERC1155(world.UD__getItemsContract());
+        uint256 amount = 9 ether;
+        address auctionHouse = world.UD__auctionHouseAddress();
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+        // give userA gold
+        world.UD__dropGold(userACharacterID, amount);
+        // have userA set max allowance for their gold
+        vm.startPrank(userA);
+        gold.approve(auctionHouse, MAX_INT);
+        // have userA create an order
+        Offer memory oA = Offer({tokenType:  TokenType.ERC20, token: world.UD__getGoldToken(), identifier: 0, amount: amount});
+        Consideration memory cA = Consideration({tokenType: TokenType.ERC1155, token: world.UD__getItemsContract(), identifier: 1, amount: 1, recipient: userA});
+        bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
+        vm.stopPrank();
+        // create user B
+        address userB = makeAddr("userB");
+        bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("UserB"), "test_Character_URI");
+        world.UD__adminDropItem(userBCharacterID, 1, 1);
+        vm.startPrank(userB);
+        // give userB an item
+        items.setApprovalForAll(auctionHouse, true);
+        // have userB create fulfill the order for userA's gold
+        world.UD__fulfillOrder(userAOrder);
+        vm.expectRevert(bytes("Order is not active"));
+        world.UD__fulfillOrder(userAOrder);
+        endGasReport();
+        assertEq(items.balanceOf(userA, 1),   1);
+        assertEq(gold.balanceOf(userA),   0);
+        assertEq(items.balanceOf(userB, 1),   0);
+        assertEq(gold.balanceOf(userB),   amount);
+        assertEq(items.balanceOf(auctionHouse, 1),   0);
+        assertEq(gold.balanceOf(auctionHouse),   0);
 
-    // }
+    }
 
     function test_fulfillOrderForERC1155() public {
         startGasReport("fulfills an order for an item");
