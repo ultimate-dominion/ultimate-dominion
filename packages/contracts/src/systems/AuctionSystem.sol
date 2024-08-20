@@ -115,7 +115,7 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
     function auctionHouseAddress() external view returns (address){
         return address(this);
     }
-    function _transfer(bytes32 orderHash, bool isOffer, address to, address from) internal nonReentrant {
+    function _transfer(bytes32 orderHash, bool isOffer, address to, address from) internal {
         ConsiderationsData memory c = Considerations.get(orderHash);
         OffersData memory o = Offers.get(orderHash);
         uint256 amount = isOffer ? o.amount : c.amount;
