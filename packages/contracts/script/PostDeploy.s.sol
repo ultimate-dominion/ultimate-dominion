@@ -127,6 +127,8 @@ contract PostDeploy is Script {
         // fund the subscription from deployer wallet with .001 eth;
         IRngSystem(address(world)).fundSubscription{value: 0.001 ether}();
 
+        IRngSystem(address(world)).addConsumer(UltimateDominionConfig.getSubscriptionId());
+
         // install gold module
         IERC20Mintable goldToken = registerERC20(
             world, GOLD_NAMESPACE, ERC20MetadataData({decimals: 18, name: "GoldToken", symbol: unicode"🜚"})
@@ -276,12 +278,12 @@ contract PostDeploy is Script {
             resourceIds.rngSystemId, "rawFulfillRandomness(bytes32,uint256)", "rawFulfillRandomness(bytes32,uint256)"
         );
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "estimateFee()", "estimateFee()");
-        world.registerRootFunctionSelector(resourceIds.rngSystemId, "getEntropy()", "getEntropy()");
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "createSubscription()", "createSubscription()");
         world.registerRootFunctionSelector(
             resourceIds.rngSystemId, "requiredTxGas(address,uint256,bytes)", "requiredTxGas(address,uint256,bytes)"
         );
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "fundSubscription()", "fundSubscription()");
+        world.registerRootFunctionSelector(resourceIds.rngSystemId, "addConsumer(uint64)", "addConsumer(uint64)");
     }
 
     function _createStarterItems() internal {

@@ -13,6 +13,7 @@ abstract contract IRngSystem {
     function createSubscription() external virtual returns (uint64);
     function fundSubscription() external payable virtual;
     function getRandcastAdapter() internal virtual returns (address);
+    function addConsumer(uint64 subscriptionId) external virtual;
 
     function rawFulfillRandomness(bytes32 requestId, uint256 randomness) external {
         address randcastAdapter = getRandcastAdapter();

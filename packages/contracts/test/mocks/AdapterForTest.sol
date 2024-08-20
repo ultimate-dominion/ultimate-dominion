@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {IAdapter} from "@interfaces/IAdapter.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
+import "forge-std/console2.sol";
 
 struct PartialSignature {
     uint256 index;
@@ -13,6 +14,7 @@ contract AdapterForTest {
     /* solhint-disable */
     uint64 currentSubId = 0;
     uint256 timesCalled;
+    mapping(uint64 => mapping(address => bool)) hasPermission;
 
     struct RequestData {
         address callbackAddress;
@@ -26,7 +28,9 @@ contract AdapterForTest {
         return currentSubId;
     }
 
-    function addConsumer(uint64 subId, address consumer) external {}
+    function addConsumer(uint64 subId, address consumer) external {
+        hasPermission[subId][consumer] = true;
+    }
 
     function fundSubscription(uint64 subId) external payable {}
 
@@ -113,6 +117,7 @@ contract AdapterForTest {
     }
 
     function requestRandomness(IAdapter.RandomnessRequestParams memory params) public returns (bytes32 requestId) {
+        require(hasPermission[params.subId][msg.sender], "you don't have permssion to use this sub");
         requestId = keccak256(abi.encodePacked(block.timestamp, "test"));
         pendingRequests[requestId] = RequestData(msg.sender, requestId);
         fulfillRandomness(requestId);
@@ -124,7 +129,7 @@ contract AdapterForTest {
         // (bool success,) = data.callbackAddress.call(
         //     abi.encodeWithSignature("_fulfillRandomness(bytes32,uint256)", data.requestId, randomness)
         // );
-        IRngSystem(data.callbackAddress)._fulfillRandomness(data.requestId, randomness);
+        IRngSystem(data.callbackAddress).rawFulfillRandomness(data.requestId, randomness);
         // if (!success) {
         //     revert("Call back failed");
         // }

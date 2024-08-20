@@ -41,7 +41,7 @@ contract RngSystem is System, IRngSystem {
     }
 
     function subscriptionId() public view returns (uint64) {
-        return _randcast().getCurrentSubId();
+        return UltimateDominionConfig.getSubscriptionId();
     }
 
     function getRng(bytes32 userRandomNumber, RngRequestType requestType, bytes memory data)
@@ -108,6 +108,11 @@ contract RngSystem is System, IRngSystem {
         if (sub.freeRequestCount == 0) {
             _fee = _randcast().estimatePaymentAmountInETH(estimateCallbackGas(), 550000, 0, tx.gasprice * 3, 3);
         }
+    }
+
+    function addConsumer(uint64 subscriptionId) public override {
+        _requireAccess(address(this), _msgSender());
+        _randcast().addConsumer(subscriptionId, address(this));
     }
 
     function fundSubscription() public payable override {
