@@ -117,9 +117,8 @@ export const BattleProvider = ({
 
     if (latestBattleOutcomeSeen === latestBattle?.encounterId) return null;
 
-    if (latestBattle.end !== '0' && continueToBattleOutcome) return null;
     return latestBattle;
-  }, [allBattles, continueToBattleOutcome]);
+  }, [allBattles]);
 
   const lastestBattleOutcome = useMemo(() => {
     const latestCompletedBattle = allBattles.filter(b => b.end !== '0').pop();

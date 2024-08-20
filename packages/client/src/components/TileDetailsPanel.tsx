@@ -67,6 +67,8 @@ export const TileDetailsPanel = (): JSX.Element => {
       action => action.attackerId === opponent.id,
     );
 
+    if (actionIndex === -1) return;
+
     const currentBattleOpponentTurn = localStorage.getItem(
       CURRENT_BATTLE_OPPONENT_TURN_KEY,
     );
@@ -99,6 +101,8 @@ export const TileDetailsPanel = (): JSX.Element => {
     const actionIndex = actionOutcomes.findLastIndex(
       action => action.attackerId === character.id,
     );
+
+    if (actionIndex === -1) return;
 
     const currentBattleDefenderTurn = localStorage.getItem(
       CURRENT_BATTLE_USER_TURN_KEY,
