@@ -78,8 +78,6 @@ export const AuctionItem = (): JSX.Element => {
   const [listingAmount, setListingAmount] = useState('1');
   const [listingPrice, setListingPrice] = useState('1');
   const [itemType, setItemType] = useState<string | null>(null);
-  const [goldAllowance, setGoldAllowance] = useState<bigint | null>(null);
-  const [itemAllowance, setItemAllowance] = useState<boolean | null>(null);
   const [auctionContractAddress, setAuctionContractAddress] = useState('');
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [isOpen, setIsOpen] = useState(false);
