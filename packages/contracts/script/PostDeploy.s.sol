@@ -57,6 +57,7 @@ import {ERC1155System} from "@erc1155/ERC1155System.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
+import {GasEstimator} from "./GasEstimator.sol";
 
 import "forge-std/console2.sol";
 import "forge-std/StdJson.sol";
@@ -136,6 +137,9 @@ contract PostDeploy is Script {
             UltimateDominionConfig.getSubscriptionId(), address(world)
         );
 
+        address gasEstimator = address(new GasEstimator());
+        UltimateDominionConfig.setGasEstimator(gasEstimator);
+
         // fund the subscription from deployer wallet with .001 eth;
         IRngSystem(address(world)).fundSubscription{value: 0.001 ether}();
 
@@ -154,7 +158,7 @@ contract PostDeploy is Script {
         );
 
         UltimateDominionConfig.setCharacterToken(address(characters));
-
+        // generate all usefull resource Ids
         {
             resourceIds.erc20NamespaceId = WorldResourceIdLib.encodeNamespace(GOLD_NAMESPACE);
             resourceIds.erc20SystemId =
@@ -193,7 +197,10 @@ contract PostDeploy is Script {
         IWorld(worldAddress).grantAccess(resourceIds.lootManagerSystemId, characterSystemAddress);
         //grant Admin system access to lootManager
         IWorld(worldAddress).grantAccess(resourceIds.lootManagerSystemId, Systems.getSystem(resourceIds.adminSystemId));
-
+        // grant gas estimator access to the pvp
+        IWorld(worldAddress).grantAccess(resourceIds.pvpSystemId, UltimateDominionConfig.getGasEstimator());
+        // grant gas estimator access to pve system
+        IWorld(worldAddress).grantAccess(resourceIds.pveSystemId, UltimateDominionConfig.getGasEstimator());
         //register mint function selector on world
         IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
 
@@ -287,7 +294,7 @@ contract PostDeploy is Script {
         world.registerRootFunctionSelector(
             resourceIds.rngSystemId, "rawFulfillRandomness(bytes32,uint256)", "rawFulfillRandomness(bytes32,uint256)"
         );
-        world.registerRootFunctionSelector(resourceIds.rngSystemId, "estimateFee()", "estimateFee()");
+        world.registerRootFunctionSelector(resourceIds.rngSystemId, "estimateFee(bytes32)", "estimateFee(bytes32)");
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "createSubscription()", "createSubscription()");
         world.registerRootFunctionSelector(
             resourceIds.rngSystemId, "requiredTxGas(address,uint256,bytes)", "requiredTxGas(address,uint256,bytes)"

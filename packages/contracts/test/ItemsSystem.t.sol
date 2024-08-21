@@ -124,9 +124,9 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     }
 
     function test_GetBalance() public {
-        uint256 fees = IRngSystem(worldAddress).estimateFee();
+        // uint256 fees = IRngSystem(worldAddress).estimateFee();
         vm.startPrank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
         StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
         assertEq(erc1155System.balanceOf(address(alice), starterDat.itemIds[0]), starterDat.amounts[0]);

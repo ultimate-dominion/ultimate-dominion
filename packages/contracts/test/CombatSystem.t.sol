@@ -142,12 +142,12 @@ contract Test_CombatSystem is SetUp, GasReporter {
         // expect revert because it's not alice's turn
         vm.expectRevert();
         vm.prank(alice);
-        world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+        world.UD__endTurn(encounterId, alicesCharacterId, aliceActions);
 
         // warp ahead to after pvp timeout, alice should now be able to make a move
         vm.warp(block.timestamp + 31);
         vm.prank(alice);
-        world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+        world.UD__endTurn(encounterId, alicesCharacterId, aliceActions);
     }
 
     function test_CreateEncounterPvP_Revert_WrongPosition() public {
@@ -203,11 +203,11 @@ contract Test_CombatSystem is SetUp, GasReporter {
         });
         uint256 fees = 0; // IRngSystem(worldAddress).estimateFee();
         vm.prank(bob);
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+        world.UD__endTurn(encounterId, bobCharacterId, actions);
 
         while (world.UD__getEncounter(encounterId).end == 0) {
             vm.prank(bob);
-            world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+            world.UD__endTurn(encounterId, bobCharacterId, actions);
         }
 
         StatsData memory endingStats = Stats.get(bobCharacterId);
@@ -290,14 +290,14 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         while (world.UD__getEncounter(encounterId).end == 0) {
             vm.prank(bob);
-            world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
+            world.UD__endTurn(encounterId, bobCharacterId, bobActions);
             // break if bob wins
             if (world.UD__getEncounter(encounterId).end != 0) {
                 break;
             }
             // bob's move
             vm.prank(alice);
-            world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+            world.UD__endTurn(encounterId, alicesCharacterId, aliceActions);
         }
 
         StatsData memory endingBobStats = Stats.get(bobCharacterId);
@@ -321,8 +321,8 @@ contract Test_CombatSystem is SetUp, GasReporter {
         Action[] memory actions = new Action[](1);
         actions[0] =
             Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 1});
-        uint256 fees = IRngSystem(worldAddress).estimateFee();
+        // uint256 fees = IRngSystem(worldAddress).estimateFee();
         vm.expectRevert("ENCOUNTER SYSTEM: NON-COMBATANT");
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+        world.UD__endTurn(encounterId, bobCharacterId, actions);
     }
 }

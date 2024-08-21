@@ -21,6 +21,7 @@ struct UltimateDominionConfigData {
   address goldToken;
   address characterToken;
   address items;
+  address gasEstimator;
   address randcastAdapter;
   uint64 subscriptionId;
 }
@@ -30,12 +31,12 @@ library UltimateDominionConfig {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000556c74696d617465446f6d696e696f6e);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0059060001141414140800000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x006d070001141414141408000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (bool, address, address, address, address, uint64)
-  Schema constant _valueSchema = Schema.wrap(0x0059060060616161610700000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bool, address, address, address, address, address, uint64)
+  Schema constant _valueSchema = Schema.wrap(0x006d070060616161616107000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -50,13 +51,14 @@ library UltimateDominionConfig {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](6);
+    fieldNames = new string[](7);
     fieldNames[0] = "locked";
     fieldNames[1] = "goldToken";
     fieldNames[2] = "characterToken";
     fieldNames[3] = "items";
-    fieldNames[4] = "randcastAdapter";
-    fieldNames[5] = "subscriptionId";
+    fieldNames[4] = "gasEstimator";
+    fieldNames[5] = "randcastAdapter";
+    fieldNames[6] = "subscriptionId";
   }
 
   /**
@@ -226,12 +228,50 @@ library UltimateDominionConfig {
   }
 
   /**
+   * @notice Get gasEstimator.
+   */
+  function getGasEstimator() internal view returns (address gasEstimator) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Get gasEstimator.
+   */
+  function _getGasEstimator() internal view returns (address gasEstimator) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Set gasEstimator.
+   */
+  function setGasEstimator(address gasEstimator) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((gasEstimator)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set gasEstimator.
+   */
+  function _setGasEstimator(address gasEstimator) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((gasEstimator)), _fieldLayout);
+  }
+
+  /**
    * @notice Get randcastAdapter.
    */
   function getRandcastAdapter() internal view returns (address randcastAdapter) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -241,7 +281,7 @@ library UltimateDominionConfig {
   function _getRandcastAdapter() internal view returns (address randcastAdapter) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -251,7 +291,7 @@ library UltimateDominionConfig {
   function setRandcastAdapter(address randcastAdapter) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((randcastAdapter)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((randcastAdapter)), _fieldLayout);
   }
 
   /**
@@ -260,7 +300,7 @@ library UltimateDominionConfig {
   function _setRandcastAdapter(address randcastAdapter) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((randcastAdapter)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((randcastAdapter)), _fieldLayout);
   }
 
   /**
@@ -269,7 +309,7 @@ library UltimateDominionConfig {
   function getSubscriptionId() internal view returns (uint64 subscriptionId) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (uint64(bytes8(_blob)));
   }
 
@@ -279,7 +319,7 @@ library UltimateDominionConfig {
   function _getSubscriptionId() internal view returns (uint64 subscriptionId) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (uint64(bytes8(_blob)));
   }
 
@@ -289,7 +329,7 @@ library UltimateDominionConfig {
   function setSubscriptionId(uint64 subscriptionId) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((subscriptionId)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((subscriptionId)), _fieldLayout);
   }
 
   /**
@@ -298,7 +338,7 @@ library UltimateDominionConfig {
   function _setSubscriptionId(uint64 subscriptionId) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((subscriptionId)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((subscriptionId)), _fieldLayout);
   }
 
   /**
@@ -337,10 +377,19 @@ library UltimateDominionConfig {
     address goldToken,
     address characterToken,
     address items,
+    address gasEstimator,
     address randcastAdapter,
     uint64 subscriptionId
   ) internal {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, items, randcastAdapter, subscriptionId);
+    bytes memory _staticData = encodeStatic(
+      locked,
+      goldToken,
+      characterToken,
+      items,
+      gasEstimator,
+      randcastAdapter,
+      subscriptionId
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -358,10 +407,19 @@ library UltimateDominionConfig {
     address goldToken,
     address characterToken,
     address items,
+    address gasEstimator,
     address randcastAdapter,
     uint64 subscriptionId
   ) internal {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, items, randcastAdapter, subscriptionId);
+    bytes memory _staticData = encodeStatic(
+      locked,
+      goldToken,
+      characterToken,
+      items,
+      gasEstimator,
+      randcastAdapter,
+      subscriptionId
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -380,6 +438,7 @@ library UltimateDominionConfig {
       _table.goldToken,
       _table.characterToken,
       _table.items,
+      _table.gasEstimator,
       _table.randcastAdapter,
       _table.subscriptionId
     );
@@ -401,6 +460,7 @@ library UltimateDominionConfig {
       _table.goldToken,
       _table.characterToken,
       _table.items,
+      _table.gasEstimator,
       _table.randcastAdapter,
       _table.subscriptionId
     );
@@ -426,6 +486,7 @@ library UltimateDominionConfig {
       address goldToken,
       address characterToken,
       address items,
+      address gasEstimator,
       address randcastAdapter,
       uint64 subscriptionId
     )
@@ -438,9 +499,11 @@ library UltimateDominionConfig {
 
     items = (address(Bytes.getBytes20(_blob, 41)));
 
-    randcastAdapter = (address(Bytes.getBytes20(_blob, 61)));
+    gasEstimator = (address(Bytes.getBytes20(_blob, 61)));
 
-    subscriptionId = (uint64(Bytes.getBytes8(_blob, 81)));
+    randcastAdapter = (address(Bytes.getBytes20(_blob, 81)));
+
+    subscriptionId = (uint64(Bytes.getBytes8(_blob, 101)));
   }
 
   /**
@@ -459,6 +522,7 @@ library UltimateDominionConfig {
       _table.goldToken,
       _table.characterToken,
       _table.items,
+      _table.gasEstimator,
       _table.randcastAdapter,
       _table.subscriptionId
     ) = decodeStatic(_staticData);
@@ -491,10 +555,11 @@ library UltimateDominionConfig {
     address goldToken,
     address characterToken,
     address items,
+    address gasEstimator,
     address randcastAdapter,
     uint64 subscriptionId
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(locked, goldToken, characterToken, items, randcastAdapter, subscriptionId);
+    return abi.encodePacked(locked, goldToken, characterToken, items, gasEstimator, randcastAdapter, subscriptionId);
   }
 
   /**
@@ -508,10 +573,19 @@ library UltimateDominionConfig {
     address goldToken,
     address characterToken,
     address items,
+    address gasEstimator,
     address randcastAdapter,
     uint64 subscriptionId
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, items, randcastAdapter, subscriptionId);
+    bytes memory _staticData = encodeStatic(
+      locked,
+      goldToken,
+      characterToken,
+      items,
+      gasEstimator,
+      randcastAdapter,
+      subscriptionId
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

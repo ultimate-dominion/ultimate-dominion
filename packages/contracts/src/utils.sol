@@ -18,6 +18,7 @@ bytes16 constant MOB_SYSTEM_NAME = "MobSystem";
 bytes16 constant MAP_SYSTEM_NAME = "MapSystem";
 bytes16 constant LOOTMANAGER_SYSTEM_NAME = "LootManagerSyste";
 bytes16 constant COMBAT_SYSTEM_NAME = "CombatSystem";
+bytes16 constant ENCOUNTER_SYSTEM_NAME = "EncounterSystem";
 
 function _erc20SystemId(bytes14 namespace) pure returns (ResourceId) {
     return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: ERC20_SYSTEM_NAME});
@@ -53,6 +54,10 @@ function _lootManagerSystemId(bytes14 namespace) pure returns (ResourceId) {
 
 function _combatSystemId(bytes14 namespace) pure returns (ResourceId) {
     return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: COMBAT_SYSTEM_NAME});
+}
+
+function _encounterSystemId(bytes14 namespace) pure returns (ResourceId) {
+    return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: ENCOUNTER_SYSTEM_NAME});
 }
 
 function _rngSystemId(bytes14 namespace) pure returns (ResourceId) {

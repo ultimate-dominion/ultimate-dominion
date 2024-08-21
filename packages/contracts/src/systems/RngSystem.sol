@@ -2,6 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
+import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {
     RandomNumbers,
     RandomNumbersData,
@@ -20,11 +21,12 @@ import {LibChunks} from "../libraries/LibChunks.sol";
 import "@libraries/StringAndUintConverter.sol" as StringAndUintConverter;
 import {IAdapter} from "@interfaces/IAdapter.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
+import {IGasEstimator} from "@interfaces/IGasEstimator.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {_RANDOMNESS_PLACEHOLDER, _MAX_GAS_LIMIT} from "../../constants.sol";
 import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
-import {_requireAccess} from "../utils.sol";
+import {_requireAccess, _characterSystemId, _encounterSystemId} from "../utils.sol";
 import "forge-std/console2.sol";
 
 contract RngSystem is System, IRngSystem {
@@ -32,12 +34,23 @@ contract RngSystem is System, IRngSystem {
 
     event RNGFulfilled(uint256 randomNumber);
 
+    modifier onlySystem() {
+        address characterSystemAddr = Systems.getSystem(_characterSystemId("UD"));
+        address encounterSystemAddr = Systems.getSystem(_encounterSystemId("UD"));
+        require(_msgSender() == encounterSystemAddr || _msgSender() == characterSystemAddr, "RNG: INVALID CALLER");
+        _;
+    }
+
     function _randcast() internal view returns (IAdapter randcast) {
         randcast = IAdapter(getRandcastAdapter());
     }
 
     function getRandcastAdapter() internal view override returns (address) {
         return UltimateDominionConfig.getRandcastAdapter();
+    }
+
+    function getGasEstimator() internal view override returns (address) {
+        return UltimateDominionConfig.getGasEstimator();
     }
 
     function subscriptionId() public view returns (uint64) {
@@ -48,14 +61,19 @@ contract RngSystem is System, IRngSystem {
         external
         payable
         override
+        onlySystem
         returns (bytes32 _requestId)
     {
         RandomNumbersData memory randomNumberData;
         randomNumberData.arbitraryData = data;
         randomNumberData.requestType = requestType;
 
-        uint32 callbackGas = estimateCallbackGas();
-        uint256 requestFee = estimateFee();
+        bytes32 requestId = _nextRequestId(subscriptionId());
+        // set the data in advance to we can estimate gas
+        RandomNumbers.set(requestId, randomNumberData);
+
+        uint32 callbackGas = estimateCallbackGas(requestId);
+        // uint256 requestFee = estimateFee();
         bytes memory randcastParams;
         IAdapter.RandomnessRequestParams memory randomnessParams = IAdapter.RandomnessRequestParams({
             requestType: IAdapter.RequestType.Randomness,
@@ -82,7 +100,7 @@ contract RngSystem is System, IRngSystem {
         RngLogsData memory rngLog = RngLogsData({
             subscriptionId: subscriptionId(),
             adapter: getRandcastAdapter(),
-            fee: requestFee,
+            fee: 0,
             requestType: requestType,
             randomNumber: 0,
             userRandomNumber: userRandomNumber,
@@ -103,10 +121,10 @@ contract RngSystem is System, IRngSystem {
         RandomNumbers.set(_requestId, randomNumberData);
     }
 
-    function estimateFee() public override returns (uint256 _fee) {
+    function estimateFee(bytes32 requestId) public override returns (uint256 _fee) {
         IAdapter.Subscription memory sub = _getSubscription(subscriptionId());
         if (sub.freeRequestCount == 0) {
-            _fee = _randcast().estimatePaymentAmountInETH(estimateCallbackGas(), 550000, 0, tx.gasprice * 3, 3);
+            _fee = _randcast().estimatePaymentAmountInETH(estimateCallbackGas(requestId), 550000, 0, tx.gasprice * 3, 3);
         }
     }
 
@@ -179,8 +197,8 @@ contract RngSystem is System, IRngSystem {
         ) = _randcast().getSubscription(subId);
     }
 
-    function estimateCallbackGas() public pure returns (uint32 _callbackGas) {
-        _callbackGas = 200000; //_dryRunCallbackToEstimateGas(IAdapter.RequestType.Randomness, "") + 30_000;
+    function estimateCallbackGas(bytes32 requestId) public returns (uint32 _callbackGas) {
+        _callbackGas = _dryRunCallbackToEstimateGas(IAdapter.RequestType.Randomness, "", requestId) + 30_000;
     }
 
     function createSubscription() external virtual override returns (uint64 _subscriptionId) {
@@ -189,16 +207,18 @@ contract RngSystem is System, IRngSystem {
         UltimateDominionConfig.setSubscriptionId(_subscriptionId);
     }
 
-    function _dryRunCallbackToEstimateGas(IAdapter.RequestType randcastRequestType, bytes memory params)
-        internal
-        returns (uint32)
-    {
-        // This should be identical to adapter generated requestId.
-        bytes32 requestId = _nextRequestId(subscriptionId());
+    function _dryRunCallbackToEstimateGas(
+        IAdapter.RequestType randcastRequestType,
+        bytes memory params,
+        bytes32 requestId
+    ) internal returns (uint32) {
+        // // This should be identical to adapter generated requestId.
+        // bytes32 requestId = _nextRequestId(subscriptionId());
+
         // Prepares the message call of callback function according to request type
         bytes memory data;
         if (randcastRequestType == IAdapter.RequestType.Randomness) {
-            data = abi.encodeWithSignature("_fulfillRandomness(bytes32,uint256)", requestId, _RANDOMNESS_PLACEHOLDER);
+            data = abi.encodeWithSignature("rawFulfillRandomness(bytes32,uint256)", requestId, _RANDOMNESS_PLACEHOLDER);
             // } else if (randcastRequestType == IAdapter.RequestType.RandomWords) {
             //     uint32 numWords = abi.decode(params, (uint32));
             //     uint256[] memory randomWords = new uint256[](numWords);
@@ -219,15 +239,10 @@ contract RngSystem is System, IRngSystem {
 
         // We don't want message call for estimating gas to take effect, therefore success should be false,
         // and result should be the reverted reason, which in fact is gas used we encoded to string.
-        bool success;
-        (bytes memory result) = SystemSwitch.call(abi.encodeCall(this.requiredTxGas, (address(this), 0, data)));
-        // if call returns a result sucess is true
-        if (result.length != 0) {
-            success = true;
-        }
-        // (bool success, bytes memory result) =
-        // // solhint-disable-next-line avoid-low-level-calls
-        //  address(this).call(abi.encodeWithSelector(this.requiredTxGas.selector, address(this), 0, data));
+
+        (bool success, bytes memory result) =
+        // solhint-disable-next-line avoid-low-level-calls
+         getGasEstimator().call(abi.encodeWithSelector(IGasEstimator.requiredTxGas.selector, address(this), 0, data));
 
         // This will be 0 if message call for callback fails,
         // we pass this message to tell user that callback implementation need to be checked.
@@ -251,7 +266,7 @@ contract RngSystem is System, IRngSystem {
     }
 
     function _nextRequestId(uint64 subId) internal returns (bytes32) {
-        subId = subId == 0 ? _randcast().getLastSubscription(address(this)) : subId;
+        subId = subId == 0 ? subscriptionId() : subId; //_randcast().getLastSubscription(address(this)) : subId;
         if (subId == 0) {
             revert("NoSubscriptionBound");
         }
@@ -268,34 +283,6 @@ contract RngSystem is System, IRngSystem {
         uint256 newNonce = currentNonce + 1;
         RngNonces.setNonce(subId, newNonce);
         return newNonce;
-    }
-
-    /**
-     * @notice Estimates gas used by actually calling that function then reverting with the gas used as string
-     * @param to Destination address
-     * @param value Ether value
-     * @param data Data payload
-     */
-    function requiredTxGas(address to, uint256 value, bytes calldata data) external returns (uint256) {
-        uint256 startGas = gasleft();
-        // We don't provide an error message here, as we use it to return the estimate
-        // solhint-disable-next-line reason-string
-        require(_executeCall(to, value, data, gasleft()));
-        uint256 requiredGas = startGas - gasleft();
-        string memory s = StringAndUintConverter.uintToString(requiredGas);
-        // Convert response to string and return via error message
-        revert(s);
-    }
-
-    function _executeCall(address to, uint256 value, bytes memory data, uint256 txGas)
-        internal
-        returns (bool success)
-    {
-        // solhint-disable-next-line no-inline-assembly
-        // assembly {
-        //     success := call(txGas, to, value, add(data, 0x20), mload(data), 0, 0)
-        // }
-        (bytes memory result) = SystemSwitch.call(data);
     }
 
     /**
@@ -321,6 +308,7 @@ contract RngSystem is System, IRngSystem {
 
     function _fullfillEntropy(bytes32 requestId, uint256 randomNumber) internal {
         RngRequestType requestType = RandomNumbers.getRequestType(requestId);
+
         bytes memory _data = RandomNumbers.getArbitraryData(requestId);
 
         RngLogs.setRandomNumber(requestId, randomNumber);

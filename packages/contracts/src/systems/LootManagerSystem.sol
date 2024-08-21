@@ -218,6 +218,7 @@ contract LootManagerSystem is System {
 
     function _trimDroppedItemIds(uint256 totalItemsDropped, bytes[] memory itemsDropped)
         internal
+        view
         returns (uint256[] memory _droppedItemIds)
     {
         // trim down encoded bytes array into dropped item ids

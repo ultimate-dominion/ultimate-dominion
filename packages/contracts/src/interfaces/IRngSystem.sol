@@ -9,15 +9,19 @@ abstract contract IRngSystem {
         payable
         virtual
         returns (bytes32 _requestId);
-    function estimateFee() external virtual returns (uint256);
+    function estimateFee(bytes32 requestId) external virtual returns (uint256);
     function createSubscription() external virtual returns (uint64);
     function fundSubscription() external payable virtual;
     function getRandcastAdapter() internal virtual returns (address);
+    function getGasEstimator() internal virtual returns (address);
 
     function rawFulfillRandomness(bytes32 requestId, uint256 randomness) external {
         address randcastAdapter = getRandcastAdapter();
         require(randcastAdapter != address(0), "Randcast Adapter address not set");
-        require(msg.sender == randcastAdapter, "Only Randcast Adapter can call this function");
+        require(
+            msg.sender == randcastAdapter || msg.sender == getGasEstimator(),
+            "Only Randcast Adapter can call this function"
+        );
 
         fulfillRandomness(requestId, randomness);
     }

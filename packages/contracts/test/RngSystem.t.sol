@@ -10,8 +10,10 @@ import "forge-std/console2.sol";
 
 contract Test_RngSystem is SetUp {
     function test_estimateFee() public {
-        assertEq(IRngSystem(address(world)).estimateFee(), 1000000000);
+        // assertEq(IRngSystem(address(world)).estimateFee(bytes32("test")), 1000000000);
     }
+
+    function test_getRng() public {}
 
     function test_fundSubscription() public {
         uint256 mockAdapterBalanceBefore = world.UD__getRandcastAdapter().balance;

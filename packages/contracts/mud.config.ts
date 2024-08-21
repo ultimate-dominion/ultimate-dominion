@@ -259,6 +259,7 @@ export default defineWorld({
         goldToken: "address",
         characterToken: "address",
         items: "address",
+        gasEstimator: "address",
         randcastAdapter: "address",
         subscriptionId: "uint64",
       },

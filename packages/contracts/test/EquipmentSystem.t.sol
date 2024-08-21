@@ -80,9 +80,9 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_unequipItem() public {
-        uint256 fees = IRngSystem(worldAddress).estimateFee();
+        // uint256 fees = IRngSystem(worldAddress).estimateFee();
         vm.startPrank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
         StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
 
