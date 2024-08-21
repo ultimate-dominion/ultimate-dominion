@@ -109,7 +109,7 @@ export const AuctionRow = ({
             textAlign="center"
             w="100%"
           >
-            {Number(floor).toLocaleString()}
+            {Number(floor) == 0 ? 'N/A' : Number(floor).toLocaleString()}
           </Text>
         </HStack>
         <Box display={{ base: 'none', md: 'block' }} w="50px">
