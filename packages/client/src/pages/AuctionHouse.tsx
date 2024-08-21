@@ -12,6 +12,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
 import { getComponentValueStrict, Has, runQuery } from '@latticexyz/recs';
 import {
   decodeEntity,
@@ -24,6 +25,7 @@ import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
 import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
+import { Address, maxUint256 } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { AuctionRow } from '../components/AuctionRow';
@@ -33,8 +35,11 @@ import { HOME_PATH } from '../Routes';
 import { fetchMetadataFromUri, getEmoji, uriToHttp } from '../utils/helpers';
 import {
   ArmorStats,
+  ConsiderationData,
   Item,
   ItemType,
+  OfferData,
+  Order,
   StatsClasses,
   WeaponStats,
 } from '../utils/types';
@@ -52,21 +57,108 @@ export const AuctionHouse = (): JSX.Element => {
   const { isConnected } = useAccount();
 
   const {
-    components: { Items, ItemsBaseURI, ItemsOwners, ItemsTokenURI },
+    components: {
+      UltimateDominionConfig,
+      Items,
+      ItemsBaseURI,
+      ItemsOwners,
+      ItemsTokenURI,
+      Offers,
+    },
 
     network: { worldContract },
   } = useMUD();
+
+  const [isFetchingOrders, setIsFetchingOrders] = useState(false);
   const [isFetchingItems, setIsFetchingItems] = useState(false);
   const [items, setItems] = useState<Item[] | null>(null);
-  const [prices] = useState<Price[] | null>(null);
+  const [prices, setPrices] = useState<Price[] | null>(null);
 
   const [entries, setEntries] = useState<Item[]>([]);
+  const [, setOrders] = useState<Order[] | null>(null);
 
   const [sort, setSort] = useState({ sorted: 'byClass', reversed: false });
   const [filter, setFilter] = useState({ filtered: 'all' });
   const [query, setQuery] = useState('');
   const [page, setPage] = useState('1');
   const [pageLimit, setPageLimit] = useState(0);
+
+  const { goldToken } = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  ) ?? { goldToken: null };
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      setIsFetchingOrders(true);
+      setPrices(null);
+      setOrders(
+        await Promise.all(
+          Array.from(runQuery([Has(Offers)])).map(async orderHash => {
+            const offerData = await worldContract.read.UD__getOffer([
+              orderHash as Address,
+            ]);
+            const considerationData =
+              await worldContract.read.UD__getConsideration([
+                orderHash as Address,
+              ]);
+            const orderStatus = await worldContract.read.UD__getOrderStatus([
+              orderHash as Address,
+            ]);
+            const price = {
+              tokenId:
+                considerationData.token == goldToken
+                  ? offerData.identifier.toString()
+                  : considerationData.identifier.toString(),
+              floor: '0',
+              ceiling: maxUint256.toString(),
+            } as Price;
+            if (considerationData.token == goldToken && orderStatus == 1) {
+              price.floor = BigInt(
+                considerationData.amount / offerData.amount <
+                  BigInt(price.floor)
+                  ? considerationData.amount / offerData.amount
+                  : BigInt(price.floor),
+              ).toString();
+            }
+            if (offerData.token == goldToken && orderStatus == 1) {
+              price.ceiling = BigInt(
+                offerData.amount / considerationData.amount >
+                  BigInt(price.ceiling)
+                  ? offerData.amount / considerationData.amount
+                  : BigInt(price.ceiling),
+              ).toString();
+            }
+            if (price != null) setPrices([price]);
+            else {
+              setPrices(prev => [...(prev as []), price]);
+            }
+            return {
+              orderHash: orderHash.toString(),
+              orderStatus: orderStatus.toString(),
+              offer: {
+                amount: offerData.amount.toString(),
+                identifier: offerData.identifier.toString(),
+                token: offerData.token.toString(),
+                tokenType: offerData.tokenType.toString(),
+              } as OfferData,
+              consideration: {
+                amount: considerationData.amount.toString(),
+                identifier: considerationData.identifier.toString(),
+                token: considerationData.token.toString(),
+                tokenType: considerationData.tokenType.toString(),
+                recipient: considerationData.recipient.toString(),
+              } as ConsiderationData,
+            } as Order;
+          }),
+        ),
+      );
+    } catch (err) {
+      renderError('Could not get order data.');
+    } finally {
+      setIsFetchingOrders(false);
+    }
+  }, [Offers, goldToken, renderError, worldContract.read]);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -243,8 +335,9 @@ export const AuctionHouse = (): JSX.Element => {
   useEffect(() => {
     (async (): Promise<void> => {
       await fetchItems();
+      await fetchOrders();
     })();
-  }, [fetchItems]);
+  }, [fetchItems, fetchOrders]);
 
   useEffect(() => {
     if (pageNumber < 1) {
@@ -259,7 +352,6 @@ export const AuctionHouse = (): JSX.Element => {
       const floorB =
         prices?.filter(price => entryB.tokenId == price.tokenId)[0]?.floor ||
         '0';
-
       switch (sort.sorted) {
         case 'byClass':
           result = sort.reversed
@@ -271,13 +363,13 @@ export const AuctionHouse = (): JSX.Element => {
           result = sort.reversed
             ? BigInt(entryA?.stats?.minLevel || '0') >=
               BigInt(entryB?.stats?.minLevel || '0')
-            : BigInt(entryB?.stats?.minLevel || '0') <
+            : BigInt(entryB?.stats?.minLevel || '0') >
               BigInt(entryA?.stats?.minLevel || '0');
           break;
         case 'byPrice':
           result = sort.reversed
             ? BigInt(floorA) >= BigInt(floorB)
-            : BigInt(floorB) < BigInt(floorA);
+            : BigInt(floorB) > BigInt(floorA);
           break;
         default:
           result =
@@ -321,7 +413,7 @@ export const AuctionHouse = (): JSX.Element => {
     sort.sorted,
   ]);
 
-  if (isFetchingItems) {
+  if (isFetchingItems || isFetchingOrders) {
     return (
       <Center h="100%">
         <Spinner size="lg" />
@@ -428,7 +520,14 @@ export const AuctionHouse = (): JSX.Element => {
                 intModifier={'0'}
                 minLevel={'0'}
                 strModifier={'0'}
-                floor={'0'}
+                floor={
+                  prices &&
+                  prices?.filter(price => price.tokenId == item.tokenId)
+                    .length > 0
+                    ? prices?.filter(price => price.tokenId == item.tokenId)[0]
+                        .floor
+                    : '0'
+                }
                 {...item}
                 {...item.stats}
                 emoji={getEmoji(item?.name as string)}
