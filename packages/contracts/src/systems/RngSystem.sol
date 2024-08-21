@@ -68,12 +68,12 @@ contract RngSystem is System, IRngSystem {
         randomNumberData.arbitraryData = data;
         randomNumberData.requestType = requestType;
 
-        bytes32 requestId = _nextRequestId(subscriptionId());
+        _requestId = _nextRequestId(subscriptionId());
         // set the data in advance to we can estimate gas
-        RandomNumbers.set(requestId, randomNumberData);
+        RandomNumbers.set(_requestId, randomNumberData);
 
-        uint32 callbackGas = estimateCallbackGas(requestId);
-        // uint256 requestFee = estimateFee();
+        uint32 callbackGas = estimateCallbackGas(_requestId);
+        // uint256 requestFee =      estimateFee(_requestId);
         bytes memory randcastParams;
         IAdapter.RandomnessRequestParams memory randomnessParams = IAdapter.RandomnessRequestParams({
             requestType: IAdapter.RequestType.Randomness,
@@ -84,16 +84,7 @@ contract RngSystem is System, IRngSystem {
             callbackGasLimit: callbackGas,
             callbackMaxGasPrice: tx.gasprice * 3
         });
-        // NOTE: required for testing, since callback is coming before data is stored
-        /////////////// TODO: remove for mainnet deployment //////
-        if (block.chainid == 31337) {
-            // (, bytes memory returnData) = address(_randcast()).staticcall(
-            //     abi.encodeWithSelector(IAdapter.requestRandomness.selector, randomnessParams)
-            // );
-            _requestId = keccak256(abi.encodePacked(block.timestamp, "test")); //abi.decode(returnData, (bytes32));
 
-            RandomNumbers.set(_requestId, randomNumberData);
-        }
         // pay the fees and request a random number from arpa
         _requestId = _randcast().requestRandomness(randomnessParams);
 
@@ -108,17 +99,6 @@ contract RngSystem is System, IRngSystem {
         });
 
         RngLogs.set(_requestId, rngLog);
-
-        uint256 rng;
-        uint256 timesCalled;
-        if (block.chainid == 31337) {
-            rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled + 1234567) ** 8)));
-            timesCalled++;
-        } else {
-            rng = uint256(keccak256(abi.encode(block.prevrandao, userRandomNumber)));
-        }
-
-        RandomNumbers.set(_requestId, randomNumberData);
     }
 
     function estimateFee(bytes32 requestId) public override returns (uint256 _fee) {
@@ -198,7 +178,7 @@ contract RngSystem is System, IRngSystem {
     }
 
     function estimateCallbackGas(bytes32 requestId) public returns (uint32 _callbackGas) {
-        _callbackGas = _dryRunCallbackToEstimateGas(IAdapter.RequestType.Randomness, "", requestId) + 30_000;
+        _callbackGas = _dryRunCallbackToEstimateGas(IAdapter.RequestType.Randomness, "", requestId) + 1_000_000;
     }
 
     function createSubscription() external virtual override returns (uint64 _subscriptionId) {
