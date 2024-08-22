@@ -68,7 +68,7 @@ contract RngSystem is System, IRngSystem {
         randomNumberData.arbitraryData = data;
         randomNumberData.requestType = requestType;
 
-        // _requestId = _nextRequestId(subscriptionId());
+        _requestId = _nextRequestId(subscriptionId());
         // set the data in advance so we can estimate gas
 
         uint32 callbackGas = requestType == RngRequestType.CharacterStats ? 300_000 : 3_000_000; //estimateCallbackGas(_requestId); // hardcode gas for end turn + 20%  which is the highes gas cost callback // 2339696; //
@@ -83,8 +83,6 @@ contract RngSystem is System, IRngSystem {
             callbackGasLimit: callbackGas,
             callbackMaxGasPrice: tx.gasprice * 3
         });
-
-        console2.log("CALLBACK GAS", callbackGas);
 
         // pay the fees and request a random number from arpa
         bytes32 rcRequestId = _randcast().requestRandomness(randomnessParams);
