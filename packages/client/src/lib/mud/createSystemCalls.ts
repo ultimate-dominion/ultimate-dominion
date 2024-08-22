@@ -412,11 +412,12 @@ export function createSystemCalls(
     });
 
     try {
-      const tx = await worldContract.write.UD__move([
-        characterEntity.toString() as `0x${string}`,
-        x,
-        y,
-      ]);
+      const tx = await worldContract.write.UD__move(
+        [characterEntity.toString() as `0x${string}`, x, y],
+        {
+          gas: BigInt('10000000'),
+        },
+      );
       await waitForTransaction(tx);
 
       const { x: newX, y: newY } = getComponentValueStrict(
@@ -594,7 +595,7 @@ export function createSystemCalls(
         tokenIdEntity,
       ).tokenURI;
 
-      const success = newMetadataURI === `ipfs://${characterMetadataCid}`;
+      const success = newMetadataURI === characterMetadataCid;
 
       return {
         error: success ? undefined : 'Failed to update token URI.',

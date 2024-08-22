@@ -365,10 +365,10 @@ contract PostDeploy is Script {
             if (i == 0) {
                 warriorItemIds[1] = starterWeaponId;
             }
-            if (i == 1) {
+            if (i == 0) {
                 rogueItemIds[1] = starterWeaponId;
             }
-            if (i == 2) {
+            if (i == 0) {
                 mageItemIds[1] = starterWeaponId;
             }
         }

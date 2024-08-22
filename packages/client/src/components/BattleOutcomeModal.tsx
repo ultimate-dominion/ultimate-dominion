@@ -21,7 +21,6 @@ import { Link } from 'react-router-dom';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
-import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
@@ -54,49 +53,18 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const {
     components: { Items, ItemsBaseURI, ItemsTokenURI, Levels },
   } = useMUD();
-  const { character, refreshCharacter } = useCharacter();
-  const { allMonsters, otherCharactersOnTile } = useMap();
-  const { onContinueToBattleOutcome } = useBattle();
+  const { character } = useCharacter();
+  const { onContinueToBattleOutcome, opponent } = useBattle();
 
   const [armor, setArmor] = useState<Armor[]>([]);
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
 
-  const opponent = useMemo(() => {
-    if (!character) return null;
-    const opponent =
-      character.id === battleOutcome.defenders[0]
-        ? battleOutcome.attackers[0]
-        : battleOutcome.defenders[0];
-
-    const monsterOpponent = allMonsters.find(
-      monster => monster.id === opponent,
-    );
-    if (monsterOpponent) {
-      return monsterOpponent;
-    }
-
-    const characterOpponent = otherCharactersOnTile.find(
-      c => c.id === opponent,
-    );
-    if (characterOpponent) {
-      return characterOpponent;
-    }
-
-    return null;
-  }, [allMonsters, battleOutcome, character, otherCharactersOnTile]);
-
   const onAcknowledge = useCallback(() => {
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
     onContinueToBattleOutcome(false);
-    refreshCharacter();
     onClose();
-  }, [
-    battleOutcome.encounterId,
-    onContinueToBattleOutcome,
-    onClose,
-    refreshCharacter,
-  ]);
+  }, [battleOutcome.encounterId, onContinueToBattleOutcome, onClose]);
 
   const nextLevelXpRequirement =
     useComponentValue(

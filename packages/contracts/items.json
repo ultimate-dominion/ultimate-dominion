@@ -11,59 +11,151 @@
         "classRestrictions": [],
         "hitPointModifier": 0,
         "intModifier": 0,
-        "minLevel": 0,
+        "minLevel": 1,
         "strModifier": 0
+      }
+    },
+    {
+      "dropChance": 10000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "2_steel_breastplate.json",
+      "name": "Steel Breastplate",
+      "stats": {
+        "agiModifier": -3,
+        "armorModifier": 3,
+        "classRestrictions": [0],
+        "hitPointModifier": 0,
+        "intModifier": 0,
+        "minLevel": 3,
+        "strModifier": 0
+      }
+    },
+    {
+      "dropChance": 10000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "3_light_chainmail.json",
+      "name": "Light Chainmail",
+      "stats": {
+        "agiModifier": -1,
+        "armorModifier": 2,
+        "classRestrictions": [1],
+        "hitPointModifier": 0,
+        "intModifier": 0,
+        "minLevel": 3,
+        "strModifier": 0
+      }
+    },
+    {
+      "dropChance": 10000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "4_apprentice_robe.json",
+      "name": "Apprentice Robe",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 1,
+        "classRestrictions": [2],
+        "hitPointModifier": 0,
+        "intModifier": 3,
+        "minLevel": 3,
+        "strModifier": 0
+      }
+    },
+    {
+      "dropChance": 5000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "5_enchanted_armor.json",
+      "name": "Enchanted Armor",
+      "stats": {
+        "agiModifier": -2,
+        "armorModifier": 4,
+        "classRestrictions": [0, 2],
+        "hitPointModifier": 0,
+        "intModifier": 3,
+        "minLevel": 5,
+        "strModifier": 3
       }
     }
   ],
-  "metadataUriPrefix": "ipfs://QmPooDEwqeGh3Qszig7veD1yEoa6EoVyDUmLqWUZ1riiDS/",
+  "metadataUriPrefix": "ipfs://QmcEgdrkuCYj9xjoo8ofuDfdr9kyAk8CCYpzqeMA4f9hp3/",
   "weapons": [
     {
       "dropChance": 20000000,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "2_rusty_sword.json",
-      "name": "Rusty Sword",
+      "metadataUri": "6_rusty_axe.json",
+      "name": "Rusty Axe",
       "stats": {
-        "agiModifier": 2,
+        "agiModifier": 0,
         "classRestrictions": [],
         "hitPointModifier": 0,
-        "intModifier": 1,
+        "intModifier": 0,
         "maxDamage": 5,
-        "minDamage": 1,
-        "minLevel": 1,
-        "strModifier": 5
-      }
-    },
-    {
-      "dropChance": 20000000,
-      "initialSupply": 10000000000000000000,
-      "metadataUri": "3_cracked_dagger.json",
-      "name": "Cracked Dagger",
-      "stats": {
-        "agiModifier": 4,
-        "classRestrictions": [],
-        "hitPointModifier": 0,
-        "intModifier": 2,
-        "maxDamage": 3,
         "minDamage": 1,
         "minLevel": 1,
         "strModifier": 2
       }
     },
     {
-      "dropChance": 20000000,
+      "dropChance": 10000000,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "4_cobbled_wand.json",
-      "name": "Cobbled Wand",
+      "metadataUri": "7_iron_sword.json",
+      "name": "Iron Sword",
       "stats": {
-        "agiModifier": 2,
-        "classRestrictions": [],
+        "agiModifier": 0,
+        "classRestrictions": [0],
+        "hitPointModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 8,
+        "minDamage": 4,
+        "minLevel": 3,
+        "strModifier": 5
+      }
+    },
+    {
+      "dropChance": 10000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "8_novice_staff.json",
+      "name": "Novice Staff",
+      "stats": {
+        "agiModifier": 0,
+        "classRestrictions": [2],
         "hitPointModifier": 0,
         "intModifier": 5,
-        "maxDamage": 2,
-        "minDamage": 1,
-        "minLevel": 1,
-        "strModifier": 1
+        "maxDamage": 8,
+        "minDamage": 4,
+        "minLevel": 3,
+        "strModifier": 0
+      }
+    },
+    {
+      "dropChance": 10000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "9_throwing_dagger.json",
+      "name": "Throwing Dagger",
+      "stats": {
+        "agiModifier": 5,
+        "classRestrictions": [1],
+        "hitPointModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 8,
+        "minDamage": 4,
+        "minLevel": 3,
+        "strModifier": 0
+      }
+    },
+    {
+      "dropChance": 5000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "10_steel_sword.json",
+      "name": "Steel Sword",
+      "stats": {
+        "agiModifier": 0,
+        "classRestrictions": [0],
+        "hitPointModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 15,
+        "minDamage": 10,
+        "minLevel": 5,
+        "strModifier": 9
       }
     }
   ]

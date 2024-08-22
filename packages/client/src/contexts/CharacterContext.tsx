@@ -74,7 +74,7 @@ export const CharacterProvider = ({
   const { renderError } = useToast();
 
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(true);
   const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
   const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
 
@@ -169,10 +169,10 @@ export const CharacterProvider = ({
   useEffect(() => {
     if (!(delegatorAddress && isSynced && publicClient && worldContract))
       return;
-    fetchCharacterData();
+    refreshCharacter();
   }, [
     delegatorAddress,
-    fetchCharacterData,
+    refreshCharacter,
     isSynced,
     publicClient,
     worldContract,
