@@ -124,12 +124,13 @@ contract PostDeploy is Script {
         _addRngSystem();
 
         // create randcast subscription
-        if (IAdapter(UltimateDominionConfig.getRandcastAdapter()).getLastSubscription(address(world)) == 0) {
+        if (IAdapter(UltimateDominionConfig.getRandcastAdapter()).getLastSubscription(vm.addr(deployerPrivateKey)) == 0)
+        {
             uint64 subscriptionId = IAdapter(UltimateDominionConfig.getRandcastAdapter()).createSubscription();
             UltimateDominionConfig.setSubscriptionId(subscriptionId);
         } else {
             uint64 subscriptionId =
-                IAdapter(UltimateDominionConfig.getRandcastAdapter()).getLastSubscription(address(world));
+                IAdapter(UltimateDominionConfig.getRandcastAdapter()).getLastSubscription(vm.addr(deployerPrivateKey));
             UltimateDominionConfig.setSubscriptionId(subscriptionId);
         }
 

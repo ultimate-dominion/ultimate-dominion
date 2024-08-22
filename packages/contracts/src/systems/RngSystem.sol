@@ -69,10 +69,10 @@ contract RngSystem is System, IRngSystem {
         randomNumberData.requestType = requestType;
 
         _requestId = _nextRequestId(subscriptionId());
-        // set the data in advance to we can estimate gas
+        // set the data in advance so we can estimate gas
         RandomNumbers.set(_requestId, randomNumberData);
 
-        uint32 callbackGas = estimateCallbackGas(_requestId);
+        uint32 callbackGas = requestType == RngRequestType.CharacterStats ? 300_000 : 3_000_000; //estimateCallbackGas(_requestId); // hardcode gas for end turn + 20%  which is the highes gas cost callback // 2339696; //
         // uint256 requestFee =      estimateFee(_requestId);
         bytes memory randcastParams;
         IAdapter.RandomnessRequestParams memory randomnessParams = IAdapter.RandomnessRequestParams({
@@ -85,8 +85,14 @@ contract RngSystem is System, IRngSystem {
             callbackMaxGasPrice: tx.gasprice * 3
         });
 
+        console2.log("CALLBACK GAS", callbackGas);
+
         // pay the fees and request a random number from arpa
-        _requestId = _randcast().requestRandomness(randomnessParams);
+        bytes32 rcRequestId = _randcast().requestRandomness(randomnessParams);
+
+        require(rcRequestId == _requestId, "mismatch request ids");
+
+        _incrementNonce(subscriptionId());
 
         RngLogsData memory rngLog = RngLogsData({
             subscriptionId: subscriptionId(),
@@ -178,7 +184,7 @@ contract RngSystem is System, IRngSystem {
     }
 
     function estimateCallbackGas(bytes32 requestId) public returns (uint32 _callbackGas) {
-        _callbackGas = _dryRunCallbackToEstimateGas(IAdapter.RequestType.Randomness, "", requestId) + 1_000_000;
+        _callbackGas = _dryRunCallbackToEstimateGas(IAdapter.RequestType.Randomness, "", requestId) + 100_000;
     }
 
     function createSubscription() external virtual override returns (uint64 _subscriptionId) {
@@ -246,7 +252,10 @@ contract RngSystem is System, IRngSystem {
     }
 
     function _nextRequestId(uint64 subId) internal returns (bytes32) {
-        subId = subId == 0 ? subscriptionId() : subId; //_randcast().getLastSubscription(address(this)) : subId;
+        if (block.chainid == 31337) {
+            return keccak256(abi.encodePacked(block.timestamp, "test"));
+        }
+        subId = subId == 0 ? subscriptionId() : subId;
         if (subId == 0) {
             revert("NoSubscriptionBound");
         }
@@ -259,6 +268,10 @@ contract RngSystem is System, IRngSystem {
     }
 
     function getNonce(uint64 subId) public returns (uint256) {
+        return RngNonces.getNonce(subId);
+    }
+
+    function _incrementNonce(uint64 subId) internal returns (uint256) {
         uint256 currentNonce = RngNonces.getNonce(subId);
         uint256 newNonce = currentNonce + 1;
         RngNonces.setNonce(subId, newNonce);

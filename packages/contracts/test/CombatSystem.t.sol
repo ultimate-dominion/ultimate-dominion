@@ -188,6 +188,25 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__executePvECombat(1000000000, keccak256(abi.encode("11111")), actions);
     }
 
+    function test_EndTurn_GasReport() public {
+        vm.prank(bob);
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
+
+        Action[] memory actions = new Action[](1);
+
+        actions[0] = Action({
+            attackerEntityId: bobCharacterId,
+            defenderEntityId: entityId,
+            actionId: basicMagicAttackId,
+            weaponId: 2
+        });
+
+        startGasReport("EndTurn");
+        vm.prank(bob);
+        world.UD__endTurn(encounterId, bobCharacterId, actions);
+        endGasReport();
+    }
+
     function test_EndTurn_EndsPvEEncounter() public {
         StatsData memory startingStats = Stats.get(bobCharacterId);
         uint256 startingGold = goldToken.balanceOf(bob);

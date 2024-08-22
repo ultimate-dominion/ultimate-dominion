@@ -215,6 +215,7 @@ contract EncounterSystem is System {
                 }
             }
         }
+        console2.log("Queue actions");
         _queueActions(encounterId, actions);
     }
 

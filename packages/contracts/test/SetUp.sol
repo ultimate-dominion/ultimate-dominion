@@ -57,7 +57,8 @@ contract SetUp is Test {
         goldToken = IERC20Mintable(world.UD__getGoldToken());
         characterToken = IERC721Mintable(world.UD__getCharacterToken());
         erc1155System = IERC1155System(world.UD__getItemsContract());
-
+        vm.label(UltimateDominionConfig.getGasEstimator(), "Gas Estimator");
+        vm.label(UltimateDominionConfig.getRandcastAdapter(), "Randcast");
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;
         // create a starter armor
