@@ -180,11 +180,16 @@ export function createSystemCalls(
         functionName: 'UD__endTurn',
       });
 
-      const tx = await worldContract.write.UD__endTurn([
-        encounterId.toString() as `0x${string}`,
-        playerId.toString() as `0x${string}`,
-        actions,
-      ]);
+      const tx = await worldContract.write.UD__endTurn(
+        [
+          encounterId.toString() as `0x${string}`,
+          playerId.toString() as `0x${string}`,
+          actions,
+        ],
+        {
+          gas: BigInt('10000000'),
+        },
+      );
 
       await waitForTransaction(tx);
 
