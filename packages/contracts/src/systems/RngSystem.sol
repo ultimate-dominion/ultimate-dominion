@@ -68,9 +68,8 @@ contract RngSystem is System, IRngSystem {
         randomNumberData.arbitraryData = data;
         randomNumberData.requestType = requestType;
 
-        _requestId = _nextRequestId(subscriptionId());
+        // _requestId = _nextRequestId(subscriptionId());
         // set the data in advance so we can estimate gas
-        RandomNumbers.set(_requestId, randomNumberData);
 
         uint32 callbackGas = requestType == RngRequestType.CharacterStats ? 300_000 : 3_000_000; //estimateCallbackGas(_requestId); // hardcode gas for end turn + 20%  which is the highes gas cost callback // 2339696; //
         // uint256 requestFee =      estimateFee(_requestId);
@@ -93,6 +92,8 @@ contract RngSystem is System, IRngSystem {
         require(rcRequestId == _requestId, "mismatch request ids");
 
         _incrementNonce(subscriptionId());
+
+        RandomNumbers.set(_requestId, randomNumberData);
 
         RngLogsData memory rngLog = RngLogsData({
             subscriptionId: subscriptionId(),
@@ -268,7 +269,7 @@ contract RngSystem is System, IRngSystem {
     }
 
     function getNonce(uint64 subId) public returns (uint256) {
-        return RngNonces.getNonce(subId);
+        return RngNonces.getNonce(subId) + 1;
     }
 
     function _incrementNonce(uint64 subId) internal returns (uint256) {
