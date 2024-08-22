@@ -14,6 +14,8 @@ import { GiAxeSword, GiRogue } from 'react-icons/gi';
 
 import { type Armor, StatsClasses, type Weapon } from '../utils/types';
 
+const getStatSymbol = (stat: string): string => (Number(stat) >= 0 ? '+' : '');
+
 type ItemCardProps = (Armor | Weapon) & {
   isEquipped?: boolean;
   onClick?: () => void;
@@ -65,10 +67,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         </Text>
 
         <Text size={{ base: '2xs', sm: 'sm' }}>
-          STR+{strModifier} AGI+{agiModifier} INT+
+          STR{getStatSymbol(strModifier)}
+          {strModifier} AGI{getStatSymbol(agiModifier)}
+          {agiModifier} INT{getStatSymbol(intModifier)}
           {intModifier}{' '}
           {(item as Armor).armorModifier
-            ? `ARM+${(item as Armor).armorModifier}`
+            ? `ARM${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
             : ''}
         </Text>
       </CardBody>
@@ -109,12 +113,12 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
       <Box>
         <Text size="xs">{item.name.slice(0, -3)}</Text>
         <Text size="xs">
-          STR+
-          {item.strModifier} AGI+
-          {item.agiModifier} INT+
-          {item.intModifier}
+          STR{getStatSymbol(item.strModifier)}
+          {item.strModifier} AGI{getStatSymbol(item.agiModifier)}
+          {item.agiModifier} INT{getStatSymbol(item.intModifier)}
+          {item.intModifier}{' '}
           {(item as Armor).armorModifier
-            ? ` ARM+${(item as Armor).armorModifier}`
+            ? `ARM${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
             : ''}
         </Text>
       </Box>

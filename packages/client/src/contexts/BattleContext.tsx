@@ -73,7 +73,7 @@ export const BattleProvider = ({
     delegatorAddress,
     systemCalls: { endTurn },
   } = useMUD();
-  const { character } = useCharacter();
+  const { character, refreshCharacter } = useCharacter();
   const { allMonsters, allCharacters } = useMap();
 
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
@@ -272,6 +272,8 @@ export const BattleProvider = ({
 
         localStorage.removeItem(CURRENT_BATTLE_OPPONENT_TURN_KEY);
         localStorage.removeItem(CURRENT_BATTLE_USER_TURN_KEY);
+
+        refreshCharacter();
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to attack.', e);
       } finally {
@@ -285,6 +287,7 @@ export const BattleProvider = ({
       delegatorAddress,
       endTurn,
       opponent,
+      refreshCharacter,
       renderError,
     ],
   );

@@ -38,12 +38,7 @@ import {
   shortenAddress,
   uriToHttp,
 } from '../utils/helpers';
-import {
-  type Armor,
-  ItemType,
-  StatsClasses,
-  type Weapon,
-} from '../utils/types';
+import { type Armor, StatsClasses, type Weapon } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
@@ -181,31 +176,20 @@ export const CharacterCreation = (): JSX.Element => {
   );
 
   useEffect(() => {
-    const starterItemTokenIds = Array.from(runQuery([Has(StarterItems)]))
-      .map(entity => {
+    const starterItemTokenIds = Array.from(runQuery([Has(StarterItems)])).map(
+      entity => {
         const tokenIds = getComponentValueStrict(StarterItems, entity).itemIds;
         return tokenIds;
-      })
-      .flat()
+      },
+    );
+
+    const starterArmorTokenIds = starterItemTokenIds
+      .map(item => item[0] as bigint)
       .filter((value, index, self) => self.indexOf(value) === index);
 
-    const starterItemType = starterItemTokenIds.map(tokenId => {
-      const tokenIdEntity = encodeEntity({ tokenId: 'uint256' }, { tokenId });
-      const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-
-      return {
-        itemType: itemTemplate.itemType,
-        tokenId,
-      };
-    });
-
-    const starterArmorTokenIds = starterItemType
-      .filter(item => item.itemType === ItemType.Armor)
-      .map(item => item.tokenId);
-
-    const starterWeaponTokenIds = starterItemType
-      .filter(item => item.itemType === ItemType.Weapon)
-      .map(item => item.tokenId);
+    const starterWeaponTokenIds = starterItemTokenIds.map(
+      item => item[1] as bigint,
+    );
 
     fetchStarterItems(starterArmorTokenIds, starterWeaponTokenIds);
   }, [fetchStarterItems, Items, StarterItems]);
