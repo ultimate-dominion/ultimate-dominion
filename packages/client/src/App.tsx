@@ -1,4 +1,4 @@
-import { Grid, useBreakpointValue, useDisclosure } from '@chakra-ui/react';
+import { Grid, useBreakpointValue } from '@chakra-ui/react';
 import { useEffect } from 'react';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
@@ -30,17 +30,28 @@ export default App;
 const AppInner = (): JSX.Element => {
   const { pathname } = useLocation();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const { burnerBalance, burnerBalanceFetched, isSynced } = useMUD();
-
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    burnerBalance,
+    burnerBalanceFetched,
+    isSynced,
+    isWalletDetailsModalOpen,
+    onCloseWalletDetailsModal,
+    onOpenWalletDetailsModal,
+  } = useMUD();
 
   useEffect(() => {
     if (pathname === HOME_PATH) return;
 
     if (burnerBalanceFetched && burnerBalance === '0' && isSynced) {
-      onOpen();
+      onOpenWalletDetailsModal();
     }
-  }, [burnerBalance, burnerBalanceFetched, isSynced, pathname, onOpen]);
+  }, [
+    burnerBalance,
+    burnerBalanceFetched,
+    isSynced,
+    onOpenWalletDetailsModal,
+    pathname,
+  ]);
 
   return (
     <Grid
@@ -50,10 +61,13 @@ const AppInner = (): JSX.Element => {
       templateColumns="100%"
       templateRows="auto 1fr auto"
     >
-      <Header onOpenWalletDetailsModal={onOpen} />
+      <Header onOpenWalletDetailsModal={onOpenWalletDetailsModal} />
       <AppRoutes />
       {isDesktop && <Footer />}
-      <WalletDetailsModal isOpen={isOpen} onClose={onClose} />
+      <WalletDetailsModal
+        isOpen={isWalletDetailsModalOpen}
+        onClose={onCloseWalletDetailsModal}
+      />
     </Grid>
   );
 };

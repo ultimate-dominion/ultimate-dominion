@@ -5,15 +5,15 @@
       "name": "Giant Rat",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
-        "agility": 4,
+        "agility": 15,
         "armor": 1,
         "class": 0,
         "experience": 35,
         "hitPoints": 5,
         "intelligence": 4,
-        "inventory": [2],
+        "inventory": [6],
         "level": 1,
         "strength": 4
       }
@@ -23,7 +23,7 @@
       "name": "Green Slime",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 2,
         "armor": 1,
@@ -31,7 +31,7 @@
         "experience": 30,
         "hitPoints": 8,
         "intelligence": 8,
-        "inventory": [4],
+        "inventory": [6],
         "level": 1,
         "strength": 2
       }
@@ -41,7 +41,7 @@
       "name": "Kobold Scout",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 11,
         "armor": 1,
@@ -49,7 +49,7 @@
         "experience": 60,
         "hitPoints": 6,
         "intelligence": 6,
-        "inventory": [3],
+        "inventory": [6],
         "level": 2,
         "strength": 8
       }
@@ -59,7 +59,7 @@
       "name": "Gray Ooze",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 4,
         "armor": 1,
@@ -67,7 +67,7 @@
         "experience": 55,
         "hitPoints": 9,
         "intelligence": 8,
-        "inventory": [4],
+        "inventory": [6],
         "level": 2,
         "strength": 2
       }
@@ -77,7 +77,7 @@
       "name": "Cave Goblin",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 6,
         "armor": 1,
@@ -85,7 +85,7 @@
         "experience": 90,
         "hitPoints": 12,
         "intelligence": 6,
-        "inventory": [2],
+        "inventory": [6],
         "level": 3,
         "strength": 13
       }
@@ -95,7 +95,7 @@
       "name": "Giant Bat",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 12,
         "armor": 1,
@@ -103,7 +103,7 @@
         "experience": 85,
         "hitPoints": 10,
         "intelligence": 6,
-        "inventory": [3],
+        "inventory": [6],
         "level": 3,
         "strength": 8
       }
@@ -113,7 +113,7 @@
       "name": "Skeleton",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 8,
         "armor": 1,
@@ -121,7 +121,7 @@
         "experience": 135,
         "hitPoints": 14,
         "intelligence": 7,
-        "inventory": [2],
+        "inventory": [7],
         "level": 4,
         "strength": 15
       }
@@ -131,7 +131,7 @@
       "name": "Giant Spider",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 13,
         "armor": 1,
@@ -139,7 +139,7 @@
         "experience": 155,
         "hitPoints": 12,
         "intelligence": 7,
-        "inventory": [3],
+        "inventory": [9],
         "level": 4,
         "strength": 12
       }
@@ -149,7 +149,7 @@
       "name": "Fire Beetle",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 10,
         "armor": 1,
@@ -157,7 +157,7 @@
         "experience": 205,
         "hitPoints": 14,
         "intelligence": 12,
-        "inventory": [4],
+        "inventory": [8],
         "level": 5,
         "strength": 14
       }
@@ -167,7 +167,7 @@
       "name": "Orc Grunt",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 9,
         "armor": 1,
@@ -175,7 +175,7 @@
         "experience": 215,
         "hitPoints": 18,
         "intelligence": 10,
-        "inventory": [2],
+        "inventory": [7],
         "level": 5,
         "strength": 18
       }
@@ -185,7 +185,7 @@
       "name": "Cave Wraith",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 15,
         "armor": 1,
@@ -193,7 +193,7 @@
         "experience": 310,
         "hitPoints": 17,
         "intelligence": 18,
-        "inventory": [4],
+        "inventory": [8],
         "level": 6,
         "strength": 16
       }
@@ -203,7 +203,7 @@
       "name": "Giant Centipede",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 16,
         "armor": 1,
@@ -211,7 +211,7 @@
         "experience": 300,
         "hitPoints": 15,
         "intelligence": 13,
-        "inventory": [3],
+        "inventory": [9],
         "level": 6,
         "strength": 18
       }
@@ -221,7 +221,7 @@
       "name": "Cave Bear",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 18,
         "armor": 1,
@@ -229,7 +229,7 @@
         "experience": 460,
         "hitPoints": 21,
         "intelligence": 14,
-        "inventory": [2],
+        "inventory": [10],
         "level": 7,
         "strength": 22
       }
@@ -239,7 +239,7 @@
       "name": "Specter",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 16,
         "armor": 1,
@@ -247,7 +247,7 @@
         "experience": 440,
         "hitPoints": 18,
         "intelligence": 21,
-        "inventory": [4],
+        "inventory": [8],
         "level": 7,
         "strength": 16
       }
@@ -257,7 +257,7 @@
       "name": "Giant Worm",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 22,
         "armor": 1,
@@ -265,7 +265,7 @@
         "experience": 610,
         "hitPoints": 18,
         "intelligence": 14,
-        "inventory": [3],
+        "inventory": [9],
         "level": 8,
         "strength": 20
       }
@@ -275,7 +275,7 @@
       "name": "Troll",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 17,
         "armor": 1,
@@ -283,7 +283,7 @@
         "experience": 625,
         "hitPoints": 24,
         "intelligence": 18,
-        "inventory": [2],
+        "inventory": [10],
         "level": 8,
         "strength": 25
       }
@@ -293,7 +293,7 @@
       "name": "Magma Mephit",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 20,
         "armor": 1,
@@ -301,7 +301,7 @@
         "experience": 880,
         "hitPoints": 24,
         "intelligence": 25,
-        "inventory": [4],
+        "inventory": [8],
         "level": 9,
         "strength": 22
       }
@@ -311,7 +311,7 @@
       "name": "Spirit Naga",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 25,
         "armor": 1,
@@ -319,7 +319,7 @@
         "experience": 900,
         "hitPoints": 22,
         "intelligence": 22,
-        "inventory": [3],
+        "inventory": [9],
         "level": 9,
         "strength": 22
       }
@@ -329,7 +329,7 @@
       "name": "Werewolf",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 35,
         "armor": 1,
@@ -337,7 +337,7 @@
         "experience": 3600,
         "hitPoints": 28,
         "intelligence": 25,
-        "inventory": [3],
+        "inventory": [9],
         "level": 10,
         "strength": 26
       }
@@ -347,7 +347,7 @@
       "name": "Umber Hulk",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 26,
         "armor": 1,
@@ -355,7 +355,7 @@
         "experience": 4000,
         "hitPoints": 34,
         "intelligence": 27,
-        "inventory": [2],
+        "inventory": [10],
         "level": 10,
         "strength": 34
       }
@@ -365,7 +365,7 @@
       "name": "Shadow Dragon",
       "stats": {
         "actions": [
-          "0xd464b19f24e411cdda8d46d732e56a4c832b013526c63bb3f774f167796f1c7d"
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
         ],
         "agility": 32,
         "armor": 1,
@@ -373,7 +373,7 @@
         "experience": 4000,
         "hitPoints": 32,
         "intelligence": 36,
-        "inventory": [4],
+        "inventory": [8],
         "level": 10,
         "strength": 30
       }

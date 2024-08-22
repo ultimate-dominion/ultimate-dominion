@@ -25,7 +25,7 @@ import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
-import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 
 export const GameBoard = (): JSX.Element => {
@@ -52,8 +52,8 @@ export const GameBoard = (): JSX.Element => {
     isSynced,
     network: { worldContract },
   } = useMUD();
-  const { character, equippedWeapons } = useCharacter();
-  const { position } = useMap();
+  const { character, equippedWeapons, isRefreshing } = useCharacter();
+  const { inSafetyZone, position } = useMap();
   const { continueToBattleOutcome, lastestBattleOutcome } = useBattle();
 
   // Redirect to home if synced, but missing other requirements
@@ -71,17 +71,24 @@ export const GameBoard = (): JSX.Element => {
       return;
     }
 
-    if (character?.locked) {
-      navigate(GAME_BOARD_PATH);
+    if (!character?.locked && !isRefreshing) {
+      navigate(CHARACTER_CREATION_PATH);
       return;
     }
-  }, [character, delegatorAddress, isConnected, isSynced, navigate]);
+  }, [
+    character,
+    delegatorAddress,
+    isConnected,
+    isRefreshing,
+    isSynced,
+    navigate,
+  ]);
 
   // Open equip info modal if character has no experience and no equipped items
   useEffect(() => {
     if (!(character && equippedWeapons)) return;
 
-    const equipInfoSeenKey = `equip-info-seen-${worldContract.address}-${character.characterId}`;
+    const equipInfoSeenKey = `equip-info-seen-${worldContract.address}-${character.id}`;
 
     const hasSeenEquipInfo = localStorage.getItem(equipInfoSeenKey);
     if (hasSeenEquipInfo) return;
@@ -94,7 +101,7 @@ export const GameBoard = (): JSX.Element => {
   const onAcknowledgeEquipInfo = useCallback(() => {
     if (!character) return;
 
-    const equipInfoSeenKey = `equip-info-seen-${worldContract.address}-${character.characterId}`;
+    const equipInfoSeenKey = `equip-info-seen-${worldContract.address}-${character.id}`;
     localStorage.setItem(equipInfoSeenKey, 'true');
     onCloseEquipInfoModal();
   }, [character, onCloseEquipInfoModal, worldContract]);
@@ -102,22 +109,27 @@ export const GameBoard = (): JSX.Element => {
   // Open Outer Realms warning modal if character is level 1 and entered Outer Realms
   useEffect(() => {
     if (!(character && position)) return;
-    const outerRealms = position.x === 5 || position.y === 5;
 
-    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract.address}-${character.characterId}`;
+    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract.address}-${character.id}`;
 
     const hasSeenWarning = localStorage.getItem(outerRealmsSeenKey);
     if (hasSeenWarning) return;
 
-    if (character.level === '1' && outerRealms) {
+    if (character.level === '1' && !inSafetyZone) {
       onOpenOuterRealmsInfoModal();
     }
-  }, [character, onOpenOuterRealmsInfoModal, position, worldContract]);
+  }, [
+    character,
+    inSafetyZone,
+    onOpenOuterRealmsInfoModal,
+    position,
+    worldContract,
+  ]);
 
   const onAcknowledgeOuterRealmsWarning = useCallback(() => {
     if (!character) return;
 
-    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract.address}-${character.characterId}`;
+    const outerRealmsSeenKey = `outer-realms-warning-seen-${worldContract.address}-${character.id}`;
     localStorage.setItem(outerRealmsSeenKey, 'true');
     onCloseOuterRealmsInfoModal();
   }, [character, onCloseOuterRealmsInfoModal, worldContract]);
@@ -219,7 +231,7 @@ export const GameBoard = (): JSX.Element => {
             as={Link}
             color="blue"
             onClick={onAcknowledgeEquipInfo}
-            to={`/characters/${character?.characterId}`}
+            to={`/characters/${character?.id}`}
             _hover={{
               textDecoration: 'underline',
             }}

@@ -64,6 +64,17 @@ export const decodeCharacterId = (
   return { ownerAddress, characterTokenId: characterTokenId.toString() };
 };
 
+export const decodeMonsterId = (
+  monsterId: `0x${string}`,
+): {
+  mobId: string;
+} => {
+  const mobIdHex = monsterId.slice(2, 10);
+  const mobIdBigInt = hexToBigInt(`0x${mobIdHex}`);
+
+  return { mobId: mobIdBigInt.toString() };
+};
+
 export const decodeWeaponStats = (statsBytes: string): WeaponStats => {
   const itemTemplateStats = decodeAbiParameters(
     [

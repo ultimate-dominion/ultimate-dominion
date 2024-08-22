@@ -15,7 +15,7 @@ import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {Characters, CharactersData, UltimateDominionConfig} from "@codegen/index.sol";
 import {Classes, MobType, ItemType, ActionType} from "@codegen/common.sol";
 import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
-import {WeaponStats, MonsterStats, ArmorStats, PhysicalAttackStats} from "@interfaces/Structs.sol";
+import {WeaponStats, MonsterStats, ArmorStats, PhysicalAttackStats, MagicAttackStats} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_NAMESPACE} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {System} from "@latticexyz/world/src/System.sol";
@@ -40,6 +40,7 @@ contract SetUp is Test {
     bytes32 public alicesRandomness = bytes32(keccak256(abi.encode("alicesRestaurant")));
     bytes32 basicAttackId;
     uint256 newArmorId;
+    bytes32 basicMagicAttackId;
 
     function setUp() public virtual {
         vm.startPrank(deployer);
@@ -70,17 +71,16 @@ contract SetUp is Test {
             hitPointModifier: 4
         });
 
-        basicAttackId = keccak256(
-            abi.encode(
-                PhysicalAttackStats({
-                    bonusDamage: 0,
-                    armorPenetration: 0,
-                    attackModifierBonus: 0,
-                    critChanceBonus: 0,
-                    classRestrictions: classRestrictions
-                })
-            )
-        );
+        bytes32[] memory statusEffects = new bytes32[](0);
+
+        basicAttackId = keccak256(abi.encode("basic weapon attack"));
+
+        uint8[] memory newClassRestrictions = new uint8[](1);
+        newClassRestrictions[0] = uint8(2);
+        uint256[] memory itemRestrictions = new uint256[](0);
+
+        basicMagicAttackId = keccak256(abi.encode("basic magic attack"));
+
         vm.label(alice, "alice");
         vm.label(bob, "bob");
         vm.label(worldAddress, "world");
@@ -97,7 +97,7 @@ contract SetUp is Test {
         vm.startPrank(bob);
         bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
         uint256 fees = entropy.getFee(address(1));
-        world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Rogue);
+        world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Mage);
         world.UD__enterGame(bobCharacterId);
         vm.stopPrank();
     }

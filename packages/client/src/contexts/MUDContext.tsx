@@ -1,3 +1,4 @@
+import { useDisclosure } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { getComponentValue } from '@latticexyz/recs';
 import { SyncStep } from '@latticexyz/store-sync';
@@ -31,7 +32,10 @@ type MUDContextType = {
   delegatorEntity: string | null;
   getBurner: () => void;
   isSynced: boolean;
+  isWalletDetailsModalOpen: boolean;
   network: NetworkResult;
+  onCloseWalletDetailsModal: () => void;
+  onOpenWalletDetailsModal: () => void;
   systemCalls: SystemCallsResult;
 };
 
@@ -48,6 +52,12 @@ type Props = {
 
 export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
   const { data: externalWalletClient } = useWalletClient();
+
+  const {
+    isOpen: isWalletDetailsModalOpen,
+    onOpen: onOpenWalletDetailsModal,
+    onClose: onCloseWalletDetailsModal,
+  } = useDisclosure();
 
   const [burner, setBurner] = useState<Burner | null>(null);
   const [burnerBalance, setBurnerBalance] = useState<string>('0');
@@ -119,7 +129,10 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
         delegatorEntity: null,
         getBurner,
         isSynced,
+        isWalletDetailsModalOpen,
         network: setupResult.network,
+        onCloseWalletDetailsModal,
+        onOpenWalletDetailsModal,
         systemCalls: setupResult.systemCalls,
       };
     }
@@ -136,7 +149,10 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
       ),
       getBurner,
       isSynced,
+      isWalletDetailsModalOpen,
       network: burner.network,
+      onCloseWalletDetailsModal,
+      onOpenWalletDetailsModal,
       systemCalls: burner.systemCalls,
     };
   }, [
@@ -145,6 +161,9 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
     burnerBalanceFetched,
     getBurner,
     isSynced,
+    isWalletDetailsModalOpen,
+    onCloseWalletDetailsModal,
+    onOpenWalletDetailsModal,
     setupResult,
   ]);
 

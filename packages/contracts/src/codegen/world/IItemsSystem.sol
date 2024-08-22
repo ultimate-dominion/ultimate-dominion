@@ -20,6 +20,8 @@ interface IItemsSystem {
     string memory itemMetadataURI
   ) external returns (uint256);
 
+  function UD__resupplyLootManager(uint256 itemId, uint256 newSupply) external;
+
   function UD__createItems(
     ItemType[] memory itemTypes,
     uint256[] memory supply,
@@ -27,6 +29,8 @@ interface IItemsSystem {
     bytes[] memory stats,
     string[] memory itemMetadataURIs
   ) external;
+
+  function UD__getItemBalance(bytes32 entityId, uint256 itemId) external view returns (uint256 _balance);
 
   function UD__getTotalSupply(uint256 tokenId) external view returns (uint256 _supply);
 
