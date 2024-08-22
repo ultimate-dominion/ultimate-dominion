@@ -8,7 +8,7 @@ verbosity = 2
 src = "src"
 test = "test"
 out = "out"
-target_evm = "cancun"
+target_evm = "paris"
 allow_paths = [
   # pnpm symlinks to the project root's node_modules
   "../../node_modules",

@@ -128,6 +128,8 @@ contract PostDeploy is Script {
         {
             uint64 subscriptionId = IAdapter(UltimateDominionConfig.getRandcastAdapter()).createSubscription();
             UltimateDominionConfig.setSubscriptionId(subscriptionId);
+            // fund the subscription from deployer wallet with .001 eth;
+            IRngSystem(UltimateDominionConfig.getRandcastAdapter()).fundSubscription{value: 0.001 ether}(subscriptionId);
         } else {
             uint64 subscriptionId =
                 IAdapter(UltimateDominionConfig.getRandcastAdapter()).getLastSubscription(vm.addr(deployerPrivateKey));
@@ -140,9 +142,6 @@ contract PostDeploy is Script {
 
         address gasEstimator = address(new GasEstimator());
         UltimateDominionConfig.setGasEstimator(gasEstimator);
-
-        // fund the subscription from deployer wallet with .001 eth;
-        IRngSystem(address(world)).fundSubscription{value: 0.001 ether}();
 
         // install gold module
         IERC20Mintable goldToken = registerERC20(

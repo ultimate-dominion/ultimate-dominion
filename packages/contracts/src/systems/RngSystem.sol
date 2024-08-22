@@ -37,7 +37,10 @@ contract RngSystem is System, IRngSystem {
     modifier onlySystem() {
         address characterSystemAddr = Systems.getSystem(_characterSystemId("UD"));
         address encounterSystemAddr = Systems.getSystem(_encounterSystemId("UD"));
-        require(_msgSender() == encounterSystemAddr || _msgSender() == characterSystemAddr, "RNG: INVALID CALLER");
+        require(
+            _msgSender() == encounterSystemAddr || _msgSender() == characterSystemAddr || _msgSender() == _world(),
+            "RNG: INVALID CALLER"
+        );
         _;
     }
 
@@ -68,7 +71,6 @@ contract RngSystem is System, IRngSystem {
         randomNumberData.arbitraryData = data;
         randomNumberData.requestType = requestType;
 
-        _requestId = _nextRequestId(subscriptionId());
         // set the data in advance so we can estimate gas
 
         uint32 callbackGas = requestType == RngRequestType.CharacterStats ? 300_000 : 3_000_000; //estimateCallbackGas(_requestId); // hardcode gas for end turn + 20%  which is the highes gas cost callback // 2339696; //
@@ -83,11 +85,13 @@ contract RngSystem is System, IRngSystem {
             callbackGasLimit: callbackGas,
             callbackMaxGasPrice: tx.gasprice * 3
         });
-
+        if (block.chainid == 31337) {
+            //if testing set data before call for callback
+            _requestId = keccak256(abi.encodePacked(block.timestamp, "test"));
+            RandomNumbers.set(_requestId, randomNumberData);
+        }
         // pay the fees and request a random number from arpa
-        bytes32 rcRequestId = _randcast().requestRandomness(randomnessParams);
-
-        require(rcRequestId == _requestId, "mismatch request ids");
+        _requestId = _randcast().requestRandomness(randomnessParams);
 
         _incrementNonce(subscriptionId());
 
@@ -128,11 +132,10 @@ contract RngSystem is System, IRngSystem {
         if (feeConfig.isFlatFeePromotionEnabledPermanently) {
             reqCountCalc = reqCount;
         } else if (
-            feeConfig
-                //solhint-disable-next-line not-rely-on-time
-                .flatFeePromotionStartTimestamp <= block.timestamp
             //solhint-disable-next-line not-rely-on-time
-            && block.timestamp <= feeConfig.flatFeePromotionEndTimestamp
+            //solhint-disable-next-line not-rely-on-time
+            feeConfig.flatFeePromotionStartTimestamp <= block.timestamp
+                && block.timestamp <= feeConfig.flatFeePromotionEndTimestamp
         ) {
             if (lastRequestTimestamp < feeConfig.flatFeePromotionStartTimestamp) {
                 reqCountCalc = 1;
@@ -250,7 +253,7 @@ contract RngSystem is System, IRngSystem {
         return uint256(keccak256(abi.encode(block.chainid, userSeed, subId, requester, nonce)));
     }
 
-    function _nextRequestId(uint64 subId) internal returns (bytes32) {
+    function _nextRequestId(uint64 subId) internal view returns (bytes32) {
         if (block.chainid == 31337) {
             return keccak256(abi.encodePacked(block.timestamp, "test"));
         }
@@ -266,7 +269,7 @@ contract RngSystem is System, IRngSystem {
         return keccak256(abi.encodePacked(inputSeed));
     }
 
-    function getNonce(uint64 subId) public returns (uint256) {
+    function getNonce(uint64 subId) public view returns (uint256) {
         return RngNonces.getNonce(subId) + 1;
     }
 
@@ -299,17 +302,15 @@ contract RngSystem is System, IRngSystem {
     }
 
     function _fullfillEntropy(bytes32 requestId, uint256 randomNumber) internal {
-        RngRequestType requestType = RandomNumbers.getRequestType(requestId);
-
-        bytes memory _data = RandomNumbers.getArbitraryData(requestId);
+        RandomNumbersData memory rnData = RandomNumbers.get(requestId);
 
         RngLogs.setRandomNumber(requestId, randomNumber);
 
-        if (uint8(requestType) == uint8(0)) {
-            bytes32 characterId = abi.decode(_data, (bytes32));
+        if (uint8(rnData.requestType) == uint8(0)) {
+            bytes32 characterId = abi.decode(rnData.arbitraryData, (bytes32));
             _storeStats(randomNumber, characterId);
-        } else if (uint8(requestType) == uint8(1)) {
-            (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
+        } else if (uint8(rnData.requestType) == uint8(1)) {
+            (bytes32 encounterId, Action[] memory moves) = abi.decode(rnData.arbitraryData, (bytes32, Action[]));
             require(moves.length > 0, "RNG: Invalid moves");
             EncounterType encounterType = CombatEncounter.getEncounterType(encounterId);
             if (encounterType == EncounterType.PvE) {

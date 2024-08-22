@@ -129,12 +129,7 @@ contract CharacterSystem is System {
         RngRequestType requestType = RngRequestType.CharacterStats;
         Stats.setClass(characterId, class);
         // use systemSwitch to call rng system
-        requestId = abi.decode(
-            SystemSwitch.call(
-                abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, abi.encode(characterId)))
-            ),
-            (bytes32)
-        );
+        SystemSwitch.call(abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, abi.encode(characterId))));
     }
 
     function enterGame(bytes32 characterId) public onlyOwner(characterId) {
