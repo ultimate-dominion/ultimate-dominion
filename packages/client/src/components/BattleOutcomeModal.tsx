@@ -53,7 +53,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const {
     components: { Items, ItemsBaseURI, ItemsTokenURI, Levels },
   } = useMUD();
-  const { character, refreshCharacter } = useCharacter();
+  const { character } = useCharacter();
   const { onContinueToBattleOutcome, opponent } = useBattle();
 
   const [armor, setArmor] = useState<Armor[]>([]);
@@ -63,14 +63,8 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const onAcknowledge = useCallback(() => {
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
     onContinueToBattleOutcome(false);
-    refreshCharacter();
     onClose();
-  }, [
-    battleOutcome.encounterId,
-    onContinueToBattleOutcome,
-    onClose,
-    refreshCharacter,
-  ]);
+  }, [battleOutcome.encounterId, onContinueToBattleOutcome, onClose]);
 
   const nextLevelXpRequirement =
     useComponentValue(
