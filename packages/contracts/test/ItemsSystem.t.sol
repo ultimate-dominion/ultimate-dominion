@@ -56,12 +56,13 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         uint256 newItemId =
             world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri/");
 
-        assertEq(newItemId, 7);
+        assertEq(newItemId, 13);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
+        console2.log(erc1155System.uri(newItemId));
         assertEq(
             keccak256(abi.encode(erc1155System.uri(newItemId))),
-            keccak256(abi.encode("ipfs://QmPooDEwqeGh3Qszig7veD1yEoa6EoVyDUmLqWUZ1riiDS/test_Weapon_uri/"))
+            keccak256(abi.encode("ipfs://QmcEgdrkuCYj9xjoo8ofuDfdr9kyAk8CCYpzqeMA4f9hp3/test_Weapon_uri/"))
         );
 
         endGasReport();
