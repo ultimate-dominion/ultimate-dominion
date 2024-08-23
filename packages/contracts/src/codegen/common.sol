@@ -47,6 +47,19 @@ enum ActionType {
   StatusEffect
 }
 
+enum OrderStatus {
+  Canceled,
+  Active,
+  Fullfilled
+}
+
+enum TokenType {
+  NATIVE,
+  ERC20,
+  ERC721,
+  ERC1155
+}
+
 enum StatusEffects {
   ToHitModifier,
   DoT,

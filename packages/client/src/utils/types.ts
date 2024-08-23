@@ -140,3 +140,30 @@ export type WeaponStats = {
   minLevel: string;
   strModifier: string;
 };
+
+export type Item = Metadata & {
+  itemId: Entity;
+  itemType: ItemType;
+  class: StatsClasses;
+  stats: WeaponStats | ArmorStats | null;
+  tokenId: string;
+};
+export type Order = {
+  orderHash: string;
+  orderStatus: string;
+  offer: OfferData;
+  consideration: ConsiderationData;
+};
+export type OfferData = {
+  amount: string;
+  identifier: string;
+  token: string;
+  tokenType: string;
+};
+export type ConsiderationData = {
+  amount: string;
+  identifier: string;
+  token: string;
+  tokenType: string;
+  recipient: string;
+};
