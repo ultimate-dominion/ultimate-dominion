@@ -59,12 +59,12 @@ export const CharacterProvider = ({
       CharacterEquipment,
       Characters,
       CharactersTokenURI,
+      EncounterEntity,
+      GoldBalances,
       Items,
       ItemsBaseURI,
       ItemsOwners,
       ItemsTokenURI,
-      GoldBalances,
-      MatchEntity,
       Stats,
     },
     delegatorAddress,
@@ -74,7 +74,7 @@ export const CharacterProvider = ({
   const { renderError } = useToast();
 
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(true);
   const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
   const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
 
@@ -98,17 +98,20 @@ export const CharacterProvider = ({
       const goldBalance =
         getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
 
-      const encounterId = getComponentValue(MatchEntity, entity)?.encounterId;
+      const encounterId = getComponentValue(
+        EncounterEntity,
+        entity,
+      )?.encounterId;
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
       return {
         agility: characterStats?.agility.toString() ?? '0',
         baseHp: characterStats?.baseHp.toString() ?? '0',
         currentHp: characterStats?.currentHp.toString() ?? '0',
-        characterId: entity,
         entityClass: characterStats?.class ?? 0,
         experience: characterStats?.experience.toString() ?? '0',
         goldBalance: formatEther(goldBalance).toString(),
+        id: entity,
         inBattle,
         intelligence: characterStats?.intelligence.toString() ?? '0',
         level: characterStats?.level.toString() ?? '0',
@@ -145,8 +148,8 @@ export const CharacterProvider = ({
     Characters,
     CharactersTokenURI,
     delegatorAddress,
+    EncounterEntity,
     GoldBalances,
-    MatchEntity,
     publicClient,
     Stats,
     worldContract,
@@ -166,10 +169,10 @@ export const CharacterProvider = ({
   useEffect(() => {
     if (!(delegatorAddress && isSynced && publicClient && worldContract))
       return;
-    fetchCharacterData();
+    refreshCharacter();
   }, [
     delegatorAddress,
-    fetchCharacterData,
+    refreshCharacter,
     isSynced,
     publicClient,
     worldContract,
@@ -341,7 +344,7 @@ export const CharacterProvider = ({
       if (!userCharacter) return;
 
       const { equippedArmor, equippedWeapons } =
-        getComponentValue(CharacterEquipment, userCharacter.characterId) ??
+        getComponentValue(CharacterEquipment, userCharacter.id) ??
         ({ equippedArmor: [], equippedWeapons: [] } as {
           equippedArmor: bigint[];
           equippedWeapons: bigint[];

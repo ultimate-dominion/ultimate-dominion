@@ -33,8 +33,8 @@ type EditCharacterModalProps = Character & {
 };
 
 export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
-  characterId,
   description,
+  id,
   image,
   isOpen,
   name,
@@ -59,7 +59,6 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
     setFile: setAvatar,
     onUpload,
     isUploading,
-    isUploaded,
   } = useUploadFile({ fileName: 'characterAvatar' });
 
   useEffect(() => {
@@ -149,7 +148,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
           );
 
         const { error, success } = await updateTokenUri(
-          characterId,
+          id,
           characterMetadataCid,
           tokenId,
         );
@@ -169,9 +168,9 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
     },
     [
       avatar,
-      characterId,
       delegatorAddress,
       description,
+      id,
       image,
       name,
       newDescription,
@@ -206,6 +205,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
               <VStack w="100%">
                 <FormControl isInvalid={showError && !newName}>
                   <Input
+                    isDisabled={isUpdating}
                     onChange={e => setNewName(e.target.value)}
                     placeholder={'Name'}
                     type="text"
@@ -222,13 +222,14 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                   <Input
                     accept=".png, .jpg, .jpeg, .webp, .svg"
                     id="avatarInput"
+                    isDisabled={isUpdating}
                     onChange={e => setAvatar(e.target.files?.[0] ?? null)}
                     style={{ display: 'none' }}
                     type="file"
                   />
                   <Button
                     alignSelf="start"
-                    isDisabled={isUploaded}
+                    isDisabled={isUpdating}
                     isLoading={isUploading}
                     loadingText="Uploading..."
                     onClick={onUploadAvatar}
@@ -248,6 +249,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
             <FormControl isInvalid={showError && !newDescription}>
               <Textarea
                 height="200px"
+                isDisabled={isUpdating}
                 onChange={e => setNewDescription(e.target.value)}
                 placeholder="Bio"
                 value={newDescription}

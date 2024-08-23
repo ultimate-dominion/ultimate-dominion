@@ -1,13 +1,6 @@
 declare const abi: [
   {
     "type": "function",
-    "name": "UD___calculateMagicAttack",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "UD__adminClearBattleState",
     "inputs": [
       {
@@ -62,6 +55,39 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__adminMoveEntity",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "currentX",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "currentY",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__adminSetCombatEncounter",
     "inputs": [
       {
@@ -100,9 +126,19 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
+            "name": "currentTurnTimer",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
             "name": "maxTurns",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "attackersAreMobs",
+            "type": "bool",
+            "internalType": "bool"
           },
           {
             "name": "defenders",
@@ -270,7 +306,31 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__checkForMatchEnd",
+    "name": "UD__checkActionRestrictions",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actionId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__checkForEncounterEnd",
     "inputs": [
       {
         "name": "encounterData",
@@ -303,9 +363,19 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
+            "name": "currentTurnTimer",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
             "name": "maxTurns",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "attackersAreMobs",
+            "type": "bool",
+            "internalType": "bool"
           },
           {
             "name": "defenders",
@@ -322,7 +392,7 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "_matchEnded",
+        "name": "_encounterEnded",
         "type": "bool",
         "internalType": "bool"
       },
@@ -368,6 +438,11 @@ declare const abi: [
         "internalType": "enum ActionType"
       },
       {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
         "name": "actionStats",
         "type": "bytes",
         "internalType": "bytes"
@@ -376,6 +451,35 @@ declare const abi: [
     "outputs": [
       {
         "name": "actionId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createEncounter",
+    "inputs": [
+      {
+        "name": "encounterType",
+        "type": "uint8",
+        "internalType": "enum EncounterType"
+      },
+      {
+        "name": "group1",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "group2",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "encounterId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -452,35 +556,6 @@ declare const abi: [
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__createMatch",
-    "inputs": [
-      {
-        "name": "encounterType",
-        "type": "uint8",
-        "internalType": "enum EncounterType"
-      },
-      {
-        "name": "attackers",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      },
-      {
-        "name": "defenders",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "encounterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -759,7 +834,7 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__endMatch",
+    "name": "UD__endEncounter",
     "inputs": [
       {
         "name": "encounterId",
@@ -1019,7 +1094,7 @@ declare const abi: [
     "name": "UD__executePvECombat",
     "inputs": [
       {
-        "name": "prevRandao",
+        "name": "randomness",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -1388,9 +1463,19 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
+            "name": "currentTurnTimer",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
             "name": "maxTurns",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "attackersAreMobs",
+            "type": "bool",
+            "internalType": "bool"
           },
           {
             "name": "defenders",
@@ -1427,6 +1512,30 @@ declare const abi: [
         "name": "entitiesAtPosition",
         "type": "bytes32[]",
         "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEntityPosition",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "stateMutability": "view"
@@ -1472,6 +1581,30 @@ declare const abi: [
         "name": "_goldToken",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getItemBalance",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_balance",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -2373,25 +2506,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__isFlaggedForPvp",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_isFlaggedForPvp",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__isItemOwner",
     "inputs": [
       {
@@ -2552,6 +2666,11 @@ declare const abi: [
     "outputs": [
       {
         "name": "_isValidPvE",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "_attackersAreMobs",
         "type": "bool",
         "internalType": "bool"
       }
@@ -2719,6 +2838,37 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__removeEntityFromBoard",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__resupplyLootManager",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "newSupply",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__rollStats",
     "inputs": [
       {
@@ -2751,24 +2901,6 @@ declare const abi: [
       },
       {
         "name": "adminState",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__setPvpFlag",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "flag",
         "type": "bool",
         "internalType": "bool"
       }

@@ -12,20 +12,22 @@ import {
     Spawned,
     Stats,
     MobsByLevel,
-    MatchEntity
+    EncounterEntity
 } from "../codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
+import {_requireAccess} from "../utils.sol";
 
 contract MapSystem is System {
     using LibChunks for uint256;
 
     function move(bytes32 entityId, uint16 x, uint16 y) public {
         address owner = Characters.getOwner(entityId);
+        require(IWorld(_world()).UD__isValidCharacterId(entityId), "Can Only move characters");
         require(_msgSender() == owner, "Only the owner can move a character");
         require(Spawned.getSpawned(entityId), "Character not spawned");
-        require(MatchEntity.getEncounterId(entityId) == bytes32(0), "Cannot move while in an encounter.");
+        require(EncounterEntity.getEncounterId(entityId) == bytes32(0), "Cannot move while in an encounter.");
 
         (uint16 currentX, uint16 currentY) = Position.get(entityId);
         (uint16 height, uint16 width) = MapConfig.get();
@@ -57,9 +59,8 @@ contract MapSystem is System {
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
 
-        MatchEntity.setDied(entityId, false);
+        EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
-        MatchEntity.setDied(entityId, false);
     }
 
     function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
@@ -71,6 +72,10 @@ contract MapSystem is System {
         if (j == x && k == y) {
             _isAtPosition = true;
         }
+    }
+
+    function getEntityPosition(bytes32 entityId) public view returns (uint16 x, uint16 y) {
+        (x, y) = Position.get(entityId);
     }
 
     function _spawnOnTileEnter(uint16 x, uint16 y) internal {
@@ -144,6 +149,36 @@ contract MapSystem is System {
         return a >= b ? a : b;
     }
 
+    function removeEntityFromBoard(bytes32 entityId) public {
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
+            if (senderIsOwner) {
+                // if sender is owner execute removal
+            } else {
+                _requireAccess(address(this), _msgSender());
+            }
+        } else {
+            _requireAccess(address(this), _msgSender());
+        }
+        (uint16 currentX, uint16 currentY) = getEntityPosition(entityId);
+        bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
+        bool entityWasAtPosition;
+        for (uint256 i; i < entAtPos.length;) {
+            if (entAtPos[i] == entityId) {
+                entityWasAtPosition = true;
+                bytes32 lastEnt = entAtPos[entAtPos.length - 1];
+                EntitiesAtPosition.updateEntities(currentX, currentY, i, lastEnt);
+                EntitiesAtPosition.popEntities(currentX, currentY);
+                break;
+            }
+            {
+                i++;
+            }
+        }
+        Position.set(entityId, 0, 0);
+        require(entityWasAtPosition, "Entity not at position");
+    }
+
     function _moveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) internal {
         bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
         bool entityWasAtPosition;
@@ -159,7 +194,7 @@ contract MapSystem is System {
                 i++;
             }
         }
-        require(entityWasAtPosition, "Entity was not at that position");
+        require(entityWasAtPosition, "Entity not at position");
         Position.set(entityId, x, y);
         EntitiesAtPosition.pushEntities(x, y, entityId);
     }

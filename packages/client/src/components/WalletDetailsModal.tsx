@@ -46,7 +46,7 @@ export const WalletDetailsModal = ({
     network: { walletClient, worldContract, publicClient },
     components: { UltimateDominionConfig },
   } = useMUD();
-  const { data: externalWalletBalance } = useBalance({
+  const { data: externalWalletBalance, refetch } = useBalance({
     address: externalWalletClient?.account.address,
   });
   const { goldToken } = useComponentValue(
@@ -92,6 +92,9 @@ export const WalletDetailsModal = ({
     if (isOpen) {
       setDepositAmount('0');
       setWithdrawAmount('0');
+
+      refetch();
+
       setGoldAllowance('100');
       if (externalWalletClient && itemsApprovedInitial == null) {
         (async function () {
@@ -113,6 +116,7 @@ export const WalletDetailsModal = ({
     itemsApprovedInitial,
     itemsContract,
     publicClient,
+    refetch,
     walletClient.account,
     worldContract.read,
   ]);
@@ -141,6 +145,7 @@ export const WalletDetailsModal = ({
       });
 
       setDepositAmount('0');
+      await refetch();
       renderSuccess('Funds deposited successfully!');
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error depositing funds.', e);
@@ -152,6 +157,7 @@ export const WalletDetailsModal = ({
     depositAmount,
     externalWalletBalance,
     externalWalletClient,
+    refetch,
     renderError,
     renderSuccess,
   ]);
@@ -301,7 +307,7 @@ export const WalletDetailsModal = ({
                 <Text size="sm">Balance: {burnerBalance}</Text>
                 <Text fontWeight={700} size="sm">
                   Do not deposit any funds into this account that you are not
-                  willing to lose. We recommend no more than 0.005 ETH at a
+                  willing to lose. We recommend no more than 0.0005 ETH at a
                   time.
                 </Text>
                 <HStack>

@@ -171,10 +171,7 @@ export const LevelingPanel = ({
         strength: newStrength,
       };
 
-      const { error, success } = await levelCharacter(
-        character.characterId,
-        newStats,
-      );
+      const { error, success } = await levelCharacter(character.id, newStats);
 
       if (error && !success) {
         throw new Error(error);
@@ -189,12 +186,7 @@ export const LevelingPanel = ({
     }
   }, [
     abilityPoints,
-    character.baseHp,
-    character.characterId,
-    character.currentHp,
-    character.entityClass,
-    character.experience,
-    character.level,
+    character,
     delegatorAddress,
     levelCharacter,
     newAgility,

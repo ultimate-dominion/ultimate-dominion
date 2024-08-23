@@ -23,7 +23,7 @@ import {
     CombatEncounter,
     CombatEncounterData,
     Mobs,
-    MatchEntity
+    EncounterEntity
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
@@ -95,7 +95,6 @@ contract LootManagerSystem is System {
         internal
         returns (uint256[] memory)
     {
-        console2.log("Calculating item drop");
         uint256 mobId = IWorld(_world()).UD__getMobId(entityId);
         MonsterStats memory monsterStats = abi.decode(Mobs.getMobStats(mobId), (MonsterStats));
 
@@ -106,8 +105,8 @@ contract LootManagerSystem is System {
         for (uint256 i; i < monsterStats.inventory.length; i++) {
             tempItemId = monsterStats.inventory[i];
             uint256 dropChance = Items.getDropChance(tempItemId);
-
-            if (randomNumber % 100_000_000 > dropChance) {
+            console2.log("drop calc", randomNumber % 100_000_000 < dropChance);
+            if (randomNumber % 100_000_000 < dropChance) {
                 console2.log("ITEM DROPPED", tempItemId);
                 IWorld(_world()).UD__dropItem(characterId, tempItemId, 1);
                 itemIdsDropped[i] = tempItemId;
@@ -148,60 +147,67 @@ contract LootManagerSystem is System {
 
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         RewardDistributionTemps memory distTemps;
-        require(encounterData.end != 0 && encounterData.rewardsDistributed == false, "Invalid Match");
+        require(encounterData.end != 0 && encounterData.rewardsDistributed == false, "Invalid Encounter");
 
         // check dead attackers and defenders
         StatsData memory statsTemp;
 
-        for (uint256 i; i < encounterData.attackers.length; i++) {
-            statsTemp = Stats.get(encounterData.attackers[i]);
-            distTemps.cumulativeAttackerLevels += statsTemp.level;
+        if (encounterData.attackersAreMobs) {
+            distTemps.monsters = encounterData.attackers;
+            distTemps.players = encounterData.defenders;
+        } else {
+            distTemps.players = encounterData.attackers;
+            distTemps.monsters = encounterData.defenders;
+        }
+        for (uint256 i; i < distTemps.players.length; i++) {
+            statsTemp = Stats.get(distTemps.players[i]);
+            distTemps.cumulativePlayerLevels += statsTemp.level;
             if (statsTemp.currentHp > 0) {
-                distTemps.livingAttackers++;
+                distTemps.livingPlayers++;
             }
         }
 
-        //if cumulative attacker levels is >= 5 levels above the monster level no gold reward.
+        // if cumulative attacker levels is >= 5 levels above the monster level no gold reward.
         //  for this calculation level is calculated from exp not from actual leveled levels
 
-        bytes[] memory itemsDroppedTemp = new bytes[](encounterData.defenders.length);
+        bytes[] memory itemsDroppedTemp = new bytes[](distTemps.monsters.length);
 
-        for (uint256 i; i < encounterData.defenders.length; i++) {
-            distTemps.defenderTemp = encounterData.defenders[i];
-            distTemps.defenderLevelTemp = Stats.getLevel(distTemps.defenderTemp);
-            bool correctLevelSpread = distTemps.defenderLevelTemp > distTemps.cumulativeAttackerLevels
+        for (uint256 i; i < distTemps.monsters.length; i++) {
+            distTemps.monsterTemp = distTemps.monsters[i];
+            distTemps.defenderLevelTemp = Stats.getLevel(distTemps.monsterTemp);
+            bool correctLevelSpread = distTemps.defenderLevelTemp > distTemps.cumulativePlayerLevels
                 ? true
-                : (distTemps.cumulativeAttackerLevels - distTemps.defenderLevelTemp) <= 5;
+                : (distTemps.cumulativePlayerLevels - distTemps.defenderLevelTemp) <= 5;
 
-            if (MatchEntity.getDied(distTemps.defenderTemp) && correctLevelSpread) {
-                _expAmount += Stats.getExperience(distTemps.defenderTemp);
+            if (EncounterEntity.getDied(distTemps.monsterTemp) && correctLevelSpread) {
+                _expAmount += Stats.getExperience(distTemps.monsterTemp);
                 _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
-                MatchEntity.setEncounterId(distTemps.defenderTemp, bytes32(0));
+                EncounterEntity.setEncounterId(distTemps.monsterTemp, bytes32(0));
 
                 // get dropped items into temporary array
+                bytes32 playerToDropTo = distTemps.players[randomNumber % distTemps.players.length];
 
-                _itemIdsDropped = _calculateItemDrop(
-                    randomNumber,
-                    distTemps.defenderTemp,
-                    encounterData.attackers[randomNumber % encounterData.attackers.length]
-                );
+                // if player is still alive drop item
+                if (!EncounterEntity.getDied(playerToDropTo)) {
+                    _itemIdsDropped = _calculateItemDrop(randomNumber, distTemps.monsterTemp, playerToDropTo);
+                }
             }
         }
 
         // drop gold reward calculated from the level of mob to player journey wallet (can mint tokens when he returns to 0,0).
-        // if dead player, drop transfer 50% of un-banked gold to world contract
+        // if dead player, drop transfer 50% of un-banked gold to world contract note this isn't happening here
         // distribute loot
 
-        for (uint256 i; i < encounterData.attackers.length; i++) {
-            distTemps.entityIdTemp = encounterData.attackers[i];
+        for (uint256 i; i < distTemps.players.length; i++) {
+            distTemps.entityIdTemp = distTemps.players[i];
             if (IWorld(_world()).UD__isValidCharacterId(distTemps.entityIdTemp)) {
                 statsTemp = Stats.get(distTemps.entityIdTemp);
                 if (statsTemp.currentHp > int256(0)) {
                     if (_goldAmount > uint256(0)) {
-                        IWorld(_world()).UD__dropGold(distTemps.entityIdTemp, (_goldAmount / distTemps.livingAttackers));
+                        IWorld(_world()).UD__dropGold(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
                     }
-                    if (_expAmount > uint256(0) && distTemps.livingAttackers > uint256(0)) {
-                        statsTemp.experience += _expAmount / distTemps.livingAttackers;
+                    if (_expAmount > uint256(0) && distTemps.livingPlayers > uint256(0)) {
+                        statsTemp.experience += _expAmount / distTemps.livingPlayers;
                     }
                 }
                 Stats.set(distTemps.entityIdTemp, statsTemp);

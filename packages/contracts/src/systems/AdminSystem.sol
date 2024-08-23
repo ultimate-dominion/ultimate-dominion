@@ -6,7 +6,7 @@ import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {
     RandomNumbers,
-    MatchEntity,
+    EncounterEntity,
     ActionsData,
     Actions,
     Stats,
@@ -15,7 +15,9 @@ import {
     CombatEncounterData,
     CharacterEquipment,
     Admin,
-    UltimateDominionConfig
+    UltimateDominionConfig,
+    EntitiesAtPosition,
+    Position
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {RngRequestType, MobType, EncounterType, ActionType} from "@codegen/common.sol";
@@ -32,7 +34,7 @@ contract AdminSystem is System {
     }
 
     function adminClearBattleState(bytes32 entityId) public onlyAdmin {
-        MatchEntity.setEncounterId(entityId, bytes32(0));
+        EncounterEntity.setEncounterId(entityId, bytes32(0));
     }
 
     function adminSetCombatEncounter(bytes32 encounterId, CombatEncounterData memory encounterData) public onlyAdmin {
@@ -53,6 +55,26 @@ contract AdminSystem is System {
 
     function adminSetStats(bytes32 entityId, StatsData memory desiredStats) public onlyAdmin {
         Stats.set(entityId, desiredStats);
+    }
+
+    function adminMoveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) public onlyAdmin {
+        bytes32[] memory entAtPos = IWorld(_world()).UD__getEntitiesAtPosition(currentX, currentY);
+        bool entityWasAtPosition;
+        for (uint256 i; i < entAtPos.length;) {
+            if (entAtPos[i] == entityId) {
+                entityWasAtPosition = true;
+                bytes32 lastEnt = entAtPos[entAtPos.length - 1];
+                EntitiesAtPosition.updateEntities(currentX, currentY, i, lastEnt);
+                EntitiesAtPosition.popEntities(currentX, currentY);
+                break;
+            }
+            {
+                i++;
+            }
+        }
+        require(entityWasAtPosition, "Entity not at position");
+        Position.set(entityId, x, y);
+        EntitiesAtPosition.pushEntities(x, y, entityId);
     }
 
     function getSystemAddress(ResourceId systemId) public view returns (address) {

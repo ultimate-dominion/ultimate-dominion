@@ -19,8 +19,8 @@ import { type Character, StatsClasses } from '../utils/types';
 export const LeaderboardRow = ({
   agility,
   baseHp,
-  characterId,
   entityClass,
+  id,
   image,
   intelligence,
   goldBalance,
@@ -41,7 +41,7 @@ export const LeaderboardRow = ({
       borderColor="grey400"
       borderRadius={2}
       justify="space-between"
-      onClick={() => navigate(`/characters/${characterId}`)}
+      onClick={() => navigate(`/characters/${id}`)}
       w="100%"
       _hover={{
         cursor: 'pointer',

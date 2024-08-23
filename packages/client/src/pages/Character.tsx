@@ -61,7 +61,7 @@ import {
 } from '../utils/types';
 
 export const CharacterPage = (): JSX.Element => {
-  const { characterId } = useParams();
+  const { id } = useParams();
   const { renderError } = useToast();
   const navigate = useNavigate();
   const { isConnected } = useAccount();
@@ -70,9 +70,9 @@ export const CharacterPage = (): JSX.Element => {
     components: {
       Characters,
       CharactersTokenURI,
+      EncounterEntity,
       GoldBalances,
       Levels,
-      MatchEntity,
       Stats,
     },
     isSynced,
@@ -98,14 +98,11 @@ export const CharacterPage = (): JSX.Element => {
 
   const fetchCharacter = useCallback(async () => {
     try {
-      if (!(characterId && publicClient && worldContract)) return null;
+      if (!(id && publicClient && worldContract)) return null;
       setIsLoadingCharacter(true);
 
-      const characterData = getComponentValue(
-        Characters,
-        characterId as Entity,
-      );
-      const characterStats = getComponentValue(Stats, characterId as Entity);
+      const characterData = getComponentValue(Characters, id as Entity);
+      const characterStats = getComponentValue(Stats, id as Entity);
 
       if (!(characterData && characterStats)) return null;
 
@@ -130,8 +127,8 @@ export const CharacterPage = (): JSX.Element => {
       );
 
       const encounterId = getComponentValue(
-        MatchEntity,
-        characterId as Entity,
+        EncounterEntity,
+        id as Entity,
       )?.encounterId;
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
@@ -140,10 +137,10 @@ export const CharacterPage = (): JSX.Element => {
         agility: characterStats.agility.toString(),
         baseHp: characterStats.baseHp.toString(),
         entityClass: characterStats.class,
-        characterId: characterId as Entity,
         currentHp: characterStats.currentHp.toString(),
         experience: characterStats.experience.toString(),
         goldBalance: formatEther(goldBalance as bigint).toString(),
+        id: id as Entity,
         inBattle,
         intelligence: characterStats.intelligence.toString(),
         level: characterStats.level.toString(),
@@ -168,11 +165,11 @@ export const CharacterPage = (): JSX.Element => {
       setIsLoadingCharacter(false);
     }
   }, [
-    characterId,
     Characters,
     CharactersTokenURI,
+    EncounterEntity,
     GoldBalances,
-    MatchEntity,
+    id,
     renderError,
     Stats,
     publicClient,
@@ -180,10 +177,10 @@ export const CharacterPage = (): JSX.Element => {
   ]);
 
   const isOwner = useMemo(() => {
-    if (!(userCharacter && characterId)) return false;
-    const { ownerAddress } = decodeCharacterId(characterId as `0x${string}`);
+    if (!(id && userCharacter)) return false;
+    const { ownerAddress } = decodeCharacterId(id as `0x${string}`);
     return userCharacter.owner.toLowerCase() === ownerAddress;
-  }, [userCharacter, characterId]);
+  }, [id, userCharacter]);
 
   useEffect(() => {
     if (!isSynced) return;
@@ -469,10 +466,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const [selectedItem, setSelectedItem] = useState<Armor | Weapon | null>(null);
 
   const { equippedArmor, equippedWeapons } =
-    useComponentValue(
-      CharacterEquipment,
-      character.characterId as Entity | undefined,
-    ) ??
+    useComponentValue(CharacterEquipment, character.id as Entity | undefined) ??
     ({ equippedArmor: [], equippedWeapons: [] } as {
       equippedArmor: bigint[];
       equippedWeapons: bigint[];

@@ -16,7 +16,7 @@ interface IPvESystem {
     bytes32[] memory defenders,
     uint16 x,
     uint16 y
-  ) external view returns (bool _isValidPvE);
+  ) external view returns (bool _isValidPvE, bool _attackersAreMobs);
 
-  function UD__executePvECombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) external;
+  function UD__executePvECombat(uint256 randomness, bytes32 encounterId, Action[] memory actions) external;
 }
