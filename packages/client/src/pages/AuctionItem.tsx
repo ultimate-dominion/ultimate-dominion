@@ -130,7 +130,7 @@ export const AuctionItem = (): JSX.Element => {
       };
       return allowances;
     } catch (err) {
-      renderError('Could not get allowances', err['errorMsg']);
+      renderError('Could not get allowances', (err as Error).message);
       return allowances;
     }
   };
@@ -236,7 +236,7 @@ export const AuctionItem = (): JSX.Element => {
     }
   };
   const orderItem = async function (amount: string, price: string) {
-    if (current) {
+    if (current && userCharacter) {
       _sell(
         current,
         parseEther(price.toString()),
