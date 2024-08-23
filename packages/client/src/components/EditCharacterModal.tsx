@@ -59,7 +59,6 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
     setFile: setAvatar,
     onUpload,
     isUploading,
-    isUploaded,
   } = useUploadFile({ fileName: 'characterAvatar' });
 
   useEffect(() => {
@@ -223,14 +222,14 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                   <Input
                     accept=".png, .jpg, .jpeg, .webp, .svg"
                     id="avatarInput"
-                    isDisabled={isUpdating || isUploaded}
+                    isDisabled={isUpdating}
                     onChange={e => setAvatar(e.target.files?.[0] ?? null)}
                     style={{ display: 'none' }}
                     type="file"
                   />
                   <Button
                     alignSelf="start"
-                    isDisabled={isUpdating || isUploaded}
+                    isDisabled={isUpdating}
                     isLoading={isUploading}
                     loadingText="Uploading..."
                     onClick={onUploadAvatar}

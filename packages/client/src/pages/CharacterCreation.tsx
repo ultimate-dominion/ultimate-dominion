@@ -63,7 +63,6 @@ export const CharacterCreation = (): JSX.Element => {
     setFile: setAvatar,
     onUpload,
     isUploading,
-    isUploaded,
   } = useUploadFile({ fileName: 'characterAvatar' });
 
   const [name, setName] = useState('');
@@ -498,7 +497,7 @@ export const CharacterCreation = (): JSX.Element => {
                     <Input
                       accept=".png, .jpg, .jpeg, .webp, .svg"
                       id="avatarInput"
-                      isDisabled={isCreating || isUploaded}
+                      isDisabled={isCreating}
                       onChange={e =>
                         e.target.files?.[0] && setAvatar(e.target.files?.[0])
                       }
@@ -507,7 +506,7 @@ export const CharacterCreation = (): JSX.Element => {
                     />
                     <Button
                       alignSelf="start"
-                      isDisabled={isCreating || isUploaded}
+                      isDisabled={isCreating}
                       isLoading={isUploading}
                       loadingText="Uploading..."
                       onClick={onUploadAvatar}
