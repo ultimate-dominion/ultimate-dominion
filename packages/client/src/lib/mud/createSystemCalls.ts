@@ -461,11 +461,16 @@ export function createSystemCalls(
         functionName: 'UD__rollStats',
       });
 
-      const tx = await worldContract.write.UD__rollStats([
-        userRandomNumber,
-        characterEntity.toString() as `0x${string}`,
-        characterClass,
-      ]);
+      const tx = await worldContract.write.UD__rollStats(
+        [
+          userRandomNumber,
+          characterEntity.toString() as `0x${string}`,
+          characterClass,
+        ],
+        {
+          gas: BigInt('10000000'),
+        },
+      );
 
       const { blockNumber } = await waitForTransaction(tx);
 
