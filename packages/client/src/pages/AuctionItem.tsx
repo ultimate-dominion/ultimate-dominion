@@ -34,6 +34,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Address, erc20Abi, formatEther, maxUint256, parseEther } from 'viem';
 import { useWalletClient } from 'wagmi';
 
+import { AuctionAllowance } from '../components/AuctionAllowance';
 import { ItemCard } from '../components/ItemCard';
 import { OrderRow } from '../components/OrderRow';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -77,11 +78,9 @@ export const AuctionItem = (): JSX.Element => {
   const [listingAmount, setListingAmount] = useState('1');
   const [listingPrice, setListingPrice] = useState('1');
   const [itemType, setItemType] = useState<string | null>(null);
-  const [goldAllowance, setGoldAllowance] = useState<bigint | null>(null);
-  const [itemAllowance, setItemAllowance] = useState<boolean | null>(null);
   const [auctionContractAddress, setAuctionContractAddress] = useState('');
   const [orders, setOrders] = useState<Order[] | null>(null);
-
+  const [isOpen, setIsOpen] = useState(false);
   const {
     components: {
       UltimateDominionConfig,
@@ -103,19 +102,68 @@ export const AuctionItem = (): JSX.Element => {
     singletonEntity,
   ) ?? { items: null };
 
+  const _getAllowances = async function () {
+    let allowances = { goldAllowance: 0n, itemAllowance: false };
+    try {
+      const _goldAllowance = await publicClient.readContract({
+        address: goldToken as Address,
+        abi: erc20Abi,
+        functionName: 'allowance',
+        args: [
+          userCharacter?.owner as Address,
+          auctionContractAddress as Address,
+        ],
+      });
+
+      const _itemAllowance = (await publicClient.readContract({
+        address: itemsContract as Address,
+        abi: ERC_1155ABI,
+        functionName: 'isApprovedForAll',
+        args: [
+          userCharacter?.owner as Address,
+          auctionContractAddress as Address,
+        ],
+      })) as boolean;
+      allowances = {
+        goldAllowance: _goldAllowance,
+        itemAllowance: _itemAllowance,
+      };
+      return allowances;
+    } catch (err) {
+      renderError('Could not get allowances', err['errorMsg']);
+      return allowances;
+    }
+  };
+  const onClose = function () {
+    setIsOpen(false);
+    navigate(0);
+  };
   const _sell = async function (
     wanted: Item | bigint,
     offered: Item | bigint,
     purchaser: Character,
     amount: bigint,
   ) {
-    if (!externalWalletClient) {
+    if (!externalWalletClient || !auctionContractAddress || !userCharacter) {
       renderError('Wallet not connected.');
       return;
     }
     try {
       setIsSelling(true);
-      // this is covering both selling an item for gold or gold for an item
+      const allowances = await _getAllowances();
+      if (typeof offered != 'bigint' && !allowances.itemAllowance) {
+        renderError('Items allowance is off');
+        setIsOpen(true);
+        return;
+      }
+      if (
+        typeof offered == 'bigint' &&
+        (!allowances.goldAllowance || allowances.goldAllowance < offered)
+      ) {
+        renderError('Gold allowance is insufficient');
+        setIsOpen(true);
+        return;
+      } // this is covering both selling an item for gold or gold for an item
       // wanted is either an item or a bigint (representing a gold amount)
       const { request } = await publicClient.simulateContract({
         address: worldContract.address,
@@ -188,13 +236,7 @@ export const AuctionItem = (): JSX.Element => {
     }
   };
   const orderItem = async function (amount: string, price: string) {
-    if (
-      !params.itemId ||
-      goldAllowance == null ||
-      goldAllowance < parseEther(price.toString())
-    ) {
-      renderError('Approve more funds in your wallet details');
-    } else if (current && userCharacter) {
+    if (current) {
       _sell(
         current,
         parseEther(price.toString()),
@@ -287,7 +329,7 @@ export const AuctionItem = (): JSX.Element => {
           const orderStatus = await worldContract.read.UD__getOrderStatus([
             orderHash as Address,
           ]);
-          if (considerationData.token == goldToken) {
+          if (considerationData.token == goldToken && orderStatus == 1) {
             setFloor(
               BigInt(
                 considerationData.amount / offerData.amount < floor
@@ -296,7 +338,7 @@ export const AuctionItem = (): JSX.Element => {
               ),
             );
           }
-          if (offerData.token == goldToken) {
+          if (offerData.token == goldToken && orderStatus == 1) {
             setCeiling(
               BigInt(
                 offerData.amount / considerationData.amount > ceiling
@@ -451,52 +493,20 @@ export const AuctionItem = (): JSX.Element => {
       if (userCharacter && itemType && current) {
         await fetchCharacterItems(userCharacter);
       }
-      if (auctionContractAddress && userCharacter) {
-        setGoldAllowance(
-          await publicClient.readContract({
-            address: goldToken as Address,
-            abi: erc20Abi,
-            functionName: 'allowance',
-            args: [
-              userCharacter?.owner as Address,
-              auctionContractAddress as Address,
-            ],
-          }),
-        );
-      }
-      if (itemAllowance == null && auctionContractAddress && userCharacter) {
-        setItemAllowance(
-          (await publicClient.readContract({
-            address: itemsContract as Address,
-            abi: ERC_1155ABI,
-            functionName: 'isApprovedForAll',
-            args: [
-              userCharacter?.owner as Address,
-              auctionContractAddress as Address,
-            ],
-          })) as boolean,
-        );
-      }
     })();
   }, [
     Characters,
-    auctionContractAddress,
     current,
     fetchCharacterItems,
     fetchCurrent,
     fetchOrders,
-    goldAllowance,
-    goldToken,
-    itemAllowance,
     itemType,
-    itemsContract,
-    publicClient,
     userCharacter,
-    userCharacter?.owner,
     worldContract.read,
   ]);
   return (
     <Stack>
+      <AuctionAllowance isOpen={isOpen} onClose={onClose}></AuctionAllowance>
       <Box>
         <Button
           mt={5}

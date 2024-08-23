@@ -173,7 +173,7 @@ export const AuctionAllowance = ({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>
-          {isConnected ? 'Wallet Details' : 'Connect Wallet'}
+          {isConnected ? 'Auction House Allowances' : 'Connect Wallet'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
