@@ -44,19 +44,19 @@ contract ActionSystem is System {
         if (uint8(action.actionType) == uint8(1)) {
             PhysicalAttackStats memory attackStats = abi.decode(action.actionStats, (PhysicalAttackStats));
             bool isLevel = character.level >= attackStats.minLevel;
-            bool hasStats;
-            if (attackStats.statRestrictions.minAgility <= character.agility) hasStats = true;
-            if (attackStats.statRestrictions.minStrength <= character.strength) hasStats = true;
-            if (attackStats.statRestrictions.minIntelligence <= character.intelligence) hasStats = true;
+            bool hasStats = true;
+            if (attackStats.statRestrictions.minAgility > character.agility) hasStats = false;
+            if (attackStats.statRestrictions.minStrength > character.strength) hasStats = false;
+            if (attackStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
         } else if (uint8(action.actionType) == uint8(2)) {
             bytes32[] memory equippedSpells = CharacterEquipment.getEquippedSpells(entityId);
             MagicAttackStats memory magicStats = abi.decode(action.actionStats, (MagicAttackStats));
             bool isLevel = character.level >= magicStats.minLevel;
-            bool hasStats;
-            if (magicStats.statRestrictions.minAgility <= character.agility) hasStats = true;
-            if (magicStats.statRestrictions.minStrength <= character.strength) hasStats = true;
-            if (magicStats.statRestrictions.minIntelligence <= character.intelligence) hasStats = true;
+            bool hasStats = true;
+            if (magicStats.statRestrictions.minAgility > character.agility) hasStats = false;
+            if (magicStats.statRestrictions.minStrength > character.strength) hasStats = false;
+            if (magicStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
             if (canUse) {
                 // check that spell is equipped

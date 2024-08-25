@@ -325,7 +325,7 @@ contract PostDeploy is Script {
                 abi.encode(newWeapon),
                 weaponTemplate.metadataUri
             );
-            console2.log("weapon made", starterWeaponId);
+
             if (i == 0) {
                 warriorItemIds[1] = starterWeaponId;
                 rogueItemIds[1] = starterWeaponId;

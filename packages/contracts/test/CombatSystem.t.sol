@@ -142,8 +142,6 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.warp(block.timestamp + 31);
         vm.prank(alice);
         world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
-        vm.prank(bob);
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
     }
 
     function test_CreateEncounterPvP_Revert_WrongPosition() public {

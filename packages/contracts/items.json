@@ -10,7 +10,7 @@
         "armorModifier": 1,
         "hitPointModifier": 0,
         "intModifier": 0,
-        "minLevel": 1,
+        "minLevel": 0,
         "statRestrictions": {
           "minAgility": 1,
           "minIntelligence": 1,
@@ -109,11 +109,11 @@
         "intModifier": 0,
         "maxDamage": 5,
         "minDamage": 1,
-        "minLevel": 1,
+        "minLevel": 0,
         "statRestrictions": {
           "minAgility": 1,
           "minIntelligence": 1,
-          "minStrength": 5
+          "minStrength": 1
         },
         "strModifier": 2
       }

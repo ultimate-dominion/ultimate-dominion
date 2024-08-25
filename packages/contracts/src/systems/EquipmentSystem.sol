@@ -103,19 +103,19 @@ contract EquipmentSystem is System {
         if (uint8(itemData.itemType) == 0) {
             WeaponStats memory weaponStats = abi.decode(itemData.stats, (WeaponStats));
             bool isLevel = character.level >= weaponStats.minLevel;
-            bool hasStats;
-            if (weaponStats.statRestrictions.minAgility <= character.agility) hasStats = true;
-            if (weaponStats.statRestrictions.minStrength <= character.strength) hasStats = true;
-            if (weaponStats.statRestrictions.minIntelligence <= character.intelligence) hasStats = true;
+            bool hasStats = true;
+            if (weaponStats.statRestrictions.minAgility > character.agility) hasStats = false;
+            if (weaponStats.statRestrictions.minStrength > character.strength) hasStats = false;
+            if (weaponStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
         }
         if (uint8(itemData.itemType) == 1) {
             ArmorStats memory armorStats = abi.decode(itemData.stats, (ArmorStats));
             bool isLevel = character.level >= armorStats.minLevel;
-            bool hasStats;
-            if (armorStats.statRestrictions.minAgility <= character.agility) hasStats = true;
-            if (armorStats.statRestrictions.minStrength <= character.strength) hasStats = true;
-            if (armorStats.statRestrictions.minIntelligence <= character.intelligence) hasStats = true;
+            bool hasStats = true;
+            if (armorStats.statRestrictions.minAgility > character.agility) hasStats = false;
+            if (armorStats.statRestrictions.minStrength > character.strength) hasStats = false;
+            if (armorStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
         }
         return canUse;
