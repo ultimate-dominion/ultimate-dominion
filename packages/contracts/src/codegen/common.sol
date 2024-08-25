@@ -19,7 +19,7 @@ enum ItemType {
   Armor,
   Spell,
   Potion,
-  Material,
+  Utility,
   QuestItem
 }
 

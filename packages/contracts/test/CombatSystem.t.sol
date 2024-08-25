@@ -122,7 +122,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             attackerEntityId: bobCharacterId,
             defenderEntityId: alicesCharacterId,
             actionId: basicMagicAttackId,
-            weaponId: 2
+            weaponId: 6
         });
 
         //alice's move
@@ -131,7 +131,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             attackerEntityId: alicesCharacterId,
             defenderEntityId: bobCharacterId,
             actionId: basicAttackId,
-            weaponId: 2
+            weaponId: 6
         });
 
         uint256 fees = 0; // entropy.getFee(address(1));
@@ -195,7 +195,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             attackerEntityId: bobCharacterId,
             defenderEntityId: entityId,
             actionId: basicMagicAttackId,
-            weaponId: 2
+            weaponId: 6
         });
         uint256 fees = 0; // entropy.getFee(address(1));
         vm.prank(bob);
@@ -270,7 +270,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             attackerEntityId: bobCharacterId,
             defenderEntityId: alicesCharacterId,
             actionId: basicMagicAttackId,
-            weaponId: 2
+            weaponId: 6
         });
 
         uint256 fees = 0; // entropy.getFee(address(1));
@@ -281,7 +281,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             attackerEntityId: alicesCharacterId,
             defenderEntityId: bobCharacterId,
             actionId: basicAttackId,
-            weaponId: 2
+            weaponId: 6
         });
 
         while (world.UD__getEncounter(encounterId).end == 0) {

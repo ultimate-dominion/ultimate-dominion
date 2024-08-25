@@ -6,13 +6,16 @@
             "stats": {
                 "attackModifierBonus": 0,
                 "bonusDamage": 0,
-                "classRestrictions": [
-                    2
-                ],
                 "critChanceBonus": 0,
                 "itemRestrictions": [],
                 "minDamage": 1,
                 "maxDamage": 5,
+                "minLevel": 1,
+                "statRestrictions": {
+                    "minAgility": 1,
+                    "minIntelligence": 5,
+                    "minStrength": 1
+                },
                 "statusEffects": []
             }
         }
@@ -25,10 +28,22 @@
                 "armorPenetration": 0,
                 "attackModifierBonus": 0,
                 "bonusDamage": 0,
-                "classRestrictions": [],
                 "critChanceBonus": 0,
+                "minLevel": 1,
+                "statRestrictions": {
+                    "minAgility": 1,
+                    "minIntelligence": 1,
+                    "minStrength": 1
+                },
                 "statusEffects": []
             }
+        }
+    ],
+    "useItem": [
+        {
+            "actionId": "",
+            "name": "use consumable item",
+            "itemId": 0
         }
     ]
 }

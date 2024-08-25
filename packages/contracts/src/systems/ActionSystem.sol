@@ -10,7 +10,8 @@ import {
     Stats,
     CombatEncounter,
     CombatEncounterData,
-    CharacterEquipment
+    CharacterEquipment,
+    StatsData
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {RngRequestType, MobType, EncounterType, ActionType, Classes} from "@codegen/common.sol";
@@ -37,34 +38,27 @@ contract ActionSystem is System {
 
     function checkActionRestrictions(bytes32 entityId, bytes32 actionId) public view returns (bool) {
         ActionsData memory action = Actions.get(actionId);
-        Classes class = Stats.getClass(entityId);
-        bool isClass;
+        StatsData memory character = Stats.get(entityId);
+        bool canUse;
         bool isEquipped;
         if (uint8(action.actionType) == uint8(1)) {
             PhysicalAttackStats memory attackStats = abi.decode(action.actionStats, (PhysicalAttackStats));
-            for (uint256 i; i < attackStats.classRestrictions.length;) {
-                if (uint8(class) == attackStats.classRestrictions[i]) {
-                    isClass = true;
-                    break;
-                }
-                {
-                    i++;
-                }
-            }
-            return isClass;
+            bool isLevel = character.level >= attackStats.minLevel;
+            bool hasStats;
+            if (attackStats.statRestrictions.minAgility <= character.agility) hasStats = true;
+            if (attackStats.statRestrictions.minStrength <= character.strength) hasStats = true;
+            if (attackStats.statRestrictions.minIntelligence <= character.intelligence) hasStats = true;
+            if (isLevel && hasStats) canUse = true;
         } else if (uint8(action.actionType) == uint8(2)) {
             bytes32[] memory equippedSpells = CharacterEquipment.getEquippedSpells(entityId);
             MagicAttackStats memory magicStats = abi.decode(action.actionStats, (MagicAttackStats));
-            for (uint256 i; i < magicStats.classRestrictions.length;) {
-                if (magicStats.classRestrictions[i] == uint8(class)) {
-                    isClass = true;
-                    break;
-                }
-                {
-                    i++;
-                }
-            }
-            if (isClass) {
+            bool isLevel = character.level >= magicStats.minLevel;
+            bool hasStats;
+            if (magicStats.statRestrictions.minAgility <= character.agility) hasStats = true;
+            if (magicStats.statRestrictions.minStrength <= character.strength) hasStats = true;
+            if (magicStats.statRestrictions.minIntelligence <= character.intelligence) hasStats = true;
+            if (isLevel && hasStats) canUse = true;
+            if (canUse) {
                 // check that spell is equipped
                 for (uint256 i; i < equippedSpells.length;) {
                     if (equippedSpells[i] == actionId) {
@@ -88,9 +82,9 @@ contract ActionSystem is System {
                     }
                 }
             }
-            return isClass && isEquipped;
+            return canUse && isEquipped;
         } else {
-            return isClass && isEquipped;
+            return canUse && isEquipped;
         }
     }
 }
