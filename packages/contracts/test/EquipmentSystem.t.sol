@@ -83,6 +83,98 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         world.UD__equipItems(bobCharacterId, itemsToEquip);
     }
 
+    function test_equipItems_Revert_LowAgi() public {
+        StatRestrictions memory statRestrictions =
+            StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 10000});
+        WeaponStats memory weaponStats = WeaponStats({
+            agiModifier: 0,
+            statRestrictions: statRestrictions,
+            hitPointModifier: 0,
+            intModifier: 0,
+            maxDamage: 4,
+            minDamage: 1,
+            minLevel: 0,
+            strModifier: 0
+        });
+        vm.startPrank(deployer);
+        uint256 firstItemId =
+            world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
+
+        uint256[] memory itemIds = new uint256[](1);
+        uint256[] memory amounts = new uint256[](1);
+        bytes32[] memory characterIds = new bytes32[](1);
+        itemIds[0] = firstItemId;
+        amounts[0] = 1;
+        characterIds[0] = bobCharacterId;
+        world.UD__dropItems(characterIds, itemIds, amounts);
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](1);
+        itemsToEquip[0] = firstItemId;
+        vm.expectRevert();
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+    }
+
+    function test_equipItems_Revert_LowInt() public {
+        StatRestrictions memory statRestrictions =
+            StatRestrictions({minStrength: 0, minIntelligence: 1000, minAgility: 0});
+        WeaponStats memory weaponStats = WeaponStats({
+            agiModifier: 0,
+            statRestrictions: statRestrictions,
+            hitPointModifier: 0,
+            intModifier: 0,
+            maxDamage: 4,
+            minDamage: 1,
+            minLevel: 0,
+            strModifier: 0
+        });
+        vm.startPrank(deployer);
+        uint256 firstItemId =
+            world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
+
+        uint256[] memory itemIds = new uint256[](1);
+        uint256[] memory amounts = new uint256[](1);
+        bytes32[] memory characterIds = new bytes32[](1);
+        itemIds[0] = firstItemId;
+        amounts[0] = 1;
+        characterIds[0] = bobCharacterId;
+        world.UD__dropItems(characterIds, itemIds, amounts);
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](1);
+        itemsToEquip[0] = firstItemId;
+        vm.expectRevert();
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+    }
+
+    function test_equipItems_Revert_LowLvl() public {
+        StatRestrictions memory statRestrictions = StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 0});
+        WeaponStats memory weaponStats = WeaponStats({
+            agiModifier: 0,
+            statRestrictions: statRestrictions,
+            hitPointModifier: 0,
+            intModifier: 0,
+            maxDamage: 4,
+            minDamage: 1,
+            minLevel: 10,
+            strModifier: 0
+        });
+        vm.startPrank(deployer);
+        uint256 firstItemId =
+            world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
+
+        uint256[] memory itemIds = new uint256[](1);
+        uint256[] memory amounts = new uint256[](1);
+        bytes32[] memory characterIds = new bytes32[](1);
+        itemIds[0] = firstItemId;
+        amounts[0] = 1;
+        characterIds[0] = bobCharacterId;
+        world.UD__dropItems(characterIds, itemIds, amounts);
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](1);
+        itemsToEquip[0] = firstItemId;
+        vm.expectRevert();
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+    }
+
     function test_applyEquipmentBonuses() public {
         uint256[] memory itemIds = new uint256[](1);
         uint256[] memory amounts = new uint256[](1);
