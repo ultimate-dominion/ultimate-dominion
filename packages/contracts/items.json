@@ -12,9 +12,9 @@
         "intModifier": 0,
         "minLevel": 0,
         "statRestrictions": {
-          "minAgility": 1,
-          "minIntelligence": 1,
-          "minStrength": 1
+          "minAgility": 0,
+          "minIntelligence": 0,
+          "minStrength": 0
         },
         "strModifier": 0
       }
@@ -31,9 +31,9 @@
         "intModifier": 0,
         "minLevel": 3,
         "statRestrictions": {
-          "minAgility": 1,
-          "minIntelligence": 1,
-          "minStrength": 8
+          "minAgility": 0,
+          "minIntelligence": 0,
+          "minStrength": 12
         },
         "strModifier": 0
       }
@@ -50,9 +50,9 @@
         "intModifier": 0,
         "minLevel": 3,
         "statRestrictions": {
-          "minAgility": 1,
-          "minIntelligence": 8,
-          "minStrength": 1
+          "minAgility": 12,
+          "minIntelligence": 0,
+          "minStrength": 6
         },
         "strModifier": 0
       }
@@ -69,9 +69,9 @@
         "intModifier": 3,
         "minLevel": 3,
         "statRestrictions": {
-          "minAgility": 1,
-          "minIntelligence": 10,
-          "minStrength": 1
+          "minAgility": 0,
+          "minIntelligence": 12,
+          "minStrength": 0
         },
         "strModifier": 0
       }
@@ -84,14 +84,14 @@
       "stats": {
         "agiModifier": -2,
         "armorModifier": 4,
-        "statRestrictions": {
-          "minAgility": 1,
-          "minIntelligence": 8,
-          "minStrength": 4
-        },
         "hitPointModifier": 0,
         "intModifier": 3,
         "minLevel": 5,
+        "statRestrictions": {
+          "minAgility": 0,
+          "minIntelligence": 12,
+          "minStrength": 12
+        },
         "strModifier": 3
       }
     }
@@ -111,9 +111,9 @@
         "minDamage": 1,
         "minLevel": 0,
         "statRestrictions": {
-          "minAgility": 1,
-          "minIntelligence": 1,
-          "minStrength": 1
+          "minAgility": 0,
+          "minIntelligence": 0,
+          "minStrength": 0
         },
         "strModifier": 2
       }
@@ -131,9 +131,9 @@
         "minDamage": 4,
         "minLevel": 3,
         "statRestrictions": {
-          "minAgility": 1,
-          "minIntelligence": 1,
-          "minStrength": 5
+          "minAgility": 0,
+          "minIntelligence": 0,
+          "minStrength": 12
         },
         "strModifier": 5
       }
@@ -151,9 +151,9 @@
         "minDamage": 4,
         "minLevel": 3,
         "statRestrictions": {
-          "minAgility": 1,
-          "minIntelligence": 5,
-          "minStrength": 1
+          "minAgility": 0,
+          "minIntelligence": 12,
+          "minStrength": 0
         },
         "strModifier": 0
       }
@@ -171,9 +171,9 @@
         "minDamage": 4,
         "minLevel": 3,
         "statRestrictions": {
-          "minAgility": 5,
-          "minIntelligence": 1,
-          "minStrength": 1
+          "minAgility": 12,
+          "minIntelligence": 0,
+          "minStrength": 0
         },
         "strModifier": 0
       }
@@ -191,9 +191,9 @@
         "minDamage": 10,
         "minLevel": 5,
         "statRestrictions": {
-          "minAgility": 1,
-          "minIntelligence": 1,
-          "minStrength": 12
+          "minAgility": 0,
+          "minIntelligence": 0,
+          "minStrength": 15
         },
         "strModifier": 9
       }

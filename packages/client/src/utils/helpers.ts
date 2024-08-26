@@ -1,11 +1,6 @@
 import { decodeAbiParameters, hexToBigInt } from 'viem';
 
-import {
-  type ArmorStats,
-  type Metadata,
-  StatsClasses,
-  WeaponStats,
-} from '../utils/types';
+import { type ArmorStats, type Metadata, WeaponStats } from '../utils/types';
 
 export const decodeArmorStats = (statsBytes: string): ArmorStats => {
   const itemTemplateStats = decodeAbiParameters(
@@ -16,10 +11,18 @@ export const decodeArmorStats = (statsBytes: string): ArmorStats => {
         components: [
           { name: 'agiModifier', type: 'int256' },
           { name: 'armorModifier', type: 'uint256' },
-          { name: 'classRestrictions', type: 'uint8[]' },
           { name: 'hitPointModifier', type: 'int256' },
           { name: 'intModifier', type: 'int256' },
           { name: 'minLevel', type: 'uint256' },
+          {
+            name: 'statRestrictions',
+            type: 'tuple',
+            components: [
+              { name: 'minAgility', type: 'uint256' },
+              { name: 'minIntelligence', type: 'uint256' },
+              { name: 'minStrength', type: 'uint256' },
+            ],
+          },
           { name: 'strModifier', type: 'int256' },
         ],
       },
@@ -30,12 +33,15 @@ export const decodeArmorStats = (statsBytes: string): ArmorStats => {
   return {
     agiModifier: itemTemplateStats.agiModifier.toString(),
     armorModifier: itemTemplateStats.armorModifier.toString(),
-    classRestrictions: itemTemplateStats.classRestrictions.map(
-      (classRestriction: number) => classRestriction as StatsClasses,
-    ),
     hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
     intModifier: itemTemplateStats.intModifier.toString(),
     minLevel: itemTemplateStats.minLevel.toString(),
+    statRestrictions: {
+      minAgility: itemTemplateStats.statRestrictions.minAgility.toString(),
+      minIntelligence:
+        itemTemplateStats.statRestrictions.minIntelligence.toString(),
+      minStrength: itemTemplateStats.statRestrictions.minStrength.toString(),
+    },
     strModifier: itemTemplateStats.strModifier.toString(),
   };
 };
@@ -83,12 +89,20 @@ export const decodeWeaponStats = (statsBytes: string): WeaponStats => {
         type: 'tuple',
         components: [
           { name: 'agiModifier', type: 'int256' },
-          { name: 'classRestrictions', type: 'uint8[]' },
           { name: 'hitPointModifier', type: 'int256' },
           { name: 'intModifier', type: 'int256' },
           { name: 'maxDamage', type: 'uint256' },
           { name: 'minDamage', type: 'uint256' },
           { name: 'minLevel', type: 'uint256' },
+          {
+            name: 'statRestrictions',
+            type: 'tuple',
+            components: [
+              { name: 'minAgility', type: 'uint256' },
+              { name: 'minIntelligence', type: 'uint256' },
+              { name: 'minStrength', type: 'uint256' },
+            ],
+          },
           { name: 'strModifier', type: 'int256' },
         ],
       },
@@ -98,14 +112,17 @@ export const decodeWeaponStats = (statsBytes: string): WeaponStats => {
 
   return {
     agiModifier: itemTemplateStats.agiModifier.toString(),
-    classRestrictions: itemTemplateStats.classRestrictions.map(
-      (classRestriction: number) => classRestriction as StatsClasses,
-    ),
     hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
     intModifier: itemTemplateStats.intModifier.toString(),
     maxDamage: itemTemplateStats.maxDamage.toString(),
     minDamage: itemTemplateStats.minDamage.toString(),
     minLevel: itemTemplateStats.minLevel.toString(),
+    statRestrictions: {
+      minAgility: itemTemplateStats.statRestrictions.minAgility.toString(),
+      minIntelligence:
+        itemTemplateStats.statRestrictions.minIntelligence.toString(),
+      minStrength: itemTemplateStats.statRestrictions.minStrength.toString(),
+    },
     strModifier: itemTemplateStats.strModifier.toString(),
   };
 };

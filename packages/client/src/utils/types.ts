@@ -57,10 +57,10 @@ export type Armor = ArmorStats &
 export type ArmorStats = {
   agiModifier: string;
   armorModifier: string;
-  classRestrictions: StatsClasses[];
   hitPointModifier: string;
   intModifier: string;
   minLevel: string;
+  statRestrictions: StatRestrictions;
   strModifier: string;
 };
 
@@ -132,12 +132,12 @@ export type Weapon = WeaponStats &
 
 export type WeaponStats = {
   agiModifier: string;
-  classRestrictions: StatsClasses[];
   hitPointModifier: string;
   intModifier: string;
   maxDamage: string;
   minDamage: string;
   minLevel: string;
+  statRestrictions: StatRestrictions;
   strModifier: string;
 };
 
@@ -166,4 +166,10 @@ export type ConsiderationData = {
   token: string;
   tokenType: string;
   recipient: string;
+};
+
+export type StatRestrictions = {
+  minAgility: string;
+  minIntelligence: string;
+  minStrength: string;
 };

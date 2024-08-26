@@ -272,12 +272,17 @@ export const CharacterProvider = ({
               agiModifier: decodedArmorStats.agiModifier,
               armorModifier: decodedArmorStats.armorModifier,
               balance: item.balance,
-              classRestrictions: decodedArmorStats.classRestrictions,
               hitPointModifier: decodedArmorStats.hitPointModifier,
               intModifier: decodedArmorStats.intModifier,
               itemId: item.itemId,
               minLevel: decodedArmorStats.minLevel,
               owner: item.owner,
+              statRestrictions: {
+                minAgility: decodedArmorStats.statRestrictions.minAgility,
+                minIntelligence:
+                  decodedArmorStats.statRestrictions.minIntelligence,
+                minStrength: decodedArmorStats.statRestrictions.minStrength,
+              },
               strModifier: decodedArmorStats.strModifier,
               tokenId: item.tokenId,
             } as Armor;
@@ -312,7 +317,6 @@ export const CharacterProvider = ({
               ...metadata,
               agiModifier: decodedWeaponStats.agiModifier,
               balance: item.balance,
-              classRestrictions: decodedWeaponStats.classRestrictions,
               hitPointModifier: decodedWeaponStats.hitPointModifier,
               intModifier: decodedWeaponStats.intModifier,
               itemId: item.itemId,
@@ -320,6 +324,12 @@ export const CharacterProvider = ({
               minDamage: decodedWeaponStats.minDamage,
               minLevel: decodedWeaponStats.minLevel,
               owner: item.owner,
+              statRestrictions: {
+                minAgility: decodedWeaponStats.statRestrictions.minAgility,
+                minIntelligence:
+                  decodedWeaponStats.statRestrictions.minIntelligence,
+                minStrength: decodedWeaponStats.statRestrictions.minStrength,
+              },
               strModifier: decodedWeaponStats.strModifier,
               tokenId: item.tokenId,
             } as Weapon;

@@ -1,49 +1,49 @@
 {
-    "magicAttacks": [
-        {
-            "actionId": "0xeee09063621624b36fd13f51d41a59650ee42e3cb4bb1bf6ca148602475c18a3",
-            "name": "basic magic attack",
-            "stats": {
-                "attackModifierBonus": 0,
-                "bonusDamage": 0,
-                "critChanceBonus": 0,
-                "itemRestrictions": [],
-                "minDamage": 1,
-                "maxDamage": 5,
-                "minLevel": 1,
-                "statRestrictions": {
-                    "minAgility": 1,
-                    "minIntelligence": 5,
-                    "minStrength": 1
-                },
-                "statusEffects": []
-            }
-        }
-    ],
-    "physicalAttacks": [
-        {
-            "actionId": "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000",
-            "name": "basic weapon attack",
-            "stats": {
-                "armorPenetration": 0,
-                "attackModifierBonus": 0,
-                "bonusDamage": 0,
-                "critChanceBonus": 0,
-                "minLevel": 1,
-                "statRestrictions": {
-                    "minAgility": 1,
-                    "minIntelligence": 1,
-                    "minStrength": 1
-                },
-                "statusEffects": []
-            }
-        }
-    ],
-    "useItem": [
-        {
-            "actionId": "",
-            "name": "use consumable item",
-            "itemId": 0
-        }
-    ]
+  "magicAttacks": [
+    {
+      "actionId": "0xeee09063621624b36fd13f51d41a59650ee42e3cb4bb1bf6ca148602475c18a3",
+      "name": "basic magic attack",
+      "stats": {
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0,
+        "itemRestrictions": [],
+        "minDamage": 1,
+        "maxDamage": 5,
+        "minLevel": 1,
+        "statRestrictions": {
+          "minAgility": 1,
+          "minIntelligence": 5,
+          "minStrength": 1
+        },
+        "statusEffects": []
+      }
+    }
+  ],
+  "physicalAttacks": [
+    {
+      "actionId": "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000",
+      "name": "basic weapon attack",
+      "stats": {
+        "armorPenetration": 0,
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0,
+        "minLevel": 1,
+        "statRestrictions": {
+          "minAgility": 1,
+          "minIntelligence": 1,
+          "minStrength": 1
+        },
+        "statusEffects": []
+      }
+    }
+  ],
+  "useItem": [
+    {
+      "actionId": "",
+      "name": "use consumable item",
+      "itemId": 0
+    }
+  ]
 }

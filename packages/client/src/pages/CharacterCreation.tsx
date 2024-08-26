@@ -118,9 +118,14 @@ export const CharacterCreation = (): JSX.Element => {
             return {
               agiModifier: decodedArmorStats.agiModifier,
               armorModifier: decodedArmorStats.armorModifier,
-              classRestrictions: decodedArmorStats.classRestrictions,
               hitPointModifier: decodedArmorStats.hitPointModifier,
               intModifier: decodedArmorStats.intModifier,
+              statRestrictions: {
+                minAgility: decodedArmorStats.statRestrictions.minAgility,
+                minIntelligence:
+                  decodedArmorStats.statRestrictions.minIntelligence,
+                minStrength: decodedArmorStats.statRestrictions.minStrength,
+              },
               strModifier: decodedArmorStats.strModifier,
               ...fetachedMetadata,
             } as Armor;
@@ -153,12 +158,17 @@ export const CharacterCreation = (): JSX.Element => {
 
             return {
               agiModifier: decodedWeaponStats.agiModifier,
-              classRestrictions: decodedWeaponStats.classRestrictions,
               hitPointModifier: decodedWeaponStats.hitPointModifier,
               intModifier: decodedWeaponStats.intModifier,
               maxDamage: decodedWeaponStats.maxDamage,
               minDamage: decodedWeaponStats.minDamage,
               minLevel: decodedWeaponStats.minLevel,
+              statRestrictions: {
+                minAgility: decodedWeaponStats.statRestrictions.minAgility,
+                minIntelligence:
+                  decodedWeaponStats.statRestrictions.minIntelligence,
+                minStrength: decodedWeaponStats.statRestrictions.minStrength,
+              },
               strModifier: decodedWeaponStats.strModifier,
               ...fetachedMetadata,
             } as Weapon;
