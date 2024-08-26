@@ -15,7 +15,14 @@ import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {Characters, CharactersData, UltimateDominionConfig} from "@codegen/index.sol";
 import {Classes, MobType, ItemType, ActionType} from "@codegen/common.sol";
 import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
-import {WeaponStats, MonsterStats, ArmorStats, PhysicalAttackStats, MagicAttackStats} from "@interfaces/Structs.sol";
+import {
+    WeaponStats,
+    MonsterStats,
+    ArmorStats,
+    PhysicalAttackStats,
+    MagicAttackStats,
+    StatRestrictions
+} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_NAMESPACE} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {System} from "@latticexyz/world/src/System.sol";
@@ -60,10 +67,10 @@ contract SetUp is Test {
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;
         // create a starter armor
-        uint8[] memory classRestrictions = new uint8[](0);
+        StatRestrictions memory statRestrictions = StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 0});
         ArmorStats memory newArmor = ArmorStats({
             armorModifier: 1,
-            classRestrictions: classRestrictions,
+            statRestrictions: statRestrictions,
             minLevel: 0,
             strModifier: 1,
             agiModifier: 2,
@@ -75,8 +82,6 @@ contract SetUp is Test {
 
         basicAttackId = keccak256(abi.encode("basic weapon attack"));
 
-        uint8[] memory newClassRestrictions = new uint8[](1);
-        newClassRestrictions[0] = uint8(2);
         uint256[] memory itemRestrictions = new uint256[](0);
 
         basicMagicAttackId = keccak256(abi.encode("basic magic attack"));

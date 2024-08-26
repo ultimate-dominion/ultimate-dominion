@@ -14,7 +14,7 @@ import {IERC1155MetadataURI} from "@erc1155/IERC1155MetadataURI.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
-import {WeaponStats} from "@interfaces/Structs.sol";
+import {WeaponStats, StatRestrictions} from "@interfaces/Structs.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {_itemsSystemId} from "../src/utils.sol";
@@ -38,10 +38,10 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     function test_CreateItem() public {
         startGasReport("creates an item");
 
-        uint8[] memory restrictions = new uint8[](0);
+        StatRestrictions memory statRestrictions = StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStats memory weaponStats = WeaponStats({
             agiModifier: 0,
-            classRestrictions: restrictions,
+            statRestrictions: statRestrictions,
             hitPointModifier: 0,
             intModifier: 0,
             maxDamage: 4,
@@ -55,22 +55,22 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         uint256 newItemId =
             world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri/");
 
-        assertEq(newItemId, 7);
+        assertEq(newItemId, 13);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
             keccak256(abi.encode(erc1155System.uri(newItemId))),
-            keccak256(abi.encode("ipfs://QmPooDEwqeGh3Qszig7veD1yEoa6EoVyDUmLqWUZ1riiDS/test_Weapon_uri/"))
+            keccak256(abi.encode("ipfs://QmcEgdrkuCYj9xjoo8ofuDfdr9kyAk8CCYpzqeMA4f9hp3/test_Weapon_uri/"))
         );
 
         endGasReport();
     }
 
     function test_CreateItem_Revert_NotNamespaceOwner() public {
-        uint8[] memory restrictions = new uint8[](0);
+        StatRestrictions memory statRestrictions = StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStats memory weaponStats = WeaponStats({
             agiModifier: 0,
-            classRestrictions: restrictions,
+            statRestrictions: statRestrictions,
             hitPointModifier: 0,
             intModifier: 0,
             maxDamage: 4,
@@ -105,10 +105,10 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     }
 
     function test_GetTotalSupply() public {
-        uint8[] memory restrictions = new uint8[](0);
+        StatRestrictions memory statRestrictions = StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStats memory weaponStats = WeaponStats({
             agiModifier: 0,
-            classRestrictions: restrictions,
+            statRestrictions: statRestrictions,
             hitPointModifier: 0,
             intModifier: 0,
             maxDamage: 4,

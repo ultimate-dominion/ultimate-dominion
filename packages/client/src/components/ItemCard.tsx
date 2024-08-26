@@ -2,17 +2,14 @@ import {
   Box,
   Card,
   CardBody,
-  CardFooter,
   CardHeader,
   Center,
   HStack,
   Stack,
   Text,
 } from '@chakra-ui/react';
-import { FaHatWizard } from 'react-icons/fa';
-import { GiAxeSword, GiRogue } from 'react-icons/gi';
 
-import { type Armor, StatsClasses, type Weapon } from '../utils/types';
+import { type Armor, type Weapon } from '../utils/types';
 
 const getStatSymbol = (stat: string): string => (Number(stat) >= 0 ? '+' : '');
 
@@ -29,8 +26,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const {
     agiModifier,
     balance,
-    classRestrictions,
     intModifier,
+    statRestrictions,
     strModifier,
     name,
   } = item;
@@ -66,30 +63,30 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           </Text>
         </Text>
 
-        <Text size={{ base: '2xs', sm: 'sm' }}>
-          STR{getStatSymbol(strModifier)}
-          {strModifier} AGI{getStatSymbol(agiModifier)}
-          {agiModifier} INT{getStatSymbol(intModifier)}
-          {intModifier}{' '}
-          {(item as Armor).armorModifier
-            ? `ARM${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
-            : ''}
-        </Text>
+        <HStack alignItems="start">
+          <Text fontWeight="bold" size={{ base: '2xs', sm: 'sm' }}>
+            Mods:
+          </Text>
+          <Text size={{ base: '2xs', sm: 'sm' }}>
+            STR {getStatSymbol(strModifier)}
+            {strModifier} AGI {getStatSymbol(agiModifier)}
+            {agiModifier} INT {getStatSymbol(intModifier)}
+            {intModifier}{' '}
+            {(item as Armor).armorModifier
+              ? `ARM ${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
+              : ''}
+          </Text>
+        </HStack>
+        <HStack alignItems="start">
+          <Text fontWeight="bold" size={{ base: '2xs', sm: 'sm' }}>
+            Requirements:
+          </Text>
+          <Text size={{ base: '2xs', sm: 'sm' }}>
+            STR {statRestrictions.minStrength} AGI {statRestrictions.minAgility}{' '}
+            INT {statRestrictions.minIntelligence}
+          </Text>
+        </HStack>
       </CardBody>
-
-      <CardFooter>
-        <Center>
-          {classRestrictions.includes(StatsClasses.Warrior) && (
-            <GiAxeSword size={28} />
-          )}
-          {classRestrictions.includes(StatsClasses.Rogue) && (
-            <GiRogue size={28} />
-          )}
-          {classRestrictions.includes(StatsClasses.Mage) && (
-            <FaHatWizard size={28} />
-          )}
-        </Center>
-      </CardFooter>
     </Card>
   );
 };
