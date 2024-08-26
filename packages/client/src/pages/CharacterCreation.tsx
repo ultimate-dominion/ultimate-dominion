@@ -386,7 +386,6 @@ export const CharacterCreation = (): JSX.Element => {
 
     if (character && rolledOnce) {
       setCharacterClass(character.entityClass);
-      return;
     }
 
     if (character?.locked) {
