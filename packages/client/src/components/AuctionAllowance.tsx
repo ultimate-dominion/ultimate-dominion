@@ -1,6 +1,5 @@
 import {
   Button,
-  Divider,
   FormControl,
   FormHelperText,
   FormLabel,
@@ -21,16 +20,14 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useState } from 'react';
-import { Address, erc20Abi, formatEther, parseEther } from 'viem';
+import { Address, erc20Abi, parseEther } from 'viem';
 import { useAccount, useBalance, useWalletClient } from 'wagmi';
 
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { ERC_1155ABI } from '../utils/constants';
-import { shortenAddress } from '../utils/helpers';
 import { ConnectWalletButton } from './ConnectWalletButton';
-import { CopyText } from './CopyText';
-export const WalletDetailsModal = ({
+export const AuctionAllowance = ({
   isOpen,
   onClose,
 }: {
@@ -41,12 +38,10 @@ export const WalletDetailsModal = ({
   const { data: externalWalletClient } = useWalletClient();
   const { isConnected, address } = useAccount();
   const {
-    burnerAddress,
-    burnerBalance,
     network: { walletClient, worldContract, publicClient },
     components: { UltimateDominionConfig },
   } = useMUD();
-  const { data: externalWalletBalance, refetch } = useBalance({
+  useBalance({
     address: externalWalletClient?.account.address,
   });
   const { goldToken } = useComponentValue(
@@ -58,18 +53,6 @@ export const WalletDetailsModal = ({
     UltimateDominionConfig,
     singletonEntity,
   ) ?? { items: null };
-
-  const [depositAmount, setDepositAmount] = useState<string>('0');
-  const [isDepositing, setIsDepositing] = useState(false);
-  const [depositErrorMessage, setDepositErrorMessage] = useState<string | null>(
-    null,
-  );
-
-  const [withdrawAmount, setWithdrawAmount] = useState<string>('0');
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
-  const [withdrawErrorMessage, setWithdrawErrorMessage] = useState<
-    string | null
-  >(null);
 
   const [goldAllowance, setGoldAllowance] = useState<string>('100');
   const [isApprovingGold, setIsApprovingGold] = useState(false);
@@ -83,18 +66,11 @@ export const WalletDetailsModal = ({
 
   // Reset errorMessage state when any of the form fields change
   useEffect(() => {
-    setDepositErrorMessage(null);
-    setWithdrawErrorMessage(null);
     setGoldErrorMessage(null);
-  }, [depositAmount, withdrawAmount, goldAllowance]);
+  }, [goldAllowance]);
 
   useEffect(() => {
     if (isOpen) {
-      setDepositAmount('0');
-      setWithdrawAmount('0');
-
-      refetch();
-
       setGoldAllowance('100');
       if (externalWalletClient && itemsApprovedInitial == null) {
         (async function () {
@@ -116,86 +92,10 @@ export const WalletDetailsModal = ({
     itemsApprovedInitial,
     itemsContract,
     publicClient,
-    refetch,
     walletClient.account,
     worldContract.read,
   ]);
 
-  const onDeposit = useCallback(async () => {
-    try {
-      setIsDepositing(true);
-
-      if (!(externalWalletBalance && externalWalletClient)) {
-        throw new Error('No external wallet client found.');
-      }
-
-      if (!depositAmount || parseEther(depositAmount) <= 0) {
-        setDepositErrorMessage('Amount must be greater than 0.');
-        return;
-      }
-
-      if (parseEther(depositAmount) > externalWalletBalance.value) {
-        setDepositErrorMessage('Insufficient funds in external wallet.');
-        return;
-      }
-
-      await externalWalletClient.sendTransaction({
-        to: burnerAddress,
-        value: parseEther(depositAmount),
-      });
-
-      setDepositAmount('0');
-      await refetch();
-      renderSuccess('Funds deposited successfully!');
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error depositing funds.', e);
-    } finally {
-      setIsDepositing(false);
-    }
-  }, [
-    burnerAddress,
-    depositAmount,
-    externalWalletBalance,
-    externalWalletClient,
-    refetch,
-    renderError,
-    renderSuccess,
-  ]);
-
-  const onWithdraw = useCallback(async () => {
-    try {
-      setIsWithdrawing(true);
-
-      if (!withdrawAmount || parseEther(withdrawAmount) <= 0) {
-        setWithdrawErrorMessage('Amount must be greater than 0.');
-        return;
-      }
-
-      if (parseEther(withdrawAmount) > parseEther(burnerBalance)) {
-        setWithdrawErrorMessage('Insufficient funds in session wallet.');
-        return;
-      }
-
-      await walletClient.sendTransaction({
-        to: address,
-        value: parseEther(withdrawAmount),
-      });
-
-      setWithdrawAmount('0');
-      renderSuccess('Funds withdrawn successfully!');
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error withdrawing funds.', e);
-    } finally {
-      setIsWithdrawing(false);
-    }
-  }, [
-    address,
-    burnerBalance,
-    renderError,
-    renderSuccess,
-    walletClient,
-    withdrawAmount,
-  ]);
   const onGoldAllowance = useCallback(async () => {
     try {
       if (!externalWalletClient) {
@@ -273,99 +173,15 @@ export const WalletDetailsModal = ({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>
-          {isConnected ? 'Wallet Details' : 'Connect Wallet'}
+          {isConnected ? 'Auction House Allowances' : 'Connect Wallet'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {address && externalWalletClient && isConnected ? (
             <VStack p={4} spacing={10}>
               <VStack alignItems="start" spacing={4}>
-                {burnerBalance === '0' && (
-                  <>
-                    <Text color="red" fontWeight={700} size="sm">
-                      Your session wallet balance is 0. In order to play, you
-                      must deposit funds into your session account.
-                    </Text>
-                    <Divider />
-                  </>
-                )}
-                <Text>Connected Account:</Text>
-                <CopyText text={address}>
-                  <Text>{shortenAddress(address)}</Text>
-                </CopyText>
-                <Text size="sm">
-                  Balance:{' '}
-                  {externalWalletBalance
-                    ? formatEther(externalWalletBalance.value)
-                    : '0'}
-                </Text>
-                <Divider />
-                <Text>Session Account:</Text>
-                <CopyText text={burnerAddress}>
-                  <Text>{shortenAddress(burnerAddress)}</Text>
-                </CopyText>
-                <Text size="sm">Balance: {burnerBalance}</Text>
-                <Text fontWeight={700} size="sm">
-                  Do not deposit any funds into this account that you are not
-                  willing to lose. We recommend no more than 0.0005 ETH at a
-                  time.
-                </Text>
                 <HStack>
-                  <FormControl isInvalid={!!depositErrorMessage}>
-                    <FormLabel fontSize="xs">
-                      Deposit to session wallet
-                    </FormLabel>
-                    {!!depositErrorMessage && (
-                      <FormHelperText color="red" fontSize="xs" mb={2}>
-                        {depositErrorMessage}
-                      </FormHelperText>
-                    )}
-                    <Input
-                      isDisabled={isDepositing}
-                      onChange={e => setDepositAmount(e.target.value)}
-                      placeholder="Amount"
-                      type="number"
-                      value={depositAmount}
-                    />
-                  </FormControl>
-                  <Button
-                    alignSelf="end"
-                    isLoading={isDepositing}
-                    onClick={onDeposit}
-                    size="sm"
-                  >
-                    Deposit
-                  </Button>
-                </HStack>
-                <HStack>
-                  <FormControl isInvalid={!!withdrawErrorMessage}>
-                    <FormLabel fontSize="xs">
-                      Withdraw from session wallet
-                    </FormLabel>
-                    {!!withdrawErrorMessage && (
-                      <FormHelperText color="red" fontSize="xs" mb={2}>
-                        {withdrawErrorMessage}
-                      </FormHelperText>
-                    )}
-                    <Input
-                      isDisabled={isWithdrawing}
-                      onChange={e => setWithdrawAmount(e.target.value)}
-                      placeholder="Amount"
-                      type="number"
-                      value={withdrawAmount}
-                    />
-                  </FormControl>
-                  <Button
-                    alignSelf="end"
-                    isLoading={isWithdrawing}
-                    onClick={onWithdraw}
-                    size="sm"
-                  >
-                    Withdraw
-                  </Button>
-                </HStack>
-                <HStack>
-                  <FormControl isInvalid={!!withdrawErrorMessage}>
+                  <FormControl isInvalid={!!goldErrorMessage}>
                     <FormLabel fontSize="xs">
                       Set Auction House gold allowance
                     </FormLabel>
@@ -392,7 +208,7 @@ export const WalletDetailsModal = ({
                   </Button>
                 </HStack>
                 <HStack>
-                  <FormControl isInvalid={!!withdrawErrorMessage}>
+                  <FormControl>
                     <FormLabel fontSize="xs">
                       Set Auction House item approval
                     </FormLabel>

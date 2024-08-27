@@ -20,14 +20,8 @@ import {
   Entity,
   getComponentValue,
   getComponentValueStrict,
-  Has,
-  runQuery,
 } from '@latticexyz/recs';
-import {
-  decodeEntity,
-  encodeEntity,
-  singletonEntity,
-} from '@latticexyz/store-sync/recs';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaHatWizard } from 'react-icons/fa';
 import { GiAxeSword, GiRogue } from 'react-icons/gi';
@@ -41,21 +35,19 @@ import { ItemEquipModal } from '../components/ItemEquipModal';
 import { Level } from '../components/Level';
 import { LevelingPanel } from '../components/LevelingPanel';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { HOME_PATH, LEADERBOARD_PATH } from '../Routes';
+import { AUCTION_HOUSE_PATH, HOME_PATH, LEADERBOARD_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
-  decodeArmorStats,
   decodeCharacterId,
-  decodeWeaponStats,
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
 import {
   type Armor,
   type Character,
-  ItemType,
   StatsClasses,
   type Weapon,
 } from '../utils/types';
@@ -375,7 +367,15 @@ export const CharacterPage = (): JSX.Element => {
 
               <Spacer />
               <Box alignSelf="start" w="100%">
-                <Button m="5px 0" w="100%">
+                <Button
+                  m="5px 0"
+                  w="100%"
+                  onClick={() => {
+                    if (isOwner) {
+                      navigate(AUCTION_HOUSE_PATH);
+                    }
+                  }}
+                >
                   {isOwner ? 'Auction House' : 'Chat'}
                 </Button>
                 <Button
@@ -437,14 +437,13 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const { renderError } = useToast();
 
   const {
-    components: {
-      CharacterEquipment,
-      Items,
-      ItemsBaseURI,
-      ItemsOwners,
-      ItemsTokenURI,
-    },
+    components: { CharacterEquipment, ItemsOwners },
   } = useMUD();
+  const {
+    armorTemplates,
+    isLoading: isLoadingItemTemplates,
+    weaponTemplates,
+  } = useItems();
 
   const {
     isOpen: isItemModalOpen,
@@ -468,119 +467,52 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const maxWeaponsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
 
   const fetchCharacterItems = useCallback(
-    async (_character: Character) => {
+    (_character: Character) => {
       try {
-        const _items = Array.from(runQuery([Has(ItemsOwners)]))
-          .map(entity => {
-            const itemdBalance = getComponentValueStrict(
-              ItemsOwners,
-              entity,
-            ).balance;
-
-            const { owner, tokenId } = decodeEntity(
+        const _armor = armorTemplates
+          .map(armor => {
+            const tokenOwnersEntity = encodeEntity(
               { owner: 'address', tokenId: 'uint256' },
-              entity,
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(armor.tokenId),
+              },
             );
 
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId },
-            );
-
-            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
 
             return {
-              balance: itemdBalance.toString(),
-              itemId: entity,
-              itemType: itemTemplate.itemType,
-              owner,
-              stats: itemTemplate.stats,
-              tokenId: tokenId.toString(),
-              tokenIdEntity,
-            };
-          })
-          .filter(item => item.owner === _character.owner)
-          .sort((a, b) => {
-            return Number(a.tokenId) - Number(b.tokenId);
-          });
-
-        const _armor = _items.filter(item => item.itemType === ItemType.Armor);
-        const _weapons = _items.filter(
-          item => item.itemType === ItemType.Weapon,
-        );
-
-        const fullArmor = await Promise.all(
-          _armor.map(async item => {
-            const decodedArmorStats = decodeArmorStats(item.stats);
-
-            const baseURI = getComponentValueStrict(
-              ItemsBaseURI,
-              singletonEntity,
-            ).uri;
-
-            const tokenURI = getComponentValueStrict(
-              ItemsTokenURI,
-              item.tokenIdEntity,
-            ).uri;
-
-            const metadata = await fetchMetadataFromUri(
-              uriToHttp(`${baseURI}${tokenURI}`)[0],
-            );
-
-            return {
-              ...metadata,
-              agiModifier: decodedArmorStats.agiModifier,
-              armorModifier: decodedArmorStats.armorModifier,
-              balance: item.balance,
-              classRestrictions: decodedArmorStats.classRestrictions,
-              hitPointModifier: decodedArmorStats.hitPointModifier,
-              intModifier: decodedArmorStats.intModifier,
-              itemId: item.itemId,
-              owner: item.owner,
-              strModifier: decodedArmorStats.strModifier,
-              tokenId: item.tokenId,
+              ...armor,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
             } as Armor;
-          }),
-        );
+          })
+          .filter(a => a.balance !== '0');
 
-        const fullWeapons = await Promise.all(
-          _weapons.map(async item => {
-            const decodedWeaponStats = decodeWeaponStats(item.stats);
-
-            const baseURI = getComponentValueStrict(
-              ItemsBaseURI,
-              singletonEntity,
-            ).uri;
-
-            const tokenURI = getComponentValueStrict(
-              ItemsTokenURI,
-              item.tokenIdEntity,
-            ).uri;
-
-            const metadata = await fetchMetadataFromUri(
-              uriToHttp(`${baseURI}${tokenURI}`)[0],
+        const _weapons = weaponTemplates
+          .map(weapon => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(weapon.tokenId),
+              },
             );
 
-            return {
-              ...metadata,
-              agiModifier: decodedWeaponStats.agiModifier,
-              balance: item.balance,
-              classRestrictions: decodedWeaponStats.classRestrictions,
-              hitPointModifier: decodedWeaponStats.hitPointModifier,
-              intModifier: decodedWeaponStats.intModifier,
-              itemId: item.itemId,
-              maxDamage: decodedWeaponStats.maxDamage,
-              minDamage: decodedWeaponStats.minDamage,
-              minLevel: decodedWeaponStats.minLevel,
-              owner: item.owner,
-              strModifier: decodedWeaponStats.strModifier,
-              tokenId: item.tokenId,
-            } as Weapon;
-          }),
-        );
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
 
-        setArmor(fullArmor);
-        setWeapons(fullWeapons);
+            return {
+              ...weapon,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Weapon;
+          })
+          .filter(w => w.balance !== '0');
+
+        setArmor(_armor);
+        setWeapons(_weapons);
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Failed to fetch character items.',
@@ -590,14 +522,13 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         setIsLoadingItems(false);
       }
     },
-    [Items, ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError],
+    [armorTemplates, ItemsOwners, renderError, weaponTemplates],
   );
 
   useEffect(() => {
-    (async (): Promise<void> => {
-      await fetchCharacterItems(character);
-    })();
-  }, [character, fetchCharacterItems]);
+    if (isLoadingItemTemplates) return;
+    fetchCharacterItems(character);
+  }, [character, fetchCharacterItems, isLoadingItemTemplates]);
 
   if (isLoadingItems) {
     return (

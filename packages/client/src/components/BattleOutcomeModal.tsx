@@ -14,27 +14,20 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { getComponentValueStrict } from '@latticexyz/recs';
-import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { zeroAddress, zeroHash } from 'viem';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
-import { useMap } from '../contexts/MapContext';
+import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 import {
-  decodeArmorStats,
-  decodeWeaponStats,
-  fetchMetadataFromUri,
-  uriToHttp,
-} from '../utils/helpers';
-import {
   type Armor,
   type CombatOutcomeType,
-  ItemType,
   type Weapon,
 } from '../utils/types';
 import { ItemCard } from './ItemCard';
@@ -52,51 +45,21 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
 }): JSX.Element => {
   const { renderError } = useToast();
   const {
-    components: { Items, ItemsBaseURI, ItemsTokenURI, Levels },
+    components: { Levels },
   } = useMUD();
-  const { character, refreshCharacter } = useCharacter();
-  const { allMonsters, otherCharactersOnTile } = useMap();
-  const { onContinueToBattleOutcome } = useBattle();
+  const { armorTemplates, weaponTemplates } = useItems();
+  const { character } = useCharacter();
+  const { onContinueToBattleOutcome, opponent } = useBattle();
 
   const [armor, setArmor] = useState<Armor[]>([]);
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
 
-  const opponent = useMemo(() => {
-    if (!character) return null;
-    const opponent =
-      character.id === battleOutcome.defenders[0]
-        ? battleOutcome.attackers[0]
-        : battleOutcome.defenders[0];
-
-    const monsterOpponent = allMonsters.find(
-      monster => monster.id === opponent,
-    );
-    if (monsterOpponent) {
-      return monsterOpponent;
-    }
-
-    const characterOpponent = otherCharactersOnTile.find(
-      c => c.id === opponent,
-    );
-    if (characterOpponent) {
-      return characterOpponent;
-    }
-
-    return null;
-  }, [allMonsters, battleOutcome, character, otherCharactersOnTile]);
-
   const onAcknowledge = useCallback(() => {
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
     onContinueToBattleOutcome(false);
-    refreshCharacter();
     onClose();
-  }, [
-    battleOutcome.encounterId,
-    onContinueToBattleOutcome,
-    onClose,
-    refreshCharacter,
-  ]);
+  }, [battleOutcome.encounterId, onContinueToBattleOutcome, onClose]);
 
   const nextLevelXpRequirement =
     useComponentValue(
@@ -113,107 +76,32 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   }, [character, nextLevelXpRequirement]);
 
   const fetchLootedItems = useCallback(
-    async (_lootedItems: string[]) => {
+    (_lootedItemIds: string[]) => {
       try {
-        const _items = _lootedItems
-          .map(tokenId => {
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId: BigInt(tokenId) },
-            );
-
-            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-
+        const _armor = armorTemplates
+          .filter(a => _lootedItemIds.includes(a.tokenId))
+          .map(armor => {
             return {
+              ...armor,
               balance: '1',
-              itemId: tokenIdEntity,
-              itemType: itemTemplate.itemType,
-              owner: '',
-              stats: itemTemplate.stats,
-              tokenId: tokenId.toString(),
-              tokenIdEntity,
-            };
-          })
-          .sort((a, b) => {
-            return Number(a.tokenId) - Number(b.tokenId);
+              itemId: zeroHash,
+              owner: zeroAddress,
+            } as Armor;
           });
 
-        const _armor = _items.filter(item => item.itemType === ItemType.Armor);
-        const _weapons = _items.filter(
-          item => item.itemType === ItemType.Weapon,
-        );
-
-        const fullArmor = await Promise.all(
-          _armor.map(async item => {
-            const decodedArmorStats = decodeArmorStats(item.stats);
-
-            const baseURI = getComponentValueStrict(
-              ItemsBaseURI,
-              singletonEntity,
-            ).uri;
-
-            const tokenURI = getComponentValueStrict(
-              ItemsTokenURI,
-              item.tokenIdEntity,
-            ).uri;
-
-            const metadata = await fetchMetadataFromUri(
-              uriToHttp(`${baseURI}${tokenURI}`)[0],
-            );
-
+        const _weapons = weaponTemplates
+          .filter(w => _lootedItemIds.includes(w.tokenId))
+          .map(weapon => {
             return {
-              ...metadata,
-              agiModifier: decodedArmorStats.agiModifier,
-              armorModifier: decodedArmorStats.armorModifier,
-              classRestrictions: decodedArmorStats.classRestrictions,
-              hitPointModifier: decodedArmorStats.hitPointModifier,
-              intModifier: decodedArmorStats.intModifier,
-              itemId: item.itemId,
-              owner: item.owner,
-              strModifier: decodedArmorStats.strModifier,
-              tokenId: item.tokenId,
-            } as Armor;
-          }),
-        );
-
-        const fullWeapons = await Promise.all(
-          _weapons.map(async item => {
-            const decodedWeaponStats = decodeWeaponStats(item.stats);
-
-            const baseURI = getComponentValueStrict(
-              ItemsBaseURI,
-              singletonEntity,
-            ).uri;
-
-            const tokenURI = getComponentValueStrict(
-              ItemsTokenURI,
-              item.tokenIdEntity,
-            ).uri;
-
-            const metadata = await fetchMetadataFromUri(
-              uriToHttp(`${baseURI}${tokenURI}`)[0],
-            );
-
-            return {
-              ...metadata,
-              agiModifier: decodedWeaponStats.agiModifier,
-              balance: item.balance,
-              classRestrictions: decodedWeaponStats.classRestrictions,
-              hitPointModifier: decodedWeaponStats.hitPointModifier,
-              intModifier: decodedWeaponStats.intModifier,
-              itemId: item.itemId,
-              maxDamage: decodedWeaponStats.maxDamage,
-              minDamage: decodedWeaponStats.minDamage,
-              minLevel: decodedWeaponStats.minLevel,
-              owner: item.owner,
-              strModifier: decodedWeaponStats.strModifier,
-              tokenId: item.tokenId,
+              ...weapon,
+              balance: '1',
+              itemId: zeroHash,
+              owner: zeroAddress,
             } as Weapon;
-          }),
-        );
+          });
 
-        setArmor(fullArmor);
-        setWeapons(fullWeapons);
+        setArmor(_armor);
+        setWeapons(_weapons);
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Failed to fetch looted items.',
@@ -223,7 +111,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
         setIsLoadingItems(false);
       }
     },
-    [Items, ItemsBaseURI, ItemsTokenURI, renderError],
+    [armorTemplates, renderError, weaponTemplates],
   );
 
   useEffect(() => {

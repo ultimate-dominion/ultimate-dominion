@@ -1,15 +1,17 @@
 import {
+  Box,
   Card,
   CardBody,
-  CardFooter,
   CardHeader,
   Center,
+  HStack,
+  Stack,
   Text,
 } from '@chakra-ui/react';
-import { FaHatWizard } from 'react-icons/fa';
-import { GiAxeSword, GiRogue } from 'react-icons/gi';
 
-import { type Armor, StatsClasses, type Weapon } from '../utils/types';
+import { type Armor, type Weapon } from '../utils/types';
+
+const getStatSymbol = (stat: string): string => (Number(stat) >= 0 ? '+' : '');
 
 type ItemCardProps = (Armor | Weapon) & {
   isEquipped?: boolean;
@@ -24,8 +26,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const {
     agiModifier,
     balance,
-    classRestrictions,
     intModifier,
+    statRestrictions,
     strModifier,
     name,
   } = item;
@@ -61,28 +63,62 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           </Text>
         </Text>
 
-        <Text size={{ base: '2xs', sm: 'sm' }}>
-          STR+{strModifier} AGI+{agiModifier} INT+
-          {intModifier}{' '}
+        <HStack alignItems="start">
+          <Text fontWeight="bold" size={{ base: '2xs', sm: 'sm' }}>
+            Mods:
+          </Text>
+          <Text size={{ base: '2xs', sm: 'sm' }}>
+            STR {getStatSymbol(strModifier)}
+            {strModifier} AGI {getStatSymbol(agiModifier)}
+            {agiModifier} INT {getStatSymbol(intModifier)}
+            {intModifier}{' '}
+            {(item as Armor).armorModifier
+              ? `ARM ${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
+              : ''}
+          </Text>
+        </HStack>
+        <HStack alignItems="start">
+          <Text fontWeight="bold" size={{ base: '2xs', sm: 'sm' }}>
+            Requirements:
+          </Text>
+          <Text size={{ base: '2xs', sm: 'sm' }}>
+            STR {statRestrictions.minStrength} AGI {statRestrictions.minAgility}{' '}
+            INT {statRestrictions.minIntelligence}
+          </Text>
+        </HStack>
+      </CardBody>
+    </Card>
+  );
+};
+
+export const ItemCardSmall: React.FC<ItemCardProps> = ({
+  ...item
+}): JSX.Element => {
+  return (
+    <HStack border="1px solid" borderColor="grey400" w="100%">
+      <Stack
+        alignItems="center"
+        bgColor="grey400"
+        h="50px"
+        justifyContent="center"
+        w="50px"
+      >
+        <Text color="white" fontSize="2xl">
+          {item.name.slice(-3)}
+        </Text>
+      </Stack>
+      <Box>
+        <Text size="xs">{item.name.slice(0, -3)}</Text>
+        <Text size="xs">
+          STR{getStatSymbol(item.strModifier)}
+          {item.strModifier} AGI{getStatSymbol(item.agiModifier)}
+          {item.agiModifier} INT{getStatSymbol(item.intModifier)}
+          {item.intModifier}{' '}
           {(item as Armor).armorModifier
-            ? `ARM+${(item as Armor).armorModifier}`
+            ? `ARM${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
             : ''}
         </Text>
-      </CardBody>
-
-      <CardFooter>
-        <Center>
-          {classRestrictions.includes(StatsClasses.Warrior) && (
-            <GiAxeSword size={28} />
-          )}
-          {classRestrictions.includes(StatsClasses.Rogue) && (
-            <GiRogue size={28} />
-          )}
-          {classRestrictions.includes(StatsClasses.Mage) && (
-            <FaHatWizard size={28} />
-          )}
-        </Center>
-      </CardFooter>
-    </Card>
+      </Box>
+    </HStack>
   );
 };

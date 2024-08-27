@@ -90,7 +90,8 @@ contract EquipmentSystem is System {
             }
         } else if (uint8(itemData.itemType) == 2) {
             // spells
-        } else {
+        }
+        else {
             revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
     }
@@ -99,45 +100,23 @@ contract EquipmentSystem is System {
         ItemsData memory itemData = Items.get(itemId);
         StatsData memory character = Stats.get(characterId);
 
-        canUse = true;
-
         if (uint8(itemData.itemType) == 0) {
             WeaponStats memory weaponStats = abi.decode(itemData.stats, (WeaponStats));
             bool isLevel = character.level >= weaponStats.minLevel;
-            bool isClass;
-            if (weaponStats.classRestrictions.length > 0) {
-                for (uint256 i; i < weaponStats.classRestrictions.length;) {
-                    if (uint8(character.class) == uint8(weaponStats.classRestrictions[i])) {
-                        isClass = true;
-                        break;
-                    }
-                    {
-                        i++;
-                    }
-                }
-            } else {
-                isClass = true;
-            }
-            if (!isLevel || !isClass) canUse = false;
+            bool hasStats = true;
+            if (weaponStats.statRestrictions.minAgility > character.agility) hasStats = false;
+            if (weaponStats.statRestrictions.minStrength > character.strength) hasStats = false;
+            if (weaponStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+            if (isLevel && hasStats) canUse = true;
         }
         if (uint8(itemData.itemType) == 1) {
             ArmorStats memory armorStats = abi.decode(itemData.stats, (ArmorStats));
             bool isLevel = character.level >= armorStats.minLevel;
-            bool isClass;
-            if (armorStats.classRestrictions.length > 0) {
-                for (uint256 i; i < armorStats.classRestrictions.length;) {
-                    if (uint8(character.class) == uint8(armorStats.classRestrictions[i])) {
-                        isClass = true;
-                        break;
-                    }
-                    {
-                        i++;
-                    }
-                }
-            } else {
-                isClass = true;
-            }
-            if (!isLevel || !isClass) canUse = false;
+            bool hasStats = true;
+            if (armorStats.statRestrictions.minAgility > character.agility) hasStats = false;
+            if (armorStats.statRestrictions.minStrength > character.strength) hasStats = false;
+            if (armorStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+            if (isLevel && hasStats) canUse = true;
         }
         return canUse;
     }
@@ -222,7 +201,8 @@ contract EquipmentSystem is System {
             //     CharacterEquipment.popEquippedSpells(characterId);
             //     success = true;
             // }
-        } else {
+        }
+        else {
             revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
         _setEquipmentBonuses(characterId);

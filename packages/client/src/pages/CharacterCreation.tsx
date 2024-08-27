@@ -17,26 +17,29 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { getComponentValueStrict, Has, runQuery } from '@latticexyz/recs';
-import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
+import {
+  Entity,
+  getComponentValueStrict,
+  Has,
+  runQuery,
+} from '@latticexyz/recs';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { zeroAddress, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
+import { ItemCardSmall } from '../components/ItemCard';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
-import {
-  decodeWeaponStats,
-  fetchMetadataFromUri,
-  shortenAddress,
-  uriToHttp,
-} from '../utils/helpers';
-import { StatsClasses, type Weapon } from '../utils/types';
+import { shortenAddress } from '../utils/helpers';
+import { type Armor, StatsClasses, type Weapon } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
@@ -44,24 +47,22 @@ export const CharacterCreation = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { isConnected } = useAccount();
   const {
-    components: {
-      Items,
-      ItemsBaseURI,
-      ItemsTokenURI,
-      StarterItems,
-      UltimateDominionConfig,
-    },
+    components: { Items, StarterItems, UltimateDominionConfig },
     delegatorAddress,
     isSynced,
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
+  const {
+    armorTemplates,
+    isLoading: isLoadingItemTemplates,
+    weaponTemplates,
+  } = useItems();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
   const {
     file: avatar,
     setFile: setAvatar,
     onUpload,
     isUploading,
-    isUploaded,
   } = useUploadFile({ fileName: 'characterAvatar' });
 
   const [name, setName] = useState('');
@@ -69,6 +70,7 @@ export const CharacterCreation = (): JSX.Element => {
   const [characterClass, setCharacterClass] = useState<StatsClasses>(
     StatsClasses.Warrior,
   );
+  const [starterArmor, setStarterArmor] = useState<Armor[] | null>(null);
   const [starterWeapons, setStarterWeapons] = useState<Weapon[] | null>(null);
 
   const [isCreating, setIsCreating] = useState(false);
@@ -86,63 +88,49 @@ export const CharacterCreation = (): JSX.Element => {
     setShowError(false);
   }, [avatar, description, name]);
 
-  const fetchStarterWeapons = useCallback(async () => {
-    try {
-      const starterWeaponTokenIds = Array.from(
-        runQuery([Has(StarterItems)]),
-      ).map(entity => {
-        const tokenId = getComponentValueStrict(StarterItems, entity)
-          .itemIds[1];
-        return tokenId;
-      });
-
-      const _items: Weapon[] = await Promise.all(
-        starterWeaponTokenIds.map(async tokenId => {
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId },
-          );
-
-          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-          const decodedWeaponStats = decodeWeaponStats(itemTemplate.stats);
-
-          const baseURI = getComponentValueStrict(
-            ItemsBaseURI,
-            singletonEntity,
-          ).uri;
-
-          const tokenURI = getComponentValueStrict(
-            ItemsTokenURI,
-            tokenIdEntity,
-          ).uri;
-
-          const fetachedMetadata = await fetchMetadataFromUri(
-            uriToHttp(`${baseURI}${tokenURI}`)[0],
-          );
-
-          return {
-            agiModifier: decodedWeaponStats.agiModifier,
-            classRestrictions: decodedWeaponStats.classRestrictions,
-            hitPointModifier: decodedWeaponStats.hitPointModifier,
-            intModifier: decodedWeaponStats.intModifier,
-            maxDamage: decodedWeaponStats.maxDamage,
-            minDamage: decodedWeaponStats.minDamage,
-            minLevel: decodedWeaponStats.minLevel,
-            strModifier: decodedWeaponStats.strModifier,
-            ...fetachedMetadata,
-          } as Weapon;
-        }),
-      );
-
-      setStarterWeapons(_items);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error fetching starter item.', e);
-    }
-  }, [Items, ItemsBaseURI, ItemsTokenURI, renderError, StarterItems]);
-
   useEffect(() => {
-    fetchStarterWeapons();
-  }, [fetchStarterWeapons]);
+    if (isLoadingItemTemplates) return;
+
+    const starterItemTokenIds = Array.from(runQuery([Has(StarterItems)])).map(
+      entity => {
+        const tokenIds = getComponentValueStrict(StarterItems, entity).itemIds;
+        return tokenIds;
+      },
+    );
+
+    const starterArmorTokenIds = starterItemTokenIds
+      .map(item => item[0].toString())
+      .filter((value, index, self) => self.indexOf(value) === index);
+    const starterWeaponTokenIds = starterItemTokenIds.map(item =>
+      item[1].toString(),
+    );
+
+    const _starterArmor = armorTemplates
+      .filter(armor => starterArmorTokenIds.includes(armor.tokenId))
+      .map(armor => ({
+        ...armor,
+        balance: '1',
+        itemId: zeroHash as Entity,
+        owner: zeroAddress,
+      }));
+    const _starterWeapons = weaponTemplates
+      .filter(weapon => starterWeaponTokenIds.includes(weapon.tokenId))
+      .map(armor => ({
+        ...armor,
+        balance: '1',
+        itemId: zeroHash as Entity,
+        owner: zeroAddress,
+      }));
+
+    setStarterArmor(_starterArmor);
+    setStarterWeapons(_starterWeapons);
+  }, [
+    armorTemplates,
+    isLoadingItemTemplates,
+    Items,
+    StarterItems,
+    weaponTemplates,
+  ]);
 
   const onUploadAvatar = useCallback(() => {
     const input = document.getElementById('avatarInput');
@@ -327,7 +315,6 @@ export const CharacterCreation = (): JSX.Element => {
 
     if (character && rolledOnce) {
       setCharacterClass(character.entityClass);
-      return;
     }
 
     if (character?.locked) {
@@ -347,6 +334,13 @@ export const CharacterCreation = (): JSX.Element => {
     navigate,
     rolledOnce,
   ]);
+
+  const numberOfStarterItems = useMemo(() => {
+    return (
+      (starterArmor?.length ?? 0) +
+      (starterWeapons && starterWeapons[characterClass] ? 1 : 0)
+    );
+  }, [characterClass, starterArmor, starterWeapons]);
 
   const UploadedAvatar = useMemo(() => {
     return (
@@ -410,6 +404,9 @@ export const CharacterCreation = (): JSX.Element => {
             p={{ base: 4, sm: 10 }}
             pos="relative"
           >
+            <Heading mb={6} size="sm" textAlign="left">
+              Create Your Character
+            </Heading>
             <VStack spacing={8}>
               <Stack
                 alignItems="start"
@@ -421,6 +418,7 @@ export const CharacterCreation = (): JSX.Element => {
                 <VStack w="100%">
                   <FormControl isInvalid={showError && !name}>
                     <Input
+                      isDisabled={isCreating}
                       maxLength={15}
                       onChange={e => setName(e.target.value)}
                       placeholder="Name"
@@ -437,6 +435,7 @@ export const CharacterCreation = (): JSX.Element => {
                     <Input
                       accept=".png, .jpg, .jpeg, .webp, .svg"
                       id="avatarInput"
+                      isDisabled={isCreating}
                       onChange={e =>
                         e.target.files?.[0] && setAvatar(e.target.files?.[0])
                       }
@@ -445,7 +444,7 @@ export const CharacterCreation = (): JSX.Element => {
                     />
                     <Button
                       alignSelf="start"
-                      isDisabled={isUploaded}
+                      isDisabled={isCreating}
                       isLoading={isUploading}
                       loadingText="Uploading..."
                       onClick={onUploadAvatar}
@@ -465,6 +464,7 @@ export const CharacterCreation = (): JSX.Element => {
               <FormControl isInvalid={showError && !description}>
                 <Textarea
                   height="200px"
+                  isDisabled={isCreating}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="Bio"
                   value={description}
@@ -513,7 +513,7 @@ export const CharacterCreation = (): JSX.Element => {
         >
           <VStack alignItems="left" spacing={6}>
             <Heading size="sm" textAlign="left">
-              Choose your Character
+              Choose Your Class
             </Heading>
             <ButtonGroup justifyContent="space-between">
               <Button
@@ -574,7 +574,7 @@ export const CharacterCreation = (): JSX.Element => {
               </HStack>
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
-                  <Text>HP - Hit</Text>
+                  <Text>HP - Hit Points</Text>
                   <Text>{character?.baseHp ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
@@ -598,34 +598,19 @@ export const CharacterCreation = (): JSX.Element => {
               </HStack>
               <HStack justify="space-between" w="100%">
                 <Heading size="sm">Items</Heading>
-                <Text>1</Text>
+                <Text>{numberOfStarterItems}</Text>
               </HStack>
-              {starterWeapons && starterWeapons[characterClass] && (
-                <HStack border="1px solid" borderColor="grey400" w="100%">
-                  <Stack
-                    alignItems="center"
-                    bgColor="grey400"
-                    h="50px"
-                    justifyContent="center"
-                    w="50px"
-                  >
-                    <Text color="white" fontSize="2xl">
-                      {starterWeapons[characterClass].name.slice(-3)}
-                    </Text>
-                  </Stack>
-                  <Box>
-                    <Text size="xs">
-                      {starterWeapons[characterClass].name.slice(0, -3)}
-                    </Text>
-                    <Text size="xs">
-                      STR+
-                      {starterWeapons[characterClass].strModifier} AGI+
-                      {starterWeapons[characterClass].agiModifier} INT+
-                      {starterWeapons[characterClass].intModifier}
-                    </Text>
-                  </Box>
-                </HStack>
-              )}
+              <VStack w="100%">
+                {starterArmor?.map(armor => (
+                  <ItemCardSmall
+                    key={`starter-armor-${armor.itemId}`}
+                    {...armor}
+                  />
+                ))}
+                {starterWeapons && starterWeapons[characterClass] && (
+                  <ItemCardSmall {...starterWeapons[characterClass]} />
+                )}
+              </VStack>
             </VStack>
           </SimpleGrid>
           {!isSmallScreen && (

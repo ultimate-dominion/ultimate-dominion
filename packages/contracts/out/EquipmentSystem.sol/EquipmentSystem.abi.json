@@ -163,11 +163,6 @@
             "internalType": "uint256"
           },
           {
-            "name": "classRestrictions",
-            "type": "uint8[]",
-            "internalType": "uint8[]"
-          },
-          {
             "name": "hitPointModifier",
             "type": "int256",
             "internalType": "int256"
@@ -181,6 +176,28 @@
             "name": "minLevel",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "statRestrictions",
+            "type": "tuple",
+            "internalType": "struct StatRestrictions",
+            "components": [
+              {
+                "name": "minAgility",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "minIntelligence",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "minStrength",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
           },
           {
             "name": "strModifier",
@@ -214,11 +231,6 @@
             "internalType": "int256"
           },
           {
-            "name": "classRestrictions",
-            "type": "uint8[]",
-            "internalType": "uint8[]"
-          },
-          {
             "name": "hitPointModifier",
             "type": "int256",
             "internalType": "int256"
@@ -242,6 +254,28 @@
             "name": "minLevel",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "statRestrictions",
+            "type": "tuple",
+            "internalType": "struct StatRestrictions",
+            "components": [
+              {
+                "name": "minAgility",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "minIntelligence",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "minStrength",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
           },
           {
             "name": "strModifier",

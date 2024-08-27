@@ -21,7 +21,7 @@ import { formatEther, formatUnits } from 'viem';
 import { useToast } from '../hooks/useToast';
 import {
   BATTLE_OUTCOME_SEEN_KEY,
-  CURRENT_BATTLE_MONSTER_TURN_KEY,
+  CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
 import {
@@ -73,7 +73,7 @@ export const BattleProvider = ({
     delegatorAddress,
     systemCalls: { endTurn },
   } = useMUD();
-  const { character } = useCharacter();
+  const { character, refreshCharacter } = useCharacter();
   const { allMonsters, allCharacters } = useMap();
 
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
@@ -117,9 +117,8 @@ export const BattleProvider = ({
 
     if (latestBattleOutcomeSeen === latestBattle?.encounterId) return null;
 
-    if (latestBattle.end !== '0' && continueToBattleOutcome) return null;
     return latestBattle;
-  }, [allBattles, continueToBattleOutcome]);
+  }, [allBattles]);
 
   const lastestBattleOutcome = useMemo(() => {
     const latestCompletedBattle = allBattles.filter(b => b.end !== '0').pop();
@@ -271,8 +270,10 @@ export const BattleProvider = ({
           throw new Error(error);
         }
 
-        localStorage.removeItem(CURRENT_BATTLE_MONSTER_TURN_KEY);
+        localStorage.removeItem(CURRENT_BATTLE_OPPONENT_TURN_KEY);
         localStorage.removeItem(CURRENT_BATTLE_USER_TURN_KEY);
+
+        refreshCharacter();
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to attack.', e);
       } finally {
@@ -286,6 +287,7 @@ export const BattleProvider = ({
       delegatorAddress,
       endTurn,
       opponent,
+      refreshCharacter,
       renderError,
     ],
   );

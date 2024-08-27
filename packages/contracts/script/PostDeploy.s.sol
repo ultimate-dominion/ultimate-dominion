@@ -270,7 +270,6 @@ contract PostDeploy is Script {
         bytes memory data = vm.parseJson(json);
 
         StarterItems memory itemsData = abi.decode(data, (StarterItems));
-
         uint256[] memory warriorItemIds = new uint256[](2);
         uint256[] memory rogueItemIds = new uint256[](2);
         uint256[] memory mageItemIds = new uint256[](2);
@@ -281,10 +280,10 @@ contract PostDeploy is Script {
             ArmorStats memory newArmor = ArmorStats({
                 agiModifier: armorTemplate.stats.agiModifier,
                 armorModifier: armorTemplate.stats.armorModifier,
-                classRestrictions: armorTemplate.stats.classRestrictions,
                 hitPointModifier: armorTemplate.stats.hitPointModifier,
                 intModifier: armorTemplate.stats.intModifier,
                 minLevel: armorTemplate.stats.minLevel,
+                statRestrictions: armorTemplate.stats.statRestrictions,
                 strModifier: armorTemplate.stats.strModifier
             });
 
@@ -308,12 +307,12 @@ contract PostDeploy is Script {
 
             WeaponStats memory newWeapon = WeaponStats({
                 agiModifier: weaponTemplate.stats.agiModifier,
-                classRestrictions: weaponTemplate.stats.classRestrictions,
                 hitPointModifier: weaponTemplate.stats.hitPointModifier,
                 intModifier: weaponTemplate.stats.intModifier,
                 maxDamage: weaponTemplate.stats.maxDamage,
                 minDamage: weaponTemplate.stats.minDamage,
                 minLevel: weaponTemplate.stats.minLevel,
+                statRestrictions: weaponTemplate.stats.statRestrictions,
                 strModifier: weaponTemplate.stats.strModifier
             });
 
@@ -327,11 +326,7 @@ contract PostDeploy is Script {
 
             if (i == 0) {
                 warriorItemIds[1] = starterWeaponId;
-            }
-            if (i == 1) {
                 rogueItemIds[1] = starterWeaponId;
-            }
-            if (i == 2) {
                 mageItemIds[1] = starterWeaponId;
             }
         }

@@ -20,7 +20,7 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { LEADERBOARD_PATH } from '../Routes';
+import { AUCTION_HOUSE_PATH, LEADERBOARD_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { Level } from './Level';
 
@@ -242,6 +242,7 @@ export const StatsPanel = (): JSX.Element => {
           <VStack alignSelf="start" alignItems="start">
             <Link
               as={RouterLink}
+              to={AUCTION_HOUSE_PATH}
               borderBottom="2px solid"
               borderColor="grey400"
               fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}

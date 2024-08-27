@@ -20,11 +20,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { EncounterType } from '../utils/types';
 
 export const ActionsPanel = (): JSX.Element => {
-  const {
-    isRefreshing: isRefreshingCharacter,
-    character,
-    equippedWeapons,
-  } = useCharacter();
+  const { character, equippedWeapons } = useCharacter();
   const { isSpawned, monstersOnTile, position } = useMap();
   const {
     actionOutcomes,
@@ -35,11 +31,14 @@ export const ActionsPanel = (): JSX.Element => {
     onContinueToBattleOutcome,
     opponent,
   } = useBattle();
-  const { isRefreshing: isRefreshingMap } = useMovement();
+  const { isRefreshing } = useMovement();
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
+  const [actionButtonFocus, setActionButtonFocus] = useState<number>(0);
 
   const parentDivRef = useRef<HTMLDivElement>(null);
+  const actionButton1Ref = useRef<HTMLButtonElement>(null);
+  const actionButton2Ref = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (parentDivRef.current) {
@@ -48,97 +47,42 @@ export const ActionsPanel = (): JSX.Element => {
         top: parentDivRef.current.scrollHeight,
       });
     }
+
+    if (actionButton1Ref.current) {
+      actionButton1Ref.current.focus();
+      setActionButtonFocus(0);
+    }
   }, [actionOutcomes]);
+
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'ArrowLeft':
+          if (actionButtonFocus === 1 && actionButton2Ref.current) {
+            actionButton1Ref.current?.focus();
+            setActionButtonFocus(0);
+          }
+          break;
+        case 'ArrowRight':
+          if (actionButtonFocus === 0 && actionButton1Ref.current) {
+            actionButton2Ref.current?.focus();
+            setActionButtonFocus(1);
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', listener);
+    // eslint-disable-next-line consistent-return
+    return () => window.removeEventListener('keydown', listener);
+  }, [actionButtonFocus]);
 
   const battleOver = useMemo(
     () => currentBattle?.encounterId === lastestBattleOutcome?.encounterId,
     [currentBattle, lastestBattleOutcome],
   );
-
-  const actionText = useMemo(() => {
-    if (isRefreshingCharacter || isRefreshingMap) return '';
-
-    if (!(isSpawned && position)) {
-      return (
-        <Typist
-          avgTypingDelay={10}
-          cursor={{ show: false }}
-          stdTypingDelay={10}
-        >
-          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-            In order to begin battling, you must{' '}
-            <Text as="span" fontWeight={700}>
-              spawn
-            </Text>{' '}
-            your character.
-          </Text>
-        </Typist>
-      );
-    }
-
-    if (position.x === 0 && position.y === 0) {
-      return (
-        <Typist
-          avgTypingDelay={10}
-          cursor={{ show: false }}
-          stdTypingDelay={10}
-        >
-          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-            You are currently in the starting tile.{' '}
-            <Text as="span" fontWeight={700}>
-              Move to a new tile
-            </Text>{' '}
-            to find monsters to battle.
-          </Text>
-        </Typist>
-      );
-    }
-
-    if ((position.x !== 0 || position.y !== 0) && monstersOnTile.length === 0) {
-      return (
-        <Typist
-          avgTypingDelay={10}
-          cursor={{ show: false }}
-          startDelay={500}
-          stdTypingDelay={10}
-        >
-          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-            Looks like there are no monsters in this tile.{' '}
-            <Text as="span" fontWeight={700}>
-              Move to a new tile
-            </Text>{' '}
-            to find monsters to battle.
-          </Text>
-        </Typist>
-      );
-    }
-
-    if ((position.x !== 0 || position.y !== 0) && monstersOnTile.length > 0) {
-      return (
-        <Typist
-          avgTypingDelay={10}
-          cursor={{ show: false }}
-          stdTypingDelay={10}
-        >
-          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-            To initiate a battle,{' '}
-            <Text as="span" fontWeight={700}>
-              click on a monster
-            </Text>
-            .
-          </Text>
-        </Typist>
-      );
-    }
-
-    return '';
-  }, [
-    isRefreshingCharacter,
-    isRefreshingMap,
-    isSpawned,
-    monstersOnTile,
-    position,
-  ]);
 
   const userTurn = useMemo(() => {
     if (!(character && currentBattle)) return false;
@@ -294,6 +238,7 @@ export const ActionsPanel = (): JSX.Element => {
                         ).toString(),
                   )
                 }
+                ref={index === 0 ? actionButton1Ref : actionButton2Ref}
                 variant="outline"
                 w="100%"
               >
@@ -304,7 +249,76 @@ export const ActionsPanel = (): JSX.Element => {
         </VStack>
       )}
       <Stack p={{ base: 2, lg: 4 }}>
-        {!currentBattle && actionText}
+        {!currentBattle && !(isSpawned && position) && (
+          <Typist
+            avgTypingDelay={10}
+            cursor={{ show: false }}
+            stdTypingDelay={10}
+          >
+            <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+              In order to begin battling, you must{' '}
+              <Text as="span" fontWeight={700}>
+                spawn
+              </Text>{' '}
+              your character.
+            </Text>
+          </Typist>
+        )}
+        {!currentBattle &&
+          isSpawned &&
+          position?.x === 0 &&
+          position?.y === 0 && (
+            <Typist
+              avgTypingDelay={10}
+              cursor={{ show: false }}
+              stdTypingDelay={10}
+            >
+              <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                You are currently in the starting tile.{' '}
+                <Text as="span" fontWeight={700}>
+                  Move to a new tile
+                </Text>{' '}
+                to find monsters to battle.
+              </Text>
+            </Typist>
+          )}
+        {!currentBattle &&
+          !isRefreshing &&
+          isSpawned &&
+          (position?.x !== 0 || position?.y !== 0) &&
+          monstersOnTile.length === 0 && (
+            <Typist
+              avgTypingDelay={10}
+              cursor={{ show: false }}
+              stdTypingDelay={10}
+            >
+              <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                Looks like there are no monsters in this tile.{' '}
+                <Text as="span" fontWeight={700}>
+                  Move to a new tile
+                </Text>{' '}
+                to find monsters to battle.
+              </Text>
+            </Typist>
+          )}
+        {!currentBattle &&
+          !isRefreshing &&
+          (position?.x !== 0 || position?.y !== 0) &&
+          monstersOnTile.length > 0 && (
+            <Typist
+              avgTypingDelay={10}
+              cursor={{ show: false }}
+              stdTypingDelay={10}
+            >
+              <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                To initiate a battle,{' '}
+                <Text as="span" fontWeight={700}>
+                  click on a monster
+                </Text>
+                .
+              </Text>
+            </Typist>
+          )}
 
         {opponent &&
           actionOutcomes.map((action, i) => {

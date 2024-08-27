@@ -17,11 +17,13 @@ export default defineWorld({
       "Mage", // 2
     ],
     RngRequestType: ["CharacterStats", "Combat", "WorldGeneration"],
-    ItemType: ["Weapon", "Armor", "Spell", "Potion", "Material", "QuestItem"],
+    ItemType: ["Weapon", "Armor", "Spell", "Potion", "Utility", "QuestItem"],
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
     ActionType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
+    OrderStatus: ["Canceled", "Active", "Fullfilled"],
+    TokenType: ["NATIVE", "ERC20", "ERC721", "ERC1155"],
     StatusEffects: [
       "ToHitModifier",
       "DoT",
@@ -256,6 +258,37 @@ export default defineWorld({
         items: "address",
       },
     },
+        ///////// AUCTION HOUSE ////////////
+        Orders: {
+          key: ["orderHash"],
+          schema: {
+            orderHash: "bytes32",
+            offerer: "address",
+            offerCounter: "uint256",
+            orderStatus: "OrderStatus",
+          },
+        },
+        Considerations: {
+          key: ["orderHash"],
+          schema: {
+            orderHash: "bytes32",
+            tokenType: "TokenType",
+            token: "address",
+            identifier: "uint256",
+            amount: "uint256",
+            recipient: "address",
+          },
+        },
+        Offers: {
+          key: ["orderHash"],
+          schema: {
+            orderHash: "bytes32",
+            tokenType: "TokenType",
+            token: "address",
+            identifier: "uint256",
+            amount: "uint256",
+          },
+        },
     ///////////////////////// OFFCHAIN TABLES//////////////////
     RngLogs: {
       key: ["requestId"],

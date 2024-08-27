@@ -19,7 +19,7 @@ enum ItemType {
   Armor,
   Spell,
   Potion,
-  Material,
+  Utility,
   QuestItem
 }
 
@@ -45,6 +45,19 @@ enum ActionType {
   PhysicalAttack,
   MagicAttack,
   StatusEffect
+}
+
+enum OrderStatus {
+  Canceled,
+  Active,
+  Fullfilled
+}
+
+enum TokenType {
+  NATIVE,
+  ERC20,
+  ERC721,
+  ERC1155
 }
 
 enum StatusEffects {

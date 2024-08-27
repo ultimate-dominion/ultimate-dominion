@@ -21,6 +21,11 @@ export enum ItemType {
   QuestItem,
 }
 
+export enum MobType {
+  Monster,
+  NPC,
+}
+
 export enum StatsClasses {
   Warrior,
   Rogue,
@@ -46,23 +51,23 @@ export type ActionOutcomeType = {
   weaponId: string;
 };
 
-export type Armor = ArmorStats &
-  Metadata & {
-    balance: string;
-    itemId: Entity;
-    owner: string;
-    tokenId: string;
-  };
+export type Armor = ArmorTemplate & {
+  balance: string;
+  itemId: Entity;
+  owner: string;
+};
 
 export type ArmorStats = {
   agiModifier: string;
   armorModifier: string;
-  classRestrictions: StatsClasses[];
   hitPointModifier: string;
   intModifier: string;
   minLevel: string;
+  statRestrictions: StatRestrictions;
   strModifier: string;
 };
+
+export type ArmorTemplate = ArmorStats & Metadata & { tokenId: string };
 
 export type Character = CharacterData & EntityStats & Metadata;
 
@@ -115,28 +120,66 @@ export type Metadata = {
   name: string;
 };
 
-export type Monster = Metadata &
-  EntityStats & {
-    id: Entity;
-    inBattle: boolean;
+export type Monster = MonsterTemplate & {
+  id: Entity;
+  inBattle: boolean;
+  isSpawned: boolean;
+  position: { x: number; y: number };
+};
+
+export type MonsterTemplate = EntityStats &
+  Metadata & {
     mobId: string;
   };
 
-export type Weapon = WeaponStats &
-  Metadata & {
-    balance: string;
-    itemId: Entity;
-    owner: string;
-    tokenId: string;
-  };
+export type Weapon = WeaponTemplate & {
+  balance: string;
+  itemId: Entity;
+  owner: string;
+};
 
 export type WeaponStats = {
   agiModifier: string;
-  classRestrictions: StatsClasses[];
   hitPointModifier: string;
   intModifier: string;
   maxDamage: string;
   minDamage: string;
   minLevel: string;
+  statRestrictions: StatRestrictions;
   strModifier: string;
+};
+
+export type WeaponTemplate = WeaponStats & Metadata & { tokenId: string };
+
+export type Item = Metadata & {
+  itemId: Entity;
+  itemType: ItemType;
+  class: StatsClasses;
+  stats: WeaponStats | ArmorStats | null;
+  tokenId: string;
+};
+export type Order = {
+  orderHash: string;
+  orderStatus: string;
+  offer: OfferData;
+  consideration: ConsiderationData;
+};
+export type OfferData = {
+  amount: string;
+  identifier: string;
+  token: string;
+  tokenType: string;
+};
+export type ConsiderationData = {
+  amount: string;
+  identifier: string;
+  token: string;
+  tokenType: string;
+  recipient: string;
+};
+
+export type StatRestrictions = {
+  minAgility: string;
+  minIntelligence: string;
+  minStrength: string;
 };
