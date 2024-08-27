@@ -11,7 +11,7 @@ import { CharacterPage } from './pages/Character';
 import { CharacterCreation } from './pages/CharacterCreation';
 import { GameBoard } from './pages/GameBoard';
 import { Leaderboard } from './pages/Leaderboard';
-import { Shops } from './pages/Shops';
+import { Shop } from './pages/Shop';
 import { Welcome } from './pages/Welcome';
 
 export const HOME_PATH = '/';
@@ -55,7 +55,7 @@ const AppRoutes: React.FC = () => {
       <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
       <Route path={AUCTION_HOUSE_PATH} element={<AuctionHouse />} />
       <Route path={ITEM_PATH + ':itemId'} element={<AuctionItem />} />
-      <Route path={SHOP_PATH} element={<Shops />} />
+      <Route path={SHOP_PATH} element={<Shop />} />
     </Routes>
   );
 };

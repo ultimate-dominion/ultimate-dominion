@@ -23,7 +23,7 @@ import { IoAdd, IoRemove } from 'react-icons/io5';
 // import { useNavigate } from 'react-router-dom';
 
 // import { SHOP_PATH } from '../Routes';
-export const ShopRow = ({ name }: { name: string }): JSX.Element => {
+export const ShopItemRow = ({ name }: { name: string }): JSX.Element => {
   // const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
