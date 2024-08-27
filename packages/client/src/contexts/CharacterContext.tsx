@@ -65,7 +65,11 @@ export const CharacterProvider = ({
     network: { publicClient, worldContract },
   } = useMUD();
   const { renderError } = useToast();
-  const { armor, isLoading: isLoadingItems, weapons } = useItems();
+  const {
+    armorTemplates,
+    isLoading: isLoadingItemTemplates,
+    weaponTemplates,
+  } = useItems();
 
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(true);
@@ -173,7 +177,7 @@ export const CharacterProvider = ({
   ]);
 
   const fetchCharacterItems = useCallback(
-    async (
+    (
       _character: Character,
       _equippedArmor: bigint[],
       _equippedWeapons: bigint[],
@@ -203,7 +207,7 @@ export const CharacterProvider = ({
             tokenOwnersEntity,
           );
 
-          const armorDetails = armor.find(
+          const armorDetails = armorTemplates.find(
             item => item.tokenId === tokenId.toString(),
           );
 
@@ -229,7 +233,7 @@ export const CharacterProvider = ({
               tokenOwnersEntity,
             );
 
-            const weaponDetails = weapons.find(
+            const weaponDetails = weaponTemplates.find(
               item => item.tokenId === tokenId.toString(),
             );
 
@@ -255,27 +259,24 @@ export const CharacterProvider = ({
         );
       }
     },
-    [armor, ItemsOwners, renderError, weapons],
+    [armorTemplates, ItemsOwners, renderError, weaponTemplates],
   );
 
   useEffect(() => {
-    if (!isSynced) return;
-    if (isLoadingItems) return;
-    (async (): Promise<void> => {
-      if (!userCharacter) return;
+    if (!(isSynced && userCharacter) || isLoadingItemTemplates) return;
 
-      const { equippedArmor, equippedWeapons } =
-        getComponentValue(CharacterEquipment, userCharacter.id) ??
-        ({ equippedArmor: [], equippedWeapons: [] } as {
-          equippedArmor: bigint[];
-          equippedWeapons: bigint[];
-        });
-      await fetchCharacterItems(userCharacter, equippedArmor, equippedWeapons);
-    })();
+    const { equippedArmor, equippedWeapons } =
+      getComponentValue(CharacterEquipment, userCharacter.id) ??
+      ({ equippedArmor: [], equippedWeapons: [] } as {
+        equippedArmor: bigint[];
+        equippedWeapons: bigint[];
+      });
+
+    fetchCharacterItems(userCharacter, equippedArmor, equippedWeapons);
   }, [
     CharacterEquipment,
     fetchCharacterItems,
-    isLoadingItems,
+    isLoadingItemTemplates,
     isSynced,
     userCharacter,
   ]);

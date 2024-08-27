@@ -25,14 +25,14 @@ import { type Armor, ItemType, type Weapon } from '../utils/types';
 import { useMUD } from './MUDContext';
 
 type ItemsContextType = {
-  armor: Armor[];
-  weapons: Weapon[];
+  armorTemplates: Armor[];
+  weaponTemplates: Weapon[];
   isLoading: boolean;
 };
 
 const ItemsContext = createContext<ItemsContextType>({
-  armor: [],
-  weapons: [],
+  armorTemplates: [],
+  weaponTemplates: [],
   isLoading: false,
 });
 
@@ -47,8 +47,8 @@ export const ItemsProvider = ({
     isSynced,
   } = useMUD();
 
-  const [armor, setArmor] = useState<Armor[]>([]);
-  const [weapons, setWeapons] = useState<Weapon[]>([]);
+  const [armorTemplates, setArmorTemplates] = useState<Armor[]>([]);
+  const [weaponTemplates, setWeaponTemplates] = useState<Weapon[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const fetchAllArmor = useCallback(
@@ -194,14 +194,14 @@ export const ItemsProvider = ({
             .map(({ tokenId }) => tokenId);
 
           const _armor = await fetchAllArmor(allArmorIds);
-          setArmor(_armor);
+          setArmorTemplates(_armor);
 
           const allWeaponIds = allItemIds
             .filter(({ itemType }) => itemType === ItemType.Weapon)
             .map(({ tokenId }) => tokenId);
 
           const _weapons = await fetchAllWeapons(allWeaponIds);
-          setWeapons(_weapons);
+          setWeaponTemplates(_weapons);
         }
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to fetch items.', e);
@@ -214,8 +214,8 @@ export const ItemsProvider = ({
   return (
     <ItemsContext.Provider
       value={{
-        armor,
-        weapons,
+        armorTemplates,
+        weaponTemplates,
         isLoading,
       }}
     >

@@ -18,7 +18,7 @@ import {
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { getComponentValueStrict, Has, runQuery } from '@latticexyz/recs';
-import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -26,18 +26,13 @@ import { useAccount } from 'wagmi';
 
 import { ItemCardSmall } from '../components/ItemCard';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
-import {
-  decodeArmorStats,
-  decodeWeaponStats,
-  fetchMetadataFromUri,
-  shortenAddress,
-  uriToHttp,
-} from '../utils/helpers';
+import { shortenAddress } from '../utils/helpers';
 import { type Armor, StatsClasses, type Weapon } from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
@@ -46,17 +41,16 @@ export const CharacterCreation = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { isConnected } = useAccount();
   const {
-    components: {
-      Items,
-      ItemsBaseURI,
-      ItemsTokenURI,
-      StarterItems,
-      UltimateDominionConfig,
-    },
+    components: { Items, StarterItems, UltimateDominionConfig },
     delegatorAddress,
     isSynced,
     systemCalls: { enterGame, mintCharacter, rollStats },
   } = useMUD();
+  const {
+    armorTemplates,
+    isLoading: isLoadingItemTemplates,
+    weaponTemplates,
+  } = useItems();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
   const {
     file: avatar,
@@ -88,103 +82,9 @@ export const CharacterCreation = (): JSX.Element => {
     setShowError(false);
   }, [avatar, description, name]);
 
-  const fetchStarterItems = useCallback(
-    async (starterArmorTokenIds: bigint[], starterWeaponTokenIds: bigint[]) => {
-      try {
-        const _armor: Armor[] = await Promise.all(
-          starterArmorTokenIds.map(async tokenId => {
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId },
-            );
-
-            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-            const decodedArmorStats = decodeArmorStats(itemTemplate.stats);
-
-            const baseURI = getComponentValueStrict(
-              ItemsBaseURI,
-              singletonEntity,
-            ).uri;
-
-            const tokenURI = getComponentValueStrict(
-              ItemsTokenURI,
-              tokenIdEntity,
-            ).uri;
-
-            const fetachedMetadata = await fetchMetadataFromUri(
-              uriToHttp(`${baseURI}${tokenURI}`)[0],
-            );
-
-            return {
-              agiModifier: decodedArmorStats.agiModifier,
-              armorModifier: decodedArmorStats.armorModifier,
-              hitPointModifier: decodedArmorStats.hitPointModifier,
-              intModifier: decodedArmorStats.intModifier,
-              statRestrictions: {
-                minAgility: decodedArmorStats.statRestrictions.minAgility,
-                minIntelligence:
-                  decodedArmorStats.statRestrictions.minIntelligence,
-                minStrength: decodedArmorStats.statRestrictions.minStrength,
-              },
-              strModifier: decodedArmorStats.strModifier,
-              ...fetachedMetadata,
-            } as Armor;
-          }),
-        );
-
-        const _weapons: Weapon[] = await Promise.all(
-          starterWeaponTokenIds.map(async tokenId => {
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId },
-            );
-
-            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-            const decodedWeaponStats = decodeWeaponStats(itemTemplate.stats);
-
-            const baseURI = getComponentValueStrict(
-              ItemsBaseURI,
-              singletonEntity,
-            ).uri;
-
-            const tokenURI = getComponentValueStrict(
-              ItemsTokenURI,
-              tokenIdEntity,
-            ).uri;
-
-            const fetachedMetadata = await fetchMetadataFromUri(
-              uriToHttp(`${baseURI}${tokenURI}`)[0],
-            );
-
-            return {
-              agiModifier: decodedWeaponStats.agiModifier,
-              hitPointModifier: decodedWeaponStats.hitPointModifier,
-              intModifier: decodedWeaponStats.intModifier,
-              maxDamage: decodedWeaponStats.maxDamage,
-              minDamage: decodedWeaponStats.minDamage,
-              minLevel: decodedWeaponStats.minLevel,
-              statRestrictions: {
-                minAgility: decodedWeaponStats.statRestrictions.minAgility,
-                minIntelligence:
-                  decodedWeaponStats.statRestrictions.minIntelligence,
-                minStrength: decodedWeaponStats.statRestrictions.minStrength,
-              },
-              strModifier: decodedWeaponStats.strModifier,
-              ...fetachedMetadata,
-            } as Weapon;
-          }),
-        );
-
-        setStarterArmor(_armor);
-        setStarterWeapons(_weapons);
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Error fetching starter item.', e);
-      }
-    },
-    [Items, ItemsBaseURI, ItemsTokenURI, renderError],
-  );
-
   useEffect(() => {
+    if (isLoadingItemTemplates) return;
+
     const starterItemTokenIds = Array.from(runQuery([Has(StarterItems)])).map(
       entity => {
         const tokenIds = getComponentValueStrict(StarterItems, entity).itemIds;
@@ -193,15 +93,28 @@ export const CharacterCreation = (): JSX.Element => {
     );
 
     const starterArmorTokenIds = starterItemTokenIds
-      .map(item => item[0] as bigint)
+      .map(item => item[0].toString())
       .filter((value, index, self) => self.indexOf(value) === index);
-
-    const starterWeaponTokenIds = starterItemTokenIds.map(
-      item => item[1] as bigint,
+    const starterWeaponTokenIds = starterItemTokenIds.map(item =>
+      item[1].toString(),
     );
 
-    fetchStarterItems(starterArmorTokenIds, starterWeaponTokenIds);
-  }, [fetchStarterItems, Items, StarterItems]);
+    const _starterArmor = armorTemplates.filter(armor =>
+      starterArmorTokenIds.includes(armor.tokenId),
+    );
+    const _starterWeapons = weaponTemplates.filter(weapon =>
+      starterWeaponTokenIds.includes(weapon.tokenId),
+    );
+
+    setStarterArmor(_starterArmor);
+    setStarterWeapons(_starterWeapons);
+  }, [
+    armorTemplates,
+    isLoadingItemTemplates,
+    Items,
+    StarterItems,
+    weaponTemplates,
+  ]);
 
   const onUploadAvatar = useCallback(() => {
     const input = document.getElementById('avatarInput');
