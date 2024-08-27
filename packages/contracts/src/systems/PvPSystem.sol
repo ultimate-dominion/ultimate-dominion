@@ -28,8 +28,7 @@ import {
     MobsData,
     Counters,
     ActionOutcome,
-    ActionOutcomeData,
-    PvPFlag
+    ActionOutcomeData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {
@@ -51,7 +50,7 @@ import {
     CRIT_MODIFIER,
     BASE_GOLD_DROP
 } from "../../constants.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract PvPSystem is System {
     function isValidPvP(bytes32[] memory attackers, bytes32[] memory defenders, uint16 x, uint16 y)
@@ -74,7 +73,8 @@ contract PvPSystem is System {
             }
             if (entityX >= 5 || entityY >= 5) {
                 // intentionally left empty
-            } else {
+            }
+            else {
                 _isValidPvP = false;
                 break;
             }
@@ -95,7 +95,8 @@ contract PvPSystem is System {
                 }
                 if (entityX >= 5 || entityY >= 5) {
                     // intentionally left empty
-                } else {
+                }
+                else {
                     _isValidPvP = false;
                     break;
                 }

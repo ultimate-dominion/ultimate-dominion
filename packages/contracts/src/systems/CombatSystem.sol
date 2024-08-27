@@ -28,8 +28,7 @@ import {
     MobsData,
     Counters,
     ActionOutcome,
-    ActionOutcomeData,
-    PvPFlag
+    ActionOutcomeData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {
@@ -39,7 +38,8 @@ import {
     NPCStats,
     Action,
     PhysicalAttackStats,
-    AdjustedCombatStats
+    AdjustedCombatStats,
+    SpellStats
 } from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
@@ -54,7 +54,7 @@ import {
     BASE_GOLD_DROP,
     PRECISION
 } from "../../constants.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract CombatSystem is System {
     using Math for uint256;
@@ -189,14 +189,19 @@ contract CombatSystem is System {
                                 : uint256(0)
                         ) * DEFENSE_MODIFIER
                     );
-                console2.log("HIT!");
+                console.log("HIT!");
                 if (crit) {
+<<<<<<< Updated upstream
                     console2.log("CRIT!");
                     damage = damage * int256(CRIT_MULTIPLIER);
+=======
+                    console.log("CRIT!");
+                    damage = damage * int256(CRIT_MODIFIER);
+>>>>>>> Stashed changes
                     crit = true;
                 }
             } else {
-                console2.log("MISS!");
+                console.log("MISS!");
                 damage = 0;
                 hit = false;
             }
@@ -262,13 +267,14 @@ contract CombatSystem is System {
         MagicAttackStats memory attackStats,
         bytes32 attackerId,
         bytes32 defenderId,
-        uint256 weaponId,
+        uint256 spellId,
         uint256 randomNumber
-    ) internal returns (int256 damage, bool hit, bool crit) {
+    ) internal view returns (int256 damage, bool hit, bool crit) {
         // get attacker
         AdjustedCombatStats memory attacker = IWorld(_world()).UD__applyEquipmentBonuses(attackerId);
         //get defender
         AdjustedCombatStats memory defender = IWorld(_world()).UD__applyEquipmentBonuses(defenderId);
+        SpellStats memory spell = IWorld(_world()).UD__getSpellStats(spellId);
 
         if (defender.currentHp > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
@@ -281,12 +287,17 @@ contract CombatSystem is System {
                 console2.log("Magic damage");
                 console2.logInt(damage);
                 if (crit) {
+<<<<<<< Updated upstream
                     console2.log("CRIT!");
                     damage = damage * int256(CRIT_MULTIPLIER);
+=======
+                    console.log("CRIT!");
+                    damage = damage * int256(CRIT_MODIFIER);
+>>>>>>> Stashed changes
                     crit = true;
                 }
             } else {
-                console2.log("MISS!");
+                console.log("MISS!");
                 damage = 0;
                 hit = false;
             }
@@ -302,8 +313,12 @@ contract CombatSystem is System {
         uint64 rnChunk,
         AdjustedCombatStats memory attacker,
         AdjustedCombatStats memory defender
+<<<<<<< Updated upstream
     ) internal returns (int256 _damage) {
         console2.log("MAGIC!");
+=======
+    ) internal pure returns (int256 _damage) {
+>>>>>>> Stashed changes
         if (attackStats.minDamage > 0 && attackStats.maxDamage > 0) {
             int256 baseDamage = attackStats.bonusDamage
                 + int256(

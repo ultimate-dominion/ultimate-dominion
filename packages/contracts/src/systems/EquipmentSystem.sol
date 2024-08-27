@@ -39,8 +39,8 @@ import {
     _operatorApprovalTableId,
     _ownersTableId
 } from "@erc1155/utils.sol";
-import {AdjustedCombatStats, MonsterStats} from "@interfaces/Structs.sol";
-import "forge-std/console2.sol";
+import {AdjustedCombatStats, MonsterStats, SpellStats} from "@interfaces/Structs.sol";
+import "forge-std/console.sol";
 
 contract EquipmentSystem is System {
     modifier inGame(bytes32 characterId) {
@@ -303,5 +303,11 @@ contract EquipmentSystem is System {
         ItemsData memory _data = Items.get(itemId);
         require(_data.itemType == ItemType.Armor, "ITEMS: Not a  Armor");
         _ArmorStats = abi.decode(_data.stats, (ArmorStats));
+    }
+
+    function getSpellStats(uint256 itemId) public view returns (SpellStats memory _spellStats) {
+        ItemsData memory _data = Items.get(itemId);
+        require(_data.itemType == ItemType.Spell, "ITEMS: Not a  Armor");
+        _spellStats = abi.decode(_data.stats, (SpellStats));
     }
 }

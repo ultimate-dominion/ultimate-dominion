@@ -45,7 +45,7 @@ import {
     _operatorApprovalTableId,
     _ownersTableId
 } from "@erc1155/utils.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract LootManagerSystem is System {
     // all items and gold will be managed by this system.  ownership of both contracts will be on this system and permissions
@@ -105,9 +105,9 @@ contract LootManagerSystem is System {
         for (uint256 i; i < monsterStats.inventory.length; i++) {
             tempItemId = monsterStats.inventory[i];
             uint256 dropChance = Items.getDropChance(tempItemId);
-            console2.log("drop calc", randomNumber % 100_000_000 < dropChance);
+            console.log("drop calc", randomNumber % 100_000_000 < dropChance);
             if (randomNumber % 100_000_000 < dropChance) {
-                console2.log("ITEM DROPPED", tempItemId);
+                console.log("ITEM DROPPED", tempItemId);
                 IWorld(_world()).UD__dropItem(characterId, tempItemId, 1);
                 itemIdsDropped[i] = tempItemId;
                 totalItemsDropped++;
@@ -170,8 +170,6 @@ contract LootManagerSystem is System {
         // if cumulative attacker levels is >= 5 levels above the monster level no gold reward.
         //  for this calculation level is calculated from exp not from actual leveled levels
 
-        bytes[] memory itemsDroppedTemp = new bytes[](distTemps.monsters.length);
-
         for (uint256 i; i < distTemps.monsters.length; i++) {
             distTemps.monsterTemp = distTemps.monsters[i];
             distTemps.defenderLevelTemp = Stats.getLevel(distTemps.monsterTemp);
@@ -218,6 +216,7 @@ contract LootManagerSystem is System {
 
     function _trimDroppedItemIds(uint256 totalItemsDropped, bytes[] memory itemsDropped)
         internal
+        pure
         returns (uint256[] memory _droppedItemIds)
     {
         // trim down encoded bytes array into dropped item ids

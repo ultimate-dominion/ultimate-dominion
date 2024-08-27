@@ -11,6 +11,7 @@ struct StatRestrictions {
 }
 
 struct WeaponStats {
+    bytes32[] actions;
     int256 agiModifier;
     int256 hitPointModifier;
     int256 intModifier;
@@ -29,6 +30,27 @@ struct ArmorStats {
     uint256 minLevel;
     StatRestrictions statRestrictions;
     int256 strModifier;
+}
+
+struct SpellStats {
+    bytes32[] actions;
+    int256 maxDamage;
+    int256 minDamage;
+    uint256 minLevel;
+    StatRestrictions statRestrictions;
+    bytes32[] statusEffects;
+}
+
+struct StatusEffect {
+    int256 agiModifier;
+    int256 armorModifier;
+    int256 damagePerTick;
+    int256 totalHitPointModifier;
+    int256 intModifier;
+    //the amount of time in seconds this status effect is valid for
+    uint256 validTime;
+    // the number of turns in combat this is valid for.
+    uint256 validTurns;
 }
 
 struct WeaponTemplateDetails {
@@ -69,7 +91,34 @@ struct PhysicalAttackTemplate {
     string name;
     PhysicalAttackStats stats;
 }
+<<<<<<< Updated upstream
 /////////////////////////////////// MONSTERS /////////////////////////////////////
+=======
+
+<<<<<<< Updated upstream
+struct ArmorStats {
+    int256 agiModifier;
+    uint256 armorModifier;
+    uint8[] classRestrictions;
+    int256 hitPointModifier;
+    int256 intModifier;
+    uint256 minLevel;
+    int256 strModifier;
+}
+=======
+struct AdjustedCombatStats {
+    uint256 adjustedStrength;
+    uint256 adjustedAgility;
+    uint256 adjustedIntelligence;
+    uint256 adjustedArmor;
+    uint256 adjustedMaxHp;
+    int256 currentHp;
+    uint256 level;
+}
+
+/////////////////////////////////// MONSTERS /////////////////////////////////////
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
 struct MonsterStats {
     // availible action ids
@@ -100,14 +149,25 @@ struct MonsterTemplateDetails {
     MonsterStats stats;
 }
 
-struct AdjustedCombatStats {
-    uint256 adjustedStrength;
-    uint256 adjustedAgility;
-    uint256 adjustedIntelligence;
-    uint256 adjustedArmor;
-    uint256 adjustedMaxHp;
-    int256 currentHp;
-    uint256 level;
+struct NPCStats {
+    string name;
+    bytes32[] storyPathIds;
+    Alignment alignment;
+}
+
+struct QuestEntity {
+    // entity id is a keccak256(characterId, questId))
+    bytes32 entityId;
+    uint256 questId;
+    uint256 currentStep;
+}
+
+/////////////////////////// ACTIONS ///////////////////////////////////
+struct Action {
+    bytes32 attackerEntityId;
+    bytes32 defenderEntityId;
+    bytes32 actionId;
+    uint256 weaponId;
 }
 
 struct PhysicalAttackStats {
@@ -123,30 +183,6 @@ struct PhysicalAttackStats {
     StatRestrictions statRestrictions;
     // status effects applied by this attack empty if none
     bytes32[] statusEffects;
-}
-
-struct StatusEffect {
-    // if this is a combat effect, must include number of turns it lasts for
-    bool combatEffect;
-    // number of turns this is valid for, 0 if non combat effect
-    uint8 turns;
-    // if non-combat effect this is the amount of time this effect is valid for
-    uint256 timeout;
-    int256 attackModifierEffect;
-    int256 damageEffect;
-    int256 strengthEffect;
-    int256 agilityEffect;
-    int256 intelligenceEffect;
-    int256 baseHitPointEffect;
-    // items that can cause this status effect
-    uint256[] itemRestrictions;
-}
-
-struct Action {
-    bytes32 attackerEntityId;
-    bytes32 defenderEntityId;
-    bytes32 actionId;
-    uint256 weaponId;
 }
 
 struct MagicAttackStats {
@@ -166,19 +202,6 @@ struct MagicAttackStats {
     bytes32[] statusEffects;
 }
 
-struct NPCStats {
-    string name;
-    bytes32[] storyPathIds;
-    Alignment alignment;
-}
-
-struct QuestEntity {
-    // entity id is a keccak256(characterId, questId))
-    bytes32 entityId;
-    uint256 questId;
-    uint256 currentStep;
-}
-
 struct RewardDistributionTemps {
     bytes32 monsterTemp;
     bytes32 entityIdTemp;
@@ -189,8 +212,15 @@ struct RewardDistributionTemps {
     bytes32[] players;
     bytes32[] monsters;
 }
+<<<<<<< Updated upstream
 
 ////// Auction house /////////
+=======
+<<<<<<< Updated upstream
+=======
+
+//////////////////////////////////// Auction house /////////////////////////////////////
+>>>>>>> Stashed changes
 
 struct Offer {
     TokenType tokenType;
@@ -213,3 +243,7 @@ struct Order {
     bytes signature;
     address offerer;
 }
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes

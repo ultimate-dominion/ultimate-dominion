@@ -45,4 +45,6 @@ interface IItemsSystem {
   function UD__setStarterItems(Classes class, uint256[] memory itemIds, uint256[] memory amounts) external;
 
   function UD__isItemOwner(uint256 itemId, address account) external view returns (bool);
+
+  function UD__consumeItem(bytes32 characterId, uint256 itemId) external;
 }

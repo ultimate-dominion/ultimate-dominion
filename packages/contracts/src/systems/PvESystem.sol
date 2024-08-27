@@ -50,7 +50,7 @@ import {
     CRIT_MODIFIER,
     BASE_GOLD_DROP
 } from "../../constants.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract PvESystem is System {
     function isValidPvE(bytes32[] memory attackers, bytes32[] memory defenders, uint16 x, uint16 y)

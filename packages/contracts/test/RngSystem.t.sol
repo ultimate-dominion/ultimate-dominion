@@ -6,7 +6,7 @@ import {Classes} from "../src/codegen/common.sol";
 import {RandomNumbersData} from "../src/codegen/tables/RandomNumbers.sol";
 import {IRngSystem} from "../src/interfaces/IRngSystem.sol";
 
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract Test_RngSystem is SetUp {
     function test_getFee() public {

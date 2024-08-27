@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import "forge-std/Test.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 import "forge-std/StdJson.sol";
 import {MudTest} from "@latticexyz/world/test/MudTest.t.sol";
 import {getKeysWithValue} from "@latticexyz/world-modules/src/modules/keyswithvalue/getKeysWithValue.sol";

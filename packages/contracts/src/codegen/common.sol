@@ -18,8 +18,16 @@ enum ItemType {
   Weapon,
   Armor,
   Spell,
+<<<<<<< Updated upstream
   Potion,
+<<<<<<< Updated upstream
   Utility,
+=======
+  Material,
+=======
+  Consumable,
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
   QuestItem
 }
 
@@ -47,6 +55,17 @@ enum ActionType {
   StatusEffect
 }
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+=======
+enum ResistanceStat {
+  Agility,
+  Strength,
+  Intelligence
+}
+
+>>>>>>> Stashed changes
 enum OrderStatus {
   Canceled,
   Active,
@@ -60,6 +79,10 @@ enum TokenType {
   ERC1155
 }
 
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 enum StatusEffects {
   ToHitModifier,
   DoT,

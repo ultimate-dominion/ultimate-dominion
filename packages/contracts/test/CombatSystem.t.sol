@@ -4,7 +4,7 @@ import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, EncounterType} from "@codegen/common.sol";
 import {StatsData, Stats} from "@tables/Stats.sol";
 import {EncounterEntity} from "@tables/EncounterEntity.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";

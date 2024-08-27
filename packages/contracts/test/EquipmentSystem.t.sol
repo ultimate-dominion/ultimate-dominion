@@ -2,8 +2,17 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType} from "@codegen/common.sol";
+<<<<<<< Updated upstream
 import {StatsData} from "@codegen/index.sol";
+=======
+<<<<<<< Updated upstream
+import {StatsData} from "@tables/Stats.sol";
+>>>>>>> Stashed changes
 import "forge-std/console2.sol";
+=======
+import {StatsData} from "@codegen/index.sol";
+import "forge-std/console.sol";
+>>>>>>> Stashed changes
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig, StarterItemsData} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";

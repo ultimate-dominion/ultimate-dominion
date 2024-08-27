@@ -57,7 +57,7 @@ import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
 
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 import "forge-std/StdJson.sol";
 
 struct ResourceIds {
@@ -212,8 +212,8 @@ contract PostDeploy is Script {
                 actionsData.physicalAttacks[i].name,
                 abi.encode(actionsData.physicalAttacks[i].stats)
             );
-            console2.log("Physical action id: ", i + 1);
-            console2.logBytes32(newActionId);
+            console.log("Physical action id: ", i + 1);
+            console.logBytes32(newActionId);
             require(newActionId == actionsData.physicalAttacks[i].actionId, "Physical action Id mismatch");
         }
 
@@ -221,8 +221,8 @@ contract PostDeploy is Script {
             bytes32 newActionId = world.UD__createAction(
                 ActionType.MagicAttack, actionsData.magicAttacks[i].name, abi.encode(actionsData.magicAttacks[i].stats)
             );
-            console2.log("Magic action Id ", i + 1);
-            console2.logBytes32(newActionId);
+            console.log("Magic action Id ", i + 1);
+            console.logBytes32(newActionId);
             require(newActionId == actionsData.magicAttacks[i].actionId, "Magical action Id mismatch");
         }
     }

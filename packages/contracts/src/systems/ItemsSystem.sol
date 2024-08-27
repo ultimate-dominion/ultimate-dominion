@@ -38,7 +38,7 @@ import {
     _operatorApprovalTableId,
     _ownersTableId
 } from "@erc1155/utils.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract ItemsSystem is System {
     function createItem(
@@ -156,8 +156,25 @@ contract ItemsSystem is System {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
 
+<<<<<<< Updated upstream
     // function getArmorStats(uint256 itemId)public view returns(){}
+=======
+<<<<<<< Updated upstream
+    // function getArmourStats(uint256 itemId)public view returns(){}
+>>>>>>> Stashed changes
     // function getPotionStats(uint256 itemId)public view returns(){}
+=======
+    function consumeItem(bytes32 characterId, uint256 itemId) public {
+        _requireAccess(address(this), _msgSender());
+
+        address playerAddr = IWorld(_world()).UD__getOwnerAddress(characterId);
+        address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
+        //will require approval
+        _items().safeTransferFrom(playerAddr, lootManager, itemId, 1, "");
+    }
+
+    // function getConsumableStats(uint256 itemId)public view returns(){}
+>>>>>>> Stashed changes
     // function getScrollStats(uint256 itemId)public view returns(){}
     // function getMaterialStats(uint256 itemId)public view returns(){}
 }

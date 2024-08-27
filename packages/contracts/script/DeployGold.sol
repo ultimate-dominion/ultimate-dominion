@@ -14,7 +14,7 @@ import {GOLD_NAMESPACE} from "../constants.sol";
 import {CharacterSystem} from "../src/systems/CharacterSystem.sol";
 
 import {UltimateDominionConfig} from "../src/codegen/index.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract DeployGold is Script {
     function run(address worldAddress) public returns (address) {

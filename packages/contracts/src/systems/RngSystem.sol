@@ -21,7 +21,7 @@ import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract RngSystem is System, IEntropyConsumer {
     using LibChunks for uint256;
@@ -194,7 +194,7 @@ contract RngSystem is System, IEntropyConsumer {
         Stats.set(characterId, stats);
     }
 
-    function _getCounter(uint256 counterNumber) internal returns (uint256 _counter) {
+    function _getCounter(uint256 counterNumber) internal view returns (uint256 _counter) {
         _counter = Counters.get(address(this), counterNumber);
     }
 

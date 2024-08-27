@@ -34,6 +34,7 @@ contract ActionSystem is System {
             "Action already exists"
         );
         Actions.set(actionId, actionType, actionStats);
+        if (actionType == ActionType.PhysicalAttack) {}
     }
 
     function checkActionRestrictions(bytes32 entityId, bytes32 actionId) public view returns (bool) {
@@ -52,13 +53,37 @@ contract ActionSystem is System {
         } else if (uint8(action.actionType) == uint8(2)) {
             bytes32[] memory equippedSpells = CharacterEquipment.getEquippedSpells(entityId);
             MagicAttackStats memory magicStats = abi.decode(action.actionStats, (MagicAttackStats));
+<<<<<<< Updated upstream
             bool isLevel = character.level >= magicStats.minLevel;
             bool hasStats = true;
+=======
+<<<<<<< Updated upstream
+            for (uint256 i; i < magicStats.classRestrictions.length;) {
+                if (magicStats.classRestrictions[i] == uint8(class)) {
+                    isClass = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+            if (isClass) {
+=======
+            bool isLevel = character.level >= magicStats.minLevel;
+            bool hasStats = true;
+
+>>>>>>> Stashed changes
             if (magicStats.statRestrictions.minAgility > character.agility) hasStats = false;
             if (magicStats.statRestrictions.minStrength > character.strength) hasStats = false;
             if (magicStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
+<<<<<<< Updated upstream
             if (canUse) {
+=======
+
+            if (canUse) {
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
                 // check that spell is equipped
                 for (uint256 i; i < equippedSpells.length;) {
                     if (equippedSpells[i] == actionId) {

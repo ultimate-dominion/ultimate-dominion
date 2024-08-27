@@ -17,11 +17,12 @@ export default defineWorld({
       "Mage", // 2
     ],
     RngRequestType: ["CharacterStats", "Combat", "WorldGeneration"],
-    ItemType: ["Weapon", "Armor", "Spell", "Potion", "Utility", "QuestItem"],
+    ItemType: ["Weapon", "Armor", "Spell", "Consumable", "QuestItem"],
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
     ActionType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
+    ResistanceStat: ["Agility", "Strength", "Intelligence"],
     OrderStatus: ["Canceled", "Active", "Fullfilled"],
     TokenType: ["NATIVE", "ERC20", "ERC721", "ERC1155"],
     StatusEffects: [
@@ -44,6 +45,34 @@ export default defineWorld({
         isAdmin: "bool",
       },
     },
+    RandomNumbers: {
+      key: ["sequenceNumber"],
+      schema: {
+        sequenceNumber: "uint64",
+        requestType: "RngRequestType",
+        arbitraryData: "bytes",
+      },
+    },
+    Counters: {
+      schema: {
+        contractAddress: "address",
+        counterId: "uint256",
+        counter: "uint256",
+      },
+      key: ["contractAddress", "counterId"],
+    },
+    /**
+     * Stores players chosen names.
+     */
+    Name: "string",
+    NameExists: {
+      key: ["nameData"],
+      schema: {
+        nameData: "bytes32",
+        value: "bool",
+      },
+    },
+    //////////////////////////////////////////////////// CHARACTERS & NPCS ///////////////////////////////////////////////
     Characters: {
       key: ["characterId"],
       schema: {
@@ -68,23 +97,6 @@ export default defineWorld({
         level: "uint256",
       },
     },
-    MapConfig: {
-      key: [],
-      schema: {
-        height: "uint16",
-        width: "uint16",
-      },
-      codegen: {
-        dataStruct: false,
-      },
-    },
-    Spawned: {
-      key: ["entityId"],
-      schema: {
-        entityId: "bytes32",
-        spawned: "bool",
-      },
-    },
     Mobs: {
       key: ["mobId"],
       schema: {
@@ -92,6 +104,22 @@ export default defineWorld({
         mobType: "MobType",
         mobStats: "bytes",
         mobMetadata: "string",
+      },
+    },
+    MonsterStats: {
+      key: ["mobId"],
+      schema: {
+        mobId: "uint256",
+        agility: "uint256",
+        armor: "uint256",
+        class: "Classes",
+        experience: "uint256",
+        hitPoints: "uint256",
+        intelligence: "uint256",
+        level: "uint256",
+        strength: "uint256",
+        actions: "bytes32[]",
+        inventory: "uint256[]",
       },
     },
     MobsByLevel: {
@@ -119,43 +147,68 @@ export default defineWorld({
         armor: "uint256",
         equippedArmor: "uint256[]",
         equippedWeapons: "uint256[]",
-        equippedSpells: "bytes32[]",
+        equippedSpells: "uint256[]",
+        equippedConsumables: "uint256[]",
       },
     },
-    PvPFlag: {
-      key: ["entityId"],
-      schema: {
-        entityId: "bytes32",
-        pvpFlag: "bool",
-      },
-    },
-    Counters: {
-      schema: {
-        contractAddress: "address",
-        counterId: "uint256",
-        counter: "uint256",
-      },
-      key: ["contractAddress", "counterId"],
-    },
+    ///////////////////////////////////////// ITEMS ///////////////////////////////////////////////////////
     Items: {
       schema: {
         itemId: "uint256",
         itemType: "ItemType",
         dropChance: "uint256",
         stats: "bytes",
-        // probability in 10^6 e.g. 20_000_000 = 20%
       },
       key: ["itemId"],
     },
-    Actions: {
+    StatRestrictions: {
+      key: ["itemId"],
       schema: {
-        actionId: "bytes32",
-        actionType: "ActionType",
-        actionStats: "bytes",
+        itemId: "uint256",
+        minAgility: "uint256",
+        minIntelligence: "uint256",
+        minStrength: "uint256",
       },
-      key: ["actionId"],
     },
-
+    WeaponStats: {
+      schema: {
+        itemId: "uint256",
+        agiModifier: "int256",
+        hpModifier: "int256",
+        maxDamage: "uint256",
+        minDamage: "uint256",
+        minLevel: "uint256",
+        strModifier: "int256",
+        statusEffects: "bytes32[]",
+      },
+      key: ["itemId"],
+    },
+    ArmorStats: {
+      schema: {
+        itemId: "uint256",
+        agiModifier: "int256",
+        hpModifier: "int256",
+        minLevel: "uint256",
+        strModifier: "int256",
+      },
+      key: ["itemId"],
+    },
+    SpellStats: {
+      key: ["itemId"],
+      schema: {
+        itemId: "uint256",
+        minDamage: "int256",
+        maxDamage: "int256",
+        statusEffects: "bytes32[]",
+      },
+    },
+    ConsumableStats: {
+      key: ["itemId"],
+      schema: {
+        itemId: "uint256",
+        spellEffect: "uint256",
+      },
+    },
     StarterItems: {
       key: ["class"],
       schema: {
@@ -164,17 +217,59 @@ export default defineWorld({
         amounts: "uint256[]",
       },
     },
-    /**
-     * Stores players chosen names.
-     */
-    Name: "string",
-    NameExists: {
-      key: ["nameData"],
+    /////////////////////////////////// ACTIONS ////////////////////////////////////////////////////////////////////////////
+    Actions: {
       schema: {
-        nameData: "bytes32",
-        value: "bool",
+        actionId: "bytes32",
+        actionType: "ActionType",
+        actionStats: "bytes",
+      },
+      key: ["actionId"],
+    },
+    PhysicalAttackStats: {
+      key: ["actionId"],
+      schema: {
+        actionId: "bytes32",
+        armorPenetration: "int256",
+        // modifiers are percentages so 20% of total stat for buff or -20% of total stat for debuff
+        attackModifierBonus: "int256",
+        attacksPerTurn: "uint256",
+        bonusDamage: "int256",
+        chitChanceBonus: "int256",
+        minLevel: "int256",
+        statusEffects: "bytes32[]",
       },
     },
+    MagicAttackStats: {
+      key: ["actionId"],
+      schema: {
+        actionId: "bytes32",
+        // modifiers are percentages so 20% of total stat for buff or -20% of total stat for debuff
+        attackModifierBonus: "int256",
+        bonusDamage: "int256",
+        chitChanceBonus: "int256",
+        minLevel: "int256",
+        statusEffects: "bytes32[]",
+      },
+    },
+    StatusEffectStats: {
+      key: ["actionId"],
+      schema: {
+        actionId: "bytes32",
+        // modifiers are percentages so 20% of total stat for buff or -20% of total stat for debuff
+        agiModifier: "int256",
+        armorModifier: "int256",
+        hpModifier: "int256",
+        intModifier: "int256",
+        damagePerTick: "int256",
+        resistanceStat: "ResistanceStat",
+        validTime: "uint256",
+        validTurns: "uint256",
+        cooldown: "uint256",
+      },
+    },
+
+    ////////////////////////////////// ENCOUNTERS ///////////////////////////////////////////////////////////////////////////////
     CombatEncounter: {
       schema: {
         //keccak hash of (attackers, defenders, encounterType, startTime)
@@ -209,12 +304,22 @@ export default defineWorld({
         died: "bool",
       },
     },
-    RandomNumbers: {
-      key: ["sequenceNumber"],
+    /////////// MAP ////////////////////
+    MapConfig: {
+      key: [],
       schema: {
-        sequenceNumber: "uint64",
-        requestType: "RngRequestType",
-        arbitraryData: "bytes",
+        height: "uint16",
+        width: "uint16",
+      },
+      codegen: {
+        dataStruct: false,
+      },
+    },
+    Spawned: {
+      key: ["entityId"],
+      schema: {
+        entityId: "bytes32",
+        spawned: "bool",
       },
     },
     /**
@@ -258,37 +363,37 @@ export default defineWorld({
         items: "address",
       },
     },
-        ///////// AUCTION HOUSE ////////////
-        Orders: {
-          key: ["orderHash"],
-          schema: {
-            orderHash: "bytes32",
-            offerer: "address",
-            offerCounter: "uint256",
-            orderStatus: "OrderStatus",
-          },
-        },
-        Considerations: {
-          key: ["orderHash"],
-          schema: {
-            orderHash: "bytes32",
-            tokenType: "TokenType",
-            token: "address",
-            identifier: "uint256",
-            amount: "uint256",
-            recipient: "address",
-          },
-        },
-        Offers: {
-          key: ["orderHash"],
-          schema: {
-            orderHash: "bytes32",
-            tokenType: "TokenType",
-            token: "address",
-            identifier: "uint256",
-            amount: "uint256",
-          },
-        },
+    ///////// AUCTION HOUSE ////////////
+    Orders: {
+      key: ["orderHash"],
+      schema: {
+        orderHash: "bytes32",
+        offerer: "address",
+        offerCounter: "uint256",
+        orderStatus: "OrderStatus",
+      },
+    },
+    Considerations: {
+      key: ["orderHash"],
+      schema: {
+        orderHash: "bytes32",
+        tokenType: "TokenType",
+        token: "address",
+        identifier: "uint256",
+        amount: "uint256",
+        recipient: "address",
+      },
+    },
+    Offers: {
+      key: ["orderHash"],
+      schema: {
+        orderHash: "bytes32",
+        tokenType: "TokenType",
+        token: "address",
+        identifier: "uint256",
+        amount: "uint256",
+      },
+    },
     ///////////////////////// OFFCHAIN TABLES//////////////////
     RngLogs: {
       key: ["requestId"],

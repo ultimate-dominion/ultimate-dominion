@@ -50,7 +50,7 @@ import {
     CRIT_MODIFIER,
     BASE_GOLD_DROP
 } from "../../constants.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract EncounterSystem is System {
     using Math for uint256;

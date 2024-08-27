@@ -4,7 +4,7 @@ pragma solidity >=0.8.24;
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType} from "@codegen/common.sol";
 import {StatsData, StarterItemsData} from "@codegen/index.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";

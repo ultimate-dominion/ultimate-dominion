@@ -430,6 +430,24 @@
   },
   {
     "type": "function",
+    "name": "UD__consumeItem",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__createAction",
     "inputs": [
       {
@@ -2257,6 +2275,69 @@
       }
     ],
     "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getSpellStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_spellStats",
+        "type": "tuple",
+        "internalType": "struct SpellStats",
+        "components": [
+          {
+            "name": "maxDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "statRestrictions",
+            "type": "tuple",
+            "internalType": "struct StatRestrictions",
+            "components": [
+              {
+                "name": "minAgility",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "minIntelligence",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "minStrength",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "statusEffects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
