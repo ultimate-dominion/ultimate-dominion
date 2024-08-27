@@ -246,6 +246,7 @@ export default defineWorld({
      * - characterToken ERC721 character nft contract.
      * - entropy address of pyth entropy contract
      * - pythProvider address of pyth provider.
+     * - auctionHouse address of Auction House contract.
      */
     UltimateDominionConfig: {
       key: [],
@@ -256,39 +257,40 @@ export default defineWorld({
         entropy: "address",
         pythProvider: "address",
         items: "address",
+        auctionHouse: "address",
       },
     },
-        ///////// AUCTION HOUSE ////////////
-        Orders: {
-          key: ["orderHash"],
-          schema: {
-            orderHash: "bytes32",
-            offerer: "address",
-            offerCounter: "uint256",
-            orderStatus: "OrderStatus",
-          },
-        },
-        Considerations: {
-          key: ["orderHash"],
-          schema: {
-            orderHash: "bytes32",
-            tokenType: "TokenType",
-            token: "address",
-            identifier: "uint256",
-            amount: "uint256",
-            recipient: "address",
-          },
-        },
-        Offers: {
-          key: ["orderHash"],
-          schema: {
-            orderHash: "bytes32",
-            tokenType: "TokenType",
-            token: "address",
-            identifier: "uint256",
-            amount: "uint256",
-          },
-        },
+    ///////// AUCTION HOUSE ////////////
+    Orders: {
+      key: ["orderHash"],
+      schema: {
+        orderHash: "bytes32",
+        offerer: "address",
+        offerCounter: "uint256",
+        orderStatus: "OrderStatus",
+      },
+    },
+    Considerations: {
+      key: ["orderHash"],
+      schema: {
+        orderHash: "bytes32",
+        tokenType: "TokenType",
+        token: "address",
+        identifier: "uint256",
+        amount: "uint256",
+        recipient: "address",
+      },
+    },
+    Offers: {
+      key: ["orderHash"],
+      schema: {
+        orderHash: "bytes32",
+        tokenType: "TokenType",
+        token: "address",
+        identifier: "uint256",
+        amount: "uint256",
+      },
+    },
     ///////////////////////// OFFCHAIN TABLES//////////////////
     RngLogs: {
       key: ["requestId"],
