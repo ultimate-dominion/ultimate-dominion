@@ -15,6 +15,7 @@ import { App } from './App';
 import { DevTools } from './components/DevTools';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { ItemsProvider } from './contexts/ItemsContext';
+import { MonstersProvider } from './contexts/MonstersContext';
 import { MUDProvider } from './contexts/MUDContext';
 import { Web3Provider } from './contexts/Web3Provider';
 import { setup } from './lib/mud/setup';
@@ -32,9 +33,11 @@ setup().then(async result => {
       <Web3Provider>
         <MUDProvider setupResult={result}>
           <ItemsProvider>
-            <CharacterProvider>
-              <App />
-            </CharacterProvider>
+            <MonstersProvider>
+              <CharacterProvider>
+                <App />
+              </CharacterProvider>
+            </MonstersProvider>
           </ItemsProvider>
           {import.meta.env.DEV && <DevTools />}
         </MUDProvider>

@@ -1,6 +1,11 @@
 import { decodeAbiParameters, hexToBigInt } from 'viem';
 
-import { type ArmorStats, type Metadata, WeaponStats } from '../utils/types';
+import {
+  type ArmorStats,
+  type EntityStats,
+  type Metadata,
+  type WeaponStats,
+} from '../utils/types';
 
 export const decodeArmorStats = (statsBytes: string): ArmorStats => {
   const itemTemplateStats = decodeAbiParameters(
@@ -79,6 +84,41 @@ export const decodeMonsterId = (
   const mobIdBigInt = hexToBigInt(`0x${mobIdHex}`);
 
   return { mobId: mobIdBigInt.toString() };
+};
+
+export const decodeMonsterStats = (statsBytes: string): EntityStats => {
+  const monsterTemplateStats = decodeAbiParameters(
+    [
+      {
+        name: 'monsterStats',
+        type: 'tuple',
+        components: [
+          { name: 'actions', type: 'bytes32[]' },
+          { name: 'agility', type: 'uint256' },
+          { name: 'armor', type: 'uint256' },
+          { name: 'class', type: 'uint8' },
+          { name: 'experience', type: 'uint256' },
+          { name: 'hitPoints', type: 'uint256' },
+          { name: 'intelligence', type: 'uint256' },
+          { name: 'inventory', type: 'uint256[]' },
+          { name: 'level', type: 'uint256' },
+          { name: 'strength', type: 'uint256' },
+        ],
+      },
+    ],
+    statsBytes as `0x${string}`,
+  )[0];
+
+  return {
+    agility: monsterTemplateStats.agility.toString(),
+    baseHp: monsterTemplateStats.hitPoints.toString(),
+    currentHp: monsterTemplateStats.hitPoints.toString(),
+    entityClass: monsterTemplateStats.class,
+    experience: monsterTemplateStats.experience.toString(),
+    intelligence: monsterTemplateStats.intelligence.toString(),
+    level: monsterTemplateStats.level.toString(),
+    strength: monsterTemplateStats.strength.toString(),
+  };
 };
 
 export const decodeWeaponStats = (statsBytes: string): WeaponStats => {
