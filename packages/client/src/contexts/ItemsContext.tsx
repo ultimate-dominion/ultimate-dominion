@@ -204,7 +204,10 @@ export const ItemsProvider = ({
           setWeaponTemplates(_weapons);
         }
       } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to fetch items.', e);
+        renderError(
+          (e as Error)?.message ?? 'Failed to fetch item templates.',
+          e,
+        );
       } finally {
         setIsLoading(false);
       }

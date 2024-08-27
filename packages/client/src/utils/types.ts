@@ -21,6 +21,11 @@ export enum ItemType {
   QuestItem,
 }
 
+export enum MobType {
+  Monster,
+  NPC,
+}
+
 export enum StatsClasses {
   Warrior,
   Rogue,
@@ -115,10 +120,15 @@ export type Metadata = {
   name: string;
 };
 
-export type Monster = Metadata &
-  EntityStats & {
-    id: Entity;
-    inBattle: boolean;
+export type Monster = MonsterTemplate & {
+  id: Entity;
+  inBattle: boolean;
+  isSpawned: boolean;
+  position: { x: number; y: number };
+};
+
+export type MonsterTemplate = EntityStats &
+  Metadata & {
     mobId: string;
   };
 
