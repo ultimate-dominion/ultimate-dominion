@@ -4,7 +4,7 @@ import {
   HasValue,
   runQuery,
 } from '@latticexyz/recs';
-import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
+import { encodeEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -16,12 +16,7 @@ import {
 import { formatEther, hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
-import {
-  decodeArmorStats,
-  decodeWeaponStats,
-  fetchMetadataFromUri,
-  uriToHttp,
-} from '../utils/helpers';
+import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import type {
   Armor,
   Character,
@@ -29,6 +24,7 @@ import type {
   EntityStats,
   Weapon,
 } from '../utils/types';
+import { useItems } from './ItemsContext';
 import { useMUD } from './MUDContext';
 
 type CharacterContextType = {
@@ -61,10 +57,7 @@ export const CharacterProvider = ({
       CharactersTokenURI,
       EncounterEntity,
       GoldBalances,
-      Items,
-      ItemsBaseURI,
       ItemsOwners,
-      ItemsTokenURI,
       Stats,
     },
     delegatorAddress,
@@ -72,6 +65,11 @@ export const CharacterProvider = ({
     network: { publicClient, worldContract },
   } = useMUD();
   const { renderError } = useToast();
+  const {
+    armorTemplates,
+    isLoading: isLoadingItemTemplates,
+    weaponTemplates,
+  } = useItems();
 
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(true);
@@ -179,7 +177,7 @@ export const CharacterProvider = ({
   ]);
 
   const fetchCharacterItems = useCallback(
-    async (
+    (
       _character: Character,
       _equippedArmor: bigint[],
       _equippedWeapons: bigint[],
@@ -209,12 +207,16 @@ export const CharacterProvider = ({
             tokenOwnersEntity,
           );
 
+          const armorDetails = armorTemplates.find(
+            item => item.tokenId === tokenId.toString(),
+          );
+
           return {
+            ...armorDetails,
             balance: itemOwner.balance.toString(),
             itemId: tokenOwnersEntity,
             owner: _character.owner,
-            tokenId: tokenId.toString(),
-          };
+          } as Armor;
         });
 
         const _weapons = _equippedWeapons
@@ -231,113 +233,25 @@ export const CharacterProvider = ({
               tokenOwnersEntity,
             );
 
+            const weaponDetails = weaponTemplates.find(
+              item => item.tokenId === tokenId.toString(),
+            );
+
             return {
+              ...weaponDetails,
               balance: itemOwner.balance.toString(),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
               tokenId: tokenId.toString(),
-            };
+            } as Weapon;
           })
           .filter(item => item.owner === _character.owner)
           .sort((a, b) => {
             return Number(a.tokenId) - Number(b.tokenId);
           });
 
-        const fullArmor = await Promise.all(
-          _armor.map(async item => {
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId: BigInt(item.tokenId) },
-            );
-
-            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-            const decodedArmorStats = decodeArmorStats(itemTemplate.stats);
-
-            const baseURI = getComponentValueStrict(
-              ItemsBaseURI,
-              singletonEntity,
-            ).uri;
-
-            const tokenURI = getComponentValueStrict(
-              ItemsTokenURI,
-              tokenIdEntity,
-            ).uri;
-
-            const metadata = await fetchMetadataFromUri(
-              uriToHttp(`${baseURI}${tokenURI}`)[0],
-            );
-
-            return {
-              ...metadata,
-              agiModifier: decodedArmorStats.agiModifier,
-              armorModifier: decodedArmorStats.armorModifier,
-              balance: item.balance,
-              hitPointModifier: decodedArmorStats.hitPointModifier,
-              intModifier: decodedArmorStats.intModifier,
-              itemId: item.itemId,
-              minLevel: decodedArmorStats.minLevel,
-              owner: item.owner,
-              statRestrictions: {
-                minAgility: decodedArmorStats.statRestrictions.minAgility,
-                minIntelligence:
-                  decodedArmorStats.statRestrictions.minIntelligence,
-                minStrength: decodedArmorStats.statRestrictions.minStrength,
-              },
-              strModifier: decodedArmorStats.strModifier,
-              tokenId: item.tokenId,
-            } as Armor;
-          }),
-        );
-
-        const fullWeapons = await Promise.all(
-          _weapons.map(async item => {
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId: BigInt(item.tokenId) },
-            );
-
-            const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-            const decodedWeaponStats = decodeWeaponStats(itemTemplate.stats);
-
-            const baseURI = getComponentValueStrict(
-              ItemsBaseURI,
-              singletonEntity,
-            ).uri;
-
-            const tokenURI = getComponentValueStrict(
-              ItemsTokenURI,
-              tokenIdEntity,
-            ).uri;
-
-            const metadata = await fetchMetadataFromUri(
-              uriToHttp(`${baseURI}${tokenURI}`)[0],
-            );
-
-            return {
-              ...metadata,
-              agiModifier: decodedWeaponStats.agiModifier,
-              balance: item.balance,
-              hitPointModifier: decodedWeaponStats.hitPointModifier,
-              intModifier: decodedWeaponStats.intModifier,
-              itemId: item.itemId,
-              maxDamage: decodedWeaponStats.maxDamage,
-              minDamage: decodedWeaponStats.minDamage,
-              minLevel: decodedWeaponStats.minLevel,
-              owner: item.owner,
-              statRestrictions: {
-                minAgility: decodedWeaponStats.statRestrictions.minAgility,
-                minIntelligence:
-                  decodedWeaponStats.statRestrictions.minIntelligence,
-                minStrength: decodedWeaponStats.statRestrictions.minStrength,
-              },
-              strModifier: decodedWeaponStats.strModifier,
-              tokenId: item.tokenId,
-            } as Weapon;
-          }),
-        );
-
-        setEquippedArmor(fullArmor);
-        setEquippedWeapons(fullWeapons);
+        setEquippedArmor(_armor);
+        setEquippedWeapons(_weapons);
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Failed to fetch character data.',
@@ -345,23 +259,27 @@ export const CharacterProvider = ({
         );
       }
     },
-    [Items, ItemsBaseURI, ItemsOwners, ItemsTokenURI, renderError],
+    [armorTemplates, ItemsOwners, renderError, weaponTemplates],
   );
 
   useEffect(() => {
-    if (!isSynced) return;
-    (async (): Promise<void> => {
-      if (!userCharacter) return;
+    if (!(isSynced && userCharacter) || isLoadingItemTemplates) return;
 
-      const { equippedArmor, equippedWeapons } =
-        getComponentValue(CharacterEquipment, userCharacter.id) ??
-        ({ equippedArmor: [], equippedWeapons: [] } as {
-          equippedArmor: bigint[];
-          equippedWeapons: bigint[];
-        });
-      await fetchCharacterItems(userCharacter, equippedArmor, equippedWeapons);
-    })();
-  }, [userCharacter, CharacterEquipment, fetchCharacterItems, isSynced]);
+    const { equippedArmor, equippedWeapons } =
+      getComponentValue(CharacterEquipment, userCharacter.id) ??
+      ({ equippedArmor: [], equippedWeapons: [] } as {
+        equippedArmor: bigint[];
+        equippedWeapons: bigint[];
+      });
+
+    fetchCharacterItems(userCharacter, equippedArmor, equippedWeapons);
+  }, [
+    CharacterEquipment,
+    fetchCharacterItems,
+    isLoadingItemTemplates,
+    isSynced,
+    userCharacter,
+  ]);
 
   return (
     <CharacterContext.Provider
