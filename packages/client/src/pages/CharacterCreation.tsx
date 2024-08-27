@@ -17,11 +17,17 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { getComponentValueStrict, Has, runQuery } from '@latticexyz/recs';
+import {
+  Entity,
+  getComponentValueStrict,
+  Has,
+  runQuery,
+} from '@latticexyz/recs';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { zeroAddress, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { ItemCardSmall } from '../components/ItemCard';
@@ -99,12 +105,22 @@ export const CharacterCreation = (): JSX.Element => {
       item[1].toString(),
     );
 
-    const _starterArmor = armorTemplates.filter(armor =>
-      starterArmorTokenIds.includes(armor.tokenId),
-    );
-    const _starterWeapons = weaponTemplates.filter(weapon =>
-      starterWeaponTokenIds.includes(weapon.tokenId),
-    );
+    const _starterArmor = armorTemplates
+      .filter(armor => starterArmorTokenIds.includes(armor.tokenId))
+      .map(armor => ({
+        ...armor,
+        balance: '1',
+        itemId: zeroHash as Entity,
+        owner: zeroAddress,
+      }));
+    const _starterWeapons = weaponTemplates
+      .filter(weapon => starterWeaponTokenIds.includes(weapon.tokenId))
+      .map(armor => ({
+        ...armor,
+        balance: '1',
+        itemId: zeroHash as Entity,
+        owner: zeroAddress,
+      }));
 
     setStarterArmor(_starterArmor);
     setStarterWeapons(_starterWeapons);

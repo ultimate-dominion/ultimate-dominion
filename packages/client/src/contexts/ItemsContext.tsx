@@ -12,7 +12,6 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { zeroAddress } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
@@ -21,12 +20,16 @@ import {
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
-import { type Armor, ItemType, type Weapon } from '../utils/types';
+import {
+  type ArmorTemplate,
+  ItemType,
+  type WeaponTemplate,
+} from '../utils/types';
 import { useMUD } from './MUDContext';
 
 type ItemsContextType = {
-  armorTemplates: Armor[];
-  weaponTemplates: Weapon[];
+  armorTemplates: ArmorTemplate[];
+  weaponTemplates: WeaponTemplate[];
   isLoading: boolean;
 };
 
@@ -47,22 +50,14 @@ export const ItemsProvider = ({
     isSynced,
   } = useMUD();
 
-  const [armorTemplates, setArmorTemplates] = useState<Armor[]>([]);
-  const [weaponTemplates, setWeaponTemplates] = useState<Weapon[]>([]);
+  const [armorTemplates, setArmorTemplates] = useState<ArmorTemplate[]>([]);
+  const [weaponTemplates, setWeaponTemplates] = useState<WeaponTemplate[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const fetchAllArmor = useCallback(
     async (allArmorIds: bigint[]) => {
       const fullArmor = await Promise.all(
         allArmorIds.map(async armorId => {
-          const tokenOwnersEntity = encodeEntity(
-            { owner: 'address', tokenId: 'uint256' },
-            {
-              owner: zeroAddress,
-              tokenId: armorId,
-            },
-          );
-
           const tokenIdEntity = encodeEntity(
             { tokenId: 'uint256' },
             { tokenId: armorId },
@@ -89,12 +84,9 @@ export const ItemsProvider = ({
             ...metadata,
             agiModifier: decodedArmorStats.agiModifier,
             armorModifier: decodedArmorStats.armorModifier,
-            balance: '0',
             hitPointModifier: decodedArmorStats.hitPointModifier,
             intModifier: decodedArmorStats.intModifier,
-            itemId: tokenOwnersEntity,
             minLevel: decodedArmorStats.minLevel,
-            owner: zeroAddress,
             statRestrictions: {
               minAgility: decodedArmorStats.statRestrictions.minAgility,
               minIntelligence:
@@ -103,7 +95,7 @@ export const ItemsProvider = ({
             },
             strModifier: decodedArmorStats.strModifier,
             tokenId: armorId.toString(),
-          } as Armor;
+          } as ArmorTemplate;
         }),
       );
 
@@ -116,14 +108,6 @@ export const ItemsProvider = ({
     async (allWeaponIds: bigint[]) => {
       const fullWeapons = await Promise.all(
         allWeaponIds.map(async weaponId => {
-          const tokenOwnersEntity = encodeEntity(
-            { owner: 'address', tokenId: 'uint256' },
-            {
-              owner: zeroAddress,
-              tokenId: weaponId,
-            },
-          );
-
           const tokenIdEntity = encodeEntity(
             { tokenId: 'uint256' },
             { tokenId: weaponId },
@@ -149,14 +133,11 @@ export const ItemsProvider = ({
           return {
             ...metadata,
             agiModifier: decodedArmorStats.agiModifier,
-            balance: '0',
             hitPointModifier: decodedArmorStats.hitPointModifier,
             intModifier: decodedArmorStats.intModifier,
-            itemId: tokenOwnersEntity,
             maxDamage: decodedArmorStats.maxDamage,
             minDamage: decodedArmorStats.minDamage,
             minLevel: decodedArmorStats.minLevel,
-            owner: zeroAddress,
             statRestrictions: {
               minAgility: decodedArmorStats.statRestrictions.minAgility,
               minIntelligence:
@@ -165,7 +146,7 @@ export const ItemsProvider = ({
             },
             strModifier: decodedArmorStats.strModifier,
             tokenId: weaponId.toString(),
-          } as Weapon;
+          } as WeaponTemplate;
         }),
       );
 

@@ -51,13 +51,11 @@ export type ActionOutcomeType = {
   weaponId: string;
 };
 
-export type Armor = ArmorStats &
-  Metadata & {
-    balance: string;
-    itemId: Entity;
-    owner: string;
-    tokenId: string;
-  };
+export type Armor = ArmorTemplate & {
+  balance: string;
+  itemId: Entity;
+  owner: string;
+};
 
 export type ArmorStats = {
   agiModifier: string;
@@ -68,6 +66,8 @@ export type ArmorStats = {
   statRestrictions: StatRestrictions;
   strModifier: string;
 };
+
+export type ArmorTemplate = ArmorStats & Metadata & { tokenId: string };
 
 export type Character = CharacterData & EntityStats & Metadata;
 
@@ -132,13 +132,11 @@ export type MonsterTemplate = EntityStats &
     mobId: string;
   };
 
-export type Weapon = WeaponStats &
-  Metadata & {
-    balance: string;
-    itemId: Entity;
-    owner: string;
-    tokenId: string;
-  };
+export type Weapon = WeaponTemplate & {
+  balance: string;
+  itemId: Entity;
+  owner: string;
+};
 
 export type WeaponStats = {
   agiModifier: string;
@@ -150,6 +148,8 @@ export type WeaponStats = {
   statRestrictions: StatRestrictions;
   strModifier: string;
 };
+
+export type WeaponTemplate = WeaponStats & Metadata & { tokenId: string };
 
 export type Item = Metadata & {
   itemId: Entity;
