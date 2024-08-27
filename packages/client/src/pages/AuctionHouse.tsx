@@ -240,10 +240,6 @@ export const AuctionHouse = (): JSX.Element => {
                   : data.class;
               data.stats = {
                 agiModifier: w.agiModifier.toString(),
-                classRestrictions: w.classRestrictions.map(
-                  (classRestriction: number) =>
-                    classRestriction as StatsClasses,
-                ),
                 hitPointModifier: w.hitPointModifier.toString(),
                 intModifier: w.intModifier.toString(),
                 itemId: item.itemId,
@@ -251,6 +247,12 @@ export const AuctionHouse = (): JSX.Element => {
                 minDamage: w.minDamage.toString(),
                 minLevel: w.minLevel.toString(),
                 owner: item.owner,
+                statRestrictions: {
+                  minAgility: w.statRestrictions.minAgility.toString(),
+                  minIntelligence:
+                    w.statRestrictions.minIntelligence.toString(),
+                  minStrength: w.statRestrictions.minStrength.toString(),
+                },
                 strModifier: w.strModifier.toString(),
                 tokenId: item.tokenId,
               } as WeaponStats;
@@ -283,15 +285,17 @@ export const AuctionHouse = (): JSX.Element => {
               data.stats = {
                 armorModifier: a.armorModifier.toString(),
                 agiModifier: a.agiModifier.toString(),
-                classRestrictions: a.classRestrictions.map(
-                  (classRestriction: number) =>
-                    classRestriction as StatsClasses,
-                ),
                 hitPointModifier: a.hitPointModifier.toString(),
                 intModifier: a.intModifier.toString(),
                 itemId: item.itemId,
                 minLevel: a.minLevel.toString(),
                 owner: item.owner,
+                statRestrictions: {
+                  minAgility: a.statRestrictions.minAgility.toString(),
+                  minIntelligence:
+                    a.statRestrictions.minIntelligence.toString(),
+                  minStrength: a.statRestrictions.minStrength.toString(),
+                },
                 strModifier: a.strModifier.toString(),
                 tokenId: item.tokenId,
               } as ArmorStats;
