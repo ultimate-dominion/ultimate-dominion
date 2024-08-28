@@ -14,26 +14,24 @@ export const Shop = (): JSX.Element => {
           if you need any help.
         </Text>
       </Typist>
-      <HStack border="2px solid" mt={8} p={5} w="100%">
-        <Spacer />
-        <Stack maxW="47%">
+      <HStack border="2px solid" p={8} w="100%">
+        <Spacer></Spacer>
+        <Stack w="100%">
           <ShopHalf
             filterNames={['Weapon', 'Potion']}
             name="Character’s Inventory - 55 $GOLD"
             sortNames={['byStock', 'byPrice']}
           ></ShopHalf>
         </Stack>
-        <Spacer />
-        <Divider border="1px solid black" orientation="vertical" />
-        <Spacer />
-        <VStack maxW="47%">
+        <Divider mx={8} border="1px solid black" orientation="vertical" />
+        <Stack w="100%">
           <ShopHalf
             filterNames={['Weapon', 'Potion']}
             name="Basic Armory Inventory - 200 $GOLD"
             sortNames={['byStock', 'byPrice']}
           ></ShopHalf>
-        </VStack>
-        <Spacer />
+        </Stack>
+        <Spacer></Spacer>
       </HStack>
     </VStack>
   );

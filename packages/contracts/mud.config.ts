@@ -17,7 +17,7 @@ export default defineWorld({
       "Mage", // 2
     ],
     RngRequestType: ["CharacterStats", "Combat", "WorldGeneration"],
-    ItemType: ["Weapon", "Armor", "Spell", "Potion", "Material", "QuestItem"],
+    ItemType: ["Weapon", "Armor", "Spell", "Potion", "Utility", "QuestItem"],
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],

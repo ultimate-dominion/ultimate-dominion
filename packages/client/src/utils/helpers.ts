@@ -2,9 +2,9 @@ import { decodeAbiParameters, hexToBigInt } from 'viem';
 
 import {
   type ArmorStats,
+  type EntityStats,
   type Metadata,
-  StatsClasses,
-  WeaponStats,
+  type WeaponStats,
 } from '../utils/types';
 
 export const decodeArmorStats = (statsBytes: string): ArmorStats => {
@@ -16,10 +16,18 @@ export const decodeArmorStats = (statsBytes: string): ArmorStats => {
         components: [
           { name: 'agiModifier', type: 'int256' },
           { name: 'armorModifier', type: 'uint256' },
-          { name: 'classRestrictions', type: 'uint8[]' },
           { name: 'hitPointModifier', type: 'int256' },
           { name: 'intModifier', type: 'int256' },
           { name: 'minLevel', type: 'uint256' },
+          {
+            name: 'statRestrictions',
+            type: 'tuple',
+            components: [
+              { name: 'minAgility', type: 'uint256' },
+              { name: 'minIntelligence', type: 'uint256' },
+              { name: 'minStrength', type: 'uint256' },
+            ],
+          },
           { name: 'strModifier', type: 'int256' },
         ],
       },
@@ -30,12 +38,15 @@ export const decodeArmorStats = (statsBytes: string): ArmorStats => {
   return {
     agiModifier: itemTemplateStats.agiModifier.toString(),
     armorModifier: itemTemplateStats.armorModifier.toString(),
-    classRestrictions: itemTemplateStats.classRestrictions.map(
-      (classRestriction: number) => classRestriction as StatsClasses,
-    ),
     hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
     intModifier: itemTemplateStats.intModifier.toString(),
     minLevel: itemTemplateStats.minLevel.toString(),
+    statRestrictions: {
+      minAgility: itemTemplateStats.statRestrictions.minAgility.toString(),
+      minIntelligence:
+        itemTemplateStats.statRestrictions.minIntelligence.toString(),
+      minStrength: itemTemplateStats.statRestrictions.minStrength.toString(),
+    },
     strModifier: itemTemplateStats.strModifier.toString(),
   };
 };
@@ -75,6 +86,41 @@ export const decodeMonsterId = (
   return { mobId: mobIdBigInt.toString() };
 };
 
+export const decodeMonsterStats = (statsBytes: string): EntityStats => {
+  const monsterTemplateStats = decodeAbiParameters(
+    [
+      {
+        name: 'monsterStats',
+        type: 'tuple',
+        components: [
+          { name: 'actions', type: 'bytes32[]' },
+          { name: 'agility', type: 'uint256' },
+          { name: 'armor', type: 'uint256' },
+          { name: 'class', type: 'uint8' },
+          { name: 'experience', type: 'uint256' },
+          { name: 'hitPoints', type: 'uint256' },
+          { name: 'intelligence', type: 'uint256' },
+          { name: 'inventory', type: 'uint256[]' },
+          { name: 'level', type: 'uint256' },
+          { name: 'strength', type: 'uint256' },
+        ],
+      },
+    ],
+    statsBytes as `0x${string}`,
+  )[0];
+
+  return {
+    agility: monsterTemplateStats.agility.toString(),
+    baseHp: monsterTemplateStats.hitPoints.toString(),
+    currentHp: monsterTemplateStats.hitPoints.toString(),
+    entityClass: monsterTemplateStats.class,
+    experience: monsterTemplateStats.experience.toString(),
+    intelligence: monsterTemplateStats.intelligence.toString(),
+    level: monsterTemplateStats.level.toString(),
+    strength: monsterTemplateStats.strength.toString(),
+  };
+};
+
 export const decodeWeaponStats = (statsBytes: string): WeaponStats => {
   const itemTemplateStats = decodeAbiParameters(
     [
@@ -83,12 +129,20 @@ export const decodeWeaponStats = (statsBytes: string): WeaponStats => {
         type: 'tuple',
         components: [
           { name: 'agiModifier', type: 'int256' },
-          { name: 'classRestrictions', type: 'uint8[]' },
           { name: 'hitPointModifier', type: 'int256' },
           { name: 'intModifier', type: 'int256' },
           { name: 'maxDamage', type: 'uint256' },
           { name: 'minDamage', type: 'uint256' },
           { name: 'minLevel', type: 'uint256' },
+          {
+            name: 'statRestrictions',
+            type: 'tuple',
+            components: [
+              { name: 'minAgility', type: 'uint256' },
+              { name: 'minIntelligence', type: 'uint256' },
+              { name: 'minStrength', type: 'uint256' },
+            ],
+          },
           { name: 'strModifier', type: 'int256' },
         ],
       },
@@ -98,14 +152,17 @@ export const decodeWeaponStats = (statsBytes: string): WeaponStats => {
 
   return {
     agiModifier: itemTemplateStats.agiModifier.toString(),
-    classRestrictions: itemTemplateStats.classRestrictions.map(
-      (classRestriction: number) => classRestriction as StatsClasses,
-    ),
     hitPointModifier: itemTemplateStats.hitPointModifier.toString(),
     intModifier: itemTemplateStats.intModifier.toString(),
     maxDamage: itemTemplateStats.maxDamage.toString(),
     minDamage: itemTemplateStats.minDamage.toString(),
     minLevel: itemTemplateStats.minLevel.toString(),
+    statRestrictions: {
+      minAgility: itemTemplateStats.statRestrictions.minAgility.toString(),
+      minIntelligence:
+        itemTemplateStats.statRestrictions.minIntelligence.toString(),
+      minStrength: itemTemplateStats.statRestrictions.minStrength.toString(),
+    },
     strModifier: itemTemplateStats.strModifier.toString(),
   };
 };

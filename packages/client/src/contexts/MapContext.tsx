@@ -26,6 +26,7 @@ import {
 } from '../utils/helpers';
 import { type Character, type Monster } from '../utils/types';
 import { useCharacter } from './CharacterContext';
+import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
 
 type MapContextType = {
@@ -66,7 +67,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       CharactersTokenURI,
       EncounterEntity,
       GoldBalances,
-      Mobs,
       Position,
       Spawned,
       Stats,
@@ -76,6 +76,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     network: { publicClient, worldContract },
     systemCalls: { spawn },
   } = useMUD();
+  const { monsterTemplates } = useMonsters();
   const { character, refreshCharacter } = useCharacter();
 
   const [isSpawning, setIsSpawning] = useState(false);
@@ -224,59 +225,36 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   );
 
   const getMonsters = useCallback(
-    async (
-      entities: Entity[],
-    ): Promise<
-      (Monster & { isSpawned: boolean; position: { x: number; y: number } })[]
-    > => {
+    (entities: Entity[]): Monster[] => {
       try {
-        const _monsters: (Monster & {
-          isSpawned: boolean;
-          position: { x: number; y: number };
-        })[] = await Promise.all(
-          entities.map(async entity => {
-            const { mobId } = decodeMonsterId(entity as `0x${string}`);
-            const mobData = getComponentValueStrict(
-              Mobs,
-              encodeEntity({ mobId: 'uint256' }, { mobId: BigInt(mobId) }),
-            );
-            const monsterStats = getComponentValueStrict(Stats, entity);
-            const encounterId = getComponentValue(
-              EncounterEntity,
-              entity,
-            )?.encounterId;
-            const inBattle = !!encounterId && encounterId !== zeroHash;
+        const _monsters: Monster[] = entities.map(entity => {
+          const { mobId } = decodeMonsterId(entity as `0x${string}`);
+          const encounterId = getComponentValue(
+            EncounterEntity,
+            entity,
+          )?.encounterId;
 
-            const { mobMetadata: metadataURI } = mobData;
+          const currentHp = getComponentValueStrict(
+            Stats,
+            entity,
+          ).currentHp.toString();
+          const inBattle = !!encounterId && encounterId !== zeroHash;
+          const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
+          const _position = getComponentValueStrict(Position, entity);
 
-            const fetachedMetadata = await fetchMetadataFromUri(
-              uriToHttp(metadataURI)[0],
-            );
+          const monsterTemplate = monsterTemplates.find(
+            m => m.mobId === mobId.toString(),
+          );
 
-            const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
-            const _position = getComponentValueStrict(Position, entity);
-
-            return {
-              agility: monsterStats.agility.toString(),
-              baseHp: monsterStats.baseHp.toString(),
-              currentHp: monsterStats.currentHp.toString(),
-              entityClass: monsterStats.class,
-              experience: monsterStats.experience.toString(),
-              id: entity,
-              inBattle,
-              intelligence: monsterStats.intelligence.toString(),
-              isSpawned,
-              level: monsterStats.level.toString(),
-              mobId,
-              position: { x: _position.x, y: _position.y },
-              strength: monsterStats.strength.toString(),
-              ...fetachedMetadata,
-            } as Monster & {
-              isSpawned: boolean;
-              position: { x: number; y: number };
-            };
-          }),
-        );
+          return {
+            ...monsterTemplate,
+            currentHp,
+            id: entity,
+            inBattle,
+            isSpawned,
+            position: { x: _position.x, y: _position.y },
+          } as Monster;
+        });
 
         return _monsters;
       } catch (e) {
@@ -284,17 +262,17 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         return [];
       }
     },
-    [EncounterEntity, Mobs, Position, renderError, Spawned, Stats],
+    [EncounterEntity, monsterTemplates, Position, renderError, Spawned, Stats],
   );
 
   useEffect(() => {
-    (async (): Promise<void> => {
+    (async () => {
       if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;
 
       const _allCharacters = await getAllCharacters(allCharacterEntities);
       setAllCharacters(_allCharacters as Character[]);
 
-      const _monsters = await getMonsters(allMonsterEntities);
+      const _monsters = getMonsters(allMonsterEntities);
       setAllMonsters(_monsters);
     })();
   }, [
