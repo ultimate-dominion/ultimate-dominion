@@ -15,25 +15,25 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { Has, runQuery } from '@latticexyz/recs';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-// import FuzzySearch from 'fuzzy-search';
+import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
-// import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
-// import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
+import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
+import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { Address, maxUint256 } from 'viem';
 import { useAccount } from 'wagmi';
 
-// import { AuctionRow } from '../components/AuctionRow';
+import { AuctionRow } from '../components/AuctionRow';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { HOME_PATH } from '../Routes';
-// import { getEmoji } from '../utils/helpers';
+import { getEmoji } from '../utils/helpers';
 import {
   ArmorTemplate,
   ConsiderationData,
-  // ItemType,
+  ItemType,
   OfferData,
   Order,
   WeaponTemplate,
@@ -44,7 +44,7 @@ interface Price {
   floor: string;
   ceiling: string;
 }
-// const PER_PAGE = 5;
+const PER_PAGE = 10;
 
 export const AuctionHouse = (): JSX.Element => {
   const { renderError } = useToast();
@@ -57,24 +57,24 @@ export const AuctionHouse = (): JSX.Element => {
     network: { worldContract },
   } = useMUD();
   const {
-    // armorTemplates,
+    armorTemplates,
     isLoading: isLoadingItemTemplates,
-    // weaponTemplates,
+    weaponTemplates,
   } = useItems();
 
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
-  const [, /* prices */ setPrices] = useState<Price[] | null>(null);
+  const [prices, setPrices] = useState<Price[] | null>(null);
 
-  const [entries /* setEntries */] = useState<
-    (ArmorTemplate | WeaponTemplate)[]
-  >([]);
+  const [entries, setEntries] = useState<(ArmorTemplate | WeaponTemplate)[]>(
+    [],
+  );
   const [, setOrders] = useState<Order[] | null>(null);
 
   const [sort, setSort] = useState({ sorted: 'byClass', reversed: false });
   const [filter, setFilter] = useState({ filtered: 'all' });
   const [query, setQuery] = useState('');
-  const [page /* setPage */] = useState('1');
-  // const [pageLimit, setPageLimit ] = useState(0);
+  const [page, setPage] = useState('1');
+  const [pageLimit, setPageLimit] = useState(0);
 
   const { goldToken } = useComponentValue(
     UltimateDominionConfig,
@@ -173,81 +173,84 @@ export const AuctionHouse = (): JSX.Element => {
     })();
   }, [fetchOrders]);
 
+  const items = useMemo(
+    () => [...armorTemplates, ...weaponTemplates],
+    [armorTemplates, weaponTemplates],
+  );
+
   useEffect(() => {
     if (pageNumber < 1 || isLoadingItemTemplates) {
       return;
     }
-    // let entriesCopy = armorTemplates.concat(weaponTemplates);
+    let entriesCopy = items;
 
-    // entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
-    //   let result = false;
-    //   const floorA =
-    //     prices?.filter(price => entryA.tokenId == price.tokenId)[0]?.floor ||
-    //     '0';
-    //   const floorB =
-    //     prices?.filter(price => entryB.tokenId == price.tokenId)[0]?.floor ||
-    //     '0';
-    //   switch (sort.sorted) {
-    //     case 'byClass':
-    //       result = sort.reversed
-    //         ? entryA.class.toString().localeCompare(entryB.class.toString()) > 0
-    //         : entryB.class.toString().localeCompare(entryA.class.toString()) >
-    //           0;
-    //       break;
-    //     case 'byLevel':
-    //       result = sort.reversed
-    //         ? BigInt(entryA?.stats?.minLevel || '0') >=
-    //           BigInt(entryB?.stats?.minLevel || '0')
-    //         : BigInt(entryB?.stats?.minLevel || '0') >
-    //           BigInt(entryA?.stats?.minLevel || '0');
-    //       break;
-    //     case 'byPrice':
-    //       result = sort.reversed
-    //         ? BigInt(floorA) >= BigInt(floorB)
-    //         : BigInt(floorB) > BigInt(floorA);
-    //       break;
-    //     default:
-    //       result =
-    //         entryA.class.toString().localeCompare(entryB.class.toString()) > 0;
-    //   }
-    //   return result ? 1 : -1;
-    // });
-    // entriesCopy = [...entriesCopy].filter(entry => {
-    //   switch (filter.filtered) {
-    //     case 'byArmor':
-    //       return entry.itemType == ItemType.Armor;
-    //     case 'byWeapon':
-    //       return entry.itemType == ItemType.Weapon;
-    //     default:
-    //       return true;
-    //   }
-    // });
-    // const searcher = new FuzzySearch(
-    //   [...entriesCopy],
-    //   ['name', 'description'],
-    //   { caseSensitive: false },
-    // );
-    // entriesCopy = searcher.search(query);
-    // const _pageLimit =
-    //   Math.floor(Math.ceil(entriesCopy.length / PER_PAGE)) || 1;
-    // setPageLimit(_pageLimit);
-    // setEntries(
-    //   entriesCopy.slice((pageNumber - 1) * PER_PAGE, pageNumber * PER_PAGE),
-    // );
+    entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
+      let result = false;
+      const floorA =
+        prices?.filter(price => entryA.tokenId == price.tokenId)[0]?.floor ||
+        '0';
+      const floorB =
+        prices?.filter(price => entryB.tokenId == price.tokenId)[0]?.floor ||
+        '0';
+      switch (sort.sorted) {
+        // case 'byClass':
+        //   result = sort.reversed
+        //     ? entryA.class.toString().localeCompare(entryB.class.toString()) > 0
+        //     : entryB.class.toString().localeCompare(entryA.class.toString()) >
+        //       0;
+        //   break;
+        case 'byLevel':
+          result = sort.reversed
+            ? BigInt(entryA?.minLevel || '0') >= BigInt(entryB?.minLevel || '0')
+            : BigInt(entryB?.minLevel || '0') > BigInt(entryA?.minLevel || '0');
+          break;
+        case 'byPrice':
+          result = sort.reversed
+            ? BigInt(floorA) >= BigInt(floorB)
+            : BigInt(floorB) > BigInt(floorA);
+          break;
+        default:
+          // result =
+          //   entryA.class.toString().localeCompare(entryB.class.toString()) > 0;
+          break;
+      }
+      return result ? 1 : -1;
+    });
+    entriesCopy = [...entriesCopy].filter(entry => {
+      switch (filter.filtered) {
+        case 'byArmor':
+          return entry.itemType == ItemType.Armor;
+        case 'byWeapon':
+          return entry.itemType == ItemType.Weapon;
+        default:
+          return true;
+      }
+    });
+    const searcher = new FuzzySearch(
+      [...entriesCopy],
+      ['name', 'description'],
+      { caseSensitive: false },
+    );
+    entriesCopy = searcher.search(query);
+    const _pageLimit =
+      Math.floor(Math.ceil(entriesCopy.length / PER_PAGE)) || 1;
+    setPageLimit(_pageLimit);
+    setEntries(
+      entriesCopy.slice((pageNumber - 1) * PER_PAGE, pageNumber * PER_PAGE),
+    );
 
-    // if (pageNumber > _pageLimit) {
-    //   setPage(_pageLimit.toString());
-    // }
+    if (pageNumber > _pageLimit) {
+      setPage(_pageLimit.toString());
+    }
   }, [
-    // armorTemplate,
-    // filter.filtered,
+    filter.filtered,
     isLoadingItemTemplates,
+    items,
     pageNumber,
-    // prices,
-    // query,
-    // sort.reversed,
-    // sort.sorted,
-    // weaponTemplate,
+    prices,
+    query,
+    sort.reversed,
+    sort.sorted,
   ]);
 
   if (isLoadingItemTemplates || isFetchingOrders) {
@@ -284,7 +287,7 @@ export const AuctionHouse = (): JSX.Element => {
           >
             All
           </Button>
-          {/* {Object.values(ItemType)
+          {Object.values(ItemType)
             .filter(
               key => !isNaN(Number(ItemType[key as keyof typeof ItemType])),
             )
@@ -308,7 +311,7 @@ export const AuctionHouse = (): JSX.Element => {
                   {k}
                 </Button>
               );
-            })} */}
+            })}
         </HStack>
       </Stack>
       <Flex justify="space-between" w="100%">
@@ -346,17 +349,13 @@ export const AuctionHouse = (): JSX.Element => {
         </HStack>
       </Flex>
 
-      {/* <VStack gap={3} overflowX="auto" w="100%">
+      <VStack gap={3} overflowX="auto" w="100%">
         {entries && entries.length > 0 ? (
           entries.map(function (item, i) {
             return (
               <AuctionRow
                 key={`auction-row-${i}`}
-                agiModifier={'0'}
-                hitPointModifier={'0'}
-                intModifier={'0'}
-                minLevel={'0'}
-                strModifier={'0'}
+                {...item}
                 floor={
                   prices &&
                   prices?.filter(price => price.tokenId == item.tokenId)
@@ -365,10 +364,7 @@ export const AuctionHouse = (): JSX.Element => {
                         .floor
                     : '0'
                 }
-                {...item}
-                {...item.stats}
                 emoji={getEmoji(item?.name as string)}
-                itemClass={item.class.toString()}
                 image={item.image}
               />
             );
@@ -376,8 +372,8 @@ export const AuctionHouse = (): JSX.Element => {
         ) : (
           <Text mt={12}>No items</Text>
         )}
-      </VStack> */}
-      {/* <HStack
+      </VStack>
+      <HStack
         my={5}
         visibility={items && items.length > 0 ? 'visible' : 'hidden'}
       >
@@ -441,7 +437,7 @@ export const AuctionHouse = (): JSX.Element => {
         >
           <FaForwardStep />
         </Button>
-      </HStack> */}
+      </HStack>
     </VStack>
   );
 };

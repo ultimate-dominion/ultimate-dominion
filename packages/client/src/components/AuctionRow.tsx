@@ -2,18 +2,16 @@ import {
   Avatar,
   Box,
   Button,
-  Center,
   Flex,
   HStack,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { FaHatWizard } from 'react-icons/fa';
-import { GiAxeSword, GiRogue } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
 import { ITEM_PATH } from '../Routes';
+import { type ArmorTemplate, type WeaponTemplate } from '../utils/types';
 export const AuctionRow = ({
   name,
   agiModifier,
@@ -24,20 +22,9 @@ export const AuctionRow = ({
   emoji,
   tokenId,
   floor,
-  itemClass,
-}: {
-  name: string;
-  image: string;
-  description: string;
-  agiModifier: string;
-  hitPointModifier: string;
-  intModifier: string;
-  minLevel: string;
-  strModifier: string;
+}: (ArmorTemplate | WeaponTemplate) & {
   emoji: string;
-  tokenId: string;
   floor: string;
-  itemClass: string;
 }): JSX.Element => {
   const navigate = useNavigate();
 
@@ -82,7 +69,7 @@ export const AuctionRow = ({
       </Flex>
       <HStack>
         <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
-          <Text
+          {/* <Text
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -93,7 +80,7 @@ export const AuctionRow = ({
               {itemClass == '1' && <GiRogue size={15} />}
               {itemClass == '2' && <FaHatWizard size={15} />}
             </Center>
-          </Text>
+          </Text> */}
           <Text
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}

@@ -86,6 +86,7 @@ export const ItemsProvider = ({
             armorModifier: decodedArmorStats.armorModifier,
             hitPointModifier: decodedArmorStats.hitPointModifier,
             intModifier: decodedArmorStats.intModifier,
+            itemType: itemTemplate.itemType,
             minLevel: decodedArmorStats.minLevel,
             statRestrictions: {
               minAgility: decodedArmorStats.statRestrictions.minAgility,
@@ -135,6 +136,7 @@ export const ItemsProvider = ({
             agiModifier: decodedArmorStats.agiModifier,
             hitPointModifier: decodedArmorStats.hitPointModifier,
             intModifier: decodedArmorStats.intModifier,
+            itemType: itemTemplate.itemType,
             maxDamage: decodedArmorStats.maxDamage,
             minDamage: decodedArmorStats.minDamage,
             minLevel: decodedArmorStats.minLevel,
