@@ -67,7 +67,8 @@ export type ArmorStats = {
   strModifier: string;
 };
 
-export type ArmorTemplate = ArmorStats & Metadata & { tokenId: string };
+export type ArmorTemplate = ArmorStats &
+  Metadata & { itemType: ItemType; tokenId: string };
 
 export type Character = CharacterData & EntityStats & Metadata;
 
@@ -149,7 +150,8 @@ export type WeaponStats = {
   strModifier: string;
 };
 
-export type WeaponTemplate = WeaponStats & Metadata & { tokenId: string };
+export type WeaponTemplate = WeaponStats &
+  Metadata & { itemType: ItemType; tokenId: string };
 
 export type Item = Metadata & {
   itemId: Entity;

@@ -13,12 +13,8 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { getComponentValueStrict, Has, runQuery } from '@latticexyz/recs';
-import {
-  decodeEntity,
-  encodeEntity,
-  singletonEntity,
-} from '@latticexyz/store-sync/recs';
+import { Has, runQuery } from '@latticexyz/recs';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
@@ -29,19 +25,18 @@ import { Address, maxUint256 } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { AuctionRow } from '../components/AuctionRow';
+import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { HOME_PATH } from '../Routes';
-import { fetchMetadataFromUri, getEmoji, uriToHttp } from '../utils/helpers';
+import { getEmoji } from '../utils/helpers';
 import {
-  ArmorStats,
+  ArmorTemplate,
   ConsiderationData,
-  Item,
   ItemType,
   OfferData,
   Order,
-  StatsClasses,
-  WeaponStats,
+  WeaponTemplate,
 } from '../utils/types';
 
 interface Price {
@@ -49,7 +44,7 @@ interface Price {
   floor: string;
   ceiling: string;
 }
-const PER_PAGE = 5;
+const PER_PAGE = 10;
 
 export const AuctionHouse = (): JSX.Element => {
   const { renderError } = useToast();
@@ -57,24 +52,22 @@ export const AuctionHouse = (): JSX.Element => {
   const { isConnected } = useAccount();
 
   const {
-    components: {
-      UltimateDominionConfig,
-      Items,
-      ItemsBaseURI,
-      ItemsOwners,
-      ItemsTokenURI,
-      Offers,
-    },
+    components: { UltimateDominionConfig, Offers },
 
     network: { worldContract },
   } = useMUD();
+  const {
+    armorTemplates,
+    isLoading: isLoadingItemTemplates,
+    weaponTemplates,
+  } = useItems();
 
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
-  const [isFetchingItems, setIsFetchingItems] = useState(false);
-  const [items, setItems] = useState<Item[] | null>(null);
   const [prices, setPrices] = useState<Price[] | null>(null);
 
-  const [entries, setEntries] = useState<Item[]>([]);
+  const [entries, setEntries] = useState<(ArmorTemplate | WeaponTemplate)[]>(
+    [],
+  );
   const [, setOrders] = useState<Order[] | null>(null);
 
   const [sort, setSort] = useState({ sorted: 'byClass', reversed: false });
@@ -160,168 +153,6 @@ export const AuctionHouse = (): JSX.Element => {
     }
   }, [Offers, goldToken, renderError, worldContract.read]);
 
-  const fetchItems = useCallback(async () => {
-    try {
-      setIsFetchingItems(true);
-      const _items = Array.from(runQuery([Has(ItemsOwners)]))
-        .map(entity => {
-          const { owner, tokenId } = decodeEntity(
-            { owner: 'address', tokenId: 'uint256' },
-            entity,
-          );
-
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId },
-          );
-
-          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-
-          return {
-            itemId: entity,
-            itemType: itemTemplate.itemType,
-            owner,
-            tokenId: tokenId.toString(),
-            tokenIdEntity,
-          };
-        })
-        .filter(
-          (item1, i, arr) =>
-            arr.findIndex(item2 => item2.tokenId === item1.tokenId) === i,
-        )
-        .sort((a, b) => {
-          return Number(a.tokenId) - Number(b.tokenId);
-        });
-      const allItems = await Promise.all(
-        _items.map(async item => {
-          const baseURI = getComponentValueStrict(
-            ItemsBaseURI,
-            singletonEntity,
-          ).uri;
-
-          const tokenURI = getComponentValueStrict(
-            ItemsTokenURI,
-            item.tokenIdEntity,
-          ).uri;
-
-          const metadata = await fetchMetadataFromUri(
-            uriToHttp(`${baseURI}${tokenURI}`)[0],
-          );
-          const data = {
-            ...metadata,
-            tokenId: item.tokenId,
-            itemType: item.itemType as ItemType,
-            stats: null,
-            class: StatsClasses.Mage,
-          } as Item;
-          switch (item.itemType) {
-            case ItemType.Weapon: {
-              const w = await worldContract.read.UD__getWeaponStats([
-                BigInt(item.tokenId),
-              ]);
-              const highestStat = Math.max(
-                ...Object.values({
-                  a: Number(w.agiModifier.toString()),
-                  i: Number(w.intModifier.toString()),
-                  s: Number(w.strModifier.toString()),
-                }),
-              );
-              data.class =
-                w.strModifier.toString() == highestStat.toString()
-                  ? StatsClasses.Warrior
-                  : data.class;
-              data.class =
-                w.agiModifier.toString() == highestStat.toString()
-                  ? StatsClasses.Rogue
-                  : data.class;
-              data.class =
-                w.intModifier.toString() == highestStat.toString()
-                  ? StatsClasses.Mage
-                  : data.class;
-              data.stats = {
-                agiModifier: w.agiModifier.toString(),
-                hitPointModifier: w.hitPointModifier.toString(),
-                intModifier: w.intModifier.toString(),
-                itemId: item.itemId,
-                maxDamage: w.maxDamage.toString(),
-                minDamage: w.minDamage.toString(),
-                minLevel: w.minLevel.toString(),
-                owner: item.owner,
-                statRestrictions: {
-                  minAgility: w.statRestrictions.minAgility.toString(),
-                  minIntelligence:
-                    w.statRestrictions.minIntelligence.toString(),
-                  minStrength: w.statRestrictions.minStrength.toString(),
-                },
-                strModifier: w.strModifier.toString(),
-                tokenId: item.tokenId,
-              } as WeaponStats;
-              break;
-            }
-            case ItemType.Armor: {
-              const a = await worldContract.read.UD__getArmorStats([
-                BigInt(item.tokenId),
-              ]);
-              const highestStat = Math.max(
-                ...Object.values({
-                  a: Number(a.agiModifier.toString()),
-                  i: Number(a.intModifier.toString()),
-                  s: Number(a.strModifier.toString()),
-                }),
-              );
-              data.class =
-                a.strModifier.toString() == highestStat.toString()
-                  ? StatsClasses.Warrior
-                  : data.class;
-              data.class =
-                a.agiModifier.toString() == highestStat.toString()
-                  ? StatsClasses.Rogue
-                  : data.class;
-              data.class =
-                a.intModifier.toString() == highestStat.toString()
-                  ? StatsClasses.Mage
-                  : data.class;
-
-              data.stats = {
-                armorModifier: a.armorModifier.toString(),
-                agiModifier: a.agiModifier.toString(),
-                hitPointModifier: a.hitPointModifier.toString(),
-                intModifier: a.intModifier.toString(),
-                itemId: item.itemId,
-                minLevel: a.minLevel.toString(),
-                owner: item.owner,
-                statRestrictions: {
-                  minAgility: a.statRestrictions.minAgility.toString(),
-                  minIntelligence:
-                    a.statRestrictions.minIntelligence.toString(),
-                  minStrength: a.statRestrictions.minStrength.toString(),
-                },
-                strModifier: a.strModifier.toString(),
-                tokenId: item.tokenId,
-              } as ArmorStats;
-              break;
-            }
-            default:
-              break;
-          }
-          return data as Item;
-        }),
-      );
-      setItems(allItems);
-    } catch (err) {
-      renderError('Failed to load items');
-    } finally {
-      setIsFetchingItems(false);
-    }
-  }, [
-    Items,
-    ItemsBaseURI,
-    ItemsOwners,
-    ItemsTokenURI,
-    renderError,
-    worldContract.read,
-  ]);
-
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
@@ -338,16 +169,21 @@ export const AuctionHouse = (): JSX.Element => {
 
   useEffect(() => {
     (async (): Promise<void> => {
-      await fetchItems();
       await fetchOrders();
     })();
-  }, [fetchItems, fetchOrders]);
+  }, [fetchOrders]);
+
+  const items = useMemo(
+    () => [...armorTemplates, ...weaponTemplates],
+    [armorTemplates, weaponTemplates],
+  );
 
   useEffect(() => {
-    if (pageNumber < 1) {
+    if (pageNumber < 1 || isLoadingItemTemplates) {
       return;
     }
-    let entriesCopy: Item[] = items ? items : Array<Item>();
+    let entriesCopy = items;
+
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
       let result = false;
       const floorA =
@@ -357,18 +193,16 @@ export const AuctionHouse = (): JSX.Element => {
         prices?.filter(price => entryB.tokenId == price.tokenId)[0]?.floor ||
         '0';
       switch (sort.sorted) {
-        case 'byClass':
-          result = sort.reversed
-            ? entryA.class.toString().localeCompare(entryB.class.toString()) > 0
-            : entryB.class.toString().localeCompare(entryA.class.toString()) >
-              0;
-          break;
+        // case 'byClass':
+        //   result = sort.reversed
+        //     ? entryA.class.toString().localeCompare(entryB.class.toString()) > 0
+        //     : entryB.class.toString().localeCompare(entryA.class.toString()) >
+        //       0;
+        //   break;
         case 'byLevel':
           result = sort.reversed
-            ? BigInt(entryA?.stats?.minLevel || '0') >=
-              BigInt(entryB?.stats?.minLevel || '0')
-            : BigInt(entryB?.stats?.minLevel || '0') >
-              BigInt(entryA?.stats?.minLevel || '0');
+            ? BigInt(entryA?.minLevel || '0') >= BigInt(entryB?.minLevel || '0')
+            : BigInt(entryB?.minLevel || '0') > BigInt(entryA?.minLevel || '0');
           break;
         case 'byPrice':
           result = sort.reversed
@@ -376,8 +210,9 @@ export const AuctionHouse = (): JSX.Element => {
             : BigInt(floorB) > BigInt(floorA);
           break;
         default:
-          result =
-            entryA.class.toString().localeCompare(entryB.class.toString()) > 0;
+          // result =
+          //   entryA.class.toString().localeCompare(entryB.class.toString()) > 0;
+          break;
       }
       return result ? 1 : -1;
     });
@@ -409,6 +244,7 @@ export const AuctionHouse = (): JSX.Element => {
     }
   }, [
     filter.filtered,
+    isLoadingItemTemplates,
     items,
     pageNumber,
     prices,
@@ -417,7 +253,7 @@ export const AuctionHouse = (): JSX.Element => {
     sort.sorted,
   ]);
 
-  if (isFetchingItems || isFetchingOrders) {
+  if (isLoadingItemTemplates || isFetchingOrders) {
     return (
       <Center h="100%">
         <Spinner size="lg" />
@@ -519,11 +355,7 @@ export const AuctionHouse = (): JSX.Element => {
             return (
               <AuctionRow
                 key={`auction-row-${i}`}
-                agiModifier={'0'}
-                hitPointModifier={'0'}
-                intModifier={'0'}
-                minLevel={'0'}
-                strModifier={'0'}
+                {...item}
                 floor={
                   prices &&
                   prices?.filter(price => price.tokenId == item.tokenId)
@@ -532,10 +364,7 @@ export const AuctionHouse = (): JSX.Element => {
                         .floor
                     : '0'
                 }
-                {...item}
-                {...item.stats}
                 emoji={getEmoji(item?.name as string)}
-                itemClass={item.class.toString()}
                 image={item.image}
               />
             );
