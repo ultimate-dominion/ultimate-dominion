@@ -357,24 +357,23 @@ contract PostDeploy is Script {
         MonsterTemplateDetails[] memory monsterTemplateDetails =
             abi.decode(monsterStatsData, (MonsterTemplateDetails[]));
 
-        // for (uint256 i = 0; i < monsterTemplateDetails.length; i++) {
-        //     MonsterTemplateDetails memory monsterTemplate = monsterTemplateDetails[i];
+        for (uint256 i = 0; i < monsterTemplateDetails.length; i++) {
+            MonsterTemplateDetails memory monsterTemplate = monsterTemplateDetails[i];
 
-        //     MonsterStats memory newMonster = MonsterStats({
-        //         agility: monsterTemplate.stats.agility,
-        //         armor: monsterTemplate.stats.armor,
-        //         class: monsterTemplate.stats.class,
-        //         experience: monsterTemplate.stats.experience,
-        //         hitPoints: monsterTemplate.stats.hitPoints,
-        //         level: monsterTemplate.stats.level,
-        //         intelligence: monsterTemplate.stats.intelligence,
-        //         inventory: monsterTemplate.stats.inventory,
-        //         strength: monsterTemplate.stats.strength,
-        //         effects: monsterTemplate.stats.effects
-        //     });
+            MonsterStats memory newMonster = MonsterStats({
+                agility: monsterTemplate.stats.agility,
+                armor: monsterTemplate.stats.armor,
+                class: monsterTemplate.stats.class,
+                experience: monsterTemplate.stats.experience,
+                hitPoints: monsterTemplate.stats.hitPoints,
+                level: monsterTemplate.stats.level,
+                intelligence: monsterTemplate.stats.intelligence,
+                inventory: monsterTemplate.stats.inventory,
+                strength: monsterTemplate.stats.strength
+            });
 
-        //     world.UD__createMob(MobType.Monster, abi.encode(newMonster), monsterTemplate.metadataUri);
-        // }
+            world.UD__createMob(MobType.Monster, abi.encode(newMonster), monsterTemplate.metadataUri);
+        }
     }
 
     function setLevels() internal {

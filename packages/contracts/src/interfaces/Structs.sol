@@ -94,8 +94,6 @@ struct AdjustedCombatStats {
 /////////////////////////////////// MONSTERS /////////////////////////////////////
 
 struct MonsterStats {
-    // availible action ids
-    bytes32[] effects;
     //base to hit number for this mob for physical attacks = agility * physicalAttackConversion
     uint256 agility;
     // damage reduction: subtracted from total damage

@@ -1813,11 +1813,6 @@
         "internalType": "struct MonsterStats",
         "components": [
           {
-            "name": "effects",
-            "type": "bytes32[]",
-            "internalType": "bytes32[]"
-          },
-          {
             "name": "agility",
             "type": "uint256",
             "internalType": "uint256"
@@ -1883,11 +1878,6 @@
         "type": "tuple",
         "internalType": "struct MonsterStats",
         "components": [
-          {
-            "name": "effects",
-            "type": "bytes32[]",
-            "internalType": "bytes32[]"
-          },
           {
             "name": "agility",
             "type": "uint256",
