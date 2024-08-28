@@ -156,7 +156,7 @@ contract ItemsSystem is System {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
 
-    // function getArmourStats(uint256 itemId)public view returns(){}
+    // function getArmorStats(uint256 itemId)public view returns(){}
     // function getPotionStats(uint256 itemId)public view returns(){}
     // function getScrollStats(uint256 itemId)public view returns(){}
     // function getMaterialStats(uint256 itemId)public view returns(){}

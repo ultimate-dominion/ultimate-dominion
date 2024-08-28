@@ -3,14 +3,31 @@ pragma solidity >=0.8.24;
 
 import {ItemType, Classes, Alignment, TokenType} from "@codegen/common.sol";
 
+/////////////////// Items ///////////////////////
+struct StatRestrictions {
+    uint256 minAgility;
+    uint256 minIntelligence;
+    uint256 minStrength;
+}
+
 struct WeaponStats {
     int256 agiModifier;
-    uint8[] classRestrictions;
     int256 hitPointModifier;
     int256 intModifier;
     uint256 maxDamage;
     uint256 minDamage;
     uint256 minLevel;
+    StatRestrictions statRestrictions;
+    int256 strModifier;
+}
+
+struct ArmorStats {
+    int256 agiModifier;
+    uint256 armorModifier;
+    int256 hitPointModifier;
+    int256 intModifier;
+    uint256 minLevel;
+    StatRestrictions statRestrictions;
     int256 strModifier;
 }
 
@@ -52,16 +69,7 @@ struct PhysicalAttackTemplate {
     string name;
     PhysicalAttackStats stats;
 }
-
-struct ArmorStats {
-    int256 agiModifier;
-    uint256 armorModifier;
-    uint8[] classRestrictions;
-    int256 hitPointModifier;
-    int256 intModifier;
-    uint256 minLevel;
-    int256 strModifier;
-}
+/////////////////////////////////// MONSTERS /////////////////////////////////////
 
 struct MonsterStats {
     // availible action ids
@@ -109,9 +117,10 @@ struct PhysicalAttackStats {
     int256 attackModifierBonus;
     // additional damage on top of item damage
     int256 bonusDamage;
-    uint8[] classRestrictions;
     // crit chance
     int256 critChanceBonus;
+    uint256 minLevel;
+    StatRestrictions statRestrictions;
     // status effects applied by this attack empty if none
     bytes32[] statusEffects;
 }
@@ -145,13 +154,14 @@ struct MagicAttackStats {
     int256 attackModifierBonus;
     int256 bonusDamage;
     // list of classes that can use this attack
-    uint8[] classRestrictions;
     int256 critChanceBonus;
     // items that can cause this attack (leave empty if item not required)
     uint256[] itemRestrictions;
     // damage delt by this attack (can be negative for heals)
     int256 minDamage;
     int256 maxDamage;
+    uint256 minLevel;
+    StatRestrictions statRestrictions;
     // status effects applied by this attack
     bytes32[] statusEffects;
 }
