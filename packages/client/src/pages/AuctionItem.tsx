@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Center,
+  Divider,
   Grid,
   GridItem,
   Heading,
@@ -45,11 +46,13 @@ import { AUCTION_HOUSE_PATH } from '../Routes';
 import { ERC_1155ABI } from '../utils/constants';
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import {
+  type ArmorStats,
   type ArmorTemplate,
   type Character,
   type ConsiderationData,
   type OfferData,
   type Order,
+  type WeaponStats,
   type WeaponTemplate,
 } from '../utils/types';
 
@@ -394,15 +397,12 @@ export const AuctionItem = (): JSX.Element => {
         >
           Back to Auction House
         </Button>
-        <Grid
-          templateRows="repeat(10, 1fr)"
-          templateColumns={{ base: 'repeat(5, 1fr)', lg: 'repeat(10, 1fr)' }}
-        >
-          <GridItem p={5} rowSpan={2} colSpan={5}>
+        <HStack alignItems="start" spacing={12}>
+          <Stack w="50%">
             <HStack>
               {selectedItem != null ? (
                 <Heading textAlign="center">
-                  {selectedItem?.name.replace(/[\p{Emoji}\u200d]+/gu, '')}
+                  {removeEmoji(selectedItem.name)}
                 </Heading>
               ) : (
                 <Skeleton>
@@ -419,7 +419,7 @@ export const AuctionItem = (): JSX.Element => {
                   name={' '}
                   backgroundColor="transparent"
                 >
-                  {(selectedItem?.name as string).match(/[\p{Emoji}\u200d]+/gu)}
+                  {getEmoji(selectedItem.name)}
                 </Avatar>
               ) : (
                 <Skeleton>
@@ -430,248 +430,233 @@ export const AuctionItem = (): JSX.Element => {
             {selectedItem != null && selectedItem.description != null ? (
               <Text>{selectedItem?.description}</Text>
             ) : (
-              <Skeleton></Skeleton>
+              <Skeleton />
             )}
-          </GridItem>
-          <GridItem p={5} rowSpan={2} colSpan={5}>
-            <Stack></Stack>
-            <Grid templateColumns="repeat(, 1fr)">
-              {/* {selectedItem != null && selectedItem.stats != null ? (
-                [...Object.keys({ ...selectedItem.stats })]
-                  .filter(key =>
-                    ['itemId', 'owner'].indexOf(key) > -1 ? false : true,
-                  )
-                  .map((key, i) => (
-                    <GridItem key={`detail-${i}`}>
-                      <HStack>
-                        <Text textTransform="capitalize">{key}</Text>
-                        <Spacer />
-                        <Text>
-                          {selectedItem.stats
-                            ? selectedItem.stats[
-                                key as keyof (WeaponStats | ArmorStats)
-                              ]
-                            : ''}
-                        </Text>
-                      </HStack>
-                    </GridItem>
-                  ))
-              ) : (
-                <Skeleton>
-                  <GridItem>
-                    <Text>INT</Text>
+          </Stack>
+          <Grid templateColumns="repeat(, 1fr)" w="50%">
+            {selectedItem != null ? (
+              [...Object.keys({ ...selectedItem })]
+                .filter(key =>
+                  ['itemId', 'owner', 'statRestrictions'].indexOf(key) > -1
+                    ? false
+                    : true,
+                )
+                .map((key, i) => (
+                  <GridItem key={`detail-${i}`}>
+                    <HStack>
+                      <Text textTransform="capitalize">{key}</Text>
+                      <Spacer />
+                      <Text>
+                        {selectedItem
+                          ? selectedItem[
+                              key as keyof (
+                                | Omit<WeaponStats, 'statRestrictions'>
+                                | Omit<ArmorStats, 'statRestrictions'>
+                              )
+                            ]
+                          : ''}
+                      </Text>
+                    </HStack>
                   </GridItem>
-                </Skeleton>
-              )}{' '} */}
-              <GridItem>
-                <HStack>
-                  <Text>Floor Price</Text>
-                  <Spacer></Spacer>
-                  <Text>
-                    {floor.toString() == maxUint256.toString()
-                      ? 'not enough data'
-                      : formatEther(floor).toString()}
-                  </Text>
-                </HStack>
-              </GridItem>
-              <GridItem>
-                <HStack>
-                  <Text>Cieling Price</Text>
-                  <Spacer></Spacer>
-                  <Text>
-                    {formatEther(ceiling).toString() == '0'
-                      ? 'not enough data'
-                      : formatEther(ceiling).toString()}
-                  </Text>
-                </HStack>
-              </GridItem>{' '}
-            </Grid>
-            <Spacer />
-            <Stack>
-              <Stack direction="row" mb={2} mt={8} w="100%">
-                <InputGroup size="lg" w="100%">
-                  <InputLeftAddon>Amount</InputLeftAddon>
-                  <Input
-                    onChange={e => setOfferAmount(e.target.value)}
-                    placeholder="0.00"
-                    type="number"
-                    min={0}
-                    value={offerAmount.toString()}
-                  />
-                </InputGroup>
-                <InputGroup size="lg" w="100%">
-                  <InputLeftAddon>Price</InputLeftAddon>
-                  <Input
-                    onChange={e => setOfferPrice(e.target.value)}
-                    placeholder="0.00"
-                    type="number"
-                    min={0}
-                    value={offerPrice.toString()}
-                  />
-                </InputGroup>
-              </Stack>
-              <Button
-                w="100%"
-                onClick={() =>
-                  orderItem(offerAmount.toString(), offerPrice.toString())
-                }
-                isLoading={isSelling}
-                size="sm"
-                variant="solid"
-              >
-                Offer {offerPrice} $GOLD for {offerAmount} item
-              </Button>
+                ))
+            ) : (
+              <Skeleton>
+                <GridItem>
+                  <Text>INT</Text>
+                </GridItem>
+              </Skeleton>
+            )}{' '}
+            <GridItem>
+              <HStack>
+                <Text>Floor Price</Text>
+                <Spacer></Spacer>
+                <Text>
+                  {floor.toString() == maxUint256.toString()
+                    ? 'not enough data'
+                    : formatEther(floor).toString()}
+                </Text>
+              </HStack>
+            </GridItem>
+            <GridItem>
+              <HStack>
+                <Text>Ceiling Price</Text>
+                <Spacer></Spacer>
+                <Text>
+                  {formatEther(ceiling).toString() == '0'
+                    ? 'not enough data'
+                    : formatEther(ceiling).toString()}
+                </Text>
+              </HStack>
+            </GridItem>{' '}
+          </Grid>
+        </HStack>
+        <Divider my={8} />
+        <HStack alignItems="start" spacing={12}>
+          <Stack w="50%">
+            <Text fontWeight="bold">Make an Offer</Text>
+            <Text>
+              Want to make a $GOLD offer for {selectedItem?.name}? Your offer
+              will be listed in the &quot;$GOLD Offers&quot; tab below.
+            </Text>
+          </Stack>
+          <Stack w="50%">
+            <Text fontWeight="bold">List for Sale</Text>
+            {currentBalance === '0' ? (
+              <Text>
+                You don&apos;t have any {selectedItem?.name} in your inventory.
+              </Text>
+            ) : (
+              <Text>
+                You currently have {currentBalance} {selectedItem?.name}. Want
+                to list some for sale? Your listing will be shown in the
+                &quot;Item Listings&quot; tab below.
+              </Text>
+            )}
+          </Stack>
+        </HStack>
+        <HStack alignItems="start" spacing={12}>
+          <Stack w="50%">
+            <Stack direction="row" mb={2} mt={8} w="100%">
+              <InputGroup size="lg" w="100%">
+                <InputLeftAddon>Price</InputLeftAddon>
+                <Input
+                  onChange={e => setOfferPrice(e.target.value)}
+                  placeholder="0.00"
+                  type="number"
+                  min={0}
+                  value={offerPrice.toString()}
+                />
+              </InputGroup>
+              <InputGroup size="lg" w="100%">
+                <InputLeftAddon>Amount</InputLeftAddon>
+                <Input
+                  onChange={e => setOfferAmount(e.target.value)}
+                  placeholder="0.00"
+                  type="number"
+                  min={0}
+                  value={offerAmount.toString()}
+                />
+              </InputGroup>
             </Stack>
-          </GridItem>
-          <GridItem p={5} rowSpan={8} colSpan={{ base: 5, lg: 10 }} order={3}>
-            <Tabs variant="enclosed" size="lg">
-              <TabList>
-                <Tab>Listing</Tab>
-                <Tab>Offers</Tab>
-                <Tab>Owned</Tab>
-              </TabList>
-              <TabPanels>
-                <TabPanel>
-                  <Stack gap={2}>
-                    {orders != null && itemType != null
-                      ? orders
-                          .filter(
-                            item =>
-                              item.offer.token == itemsContract &&
-                              item.consideration.token == goldToken &&
-                              item.offer.identifier == selectedItemId,
-                          )
-                          .filter(item => item.orderStatus == '1')
-                          .map((order, i) => (
-                            <OrderRow
-                              key={`order-${i}`}
-                              from={order.consideration.recipient}
-                              orderHash={order.orderHash}
-                              offer={order.offer.amount}
-                              consideration={formatEther(
-                                BigInt(order.consideration.amount),
-                              )}
-                              considerationItem={'$GOLD'}
-                              offerItem={removeEmoji(
-                                selectedItem?.name as string,
-                              )}
-                              emoji={getEmoji(selectedItem?.name as string)}
-                              recipient={order.consideration.recipient}
-                            />
-                          ))
-                      : ''}
-                  </Stack>
-                </TabPanel>
-                <TabPanel>
-                  <Stack gap={2}>
-                    {orders != null && itemType != null && selectedItem != null
-                      ? orders
-                          .filter(
-                            item =>
-                              item.offer.token == goldToken &&
-                              item.consideration.token == itemsContract &&
-                              item.consideration.identifier == selectedItemId,
-                          )
-                          .filter(item => item.orderStatus == '1')
-                          .map((order, i) => (
-                            <OrderRow
-                              key={`order-${i}`}
-                              from={order.consideration.recipient}
-                              orderHash={order.orderHash}
-                              consideration={order.consideration.amount}
-                              offer={formatEther(
-                                BigInt(order.offer.amount),
-                              ).toString()}
-                              offerItem={'$GOLD'}
-                              considerationItem={removeEmoji(selectedItem.name)}
-                              emoji={getEmoji(selectedItem.name)}
-                              recipient={order.consideration.recipient}
-                            />
-                          ))
-                      : ''}
-                  </Stack>
-                </TabPanel>
-                <TabPanel>
-                  <Center>
-                    {/* <Stack direction="row">
-                      {BigInt(currentBalance) > 0n &&
-                      selectedItem != null &&
-                      selectedItem.stats != null &&
-                      userCharacter != null &&
-                      userCharacter.owner != null ? (
-                        <ItemCard
-                          {...selectedItem}
-                          {...selectedItem.stats}
-                          owner={userCharacter.owner}
-                          balance={currentBalance}
-                          name={selectedItem.name}
-                          classRestrictions={
-                            selectedItem.stats.classRestrictions
-                          }
-                          image={`x${currentBalance}`}
-                          strModifier={selectedItem.stats.strModifier}
-                          agiModifier={selectedItem.stats.agiModifier}
-                          intModifier={selectedItem.stats.intModifier}
-                          isEquipped={false}
+            <Button
+              w="100%"
+              onClick={() =>
+                orderItem(offerAmount.toString(), offerPrice.toString())
+              }
+              isLoading={isSelling}
+              size="sm"
+              variant="solid"
+            >
+              Offer {offerPrice} $GOLD for {offerAmount} item
+            </Button>
+          </Stack>
+          <Stack w="50%">
+            <Stack direction="row" mb={2} mt={8} w="100%">
+              <InputGroup size="lg" w="100%">
+                <InputLeftAddon>Amount</InputLeftAddon>
+                <Input
+                  onChange={e => setListingAmount(e.target.value)}
+                  placeholder="0.00"
+                  type="number"
+                  min={0}
+                  step={1}
+                  max={Number(currentBalance)}
+                  value={listingAmount.toString()}
+                />
+              </InputGroup>
+              <InputGroup size="lg" w="100%">
+                <InputLeftAddon>Price</InputLeftAddon>
+                <Input
+                  onChange={e => setListingPrice(e.target.value)}
+                  placeholder="0.00"
+                  type="number"
+                  min={0}
+                  value={listingPrice.toString()}
+                />
+              </InputGroup>
+            </Stack>
+            <Button
+              w="100%"
+              onClick={() =>
+                sellItem(listingAmount.toString(), listingPrice.toString())
+              }
+              isLoading={isSelling}
+              size="sm"
+              variant="solid"
+            >
+              List {listingAmount} of your item for {listingPrice} $GOLD
+            </Button>
+          </Stack>
+        </HStack>
+        <Divider my={8} />
+        <Tabs variant="enclosed" size="lg">
+          <TabList>
+            <Tab>Item Listings</Tab>
+            <Tab>$GOLD Offers</Tab>
+            <Tab>History</Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel>
+              <Stack gap={2}>
+                {orders != null && itemType != null
+                  ? orders
+                      .filter(
+                        item =>
+                          item.offer.token == itemsContract &&
+                          item.consideration.token == goldToken &&
+                          item.offer.identifier == selectedItemId,
+                      )
+                      .filter(item => item.orderStatus == '1')
+                      .map((order, i) => (
+                        <OrderRow
+                          key={`order-${i}`}
+                          from={order.consideration.recipient}
+                          orderHash={order.orderHash}
+                          offer={order.offer.amount}
+                          consideration={formatEther(
+                            BigInt(order.consideration.amount),
+                          )}
+                          considerationItem={'$GOLD'}
+                          offerItem={removeEmoji(selectedItem?.name as string)}
+                          emoji={getEmoji(selectedItem?.name as string)}
+                          recipient={order.consideration.recipient}
                         />
-                      ) : (
-                        ''
-                      )}
-                    </Stack> */}
-                  </Center>
-                  {BigInt(currentBalance) > 0n ? (
-                    <Stack>
-                      <Stack direction="row" mb={2} mt={8} w="100%">
-                        <InputGroup size="lg" w="100%">
-                          <InputLeftAddon>Amount</InputLeftAddon>
-                          <Input
-                            onChange={e => setListingAmount(e.target.value)}
-                            placeholder="0.00"
-                            type="number"
-                            min={0}
-                            step={1}
-                            max={Number(currentBalance)}
-                            value={listingAmount.toString()}
-                          />
-                        </InputGroup>
-                        <InputGroup size="lg" w="100%">
-                          <InputLeftAddon>Price</InputLeftAddon>
-                          <Input
-                            onChange={e => setListingPrice(e.target.value)}
-                            placeholder="0.00"
-                            type="number"
-                            min={0}
-                            value={listingPrice.toString()}
-                          />
-                        </InputGroup>
-                      </Stack>
-                      <Spacer></Spacer>
-                      <Button
-                        w="100%"
-                        onClick={() =>
-                          sellItem(
-                            listingAmount.toString(),
-                            listingPrice.toString(),
-                          )
-                        }
-                        isLoading={isSelling}
-                        size="sm"
-                        variant="solid"
-                      >
-                        List {listingAmount} of your item for {listingPrice}{' '}
-                        $GOLD
-                      </Button>
-                    </Stack>
-                  ) : (
-                    <Center my={5}>
-                      <Text>None Owned</Text>
-                    </Center>
-                  )}
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
-          </GridItem>
-        </Grid>
+                      ))
+                  : ''}
+              </Stack>
+            </TabPanel>
+            <TabPanel>
+              <Stack gap={2}>
+                {orders != null && itemType != null && selectedItem != null
+                  ? orders
+                      .filter(
+                        item =>
+                          item.offer.token == goldToken &&
+                          item.consideration.token == itemsContract &&
+                          item.consideration.identifier == selectedItemId,
+                      )
+                      .filter(item => item.orderStatus == '1')
+                      .map((order, i) => (
+                        <OrderRow
+                          key={`order-${i}`}
+                          from={order.consideration.recipient}
+                          orderHash={order.orderHash}
+                          consideration={order.consideration.amount}
+                          offer={formatEther(
+                            BigInt(order.offer.amount),
+                          ).toString()}
+                          offerItem={'$GOLD'}
+                          considerationItem={removeEmoji(selectedItem.name)}
+                          emoji={getEmoji(selectedItem.name)}
+                          recipient={order.consideration.recipient}
+                        />
+                      ))
+                  : ''}
+              </Stack>
+            </TabPanel>
+            <TabPanel>Coming soon...</TabPanel>
+          </TabPanels>
+        </Tabs>
       </Box>
     </Stack>
   );

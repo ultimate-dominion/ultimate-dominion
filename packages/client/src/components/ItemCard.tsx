@@ -9,6 +9,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 
+import { getEmoji, removeEmoji } from '../utils/helpers';
 import { type Armor, type Weapon } from '../utils/types';
 
 const getStatSymbol = (stat: string): string => (Number(stat) >= 0 ? '+' : '');
@@ -51,12 +52,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     >
       <CardHeader backgroundColor="grey300">
         <Center h="100%">
-          <Text fontSize={{ base: 'xl', lg: '3xl' }}>{name.slice(-3)}</Text>
+          <Text fontSize={{ base: 'xl', lg: '3xl' }}>{getEmoji(name)}</Text>
         </Center>
       </CardHeader>
       <CardBody>
         <Text fontWeight="bold" size={{ base: 'xs', sm: 'md' }}>
-          {name.slice(0, -3)}
+          {removeEmoji(name)}
           <Text as="span" size="xs">
             {' '}
             x {balance}
@@ -104,11 +105,11 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
         w="50px"
       >
         <Text color="white" fontSize="2xl">
-          {item.name.slice(-3)}
+          {getEmoji(item.name)}
         </Text>
       </Stack>
       <Box>
-        <Text size="xs">{item.name.slice(0, -3)}</Text>
+        <Text size="xs">{removeEmoji(item.name)}</Text>
         <Text size="xs">
           STR{getStatSymbol(item.strModifier)}
           {item.strModifier} AGI{getStatSymbol(item.agiModifier)}

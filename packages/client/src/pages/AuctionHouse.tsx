@@ -70,7 +70,7 @@ export const AuctionHouse = (): JSX.Element => {
   );
   const [, setOrders] = useState<Order[] | null>(null);
 
-  const [sort, setSort] = useState({ sorted: 'byClass', reversed: false });
+  const [sort, setSort] = useState({ sorted: 'byLevel', reversed: false });
   const [filter, setFilter] = useState({ filtered: 'all' });
   const [query, setQuery] = useState('');
   const [page, setPage] = useState('1');
@@ -193,12 +193,6 @@ export const AuctionHouse = (): JSX.Element => {
         prices?.filter(price => entryB.tokenId == price.tokenId)[0]?.floor ||
         '0';
       switch (sort.sorted) {
-        // case 'byClass':
-        //   result = sort.reversed
-        //     ? entryA.class.toString().localeCompare(entryB.class.toString()) > 0
-        //     : entryB.class.toString().localeCompare(entryA.class.toString()) >
-        //       0;
-        //   break;
         case 'byLevel':
           result = sort.reversed
             ? BigInt(entryA?.minLevel || '0') >= BigInt(entryB?.minLevel || '0')
@@ -318,7 +312,7 @@ export const AuctionHouse = (): JSX.Element => {
         <Text>Items {entries.length}</Text>
         <HStack>
           <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
-            {['byClass', 'byLevel', 'byPrice'].map(s => {
+            {['byLevel', 'byPrice'].map(s => {
               return (
                 <Button
                   key={`filter-${s}`}
