@@ -402,7 +402,7 @@ export const AuctionItem = (): JSX.Element => {
             <HStack>
               {selectedItem != null ? (
                 <Heading textAlign="center">
-                  {selectedItem?.name.replace(/[\p{Emoji}\u200d]+/gu, '')}
+                  {removeEmoji(selectedItem.name)}
                 </Heading>
               ) : (
                 <Skeleton>
@@ -419,7 +419,7 @@ export const AuctionItem = (): JSX.Element => {
                   name={' '}
                   backgroundColor="transparent"
                 >
-                  {(selectedItem?.name as string).match(/[\p{Emoji}\u200d]+/gu)}
+                  {getEmoji(selectedItem.name)}
                 </Avatar>
               ) : (
                 <Skeleton>

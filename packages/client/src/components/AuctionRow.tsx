@@ -11,7 +11,9 @@ import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
 import { ITEM_PATH } from '../Routes';
+import { removeEmoji } from '../utils/helpers';
 import { type ArmorTemplate, type WeaponTemplate } from '../utils/types';
+
 export const AuctionRow = ({
   name,
   agiModifier,
@@ -59,7 +61,7 @@ export const AuctionRow = ({
         </Avatar>
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
+            <Text size={{ base: '2xs', lg: 'sm' }}>{removeEmoji(name)}</Text>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
             HP {hitPointModifier} • STR {strModifier} • AGI {agiModifier} • INT{' '}
