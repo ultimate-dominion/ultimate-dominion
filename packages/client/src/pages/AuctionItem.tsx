@@ -23,6 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import {
+  Entity,
   getComponentValue,
   getComponentValueStrict,
   Has,
@@ -32,10 +33,18 @@ import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Address, erc20Abi, formatEther, maxUint256, parseEther } from 'viem';
+import {
+  Address,
+  erc20Abi,
+  formatEther,
+  maxUint256,
+  parseEther,
+  zeroHash,
+} from 'viem';
 import { useWalletClient } from 'wagmi';
 
 import { AuctionAllowance } from '../components/AuctionAllowance';
+import { ItemCard } from '../components/ItemCard';
 import { OrderRow } from '../components/OrderRow';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
@@ -45,11 +54,13 @@ import { AUCTION_HOUSE_PATH } from '../Routes';
 import { ERC_1155ABI } from '../utils/constants';
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import {
+  type ArmorStats,
   type ArmorTemplate,
   type Character,
   type ConsiderationData,
   type OfferData,
   type Order,
+  type WeaponStats,
   type WeaponTemplate,
 } from '../utils/types';
 
@@ -430,16 +441,17 @@ export const AuctionItem = (): JSX.Element => {
             {selectedItem != null && selectedItem.description != null ? (
               <Text>{selectedItem?.description}</Text>
             ) : (
-              <Skeleton></Skeleton>
+              <Skeleton />
             )}
           </GridItem>
           <GridItem p={5} rowSpan={2} colSpan={5}>
-            <Stack></Stack>
             <Grid templateColumns="repeat(, 1fr)">
-              {/* {selectedItem != null && selectedItem.stats != null ? (
-                [...Object.keys({ ...selectedItem.stats })]
+              {selectedItem != null ? (
+                [...Object.keys({ ...selectedItem })]
                   .filter(key =>
-                    ['itemId', 'owner'].indexOf(key) > -1 ? false : true,
+                    ['itemId', 'owner', 'statRestrictions'].indexOf(key) > -1
+                      ? false
+                      : true,
                   )
                   .map((key, i) => (
                     <GridItem key={`detail-${i}`}>
@@ -447,9 +459,12 @@ export const AuctionItem = (): JSX.Element => {
                         <Text textTransform="capitalize">{key}</Text>
                         <Spacer />
                         <Text>
-                          {selectedItem.stats
-                            ? selectedItem.stats[
-                                key as keyof (WeaponStats | ArmorStats)
+                          {selectedItem
+                            ? selectedItem[
+                                key as keyof (
+                                  | Omit<WeaponStats, 'statRestrictions'>
+                                  | Omit<ArmorStats, 'statRestrictions'>
+                                )
                               ]
                             : ''}
                         </Text>
@@ -462,7 +477,7 @@ export const AuctionItem = (): JSX.Element => {
                     <Text>INT</Text>
                   </GridItem>
                 </Skeleton>
-              )}{' '} */}
+              )}{' '}
               <GridItem>
                 <HStack>
                   <Text>Floor Price</Text>
@@ -593,31 +608,21 @@ export const AuctionItem = (): JSX.Element => {
                 </TabPanel>
                 <TabPanel>
                   <Center>
-                    {/* <Stack direction="row">
+                    <Stack direction="row">
                       {BigInt(currentBalance) > 0n &&
                       selectedItem != null &&
-                      selectedItem.stats != null &&
                       userCharacter != null &&
                       userCharacter.owner != null ? (
                         <ItemCard
                           {...selectedItem}
-                          {...selectedItem.stats}
-                          owner={userCharacter.owner}
                           balance={currentBalance}
-                          name={selectedItem.name}
-                          classRestrictions={
-                            selectedItem.stats.classRestrictions
-                          }
-                          image={`x${currentBalance}`}
-                          strModifier={selectedItem.stats.strModifier}
-                          agiModifier={selectedItem.stats.agiModifier}
-                          intModifier={selectedItem.stats.intModifier}
-                          isEquipped={false}
+                          itemId={zeroHash as Entity}
+                          owner={userCharacter.owner}
                         />
                       ) : (
                         ''
                       )}
-                    </Stack> */}
+                    </Stack>
                   </Center>
                   {BigInt(currentBalance) > 0n ? (
                     <Stack>
