@@ -28,7 +28,7 @@ struct MonsterStatsData {
   uint256 intelligence;
   uint256 level;
   uint256 strength;
-  bytes32[] actions;
+  bytes32[] effects;
   uint256[] inventory;
 }
 
@@ -67,7 +67,7 @@ library MonsterStats {
     fieldNames[5] = "intelligence";
     fieldNames[6] = "level";
     fieldNames[7] = "strength";
-    fieldNames[8] = "actions";
+    fieldNames[8] = "effects";
     fieldNames[9] = "inventory";
   }
 
@@ -422,9 +422,9 @@ library MonsterStats {
   }
 
   /**
-   * @notice Get actions.
+   * @notice Get effects.
    */
-  function getActions(uint256 mobId) internal view returns (bytes32[] memory actions) {
+  function getEffects(uint256 mobId) internal view returns (bytes32[] memory effects) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -433,9 +433,9 @@ library MonsterStats {
   }
 
   /**
-   * @notice Get actions.
+   * @notice Get effects.
    */
-  function _getActions(uint256 mobId) internal view returns (bytes32[] memory actions) {
+  function _getEffects(uint256 mobId) internal view returns (bytes32[] memory effects) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -444,29 +444,29 @@ library MonsterStats {
   }
 
   /**
-   * @notice Set actions.
+   * @notice Set effects.
    */
-  function setActions(uint256 mobId, bytes32[] memory actions) internal {
+  function setEffects(uint256 mobId, bytes32[] memory effects) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
-    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((actions)));
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((effects)));
   }
 
   /**
-   * @notice Set actions.
+   * @notice Set effects.
    */
-  function _setActions(uint256 mobId, bytes32[] memory actions) internal {
+  function _setEffects(uint256 mobId, bytes32[] memory effects) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
-    StoreCore.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((actions)));
+    StoreCore.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((effects)));
   }
 
   /**
-   * @notice Get the length of actions.
+   * @notice Get the length of effects.
    */
-  function lengthActions(uint256 mobId) internal view returns (uint256) {
+  function lengthEffects(uint256 mobId) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -477,9 +477,9 @@ library MonsterStats {
   }
 
   /**
-   * @notice Get the length of actions.
+   * @notice Get the length of effects.
    */
-  function _lengthActions(uint256 mobId) internal view returns (uint256) {
+  function _lengthEffects(uint256 mobId) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -490,10 +490,10 @@ library MonsterStats {
   }
 
   /**
-   * @notice Get an item of actions.
+   * @notice Get an item of effects.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function getItemActions(uint256 mobId, uint256 _index) internal view returns (bytes32) {
+  function getItemEffects(uint256 mobId, uint256 _index) internal view returns (bytes32) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -504,10 +504,10 @@ library MonsterStats {
   }
 
   /**
-   * @notice Get an item of actions.
+   * @notice Get an item of effects.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function _getItemActions(uint256 mobId, uint256 _index) internal view returns (bytes32) {
+  function _getItemEffects(uint256 mobId, uint256 _index) internal view returns (bytes32) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -518,9 +518,9 @@ library MonsterStats {
   }
 
   /**
-   * @notice Push an element to actions.
+   * @notice Push an element to effects.
    */
-  function pushActions(uint256 mobId, bytes32 _element) internal {
+  function pushEffects(uint256 mobId, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -528,9 +528,9 @@ library MonsterStats {
   }
 
   /**
-   * @notice Push an element to actions.
+   * @notice Push an element to effects.
    */
-  function _pushActions(uint256 mobId, bytes32 _element) internal {
+  function _pushEffects(uint256 mobId, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -538,9 +538,9 @@ library MonsterStats {
   }
 
   /**
-   * @notice Pop an element from actions.
+   * @notice Pop an element from effects.
    */
-  function popActions(uint256 mobId) internal {
+  function popEffects(uint256 mobId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -548,9 +548,9 @@ library MonsterStats {
   }
 
   /**
-   * @notice Pop an element from actions.
+   * @notice Pop an element from effects.
    */
-  function _popActions(uint256 mobId) internal {
+  function _popEffects(uint256 mobId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -558,9 +558,9 @@ library MonsterStats {
   }
 
   /**
-   * @notice Update an element of actions at `_index`.
+   * @notice Update an element of effects at `_index`.
    */
-  function updateActions(uint256 mobId, uint256 _index, bytes32 _element) internal {
+  function updateEffects(uint256 mobId, uint256 _index, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -571,9 +571,9 @@ library MonsterStats {
   }
 
   /**
-   * @notice Update an element of actions at `_index`.
+   * @notice Update an element of effects at `_index`.
    */
-  function _updateActions(uint256 mobId, uint256 _index, bytes32 _element) internal {
+  function _updateEffects(uint256 mobId, uint256 _index, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
 
@@ -788,7 +788,7 @@ library MonsterStats {
     uint256 intelligence,
     uint256 level,
     uint256 strength,
-    bytes32[] memory actions,
+    bytes32[] memory effects,
     uint256[] memory inventory
   ) internal {
     bytes memory _staticData = encodeStatic(
@@ -802,8 +802,8 @@ library MonsterStats {
       strength
     );
 
-    EncodedLengths _encodedLengths = encodeLengths(actions, inventory);
-    bytes memory _dynamicData = encodeDynamic(actions, inventory);
+    EncodedLengths _encodedLengths = encodeLengths(effects, inventory);
+    bytes memory _dynamicData = encodeDynamic(effects, inventory);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
@@ -824,7 +824,7 @@ library MonsterStats {
     uint256 intelligence,
     uint256 level,
     uint256 strength,
-    bytes32[] memory actions,
+    bytes32[] memory effects,
     uint256[] memory inventory
   ) internal {
     bytes memory _staticData = encodeStatic(
@@ -838,8 +838,8 @@ library MonsterStats {
       strength
     );
 
-    EncodedLengths _encodedLengths = encodeLengths(actions, inventory);
-    bytes memory _dynamicData = encodeDynamic(actions, inventory);
+    EncodedLengths _encodedLengths = encodeLengths(effects, inventory);
+    bytes memory _dynamicData = encodeDynamic(effects, inventory);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
@@ -862,8 +862,8 @@ library MonsterStats {
       _table.strength
     );
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.actions, _table.inventory);
-    bytes memory _dynamicData = encodeDynamic(_table.actions, _table.inventory);
+    EncodedLengths _encodedLengths = encodeLengths(_table.effects, _table.inventory);
+    bytes memory _dynamicData = encodeDynamic(_table.effects, _table.inventory);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
@@ -886,8 +886,8 @@ library MonsterStats {
       _table.strength
     );
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.actions, _table.inventory);
-    bytes memory _dynamicData = encodeDynamic(_table.actions, _table.inventory);
+    EncodedLengths _encodedLengths = encodeLengths(_table.effects, _table.inventory);
+    bytes memory _dynamicData = encodeDynamic(_table.effects, _table.inventory);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(mobId));
@@ -937,13 +937,13 @@ library MonsterStats {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (bytes32[] memory actions, uint256[] memory inventory) {
+  ) internal pure returns (bytes32[] memory effects, uint256[] memory inventory) {
     uint256 _start;
     uint256 _end;
     unchecked {
       _end = _encodedLengths.atIndex(0);
     }
-    actions = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
+    effects = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
 
     _start = _end;
     unchecked {
@@ -974,7 +974,7 @@ library MonsterStats {
       _table.strength
     ) = decodeStatic(_staticData);
 
-    (_table.actions, _table.inventory) = decodeDynamic(_encodedLengths, _dynamicData);
+    (_table.effects, _table.inventory) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -1019,12 +1019,12 @@ library MonsterStats {
    * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
   function encodeLengths(
-    bytes32[] memory actions,
+    bytes32[] memory effects,
     uint256[] memory inventory
   ) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(actions.length * 32, inventory.length * 32);
+      _encodedLengths = EncodedLengthsLib.pack(effects.length * 32, inventory.length * 32);
     }
   }
 
@@ -1032,8 +1032,8 @@ library MonsterStats {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(bytes32[] memory actions, uint256[] memory inventory) internal pure returns (bytes memory) {
-    return abi.encodePacked(EncodeArray.encode((actions)), EncodeArray.encode((inventory)));
+  function encodeDynamic(bytes32[] memory effects, uint256[] memory inventory) internal pure returns (bytes memory) {
+    return abi.encodePacked(EncodeArray.encode((effects)), EncodeArray.encode((inventory)));
   }
 
   /**
@@ -1051,7 +1051,7 @@ library MonsterStats {
     uint256 intelligence,
     uint256 level,
     uint256 strength,
-    bytes32[] memory actions,
+    bytes32[] memory effects,
     uint256[] memory inventory
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(
@@ -1065,8 +1065,8 @@ library MonsterStats {
       strength
     );
 
-    EncodedLengths _encodedLengths = encodeLengths(actions, inventory);
-    bytes memory _dynamicData = encodeDynamic(actions, inventory);
+    EncodedLengths _encodedLengths = encodeLengths(effects, inventory);
+    bytes memory _dynamicData = encodeDynamic(effects, inventory);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

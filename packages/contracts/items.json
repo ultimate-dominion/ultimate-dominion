@@ -8,15 +8,15 @@
       "stats": {
         "agiModifier": -1,
         "armorModifier": 1,
-        "hitPointModifier": 0,
+        "hpModifier": 0,
         "intModifier": 0,
         "minLevel": 0,
-        "statRestrictions": {
-          "minAgility": 0,
-          "minIntelligence": 0,
-          "minStrength": 0
-        },
         "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
       }
     },
     {
@@ -27,15 +27,15 @@
       "stats": {
         "agiModifier": -3,
         "armorModifier": 3,
-        "hitPointModifier": 0,
+        "hpModifier": 0,
         "intModifier": 0,
         "minLevel": 3,
-        "statRestrictions": {
-          "minAgility": 0,
-          "minIntelligence": 0,
-          "minStrength": 12
-        },
         "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 12
       }
     },
     {
@@ -46,15 +46,15 @@
       "stats": {
         "agiModifier": -1,
         "armorModifier": 2,
-        "hitPointModifier": 0,
+        "hpModifier": 0,
         "intModifier": 0,
         "minLevel": 3,
-        "statRestrictions": {
-          "minAgility": 12,
-          "minIntelligence": 0,
-          "minStrength": 6
-        },
         "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 12,
+        "minIntelligence": 0,
+        "minStrength": 6
       }
     },
     {
@@ -65,15 +65,15 @@
       "stats": {
         "agiModifier": 0,
         "armorModifier": 1,
-        "hitPointModifier": 0,
+        "hpModifier": 0,
         "intModifier": 3,
         "minLevel": 3,
-        "statRestrictions": {
-          "minAgility": 0,
-          "minIntelligence": 12,
-          "minStrength": 0
-        },
         "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 12,
+        "minStrength": 0
       }
     },
     {
@@ -84,15 +84,15 @@
       "stats": {
         "agiModifier": -2,
         "armorModifier": 4,
-        "hitPointModifier": 0,
+        "hpModifier": 0,
         "intModifier": 3,
         "minLevel": 5,
-        "statRestrictions": {
-          "minAgility": 0,
-          "minIntelligence": 12,
-          "minStrength": 12
-        },
         "strModifier": 3
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 12,
+        "minStrength": 12
       }
     }
   ],
@@ -105,17 +105,20 @@
       "name": "Rusty Axe",
       "stats": {
         "agiModifier": 0,
-        "hitPointModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
+        ],
+        "hpModifier": 0,
         "intModifier": 0,
         "maxDamage": 5,
         "minDamage": 1,
         "minLevel": 0,
-        "statRestrictions": {
-          "minAgility": 0,
-          "minIntelligence": 0,
-          "minStrength": 0
-        },
         "strModifier": 2
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
       }
     },
     {
@@ -125,17 +128,20 @@
       "name": "Iron Sword",
       "stats": {
         "agiModifier": 0,
-        "hitPointModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
+        ],
+        "hpModifier": 0,
         "intModifier": 0,
         "maxDamage": 8,
         "minDamage": 4,
         "minLevel": 3,
-        "statRestrictions": {
-          "minAgility": 0,
-          "minIntelligence": 0,
-          "minStrength": 12
-        },
         "strModifier": 5
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 12
       }
     },
     {
@@ -145,17 +151,20 @@
       "name": "Novice Staff",
       "stats": {
         "agiModifier": 0,
-        "hitPointModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
+        ],
+        "hpModifier": 0,
         "intModifier": 5,
         "maxDamage": 8,
         "minDamage": 4,
         "minLevel": 3,
-        "statRestrictions": {
-          "minAgility": 0,
-          "minIntelligence": 12,
-          "minStrength": 0
-        },
         "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 12,
+        "minStrength": 0
       }
     },
     {
@@ -165,17 +174,20 @@
       "name": "Throwing Dagger",
       "stats": {
         "agiModifier": 5,
-        "hitPointModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
+        ],
+        "hpModifier": 0,
         "intModifier": 0,
         "maxDamage": 8,
         "minDamage": 4,
         "minLevel": 3,
-        "statRestrictions": {
-          "minAgility": 12,
-          "minIntelligence": 0,
-          "minStrength": 0
-        },
         "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 12,
+        "minIntelligence": 0,
+        "minStrength": 0
       }
     },
     {
@@ -185,17 +197,20 @@
       "name": "Steel Sword",
       "stats": {
         "agiModifier": 0,
-        "hitPointModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
+        ],
+        "hpModifier": 0,
         "intModifier": 0,
         "maxDamage": 15,
         "minDamage": 10,
         "minLevel": 5,
-        "statRestrictions": {
-          "minAgility": 0,
-          "minIntelligence": 0,
-          "minStrength": 15
-        },
         "strModifier": 9
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 15
       }
     }
   ]

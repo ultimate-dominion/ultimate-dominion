@@ -12,17 +12,17 @@ import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
-import {Characters, CharactersData, UltimateDominionConfig} from "@codegen/index.sol";
-import {Classes, MobType, ItemType, ActionType} from "@codegen/common.sol";
-import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
 import {
-    WeaponStats,
-    MonsterStats,
-    ArmorStats,
-    PhysicalAttackStats,
-    MagicAttackStats,
-    StatRestrictions
-} from "@interfaces/Structs.sol";
+    Characters,
+    CharactersData,
+    UltimateDominionConfig,
+    ArmorStatsData,
+    WeaponStatsData,
+    StatRestrictionsData
+} from "@codegen/index.sol";
+import {Classes, MobType, ItemType, EffectType} from "@codegen/common.sol";
+import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
+import {MonsterStats} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_NAMESPACE} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {System} from "@latticexyz/world/src/System.sol";
@@ -64,34 +64,33 @@ contract SetUp is Test {
         characterToken = IERC721Mintable(world.UD__getCharacterToken());
         erc1155System = IERC1155System(world.UD__getItemsContract());
 
+        basicMagicAttackId = keccak256(abi.encode("basic magic attack"));
+        basicAttackId = keccak256(abi.encode("basic weapon attack"));
+
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;
         // create a starter armor
-        StatRestrictions memory statRestrictions = StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 0});
-        ArmorStats memory newArmor = ArmorStats({
+        StatRestrictionsData memory statRestrictions =
+            StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
+        bytes32[] memory effectIds = new bytes32[](1);
+        effectIds[0] = basicAttackId;
+        ArmorStatsData memory newArmor = ArmorStatsData({
             armorModifier: 1,
-            statRestrictions: statRestrictions,
             minLevel: 0,
             strModifier: 1,
             agiModifier: 2,
             intModifier: 3,
-            hitPointModifier: 4
+            hpModifier: 4
         });
-
-        bytes32[] memory statusEffects = new bytes32[](0);
-
-        basicAttackId = keccak256(abi.encode("basic weapon attack"));
-
-        uint256[] memory itemRestrictions = new uint256[](0);
-
-        basicMagicAttackId = keccak256(abi.encode("basic magic attack"));
 
         vm.label(alice, "alice");
         vm.label(bob, "bob");
         vm.label(worldAddress, "world");
         vm.label(world.UD__getCharacterToken(), "character token");
 
-        newArmorId = world.UD__createItem(ItemType.Armor, 10 ether, 100000000, abi.encode(newArmor), "setup_armor_uri");
+        newArmorId = world.UD__createItem(
+            ItemType.Armor, 10 ether, 100000000, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
+        );
 
         world.grantAccess(_lootManagerSystemId("UD"), address(this));
         vm.stopPrank();

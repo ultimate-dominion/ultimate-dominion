@@ -18,14 +18,23 @@ import {
     Stats,
     StatsData,
     CharacterEquipment,
-    CharacterEquipmentData
+    CharacterEquipmentData,
+    ArmorStats,
+    ArmorStatsData,
+    WeaponStats,
+    WeaponStatsData,
+    StatRestrictions,
+    StatRestrictionsData,
+    SpellStatsData,
+    SpellStats,
+    ConsumableStats
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess, _lootManagerSystemId} from "../utils.sol";
 import {ITEMS_NAMESPACE, WORLD_NAMESPACE} from "../../constants.sol";
-import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
+// import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
@@ -53,6 +62,22 @@ contract ItemsSystem is System {
         // create new item struct
         ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, stats: stats});
 
+        StatRestrictionsData memory statRestrictions;
+        if (itemType == ItemType.Weapon) {
+            WeaponStatsData memory weaponStats;
+            (weaponStats, statRestrictions) = abi.decode(stats, (WeaponStatsData, StatRestrictionsData));
+
+            // set weapon stats table
+            WeaponStats.set(itemId, weaponStats);
+            StatRestrictions.set(itemId, statRestrictions);
+        } else if (itemType == ItemType.Armor) {
+            ArmorStatsData memory armorStats;
+            (armorStats, statRestrictions) = abi.decode(stats, (ArmorStatsData, StatRestrictionsData));
+
+            // set armor stats table
+            ArmorStats.set(itemId, armorStats);
+            StatRestrictions.set(itemId, statRestrictions);
+        }
         // mint supply to lootManager contract
         IWorld(_world()).call(
             _erc1155SystemId(ITEMS_NAMESPACE),
@@ -156,14 +181,8 @@ contract ItemsSystem is System {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
 
-<<<<<<< Updated upstream
     // function getArmorStats(uint256 itemId)public view returns(){}
-=======
-<<<<<<< Updated upstream
-    // function getArmourStats(uint256 itemId)public view returns(){}
->>>>>>> Stashed changes
-    // function getPotionStats(uint256 itemId)public view returns(){}
-=======
+
     function consumeItem(bytes32 characterId, uint256 itemId) public {
         _requireAccess(address(this), _msgSender());
 
@@ -174,7 +193,6 @@ contract ItemsSystem is System {
     }
 
     // function getConsumableStats(uint256 itemId)public view returns(){}
->>>>>>> Stashed changes
     // function getScrollStats(uint256 itemId)public view returns(){}
     // function getMaterialStats(uint256 itemId)public view returns(){}
 }

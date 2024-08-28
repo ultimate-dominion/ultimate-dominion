@@ -18,7 +18,9 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 struct ArmorStatsData {
   int256 agiModifier;
+  int256 armorModifier;
   int256 hpModifier;
+  int256 intModifier;
   uint256 minLevel;
   int256 strModifier;
 }
@@ -28,12 +30,12 @@ library ArmorStats {
   ResourceId constant _tableId = ResourceId.wrap(0x7462554400000000000000000000000041726d6f725374617473000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0080040020202020000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x00c0060020202020202000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (uint256)
   Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (int256, int256, uint256, int256)
-  Schema constant _valueSchema = Schema.wrap(0x008004003f3f1f3f000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (int256, int256, int256, int256, uint256, int256)
+  Schema constant _valueSchema = Schema.wrap(0x00c006003f3f3f3f1f3f00000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -49,11 +51,13 @@ library ArmorStats {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](4);
+    fieldNames = new string[](6);
     fieldNames[0] = "agiModifier";
-    fieldNames[1] = "hpModifier";
-    fieldNames[2] = "minLevel";
-    fieldNames[3] = "strModifier";
+    fieldNames[1] = "armorModifier";
+    fieldNames[2] = "hpModifier";
+    fieldNames[3] = "intModifier";
+    fieldNames[4] = "minLevel";
+    fieldNames[5] = "strModifier";
   }
 
   /**
@@ -113,13 +117,55 @@ library ArmorStats {
   }
 
   /**
+   * @notice Get armorModifier.
+   */
+  function getArmorModifier(uint256 itemId) internal view returns (int256 armorModifier) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    return (int256(uint256(bytes32(_blob))));
+  }
+
+  /**
+   * @notice Get armorModifier.
+   */
+  function _getArmorModifier(uint256 itemId) internal view returns (int256 armorModifier) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    return (int256(uint256(bytes32(_blob))));
+  }
+
+  /**
+   * @notice Set armorModifier.
+   */
+  function setArmorModifier(uint256 itemId, int256 armorModifier) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((armorModifier)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set armorModifier.
+   */
+  function _setArmorModifier(uint256 itemId, int256 armorModifier) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((armorModifier)), _fieldLayout);
+  }
+
+  /**
    * @notice Get hpModifier.
    */
   function getHpModifier(uint256 itemId) internal view returns (int256 hpModifier) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
@@ -130,7 +176,7 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
@@ -141,7 +187,7 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((hpModifier)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((hpModifier)), _fieldLayout);
   }
 
   /**
@@ -151,7 +197,49 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((hpModifier)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((hpModifier)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get intModifier.
+   */
+  function getIntModifier(uint256 itemId) internal view returns (int256 intModifier) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (int256(uint256(bytes32(_blob))));
+  }
+
+  /**
+   * @notice Get intModifier.
+   */
+  function _getIntModifier(uint256 itemId) internal view returns (int256 intModifier) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (int256(uint256(bytes32(_blob))));
+  }
+
+  /**
+   * @notice Set intModifier.
+   */
+  function setIntModifier(uint256 itemId, int256 intModifier) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((intModifier)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set intModifier.
+   */
+  function _setIntModifier(uint256 itemId, int256 intModifier) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((intModifier)), _fieldLayout);
   }
 
   /**
@@ -161,7 +249,7 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -172,7 +260,7 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -183,7 +271,7 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((minLevel)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((minLevel)), _fieldLayout);
   }
 
   /**
@@ -193,7 +281,7 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((minLevel)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((minLevel)), _fieldLayout);
   }
 
   /**
@@ -203,7 +291,7 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
@@ -214,7 +302,7 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
@@ -225,7 +313,7 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((strModifier)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((strModifier)), _fieldLayout);
   }
 
   /**
@@ -235,7 +323,7 @@ library ArmorStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((strModifier)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((strModifier)), _fieldLayout);
   }
 
   /**
@@ -271,8 +359,16 @@ library ArmorStats {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(uint256 itemId, int256 agiModifier, int256 hpModifier, uint256 minLevel, int256 strModifier) internal {
-    bytes memory _staticData = encodeStatic(agiModifier, hpModifier, minLevel, strModifier);
+  function set(
+    uint256 itemId,
+    int256 agiModifier,
+    int256 armorModifier,
+    int256 hpModifier,
+    int256 intModifier,
+    uint256 minLevel,
+    int256 strModifier
+  ) internal {
+    bytes memory _staticData = encodeStatic(agiModifier, armorModifier, hpModifier, intModifier, minLevel, strModifier);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -286,8 +382,16 @@ library ArmorStats {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(uint256 itemId, int256 agiModifier, int256 hpModifier, uint256 minLevel, int256 strModifier) internal {
-    bytes memory _staticData = encodeStatic(agiModifier, hpModifier, minLevel, strModifier);
+  function _set(
+    uint256 itemId,
+    int256 agiModifier,
+    int256 armorModifier,
+    int256 hpModifier,
+    int256 intModifier,
+    uint256 minLevel,
+    int256 strModifier
+  ) internal {
+    bytes memory _staticData = encodeStatic(agiModifier, armorModifier, hpModifier, intModifier, minLevel, strModifier);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -302,7 +406,14 @@ library ArmorStats {
    * @notice Set the full data using the data struct.
    */
   function set(uint256 itemId, ArmorStatsData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.agiModifier, _table.hpModifier, _table.minLevel, _table.strModifier);
+    bytes memory _staticData = encodeStatic(
+      _table.agiModifier,
+      _table.armorModifier,
+      _table.hpModifier,
+      _table.intModifier,
+      _table.minLevel,
+      _table.strModifier
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -317,7 +428,14 @@ library ArmorStats {
    * @notice Set the full data using the data struct.
    */
   function _set(uint256 itemId, ArmorStatsData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.agiModifier, _table.hpModifier, _table.minLevel, _table.strModifier);
+    bytes memory _staticData = encodeStatic(
+      _table.agiModifier,
+      _table.armorModifier,
+      _table.hpModifier,
+      _table.intModifier,
+      _table.minLevel,
+      _table.strModifier
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -333,14 +451,29 @@ library ArmorStats {
    */
   function decodeStatic(
     bytes memory _blob
-  ) internal pure returns (int256 agiModifier, int256 hpModifier, uint256 minLevel, int256 strModifier) {
+  )
+    internal
+    pure
+    returns (
+      int256 agiModifier,
+      int256 armorModifier,
+      int256 hpModifier,
+      int256 intModifier,
+      uint256 minLevel,
+      int256 strModifier
+    )
+  {
     agiModifier = (int256(uint256(Bytes.getBytes32(_blob, 0))));
 
-    hpModifier = (int256(uint256(Bytes.getBytes32(_blob, 32))));
+    armorModifier = (int256(uint256(Bytes.getBytes32(_blob, 32))));
 
-    minLevel = (uint256(Bytes.getBytes32(_blob, 64)));
+    hpModifier = (int256(uint256(Bytes.getBytes32(_blob, 64))));
 
-    strModifier = (int256(uint256(Bytes.getBytes32(_blob, 96))));
+    intModifier = (int256(uint256(Bytes.getBytes32(_blob, 96))));
+
+    minLevel = (uint256(Bytes.getBytes32(_blob, 128)));
+
+    strModifier = (int256(uint256(Bytes.getBytes32(_blob, 160))));
   }
 
   /**
@@ -354,7 +487,14 @@ library ArmorStats {
     EncodedLengths,
     bytes memory
   ) internal pure returns (ArmorStatsData memory _table) {
-    (_table.agiModifier, _table.hpModifier, _table.minLevel, _table.strModifier) = decodeStatic(_staticData);
+    (
+      _table.agiModifier,
+      _table.armorModifier,
+      _table.hpModifier,
+      _table.intModifier,
+      _table.minLevel,
+      _table.strModifier
+    ) = decodeStatic(_staticData);
   }
 
   /**
@@ -383,11 +523,13 @@ library ArmorStats {
    */
   function encodeStatic(
     int256 agiModifier,
+    int256 armorModifier,
     int256 hpModifier,
+    int256 intModifier,
     uint256 minLevel,
     int256 strModifier
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(agiModifier, hpModifier, minLevel, strModifier);
+    return abi.encodePacked(agiModifier, armorModifier, hpModifier, intModifier, minLevel, strModifier);
   }
 
   /**
@@ -398,11 +540,13 @@ library ArmorStats {
    */
   function encode(
     int256 agiModifier,
+    int256 armorModifier,
     int256 hpModifier,
+    int256 intModifier,
     uint256 minLevel,
     int256 strModifier
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(agiModifier, hpModifier, minLevel, strModifier);
+    bytes memory _staticData = encodeStatic(agiModifier, armorModifier, hpModifier, intModifier, minLevel, strModifier);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

@@ -16,7 +16,7 @@ import {
 } from "@codegen/index.sol";
 import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
-import {Action} from "@interfaces/Structs.sol";
+import {Attack} from "@interfaces/Structs.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
@@ -120,7 +120,7 @@ contract RngSystem is System, IEntropyConsumer {
             bytes32 characterId = abi.decode(_data, (bytes32));
             _storeStats(randomNumber, characterId);
         } else if (uint8(requestType) == uint8(1)) {
-            (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
+            (bytes32 encounterId, Attack[] memory moves) = abi.decode(_data, (bytes32, Attack[]));
             require(moves.length > 0, "RNG: Invalid moves");
             EncounterType encounterType = CombatEncounter.getEncounterType(encounterId);
             if (encounterType == EncounterType.PvE) {
@@ -135,11 +135,11 @@ contract RngSystem is System, IEntropyConsumer {
         }
     }
 
-    function _executePvECombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
+    function _executePvECombat(uint256 randomNumber, bytes32 encounterId, Attack[] memory moves) internal {
         SystemSwitch.call(abi.encodeCall(IPvESystem.UD__executePvECombat, (randomNumber, encounterId, moves)));
     }
 
-    function _executePvPCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
+    function _executePvPCombat(uint256 randomNumber, bytes32 encounterId, Attack[] memory moves) internal {
         SystemSwitch.call(abi.encodeCall(IPvPSystem.UD__executePvPCombat, (randomNumber, encounterId, moves)));
     }
 

@@ -37,7 +37,7 @@ import {
     _lootManagerSystemId
 } from "../utils.sol";
 import {ITEMS_NAMESPACE, WORLD_NAMESPACE, BASE_GOLD_DROP} from "../../constants.sol";
-import {WeaponStats, ArmorStats, MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
+import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
 import {
     _metadataTableId,
     _erc1155URIStorageTableId,

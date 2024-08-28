@@ -40,20 +40,15 @@
   },
   {
     "type": "function",
-    "name": "executeAction",
+    "name": "executeAttack",
     "inputs": [
       {
-        "name": "actionOutcomeData",
+        "name": "attackOutcomeData",
         "type": "tuple",
-        "internalType": "struct ActionOutcomeData",
+        "internalType": "struct AttackOutcomeData",
         "components": [
           {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
+            "name": "itemId",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -66,21 +61,6 @@
             "name": "defenderId",
             "type": "bytes32",
             "internalType": "bytes32"
-          },
-          {
-            "name": "hit",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "miss",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "crit",
-            "type": "bool",
-            "internalType": "bool"
           },
           {
             "name": "attackerDamageDelt",
@@ -111,6 +91,31 @@
             "name": "timestamp",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "damagePerHit",
+            "type": "int256[]",
+            "internalType": "int256[]"
+          },
+          {
+            "name": "effectIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "hit",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "miss",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "crit",
+            "type": "bool[]",
+            "internalType": "bool[]"
           }
         ]
       },
@@ -124,15 +129,10 @@
       {
         "name": "",
         "type": "tuple",
-        "internalType": "struct ActionOutcomeData",
+        "internalType": "struct AttackOutcomeData",
         "components": [
           {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
+            "name": "itemId",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -145,21 +145,6 @@
             "name": "defenderId",
             "type": "bytes32",
             "internalType": "bytes32"
-          },
-          {
-            "name": "hit",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "miss",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "crit",
-            "type": "bool",
-            "internalType": "bool"
           },
           {
             "name": "attackerDamageDelt",
@@ -190,6 +175,31 @@
             "name": "timestamp",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "damagePerHit",
+            "type": "int256[]",
+            "internalType": "int256[]"
+          },
+          {
+            "name": "effectIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "hit",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "miss",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "crit",
+            "type": "bool[]",
+            "internalType": "bool[]"
           }
         ]
       }

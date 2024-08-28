@@ -2,17 +2,8 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType} from "@codegen/common.sol";
-<<<<<<< Updated upstream
-import {StatsData} from "@codegen/index.sol";
-=======
-<<<<<<< Updated upstream
-import {StatsData} from "@tables/Stats.sol";
->>>>>>> Stashed changes
-import "forge-std/console2.sol";
-=======
 import {StatsData} from "@codegen/index.sol";
 import "forge-std/console.sol";
->>>>>>> Stashed changes
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig, StarterItemsData} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
@@ -22,11 +13,18 @@ import {IERC1155MetadataURI} from "@erc1155/IERC1155MetadataURI.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
-import {WeaponStats, ArmorStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {
+    WeaponStats,
+    WeaponStatsData,
+    ArmorStats,
+    ArmorStatsData,
+    StatRestrictions,
+    StatRestrictionsData
+} from "@codegen/index.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {_itemsSystemId} from "../src/utils.sol";
-import {StatRestrictions} from "@interfaces/Structs.sol";
 import {
     GOLD_NAMESPACE,
     CHARACTERS_NAMESPACE,
@@ -62,21 +60,24 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_equipItems_Revert_LowStr() public {
-        StatRestrictions memory statRestrictions =
-            StatRestrictions({minStrength: 1000, minIntelligence: 0, minAgility: 0});
-        WeaponStats memory weaponStats = WeaponStats({
+        StatRestrictionsData memory statRestrictions =
+            StatRestrictionsData({minStrength: 1000, minIntelligence: 0, minAgility: 0});
+        bytes32[] memory effectIds = new bytes32[](1);
+        effectIds[0] = basicAttackId;
+        WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
-            statRestrictions: statRestrictions,
-            hitPointModifier: 0,
+            hpModifier: 0,
             intModifier: 0,
             maxDamage: 4,
             minDamage: 1,
             minLevel: 0,
-            strModifier: 0
+            strModifier: 0,
+            effects: effectIds
         });
         vm.startPrank(deployer);
-        uint256 firstItemId =
-            world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
+        uint256 firstItemId = world.UD__createItem(
+            ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+        );
 
         uint256[] memory itemIds = new uint256[](1);
         uint256[] memory amounts = new uint256[](1);
@@ -93,21 +94,24 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_equipItems_Revert_LowAgi() public {
-        StatRestrictions memory statRestrictions =
-            StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 10000});
-        WeaponStats memory weaponStats = WeaponStats({
+        StatRestrictionsData memory statRestrictions =
+            StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 10000});
+        bytes32[] memory effectIds = new bytes32[](1);
+        effectIds[0] = basicAttackId;
+        WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
-            statRestrictions: statRestrictions,
-            hitPointModifier: 0,
+            hpModifier: 0,
             intModifier: 0,
             maxDamage: 4,
             minDamage: 1,
             minLevel: 0,
-            strModifier: 0
+            strModifier: 0,
+            effects: effectIds
         });
         vm.startPrank(deployer);
-        uint256 firstItemId =
-            world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
+        uint256 firstItemId = world.UD__createItem(
+            ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+        );
 
         uint256[] memory itemIds = new uint256[](1);
         uint256[] memory amounts = new uint256[](1);
@@ -124,21 +128,24 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_equipItems_Revert_LowInt() public {
-        StatRestrictions memory statRestrictions =
-            StatRestrictions({minStrength: 0, minIntelligence: 1000, minAgility: 0});
-        WeaponStats memory weaponStats = WeaponStats({
+        StatRestrictionsData memory statRestrictions =
+            StatRestrictionsData({minStrength: 0, minIntelligence: 1000, minAgility: 0});
+        bytes32[] memory effectIds = new bytes32[](1);
+        effectIds[0] = basicAttackId;
+        WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
-            statRestrictions: statRestrictions,
-            hitPointModifier: 0,
+            hpModifier: 0,
             intModifier: 0,
             maxDamage: 4,
             minDamage: 1,
             minLevel: 0,
-            strModifier: 0
+            strModifier: 0,
+            effects: effectIds
         });
         vm.startPrank(deployer);
-        uint256 firstItemId =
-            world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
+        uint256 firstItemId = world.UD__createItem(
+            ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+        );
 
         uint256[] memory itemIds = new uint256[](1);
         uint256[] memory amounts = new uint256[](1);
@@ -155,20 +162,24 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_equipItems_Revert_LowLvl() public {
-        StatRestrictions memory statRestrictions = StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 0});
-        WeaponStats memory weaponStats = WeaponStats({
+        StatRestrictionsData memory statRestrictions =
+            StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
+        bytes32[] memory effectIds = new bytes32[](1);
+        effectIds[0] = basicAttackId;
+        WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
-            statRestrictions: statRestrictions,
-            hitPointModifier: 0,
+            hpModifier: 0,
             intModifier: 0,
             maxDamage: 4,
             minDamage: 1,
             minLevel: 10,
-            strModifier: 0
+            strModifier: 0,
+            effects: effectIds
         });
         vm.startPrank(deployer);
-        uint256 firstItemId =
-            world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
+        uint256 firstItemId = world.UD__createItem(
+            ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+        );
 
         uint256[] memory itemIds = new uint256[](1);
         uint256[] memory amounts = new uint256[](1);
@@ -197,7 +208,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         uint256[] memory itemsToEquip = new uint256[](1);
         itemsToEquip[0] = newArmorId;
 
-        ArmorStats memory itemStats = world.UD__getArmorStats(newArmorId);
+        ArmorStatsData memory itemStats = world.UD__getArmorStats(newArmorId);
         StatsData memory baseStats = world.UD__getStats(bobCharacterId);
 
         world.UD__equipItems(bobCharacterId, itemsToEquip);
@@ -205,13 +216,13 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         startGasReport("apply stat bonuses");
         AdjustedCombatStats memory modifiedStats = world.UD__applyEquipmentBonuses(bobCharacterId);
         endGasReport();
-        ArmorStats memory armorStats = world.UD__getArmorStats(newArmorId);
+        ArmorStatsData memory armorStats = world.UD__getArmorStats(newArmorId);
         assertTrue(world.UD__isEquipped(bobCharacterId, newArmorId));
 
         assertEq(modifiedStats.adjustedStrength, uint256(int256(baseStats.strength) + armorStats.strModifier));
         assertEq(modifiedStats.adjustedAgility, uint256(int256(baseStats.agility) + armorStats.agiModifier));
         assertEq(modifiedStats.adjustedIntelligence, uint256(int256(baseStats.intelligence) + armorStats.intModifier));
-        assertEq(modifiedStats.adjustedMaxHp, uint256(int256(baseStats.baseHp) + armorStats.hitPointModifier));
+        assertEq(modifiedStats.adjustedMaxHp, uint256(int256(baseStats.baseHp) + armorStats.hpModifier));
     }
 
     function test_unequipItem() public {

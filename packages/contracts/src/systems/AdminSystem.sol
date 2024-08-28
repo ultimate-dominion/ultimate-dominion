@@ -7,8 +7,8 @@ import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {
     RandomNumbers,
     EncounterEntity,
-    ActionsData,
-    Actions,
+    EffectsData,
+    Effects,
     Stats,
     StatsData,
     CombatEncounter,
@@ -20,7 +20,7 @@ import {
     Position
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {RngRequestType, MobType, EncounterType, ActionType} from "@codegen/common.sol";
+import {RngRequestType, MobType, EncounterType, EffectType} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
 import {Mobs, MobsData} from "@tables/Mobs.sol";
 import {MonsterStats, NPCStats} from "@interfaces/Structs.sol";

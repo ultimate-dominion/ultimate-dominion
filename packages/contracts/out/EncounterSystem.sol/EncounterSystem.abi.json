@@ -181,9 +181,9 @@
         "internalType": "bytes32"
       },
       {
-        "name": "actions",
+        "name": "attacks",
         "type": "tuple[]",
-        "internalType": "struct Action[]",
+        "internalType": "struct Attack[]",
         "components": [
           {
             "name": "attackerEntityId",
@@ -196,12 +196,7 @@
             "internalType": "bytes32"
           },
           {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
+            "name": "itemId",
             "type": "uint256",
             "internalType": "uint256"
           }

@@ -21,12 +21,12 @@ library ConsumableStats {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000436f6e73756d61626c65537461747300);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0020010020000000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0000000100000000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (uint256)
   Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint256)
-  Schema constant _valueSchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bytes32[])
+  Schema constant _valueSchema = Schema.wrap(0x00000001c1000000000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -43,7 +43,7 @@ library ConsumableStats {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](1);
-    fieldNames[0] = "spellEffect";
+    fieldNames[0] = "effects";
   }
 
   /**
@@ -61,87 +61,327 @@ library ConsumableStats {
   }
 
   /**
-   * @notice Get spellEffect.
+   * @notice Get effects.
    */
-  function getSpellEffect(uint256 itemId) internal view returns (uint256 spellEffect) {
+  function getEffects(uint256 itemId) internal view returns (bytes32[] memory effects) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 0);
+    return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
   }
 
   /**
-   * @notice Get spellEffect.
+   * @notice Get effects.
    */
-  function _getSpellEffect(uint256 itemId) internal view returns (uint256 spellEffect) {
+  function _getEffects(uint256 itemId) internal view returns (bytes32[] memory effects) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 0);
+    return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
   }
 
   /**
-   * @notice Get spellEffect.
+   * @notice Get effects.
    */
-  function get(uint256 itemId) internal view returns (uint256 spellEffect) {
+  function get(uint256 itemId) internal view returns (bytes32[] memory effects) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 0);
+    return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
   }
 
   /**
-   * @notice Get spellEffect.
+   * @notice Get effects.
    */
-  function _get(uint256 itemId) internal view returns (uint256 spellEffect) {
+  function _get(uint256 itemId) internal view returns (bytes32[] memory effects) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 0);
+    return (SliceLib.getSubslice(_blob, 0, _blob.length).decodeArray_bytes32());
   }
 
   /**
-   * @notice Set spellEffect.
+   * @notice Set effects.
    */
-  function setSpellEffect(uint256 itemId, uint256 spellEffect) internal {
+  function setEffects(uint256 itemId, bytes32[] memory effects) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((spellEffect)), _fieldLayout);
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((effects)));
   }
 
   /**
-   * @notice Set spellEffect.
+   * @notice Set effects.
    */
-  function _setSpellEffect(uint256 itemId, uint256 spellEffect) internal {
+  function _setEffects(uint256 itemId, bytes32[] memory effects) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((spellEffect)), _fieldLayout);
+    StoreCore.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((effects)));
   }
 
   /**
-   * @notice Set spellEffect.
+   * @notice Set effects.
    */
-  function set(uint256 itemId, uint256 spellEffect) internal {
+  function set(uint256 itemId, bytes32[] memory effects) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((spellEffect)), _fieldLayout);
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((effects)));
   }
 
   /**
-   * @notice Set spellEffect.
+   * @notice Set effects.
    */
-  function _set(uint256 itemId, uint256 spellEffect) internal {
+  function _set(uint256 itemId, bytes32[] memory effects) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((spellEffect)), _fieldLayout);
+    StoreCore.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((effects)));
+  }
+
+  /**
+   * @notice Get the length of effects.
+   */
+  function lengthEffects(uint256 itemId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 0);
+    unchecked {
+      return _byteLength / 32;
+    }
+  }
+
+  /**
+   * @notice Get the length of effects.
+   */
+  function _lengthEffects(uint256 itemId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 0);
+    unchecked {
+      return _byteLength / 32;
+    }
+  }
+
+  /**
+   * @notice Get the length of effects.
+   */
+  function length(uint256 itemId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 0);
+    unchecked {
+      return _byteLength / 32;
+    }
+  }
+
+  /**
+   * @notice Get the length of effects.
+   */
+  function _length(uint256 itemId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 0);
+    unchecked {
+      return _byteLength / 32;
+    }
+  }
+
+  /**
+   * @notice Get an item of effects.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function getItemEffects(uint256 itemId, uint256 _index) internal view returns (bytes32) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    unchecked {
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 32, (_index + 1) * 32);
+      return (bytes32(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of effects.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function _getItemEffects(uint256 itemId, uint256 _index) internal view returns (bytes32) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    unchecked {
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 32, (_index + 1) * 32);
+      return (bytes32(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of effects.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function getItem(uint256 itemId, uint256 _index) internal view returns (bytes32) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    unchecked {
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 32, (_index + 1) * 32);
+      return (bytes32(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of effects.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function _getItem(uint256 itemId, uint256 _index) internal view returns (bytes32) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    unchecked {
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 32, (_index + 1) * 32);
+      return (bytes32(_blob));
+    }
+  }
+
+  /**
+   * @notice Push an element to effects.
+   */
+  function pushEffects(uint256 itemId, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 0, abi.encodePacked((_element)));
+  }
+
+  /**
+   * @notice Push an element to effects.
+   */
+  function _pushEffects(uint256 itemId, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 0, abi.encodePacked((_element)));
+  }
+
+  /**
+   * @notice Push an element to effects.
+   */
+  function push(uint256 itemId, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 0, abi.encodePacked((_element)));
+  }
+
+  /**
+   * @notice Push an element to effects.
+   */
+  function _push(uint256 itemId, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 0, abi.encodePacked((_element)));
+  }
+
+  /**
+   * @notice Pop an element from effects.
+   */
+  function popEffects(uint256 itemId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 0, 32);
+  }
+
+  /**
+   * @notice Pop an element from effects.
+   */
+  function _popEffects(uint256 itemId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 0, 32);
+  }
+
+  /**
+   * @notice Pop an element from effects.
+   */
+  function pop(uint256 itemId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 0, 32);
+  }
+
+  /**
+   * @notice Pop an element from effects.
+   */
+  function _pop(uint256 itemId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 0, 32);
+  }
+
+  /**
+   * @notice Update an element of effects at `_index`.
+   */
+  function updateEffects(uint256 itemId, uint256 _index, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    unchecked {
+      bytes memory _encoded = abi.encodePacked((_element));
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 0, uint40(_index * 32), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update an element of effects at `_index`.
+   */
+  function _updateEffects(uint256 itemId, uint256 _index, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    unchecked {
+      bytes memory _encoded = abi.encodePacked((_element));
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 0, uint40(_index * 32), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update an element of effects at `_index`.
+   */
+  function update(uint256 itemId, uint256 _index, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    unchecked {
+      bytes memory _encoded = abi.encodePacked((_element));
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 0, uint40(_index * 32), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update an element of effects at `_index`.
+   */
+  function _update(uint256 itemId, uint256 _index, bytes32 _element) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    unchecked {
+      bytes memory _encoded = abi.encodePacked((_element));
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 0, uint40(_index * 32), uint40(_encoded.length), _encoded);
+    }
   }
 
   /**
@@ -165,11 +405,22 @@ library ConsumableStats {
   }
 
   /**
-   * @notice Tightly pack static (fixed length) data using this table's schema.
-   * @return The static data, encoded into a sequence of bytes.
+   * @notice Tightly pack dynamic data lengths using this table's schema.
+   * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
-  function encodeStatic(uint256 spellEffect) internal pure returns (bytes memory) {
-    return abi.encodePacked(spellEffect);
+  function encodeLengths(bytes32[] memory effects) internal pure returns (EncodedLengths _encodedLengths) {
+    // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
+    unchecked {
+      _encodedLengths = EncodedLengthsLib.pack(effects.length * 32);
+    }
+  }
+
+  /**
+   * @notice Tightly pack dynamic (variable length) data using this table's schema.
+   * @return The dynamic data, encoded into a sequence of bytes.
+   */
+  function encodeDynamic(bytes32[] memory effects) internal pure returns (bytes memory) {
+    return abi.encodePacked(EncodeArray.encode((effects)));
   }
 
   /**
@@ -178,11 +429,10 @@ library ConsumableStats {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(uint256 spellEffect) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(spellEffect);
-
-    EncodedLengths _encodedLengths;
-    bytes memory _dynamicData;
+  function encode(bytes32[] memory effects) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+    bytes memory _staticData;
+    EncodedLengths _encodedLengths = encodeLengths(effects);
+    bytes memory _dynamicData = encodeDynamic(effects);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

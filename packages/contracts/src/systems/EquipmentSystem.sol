@@ -19,14 +19,22 @@ import {
     Stats,
     StatsData,
     CharacterEquipment,
-    CharacterEquipmentData
+    CharacterEquipmentData,
+    WeaponStats,
+    WeaponStatsData,
+    ArmorStats,
+    ArmorStatsData,
+    SpellStats,
+    SpellStatsData,
+    ConsumableStats,
+    StatRestrictions,
+    StatRestrictionsData
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess} from "../utils.sol";
 import {ITEMS_NAMESPACE} from "../../constants.sol";
-import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
@@ -39,7 +47,7 @@ import {
     _operatorApprovalTableId,
     _ownersTableId
 } from "@erc1155/utils.sol";
-import {AdjustedCombatStats, MonsterStats, SpellStats} from "@interfaces/Structs.sol";
+import {AdjustedCombatStats, MonsterStats} from "@interfaces/Structs.sol";
 import "forge-std/console.sol";
 
 contract EquipmentSystem is System {
@@ -99,23 +107,21 @@ contract EquipmentSystem is System {
     function checkRequirements(bytes32 characterId, uint256 itemId) public view returns (bool canUse) {
         ItemsData memory itemData = Items.get(itemId);
         StatsData memory character = Stats.get(characterId);
-
+        StatRestrictionsData memory statRestrictions = StatRestrictions.get(itemId);
         if (uint8(itemData.itemType) == 0) {
-            WeaponStats memory weaponStats = abi.decode(itemData.stats, (WeaponStats));
-            bool isLevel = character.level >= weaponStats.minLevel;
+            bool isLevel = character.level >= WeaponStats.getMinLevel(itemId);
             bool hasStats = true;
-            if (weaponStats.statRestrictions.minAgility > character.agility) hasStats = false;
-            if (weaponStats.statRestrictions.minStrength > character.strength) hasStats = false;
-            if (weaponStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+            if (statRestrictions.minAgility > character.agility) hasStats = false;
+            if (statRestrictions.minStrength > character.strength) hasStats = false;
+            if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
         }
         if (uint8(itemData.itemType) == 1) {
-            ArmorStats memory armorStats = abi.decode(itemData.stats, (ArmorStats));
-            bool isLevel = character.level >= armorStats.minLevel;
+            bool isLevel = character.level >= ArmorStats.getMinLevel(itemId);
             bool hasStats = true;
-            if (armorStats.statRestrictions.minAgility > character.agility) hasStats = false;
-            if (armorStats.statRestrictions.minStrength > character.strength) hasStats = false;
-            if (armorStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+            if (statRestrictions.minAgility > character.agility) hasStats = false;
+            if (statRestrictions.minStrength > character.strength) hasStats = false;
+            if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
         }
         return canUse;
@@ -141,13 +147,13 @@ contract EquipmentSystem is System {
     function _setEquipmentBonuses(bytes32 characterId) internal {
         uint256[] memory equippedArmor = CharacterEquipment.getEquippedArmor(characterId);
         uint256[] memory equippedWeapons = CharacterEquipment.getEquippedWeapons(characterId);
-        uint256 totalArmor;
+        int256 totalArmor;
         int256 totalStrModifiers;
         int256 totalAgiModifiers;
         int256 totalIntModifiers;
         int256 totalHPModifiers;
-        ArmorStats memory armorStats;
-        WeaponStats memory weaponStats;
+        ArmorStatsData memory armorStats;
+        WeaponStatsData memory weaponStats;
         if (equippedArmor.length > 0) {
             for (uint256 i; i < equippedArmor.length; i++) {
                 armorStats = getArmorStats(equippedArmor[i]);
@@ -155,7 +161,7 @@ contract EquipmentSystem is System {
                 totalStrModifiers += armorStats.strModifier;
                 totalAgiModifiers += armorStats.agiModifier;
                 totalIntModifiers += armorStats.intModifier;
-                totalHPModifiers += armorStats.hitPointModifier;
+                totalHPModifiers += armorStats.hpModifier;
             }
         }
         if (equippedWeapons.length > 0) {
@@ -164,7 +170,7 @@ contract EquipmentSystem is System {
                 totalStrModifiers += weaponStats.strModifier;
                 totalAgiModifiers += weaponStats.agiModifier;
                 totalIntModifiers += weaponStats.intModifier;
-                totalHPModifiers += weaponStats.hitPointModifier;
+                totalHPModifiers += weaponStats.hpModifier;
             }
         }
         CharacterEquipment.setStrBonus(characterId, totalStrModifiers);
@@ -293,21 +299,71 @@ contract EquipmentSystem is System {
         }
     }
 
-    function getWeaponStats(uint256 itemId) public view returns (WeaponStats memory _weaponStats) {
-        ItemsData memory _data = Items.get(itemId);
-        require(_data.itemType == ItemType.Weapon, "ITEMS: Not a  weapon");
-        _weaponStats = abi.decode(_data.stats, (WeaponStats));
+    function checkItemAction(uint256 itemId, bytes32 effectId) public view returns (bool hasAction) {
+        ItemType itemType = Items.getItemType(itemId);
+
+        if (itemType == ItemType.Weapon) {
+            bytes32[] memory effects = WeaponStats.getEffects(itemId);
+            for (uint256 i; i < effects.length;) {
+                if (effectId == effects[i]) {
+                    hasAction = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        } else if (itemType == ItemType.Spell) {
+            bytes32[] memory effects = SpellStats.getEffects(itemId);
+            for (uint256 i; i < effects.length;) {
+                if (effectId == effects[i]) {
+                    hasAction = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        } else if (itemType == ItemType.Consumable) {
+            bytes32[] memory effects = ConsumableStats.get(itemId);
+            for (uint256 i; i < effects.length;) {
+                if (effectId == effects[i]) {
+                    hasAction = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        }
     }
 
-    function getArmorStats(uint256 itemId) public view returns (ArmorStats memory _ArmorStats) {
-        ItemsData memory _data = Items.get(itemId);
-        require(_data.itemType == ItemType.Armor, "ITEMS: Not a  Armor");
-        _ArmorStats = abi.decode(_data.stats, (ArmorStats));
+    function getItemEffects(uint256 itemId) public view returns (bytes32[] memory effects) {
+        ItemType itemType = Items.getItemType(itemId);
+        if (itemType == ItemType.Weapon) {
+            effects = WeaponStats.getEffects(itemId);
+        } else if (itemType == ItemType.Spell) {
+            effects = SpellStats.getEffects(itemId);
+        } else if (itemType == ItemType.Consumable) {
+            effects = ConsumableStats.getEffects(itemId);
+        }
     }
 
-    function getSpellStats(uint256 itemId) public view returns (SpellStats memory _spellStats) {
-        ItemsData memory _data = Items.get(itemId);
-        require(_data.itemType == ItemType.Spell, "ITEMS: Not a  Armor");
-        _spellStats = abi.decode(_data.stats, (SpellStats));
+    function getWeaponStats(uint256 itemId) public view returns (WeaponStatsData memory _weaponStats) {
+        ItemType itemType = Items.getItemType(itemId);
+        require(itemType == ItemType.Weapon, "ITEMS: Not a  weapon");
+        _weaponStats = WeaponStats.get(itemId);
+    }
+
+    function getArmorStats(uint256 itemId) public view returns (ArmorStatsData memory _ArmorStats) {
+        ItemType itemType = Items.getItemType(itemId);
+        require(itemType == ItemType.Armor, "ITEMS: Not a  Armor");
+        _ArmorStats = ArmorStats.get(itemId);
+    }
+
+    function getSpellStats(uint256 itemId) public view returns (SpellStatsData memory _spellStats) {
+        ItemType itemType = Items.getItemType(itemId);
+        require(itemType == ItemType.Spell, "ITEMS: Not a  Armor");
+        _spellStats = SpellStats.get(itemId);
     }
 }

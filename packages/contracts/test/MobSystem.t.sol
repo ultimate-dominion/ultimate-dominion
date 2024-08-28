@@ -12,7 +12,7 @@ import {IERC1155MetadataURI} from "@erc1155/IERC1155MetadataURI.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
-import {WeaponStats, MonsterStats} from "@interfaces/Structs.sol";
+import {MonsterStats} from "@interfaces/Structs.sol";
 import {Mobs, MobsData} from "@tables/Mobs.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
@@ -58,11 +58,11 @@ contract Test_MobSystem is SetUp, GasReporter {
         vm.startPrank(deployer);
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;
-        bytes32[] memory _actions = new bytes32[](1);
-        _actions[0] = 0x8e4790c4376784a8480f4c5c2ef75e690c34f7175ad627d12a16d71037369861;
+        bytes32[] memory _effects = new bytes32[](1);
+        _effects[0] = 0x8e4790c4376784a8480f4c5c2ef75e690c34f7175ad627d12a16d71037369861;
 
         MonsterStats memory newMonster = MonsterStats({
-            actions: _actions,
+            effects: _effects,
             agility: 1,
             armor: 1,
             class: Classes.Warrior,

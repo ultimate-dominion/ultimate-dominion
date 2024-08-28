@@ -18,12 +18,13 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 struct WeaponStatsData {
   int256 agiModifier;
+  int256 intModifier;
   int256 hpModifier;
-  uint256 maxDamage;
-  uint256 minDamage;
+  int256 maxDamage;
+  int256 minDamage;
   uint256 minLevel;
   int256 strModifier;
-  bytes32[] statusEffects;
+  bytes32[] effects;
 }
 
 library WeaponStats {
@@ -31,12 +32,12 @@ library WeaponStats {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000576561706f6e53746174730000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x00c0060120202020202000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x00e0070120202020202020000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (uint256)
   Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (int256, int256, uint256, uint256, uint256, int256, bytes32[])
-  Schema constant _valueSchema = Schema.wrap(0x00c006013f3f1f1f1f3fc1000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (int256, int256, int256, int256, int256, uint256, int256, bytes32[])
+  Schema constant _valueSchema = Schema.wrap(0x00e007013f3f3f3f3f1f3fc10000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -52,14 +53,15 @@ library WeaponStats {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](7);
+    fieldNames = new string[](8);
     fieldNames[0] = "agiModifier";
-    fieldNames[1] = "hpModifier";
-    fieldNames[2] = "maxDamage";
-    fieldNames[3] = "minDamage";
-    fieldNames[4] = "minLevel";
-    fieldNames[5] = "strModifier";
-    fieldNames[6] = "statusEffects";
+    fieldNames[1] = "intModifier";
+    fieldNames[2] = "hpModifier";
+    fieldNames[3] = "maxDamage";
+    fieldNames[4] = "minDamage";
+    fieldNames[5] = "minLevel";
+    fieldNames[6] = "strModifier";
+    fieldNames[7] = "effects";
   }
 
   /**
@@ -119,13 +121,55 @@ library WeaponStats {
   }
 
   /**
+   * @notice Get intModifier.
+   */
+  function getIntModifier(uint256 itemId) internal view returns (int256 intModifier) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    return (int256(uint256(bytes32(_blob))));
+  }
+
+  /**
+   * @notice Get intModifier.
+   */
+  function _getIntModifier(uint256 itemId) internal view returns (int256 intModifier) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    return (int256(uint256(bytes32(_blob))));
+  }
+
+  /**
+   * @notice Set intModifier.
+   */
+  function setIntModifier(uint256 itemId, int256 intModifier) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((intModifier)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set intModifier.
+   */
+  function _setIntModifier(uint256 itemId, int256 intModifier) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((intModifier)), _fieldLayout);
+  }
+
+  /**
    * @notice Get hpModifier.
    */
   function getHpModifier(uint256 itemId) internal view returns (int256 hpModifier) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
@@ -136,7 +180,7 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
@@ -147,7 +191,7 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((hpModifier)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((hpModifier)), _fieldLayout);
   }
 
   /**
@@ -157,91 +201,91 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((hpModifier)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((hpModifier)), _fieldLayout);
   }
 
   /**
    * @notice Get maxDamage.
    */
-  function getMaxDamage(uint256 itemId) internal view returns (uint256 maxDamage) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(itemId));
-
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
-    return (uint256(bytes32(_blob)));
-  }
-
-  /**
-   * @notice Get maxDamage.
-   */
-  function _getMaxDamage(uint256 itemId) internal view returns (uint256 maxDamage) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(itemId));
-
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
-    return (uint256(bytes32(_blob)));
-  }
-
-  /**
-   * @notice Set maxDamage.
-   */
-  function setMaxDamage(uint256 itemId, uint256 maxDamage) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(itemId));
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((maxDamage)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set maxDamage.
-   */
-  function _setMaxDamage(uint256 itemId, uint256 maxDamage) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(itemId));
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((maxDamage)), _fieldLayout);
-  }
-
-  /**
-   * @notice Get minDamage.
-   */
-  function getMinDamage(uint256 itemId) internal view returns (uint256 minDamage) {
+  function getMaxDamage(uint256 itemId) internal view returns (int256 maxDamage) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (int256(uint256(bytes32(_blob))));
+  }
+
+  /**
+   * @notice Get maxDamage.
+   */
+  function _getMaxDamage(uint256 itemId) internal view returns (int256 maxDamage) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (int256(uint256(bytes32(_blob))));
+  }
+
+  /**
+   * @notice Set maxDamage.
+   */
+  function setMaxDamage(uint256 itemId, int256 maxDamage) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((maxDamage)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set maxDamage.
+   */
+  function _setMaxDamage(uint256 itemId, int256 maxDamage) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((maxDamage)), _fieldLayout);
   }
 
   /**
    * @notice Get minDamage.
    */
-  function _getMinDamage(uint256 itemId) internal view returns (uint256 minDamage) {
+  function getMinDamage(uint256 itemId) internal view returns (int256 minDamage) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    return (int256(uint256(bytes32(_blob))));
+  }
+
+  /**
+   * @notice Get minDamage.
+   */
+  function _getMinDamage(uint256 itemId) internal view returns (int256 minDamage) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    return (int256(uint256(bytes32(_blob))));
   }
 
   /**
    * @notice Set minDamage.
    */
-  function setMinDamage(uint256 itemId, uint256 minDamage) internal {
+  function setMinDamage(uint256 itemId, int256 minDamage) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((minDamage)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((minDamage)), _fieldLayout);
   }
 
   /**
    * @notice Set minDamage.
    */
-  function _setMinDamage(uint256 itemId, uint256 minDamage) internal {
+  function _setMinDamage(uint256 itemId, int256 minDamage) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((minDamage)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((minDamage)), _fieldLayout);
   }
 
   /**
@@ -251,7 +295,7 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -262,7 +306,7 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -273,7 +317,7 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((minLevel)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((minLevel)), _fieldLayout);
   }
 
   /**
@@ -283,7 +327,7 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((minLevel)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((minLevel)), _fieldLayout);
   }
 
   /**
@@ -293,7 +337,7 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
@@ -304,7 +348,7 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
   }
 
@@ -315,7 +359,7 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((strModifier)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((strModifier)), _fieldLayout);
   }
 
   /**
@@ -325,13 +369,13 @@ library WeaponStats {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((strModifier)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((strModifier)), _fieldLayout);
   }
 
   /**
-   * @notice Get statusEffects.
+   * @notice Get effects.
    */
-  function getStatusEffects(uint256 itemId) internal view returns (bytes32[] memory statusEffects) {
+  function getEffects(uint256 itemId) internal view returns (bytes32[] memory effects) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -340,9 +384,9 @@ library WeaponStats {
   }
 
   /**
-   * @notice Get statusEffects.
+   * @notice Get effects.
    */
-  function _getStatusEffects(uint256 itemId) internal view returns (bytes32[] memory statusEffects) {
+  function _getEffects(uint256 itemId) internal view returns (bytes32[] memory effects) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -351,29 +395,29 @@ library WeaponStats {
   }
 
   /**
-   * @notice Set statusEffects.
+   * @notice Set effects.
    */
-  function setStatusEffects(uint256 itemId, bytes32[] memory statusEffects) internal {
+  function setEffects(uint256 itemId, bytes32[] memory effects) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((statusEffects)));
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((effects)));
   }
 
   /**
-   * @notice Set statusEffects.
+   * @notice Set effects.
    */
-  function _setStatusEffects(uint256 itemId, bytes32[] memory statusEffects) internal {
+  function _setEffects(uint256 itemId, bytes32[] memory effects) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
-    StoreCore.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((statusEffects)));
+    StoreCore.setDynamicField(_tableId, _keyTuple, 0, EncodeArray.encode((effects)));
   }
 
   /**
-   * @notice Get the length of statusEffects.
+   * @notice Get the length of effects.
    */
-  function lengthStatusEffects(uint256 itemId) internal view returns (uint256) {
+  function lengthEffects(uint256 itemId) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -384,9 +428,9 @@ library WeaponStats {
   }
 
   /**
-   * @notice Get the length of statusEffects.
+   * @notice Get the length of effects.
    */
-  function _lengthStatusEffects(uint256 itemId) internal view returns (uint256) {
+  function _lengthEffects(uint256 itemId) internal view returns (uint256) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -397,10 +441,10 @@ library WeaponStats {
   }
 
   /**
-   * @notice Get an item of statusEffects.
+   * @notice Get an item of effects.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function getItemStatusEffects(uint256 itemId, uint256 _index) internal view returns (bytes32) {
+  function getItemEffects(uint256 itemId, uint256 _index) internal view returns (bytes32) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -411,10 +455,10 @@ library WeaponStats {
   }
 
   /**
-   * @notice Get an item of statusEffects.
+   * @notice Get an item of effects.
    * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
    */
-  function _getItemStatusEffects(uint256 itemId, uint256 _index) internal view returns (bytes32) {
+  function _getItemEffects(uint256 itemId, uint256 _index) internal view returns (bytes32) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -425,9 +469,9 @@ library WeaponStats {
   }
 
   /**
-   * @notice Push an element to statusEffects.
+   * @notice Push an element to effects.
    */
-  function pushStatusEffects(uint256 itemId, bytes32 _element) internal {
+  function pushEffects(uint256 itemId, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -435,9 +479,9 @@ library WeaponStats {
   }
 
   /**
-   * @notice Push an element to statusEffects.
+   * @notice Push an element to effects.
    */
-  function _pushStatusEffects(uint256 itemId, bytes32 _element) internal {
+  function _pushEffects(uint256 itemId, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -445,9 +489,9 @@ library WeaponStats {
   }
 
   /**
-   * @notice Pop an element from statusEffects.
+   * @notice Pop an element from effects.
    */
-  function popStatusEffects(uint256 itemId) internal {
+  function popEffects(uint256 itemId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -455,9 +499,9 @@ library WeaponStats {
   }
 
   /**
-   * @notice Pop an element from statusEffects.
+   * @notice Pop an element from effects.
    */
-  function _popStatusEffects(uint256 itemId) internal {
+  function _popEffects(uint256 itemId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -465,9 +509,9 @@ library WeaponStats {
   }
 
   /**
-   * @notice Update an element of statusEffects at `_index`.
+   * @notice Update an element of effects at `_index`.
    */
-  function updateStatusEffects(uint256 itemId, uint256 _index, bytes32 _element) internal {
+  function updateEffects(uint256 itemId, uint256 _index, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -478,9 +522,9 @@ library WeaponStats {
   }
 
   /**
-   * @notice Update an element of statusEffects at `_index`.
+   * @notice Update an element of effects at `_index`.
    */
-  function _updateStatusEffects(uint256 itemId, uint256 _index, bytes32 _element) internal {
+  function _updateEffects(uint256 itemId, uint256 _index, bytes32 _element) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -526,17 +570,26 @@ library WeaponStats {
   function set(
     uint256 itemId,
     int256 agiModifier,
+    int256 intModifier,
     int256 hpModifier,
-    uint256 maxDamage,
-    uint256 minDamage,
+    int256 maxDamage,
+    int256 minDamage,
     uint256 minLevel,
     int256 strModifier,
-    bytes32[] memory statusEffects
+    bytes32[] memory effects
   ) internal {
-    bytes memory _staticData = encodeStatic(agiModifier, hpModifier, maxDamage, minDamage, minLevel, strModifier);
+    bytes memory _staticData = encodeStatic(
+      agiModifier,
+      intModifier,
+      hpModifier,
+      maxDamage,
+      minDamage,
+      minLevel,
+      strModifier
+    );
 
-    EncodedLengths _encodedLengths = encodeLengths(statusEffects);
-    bytes memory _dynamicData = encodeDynamic(statusEffects);
+    EncodedLengths _encodedLengths = encodeLengths(effects);
+    bytes memory _dynamicData = encodeDynamic(effects);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
@@ -550,17 +603,26 @@ library WeaponStats {
   function _set(
     uint256 itemId,
     int256 agiModifier,
+    int256 intModifier,
     int256 hpModifier,
-    uint256 maxDamage,
-    uint256 minDamage,
+    int256 maxDamage,
+    int256 minDamage,
     uint256 minLevel,
     int256 strModifier,
-    bytes32[] memory statusEffects
+    bytes32[] memory effects
   ) internal {
-    bytes memory _staticData = encodeStatic(agiModifier, hpModifier, maxDamage, minDamage, minLevel, strModifier);
+    bytes memory _staticData = encodeStatic(
+      agiModifier,
+      intModifier,
+      hpModifier,
+      maxDamage,
+      minDamage,
+      minLevel,
+      strModifier
+    );
 
-    EncodedLengths _encodedLengths = encodeLengths(statusEffects);
-    bytes memory _dynamicData = encodeDynamic(statusEffects);
+    EncodedLengths _encodedLengths = encodeLengths(effects);
+    bytes memory _dynamicData = encodeDynamic(effects);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
@@ -574,6 +636,7 @@ library WeaponStats {
   function set(uint256 itemId, WeaponStatsData memory _table) internal {
     bytes memory _staticData = encodeStatic(
       _table.agiModifier,
+      _table.intModifier,
       _table.hpModifier,
       _table.maxDamage,
       _table.minDamage,
@@ -581,8 +644,8 @@ library WeaponStats {
       _table.strModifier
     );
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.statusEffects);
-    bytes memory _dynamicData = encodeDynamic(_table.statusEffects);
+    EncodedLengths _encodedLengths = encodeLengths(_table.effects);
+    bytes memory _dynamicData = encodeDynamic(_table.effects);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
@@ -596,6 +659,7 @@ library WeaponStats {
   function _set(uint256 itemId, WeaponStatsData memory _table) internal {
     bytes memory _staticData = encodeStatic(
       _table.agiModifier,
+      _table.intModifier,
       _table.hpModifier,
       _table.maxDamage,
       _table.minDamage,
@@ -603,8 +667,8 @@ library WeaponStats {
       _table.strModifier
     );
 
-    EncodedLengths _encodedLengths = encodeLengths(_table.statusEffects);
-    bytes memory _dynamicData = encodeDynamic(_table.statusEffects);
+    EncodedLengths _encodedLengths = encodeLengths(_table.effects);
+    bytes memory _dynamicData = encodeDynamic(_table.effects);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
@@ -622,24 +686,27 @@ library WeaponStats {
     pure
     returns (
       int256 agiModifier,
+      int256 intModifier,
       int256 hpModifier,
-      uint256 maxDamage,
-      uint256 minDamage,
+      int256 maxDamage,
+      int256 minDamage,
       uint256 minLevel,
       int256 strModifier
     )
   {
     agiModifier = (int256(uint256(Bytes.getBytes32(_blob, 0))));
 
-    hpModifier = (int256(uint256(Bytes.getBytes32(_blob, 32))));
+    intModifier = (int256(uint256(Bytes.getBytes32(_blob, 32))));
 
-    maxDamage = (uint256(Bytes.getBytes32(_blob, 64)));
+    hpModifier = (int256(uint256(Bytes.getBytes32(_blob, 64))));
 
-    minDamage = (uint256(Bytes.getBytes32(_blob, 96)));
+    maxDamage = (int256(uint256(Bytes.getBytes32(_blob, 96))));
 
-    minLevel = (uint256(Bytes.getBytes32(_blob, 128)));
+    minDamage = (int256(uint256(Bytes.getBytes32(_blob, 128))));
 
-    strModifier = (int256(uint256(Bytes.getBytes32(_blob, 160))));
+    minLevel = (uint256(Bytes.getBytes32(_blob, 160)));
+
+    strModifier = (int256(uint256(Bytes.getBytes32(_blob, 192))));
   }
 
   /**
@@ -648,13 +715,13 @@ library WeaponStats {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (bytes32[] memory statusEffects) {
+  ) internal pure returns (bytes32[] memory effects) {
     uint256 _start;
     uint256 _end;
     unchecked {
       _end = _encodedLengths.atIndex(0);
     }
-    statusEffects = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
+    effects = (SliceLib.getSubslice(_blob, _start, _end).decodeArray_bytes32());
   }
 
   /**
@@ -670,6 +737,7 @@ library WeaponStats {
   ) internal pure returns (WeaponStatsData memory _table) {
     (
       _table.agiModifier,
+      _table.intModifier,
       _table.hpModifier,
       _table.maxDamage,
       _table.minDamage,
@@ -677,7 +745,7 @@ library WeaponStats {
       _table.strModifier
     ) = decodeStatic(_staticData);
 
-    (_table.statusEffects) = decodeDynamic(_encodedLengths, _dynamicData);
+    (_table.effects) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -706,23 +774,24 @@ library WeaponStats {
    */
   function encodeStatic(
     int256 agiModifier,
+    int256 intModifier,
     int256 hpModifier,
-    uint256 maxDamage,
-    uint256 minDamage,
+    int256 maxDamage,
+    int256 minDamage,
     uint256 minLevel,
     int256 strModifier
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(agiModifier, hpModifier, maxDamage, minDamage, minLevel, strModifier);
+    return abi.encodePacked(agiModifier, intModifier, hpModifier, maxDamage, minDamage, minLevel, strModifier);
   }
 
   /**
    * @notice Tightly pack dynamic data lengths using this table's schema.
    * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
-  function encodeLengths(bytes32[] memory statusEffects) internal pure returns (EncodedLengths _encodedLengths) {
+  function encodeLengths(bytes32[] memory effects) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(statusEffects.length * 32);
+      _encodedLengths = EncodedLengthsLib.pack(effects.length * 32);
     }
   }
 
@@ -730,8 +799,8 @@ library WeaponStats {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(bytes32[] memory statusEffects) internal pure returns (bytes memory) {
-    return abi.encodePacked(EncodeArray.encode((statusEffects)));
+  function encodeDynamic(bytes32[] memory effects) internal pure returns (bytes memory) {
+    return abi.encodePacked(EncodeArray.encode((effects)));
   }
 
   /**
@@ -742,17 +811,26 @@ library WeaponStats {
    */
   function encode(
     int256 agiModifier,
+    int256 intModifier,
     int256 hpModifier,
-    uint256 maxDamage,
-    uint256 minDamage,
+    int256 maxDamage,
+    int256 minDamage,
     uint256 minLevel,
     int256 strModifier,
-    bytes32[] memory statusEffects
+    bytes32[] memory effects
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(agiModifier, hpModifier, maxDamage, minDamage, minLevel, strModifier);
+    bytes memory _staticData = encodeStatic(
+      agiModifier,
+      intModifier,
+      hpModifier,
+      maxDamage,
+      minDamage,
+      minLevel,
+      strModifier
+    );
 
-    EncodedLengths _encodedLengths = encodeLengths(statusEffects);
-    bytes memory _dynamicData = encodeDynamic(statusEffects);
+    EncodedLengths _encodedLengths = encodeLengths(effects);
+    bytes memory _dynamicData = encodeDynamic(effects);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

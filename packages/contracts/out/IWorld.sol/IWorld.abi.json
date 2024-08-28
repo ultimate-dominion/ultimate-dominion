@@ -306,30 +306,6 @@
   },
   {
     "type": "function",
-    "name": "UD__checkActionRestrictions",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "actionId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__checkForEncounterEnd",
     "inputs": [
       {
@@ -406,6 +382,30 @@
   },
   {
     "type": "function",
+    "name": "UD__checkItemAction",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "hasAction",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__checkRequirements",
     "inputs": [
       {
@@ -448,12 +448,12 @@
   },
   {
     "type": "function",
-    "name": "UD__createAction",
+    "name": "UD__createEffect",
     "inputs": [
       {
-        "name": "actionType",
+        "name": "effectType",
         "type": "uint8",
-        "internalType": "enum ActionType"
+        "internalType": "enum EffectType"
       },
       {
         "name": "name",
@@ -461,14 +461,14 @@
         "internalType": "string"
       },
       {
-        "name": "actionStats",
+        "name": "effectStats",
         "type": "bytes",
         "internalType": "bytes"
       }
     ],
     "outputs": [
       {
-        "name": "actionId",
+        "name": "effectId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -888,9 +888,9 @@
         "internalType": "bytes32"
       },
       {
-        "name": "actions",
+        "name": "attacks",
         "type": "tuple[]",
-        "internalType": "struct Action[]",
+        "internalType": "struct Attack[]",
         "components": [
           {
             "name": "attackerEntityId",
@@ -903,12 +903,7 @@
             "internalType": "bytes32"
           },
           {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
+            "name": "itemId",
             "type": "uint256",
             "internalType": "uint256"
           }
@@ -951,20 +946,15 @@
   },
   {
     "type": "function",
-    "name": "UD__executeAction",
+    "name": "UD__executeAttack",
     "inputs": [
       {
-        "name": "actionOutcomeData",
+        "name": "attackOutcomeData",
         "type": "tuple",
-        "internalType": "struct ActionOutcomeData",
+        "internalType": "struct AttackOutcomeData",
         "components": [
           {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
+            "name": "itemId",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -977,21 +967,6 @@
             "name": "defenderId",
             "type": "bytes32",
             "internalType": "bytes32"
-          },
-          {
-            "name": "hit",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "miss",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "crit",
-            "type": "bool",
-            "internalType": "bool"
           },
           {
             "name": "attackerDamageDelt",
@@ -1022,6 +997,31 @@
             "name": "timestamp",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "damagePerHit",
+            "type": "int256[]",
+            "internalType": "int256[]"
+          },
+          {
+            "name": "effectIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "hit",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "miss",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "crit",
+            "type": "bool[]",
+            "internalType": "bool[]"
           }
         ]
       },
@@ -1035,15 +1035,10 @@
       {
         "name": "",
         "type": "tuple",
-        "internalType": "struct ActionOutcomeData",
+        "internalType": "struct AttackOutcomeData",
         "components": [
           {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
+            "name": "itemId",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -1056,21 +1051,6 @@
             "name": "defenderId",
             "type": "bytes32",
             "internalType": "bytes32"
-          },
-          {
-            "name": "hit",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "miss",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "crit",
-            "type": "bool",
-            "internalType": "bool"
           },
           {
             "name": "attackerDamageDelt",
@@ -1101,6 +1081,31 @@
             "name": "timestamp",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "damagePerHit",
+            "type": "int256[]",
+            "internalType": "int256[]"
+          },
+          {
+            "name": "effectIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "hit",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "miss",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "crit",
+            "type": "bool[]",
+            "internalType": "bool[]"
           }
         ]
       }
@@ -1122,9 +1127,9 @@
         "internalType": "bytes32"
       },
       {
-        "name": "actions",
+        "name": "attacks",
         "type": "tuple[]",
-        "internalType": "struct Action[]",
+        "internalType": "struct Attack[]",
         "components": [
           {
             "name": "attackerEntityId",
@@ -1137,12 +1142,7 @@
             "internalType": "bytes32"
           },
           {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
+            "name": "itemId",
             "type": "uint256",
             "internalType": "uint256"
           }
@@ -1167,9 +1167,9 @@
         "internalType": "bytes32"
       },
       {
-        "name": "actions",
+        "name": "effects",
         "type": "tuple[]",
-        "internalType": "struct Action[]",
+        "internalType": "struct Attack[]",
         "components": [
           {
             "name": "attackerEntityId",
@@ -1182,12 +1182,7 @@
             "internalType": "bytes32"
           },
           {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
+            "name": "itemId",
             "type": "uint256",
             "internalType": "uint256"
           }
@@ -1230,7 +1225,7 @@
       {
         "name": "_ArmorStats",
         "type": "tuple",
-        "internalType": "struct ArmorStats",
+        "internalType": "struct ArmorStatsData",
         "components": [
           {
             "name": "agiModifier",
@@ -1239,11 +1234,11 @@
           },
           {
             "name": "armorModifier",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "hitPointModifier",
+            "name": "hpModifier",
             "type": "int256",
             "internalType": "int256"
           },
@@ -1256,28 +1251,6 @@
             "name": "minLevel",
             "type": "uint256",
             "internalType": "uint256"
-          },
-          {
-            "name": "statRestrictions",
-            "type": "tuple",
-            "internalType": "struct StatRestrictions",
-            "components": [
-              {
-                "name": "minAgility",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minIntelligence",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minStrength",
-                "type": "uint256",
-                "internalType": "uint256"
-              }
-            ]
           },
           {
             "name": "strModifier",
@@ -1646,6 +1619,25 @@
   },
   {
     "type": "function",
+    "name": "UD__getItemEffects",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "effects",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getItemType",
     "inputs": [
       {
@@ -1821,7 +1813,7 @@
         "internalType": "struct MonsterStats",
         "components": [
           {
-            "name": "actions",
+            "name": "effects",
             "type": "bytes32[]",
             "internalType": "bytes32[]"
           },
@@ -1892,7 +1884,7 @@
         "internalType": "struct MonsterStats",
         "components": [
           {
-            "name": "actions",
+            "name": "effects",
             "type": "bytes32[]",
             "internalType": "bytes32[]"
           },
@@ -2290,47 +2282,20 @@
       {
         "name": "_spellStats",
         "type": "tuple",
-        "internalType": "struct SpellStats",
+        "internalType": "struct SpellStatsData",
         "components": [
-          {
-            "name": "maxDamage",
-            "type": "int256",
-            "internalType": "int256"
-          },
           {
             "name": "minDamage",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "minLevel",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "maxDamage",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "statRestrictions",
-            "type": "tuple",
-            "internalType": "struct StatRestrictions",
-            "components": [
-              {
-                "name": "minAgility",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minIntelligence",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minStrength",
-                "type": "uint256",
-                "internalType": "uint256"
-              }
-            ]
-          },
-          {
-            "name": "statusEffects",
+            "name": "effects",
             "type": "bytes32[]",
             "internalType": "bytes32[]"
           }
@@ -2483,15 +2448,10 @@
       {
         "name": "_weaponStats",
         "type": "tuple",
-        "internalType": "struct WeaponStats",
+        "internalType": "struct WeaponStatsData",
         "components": [
           {
             "name": "agiModifier",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "hitPointModifier",
             "type": "int256",
             "internalType": "int256"
           },
@@ -2501,14 +2461,19 @@
             "internalType": "int256"
           },
           {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
             "name": "maxDamage",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "minDamage",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "minLevel",
@@ -2516,31 +2481,14 @@
             "internalType": "uint256"
           },
           {
-            "name": "statRestrictions",
-            "type": "tuple",
-            "internalType": "struct StatRestrictions",
-            "components": [
-              {
-                "name": "minAgility",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minIntelligence",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minStrength",
-                "type": "uint256",
-                "internalType": "uint256"
-              }
-            ]
-          },
-          {
             "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
+          },
+          {
+            "name": "effects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
           }
         ]
       }

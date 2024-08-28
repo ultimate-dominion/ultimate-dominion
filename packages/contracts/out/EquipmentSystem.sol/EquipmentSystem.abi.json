@@ -96,6 +96,30 @@
   },
   {
     "type": "function",
+    "name": "checkItemAction",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "hasAction",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "checkRequirements",
     "inputs": [
       {
@@ -150,7 +174,7 @@
       {
         "name": "_ArmorStats",
         "type": "tuple",
-        "internalType": "struct ArmorStats",
+        "internalType": "struct ArmorStatsData",
         "components": [
           {
             "name": "agiModifier",
@@ -159,11 +183,11 @@
           },
           {
             "name": "armorModifier",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "hitPointModifier",
+            "name": "hpModifier",
             "type": "int256",
             "internalType": "int256"
           },
@@ -178,33 +202,30 @@
             "internalType": "uint256"
           },
           {
-            "name": "statRestrictions",
-            "type": "tuple",
-            "internalType": "struct StatRestrictions",
-            "components": [
-              {
-                "name": "minAgility",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minIntelligence",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minStrength",
-                "type": "uint256",
-                "internalType": "uint256"
-              }
-            ]
-          },
-          {
             "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
           }
         ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getItemEffects",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "effects",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       }
     ],
     "stateMutability": "view"
@@ -223,47 +244,20 @@
       {
         "name": "_spellStats",
         "type": "tuple",
-        "internalType": "struct SpellStats",
+        "internalType": "struct SpellStatsData",
         "components": [
-          {
-            "name": "maxDamage",
-            "type": "int256",
-            "internalType": "int256"
-          },
           {
             "name": "minDamage",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "minLevel",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "maxDamage",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "statRestrictions",
-            "type": "tuple",
-            "internalType": "struct StatRestrictions",
-            "components": [
-              {
-                "name": "minAgility",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minIntelligence",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minStrength",
-                "type": "uint256",
-                "internalType": "uint256"
-              }
-            ]
-          },
-          {
-            "name": "statusEffects",
+            "name": "effects",
             "type": "bytes32[]",
             "internalType": "bytes32[]"
           }
@@ -286,15 +280,10 @@
       {
         "name": "_weaponStats",
         "type": "tuple",
-        "internalType": "struct WeaponStats",
+        "internalType": "struct WeaponStatsData",
         "components": [
           {
             "name": "agiModifier",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "hitPointModifier",
             "type": "int256",
             "internalType": "int256"
           },
@@ -304,14 +293,19 @@
             "internalType": "int256"
           },
           {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
             "name": "maxDamage",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "minDamage",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "minLevel",
@@ -319,31 +313,14 @@
             "internalType": "uint256"
           },
           {
-            "name": "statRestrictions",
-            "type": "tuple",
-            "internalType": "struct StatRestrictions",
-            "components": [
-              {
-                "name": "minAgility",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minIntelligence",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minStrength",
-                "type": "uint256",
-                "internalType": "uint256"
-              }
-            ]
-          },
-          {
             "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
+          },
+          {
+            "name": "effects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
           }
         ]
       }

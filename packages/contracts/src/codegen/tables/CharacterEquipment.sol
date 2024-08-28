@@ -21,7 +21,7 @@ struct CharacterEquipmentData {
   int256 agiBonus;
   int256 intBonus;
   int256 hpBonus;
-  uint256 armor;
+  int256 armor;
   uint256[] equippedArmor;
   uint256[] equippedWeapons;
   uint256[] equippedSpells;
@@ -37,8 +37,8 @@ library CharacterEquipment {
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (int256, int256, int256, int256, uint256, uint256[], uint256[], uint256[], uint256[])
-  Schema constant _valueSchema = Schema.wrap(0x00a005043f3f3f3f1f8181818100000000000000000000000000000000000000);
+  // Hex-encoded value schema of (int256, int256, int256, int256, int256, uint256[], uint256[], uint256[], uint256[])
+  Schema constant _valueSchema = Schema.wrap(0x00a005043f3f3f3f3f8181818100000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -251,29 +251,29 @@ library CharacterEquipment {
   /**
    * @notice Get armor.
    */
-  function getArmor(bytes32 characterId) internal view returns (uint256 armor) {
+  function getArmor(bytes32 characterId) internal view returns (int256 armor) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (int256(uint256(bytes32(_blob))));
   }
 
   /**
    * @notice Get armor.
    */
-  function _getArmor(bytes32 characterId) internal view returns (uint256 armor) {
+  function _getArmor(bytes32 characterId) internal view returns (int256 armor) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (int256(uint256(bytes32(_blob))));
   }
 
   /**
    * @notice Set armor.
    */
-  function setArmor(bytes32 characterId, uint256 armor) internal {
+  function setArmor(bytes32 characterId, int256 armor) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -283,7 +283,7 @@ library CharacterEquipment {
   /**
    * @notice Set armor.
    */
-  function _setArmor(bytes32 characterId, uint256 armor) internal {
+  function _setArmor(bytes32 characterId, int256 armor) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
 
@@ -977,7 +977,7 @@ library CharacterEquipment {
     int256 agiBonus,
     int256 intBonus,
     int256 hpBonus,
-    uint256 armor,
+    int256 armor,
     uint256[] memory equippedArmor,
     uint256[] memory equippedWeapons,
     uint256[] memory equippedSpells,
@@ -1003,7 +1003,7 @@ library CharacterEquipment {
     int256 agiBonus,
     int256 intBonus,
     int256 hpBonus,
-    uint256 armor,
+    int256 armor,
     uint256[] memory equippedArmor,
     uint256[] memory equippedWeapons,
     uint256[] memory equippedSpells,
@@ -1087,7 +1087,7 @@ library CharacterEquipment {
    */
   function decodeStatic(
     bytes memory _blob
-  ) internal pure returns (int256 strBonus, int256 agiBonus, int256 intBonus, int256 hpBonus, uint256 armor) {
+  ) internal pure returns (int256 strBonus, int256 agiBonus, int256 intBonus, int256 hpBonus, int256 armor) {
     strBonus = (int256(uint256(Bytes.getBytes32(_blob, 0))));
 
     agiBonus = (int256(uint256(Bytes.getBytes32(_blob, 32))));
@@ -1096,7 +1096,7 @@ library CharacterEquipment {
 
     hpBonus = (int256(uint256(Bytes.getBytes32(_blob, 96))));
 
-    armor = (uint256(Bytes.getBytes32(_blob, 128)));
+    armor = (int256(uint256(Bytes.getBytes32(_blob, 128))));
   }
 
   /**
@@ -1189,7 +1189,7 @@ library CharacterEquipment {
     int256 agiBonus,
     int256 intBonus,
     int256 hpBonus,
-    uint256 armor
+    int256 armor
   ) internal pure returns (bytes memory) {
     return abi.encodePacked(strBonus, agiBonus, intBonus, hpBonus, armor);
   }
@@ -1245,7 +1245,7 @@ library CharacterEquipment {
     int256 agiBonus,
     int256 intBonus,
     int256 hpBonus,
-    uint256 armor,
+    int256 armor,
     uint256[] memory equippedArmor,
     uint256[] memory equippedWeapons,
     uint256[] memory equippedSpells,

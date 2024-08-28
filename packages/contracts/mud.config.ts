@@ -21,8 +21,8 @@ export default defineWorld({
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
-    ActionType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
-    ResistanceStat: ["Agility", "Strength", "Intelligence"],
+    EffectType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
+    ResistanceStat: ["Strength", "Agility", "Intelligence"],
     OrderStatus: ["Canceled", "Active", "Fullfilled"],
     TokenType: ["NATIVE", "ERC20", "ERC721", "ERC1155"],
     StatusEffects: [
@@ -118,7 +118,7 @@ export default defineWorld({
         intelligence: "uint256",
         level: "uint256",
         strength: "uint256",
-        actions: "bytes32[]",
+        effects: "bytes32[]",
         inventory: "uint256[]",
       },
     },
@@ -144,7 +144,7 @@ export default defineWorld({
         agiBonus: "int256",
         intBonus: "int256",
         hpBonus: "int256",
-        armor: "uint256",
+        armor: "int256",
         equippedArmor: "uint256[]",
         equippedWeapons: "uint256[]",
         equippedSpells: "uint256[]",
@@ -174,12 +174,13 @@ export default defineWorld({
       schema: {
         itemId: "uint256",
         agiModifier: "int256",
+        intModifier: "int256",
         hpModifier: "int256",
-        maxDamage: "uint256",
-        minDamage: "uint256",
+        maxDamage: "int256",
+        minDamage: "int256",
         minLevel: "uint256",
         strModifier: "int256",
-        statusEffects: "bytes32[]",
+        effects: "bytes32[]",
       },
       key: ["itemId"],
     },
@@ -187,7 +188,9 @@ export default defineWorld({
       schema: {
         itemId: "uint256",
         agiModifier: "int256",
+        armorModifier: "int256",
         hpModifier: "int256",
+        intModifier: "int256",
         minLevel: "uint256",
         strModifier: "int256",
       },
@@ -199,14 +202,14 @@ export default defineWorld({
         itemId: "uint256",
         minDamage: "int256",
         maxDamage: "int256",
-        statusEffects: "bytes32[]",
+        effects: "bytes32[]",
       },
     },
     ConsumableStats: {
       key: ["itemId"],
       schema: {
         itemId: "uint256",
-        spellEffect: "uint256",
+        effects: "bytes32[]",
       },
     },
     StarterItems: {
@@ -218,45 +221,40 @@ export default defineWorld({
       },
     },
     /////////////////////////////////// ACTIONS ////////////////////////////////////////////////////////////////////////////
-    Actions: {
+    // Effects apply damage and or status effects
+    Effects: {
       schema: {
-        actionId: "bytes32",
-        actionType: "ActionType",
-        actionStats: "bytes",
+        effectId: "bytes32",
+        effectType: "EffectType",
+        effectExists: "bool",
       },
-      key: ["actionId"],
+      key: ["effectId"],
     },
-    PhysicalAttackStats: {
-      key: ["actionId"],
+    PhysicalDamageStats: {
+      key: ["effectId"],
       schema: {
-        actionId: "bytes32",
+        effectId: "bytes32",
         armorPenetration: "int256",
-        // modifiers are percentages so 20% of total stat for buff or -20% of total stat for debuff
         attackModifierBonus: "int256",
-        attacksPerTurn: "uint256",
         bonusDamage: "int256",
-        chitChanceBonus: "int256",
-        minLevel: "int256",
+        critChanceBonus: "int256",
         statusEffects: "bytes32[]",
       },
     },
-    MagicAttackStats: {
-      key: ["actionId"],
+    MagicDamageStats: {
+      key: ["effectId"],
       schema: {
-        actionId: "bytes32",
-        // modifiers are percentages so 20% of total stat for buff or -20% of total stat for debuff
+        effectId: "bytes32",
         attackModifierBonus: "int256",
         bonusDamage: "int256",
-        chitChanceBonus: "int256",
-        minLevel: "int256",
+        critChanceBonus: "int256",
         statusEffects: "bytes32[]",
       },
     },
     StatusEffectStats: {
-      key: ["actionId"],
+      key: ["effectId"],
       schema: {
-        actionId: "bytes32",
-        // modifiers are percentages so 20% of total stat for buff or -20% of total stat for debuff
+        effectId: "bytes32",
         agiModifier: "int256",
         armorModifier: "int256",
         hpModifier: "int256",
@@ -268,7 +266,6 @@ export default defineWorld({
         cooldown: "uint256",
       },
     },
-
     ////////////////////////////////// ENCOUNTERS ///////////////////////////////////////////////////////////////////////////////
     CombatEncounter: {
       schema: {
@@ -304,7 +301,7 @@ export default defineWorld({
         died: "bool",
       },
     },
-    /////////// MAP ////////////////////
+    ///////////////////////////////////// MAP //////////////////////////////////////////////
     MapConfig: {
       key: [],
       schema: {
@@ -363,7 +360,7 @@ export default defineWorld({
         items: "address",
       },
     },
-    ///////// AUCTION HOUSE ////////////
+    ///////////////////////////////////// AUCTION HOUSE ///////////////////////////////////
     Orders: {
       key: ["orderHash"],
       schema: {
@@ -394,7 +391,7 @@ export default defineWorld({
         amount: "uint256",
       },
     },
-    ///////////////////////// OFFCHAIN TABLES//////////////////
+    ////////////////////////////////////////// OFFCHAIN TABLES////////////////////////////////////////
     RngLogs: {
       key: ["requestId"],
       schema: {
@@ -410,26 +407,27 @@ export default defineWorld({
       },
       type: "offchainTable",
     },
-    ActionOutcome: {
+    AttackOutcome: {
       schema: {
         encounterId: "bytes32",
         currentTurn: "uint256",
-        actionNumber: "uint256",
-        actionId: "bytes32",
-        weaponId: "uint256",
+        attackNumber: "uint256",
+        itemId: "uint256",
         attackerId: "bytes32",
         defenderId: "bytes32",
-        hit: "bool",
-        miss: "bool",
-        crit: "bool",
         attackerDamageDelt: "int256",
         defenderDamageDelt: "int256",
         attackerDied: "bool",
         defenderDied: "bool",
         blockNumber: "uint256",
         timestamp: "uint256",
+        damagePerHit: "int256[]",
+        effectIds: "bytes32[]",
+        hit: "bool[]",
+        miss: "bool[]",
+        crit: "bool[]",
       },
-      key: ["encounterId", "currentTurn", "actionNumber"],
+      key: ["encounterId", "currentTurn", "attackNumber"],
       type: "offchainTable",
     },
     CombatOutcome: {
