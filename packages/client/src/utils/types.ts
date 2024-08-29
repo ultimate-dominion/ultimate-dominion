@@ -126,6 +126,7 @@ export type Metadata = {
 };
 
 export type Monster = MonsterTemplate & {
+  currentHp: string;
   id: Entity;
   inBattle: boolean;
   isSpawned: boolean;
