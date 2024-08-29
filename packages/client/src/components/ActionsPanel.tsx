@@ -320,9 +320,9 @@ export const ActionsPanel = (): JSX.Element => {
             </Typist>
           )}
 
-        {opponent &&
+        {opponent?.name &&
           attackOutcomes.map((attack, i) => {
-            if (attack.miss) {
+            if (attack.miss[0]) {
               return (
                 <Typist
                   avgTypingDelay={10}

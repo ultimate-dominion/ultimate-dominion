@@ -14,7 +14,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { formatEther, formatUnits } from 'viem';
+import { formatEther } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
@@ -187,10 +187,7 @@ export const BattleProvider = ({
       );
 
       return {
-        attackerDamageDelt: formatUnits(
-          _attackOutcome.attackerDamageDelt,
-          5,
-        ).toString(),
+        attackerDamageDelt: _attackOutcome.attackerDamageDelt.toString(),
         attackerDied: _attackOutcome.attackerDied,
         attackerId: _attackOutcome.attackerId.toString(),
         attackNumber: attackNumber.toString(),
@@ -199,9 +196,7 @@ export const BattleProvider = ({
         currentTurn: currentTurn.toString(),
         effectIds: _attackOutcome.effectIds.map(e => e.toString()),
         encounterId: encounterId.toString(),
-        damagePerHit: _attackOutcome.damagePerHit.map(d =>
-          formatUnits(d, 5).toString(),
-        ),
+        damagePerHit: _attackOutcome.damagePerHit.map(d => d.toString()),
         defenderDamageDelt: _attackOutcome.defenderDamageDelt.toString(),
         defenderDied: _attackOutcome.defenderDied,
         defenderId: _attackOutcome.defenderId.toString(),
@@ -250,7 +245,6 @@ export const BattleProvider = ({
           currentBattle.encounterId,
           character.id,
           opponent.id,
-          '0x' as Entity,
           itemId,
           currentTurn,
         );
