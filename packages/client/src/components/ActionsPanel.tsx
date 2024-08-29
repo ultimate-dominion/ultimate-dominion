@@ -356,7 +356,7 @@ export const ActionsPanel = (): JSX.Element => {
               );
             }
 
-            const critText = attack.crit ? 'Critical hit! ' : '';
+            const critText = attack.crit[0] ? 'Critical hit! ' : '';
 
             return (
               <Typist
