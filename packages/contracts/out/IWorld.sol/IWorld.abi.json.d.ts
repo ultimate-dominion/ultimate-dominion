@@ -277,56 +277,19 @@ declare const abi: [
     "name": "UD__applyStatusEffect",
     "inputs": [
       {
-        "name": "effectId",
+        "name": "entityId",
         "type": "bytes32",
         "internalType": "bytes32"
       },
       {
-        "name": "adjustedStats",
-        "type": "tuple",
-        "internalType": "struct AdjustedCombatStats",
-        "components": [
-          {
-            "name": "adjustedStrength",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "adjustedAgility",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "adjustedIntelligence",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "adjustedArmor",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "adjustedMaxHp",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "currentHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "_fullyAdjustedStats",
         "type": "tuple",
         "internalType": "struct AdjustedCombatStats",
         "components": [
@@ -366,6 +329,11 @@ declare const abi: [
             "internalType": "uint256"
           }
         ]
+      },
+      {
+        "name": "appliableDamage",
+        "type": "int256",
+        "internalType": "int256"
       }
     ],
     "stateMutability": "view"
@@ -400,6 +368,19 @@ declare const abi: [
         "internalType": "bool"
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__checkAppliedEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -566,7 +547,7 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "effectId",
+        "name": "effectStatsId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -1311,6 +1292,40 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getAppliedEffectInfo",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_effectStatsId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "_blockApplied",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_timestampApplied",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_turnApplied",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "UD__getArmorStats",
     "inputs": [
       {
@@ -1526,6 +1541,82 @@ declare const abi: [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEffectBlockApplied",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_blockApplied",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEffectStatId",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_effectStatsId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEffectTimestamp",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_timestampApplied",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEffectTurnApplied",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_turnApplied",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -1775,6 +1866,42 @@ declare const abi: [
         "name": "_lootManager",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMagicDamageStats",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_magicDamageStats",
+        "type": "tuple",
+        "internalType": "struct MagicDamageStatsData",
+        "components": [
+          {
+            "name": "attackModifierBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "bonusDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "critChanceBonus",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
       }
     ],
     "stateMutability": "view"
@@ -2307,6 +2434,47 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getPhysicalDamageStats",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_physicalDamageStats",
+        "type": "tuple",
+        "internalType": "struct PhysicalDamageStatsData",
+        "components": [
+          {
+            "name": "armorPenetration",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "attackModifierBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "bonusDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "critChanceBonus",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getPlayerEntityId",
     "inputs": [
       {
@@ -2478,6 +2646,57 @@ declare const abi: [
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getStatusEffectStats",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_statusEffectStats",
+        "type": "tuple",
+        "internalType": "struct StatusEffectStatsData",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "damagePerTick",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "resistanceStat",
+            "type": "uint8",
+            "internalType": "enum ResistanceStat"
           }
         ]
       }

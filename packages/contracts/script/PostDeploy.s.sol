@@ -224,7 +224,7 @@ contract PostDeploy is Script {
             );
             console.log("Physical action id: ", i + 1);
             console.logBytes32(newEffectId);
-            require(newEffectId == effectsData.PhysicalDamages[i].effectId, "Physical action Id mismatch");
+            require(newEffectId == effectsData.PhysicalDamages[i].effectId, "Physical effect Id mismatch");
         }
 
         for (uint256 i; i < effectsData.MagicDamages.length; i++) {
@@ -233,7 +233,18 @@ contract PostDeploy is Script {
             );
             console.log("Magic action Id ", i + 1);
             console.logBytes32(newEffectId);
-            require(newEffectId == effectsData.MagicDamages[i].effectId, "Magical action Id mismatch");
+            require(newEffectId == effectsData.MagicDamages[i].effectId, "Magical effect Id mismatch");
+        }
+
+        for (uint256 i; i < effectsData.statusEffects.length; i++) {
+            bytes32 newEffectId = world.UD__createEffect(
+                EffectType.MagicDamage,
+                effectsData.statusEffects[i].name,
+                abi.encode(effectsData.statusEffects[i].stats, effectsData.statusEffects[i].validity)
+            );
+            console.log("Magic action Id ", i + 1);
+            console.logBytes32(newEffectId);
+            require(newEffectId == effectsData.statusEffects[i].effectId, "status effect Id mismatch");
         }
     }
 

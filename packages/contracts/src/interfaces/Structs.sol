@@ -8,7 +8,8 @@ import {
     ArmorStatsData,
     MagicDamageStatsData,
     PhysicalDamageStatsData,
-    StatRestrictionsData
+    StatRestrictionsData,
+    StatusEffectsValidityData
 } from "@codegen/index.sol";
 
 /////////////////// Items ///////////////////////
@@ -67,6 +68,7 @@ struct StatusEffectTemplate {
     bytes32 effectId;
     string name;
     StatusEffectStatsData stats;
+    StatusEffectsValidityData validity;
 }
 
 struct MagicDamageTemplate {

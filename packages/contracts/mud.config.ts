@@ -259,11 +259,17 @@ export default defineWorld({
         hpModifier: "int256",
         intModifier: "int256",
         damagePerTick: "int256",
-        maxStacks: "uint8",
         resistanceStat: "ResistanceStat",
+      },
+    },
+    StatusEffectsValidity: {
+      key: ["effectId"],
+      schema: {
+        effectId: "bytes32",
+        cooldown: "uint256",
+        maxStacks: "uint256",
         validTime: "uint256",
         validTurns: "uint256",
-        cooldown: "uint256",
       },
     },
     ////////////////////////////////// ENCOUNTERS ///////////////////////////////////////////////////////////////////////////////

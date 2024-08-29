@@ -160,7 +160,7 @@ contract CombatSystem is System {
 
         require(IWorld(_world()).UD__checkItemAction(itemId, effectId), "INVALID ACTION");
 
-        PhysicalDamageStatsData memory attackStats = IWorld(_world()).UD__.getPhysicalDamageStats(effectId);
+        PhysicalDamageStatsData memory attackStats = IWorld(_world()).UD__getPhysicalDamageStats(effectId);
 
         if (defender.currentHp > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);

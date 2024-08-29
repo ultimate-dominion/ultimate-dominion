@@ -12,7 +12,7 @@
   ],
   "physicalDamage": [
     {
-      "effectId": "0xeee09063621624b3000000000000000000000000000000000000000000000000",
+      "effectId": "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
       "name": "basic weapon attack",
       "stats": {
         "armorPenetration": 0,
@@ -24,7 +24,7 @@
   ],
   "statusEffects": [
     {
-      "effectId": "0xeee09063621624b3000000000000000000000000000000000000000000000000",
+      "effectId": "0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000",
       "name": "blind",
       "stats": {
         "agiModifier": -10,
@@ -34,7 +34,11 @@
         "hpModifier": 0,
         "intModifier": 0,
         "maxStacks": 1,
-        "resistanceStat": 1,
+        "resistanceStat": 1
+      },
+      "validity": {
+        "cooldown": 2,
+        "maxStacks": 1,
         "validTime": 0,
         "validTurns": 2
       }
