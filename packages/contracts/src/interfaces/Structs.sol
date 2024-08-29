@@ -84,11 +84,11 @@ struct PhysicalDamageTemplate {
 }
 
 struct AdjustedCombatStats {
-    uint256 adjustedStrength;
-    uint256 adjustedAgility;
-    uint256 adjustedIntelligence;
-    uint256 adjustedArmor;
-    uint256 adjustedMaxHp;
+    int256 adjustedStrength;
+    int256 adjustedAgility;
+    int256 adjustedIntelligence;
+    int256 adjustedArmor;
+    int256 adjustedMaxHp;
     int256 currentHp;
     uint256 level;
 }

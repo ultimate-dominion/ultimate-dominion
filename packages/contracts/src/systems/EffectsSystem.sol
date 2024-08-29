@@ -21,7 +21,8 @@ import {
     StatusEffectStats,
     StatusEffectStatsData,
     StatusEffectsValidity,
-    StatusEffectsValidityData
+    StatusEffectsValidityData,
+    WorldStatusEffects
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {RngRequestType, MobType, EncounterType, EffectType, Classes} from "@codegen/common.sol";
@@ -51,44 +52,193 @@ contract EffectsSystem is System {
         } else if (effectType == EffectType.StatusEffect) {
             (StatusEffectStatsData memory statusStats, StatusEffectsValidityData memory validityData) =
                 abi.decode(effectStats, (StatusEffectStatsData, StatusEffectsValidityData));
+            // a status effect that expires after a certain time cannot expire after a number of turns
+            // combat effects and world effects cannot overlap
+            // also a world effect cannot cause damage over time
+
+            if (validityData.validTime != 0) {
+                require(validityData.validTurns == 0, "INVALID EFFECT: TIME");
+                require(statusStats.damagePerTick == 0, "INVALID EFFECT: WORLD EFFECT DAMAGE");
+            } else if (validityData.validTime == 0) {
+                require(validityData.validTurns != 0, "INVALID EFFECT: TURNS");
+            }
             StatusEffectStats.set(effectStatsId, statusStats);
             StatusEffectsValidity.set(effectStatsId, validityData);
         }
         Effects.set(effectStatsId, effectType, true);
     }
 
-    function applyStatusEffect(bytes32 entityId, bytes32 effectId)
+    function calculateWorldStatusEffects(bytes32 entityId, AdjustedCombatStats memory statInput)
         public
-        view
-        returns (AdjustedCombatStats memory _fullyAdjustedStats, int256 appliableDamage)
+        returns (AdjustedCombatStats memory _adjustedStats)
     {
-        require(bytes32(bytes8(effectId)) == effectId, "effect already applied");
-        StatusEffectStatsData memory statsData = getStatusEffectStats(effectId);
+        bytes32[] memory appliedEffects = WorldStatusEffects.get(entityId);
+        bytes32 effectId;
+        StatusEffectStatsData memory statsData;
+        uint256 numberOfExpiredEffects;
+
+        for (uint256 i; i < appliedEffects.length; i++) {
+            effectId = appliedEffects[i];
+            statsData = getStatusEffectStats(getEffectStatId(effectId));
+            bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
+            if (isNotExpired(updatedEffectId)) {
+                statInput.adjustedAgility += statsData.agiModifier;
+                statInput.adjustedIntelligence += statsData.agiModifier;
+                statInput.adjustedStrength += statsData.strModifier;
+                statInput.adjustedMaxHp += statsData.hpModifier;
+                statInput.adjustedArmor += statsData.armorModifier;
+            } else {
+                WorldStatusEffects.updateAppliedStatusEffects(entityId, i, updatedEffectId);
+                numberOfExpiredEffects++;
+            }
+        }
+
+        if (numberOfExpiredEffects > 0) {
+            cullExpiredEffects(entityId);
+        }
+
+        _adjustedStats = statInput;
     }
 
-    function checkAppliedEffects(bytes32 entityId) public {
-        EncounterEntityData memory encounterEntity = EncounterEntity.get(entityId);
-        if (encounterEntity.encounterId != bytes32(0)) {
-            if (encounterEntity.died && encounterEntity.appliedStatusEffects.length > 0) {
-                // if character is in an encounter and dead, remove applied effects
-                encounterEntity.appliedStatusEffects = new bytes32[](0);
-            }
-            if (!encounterEntity.died && encounterEntity.appliedStatusEffects.length > 0) {
-                //if character is in active combat with applied effects, check for expired effects and eliminate them
-                bytes32 appliedEffect;
-                for (uint256 i; i < encounterEntity.appliedStatusEffects.length; i++) {
-                    appliedEffect = encounterEntity.appliedStatusEffects[i];
-                    if (
-                        CombatEncounter.getCurrentTurn(encounterEntity.encounterId)
-                            - getEffectTurnApplied(appliedEffect)
-                            >= StatusEffectsValidity.getValidTurns(getEffectStatId(appliedEffect))
-                    ) {
-                        // if array is longer than 1, move to end of array and pop.
-                        if (encounterEntity.appliedStatusEffects.length > 1) {}
-                    }
+    function calculateAllStatusEffects(bytes32 entityId, AdjustedCombatStats memory statInput)
+        public
+        returns (AdjustedCombatStats memory _adjustedStats)
+    {
+        StatusEffectStatsData memory statsData;
+        bytes32 effectId;
+
+        bytes32[] memory worldStatusEffects = WorldStatusEffects.get(entityId);
+        uint256 numberOfExpiredEffects;
+        if (worldStatusEffects.length != 0) {
+            for (uint256 i; i < worldStatusEffects.length; i++) {
+                effectId = worldStatusEffects[i];
+                statsData = getStatusEffectStats(getEffectStatId(effectId));
+                bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
+                if (isNotExpired(updatedEffectId)) {
+                    statInput.adjustedAgility += statsData.agiModifier;
+                    statInput.adjustedIntelligence += statsData.agiModifier;
+                    statInput.adjustedStrength += statsData.strModifier;
+                    statInput.adjustedMaxHp += statsData.hpModifier;
+                    statInput.adjustedArmor += statsData.armorModifier;
+                } else {
+                    WorldStatusEffects.updateAppliedStatusEffects(entityId, i, updatedEffectId);
+                    numberOfExpiredEffects++;
                 }
             }
-        } else {}
+        }
+        if (numberOfExpiredEffects > 0) {
+            cullExpiredEffects(entityId);
+        }
+
+        EncounterEntityData memory encounterData = EncounterEntity.get(entityId);
+
+        if (encounterData.encounterId != bytes32(0)) {
+            for (uint256 i; i < encounterData.appliedStatusEffects.length; i++) {
+                effectId = encounterData.appliedStatusEffects[i];
+                statsData = getStatusEffectStats(getEffectStatId(effectId));
+                bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
+                if (isNotExpired(updatedEffectId)) {
+                    statInput.adjustedAgility += statsData.agiModifier;
+                    statInput.adjustedIntelligence += statsData.agiModifier;
+                    statInput.adjustedStrength += statsData.strModifier;
+                    statInput.adjustedMaxHp += statsData.hpModifier;
+                    statInput.adjustedArmor += statsData.armorModifier;
+                } else {
+                    EncounterEntity.updateAppliedStatusEffects(entityId, i, updatedEffectId);
+                }
+            }
+        }
+        _adjustedStats = statInput;
+    }
+
+    function cullExpiredEffects(bytes32 entityId) public {
+        bytes32[] memory worldStatusEffects = WorldStatusEffects.get(entityId);
+        bytes32 effectId;
+        uint256 removedEffects;
+        if (worldStatusEffects.length != 0) {
+            for (uint256 i = worldStatusEffects.length - 1; i >= 0; i--) {
+                effectId = worldStatusEffects[i];
+                if (!isNotExpired(effectId)) {
+                    bytes32 lastEffectId =
+                        WorldStatusEffects.getItemAppliedStatusEffects(entityId, worldStatusEffects.length - 1);
+                    WorldStatusEffects.updateAppliedStatusEffects(entityId, i, lastEffectId);
+                    WorldStatusEffects.popAppliedStatusEffects(entityId);
+                }
+            }
+        }
+    }
+
+    function applyStatusEffect(bytes32 entityId, bytes32 effectId)
+        public
+        returns (AdjustedCombatStats memory _adjustedStats)
+    {
+        _requireAccess(address(this), _msgSender());
+        StatusEffectsValidityData memory statsData = StatusEffectsValidity.get(effectId);
+        if (statsData.validTurns != 0 && EncounterEntity.getEncounterId(entityId) != bytes32(0)) {
+            EncounterEntity.pushAppliedStatusEffects(entityId, effectId);
+        } else if (statsData.validTime != 0) {
+            WorldStatusEffects.pushAppliedStatusEffects(entityId, effectId);
+        } else {
+            revert("invalid effect application");
+        }
+    }
+
+    function isValidEffect(bytes32 entityId, bytes32 appliedEffectId) public returns (bool) {
+        return isNotExpired(expireIfInvalid(entityId, appliedEffectId));
+    }
+
+    function isNotExpired(bytes32 appliedEffectId) public pure returns (bool) {
+        return getEffectExpired(appliedEffectId) == 0;
+    }
+
+    function expireIfInvalid(bytes32 entityId, bytes32 appliedEffectId) public returns (bytes32) {
+        if (isNotExpired(appliedEffectId)) {
+            (bytes32 effectStatId, uint256 timestampApplied, uint256 expiredTime, uint256 turnApplied) =
+                getAppliedEffectInfo(appliedEffectId);
+
+            require(bytes32(bytes8(appliedEffectId)) != appliedEffectId, "effect not applied");
+
+            StatusEffectsValidityData memory validityData = StatusEffectsValidity.get(getEffectStatId(appliedEffectId));
+
+            bool isValidTime;
+            bool isValidTurn;
+
+            if (validityData.validTime == 0 || block.timestamp - timestampApplied < validityData.validTime) {
+                isValidTime = true;
+            }
+
+            if (
+                validityData.validTurns == 0
+                    || CombatEncounter.getCurrentTurn(EncounterEntity.getEncounterId(entityId)) - turnApplied
+                        <= validityData.validTurns
+            ) isValidTurn = true;
+
+            if (isValidTime && isValidTurn) {
+                return appliedEffectId;
+            } else {
+                return _expireStatusEffect(appliedEffectId);
+            }
+        } else {
+            return appliedEffectId;
+        }
+    }
+
+    function _expireStatusEffect(bytes32 appliedEffectId) internal view returns (bytes32) {
+        (bytes32 effectStatId, uint256 timestampApplied, uint256 expiredTime, uint256 turnApplied) =
+            getAppliedEffectInfo(appliedEffectId);
+        if (expiredTime == 0) {
+            expiredTime = block.timestamp;
+            return bytes32(
+                abi.encodePacked(
+                    bytes8(effectStatId),
+                    bytes8(uint64(timestampApplied)),
+                    bytes8(uint64(expiredTime)),
+                    bytes8(uint64(turnApplied))
+                )
+            );
+        } else {
+            return appliedEffectId;
+        }
     }
 
     function getPhysicalDamageStats(bytes32 effectId)
@@ -132,11 +282,11 @@ contract EffectsSystem is System {
     function getAppliedEffectInfo(bytes32 appliedEffectId)
         public
         pure
-        returns (bytes32 _effectStatsId, uint256 _blockApplied, uint256 _timestampApplied, uint256 _turnApplied)
+        returns (bytes32 _effectStatsId, uint256 _timestampApplied, uint256 _effectExpiredTime, uint256 _turnApplied)
     {
         _effectStatsId = getEffectStatId(appliedEffectId);
-        _blockApplied = getEffectBlockApplied(appliedEffectId);
         _timestampApplied = getEffectTimestamp(appliedEffectId);
+        _effectExpiredTime = getEffectExpired(appliedEffectId);
         _turnApplied = getEffectTurnApplied(appliedEffectId);
     }
 
@@ -150,15 +300,15 @@ contract EffectsSystem is System {
     /**
      * @dev takes the applied statId and gets the block it was applied
      */
-    function getEffectBlockApplied(bytes32 appliedEffectId) public pure returns (uint256 _blockApplied) {
-        _blockApplied = uint256(uint64(bytes8(appliedEffectId << 16)));
+    function getEffectTimestamp(bytes32 appliedEffectId) public pure returns (uint256 _timestampApplied) {
+        _timestampApplied = uint256(uint64(bytes8(appliedEffectId << 16)));
     }
 
     /**
      * @dev takes the applied statId and gets the timestamp it was applied
      */
-    function getEffectTimestamp(bytes32 appliedEffectId) public pure returns (uint256 _timestampApplied) {
-        _timestampApplied = uint256(uint64(bytes8(appliedEffectId << 32)));
+    function getEffectExpired(bytes32 appliedEffectId) public pure returns (uint256 _effectExpiredTimestamp) {
+        _effectExpiredTimestamp = uint256(uint64(bytes8(appliedEffectId << 32)));
     }
 
     /**

@@ -34,7 +34,8 @@
         "hpModifier": 0,
         "intModifier": 0,
         "maxStacks": 1,
-        "resistanceStat": 1
+        "resistanceStat": 1,
+        "strModifier": 0
       },
       "validity": {
         "cooldown": 2,
@@ -54,9 +55,13 @@
         "hpModifier": 0,
         "intModifier": 0,
         "maxStacks": 1,
-        "resistanceStat": 0,
+        "resistanceStat": 0
+      },
+      "validity": {
+        "cooldown": 2,
+        "maxStacks": 1,
         "validTime": 0,
-        "validTurns": 3
+        "validTurns": 2
       }
     }
   ]

@@ -40,6 +40,62 @@
   },
   {
     "type": "function",
+    "name": "applyEquipmentAndStatusEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "adjustedStrength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedAgility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedIntelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedArmor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedMaxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "executeAttack",
     "inputs": [
       {

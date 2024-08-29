@@ -147,6 +147,7 @@ contract EquipmentSystem is System {
     function _setEquipmentBonuses(bytes32 characterId) internal {
         uint256[] memory equippedArmor = CharacterEquipment.getEquippedArmor(characterId);
         uint256[] memory equippedWeapons = CharacterEquipment.getEquippedWeapons(characterId);
+
         int256 totalArmor;
         int256 totalStrModifiers;
         int256 totalAgiModifiers;
@@ -221,35 +222,27 @@ contract EquipmentSystem is System {
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
 
-            combatStats.adjustedStrength = uint256(
-                int256(entityStats.strength) + equipmentStats.strBonus >= 0
-                    ? int256(entityStats.strength) + equipmentStats.strBonus
-                    : int256(0)
-            );
-            combatStats.adjustedAgility = uint256(
-                int256(entityStats.agility) + equipmentStats.agiBonus >= 0
-                    ? int256(entityStats.agility) + equipmentStats.agiBonus
-                    : int256(0)
-            );
-            combatStats.adjustedIntelligence = uint256(
-                int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
-                    ? int256(entityStats.intelligence) + equipmentStats.intBonus
-                    : int256(0)
-            );
-            combatStats.adjustedMaxHp = uint256(
-                int256(entityStats.baseHp) + equipmentStats.hpBonus >= 0
-                    ? int256(entityStats.baseHp) + equipmentStats.hpBonus
-                    : int256(1)
-            );
-            combatStats.currentHp = entityStats.currentHp;
+            combatStats.adjustedStrength = int256(entityStats.strength) + equipmentStats.strBonus >= 0
+                ? int256(entityStats.strength) + equipmentStats.strBonus
+                : int256(0);
+            combatStats.adjustedAgility = int256(entityStats.agility) + equipmentStats.agiBonus >= 0
+                ? int256(entityStats.agility) + equipmentStats.agiBonus
+                : int256(0);
+            combatStats.adjustedIntelligence = int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
+                ? int256(entityStats.intelligence) + equipmentStats.intBonus
+                : int256(0);
+            combatStats.adjustedMaxHp = int256(entityStats.baseHp) + equipmentStats.hpBonus >= 0
+                ? int256(entityStats.baseHp) + equipmentStats.hpBonus
+                : int256(1);
+            combatStats.currentHp = int256(entityStats.currentHp);
         } else {
-            combatStats.adjustedAgility = entityStats.agility;
-            combatStats.adjustedStrength = entityStats.strength;
-            combatStats.adjustedIntelligence = entityStats.intelligence;
+            combatStats.adjustedAgility = int256(entityStats.agility);
+            combatStats.adjustedStrength = int256(entityStats.strength);
+            combatStats.adjustedIntelligence = int256(entityStats.intelligence);
             combatStats.adjustedArmor =
-                abi.decode(Mobs.getMobStats(IWorld(_world()).UD__getMobId(entityId)), (MonsterStats)).armor;
-            combatStats.adjustedMaxHp = entityStats.baseHp;
-            combatStats.currentHp = entityStats.currentHp;
+                int256(abi.decode(Mobs.getMobStats(IWorld(_world()).UD__getMobId(entityId)), (MonsterStats)).armor);
+            combatStats.adjustedMaxHp = int256(entityStats.baseHp);
+            combatStats.currentHp = int256(entityStats.currentHp);
             combatStats.level = entityStats.level;
         }
         return combatStats;
@@ -299,7 +292,7 @@ contract EquipmentSystem is System {
         }
     }
 
-    function checkItemAction(uint256 itemId, bytes32 effectId) public view returns (bool hasAction) {
+    function checkItemEffect(uint256 itemId, bytes32 effectId) public view returns (bool hasAction) {
         ItemType itemType = Items.getItemType(itemId);
 
         if (itemType == ItemType.Weapon) {

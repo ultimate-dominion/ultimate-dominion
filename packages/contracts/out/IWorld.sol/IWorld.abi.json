@@ -218,6 +218,62 @@
   },
   {
     "type": "function",
+    "name": "UD__applyEquipmentAndStatusEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "adjustedStrength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedAgility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedIntelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedArmor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedMaxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__applyEquipmentBonuses",
     "inputs": [
       {
@@ -234,28 +290,28 @@
         "components": [
           {
             "name": "adjustedStrength",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedAgility",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedIntelligence",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedArmor",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedMaxHp",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "currentHp",
@@ -289,34 +345,34 @@
     ],
     "outputs": [
       {
-        "name": "_fullyAdjustedStats",
+        "name": "_adjustedStats",
         "type": "tuple",
         "internalType": "struct AdjustedCombatStats",
         "components": [
           {
             "name": "adjustedStrength",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedAgility",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedIntelligence",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedArmor",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedMaxHp",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "currentHp",
@@ -329,14 +385,9 @@
             "internalType": "uint256"
           }
         ]
-      },
-      {
-        "name": "appliableDamage",
-        "type": "int256",
-        "internalType": "int256"
       }
     ],
-    "stateMutability": "view"
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -350,6 +401,202 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__calculateAllStatusEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "statInput",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "adjustedStrength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedAgility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedIntelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedArmor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedMaxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "adjustedStrength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedAgility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedIntelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedArmor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedMaxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__calculateWorldStatusEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "statInput",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "adjustedStrength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedAgility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedIntelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedArmor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedMaxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "adjustedStrength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedAgility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedIntelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedArmor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedMaxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -368,19 +615,6 @@
         "internalType": "bool"
       }
     ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__checkAppliedEffects",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -461,7 +695,7 @@
   },
   {
     "type": "function",
-    "name": "UD__checkItemAction",
+    "name": "UD__checkItemEffect",
     "inputs": [
       {
         "name": "itemId",
@@ -795,6 +1029,19 @@
         "internalType": "bytes32"
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__cullExpiredEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -1273,6 +1520,30 @@
   },
   {
     "type": "function",
+    "name": "UD__expireIfInvalid",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__fulfillOrder",
     "inputs": [
       {
@@ -1307,12 +1578,12 @@
         "internalType": "bytes32"
       },
       {
-        "name": "_blockApplied",
+        "name": "_timestampApplied",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "_timestampApplied",
+        "name": "_effectExpiredTime",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -1544,7 +1815,7 @@
   },
   {
     "type": "function",
-    "name": "UD__getEffectBlockApplied",
+    "name": "UD__getEffectExpired",
     "inputs": [
       {
         "name": "appliedEffectId",
@@ -1554,7 +1825,7 @@
     ],
     "outputs": [
       {
-        "name": "_blockApplied",
+        "name": "_effectExpiredTimestamp",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -2679,6 +2950,11 @@
             "internalType": "int256"
           },
           {
+            "name": "damagePerTick",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
             "name": "hpModifier",
             "type": "int256",
             "internalType": "int256"
@@ -2689,14 +2965,14 @@
             "internalType": "int256"
           },
           {
-            "name": "damagePerTick",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
             "name": "resistanceStat",
             "type": "uint8",
             "internalType": "enum ResistanceStat"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
           }
         ]
       }
@@ -2900,6 +3176,25 @@
   },
   {
     "type": "function",
+    "name": "UD__isNotExpired",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "UD__isParticipant",
     "inputs": [
       {
@@ -2964,6 +3259,30 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isValidEffect",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",

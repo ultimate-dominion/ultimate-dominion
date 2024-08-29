@@ -219,10 +219,10 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         ArmorStatsData memory armorStats = world.UD__getArmorStats(newArmorId);
         assertTrue(world.UD__isEquipped(bobCharacterId, newArmorId));
 
-        assertEq(modifiedStats.adjustedStrength, uint256(int256(baseStats.strength) + armorStats.strModifier));
-        assertEq(modifiedStats.adjustedAgility, uint256(int256(baseStats.agility) + armorStats.agiModifier));
-        assertEq(modifiedStats.adjustedIntelligence, uint256(int256(baseStats.intelligence) + armorStats.intModifier));
-        assertEq(modifiedStats.adjustedMaxHp, uint256(int256(baseStats.baseHp) + armorStats.hpModifier));
+        assertEq(modifiedStats.adjustedStrength, int256(baseStats.strength) + armorStats.strModifier);
+        assertEq(modifiedStats.adjustedAgility, int256(baseStats.agility) + armorStats.agiModifier);
+        assertEq(modifiedStats.adjustedIntelligence, int256(baseStats.intelligence) + armorStats.intModifier);
+        assertEq(modifiedStats.adjustedMaxHp, int256(baseStats.baseHp) + armorStats.hpModifier);
     }
 
     function test_unequipItem() public {

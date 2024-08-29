@@ -56,28 +56,28 @@
         "components": [
           {
             "name": "adjustedStrength",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedAgility",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedIntelligence",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedArmor",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedMaxHp",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "currentHp",
@@ -96,7 +96,7 @@
   },
   {
     "type": "function",
-    "name": "checkItemAction",
+    "name": "checkItemEffect",
     "inputs": [
       {
         "name": "itemId",

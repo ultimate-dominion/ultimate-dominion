@@ -47,6 +47,7 @@ enum EffectType {
 }
 
 enum ResistanceStat {
+  None,
   Strength,
   Agility,
   Intelligence

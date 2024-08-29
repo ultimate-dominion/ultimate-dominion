@@ -22,7 +22,7 @@ interface IEquipmentSystem {
 
   function UD__applyEquipmentBonuses(bytes32 entityId) external view returns (AdjustedCombatStats memory modifiedStats);
 
-  function UD__checkItemAction(uint256 itemId, bytes32 effectId) external view returns (bool hasAction);
+  function UD__checkItemEffect(uint256 itemId, bytes32 effectId) external view returns (bool hasAction);
 
   function UD__getItemEffects(uint256 itemId) external view returns (bytes32[] memory effects);
 

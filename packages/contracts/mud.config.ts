@@ -22,7 +22,7 @@ export default defineWorld({
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
     EffectType: ["Temporary", "PhysicalDamage", "MagicDamage", "StatusEffect"],
-    ResistanceStat: ["Strength", "Agility", "Intelligence"],
+    ResistanceStat: ["None", "Strength", "Agility", "Intelligence"],
     OrderStatus: ["Canceled", "Active", "Fullfilled"],
     TokenType: ["NATIVE", "ERC20", "ERC721", "ERC1155"],
     StatusEffects: [
@@ -118,7 +118,6 @@ export default defineWorld({
         intelligence: "uint256",
         level: "uint256",
         strength: "uint256",
-        effects: "bytes32[]",
         inventory: "uint256[]",
       },
     },
@@ -256,10 +255,11 @@ export default defineWorld({
         effectId: "bytes32",
         agiModifier: "int256",
         armorModifier: "int256",
+        damagePerTick: "int256",
         hpModifier: "int256",
         intModifier: "int256",
-        damagePerTick: "int256",
         resistanceStat: "ResistanceStat",
+        strModifier: "int256",
       },
     },
     StatusEffectsValidity: {
@@ -305,6 +305,13 @@ export default defineWorld({
         // by default this is bytes(0), if this entity is in an encounter it will be set,
         encounterId: "bytes32",
         died: "bool",
+        appliedStatusEffects: "bytes32[]",
+      },
+    },
+    WorldStatusEffects: {
+      key: ["entityId"],
+      schema: {
+        entityId: "bytes32",
         appliedStatusEffects: "bytes32[]",
       },
     },

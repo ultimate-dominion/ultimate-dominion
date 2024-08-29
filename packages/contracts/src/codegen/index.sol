@@ -29,6 +29,7 @@ import { StatusEffectStats, StatusEffectStatsData } from "./tables/StatusEffectS
 import { StatusEffectsValidity, StatusEffectsValidityData } from "./tables/StatusEffectsValidity.sol";
 import { CombatEncounter, CombatEncounterData } from "./tables/CombatEncounter.sol";
 import { EncounterEntity, EncounterEntityData } from "./tables/EncounterEntity.sol";
+import { WorldStatusEffects } from "./tables/WorldStatusEffects.sol";
 import { MapConfig } from "./tables/MapConfig.sol";
 import { Spawned } from "./tables/Spawned.sol";
 import { Position } from "./tables/Position.sol";
