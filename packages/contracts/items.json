@@ -106,7 +106,7 @@
       "stats": {
         "agiModifier": 0,
         "effects": [
-          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
         "hpModifier": 0,
         "intModifier": 0,
@@ -129,7 +129,7 @@
       "stats": {
         "agiModifier": 0,
         "effects": [
-          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
         "hpModifier": 0,
         "intModifier": 0,
@@ -152,7 +152,7 @@
       "stats": {
         "agiModifier": 0,
         "effects": [
-          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
         "hpModifier": 0,
         "intModifier": 5,
@@ -175,7 +175,7 @@
       "stats": {
         "agiModifier": 5,
         "effects": [
-          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
         "hpModifier": 0,
         "intModifier": 0,
@@ -198,7 +198,7 @@
       "stats": {
         "agiModifier": 0,
         "effects": [
-          "0xbeeab8b096ac11af7b31141b25aef49eb28152e19cffd71f71b1c726b46a9000"
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
         "hpModifier": 0,
         "intModifier": 0,
