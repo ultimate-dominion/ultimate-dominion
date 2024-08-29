@@ -19,6 +19,7 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 struct SpellStatsData {
   int256 minDamage;
   int256 maxDamage;
+  uint256 minLevel;
   bytes32[] effects;
 }
 
@@ -27,12 +28,12 @@ library SpellStats {
   ResourceId constant _tableId = ResourceId.wrap(0x746255440000000000000000000000005370656c6c5374617473000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0040020120200000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0060030120202000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (uint256)
   Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (int256, int256, bytes32[])
-  Schema constant _valueSchema = Schema.wrap(0x004002013f3fc100000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (int256, int256, uint256, bytes32[])
+  Schema constant _valueSchema = Schema.wrap(0x006003013f3f1fc1000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -48,10 +49,11 @@ library SpellStats {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](3);
+    fieldNames = new string[](4);
     fieldNames[0] = "minDamage";
     fieldNames[1] = "maxDamage";
-    fieldNames[2] = "effects";
+    fieldNames[2] = "minLevel";
+    fieldNames[3] = "effects";
   }
 
   /**
@@ -150,6 +152,48 @@ library SpellStats {
     _keyTuple[0] = bytes32(uint256(itemId));
 
     StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((maxDamage)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get minLevel.
+   */
+  function getMinLevel(uint256 itemId) internal view returns (uint256 minLevel) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get minLevel.
+   */
+  function _getMinLevel(uint256 itemId) internal view returns (uint256 minLevel) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set minLevel.
+   */
+  function setMinLevel(uint256 itemId, uint256 minLevel) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((minLevel)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set minLevel.
+   */
+  function _setMinLevel(uint256 itemId, uint256 minLevel) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((minLevel)), _fieldLayout);
   }
 
   /**
@@ -347,8 +391,14 @@ library SpellStats {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(uint256 itemId, int256 minDamage, int256 maxDamage, bytes32[] memory effects) internal {
-    bytes memory _staticData = encodeStatic(minDamage, maxDamage);
+  function set(
+    uint256 itemId,
+    int256 minDamage,
+    int256 maxDamage,
+    uint256 minLevel,
+    bytes32[] memory effects
+  ) internal {
+    bytes memory _staticData = encodeStatic(minDamage, maxDamage, minLevel);
 
     EncodedLengths _encodedLengths = encodeLengths(effects);
     bytes memory _dynamicData = encodeDynamic(effects);
@@ -362,8 +412,14 @@ library SpellStats {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(uint256 itemId, int256 minDamage, int256 maxDamage, bytes32[] memory effects) internal {
-    bytes memory _staticData = encodeStatic(minDamage, maxDamage);
+  function _set(
+    uint256 itemId,
+    int256 minDamage,
+    int256 maxDamage,
+    uint256 minLevel,
+    bytes32[] memory effects
+  ) internal {
+    bytes memory _staticData = encodeStatic(minDamage, maxDamage, minLevel);
 
     EncodedLengths _encodedLengths = encodeLengths(effects);
     bytes memory _dynamicData = encodeDynamic(effects);
@@ -378,7 +434,7 @@ library SpellStats {
    * @notice Set the full data using the data struct.
    */
   function set(uint256 itemId, SpellStatsData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.minDamage, _table.maxDamage);
+    bytes memory _staticData = encodeStatic(_table.minDamage, _table.maxDamage, _table.minLevel);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.effects);
     bytes memory _dynamicData = encodeDynamic(_table.effects);
@@ -393,7 +449,7 @@ library SpellStats {
    * @notice Set the full data using the data struct.
    */
   function _set(uint256 itemId, SpellStatsData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.minDamage, _table.maxDamage);
+    bytes memory _staticData = encodeStatic(_table.minDamage, _table.maxDamage, _table.minLevel);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.effects);
     bytes memory _dynamicData = encodeDynamic(_table.effects);
@@ -407,10 +463,14 @@ library SpellStats {
   /**
    * @notice Decode the tightly packed blob of static data using this table's field layout.
    */
-  function decodeStatic(bytes memory _blob) internal pure returns (int256 minDamage, int256 maxDamage) {
+  function decodeStatic(
+    bytes memory _blob
+  ) internal pure returns (int256 minDamage, int256 maxDamage, uint256 minLevel) {
     minDamage = (int256(uint256(Bytes.getBytes32(_blob, 0))));
 
     maxDamage = (int256(uint256(Bytes.getBytes32(_blob, 32))));
+
+    minLevel = (uint256(Bytes.getBytes32(_blob, 64)));
   }
 
   /**
@@ -439,7 +499,7 @@ library SpellStats {
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (SpellStatsData memory _table) {
-    (_table.minDamage, _table.maxDamage) = decodeStatic(_staticData);
+    (_table.minDamage, _table.maxDamage, _table.minLevel) = decodeStatic(_staticData);
 
     (_table.effects) = decodeDynamic(_encodedLengths, _dynamicData);
   }
@@ -468,8 +528,8 @@ library SpellStats {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(int256 minDamage, int256 maxDamage) internal pure returns (bytes memory) {
-    return abi.encodePacked(minDamage, maxDamage);
+  function encodeStatic(int256 minDamage, int256 maxDamage, uint256 minLevel) internal pure returns (bytes memory) {
+    return abi.encodePacked(minDamage, maxDamage, minLevel);
   }
 
   /**
@@ -500,9 +560,10 @@ library SpellStats {
   function encode(
     int256 minDamage,
     int256 maxDamage,
+    uint256 minLevel,
     bytes32[] memory effects
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(minDamage, maxDamage);
+    bytes memory _staticData = encodeStatic(minDamage, maxDamage, minLevel);
 
     EncodedLengths _encodedLengths = encodeLengths(effects);
     bytes memory _dynamicData = encodeDynamic(effects);

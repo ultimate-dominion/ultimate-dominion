@@ -44,7 +44,8 @@ import {
     StatRestrictionsData,
     SpellStatsData,
     SpellStats,
-    ConsumableStats
+    ConsumableStats,
+    ConsumableStatsData
 } from "@codegen/index.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
@@ -58,7 +59,9 @@ import {
     StarterEffects,
     PhysicalDamageTemplate,
     WeaponStatDetails,
-    ArmorStatDetails
+    ArmorStatDetails,
+    SpellTemplateDetails,
+    ConsumableTemplateDetails
 } from "@interfaces/Structs.sol";
 
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
@@ -295,9 +298,9 @@ contract PostDeploy is Script {
 
         StarterItems memory itemsData = abi.decode(data, (StarterItems));
 
-        uint256[] memory warriorItemIds = new uint256[](2);
-        uint256[] memory rogueItemIds = new uint256[](2);
-        uint256[] memory mageItemIds = new uint256[](2);
+        uint256[] memory warriorItemIds = new uint256[](3);
+        uint256[] memory rogueItemIds = new uint256[](3);
+        uint256[] memory mageItemIds = new uint256[](4);
 
         for (uint256 i = 0; i < itemsData.armor.length; i++) {
             ArmorTemplateDetails memory armorTemplate = itemsData.armor[i];
@@ -355,13 +358,68 @@ contract PostDeploy is Script {
             }
         }
 
-        uint256[] memory amounts = new uint256[](2);
+        for (uint256 i = 0; i < itemsData.spells.length; i++) {
+            SpellTemplateDetails memory spellTemplate = itemsData.spells[i];
+
+            SpellStatsData memory newSpell = SpellStatsData({
+                effects: spellTemplate.stats.effects,
+                maxDamage: spellTemplate.stats.maxDamage,
+                minDamage: spellTemplate.stats.minDamage,
+                minLevel: spellTemplate.stats.minLevel
+            });
+
+            uint256 starterSpellId = world.UD__createItem(
+                ItemType.Spell,
+                spellTemplate.initialSupply,
+                spellTemplate.dropChance,
+                abi.encode(newSpell, spellTemplate.statRestrictions),
+                spellTemplate.metadataUri
+            );
+
+            if (i == 0) {
+                mageItemIds[2] = starterSpellId;
+            }
+        }
+
+        for (uint256 i = 0; i < itemsData.consumables.length; i++) {
+            ConsumableTemplateDetails memory consumablesTemplate = itemsData.consumables[i];
+
+            ConsumableStatsData memory newConsumable = ConsumableStatsData({
+                effects: consumablesTemplate.stats.effects,
+                maxDamage: consumablesTemplate.stats.maxDamage,
+                minDamage: consumablesTemplate.stats.minDamage,
+                minLevel: consumablesTemplate.stats.minLevel
+            });
+
+            uint256 starterConsumableId = world.UD__createItem(
+                ItemType.Consumable,
+                consumablesTemplate.initialSupply,
+                consumablesTemplate.dropChance,
+                abi.encode(newConsumable, consumablesTemplate.statRestrictions),
+                consumablesTemplate.metadataUri
+            );
+
+            if (i == 0) {
+                warriorItemIds[2] = starterConsumableId;
+                rogueItemIds[2] = starterConsumableId;
+                mageItemIds[3] = starterConsumableId;
+            }
+        }
+
+        uint256[] memory amounts = new uint256[](3);
         amounts[0] = 1;
         amounts[1] = 1;
+        amounts[2] = 1;
+
+        uint256[] memory mageAmounts = new uint256[](4);
+        mageAmounts[0] = 1;
+        mageAmounts[1] = 1;
+        mageAmounts[2] = 1;
+        mageAmounts[3] = 1;
 
         world.UD__setStarterItems(Classes.Warrior, warriorItemIds, amounts);
         world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);
-        world.UD__setStarterItems(Classes.Mage, mageItemIds, amounts);
+        world.UD__setStarterItems(Classes.Mage, mageItemIds, mageAmounts);
     }
 
     function _createMonsters() internal {

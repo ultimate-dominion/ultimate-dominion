@@ -201,6 +201,7 @@ export default defineWorld({
         itemId: "uint256",
         minDamage: "int256",
         maxDamage: "int256",
+        minLevel: "uint256",
         effects: "bytes32[]",
       },
     },
@@ -208,6 +209,9 @@ export default defineWorld({
       key: ["itemId"],
       schema: {
         itemId: "uint256",
+        minDamage: "int256",
+        maxDamage: "int256",
+        minLevel: "uint256",
         effects: "bytes32[]",
       },
     },

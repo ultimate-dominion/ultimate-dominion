@@ -96,31 +96,67 @@
       }
     }
   ],
-  "metadataUriPrefix": "ipfs://QmcEgdrkuCYj9xjoo8ofuDfdr9kyAk8CCYpzqeMA4f9hp3/",
-  "spells": [
+  "consumables": [
     {
       "dropChance": 20000000,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "6_rusty_axe.json",
-      "name": "Rusty Axe",
+      "metadataUri": "4_apprentice_robe.json",
+      "name": "minor healing potion",
       "stats": {
-        "agiModifier": 0,
         "effects": [
-          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
-        "intModifier": 0,
-        "maxDamage": 5,
-        "minDamage": 1,
-        "minLevel": 0,
-        "strModifier": 2
+        "maxDamage": -5,
+        "minDamage": -1,
+        "minLevel": 0
       },
       "statRestrictions": {
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
       }
+    }
+  ],
+  "metadataUriPrefix": "ipfs://QmcEgdrkuCYj9xjoo8ofuDfdr9kyAk8CCYpzqeMA4f9hp3/",
+  "spells": [
+    {
+      "dropChance": 20000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "4_apprentice_robe.json",
+      "name": "haduken",
+      "stats": {
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 5,
+        "minDamage": 1,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 4,
+        "minStrength": 0
+      }
     },
+    {
+      "dropChance": 20000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "4_apprentice_robe.json",
+      "name": "minor heal",
+      "stats": {
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": -5,
+        "minDamage": -1,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 4,
+        "minStrength": 0
+      }
+    }
   ],
   "weapons": [
     {

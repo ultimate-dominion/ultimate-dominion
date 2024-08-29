@@ -20,7 +20,7 @@ import { StatRestrictions, StatRestrictionsData } from "./tables/StatRestriction
 import { WeaponStats, WeaponStatsData } from "./tables/WeaponStats.sol";
 import { ArmorStats, ArmorStatsData } from "./tables/ArmorStats.sol";
 import { SpellStats, SpellStatsData } from "./tables/SpellStats.sol";
-import { ConsumableStats } from "./tables/ConsumableStats.sol";
+import { ConsumableStats, ConsumableStatsData } from "./tables/ConsumableStats.sol";
 import { StarterItems, StarterItemsData } from "./tables/StarterItems.sol";
 import { Effects, EffectsData } from "./tables/Effects.sol";
 import { PhysicalDamageStats, PhysicalDamageStatsData } from "./tables/PhysicalDamageStats.sol";

@@ -59,14 +59,14 @@ contract EquipmentSystem is System {
 
     function equipItems(bytes32 characterId, uint256[] memory itemIds) public inGame(characterId) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
-        require(characterOwner == _msgSender(), "ITEMS: Not Character Owner");
+        require(characterOwner == _msgSender(), "EQUIPMENT: Not Character Owner");
         uint256 itemId;
         for (uint256 i; i < itemIds.length; i++) {
             itemId = itemIds[i];
-            require(IWorld(_world()).UD__isItemOwner(itemId, _msgSender()), "ITEMS: Not Item Owner");
+            require(IWorld(_world()).UD__isItemOwner(itemId, _msgSender()), "EQUIPMENT: Not Item Owner");
             ItemsData memory itemData = Items.get(itemId);
-            require(uint8(itemData.itemType) < 3, "ITEMS: Not an equippable Item");
-            require(checkRequirements(characterId, itemId), "ITEMS: Requirements not met");
+            require(uint8(itemData.itemType) < 4, "EQUIPMENT: Not an equippable Item");
+            require(checkRequirements(characterId, itemId), "EQUIPMENT: Requirements not met");
             _equipItem(characterId, itemId, itemData.itemType);
         }
         _setEquipmentBonuses(characterId);
@@ -124,6 +124,22 @@ contract EquipmentSystem is System {
             if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
         }
+        if (uint8(itemData.itemType) == 2) {
+            bool isLevel = character.level >= SpellStats.getMinLevel(itemId);
+            bool hasStats = true;
+            if (statRestrictions.minAgility > character.agility) hasStats = false;
+            if (statRestrictions.minStrength > character.strength) hasStats = false;
+            if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+            if (isLevel && hasStats) canUse = true;
+        }
+        if (uint8(itemData.itemType) == 3) {
+            bool isLevel = character.level >= ConsumableStats.getMinLevel(itemId);
+            bool hasStats = true;
+            if (statRestrictions.minAgility > character.agility) hasStats = false;
+            if (statRestrictions.minStrength > character.strength) hasStats = false;
+            if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+            if (isLevel && hasStats) canUse = true;
+        }
         return canUse;
     }
 
@@ -139,8 +155,15 @@ contract EquipmentSystem is System {
         }
 
         if (uint8(itemType) == 2) {
-            // require(CharacterEquipment.lengthEquippedSpells(characterId) < 3, "ITEMS: Too many weapons equipped");
-            // CharacterEquipment.pushEquippedSpells(characterId, itemId);
+            require(CharacterEquipment.lengthEquippedSpells(characterId) < 3, "ITEMS: Too many spells equipped");
+            CharacterEquipment.pushEquippedSpells(characterId, itemId);
+        }
+
+        if (uint8(itemType) == 4) {
+            require(
+                CharacterEquipment.lengthEquippedConsumables(characterId) < 3, "ITEMS: Too many consumables equipped"
+            );
+            CharacterEquipment.pushEquippedConsumables(characterId, itemId);
         }
     }
 
@@ -201,15 +224,22 @@ contract EquipmentSystem is System {
                 success = true;
             }
         } else if (itemType == uint8(2)) {
-            // uint256[] memory sortedArray =
-            //     _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
-            // if (sortedArray[sortedArray.length - 1] == itemId) {
-            //     CharacterEquipment.setEquippedSpells(characterId, sortedArray);
-            //     CharacterEquipment.popEquippedSpells(characterId);
-            //     success = true;
-            // }
-        }
-        else {
+            uint256[] memory sortedArray =
+                _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
+            if (sortedArray[sortedArray.length - 1] == itemId) {
+                CharacterEquipment.setEquippedSpells(characterId, sortedArray);
+                CharacterEquipment.popEquippedSpells(characterId);
+                success = true;
+            }
+        } else if (itemType == uint8(3)) {
+            uint256[] memory sortedArray =
+                _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedConsumables(characterId));
+            if (sortedArray[sortedArray.length - 1] == itemId) {
+                CharacterEquipment.setEquippedConsumables(characterId, sortedArray);
+                CharacterEquipment.popEquippedConsumables(characterId);
+                success = true;
+            }
+        } else {
             revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
         _setEquipmentBonuses(characterId);
@@ -318,7 +348,7 @@ contract EquipmentSystem is System {
                 }
             }
         } else if (itemType == ItemType.Consumable) {
-            bytes32[] memory effects = ConsumableStats.get(itemId);
+            bytes32[] memory effects = ConsumableStats.getEffects(itemId);
             for (uint256 i; i < effects.length;) {
                 if (effectId == effects[i]) {
                     hasAction = true;
