@@ -1,6 +1,6 @@
 import { Entity } from '@latticexyz/recs';
 
-export enum ActionType {
+export enum AttackType {
   Temporary,
   PhysicalAttack,
   MagicAttack,
@@ -32,25 +32,6 @@ export enum StatsClasses {
   Mage,
 }
 
-export type ActionOutcomeType = {
-  attackerDamageDelt: string;
-  attackerDied: boolean;
-  attackerId: string;
-  actionId: string;
-  actionNumber: string;
-  blockNumber: string;
-  crit: boolean;
-  currentTurn: string;
-  defenderDamageDelt: string;
-  defenderDied: boolean;
-  defenderId: string;
-  encounterId: string;
-  hit: boolean;
-  miss: boolean;
-  timestamp: string;
-  weaponId: string;
-};
-
 export type Armor = ArmorTemplate & {
   balance: string;
   itemId: Entity;
@@ -60,14 +41,38 @@ export type Armor = ArmorTemplate & {
 export type ArmorStats = {
   agiModifier: string;
   armorModifier: string;
-  hitPointModifier: string;
+  hpModifier: string;
   intModifier: string;
   minLevel: string;
-  statRestrictions: StatRestrictions;
   strModifier: string;
 };
 
-export type ArmorTemplate = ArmorStats & Metadata & { tokenId: string };
+export type ArmorTemplate = ArmorStats &
+  Metadata & {
+    itemType: ItemType;
+    statRestrictions: StatRestrictions;
+    tokenId: string;
+  };
+
+export type AttackOutcomeType = {
+  attackerDamageDelt: string;
+  attackerDied: boolean;
+  attackerId: string;
+  attackNumber: string;
+  blockNumber: string;
+  crit: boolean[];
+  currentTurn: string;
+  effectIds: string[];
+  encounterId: string;
+  damagePerHit: string[];
+  defenderDamageDelt: string;
+  defenderDied: boolean;
+  defenderId: string;
+  hit: boolean[];
+  itemId: string;
+  miss: boolean[];
+  timestamp: string;
+};
 
 export type Character = CharacterData & EntityStats & Metadata;
 
@@ -127,7 +132,19 @@ export type Monster = MonsterTemplate & {
   position: { x: number; y: number };
 };
 
-export type MonsterTemplate = EntityStats &
+export type MonsterStats = {
+  agility: string;
+  armor: string;
+  entityClass: StatsClasses;
+  experience: string;
+  hitPoints: string;
+  intelligence: string;
+  inventory: string[];
+  level: string;
+  strength: string;
+};
+
+export type MonsterTemplate = MonsterStats &
   Metadata & {
     mobId: string;
   };
@@ -140,16 +157,21 @@ export type Weapon = WeaponTemplate & {
 
 export type WeaponStats = {
   agiModifier: string;
-  hitPointModifier: string;
+  effects: string[];
+  hpModifier: string;
   intModifier: string;
   maxDamage: string;
   minDamage: string;
   minLevel: string;
-  statRestrictions: StatRestrictions;
   strModifier: string;
 };
 
-export type WeaponTemplate = WeaponStats & Metadata & { tokenId: string };
+export type WeaponTemplate = WeaponStats &
+  Metadata & {
+    itemType: ItemType;
+    statRestrictions: StatRestrictions;
+    tokenId: string;
+  };
 
 export type Item = Metadata & {
   itemId: Entity;

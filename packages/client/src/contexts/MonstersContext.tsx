@@ -61,21 +61,21 @@ export const MonstersProvider = ({
           const { mobMetadata: metadataURI, mobStats } = mobData;
 
           const monsterStats = decodeMonsterStats(mobStats);
-
           const fetachedMetadata = await fetchMetadataFromUri(
             uriToHttp(metadataURI)[0],
           );
 
           return {
-            agility: monsterStats.agility.toString(),
-            baseHp: monsterStats.baseHp.toString(),
-            currentHp: monsterStats.currentHp.toString(),
+            agility: monsterStats.agility,
+            armor: monsterStats.armor,
             entityClass: monsterStats.entityClass,
-            experience: monsterStats.experience.toString(),
-            intelligence: monsterStats.intelligence.toString(),
-            level: monsterStats.level.toString(),
+            experience: monsterStats.experience,
+            hitPoints: monsterStats.hitPoints,
+            intelligence: monsterStats.intelligence,
+            inventory: monsterStats.inventory,
+            level: monsterStats.level,
             mobId: mobId.toString(),
-            strength: monsterStats.strength.toString(),
+            strength: monsterStats.strength,
             ...fetachedMetadata,
           } as MonsterTemplate;
         }),

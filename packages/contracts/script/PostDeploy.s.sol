@@ -316,8 +316,8 @@ contract PostDeploy is Script {
             WeaponTemplateDetails memory weaponTemplate = itemsData.weapons[i];
 
             WeaponStatsData memory newWeapon = WeaponStatsData({
-                effects: weaponTemplate.stats.effects,
                 agiModifier: weaponTemplate.stats.agiModifier,
+                effects: weaponTemplate.stats.effects,
                 hpModifier: weaponTemplate.stats.hpModifier,
                 intModifier: weaponTemplate.stats.intModifier,
                 maxDamage: weaponTemplate.stats.maxDamage,
