@@ -97,9 +97,28 @@ contract EquipmentSystem is System {
                 }
             }
         } else if (uint8(itemData.itemType) == 2) {
-            // spells
-        }
-        else {
+            uint256[] memory equippedSpells = CharacterEquipment.getEquippedSpells(characterId);
+            for (uint256 i; i < equippedSpells.length;) {
+                if (equippedSpells[i] == itemId) {
+                    _isEquipped = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        } else if (uint8(itemData.itemType) == 3) {
+            uint256[] memory equippedConsumables = CharacterEquipment.getEquippedConsumables(characterId);
+            for (uint256 i; i < equippedConsumables.length;) {
+                if (equippedConsumables[i] == itemId) {
+                    _isEquipped = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        } else {
             revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
     }
