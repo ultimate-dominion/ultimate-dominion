@@ -1,14 +1,23 @@
 import { type ContractWrite } from '@latticexyz/common';
 import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
+import { garnet } from '@latticexyz/common/chains';
+import { createClient as createFaucetClient } from '@latticexyz/faucet';
 import { getComponentValue, overridableComponent } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { callFrom } from '@latticexyz/world/internal';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import { share, Subject } from 'rxjs';
-import { type Address, createWalletClient, getContract, type Hex } from 'viem';
+import {
+  type Address,
+  createWalletClient,
+  getContract,
+  type Hex,
+  parseEther,
+} from 'viem';
 
 import { createSystemCalls } from '../mud/createSystemCalls';
 import { type SetupNetworkResult } from '../mud/setupNetwork';
+import { DEFAULT_CHAIN_ID } from '../web3';
 import { createViemClientConfig } from './createViemClientConfig';
 import { getBurnerAccount } from './getBurnerAccount';
 
@@ -73,6 +82,37 @@ export function createBurner(
         },
       }),
     );
+
+    if (DEFAULT_CHAIN_ID === garnet.id) {
+      const address = walletClient.account.address;
+      // eslint-disable-next-line no-console
+      console.info('[Dev Faucet]: Player address -> ', address);
+
+      const faucetClient = createFaucetClient({
+        url: 'https://ultimate-dominion-faucet.onrender.com/trpc',
+      });
+
+      const requestDrip = async () => {
+        const balance = await network.publicClient.getBalance({ address });
+        // eslint-disable-next-line no-console
+        console.info(`[Dev Faucet]: Player balance -> ${balance}`);
+        const lowBalance = balance < parseEther('0.00001');
+        if (lowBalance) {
+          // eslint-disable-next-line no-console
+          console.info(
+            '[Dev Faucet]: Balance is low, dripping funds to player',
+          );
+
+          await faucetClient.drip.mutate({
+            address,
+          });
+        }
+      };
+
+      requestDrip();
+      // Request a drip every 20 seconds
+      setInterval(requestDrip, 20000);
+    }
   }
 
   /*
