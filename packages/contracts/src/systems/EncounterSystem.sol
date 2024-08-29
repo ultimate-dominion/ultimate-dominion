@@ -252,11 +252,18 @@ contract EncounterSystem is System {
             itemsDropped: itemsDropped
         });
 
+        bytes32[] memory emptyArray = new bytes32[](0);
         for (uint256 i; i < encounterData.attackers.length; i++) {
+            // clear encounterId
             EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
+            // remove combat status effects
+            EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
         }
         for (uint256 i; i < encounterData.defenders.length; i++) {
+            // clear encounter id
             EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+            // remove combat status effects
+            EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
         }
         CombatOutcome.set(encounterId, combatOutcome);
     }
