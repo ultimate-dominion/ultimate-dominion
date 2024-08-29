@@ -348,6 +348,7 @@ export default defineWorld({
      * - characterToken ERC721 character nft contract.
      * - entropy address of pyth entropy contract
      * - pythProvider address of pyth provider.
+     * - auctionHouse address of Auction House contract.
      */
     UltimateDominionConfig: {
       key: [],
@@ -358,6 +359,7 @@ export default defineWorld({
         entropy: "address",
         pythProvider: "address",
         items: "address",
+        auctionHouse: "address",
       },
     },
     ///////////////////////////////////// AUCTION HOUSE ///////////////////////////////////

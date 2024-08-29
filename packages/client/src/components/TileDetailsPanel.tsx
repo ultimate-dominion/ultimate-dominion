@@ -26,6 +26,7 @@ import {
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
+import { getEmoji, removeEmoji } from '../utils/helpers';
 import { type Character, EncounterType, type Monster } from '../utils/types';
 import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
@@ -199,7 +200,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           {currentBattle.encounterType === EncounterType.PvE ? (
             <VStack w="48%">
               <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-                {isDesktop ? opponent.name.slice(0, -3) : opponent.name}
+                {isDesktop ? removeEmoji(opponent.name) : opponent.name}
               </Text>
               {isDesktop && (
                 <Text
@@ -208,7 +209,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                   opacity={isMonsterHit ? 0 : 1}
                   transition="opacity 0.1s ease-in-out"
                 >
-                  {opponent.name.slice(-3)}
+                  {getEmoji(opponent.name)}
                 </Text>
               )}
             </VStack>
