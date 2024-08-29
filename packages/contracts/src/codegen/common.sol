@@ -41,8 +41,8 @@ enum EncounterType {
 
 enum EffectType {
   Temporary,
-  PhysicalAttack,
-  MagicAttack,
+  PhysicalDamage,
+  MagicDamage,
   StatusEffect
 }
 

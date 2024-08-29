@@ -160,7 +160,7 @@ contract CombatSystem is System {
 
         require(IWorld(_world()).UD__checkItemAction(itemId, effectId), "INVALID ACTION");
 
-        PhysicalDamageStatsData memory attackStats = PhysicalDamageStats.get(effectId);
+        PhysicalDamageStatsData memory attackStats = IWorld(_world()).UD__getPhysicalDamageStats(effectId);
 
         if (defender.currentHp > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
@@ -227,7 +227,7 @@ contract CombatSystem is System {
         ) / WAD * TO_HIT_MODIFIER;
         // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
         uint256 defenseTotal =
-            ((((defenseRoll) % 600) * getStatModifier(defender.adjustedAgility, 0)) / WAD) * DEFENSE_MODIFIER;
+            ((((defenseRoll) % 400) * getStatModifier(defender.adjustedAgility, 0)) / WAD) * DEFENSE_MODIFIER;
         attackLands = attackTotal >= defenseTotal;
 
         if (attackLands) {
@@ -254,7 +254,7 @@ contract CombatSystem is System {
 
         require(IWorld(_world()).UD__checkItemAction(spellId, effectId), "INVALID ACTION");
 
-        MagicDamageStatsData memory attackStats = MagicDamageStats.get(effectId);
+        MagicDamageStatsData memory attackStats = IWorld(_world()).UD__getMagicDamageStats(effectId);
 
         if (defender.currentHp > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);

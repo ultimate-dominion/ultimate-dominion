@@ -56,7 +56,7 @@ import {
     ArmorTemplateDetails,
     StarterItems,
     StarterEffects,
-    PhysicalAttackTemplate,
+    PhysicalDamageTemplate,
     WeaponStatDetails,
     ArmorStatDetails
 } from "@interfaces/Structs.sol";
@@ -219,24 +219,35 @@ contract PostDeploy is Script {
 
         StarterEffects memory effectsData = abi.decode(data, (StarterEffects));
 
-        for (uint256 i; i < effectsData.physicalAttacks.length; i++) {
+        for (uint256 i; i < effectsData.PhysicalDamages.length; i++) {
             bytes32 newEffectId = world.UD__createEffect(
-                EffectType.PhysicalAttack,
-                effectsData.physicalAttacks[i].name,
-                abi.encode(effectsData.physicalAttacks[i].stats)
+                EffectType.PhysicalDamage,
+                effectsData.PhysicalDamages[i].name,
+                abi.encode(effectsData.PhysicalDamages[i].stats)
             );
             console.log("Physical action id: ", i + 1);
             console.logBytes32(newEffectId);
-            require(newEffectId == effectsData.physicalAttacks[i].effectId, "Physical action Id mismatch");
+            require(newEffectId == effectsData.PhysicalDamages[i].effectId, "Physical effect Id mismatch");
         }
 
-        for (uint256 i; i < effectsData.magicAttacks.length; i++) {
+        for (uint256 i; i < effectsData.MagicDamages.length; i++) {
             bytes32 newEffectId = world.UD__createEffect(
-                EffectType.MagicAttack, effectsData.magicAttacks[i].name, abi.encode(effectsData.magicAttacks[i].stats)
+                EffectType.MagicDamage, effectsData.MagicDamages[i].name, abi.encode(effectsData.MagicDamages[i].stats)
             );
             console.log("Magic action Id ", i + 1);
             console.logBytes32(newEffectId);
-            require(newEffectId == effectsData.magicAttacks[i].effectId, "Magical action Id mismatch");
+            require(newEffectId == effectsData.MagicDamages[i].effectId, "Magical effect Id mismatch");
+        }
+
+        for (uint256 i; i < effectsData.statusEffects.length; i++) {
+            bytes32 newEffectId = world.UD__createEffect(
+                EffectType.MagicDamage,
+                effectsData.statusEffects[i].name,
+                abi.encode(effectsData.statusEffects[i].stats, effectsData.statusEffects[i].validity)
+            );
+            console.log("Magic action Id ", i + 1);
+            console.logBytes32(newEffectId);
+            require(newEffectId == effectsData.statusEffects[i].effectId, "status effect Id mismatch");
         }
     }
 
