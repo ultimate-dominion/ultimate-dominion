@@ -2822,6 +2822,11 @@ declare const abi: [
             "internalType": "int256"
           },
           {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
             "name": "effects",
             "type": "bytes32[]",
             "internalType": "bytes32[]"
