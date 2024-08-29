@@ -4,7 +4,7 @@ pragma solidity >=0.8.24;
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {EntropyStructs} from "@pythnetwork/EntropyStructs.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract MockEntropy is IEntropy {
     uint128 mockFee = 100000;

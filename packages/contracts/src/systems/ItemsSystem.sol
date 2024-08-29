@@ -18,14 +18,23 @@ import {
     Stats,
     StatsData,
     CharacterEquipment,
-    CharacterEquipmentData
+    CharacterEquipmentData,
+    ArmorStats,
+    ArmorStatsData,
+    WeaponStats,
+    WeaponStatsData,
+    StatRestrictions,
+    StatRestrictionsData,
+    SpellStatsData,
+    SpellStats,
+    ConsumableStats,
+    ConsumableStatsData
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess, _lootManagerSystemId} from "../utils.sol";
 import {ITEMS_NAMESPACE, WORLD_NAMESPACE} from "../../constants.sol";
-import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
@@ -38,7 +47,7 @@ import {
     _operatorApprovalTableId,
     _ownersTableId
 } from "@erc1155/utils.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract ItemsSystem is System {
     function createItem(
@@ -53,6 +62,36 @@ contract ItemsSystem is System {
         // create new item struct
         ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, stats: stats});
 
+        StatRestrictionsData memory statRestrictions;
+        if (itemType == ItemType.Weapon) {
+            WeaponStatsData memory weaponStats;
+            (weaponStats, statRestrictions) = abi.decode(stats, (WeaponStatsData, StatRestrictionsData));
+
+            // set weapon stats table
+            WeaponStats.set(itemId, weaponStats);
+            StatRestrictions.set(itemId, statRestrictions);
+        } else if (itemType == ItemType.Armor) {
+            ArmorStatsData memory armorStats;
+            (armorStats, statRestrictions) = abi.decode(stats, (ArmorStatsData, StatRestrictionsData));
+
+            // set armor stats table
+            ArmorStats.set(itemId, armorStats);
+            StatRestrictions.set(itemId, statRestrictions);
+        } else if (itemType == ItemType.Spell) {
+            SpellStatsData memory spellStats;
+            (spellStats, statRestrictions) = abi.decode(stats, (SpellStatsData, StatRestrictionsData));
+
+            // set Spell stats table
+            SpellStats.set(itemId, spellStats);
+            StatRestrictions.set(itemId, statRestrictions);
+        } else if (itemType == ItemType.Consumable) {
+            ConsumableStatsData memory consumableStats;
+            (consumableStats, statRestrictions) = abi.decode(stats, (ConsumableStatsData, StatRestrictionsData));
+
+            // set Consumable stats table
+            ConsumableStats.set(itemId, consumableStats);
+            StatRestrictions.set(itemId, statRestrictions);
+        }
         // mint supply to lootManager contract
         IWorld(_world()).call(
             _erc1155SystemId(ITEMS_NAMESPACE),
@@ -99,7 +138,7 @@ contract ItemsSystem is System {
         uint256 len = itemTypes.length;
         require(
             supply.length == len && itemMetadataURIs.length == len && stats.length == len,
-            "ITEMS: Array length misencounter"
+            "ITEMS: Array length mismatch"
         );
 
         for (uint256 i; i < len; i++) {
@@ -144,7 +183,7 @@ contract ItemsSystem is System {
 
     function setStarterItems(Classes class, uint256[] memory itemIds, uint256[] memory amounts) public {
         _requireOwner(address(this), _msgSender());
-        require(itemIds.length == amounts.length, "ITEMS: Length misencounter");
+        require(itemIds.length == amounts.length, "ITEMS: Length mismatch");
         StarterItems.set(class, itemIds, amounts);
     }
 
@@ -157,7 +196,17 @@ contract ItemsSystem is System {
     }
 
     // function getArmorStats(uint256 itemId)public view returns(){}
-    // function getPotionStats(uint256 itemId)public view returns(){}
+
+    function consumeItem(bytes32 characterId, uint256 itemId) public {
+        _requireAccess(address(this), _msgSender());
+
+        address playerAddr = IWorld(_world()).UD__getOwnerAddress(characterId);
+        address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
+        //will require approval
+        _items().safeTransferFrom(playerAddr, lootManager, itemId, 1, "");
+    }
+
+    // function getConsumableStats(uint256 itemId)public view returns(){}
     // function getScrollStats(uint256 itemId)public view returns(){}
     // function getMaterialStats(uint256 itemId)public view returns(){}
 }

@@ -4,8 +4,6 @@ import {
   getComponentValue,
   getComponentValueStrict,
   Has,
-  HasValue,
-  runQuery,
 } from '@latticexyz/recs';
 import { decodeEntity } from '@latticexyz/store-sync/recs';
 import {
@@ -16,7 +14,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { formatEther, formatUnits } from 'viem';
+import { formatEther } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
@@ -25,8 +23,7 @@ import {
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
 import {
-  type ActionOutcomeType,
-  ActionType,
+  type AttackOutcomeType,
   type Character,
   type CombatDetails,
   type CombatOutcomeType,
@@ -37,7 +34,7 @@ import { useMap } from './MapContext';
 import { useMUD } from './MUDContext';
 
 type BattleContextType = {
-  actionOutcomes: ActionOutcomeType[];
+  attackOutcomes: AttackOutcomeType[];
   attackingItemId: null | string;
   continueToBattleOutcome: boolean;
   currentBattle: CombatDetails | null;
@@ -49,7 +46,7 @@ type BattleContextType = {
 };
 
 const BattleContext = createContext<BattleContextType>({
-  actionOutcomes: [],
+  attackOutcomes: [],
   attackingItemId: null,
   continueToBattleOutcome: false,
   currentBattle: null,
@@ -69,7 +66,7 @@ export const BattleProvider = ({
 }: BattleProviderProps): JSX.Element => {
   const { renderError } = useToast();
   const {
-    components: { ActionOutcome, Actions, CombatEncounter, CombatOutcome },
+    components: { AttackOutcome, CombatEncounter, CombatOutcome },
     delegatorAddress,
     systemCalls: { endTurn },
   } = useMUD();
@@ -176,53 +173,51 @@ export const BattleProvider = ({
     return allCharacters.find(char => char.id === character.id) ?? null;
   }, [allCharacters, character]);
 
-  const allActionOutcomes = useEntityQuery([Has(ActionOutcome)])
+  const allAttackOutcomes = useEntityQuery([Has(AttackOutcome)])
     .map(entity => {
-      const _actionOutcome = getComponentValueStrict(ActionOutcome, entity);
+      const _attackOutcome = getComponentValueStrict(AttackOutcome, entity);
 
-      const { encounterId, currentTurn, actionNumber } = decodeEntity(
+      const { encounterId, currentTurn, attackNumber } = decodeEntity(
         {
           encounterId: 'bytes32',
           currentTurn: 'uint256',
-          actionNumber: 'uint256',
+          attackNumber: 'uint256',
         },
         entity,
       );
 
       return {
-        attackerDamageDelt: formatUnits(
-          _actionOutcome.attackerDamageDelt,
-          5,
-        ).toString(),
-        attackerDied: _actionOutcome.attackerDied,
-        attackerId: _actionOutcome.attackerId.toString(),
-        actionId: _actionOutcome.actionId.toString(),
-        actionNumber: actionNumber.toString(),
-        blockNumber: _actionOutcome.blockNumber.toString(),
-        crit: _actionOutcome.crit,
+        attackerDamageDelt: _attackOutcome.attackerDamageDelt.toString(),
+        attackerDied: _attackOutcome.attackerDied,
+        attackerId: _attackOutcome.attackerId.toString(),
+        attackNumber: attackNumber.toString(),
+        blockNumber: _attackOutcome.blockNumber.toString(),
+        crit: _attackOutcome.crit,
         currentTurn: currentTurn.toString(),
-        defenderDamageDelt: _actionOutcome.defenderDamageDelt.toString(),
-        defenderDied: _actionOutcome.defenderDied,
-        defenderId: _actionOutcome.defenderId.toString(),
+        effectIds: _attackOutcome.effectIds.map(e => e.toString()),
         encounterId: encounterId.toString(),
-        hit: _actionOutcome.hit,
-        miss: _actionOutcome.miss,
-        timestamp: _actionOutcome.timestamp.toString(),
-        weaponId: _actionOutcome.weaponId.toString(),
-      } as ActionOutcomeType;
+        damagePerHit: _attackOutcome.damagePerHit.map(d => d.toString()),
+        defenderDamageDelt: _attackOutcome.defenderDamageDelt.toString(),
+        defenderDied: _attackOutcome.defenderDied,
+        defenderId: _attackOutcome.defenderId.toString(),
+        hit: _attackOutcome.hit,
+        itemId: _attackOutcome.itemId.toString(),
+        miss: _attackOutcome.miss,
+        timestamp: _attackOutcome.timestamp.toString(),
+      } as AttackOutcomeType;
     })
     .filter(
-      action =>
-        action.attackerId === character?.id ||
-        action.defenderId === character?.id,
+      attack =>
+        attack.attackerId === character?.id ||
+        attack.defenderId === character?.id,
     );
 
-  const currentBattleActionOutcomes = useMemo(
+  const currentBattleAttackOutcomes = useMemo(
     () =>
-      allActionOutcomes.filter(
-        action => action.encounterId === currentBattle?.encounterId,
+      allAttackOutcomes.filter(
+        attack => attack.encounterId === currentBattle?.encounterId,
       ),
-    [allActionOutcomes, currentBattle],
+    [allAttackOutcomes, currentBattle],
   );
 
   const onAttack = useCallback(
@@ -246,22 +241,10 @@ export const BattleProvider = ({
           throw new Error('Opponent not found.');
         }
 
-        const basicAttackId = Array.from(
-          runQuery([
-            Has(Actions),
-            HasValue(Actions, { actionType: ActionType.PhysicalAttack }),
-          ]),
-        )[0];
-
-        if (!basicAttackId) {
-          throw new Error('Basic attack not found.');
-        }
-
         const { error, success } = await endTurn(
           currentBattle.encounterId,
           character.id,
           opponent.id,
-          basicAttackId,
           itemId,
           currentTurn,
         );
@@ -281,7 +264,6 @@ export const BattleProvider = ({
       }
     },
     [
-      Actions,
       character,
       currentBattle,
       delegatorAddress,
@@ -295,7 +277,7 @@ export const BattleProvider = ({
   return (
     <BattleContext.Provider
       value={{
-        actionOutcomes: currentBattleActionOutcomes,
+        attackOutcomes: currentBattleAttackOutcomes,
         attackingItemId,
         continueToBattleOutcome,
         currentBattle,

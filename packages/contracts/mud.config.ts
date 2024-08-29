@@ -17,11 +17,12 @@ export default defineWorld({
       "Mage", // 2
     ],
     RngRequestType: ["CharacterStats", "Combat", "WorldGeneration"],
-    ItemType: ["Weapon", "Armor", "Spell", "Potion", "Utility", "QuestItem"],
+    ItemType: ["Weapon", "Armor", "Spell", "Consumable", "QuestItem"],
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
-    ActionType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
+    EffectType: ["Temporary", "PhysicalDamage", "MagicDamage", "StatusEffect"],
+    ResistanceStat: ["None", "Strength", "Agility", "Intelligence"],
     OrderStatus: ["Canceled", "Active", "Fullfilled"],
     TokenType: ["NATIVE", "ERC20", "ERC721", "ERC1155"],
     StatusEffects: [
@@ -44,6 +45,34 @@ export default defineWorld({
         isAdmin: "bool",
       },
     },
+    RandomNumbers: {
+      key: ["sequenceNumber"],
+      schema: {
+        sequenceNumber: "uint64",
+        requestType: "RngRequestType",
+        arbitraryData: "bytes",
+      },
+    },
+    Counters: {
+      schema: {
+        contractAddress: "address",
+        counterId: "uint256",
+        counter: "uint256",
+      },
+      key: ["contractAddress", "counterId"],
+    },
+    /**
+     * Stores players chosen names.
+     */
+    Name: "string",
+    NameExists: {
+      key: ["nameData"],
+      schema: {
+        nameData: "bytes32",
+        value: "bool",
+      },
+    },
+    //////////////////////////////////////////////////// CHARACTERS & NPCS ///////////////////////////////////////////////
     Characters: {
       key: ["characterId"],
       schema: {
@@ -68,23 +97,6 @@ export default defineWorld({
         level: "uint256",
       },
     },
-    MapConfig: {
-      key: [],
-      schema: {
-        height: "uint16",
-        width: "uint16",
-      },
-      codegen: {
-        dataStruct: false,
-      },
-    },
-    Spawned: {
-      key: ["entityId"],
-      schema: {
-        entityId: "bytes32",
-        spawned: "bool",
-      },
-    },
     Mobs: {
       key: ["mobId"],
       schema: {
@@ -92,6 +104,21 @@ export default defineWorld({
         mobType: "MobType",
         mobStats: "bytes",
         mobMetadata: "string",
+      },
+    },
+    MonsterStats: {
+      key: ["mobId"],
+      schema: {
+        mobId: "uint256",
+        agility: "uint256",
+        armor: "uint256",
+        class: "Classes",
+        experience: "uint256",
+        hitPoints: "uint256",
+        intelligence: "uint256",
+        level: "uint256",
+        strength: "uint256",
+        inventory: "uint256[]",
       },
     },
     MobsByLevel: {
@@ -116,46 +143,78 @@ export default defineWorld({
         agiBonus: "int256",
         intBonus: "int256",
         hpBonus: "int256",
-        armor: "uint256",
+        armor: "int256",
         equippedArmor: "uint256[]",
         equippedWeapons: "uint256[]",
-        equippedSpells: "bytes32[]",
+        equippedSpells: "uint256[]",
+        equippedConsumables: "uint256[]",
       },
     },
-    PvPFlag: {
-      key: ["entityId"],
-      schema: {
-        entityId: "bytes32",
-        pvpFlag: "bool",
-      },
-    },
-    Counters: {
-      schema: {
-        contractAddress: "address",
-        counterId: "uint256",
-        counter: "uint256",
-      },
-      key: ["contractAddress", "counterId"],
-    },
+    ///////////////////////////////////////// ITEMS ///////////////////////////////////////////////////////
     Items: {
       schema: {
         itemId: "uint256",
         itemType: "ItemType",
         dropChance: "uint256",
         stats: "bytes",
-        // probability in 10^6 e.g. 20_000_000 = 20%
       },
       key: ["itemId"],
     },
-    Actions: {
+    StatRestrictions: {
+      key: ["itemId"],
       schema: {
-        actionId: "bytes32",
-        actionType: "ActionType",
-        actionStats: "bytes",
+        itemId: "uint256",
+        minAgility: "uint256",
+        minIntelligence: "uint256",
+        minStrength: "uint256",
       },
-      key: ["actionId"],
     },
-
+    WeaponStats: {
+      schema: {
+        itemId: "uint256",
+        agiModifier: "int256",
+        intModifier: "int256",
+        hpModifier: "int256",
+        maxDamage: "int256",
+        minDamage: "int256",
+        minLevel: "uint256",
+        strModifier: "int256",
+        effects: "bytes32[]",
+      },
+      key: ["itemId"],
+    },
+    ArmorStats: {
+      schema: {
+        itemId: "uint256",
+        agiModifier: "int256",
+        armorModifier: "int256",
+        hpModifier: "int256",
+        intModifier: "int256",
+        minLevel: "uint256",
+        strModifier: "int256",
+      },
+      key: ["itemId"],
+    },
+    SpellStats: {
+      key: ["itemId"],
+      schema: {
+        itemId: "uint256",
+        minDamage: "int256",
+        maxDamage: "int256",
+        minLevel: "uint256",
+        effects: "bytes32[]",
+      },
+    },
+    ConsumableStats: {
+      key: ["itemId"],
+      schema: {
+        itemId: "uint256",
+        minDamage: "int256",
+        maxDamage: "int256",
+        minLevel: "uint256",
+        effects: "bytes32[]",
+      },
+    },
     StarterItems: {
       key: ["class"],
       schema: {
@@ -164,17 +223,60 @@ export default defineWorld({
         amounts: "uint256[]",
       },
     },
-    /**
-     * Stores players chosen names.
-     */
-    Name: "string",
-    NameExists: {
-      key: ["nameData"],
+    /////////////////////////////////// ACTIONS ////////////////////////////////////////////////////////////////////////////
+    // Effects apply damage and or status effects
+    Effects: {
       schema: {
-        nameData: "bytes32",
-        value: "bool",
+        effectId: "bytes32",
+        effectType: "EffectType",
+        effectExists: "bool",
+      },
+      key: ["effectId"],
+    },
+    PhysicalDamageStats: {
+      key: ["effectId"],
+      schema: {
+        effectId: "bytes32",
+        armorPenetration: "int256",
+        attackModifierBonus: "int256",
+        bonusDamage: "int256",
+        critChanceBonus: "int256",
       },
     },
+
+    MagicDamageStats: {
+      key: ["effectId"],
+      schema: {
+        effectId: "bytes32",
+        attackModifierBonus: "int256",
+        bonusDamage: "int256",
+        critChanceBonus: "int256",
+      },
+    },
+    StatusEffectStats: {
+      key: ["effectId"],
+      schema: {
+        effectId: "bytes32",
+        agiModifier: "int256",
+        armorModifier: "int256",
+        damagePerTick: "int256",
+        hpModifier: "int256",
+        intModifier: "int256",
+        resistanceStat: "ResistanceStat",
+        strModifier: "int256",
+      },
+    },
+    StatusEffectsValidity: {
+      key: ["effectId"],
+      schema: {
+        effectId: "bytes32",
+        cooldown: "uint256",
+        maxStacks: "uint256",
+        validTime: "uint256",
+        validTurns: "uint256",
+      },
+    },
+    ////////////////////////////////// ENCOUNTERS ///////////////////////////////////////////////////////////////////////////////
     CombatEncounter: {
       schema: {
         //keccak hash of (attackers, defenders, encounterType, startTime)
@@ -207,14 +309,32 @@ export default defineWorld({
         // by default this is bytes(0), if this entity is in an encounter it will be set,
         encounterId: "bytes32",
         died: "bool",
+        appliedStatusEffects: "bytes32[]",
       },
     },
-    RandomNumbers: {
-      key: ["sequenceNumber"],
+    WorldStatusEffects: {
+      key: ["entityId"],
       schema: {
-        sequenceNumber: "uint64",
-        requestType: "RngRequestType",
-        arbitraryData: "bytes",
+        entityId: "bytes32",
+        appliedStatusEffects: "bytes32[]",
+      },
+    },
+    ///////////////////////////////////// MAP //////////////////////////////////////////////
+    MapConfig: {
+      key: [],
+      schema: {
+        height: "uint16",
+        width: "uint16",
+      },
+      codegen: {
+        dataStruct: false,
+      },
+    },
+    Spawned: {
+      key: ["entityId"],
+      schema: {
+        entityId: "bytes32",
+        spawned: "bool",
       },
     },
     /**
@@ -260,7 +380,7 @@ export default defineWorld({
         auctionHouse: "address",
       },
     },
-    ///////// AUCTION HOUSE ////////////
+    ///////////////////////////////////// AUCTION HOUSE ///////////////////////////////////
     Orders: {
       key: ["orderHash"],
       schema: {
@@ -291,7 +411,7 @@ export default defineWorld({
         amount: "uint256",
       },
     },
-    ///////////////////////// OFFCHAIN TABLES//////////////////
+    ////////////////////////////////////////// OFFCHAIN TABLES////////////////////////////////////////
     RngLogs: {
       key: ["requestId"],
       schema: {
@@ -307,26 +427,27 @@ export default defineWorld({
       },
       type: "offchainTable",
     },
-    ActionOutcome: {
+    AttackOutcome: {
       schema: {
         encounterId: "bytes32",
         currentTurn: "uint256",
-        actionNumber: "uint256",
-        actionId: "bytes32",
-        weaponId: "uint256",
+        attackNumber: "uint256",
+        itemId: "uint256",
         attackerId: "bytes32",
         defenderId: "bytes32",
-        hit: "bool",
-        miss: "bool",
-        crit: "bool",
         attackerDamageDelt: "int256",
         defenderDamageDelt: "int256",
         attackerDied: "bool",
         defenderDied: "bool",
         blockNumber: "uint256",
         timestamp: "uint256",
+        damagePerHit: "int256[]",
+        effectIds: "bytes32[]",
+        hit: "bool[]",
+        miss: "bool[]",
+        crit: "bool[]",
       },
-      key: ["encounterId", "currentTurn", "actionNumber"],
+      key: ["encounterId", "currentTurn", "attackNumber"],
       type: "offchainTable",
     },
     CombatOutcome: {

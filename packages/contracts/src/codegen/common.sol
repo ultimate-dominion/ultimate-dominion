@@ -18,8 +18,7 @@ enum ItemType {
   Weapon,
   Armor,
   Spell,
-  Potion,
-  Utility,
+  Consumable,
   QuestItem
 }
 
@@ -40,11 +39,18 @@ enum EncounterType {
   PvE
 }
 
-enum ActionType {
+enum EffectType {
   Temporary,
-  PhysicalAttack,
-  MagicAttack,
+  PhysicalDamage,
+  MagicDamage,
   StatusEffect
+}
+
+enum ResistanceStat {
+  None,
+  Strength,
+  Agility,
+  Intelligence
 }
 
 enum OrderStatus {

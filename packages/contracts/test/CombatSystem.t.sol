@@ -4,7 +4,7 @@ import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, EncounterType} from "@codegen/common.sol";
 import {StatsData, Stats} from "@tables/Stats.sol";
 import {EncounterEntity} from "@tables/EncounterEntity.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
@@ -14,7 +14,7 @@ import {IERC1155MetadataURI} from "@erc1155/IERC1155MetadataURI.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
-import {WeaponStats, ArmorStats, Action, Action} from "@interfaces/Structs.sol";
+import {Attack} from "@interfaces/Structs.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {_itemsSystemId, _mobSystemId, _rngSystemId} from "../src/utils.sol";
@@ -113,26 +113,16 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(alice);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, pvpDefenders, attackers);
 
-        Action[] memory bobActions = new Action[](1);
-        Action[] memory aliceActions = new Action[](1);
+        Attack[] memory bobAttacks = new Attack[](1);
+        Attack[] memory aliceAttacks = new Attack[](1);
 
         vm.prank(bob);
         // bob's move
-        bobActions[0] = Action({
-            attackerEntityId: bobCharacterId,
-            defenderEntityId: alicesCharacterId,
-            actionId: basicMagicAttackId,
-            weaponId: 6
-        });
+        bobAttacks[0] = Attack({attackerEntityId: bobCharacterId, defenderEntityId: alicesCharacterId, itemId: 6});
 
         //alice's move
 
-        aliceActions[0] = Action({
-            attackerEntityId: alicesCharacterId,
-            defenderEntityId: bobCharacterId,
-            actionId: basicAttackId,
-            weaponId: 6
-        });
+        aliceAttacks[0] = Attack({attackerEntityId: alicesCharacterId, defenderEntityId: bobCharacterId, itemId: 6});
 
         uint256 fees = 0; // entropy.getFee(address(1));
 
@@ -141,7 +131,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         // alice should move 1st even though she is defender if combat timer is out
         vm.warp(block.timestamp + 31);
         vm.prank(alice);
-        world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+        world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceAttacks);
     }
 
     function test_CreateEncounterPvP_Revert_WrongPosition() public {
@@ -177,9 +167,9 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
     function test_ExecutePvECombat_Revert_No_Access(address caller) public {
         vm.assume(caller != world.UD__getSystemAddress(_rngSystemId("")));
-        Action[] memory actions = new Action[](1);
+        Attack[] memory effects = new Attack[](1);
         vm.expectRevert();
-        world.UD__executePvECombat(1000000000, keccak256(abi.encode("11111")), actions);
+        world.UD__executePvECombat(1000000000, keccak256(abi.encode("11111")), effects);
     }
 
     function test_EndTurn_EndsPvEEncounter() public {
@@ -187,21 +177,16 @@ contract Test_CombatSystem is SetUp, GasReporter {
         uint256 startingGold = goldToken.balanceOf(bob);
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
-        Action[] memory actions = new Action[](1);
+        Attack[] memory effects = new Attack[](1);
 
-        actions[0] = Action({
-            attackerEntityId: bobCharacterId,
-            defenderEntityId: entityId,
-            actionId: basicMagicAttackId,
-            weaponId: 6
-        });
+        effects[0] = Attack({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: 6});
         uint256 fees = 0; // entropy.getFee(address(1));
         vm.prank(bob);
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, effects);
 
         while (world.UD__getEncounter(encounterId).end == 0) {
             vm.prank(bob);
-            world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+            world.UD__endTurn{value: fees}(encounterId, bobCharacterId, effects);
         }
 
         StatsData memory endingStats = Stats.get(bobCharacterId);
@@ -259,39 +244,31 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, attackers, pvpDefenders);
 
-        Action[] memory bobActions = new Action[](1);
-        Action[] memory aliceActions = new Action[](1);
+        Attack[] memory bobAttacks = new Attack[](1);
+        Attack[] memory aliceAttacks = new Attack[](1);
 
         vm.prank(bob);
         // bob's move
-        bobActions[0] = Action({
-            attackerEntityId: bobCharacterId,
-            defenderEntityId: alicesCharacterId,
-            actionId: basicMagicAttackId,
-            weaponId: 6
-        });
+        bobAttacks[0] = Attack({attackerEntityId: bobCharacterId, defenderEntityId: alicesCharacterId, itemId: 6});
 
         uint256 fees = 0; // entropy.getFee(address(1));
 
         //alice's move
 
-        aliceActions[0] = Action({
-            attackerEntityId: alicesCharacterId,
-            defenderEntityId: bobCharacterId,
-            actionId: basicAttackId,
-            weaponId: 6
-        });
+        aliceAttacks[0] = Attack({attackerEntityId: alicesCharacterId, defenderEntityId: bobCharacterId, itemId: 6});
 
         while (world.UD__getEncounter(encounterId).end == 0) {
             vm.prank(bob);
-            world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
+            console.log("bob move magic");
+            world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobAttacks);
             // break if bob wins
             if (world.UD__getEncounter(encounterId).end != 0) {
                 break;
             }
             // bob's move
             vm.prank(alice);
-            world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+            console.log("alice move physical");
+            world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceAttacks);
         }
 
         StatsData memory endingBobStats = Stats.get(bobCharacterId);
@@ -312,11 +289,10 @@ contract Test_CombatSystem is SetUp, GasReporter {
     function test_EndTurn_Revert_NonCombatant() public {
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
-        Action[] memory actions = new Action[](1);
-        actions[0] =
-            Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, actionId: basicAttackId, weaponId: 1});
+        Attack[] memory effects = new Attack[](1);
+        effects[0] = Attack({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: 1});
         uint256 fees = entropy.getFee(address(1));
         vm.expectRevert("ENCOUNTER SYSTEM: NON-COMBATANT");
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, effects);
     }
 }

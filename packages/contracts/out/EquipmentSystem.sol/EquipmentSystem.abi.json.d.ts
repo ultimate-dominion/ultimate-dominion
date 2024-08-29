@@ -56,28 +56,28 @@ declare const abi: [
         "components": [
           {
             "name": "adjustedStrength",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedAgility",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedIntelligence",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedArmor",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "adjustedMaxHp",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "currentHp",
@@ -90,6 +90,30 @@ declare const abi: [
             "internalType": "uint256"
           }
         ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "checkItemEffect",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "hasAction",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -150,7 +174,7 @@ declare const abi: [
       {
         "name": "_ArmorStats",
         "type": "tuple",
-        "internalType": "struct ArmorStats",
+        "internalType": "struct ArmorStatsData",
         "components": [
           {
             "name": "agiModifier",
@@ -159,11 +183,11 @@ declare const abi: [
           },
           {
             "name": "armorModifier",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "hitPointModifier",
+            "name": "hpModifier",
             "type": "int256",
             "internalType": "int256"
           },
@@ -178,31 +202,69 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "statRestrictions",
-            "type": "tuple",
-            "internalType": "struct StatRestrictions",
-            "components": [
-              {
-                "name": "minAgility",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minIntelligence",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minStrength",
-                "type": "uint256",
-                "internalType": "uint256"
-              }
-            ]
-          },
-          {
             "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getItemEffects",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "effects",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getSpellStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_spellStats",
+        "type": "tuple",
+        "internalType": "struct SpellStatsData",
+        "components": [
+          {
+            "name": "minDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "effects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
           }
         ]
       }
@@ -223,15 +285,10 @@ declare const abi: [
       {
         "name": "_weaponStats",
         "type": "tuple",
-        "internalType": "struct WeaponStats",
+        "internalType": "struct WeaponStatsData",
         "components": [
           {
             "name": "agiModifier",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "hitPointModifier",
             "type": "int256",
             "internalType": "int256"
           },
@@ -241,14 +298,19 @@ declare const abi: [
             "internalType": "int256"
           },
           {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
             "name": "maxDamage",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "minDamage",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "minLevel",
@@ -256,31 +318,14 @@ declare const abi: [
             "internalType": "uint256"
           },
           {
-            "name": "statRestrictions",
-            "type": "tuple",
-            "internalType": "struct StatRestrictions",
-            "components": [
-              {
-                "name": "minAgility",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minIntelligence",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "minStrength",
-                "type": "uint256",
-                "internalType": "uint256"
-              }
-            ]
-          },
-          {
             "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
+          },
+          {
+            "name": "effects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
           }
         ]
       }

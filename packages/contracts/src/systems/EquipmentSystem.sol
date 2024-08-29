@@ -19,14 +19,22 @@ import {
     Stats,
     StatsData,
     CharacterEquipment,
-    CharacterEquipmentData
+    CharacterEquipmentData,
+    WeaponStats,
+    WeaponStatsData,
+    ArmorStats,
+    ArmorStatsData,
+    SpellStats,
+    SpellStatsData,
+    ConsumableStats,
+    StatRestrictions,
+    StatRestrictionsData
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess} from "../utils.sol";
 import {ITEMS_NAMESPACE} from "../../constants.sol";
-import {WeaponStats, ArmorStats} from "@interfaces/Structs.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
@@ -40,7 +48,7 @@ import {
     _ownersTableId
 } from "@erc1155/utils.sol";
 import {AdjustedCombatStats, MonsterStats} from "@interfaces/Structs.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract EquipmentSystem is System {
     modifier inGame(bytes32 characterId) {
@@ -51,14 +59,14 @@ contract EquipmentSystem is System {
 
     function equipItems(bytes32 characterId, uint256[] memory itemIds) public inGame(characterId) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
-        require(characterOwner == _msgSender(), "ITEMS: Not Character Owner");
+        require(characterOwner == _msgSender(), "EQUIPMENT: Not Character Owner");
         uint256 itemId;
         for (uint256 i; i < itemIds.length; i++) {
             itemId = itemIds[i];
-            require(IWorld(_world()).UD__isItemOwner(itemId, _msgSender()), "ITEMS: Not Item Owner");
+            require(IWorld(_world()).UD__isItemOwner(itemId, _msgSender()), "EQUIPMENT: Not Item Owner");
             ItemsData memory itemData = Items.get(itemId);
-            require(uint8(itemData.itemType) < 3, "ITEMS: Not an equippable Item");
-            require(checkRequirements(characterId, itemId), "ITEMS: Requirements not met");
+            require(uint8(itemData.itemType) < 4, "EQUIPMENT: Not an equippable Item");
+            require(checkRequirements(characterId, itemId), "EQUIPMENT: Requirements not met");
             _equipItem(characterId, itemId, itemData.itemType);
         }
         _setEquipmentBonuses(characterId);
@@ -89,9 +97,28 @@ contract EquipmentSystem is System {
                 }
             }
         } else if (uint8(itemData.itemType) == 2) {
-            // spells
-        }
-        else {
+            uint256[] memory equippedSpells = CharacterEquipment.getEquippedSpells(characterId);
+            for (uint256 i; i < equippedSpells.length;) {
+                if (equippedSpells[i] == itemId) {
+                    _isEquipped = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        } else if (uint8(itemData.itemType) == 3) {
+            uint256[] memory equippedConsumables = CharacterEquipment.getEquippedConsumables(characterId);
+            for (uint256 i; i < equippedConsumables.length;) {
+                if (equippedConsumables[i] == itemId) {
+                    _isEquipped = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        } else {
             revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
     }
@@ -99,23 +126,37 @@ contract EquipmentSystem is System {
     function checkRequirements(bytes32 characterId, uint256 itemId) public view returns (bool canUse) {
         ItemsData memory itemData = Items.get(itemId);
         StatsData memory character = Stats.get(characterId);
-
+        StatRestrictionsData memory statRestrictions = StatRestrictions.get(itemId);
         if (uint8(itemData.itemType) == 0) {
-            WeaponStats memory weaponStats = abi.decode(itemData.stats, (WeaponStats));
-            bool isLevel = character.level >= weaponStats.minLevel;
+            bool isLevel = character.level >= WeaponStats.getMinLevel(itemId);
             bool hasStats = true;
-            if (weaponStats.statRestrictions.minAgility > character.agility) hasStats = false;
-            if (weaponStats.statRestrictions.minStrength > character.strength) hasStats = false;
-            if (weaponStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+            if (statRestrictions.minAgility > character.agility) hasStats = false;
+            if (statRestrictions.minStrength > character.strength) hasStats = false;
+            if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
         }
         if (uint8(itemData.itemType) == 1) {
-            ArmorStats memory armorStats = abi.decode(itemData.stats, (ArmorStats));
-            bool isLevel = character.level >= armorStats.minLevel;
+            bool isLevel = character.level >= ArmorStats.getMinLevel(itemId);
             bool hasStats = true;
-            if (armorStats.statRestrictions.minAgility > character.agility) hasStats = false;
-            if (armorStats.statRestrictions.minStrength > character.strength) hasStats = false;
-            if (armorStats.statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+            if (statRestrictions.minAgility > character.agility) hasStats = false;
+            if (statRestrictions.minStrength > character.strength) hasStats = false;
+            if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+            if (isLevel && hasStats) canUse = true;
+        }
+        if (uint8(itemData.itemType) == 2) {
+            bool isLevel = character.level >= SpellStats.getMinLevel(itemId);
+            bool hasStats = true;
+            if (statRestrictions.minAgility > character.agility) hasStats = false;
+            if (statRestrictions.minStrength > character.strength) hasStats = false;
+            if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+            if (isLevel && hasStats) canUse = true;
+        }
+        if (uint8(itemData.itemType) == 3) {
+            bool isLevel = character.level >= ConsumableStats.getMinLevel(itemId);
+            bool hasStats = true;
+            if (statRestrictions.minAgility > character.agility) hasStats = false;
+            if (statRestrictions.minStrength > character.strength) hasStats = false;
+            if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
         }
         return canUse;
@@ -133,21 +174,29 @@ contract EquipmentSystem is System {
         }
 
         if (uint8(itemType) == 2) {
-            // require(CharacterEquipment.lengthEquippedSpells(characterId) < 3, "ITEMS: Too many weapons equipped");
-            // CharacterEquipment.pushEquippedSpells(characterId, itemId);
+            require(CharacterEquipment.lengthEquippedSpells(characterId) < 3, "ITEMS: Too many spells equipped");
+            CharacterEquipment.pushEquippedSpells(characterId, itemId);
+        }
+
+        if (uint8(itemType) == 4) {
+            require(
+                CharacterEquipment.lengthEquippedConsumables(characterId) < 3, "ITEMS: Too many consumables equipped"
+            );
+            CharacterEquipment.pushEquippedConsumables(characterId, itemId);
         }
     }
 
     function _setEquipmentBonuses(bytes32 characterId) internal {
         uint256[] memory equippedArmor = CharacterEquipment.getEquippedArmor(characterId);
         uint256[] memory equippedWeapons = CharacterEquipment.getEquippedWeapons(characterId);
-        uint256 totalArmor;
+
+        int256 totalArmor;
         int256 totalStrModifiers;
         int256 totalAgiModifiers;
         int256 totalIntModifiers;
         int256 totalHPModifiers;
-        ArmorStats memory armorStats;
-        WeaponStats memory weaponStats;
+        ArmorStatsData memory armorStats;
+        WeaponStatsData memory weaponStats;
         if (equippedArmor.length > 0) {
             for (uint256 i; i < equippedArmor.length; i++) {
                 armorStats = getArmorStats(equippedArmor[i]);
@@ -155,7 +204,7 @@ contract EquipmentSystem is System {
                 totalStrModifiers += armorStats.strModifier;
                 totalAgiModifiers += armorStats.agiModifier;
                 totalIntModifiers += armorStats.intModifier;
-                totalHPModifiers += armorStats.hitPointModifier;
+                totalHPModifiers += armorStats.hpModifier;
             }
         }
         if (equippedWeapons.length > 0) {
@@ -164,7 +213,7 @@ contract EquipmentSystem is System {
                 totalStrModifiers += weaponStats.strModifier;
                 totalAgiModifiers += weaponStats.agiModifier;
                 totalIntModifiers += weaponStats.intModifier;
-                totalHPModifiers += weaponStats.hitPointModifier;
+                totalHPModifiers += weaponStats.hpModifier;
             }
         }
         CharacterEquipment.setStrBonus(characterId, totalStrModifiers);
@@ -194,15 +243,22 @@ contract EquipmentSystem is System {
                 success = true;
             }
         } else if (itemType == uint8(2)) {
-            // uint256[] memory sortedArray =
-            //     _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
-            // if (sortedArray[sortedArray.length - 1] == itemId) {
-            //     CharacterEquipment.setEquippedSpells(characterId, sortedArray);
-            //     CharacterEquipment.popEquippedSpells(characterId);
-            //     success = true;
-            // }
-        }
-        else {
+            uint256[] memory sortedArray =
+                _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
+            if (sortedArray[sortedArray.length - 1] == itemId) {
+                CharacterEquipment.setEquippedSpells(characterId, sortedArray);
+                CharacterEquipment.popEquippedSpells(characterId);
+                success = true;
+            }
+        } else if (itemType == uint8(3)) {
+            uint256[] memory sortedArray =
+                _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedConsumables(characterId));
+            if (sortedArray[sortedArray.length - 1] == itemId) {
+                CharacterEquipment.setEquippedConsumables(characterId, sortedArray);
+                CharacterEquipment.popEquippedConsumables(characterId);
+                success = true;
+            }
+        } else {
             revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
         _setEquipmentBonuses(characterId);
@@ -215,35 +271,27 @@ contract EquipmentSystem is System {
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
 
-            combatStats.adjustedStrength = uint256(
-                int256(entityStats.strength) + equipmentStats.strBonus >= 0
-                    ? int256(entityStats.strength) + equipmentStats.strBonus
-                    : int256(0)
-            );
-            combatStats.adjustedAgility = uint256(
-                int256(entityStats.agility) + equipmentStats.agiBonus >= 0
-                    ? int256(entityStats.agility) + equipmentStats.agiBonus
-                    : int256(0)
-            );
-            combatStats.adjustedIntelligence = uint256(
-                int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
-                    ? int256(entityStats.intelligence) + equipmentStats.intBonus
-                    : int256(0)
-            );
-            combatStats.adjustedMaxHp = uint256(
-                int256(entityStats.baseHp) + equipmentStats.hpBonus >= 0
-                    ? int256(entityStats.baseHp) + equipmentStats.hpBonus
-                    : int256(1)
-            );
-            combatStats.currentHp = entityStats.currentHp;
+            combatStats.adjustedStrength = int256(entityStats.strength) + equipmentStats.strBonus >= 0
+                ? int256(entityStats.strength) + equipmentStats.strBonus
+                : int256(0);
+            combatStats.adjustedAgility = int256(entityStats.agility) + equipmentStats.agiBonus >= 0
+                ? int256(entityStats.agility) + equipmentStats.agiBonus
+                : int256(0);
+            combatStats.adjustedIntelligence = int256(entityStats.intelligence) + equipmentStats.intBonus >= 0
+                ? int256(entityStats.intelligence) + equipmentStats.intBonus
+                : int256(0);
+            combatStats.adjustedMaxHp = int256(entityStats.baseHp) + equipmentStats.hpBonus >= 0
+                ? int256(entityStats.baseHp) + equipmentStats.hpBonus
+                : int256(1);
+            combatStats.currentHp = int256(entityStats.currentHp);
         } else {
-            combatStats.adjustedAgility = entityStats.agility;
-            combatStats.adjustedStrength = entityStats.strength;
-            combatStats.adjustedIntelligence = entityStats.intelligence;
+            combatStats.adjustedAgility = int256(entityStats.agility);
+            combatStats.adjustedStrength = int256(entityStats.strength);
+            combatStats.adjustedIntelligence = int256(entityStats.intelligence);
             combatStats.adjustedArmor =
-                abi.decode(Mobs.getMobStats(IWorld(_world()).UD__getMobId(entityId)), (MonsterStats)).armor;
-            combatStats.adjustedMaxHp = entityStats.baseHp;
-            combatStats.currentHp = entityStats.currentHp;
+                int256(abi.decode(Mobs.getMobStats(IWorld(_world()).UD__getMobId(entityId)), (MonsterStats)).armor);
+            combatStats.adjustedMaxHp = int256(entityStats.baseHp);
+            combatStats.currentHp = int256(entityStats.currentHp);
             combatStats.level = entityStats.level;
         }
         return combatStats;
@@ -293,15 +341,71 @@ contract EquipmentSystem is System {
         }
     }
 
-    function getWeaponStats(uint256 itemId) public view returns (WeaponStats memory _weaponStats) {
-        ItemsData memory _data = Items.get(itemId);
-        require(_data.itemType == ItemType.Weapon, "ITEMS: Not a  weapon");
-        _weaponStats = abi.decode(_data.stats, (WeaponStats));
+    function checkItemEffect(uint256 itemId, bytes32 effectId) public view returns (bool hasAction) {
+        ItemType itemType = Items.getItemType(itemId);
+
+        if (itemType == ItemType.Weapon) {
+            bytes32[] memory effects = WeaponStats.getEffects(itemId);
+            for (uint256 i; i < effects.length;) {
+                if (effectId == effects[i]) {
+                    hasAction = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        } else if (itemType == ItemType.Spell) {
+            bytes32[] memory effects = SpellStats.getEffects(itemId);
+            for (uint256 i; i < effects.length;) {
+                if (effectId == effects[i]) {
+                    hasAction = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        } else if (itemType == ItemType.Consumable) {
+            bytes32[] memory effects = ConsumableStats.getEffects(itemId);
+            for (uint256 i; i < effects.length;) {
+                if (effectId == effects[i]) {
+                    hasAction = true;
+                    break;
+                }
+                {
+                    i++;
+                }
+            }
+        }
     }
 
-    function getArmorStats(uint256 itemId) public view returns (ArmorStats memory _ArmorStats) {
-        ItemsData memory _data = Items.get(itemId);
-        require(_data.itemType == ItemType.Armor, "ITEMS: Not a  Armor");
-        _ArmorStats = abi.decode(_data.stats, (ArmorStats));
+    function getItemEffects(uint256 itemId) public view returns (bytes32[] memory effects) {
+        ItemType itemType = Items.getItemType(itemId);
+        if (itemType == ItemType.Weapon) {
+            effects = WeaponStats.getEffects(itemId);
+        } else if (itemType == ItemType.Spell) {
+            effects = SpellStats.getEffects(itemId);
+        } else if (itemType == ItemType.Consumable) {
+            effects = ConsumableStats.getEffects(itemId);
+        }
+    }
+
+    function getWeaponStats(uint256 itemId) public view returns (WeaponStatsData memory _weaponStats) {
+        ItemType itemType = Items.getItemType(itemId);
+        require(itemType == ItemType.Weapon, "ITEMS: Not a  weapon");
+        _weaponStats = WeaponStats.get(itemId);
+    }
+
+    function getArmorStats(uint256 itemId) public view returns (ArmorStatsData memory _ArmorStats) {
+        ItemType itemType = Items.getItemType(itemId);
+        require(itemType == ItemType.Armor, "ITEMS: Not a  Armor");
+        _ArmorStats = ArmorStats.get(itemId);
+    }
+
+    function getSpellStats(uint256 itemId) public view returns (SpellStatsData memory _spellStats) {
+        ItemType itemType = Items.getItemType(itemId);
+        require(itemType == ItemType.Spell, "ITEMS: Not a  Armor");
+        _spellStats = SpellStats.get(itemId);
     }
 }

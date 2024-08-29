@@ -113,14 +113,21 @@ export const CharacterCreation = (): JSX.Element => {
         itemId: zeroHash as Entity,
         owner: zeroAddress,
       }));
-    const _starterWeapons = weaponTemplates
-      .filter(weapon => starterWeaponTokenIds.includes(weapon.tokenId))
-      .map(armor => ({
-        ...armor,
-        balance: '1',
-        itemId: zeroHash as Entity,
-        owner: zeroAddress,
-      }));
+    const _starterWeapons = starterWeaponTokenIds
+      .map(tokenId => {
+        const weapon = weaponTemplates.find(
+          weapon => weapon.tokenId === tokenId,
+        );
+        if (!weapon) return null;
+
+        return {
+          ...weapon,
+          balance: '1',
+          itemId: zeroHash as Entity,
+          owner: zeroAddress,
+        };
+      })
+      .filter(Boolean) as Weapon[];
 
     setStarterArmor(_starterArmor);
     setStarterWeapons(_starterWeapons);

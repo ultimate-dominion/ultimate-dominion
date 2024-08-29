@@ -3,8 +3,8 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType} from "@codegen/common.sol";
-import {StatsData, StarterItemsData} from "@codegen/index.sol";
-import "forge-std/console2.sol";
+import {StatsData, StarterItemsData, WeaponStatsData, StatRestrictionsData} from "@codegen/index.sol";
+import "forge-std/console.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
@@ -14,7 +14,6 @@ import {IERC1155MetadataURI} from "@erc1155/IERC1155MetadataURI.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
-import {WeaponStats, StatRestrictions} from "@interfaces/Structs.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {_itemsSystemId} from "../src/utils.sol";
@@ -37,23 +36,27 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_CreateItem() public {
         startGasReport("creates an item");
-
-        StatRestrictions memory statRestrictions = StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 0});
-        WeaponStats memory weaponStats = WeaponStats({
+        bytes32[] memory effectIds = new bytes32[](1);
+        effectIds[0] = basicAttackIdStatsId;
+        StatRestrictionsData memory statRestrictions =
+            StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
+        WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
-            statRestrictions: statRestrictions,
-            hitPointModifier: 0,
+            hpModifier: 0,
             intModifier: 0,
             maxDamage: 4,
             minDamage: 1,
             minLevel: 0,
-            strModifier: 0
+            strModifier: 0,
+            effects: effectIds
         });
         vm.startPrank(deployer);
-        uint256 firstItemId =
-            world.UD__createItem(ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
-        uint256 newItemId =
-            world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri/");
+        uint256 firstItemId = world.UD__createItem(
+            ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+        );
+        uint256 newItemId = world.UD__createItem(
+            ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri/"
+        );
 
         assertEq(newItemId, 13);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
@@ -67,16 +70,19 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     }
 
     function test_CreateItem_Revert_NotNamespaceOwner() public {
-        StatRestrictions memory statRestrictions = StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 0});
-        WeaponStats memory weaponStats = WeaponStats({
+        bytes32[] memory effectIds = new bytes32[](1);
+        effectIds[0] = basicAttackIdStatsId;
+        StatRestrictionsData memory statRestrictions =
+            StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
+        WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
-            statRestrictions: statRestrictions,
-            hitPointModifier: 0,
+            hpModifier: 0,
             intModifier: 0,
             maxDamage: 4,
             minDamage: 1,
             minLevel: 0,
-            strModifier: 0
+            strModifier: 0,
+            effects: effectIds
         });
         vm.startPrank(alice);
         vm.expectRevert();
@@ -105,16 +111,19 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     }
 
     function test_GetTotalSupply() public {
-        StatRestrictions memory statRestrictions = StatRestrictions({minStrength: 0, minIntelligence: 0, minAgility: 0});
-        WeaponStats memory weaponStats = WeaponStats({
+        bytes32[] memory effectIds = new bytes32[](1);
+        effectIds[0] = basicAttackIdStatsId;
+        StatRestrictionsData memory statRestrictions =
+            StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
+        WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
-            statRestrictions: statRestrictions,
-            hitPointModifier: 0,
+            hpModifier: 0,
             intModifier: 0,
             maxDamage: 4,
             minDamage: 1,
             minLevel: 0,
-            strModifier: 0
+            strModifier: 0,
+            effects: effectIds
         });
         vm.startPrank(deployer);
         uint256 id =

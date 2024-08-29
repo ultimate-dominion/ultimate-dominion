@@ -17,7 +17,7 @@ import { type ArmorTemplate, type WeaponTemplate } from '../utils/types';
 export const AuctionRow = ({
   name,
   agiModifier,
-  hitPointModifier,
+  hpModifier,
   intModifier,
   minLevel,
   strModifier,
@@ -64,7 +64,7 @@ export const AuctionRow = ({
             <Text size={{ base: '2xs', lg: 'sm' }}>{removeEmoji(name)}</Text>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            HP {hitPointModifier} • STR {strModifier} • AGI {agiModifier} • INT{' '}
+            HP {hpModifier} • STR {strModifier} • AGI {agiModifier} • INT{' '}
             {intModifier}
           </Text>
         </VStack>

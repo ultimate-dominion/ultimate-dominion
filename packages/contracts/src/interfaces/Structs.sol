@@ -2,41 +2,25 @@
 pragma solidity >=0.8.24;
 
 import {ItemType, Classes, Alignment, TokenType} from "@codegen/common.sol";
+import {
+    StatusEffectStatsData,
+    WeaponStatsData,
+    ArmorStatsData,
+    MagicDamageStatsData,
+    PhysicalDamageStatsData,
+    StatRestrictionsData,
+    StatusEffectsValidityData
+} from "@codegen/index.sol";
 
 /////////////////// Items ///////////////////////
-struct StatRestrictions {
-    uint256 minAgility;
-    uint256 minIntelligence;
-    uint256 minStrength;
-}
-
-struct WeaponStats {
-    int256 agiModifier;
-    int256 hitPointModifier;
-    int256 intModifier;
-    uint256 maxDamage;
-    uint256 minDamage;
-    uint256 minLevel;
-    StatRestrictions statRestrictions;
-    int256 strModifier;
-}
-
-struct ArmorStats {
-    int256 agiModifier;
-    uint256 armorModifier;
-    int256 hitPointModifier;
-    int256 intModifier;
-    uint256 minLevel;
-    StatRestrictions statRestrictions;
-    int256 strModifier;
-}
 
 struct WeaponTemplateDetails {
     uint256 dropChance;
     uint256 initialSupply;
     string metadataUri;
     string name;
-    WeaponStats stats;
+    StatRestrictionsData statRestrictions;
+    WeaponStatDetails stats;
 }
 
 struct ArmorTemplateDetails {
@@ -44,37 +28,109 @@ struct ArmorTemplateDetails {
     uint256 initialSupply;
     string metadataUri;
     string name;
-    ArmorStats stats;
+    StatRestrictionsData statRestrictions;
+    ArmorStatDetails stats;
+}
+
+struct ArmorStatDetails {
+    int256 agiModifier;
+    int256 armorModifier;
+    int256 hpModifier;
+    int256 intModifier;
+    uint256 minLevel;
+    int256 strModifier;
+}
+
+struct WeaponStatDetails {
+    int256 agiModifier;
+    bytes32[] effects;
+    int256 hpModifier;
+    int256 intModifier;
+    int256 maxDamage;
+    int256 minDamage;
+    uint256 minLevel;
+    int256 strModifier;
+}
+
+struct SpellStatDetails {
+    bytes32[] effects;
+    int256 maxDamage;
+    int256 minDamage;
+    uint256 minLevel;
+}
+
+struct SpellTemplateDetails {
+    uint256 dropChance;
+    uint256 initialSupply;
+    string metadataUri;
+    string name;
+    StatRestrictionsData statRestrictions;
+    SpellStatDetails stats;
+}
+
+struct ConsumableTemplateDetails {
+    uint256 dropChance;
+    uint256 initialSupply;
+    string metadataUri;
+    string name;
+    StatRestrictionsData statRestrictions;
+    ConsumableStatDetails stats;
+}
+
+struct ConsumableStatDetails {
+    bytes32[] effects;
+    int256 maxDamage;
+    int256 minDamage;
+    uint256 minLevel;
 }
 
 struct StarterItems {
     ArmorTemplateDetails[] armor;
+    ConsumableTemplateDetails[] consumables;
     string metadataUriPrefix;
+    SpellTemplateDetails[] spells;
     WeaponTemplateDetails[] weapons;
 }
 
-struct StarterActions {
-    MagicAttackTemplate[] magicAttacks;
-    PhysicalAttackTemplate[] physicalAttacks;
+struct StarterEffects {
+    MagicDamageTemplate[] MagicDamages;
+    PhysicalDamageTemplate[] PhysicalDamages;
+    StatusEffectTemplate[] statusEffects;
 }
 
-struct MagicAttackTemplate {
-    bytes32 actionId;
+struct StatusEffectTemplate {
+    bytes32 effectId;
     string name;
-    MagicAttackStats stats;
+    StatusEffectStatsData stats;
+    StatusEffectsValidityData validity;
 }
 
-struct PhysicalAttackTemplate {
-    bytes32 actionId;
+struct MagicDamageTemplate {
+    bytes32 effectId;
     string name;
-    PhysicalAttackStats stats;
+    MagicDamageStatsData stats;
 }
+
+struct PhysicalDamageTemplate {
+    bytes32 effectId;
+    string name;
+    PhysicalDamageStatsData stats;
+}
+
+struct AdjustedCombatStats {
+    int256 adjustedStrength;
+    int256 adjustedAgility;
+    int256 adjustedIntelligence;
+    int256 adjustedArmor;
+    int256 adjustedMaxHp;
+    int256 currentHp;
+    uint256 level;
+}
+
 /////////////////////////////////// MONSTERS /////////////////////////////////////
 
 struct MonsterStats {
-    // availible action ids
-    bytes32[] actions;
-    //base to hit number for this mob for physical attacks = agility * physicalAttackConversion
+    //base to hit number for this mob for physical attacks = agility * PhysicalDamageConversion
     uint256 agility;
     // damage reduction: subtracted from total damage
     uint256 armor;
@@ -100,72 +156,6 @@ struct MonsterTemplateDetails {
     MonsterStats stats;
 }
 
-struct AdjustedCombatStats {
-    uint256 adjustedStrength;
-    uint256 adjustedAgility;
-    uint256 adjustedIntelligence;
-    uint256 adjustedArmor;
-    uint256 adjustedMaxHp;
-    int256 currentHp;
-    uint256 level;
-}
-
-struct PhysicalAttackStats {
-    // base armor penetration
-    int256 armorPenetration;
-    //bonus chance to hit
-    int256 attackModifierBonus;
-    // additional damage on top of item damage
-    int256 bonusDamage;
-    // crit chance
-    int256 critChanceBonus;
-    uint256 minLevel;
-    StatRestrictions statRestrictions;
-    // status effects applied by this attack empty if none
-    bytes32[] statusEffects;
-}
-
-struct StatusEffect {
-    // if this is a combat effect, must include number of turns it lasts for
-    bool combatEffect;
-    // number of turns this is valid for, 0 if non combat effect
-    uint8 turns;
-    // if non-combat effect this is the amount of time this effect is valid for
-    uint256 timeout;
-    int256 attackModifierEffect;
-    int256 damageEffect;
-    int256 strengthEffect;
-    int256 agilityEffect;
-    int256 intelligenceEffect;
-    int256 baseHitPointEffect;
-    // items that can cause this status effect
-    uint256[] itemRestrictions;
-}
-
-struct Action {
-    bytes32 attackerEntityId;
-    bytes32 defenderEntityId;
-    bytes32 actionId;
-    uint256 weaponId;
-}
-
-struct MagicAttackStats {
-    //bonus chance to hit
-    int256 attackModifierBonus;
-    int256 bonusDamage;
-    // list of classes that can use this attack
-    int256 critChanceBonus;
-    // items that can cause this attack (leave empty if item not required)
-    uint256[] itemRestrictions;
-    // damage delt by this attack (can be negative for heals)
-    int256 minDamage;
-    int256 maxDamage;
-    uint256 minLevel;
-    StatRestrictions statRestrictions;
-    // status effects applied by this attack
-    bytes32[] statusEffects;
-}
-
 struct NPCStats {
     string name;
     bytes32[] storyPathIds;
@@ -179,6 +169,12 @@ struct QuestEntity {
     uint256 currentStep;
 }
 
+struct Attack {
+    bytes32 attackerEntityId;
+    bytes32 defenderEntityId;
+    uint256 itemId;
+}
+
 struct RewardDistributionTemps {
     bytes32 monsterTemp;
     bytes32 entityIdTemp;
@@ -190,7 +186,7 @@ struct RewardDistributionTemps {
     bytes32[] monsters;
 }
 
-////// Auction house /////////
+//////////////////////////////////// Auction house /////////////////////////////////////
 
 struct Offer {
     TokenType tokenType;
