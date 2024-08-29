@@ -14,12 +14,7 @@ import {
 } from 'react';
 
 import { useToast } from '../hooks/useToast';
-import {
-  decodeArmorStats,
-  decodeWeaponStats,
-  fetchMetadataFromUri,
-  uriToHttp,
-} from '../utils/helpers';
+import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import {
   type ArmorTemplate,
   ItemType,
@@ -46,7 +41,14 @@ export const ItemsProvider = ({
 }): JSX.Element => {
   const { renderError } = useToast();
   const {
-    components: { Items, ItemsBaseURI, ItemsTokenURI },
+    components: {
+      ArmorStats,
+      Items,
+      ItemsBaseURI,
+      ItemsTokenURI,
+      StatRestrictions,
+      WeaponStats,
+    },
     isSynced,
   } = useMUD();
 
@@ -56,15 +58,19 @@ export const ItemsProvider = ({
 
   const fetchAllArmor = useCallback(
     async (allArmorIds: bigint[]) => {
-      const fullArmor = await Promise.all(
+      const allArmorTemplates = await Promise.all(
         allArmorIds.map(async armorId => {
           const tokenIdEntity = encodeEntity(
             { tokenId: 'uint256' },
             { tokenId: armorId },
           );
 
+          const statRestrictions = getComponentValueStrict(
+            StatRestrictions,
+            tokenIdEntity,
+          );
           const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-          const decodedArmorStats = decodeArmorStats(itemTemplate.stats);
+          const armorStats = getComponentValueStrict(ArmorStats, tokenIdEntity);
 
           const baseURI = getComponentValueStrict(
             ItemsBaseURI,
@@ -82,39 +88,46 @@ export const ItemsProvider = ({
 
           return {
             ...metadata,
-            agiModifier: decodedArmorStats.agiModifier,
-            armorModifier: decodedArmorStats.armorModifier,
-            hitPointModifier: decodedArmorStats.hitPointModifier,
-            intModifier: decodedArmorStats.intModifier,
-            minLevel: decodedArmorStats.minLevel,
+            agiModifier: armorStats.agiModifier.toString(),
+            armorModifier: armorStats.armorModifier.toString(),
+            hpModifier: armorStats.hpModifier.toString(),
+            intModifier: armorStats.intModifier.toString(),
+            itemType: itemTemplate.itemType,
+            minLevel: armorStats.minLevel.toString(),
             statRestrictions: {
-              minAgility: decodedArmorStats.statRestrictions.minAgility,
-              minIntelligence:
-                decodedArmorStats.statRestrictions.minIntelligence,
-              minStrength: decodedArmorStats.statRestrictions.minStrength,
+              minAgility: statRestrictions.minAgility.toString(),
+              minIntelligence: statRestrictions.minIntelligence.toString(),
+              minStrength: statRestrictions.minStrength.toString(),
             },
-            strModifier: decodedArmorStats.strModifier,
+            strModifier: armorStats.strModifier.toString(),
             tokenId: armorId.toString(),
           } as ArmorTemplate;
         }),
       );
 
-      return fullArmor;
+      return allArmorTemplates;
     },
-    [Items, ItemsBaseURI, ItemsTokenURI],
+    [ArmorStats, Items, ItemsBaseURI, ItemsTokenURI, StatRestrictions],
   );
 
   const fetchAllWeapons = useCallback(
     async (allWeaponIds: bigint[]) => {
-      const fullWeapons = await Promise.all(
+      const allWeaponTemplates = await Promise.all(
         allWeaponIds.map(async weaponId => {
           const tokenIdEntity = encodeEntity(
             { tokenId: 'uint256' },
             { tokenId: weaponId },
           );
 
+          const statRestrictions = getComponentValueStrict(
+            StatRestrictions,
+            tokenIdEntity,
+          );
           const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-          const decodedArmorStats = decodeWeaponStats(itemTemplate.stats);
+          const weaponStats = getComponentValueStrict(
+            WeaponStats,
+            tokenIdEntity,
+          );
 
           const baseURI = getComponentValueStrict(
             ItemsBaseURI,
@@ -132,27 +145,28 @@ export const ItemsProvider = ({
 
           return {
             ...metadata,
-            agiModifier: decodedArmorStats.agiModifier,
-            hitPointModifier: decodedArmorStats.hitPointModifier,
-            intModifier: decodedArmorStats.intModifier,
-            maxDamage: decodedArmorStats.maxDamage,
-            minDamage: decodedArmorStats.minDamage,
-            minLevel: decodedArmorStats.minLevel,
+            agiModifier: weaponStats.agiModifier.toString(),
+            effects: weaponStats.effects,
+            hpModifier: weaponStats.hpModifier.toString(),
+            itemType: itemTemplate.itemType,
+            intModifier: weaponStats.intModifier.toString(),
+            maxDamage: weaponStats.maxDamage.toString(),
+            minDamage: weaponStats.minDamage.toString(),
+            minLevel: weaponStats.minLevel.toString(),
             statRestrictions: {
-              minAgility: decodedArmorStats.statRestrictions.minAgility,
-              minIntelligence:
-                decodedArmorStats.statRestrictions.minIntelligence,
-              minStrength: decodedArmorStats.statRestrictions.minStrength,
+              minAgility: statRestrictions.minAgility.toString(),
+              minIntelligence: statRestrictions.minIntelligence.toString(),
+              minStrength: statRestrictions.minStrength.toString(),
             },
-            strModifier: decodedArmorStats.strModifier,
+            strModifier: weaponStats.strModifier.toString(),
             tokenId: weaponId.toString(),
           } as WeaponTemplate;
         }),
       );
 
-      return fullWeapons;
+      return allWeaponTemplates;
     },
-    [Items, ItemsBaseURI, ItemsTokenURI],
+    [Items, ItemsBaseURI, ItemsTokenURI, StatRestrictions, WeaponStats],
   );
 
   useEffect(() => {

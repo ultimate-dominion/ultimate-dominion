@@ -23,7 +23,7 @@ export const ActionsPanel = (): JSX.Element => {
   const { character, equippedWeapons } = useCharacter();
   const { isSpawned, monstersOnTile, position } = useMap();
   const {
-    actionOutcomes,
+    attackOutcomes,
     attackingItemId,
     currentBattle,
     lastestBattleOutcome,
@@ -34,11 +34,11 @@ export const ActionsPanel = (): JSX.Element => {
   const { isRefreshing } = useMovement();
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
-  const [actionButtonFocus, setActionButtonFocus] = useState<number>(0);
+  const [attackButtonFocus, setAttackButtonFocus] = useState<number>(0);
 
   const parentDivRef = useRef<HTMLDivElement>(null);
-  const actionButton1Ref = useRef<HTMLButtonElement>(null);
-  const actionButton2Ref = useRef<HTMLButtonElement>(null);
+  const attackButton1Ref = useRef<HTMLButtonElement>(null);
+  const attackButton2Ref = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (parentDivRef.current) {
@@ -48,25 +48,25 @@ export const ActionsPanel = (): JSX.Element => {
       });
     }
 
-    if (actionButton1Ref.current) {
-      actionButton1Ref.current.focus();
-      setActionButtonFocus(0);
+    if (attackButton1Ref.current) {
+      attackButton1Ref.current.focus();
+      setAttackButtonFocus(0);
     }
-  }, [actionOutcomes]);
+  }, [attackOutcomes]);
 
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'ArrowLeft':
-          if (actionButtonFocus === 1 && actionButton2Ref.current) {
-            actionButton1Ref.current?.focus();
-            setActionButtonFocus(0);
+          if (attackButtonFocus === 1 && attackButton2Ref.current) {
+            attackButton1Ref.current?.focus();
+            setAttackButtonFocus(0);
           }
           break;
         case 'ArrowRight':
-          if (actionButtonFocus === 0 && actionButton1Ref.current) {
-            actionButton2Ref.current?.focus();
-            setActionButtonFocus(1);
+          if (attackButtonFocus === 0 && attackButton1Ref.current) {
+            attackButton2Ref.current?.focus();
+            setAttackButtonFocus(1);
           }
           break;
         default:
@@ -77,7 +77,7 @@ export const ActionsPanel = (): JSX.Element => {
     window.addEventListener('keydown', listener);
     // eslint-disable-next-line consistent-return
     return () => window.removeEventListener('keydown', listener);
-  }, [actionButtonFocus]);
+  }, [attackButtonFocus]);
 
   const battleOver = useMemo(
     () => currentBattle?.encounterId === lastestBattleOutcome?.encounterId,
@@ -238,7 +238,7 @@ export const ActionsPanel = (): JSX.Element => {
                         ).toString(),
                   )
                 }
-                ref={index === 0 ? actionButton1Ref : actionButton2Ref}
+                ref={index === 0 ? attackButton1Ref : attackButton2Ref}
                 variant="outline"
                 w="100%"
               >
@@ -320,19 +320,19 @@ export const ActionsPanel = (): JSX.Element => {
             </Typist>
           )}
 
-        {opponent &&
-          actionOutcomes.map((action, i) => {
-            if (action.miss) {
+        {opponent?.name &&
+          attackOutcomes.map((attack, i) => {
+            if (attack.miss[0]) {
               return (
                 <Typist
                   avgTypingDelay={10}
                   cursor={{ show: false }}
-                  key={`battle-action-${i}`}
+                  key={`battle-attack-${i}`}
                   stdTypingDelay={10}
                 >
-                  {action.attackerId === character?.id ? (
+                  {attack.attackerId === character?.id ? (
                     <Text
-                      key={`battle-action-${i}`}
+                      key={`battle-attack-${i}`}
                       size={{ base: 'xs', sm: 'sm', lg: 'md' }}
                     >
                       You missed{' '}
@@ -343,7 +343,7 @@ export const ActionsPanel = (): JSX.Element => {
                     </Text>
                   ) : (
                     <Text
-                      key={`battle-action-${i}`}
+                      key={`battle-attack-${i}`}
                       size={{ base: 'xs', sm: 'sm', lg: 'md' }}
                     >
                       <Text as="span" color="green">
@@ -356,16 +356,16 @@ export const ActionsPanel = (): JSX.Element => {
               );
             }
 
-            const critText = action.crit ? 'Critical hit! ' : '';
+            const critText = attack.crit ? 'Critical hit! ' : '';
 
             return (
               <Typist
                 avgTypingDelay={10}
                 cursor={{ show: false }}
-                key={`battle-action-${i}`}
+                key={`battle-attack-${i}`}
                 stdTypingDelay={10}
               >
-                {action.attackerId === character?.id ? (
+                {attack.attackerId === character?.id ? (
                   <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                     {critText}You attacked{' '}
                     <Text as="span" color="green">
@@ -373,7 +373,7 @@ export const ActionsPanel = (): JSX.Element => {
                     </Text>{' '}
                     for{' '}
                     <Text as="span" color="red">
-                      {action.attackerDamageDelt}
+                      {attack.attackerDamageDelt}
                     </Text>{' '}
                     damage.
                   </Text>
@@ -385,7 +385,7 @@ export const ActionsPanel = (): JSX.Element => {
                     </Text>{' '}
                     attacked you for{' '}
                     <Text as="span" color="red">
-                      {action.attackerDamageDelt}
+                      {attack.attackerDamageDelt}
                     </Text>{' '}
                     damage.
                   </Text>

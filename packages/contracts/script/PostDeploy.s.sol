@@ -206,6 +206,9 @@ contract PostDeploy is Script {
         _createEffects();
         _createMonsters();
 
+        address _auctionHouseAddress = world.UD__auctionHouseAddress();
+        UltimateDominionConfig.setAuctionHouse(_auctionHouseAddress);
+
         setLevels();
         vm.stopBroadcast();
     }
@@ -327,8 +330,8 @@ contract PostDeploy is Script {
             WeaponTemplateDetails memory weaponTemplate = itemsData.weapons[i];
 
             WeaponStatsData memory newWeapon = WeaponStatsData({
-                effects: weaponTemplate.stats.effects,
                 agiModifier: weaponTemplate.stats.agiModifier,
+                effects: weaponTemplate.stats.effects,
                 hpModifier: weaponTemplate.stats.hpModifier,
                 intModifier: weaponTemplate.stats.intModifier,
                 maxDamage: weaponTemplate.stats.maxDamage,
