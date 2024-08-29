@@ -2,8 +2,8 @@ import { Entity } from '@latticexyz/recs';
 
 export enum ActionType {
   Temporary,
-  PhysicalAttack,
-  MagicAttack,
+  PhysicalDamage,
+  MagicDamage,
   StatusEffect,
 }
 

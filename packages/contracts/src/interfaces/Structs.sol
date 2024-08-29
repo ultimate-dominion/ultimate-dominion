@@ -58,8 +58,8 @@ struct StarterItems {
 }
 
 struct StarterEffects {
-    MagicAttackTemplate[] magicAttacks;
-    PhysicalAttackTemplate[] physicalAttacks;
+    MagicDamageTemplate[] MagicDamages;
+    PhysicalDamageTemplate[] PhysicalDamages;
     StatusEffectTemplate[] statusEffects;
 }
 
@@ -69,13 +69,13 @@ struct StatusEffectTemplate {
     StatusEffectStatsData stats;
 }
 
-struct MagicAttackTemplate {
+struct MagicDamageTemplate {
     bytes32 effectId;
     string name;
     MagicDamageStatsData stats;
 }
 
-struct PhysicalAttackTemplate {
+struct PhysicalDamageTemplate {
     bytes32 effectId;
     string name;
     PhysicalDamageStatsData stats;
@@ -94,7 +94,7 @@ struct AdjustedCombatStats {
 /////////////////////////////////// MONSTERS /////////////////////////////////////
 
 struct MonsterStats {
-    //base to hit number for this mob for physical attacks = agility * physicalAttackConversion
+    //base to hit number for this mob for physical attacks = agility * PhysicalDamageConversion
     uint256 agility;
     // damage reduction: subtracted from total damage
     uint256 armor;

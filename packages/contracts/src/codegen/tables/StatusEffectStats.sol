@@ -38,8 +38,8 @@ library StatusEffectStats {
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0101090020202020200120202000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of (bytes32)
-  Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (bytes8)
+  Schema constant _keySchema = Schema.wrap(0x0008010047000000000000000000000000000000000000000000000000000000);
   // Hex-encoded value schema of (int256, int256, int256, int256, int256, uint8, uint256, uint256, uint256)
   Schema constant _valueSchema = Schema.wrap(0x010109003f3f3f3f3f001f1f1f00000000000000000000000000000000000000);
 
@@ -86,9 +86,9 @@ library StatusEffectStats {
   /**
    * @notice Get agiModifier.
    */
-  function getAgiModifier(bytes32 effectId) internal view returns (int256 agiModifier) {
+  function getAgiModifier(bytes8 effectId) internal view returns (int256 agiModifier) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
@@ -97,9 +97,9 @@ library StatusEffectStats {
   /**
    * @notice Get agiModifier.
    */
-  function _getAgiModifier(bytes32 effectId) internal view returns (int256 agiModifier) {
+  function _getAgiModifier(bytes8 effectId) internal view returns (int256 agiModifier) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
@@ -108,9 +108,9 @@ library StatusEffectStats {
   /**
    * @notice Set agiModifier.
    */
-  function setAgiModifier(bytes32 effectId, int256 agiModifier) internal {
+  function setAgiModifier(bytes8 effectId, int256 agiModifier) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((agiModifier)), _fieldLayout);
   }
@@ -118,9 +118,9 @@ library StatusEffectStats {
   /**
    * @notice Set agiModifier.
    */
-  function _setAgiModifier(bytes32 effectId, int256 agiModifier) internal {
+  function _setAgiModifier(bytes8 effectId, int256 agiModifier) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((agiModifier)), _fieldLayout);
   }
@@ -128,9 +128,9 @@ library StatusEffectStats {
   /**
    * @notice Get armorModifier.
    */
-  function getArmorModifier(bytes32 effectId) internal view returns (int256 armorModifier) {
+  function getArmorModifier(bytes8 effectId) internal view returns (int256 armorModifier) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
@@ -139,9 +139,9 @@ library StatusEffectStats {
   /**
    * @notice Get armorModifier.
    */
-  function _getArmorModifier(bytes32 effectId) internal view returns (int256 armorModifier) {
+  function _getArmorModifier(bytes8 effectId) internal view returns (int256 armorModifier) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
@@ -150,9 +150,9 @@ library StatusEffectStats {
   /**
    * @notice Set armorModifier.
    */
-  function setArmorModifier(bytes32 effectId, int256 armorModifier) internal {
+  function setArmorModifier(bytes8 effectId, int256 armorModifier) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((armorModifier)), _fieldLayout);
   }
@@ -160,9 +160,9 @@ library StatusEffectStats {
   /**
    * @notice Set armorModifier.
    */
-  function _setArmorModifier(bytes32 effectId, int256 armorModifier) internal {
+  function _setArmorModifier(bytes8 effectId, int256 armorModifier) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((armorModifier)), _fieldLayout);
   }
@@ -170,9 +170,9 @@ library StatusEffectStats {
   /**
    * @notice Get hpModifier.
    */
-  function getHpModifier(bytes32 effectId) internal view returns (int256 hpModifier) {
+  function getHpModifier(bytes8 effectId) internal view returns (int256 hpModifier) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
@@ -181,9 +181,9 @@ library StatusEffectStats {
   /**
    * @notice Get hpModifier.
    */
-  function _getHpModifier(bytes32 effectId) internal view returns (int256 hpModifier) {
+  function _getHpModifier(bytes8 effectId) internal view returns (int256 hpModifier) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
@@ -192,9 +192,9 @@ library StatusEffectStats {
   /**
    * @notice Set hpModifier.
    */
-  function setHpModifier(bytes32 effectId, int256 hpModifier) internal {
+  function setHpModifier(bytes8 effectId, int256 hpModifier) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((hpModifier)), _fieldLayout);
   }
@@ -202,9 +202,9 @@ library StatusEffectStats {
   /**
    * @notice Set hpModifier.
    */
-  function _setHpModifier(bytes32 effectId, int256 hpModifier) internal {
+  function _setHpModifier(bytes8 effectId, int256 hpModifier) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((hpModifier)), _fieldLayout);
   }
@@ -212,9 +212,9 @@ library StatusEffectStats {
   /**
    * @notice Get intModifier.
    */
-  function getIntModifier(bytes32 effectId) internal view returns (int256 intModifier) {
+  function getIntModifier(bytes8 effectId) internal view returns (int256 intModifier) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
@@ -223,9 +223,9 @@ library StatusEffectStats {
   /**
    * @notice Get intModifier.
    */
-  function _getIntModifier(bytes32 effectId) internal view returns (int256 intModifier) {
+  function _getIntModifier(bytes8 effectId) internal view returns (int256 intModifier) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
@@ -234,9 +234,9 @@ library StatusEffectStats {
   /**
    * @notice Set intModifier.
    */
-  function setIntModifier(bytes32 effectId, int256 intModifier) internal {
+  function setIntModifier(bytes8 effectId, int256 intModifier) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((intModifier)), _fieldLayout);
   }
@@ -244,9 +244,9 @@ library StatusEffectStats {
   /**
    * @notice Set intModifier.
    */
-  function _setIntModifier(bytes32 effectId, int256 intModifier) internal {
+  function _setIntModifier(bytes8 effectId, int256 intModifier) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((intModifier)), _fieldLayout);
   }
@@ -254,9 +254,9 @@ library StatusEffectStats {
   /**
    * @notice Get damagePerTick.
    */
-  function getDamagePerTick(bytes32 effectId) internal view returns (int256 damagePerTick) {
+  function getDamagePerTick(bytes8 effectId) internal view returns (int256 damagePerTick) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
@@ -265,9 +265,9 @@ library StatusEffectStats {
   /**
    * @notice Get damagePerTick.
    */
-  function _getDamagePerTick(bytes32 effectId) internal view returns (int256 damagePerTick) {
+  function _getDamagePerTick(bytes8 effectId) internal view returns (int256 damagePerTick) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
     return (int256(uint256(bytes32(_blob))));
@@ -276,9 +276,9 @@ library StatusEffectStats {
   /**
    * @notice Set damagePerTick.
    */
-  function setDamagePerTick(bytes32 effectId, int256 damagePerTick) internal {
+  function setDamagePerTick(bytes8 effectId, int256 damagePerTick) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((damagePerTick)), _fieldLayout);
   }
@@ -286,9 +286,9 @@ library StatusEffectStats {
   /**
    * @notice Set damagePerTick.
    */
-  function _setDamagePerTick(bytes32 effectId, int256 damagePerTick) internal {
+  function _setDamagePerTick(bytes8 effectId, int256 damagePerTick) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((damagePerTick)), _fieldLayout);
   }
@@ -296,9 +296,9 @@ library StatusEffectStats {
   /**
    * @notice Get resistanceStat.
    */
-  function getResistanceStat(bytes32 effectId) internal view returns (ResistanceStat resistanceStat) {
+  function getResistanceStat(bytes8 effectId) internal view returns (ResistanceStat resistanceStat) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return ResistanceStat(uint8(bytes1(_blob)));
@@ -307,9 +307,9 @@ library StatusEffectStats {
   /**
    * @notice Get resistanceStat.
    */
-  function _getResistanceStat(bytes32 effectId) internal view returns (ResistanceStat resistanceStat) {
+  function _getResistanceStat(bytes8 effectId) internal view returns (ResistanceStat resistanceStat) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return ResistanceStat(uint8(bytes1(_blob)));
@@ -318,9 +318,9 @@ library StatusEffectStats {
   /**
    * @notice Set resistanceStat.
    */
-  function setResistanceStat(bytes32 effectId, ResistanceStat resistanceStat) internal {
+  function setResistanceStat(bytes8 effectId, ResistanceStat resistanceStat) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked(uint8(resistanceStat)), _fieldLayout);
   }
@@ -328,9 +328,9 @@ library StatusEffectStats {
   /**
    * @notice Set resistanceStat.
    */
-  function _setResistanceStat(bytes32 effectId, ResistanceStat resistanceStat) internal {
+  function _setResistanceStat(bytes8 effectId, ResistanceStat resistanceStat) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked(uint8(resistanceStat)), _fieldLayout);
   }
@@ -338,9 +338,9 @@ library StatusEffectStats {
   /**
    * @notice Get validTime.
    */
-  function getValidTime(bytes32 effectId) internal view returns (uint256 validTime) {
+  function getValidTime(bytes8 effectId) internal view returns (uint256 validTime) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -349,9 +349,9 @@ library StatusEffectStats {
   /**
    * @notice Get validTime.
    */
-  function _getValidTime(bytes32 effectId) internal view returns (uint256 validTime) {
+  function _getValidTime(bytes8 effectId) internal view returns (uint256 validTime) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -360,9 +360,9 @@ library StatusEffectStats {
   /**
    * @notice Set validTime.
    */
-  function setValidTime(bytes32 effectId, uint256 validTime) internal {
+  function setValidTime(bytes8 effectId, uint256 validTime) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((validTime)), _fieldLayout);
   }
@@ -370,9 +370,9 @@ library StatusEffectStats {
   /**
    * @notice Set validTime.
    */
-  function _setValidTime(bytes32 effectId, uint256 validTime) internal {
+  function _setValidTime(bytes8 effectId, uint256 validTime) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((validTime)), _fieldLayout);
   }
@@ -380,9 +380,9 @@ library StatusEffectStats {
   /**
    * @notice Get validTurns.
    */
-  function getValidTurns(bytes32 effectId) internal view returns (uint256 validTurns) {
+  function getValidTurns(bytes8 effectId) internal view returns (uint256 validTurns) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -391,9 +391,9 @@ library StatusEffectStats {
   /**
    * @notice Get validTurns.
    */
-  function _getValidTurns(bytes32 effectId) internal view returns (uint256 validTurns) {
+  function _getValidTurns(bytes8 effectId) internal view returns (uint256 validTurns) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -402,9 +402,9 @@ library StatusEffectStats {
   /**
    * @notice Set validTurns.
    */
-  function setValidTurns(bytes32 effectId, uint256 validTurns) internal {
+  function setValidTurns(bytes8 effectId, uint256 validTurns) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((validTurns)), _fieldLayout);
   }
@@ -412,9 +412,9 @@ library StatusEffectStats {
   /**
    * @notice Set validTurns.
    */
-  function _setValidTurns(bytes32 effectId, uint256 validTurns) internal {
+  function _setValidTurns(bytes8 effectId, uint256 validTurns) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((validTurns)), _fieldLayout);
   }
@@ -422,9 +422,9 @@ library StatusEffectStats {
   /**
    * @notice Get cooldown.
    */
-  function getCooldown(bytes32 effectId) internal view returns (uint256 cooldown) {
+  function getCooldown(bytes8 effectId) internal view returns (uint256 cooldown) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 8, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -433,9 +433,9 @@ library StatusEffectStats {
   /**
    * @notice Get cooldown.
    */
-  function _getCooldown(bytes32 effectId) internal view returns (uint256 cooldown) {
+  function _getCooldown(bytes8 effectId) internal view returns (uint256 cooldown) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 8, _fieldLayout);
     return (uint256(bytes32(_blob)));
@@ -444,9 +444,9 @@ library StatusEffectStats {
   /**
    * @notice Set cooldown.
    */
-  function setCooldown(bytes32 effectId, uint256 cooldown) internal {
+  function setCooldown(bytes8 effectId, uint256 cooldown) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 8, abi.encodePacked((cooldown)), _fieldLayout);
   }
@@ -454,9 +454,9 @@ library StatusEffectStats {
   /**
    * @notice Set cooldown.
    */
-  function _setCooldown(bytes32 effectId, uint256 cooldown) internal {
+  function _setCooldown(bytes8 effectId, uint256 cooldown) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 8, abi.encodePacked((cooldown)), _fieldLayout);
   }
@@ -464,9 +464,9 @@ library StatusEffectStats {
   /**
    * @notice Get the full data.
    */
-  function get(bytes32 effectId) internal view returns (StatusEffectStatsData memory _table) {
+  function get(bytes8 effectId) internal view returns (StatusEffectStatsData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreSwitch.getRecord(
       _tableId,
@@ -479,9 +479,9 @@ library StatusEffectStats {
   /**
    * @notice Get the full data.
    */
-  function _get(bytes32 effectId) internal view returns (StatusEffectStatsData memory _table) {
+  function _get(bytes8 effectId) internal view returns (StatusEffectStatsData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     (bytes memory _staticData, EncodedLengths _encodedLengths, bytes memory _dynamicData) = StoreCore.getRecord(
       _tableId,
@@ -495,7 +495,7 @@ library StatusEffectStats {
    * @notice Set the full data using individual values.
    */
   function set(
-    bytes32 effectId,
+    bytes8 effectId,
     int256 agiModifier,
     int256 armorModifier,
     int256 hpModifier,
@@ -522,7 +522,7 @@ library StatusEffectStats {
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -531,7 +531,7 @@ library StatusEffectStats {
    * @notice Set the full data using individual values.
    */
   function _set(
-    bytes32 effectId,
+    bytes8 effectId,
     int256 agiModifier,
     int256 armorModifier,
     int256 hpModifier,
@@ -558,7 +558,7 @@ library StatusEffectStats {
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -566,7 +566,7 @@ library StatusEffectStats {
   /**
    * @notice Set the full data using the data struct.
    */
-  function set(bytes32 effectId, StatusEffectStatsData memory _table) internal {
+  function set(bytes8 effectId, StatusEffectStatsData memory _table) internal {
     bytes memory _staticData = encodeStatic(
       _table.agiModifier,
       _table.armorModifier,
@@ -583,7 +583,7 @@ library StatusEffectStats {
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
   }
@@ -591,7 +591,7 @@ library StatusEffectStats {
   /**
    * @notice Set the full data using the data struct.
    */
-  function _set(bytes32 effectId, StatusEffectStatsData memory _table) internal {
+  function _set(bytes8 effectId, StatusEffectStatsData memory _table) internal {
     bytes memory _staticData = encodeStatic(
       _table.agiModifier,
       _table.armorModifier,
@@ -608,7 +608,7 @@ library StatusEffectStats {
     bytes memory _dynamicData;
 
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
   }
@@ -679,9 +679,9 @@ library StatusEffectStats {
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord(bytes32 effectId) internal {
+  function deleteRecord(bytes8 effectId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -689,9 +689,9 @@ library StatusEffectStats {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord(bytes32 effectId) internal {
+  function _deleteRecord(bytes8 effectId) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -763,9 +763,9 @@ library StatusEffectStats {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple(bytes32 effectId) internal pure returns (bytes32[] memory) {
+  function encodeKeyTuple(bytes8 effectId) internal pure returns (bytes32[] memory) {
     bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = effectId;
+    _keyTuple[0] = bytes32(effectId);
 
     return _keyTuple;
   }

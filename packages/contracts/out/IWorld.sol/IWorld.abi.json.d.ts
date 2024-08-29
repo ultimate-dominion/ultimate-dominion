@@ -274,6 +274,104 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__applyStatusEffect",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "adjustedStrength",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "adjustedAgility",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "adjustedIntelligence",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "adjustedArmor",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "adjustedMaxHp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "adjustedStrength",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "adjustedAgility",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "adjustedIntelligence",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "adjustedArmor",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "adjustedMaxHp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__auctionHouseAddress",
     "inputs": [],
     "outputs": [

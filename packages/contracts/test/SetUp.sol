@@ -45,9 +45,9 @@ contract SetUp is Test {
     bytes32 alicesCharacterId;
     bytes32 bobCharacterId;
     bytes32 public alicesRandomness = bytes32(keccak256(abi.encode("alicesRestaurant")));
-    bytes32 basicAttackId;
+    bytes32 basicAttackIdStatsId;
     uint256 newArmorId;
-    bytes32 basicMagicAttackId;
+    bytes32 basicMagicDamageStatsId;
 
     function setUp() public virtual {
         vm.startPrank(deployer);
@@ -64,8 +64,8 @@ contract SetUp is Test {
         characterToken = IERC721Mintable(world.UD__getCharacterToken());
         erc1155System = IERC1155System(world.UD__getItemsContract());
 
-        basicMagicAttackId = keccak256(abi.encode("basic magic attack"));
-        basicAttackId = keccak256(abi.encode("basic weapon attack"));
+        basicMagicDamageStatsId = bytes32(bytes8(keccak256(abi.encode("basic magic attack"))));
+        basicAttackIdStatsId = bytes32(bytes8(keccak256(abi.encode("basic weapon attack"))));
 
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;
@@ -73,7 +73,7 @@ contract SetUp is Test {
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackId;
+        effectIds[0] = basicAttackIdStatsId;
         ArmorStatsData memory newArmor = ArmorStatsData({
             armorModifier: 1,
             minLevel: 0,

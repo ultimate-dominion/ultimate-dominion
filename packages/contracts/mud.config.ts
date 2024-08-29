@@ -21,7 +21,7 @@ export default defineWorld({
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE"],
-    EffectType: ["Temporary", "PhysicalAttack", "MagicAttack", "StatusEffect"],
+    EffectType: ["Temporary", "PhysicalDamage", "MagicDamage", "StatusEffect"],
     ResistanceStat: ["Strength", "Agility", "Intelligence"],
     OrderStatus: ["Canceled", "Active", "Fullfilled"],
     TokenType: ["NATIVE", "ERC20", "ERC721", "ERC1155"],
@@ -238,9 +238,9 @@ export default defineWorld({
         attackModifierBonus: "int256",
         bonusDamage: "int256",
         critChanceBonus: "int256",
-        statusEffects: "bytes32[]",
       },
     },
+
     MagicDamageStats: {
       key: ["effectId"],
       schema: {
@@ -248,7 +248,6 @@ export default defineWorld({
         attackModifierBonus: "int256",
         bonusDamage: "int256",
         critChanceBonus: "int256",
-        statusEffects: "bytes32[]",
       },
     },
     StatusEffectStats: {
@@ -260,6 +259,7 @@ export default defineWorld({
         hpModifier: "int256",
         intModifier: "int256",
         damagePerTick: "int256",
+        maxStacks: "uint8",
         resistanceStat: "ResistanceStat",
         validTime: "uint256",
         validTurns: "uint256",
@@ -299,6 +299,7 @@ export default defineWorld({
         // by default this is bytes(0), if this entity is in an encounter it will be set,
         encounterId: "bytes32",
         died: "bool",
+        appliedStatusEffects: "bytes32[]",
       },
     },
     ///////////////////////////////////// MAP //////////////////////////////////////////////
