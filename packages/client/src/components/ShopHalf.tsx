@@ -1,41 +1,42 @@
 import {
+  Box,
   Button,
   Flex,
   HStack,
   Input,
   InputGroup,
   InputLeftElement,
+  Spacer,
   Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useMemo, useState } from 'react';
+import FuzzySearch from 'fuzzy-search';
+import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
-import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
+
 // import { FaHatWizard } from 'react-icons/fa';
-import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
-
-import { Character } from '../utils/types';
+import { getEmoji, removeEmoji } from '../utils/helpers';
+import { ArmorTemplate, WeaponTemplate } from '../utils/types';
+import { Pagination } from './Pagination';
 import { ShopItemRow } from './ShopItemRow';
-// import { useNavigate } from 'react-router-dom';
-
-// import { SHOP_PATH } from '../Routes';
+const PER_PAGE = 5;
 export const ShopHalf = ({
   name,
-  filterNames,
-  sortNames,
+  items,
 }: {
   name: string;
-  filterNames: Array<string>;
-  sortNames: Array<string>;
+  items: Array<ArmorTemplate | WeaponTemplate>;
 }): JSX.Element => {
-  // const navigate = useNavigate();
-  const [sort, setSort] = useState({ sorted: 'byClass', reversed: false });
-  const [entries /* setEntries */] = useState<Character[]>([]);
-  // const [filter, setFilter] = useState({ filtered: 'all' });
-  // const [query, setQuery] = useState('');
-  const [page, setPage] = useState('1');
-  const [pageLimit /* setPageLimit */] = useState(0);
+  const [entries, setEntries] = useState<Array<ArmorTemplate | WeaponTemplate>>(
+    [],
+  );
+  const [page, setPage] = useState(1);
+  const [pageLimit, setPageLimit] = useState(1);
+  const [length, setLength] = useState(1);
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
+  const [filter, setFilter] = useState({ filtered: 'all' });
 
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {
@@ -43,7 +44,33 @@ export const ShopHalf = ({
     }
     return Number(page);
   }, [page]);
-
+  useEffect(() => {
+    if (pageNumber < 1) {
+      return;
+    }
+    let entriesCopy: Array<ArmorTemplate | WeaponTemplate> = [...items];
+    const searcher = new FuzzySearch(
+      [...entriesCopy],
+      ['name', 'characterId', 'description'],
+      { caseSensitive: false },
+    );
+    entriesCopy = searcher.search(query);
+    entriesCopy = [...entriesCopy].filter(entry => {
+      switch (filter.filtered) {
+        case 'byWeapon':
+          return Object.keys(entry).indexOf('armorModifier') > -1 ? 0 : 1;
+        default:
+          return true;
+      }
+    });
+    setLength(entriesCopy.length);
+    setEntries(
+      entriesCopy.slice((pageNumber - 1) * PER_PAGE, pageNumber * PER_PAGE),
+    );
+    if (pageNumber > pageLimit) {
+      setPage(pageLimit);
+    }
+  }, [filter.filtered, items, pageLimit, pageNumber, query]);
   return (
     <VStack>
       <Text fontWeight={700} fontSize={24} textAlign="left" w="100%">
@@ -59,117 +86,105 @@ export const ShopHalf = ({
           <InputLeftElement h="100%" pointerEvents="none">
             <FaSearch />
           </InputLeftElement>
-          <Input placeholder="Search" />
+          <Input
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search"
+            value={query}
+          />{' '}
         </InputGroup>
         <HStack>
-          {filterNames.map((f, i) => (
-            <Button size="sm" variant="solid" key={`filter-${i}`}>
-              {f}
-            </Button>
-          ))}
+          <Button
+            onClick={() => setFilter({ filtered: 'all' })}
+            size="sm"
+            variant={filter.filtered == 'all' ? 'solid' : 'outline'}
+          >
+            All
+          </Button>
+          <Button
+            onClick={() => setFilter({ filtered: 'byWeapon' })}
+            size="sm"
+            variant={filter.filtered == 'byWeapon' ? 'solid' : 'outline'}
+          >
+            Weapon
+          </Button>
         </HStack>
       </Stack>
-      <HStack>
+      <HStack w="100%">
         <Flex justify="space-between" w="100%">
-          <HStack>
-            <HStack textAlign="right" w="100%">
-              {sortNames.map(s => {
-                return (
-                  <Button
-                    key={`sort-${s}`}
-                    display={{ base: 'none', lg: 'flex' }}
-                    fontWeight={sort.sorted == s ? 'bold' : 'normal'}
-                    onClick={() =>
-                      setSort({
-                        sorted: s,
-                        reversed: !sort.reversed,
-                      })
-                    }
-                    p={1}
-                    size={{ base: '2xs', lg: 'sm' }}
-                    variant="ghost"
-                    w="100%"
-                  >
-                    <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                      {s}
-                    </Text>
-                    {sort.sorted == s && sort.reversed && <FaSortAmountUp />}
-                    {sort.sorted == s && !sort.reversed && <FaSortAmountDown />}
-                    {sort.sorted != s && <FaSortAmountDown color="grey" />}
-                  </Button>
-                );
-              })}
-            </HStack>
+          <HStack textAlign="right" w="100%">
+            <Spacer />
+            <Button
+              display={{ base: 'none', lg: 'flex' }}
+              fontWeight={sort.sorted == 'byStock' ? 'bold' : 'normal'}
+              onClick={() =>
+                setSort({
+                  sorted: 'byStock',
+                  reversed: !sort.reversed,
+                })
+              }
+              p={1}
+              size={{ base: '2xs' }}
+              variant="ghost"
+              w="75px"
+            >
+              <Text mr={2} size={{ base: '2xs' }}>
+                Stock
+              </Text>
+              {sort.sorted == 'byStock' && sort.reversed && <FaSortAmountUp />}
+              {sort.sorted == 'byStock' && !sort.reversed && (
+                <FaSortAmountDown />
+              )}
+              {sort.sorted != 'byStock' && <FaSortAmountDown color="grey" />}
+            </Button>
+            <Button
+              display={{ base: 'none', lg: 'flex' }}
+              fontWeight={sort.sorted == 'byPrice' ? 'bold' : 'normal'}
+              onClick={() =>
+                setSort({
+                  sorted: 'byPrice',
+                  reversed: !sort.reversed,
+                })
+              }
+              p={1}
+              size={{ base: '2xs' }}
+              variant="ghost"
+              w="75px"
+            >
+              <Text mr={2} size={{ base: '2xs' }}>
+                Price
+              </Text>
+              {sort.sorted == 'byPrice' && sort.reversed && <FaSortAmountUp />}
+              {sort.sorted == 'byPrice' && !sort.reversed && (
+                <FaSortAmountDown />
+              )}
+              {sort.sorted != 'byPrice' && <FaSortAmountDown color="grey" />}
+            </Button>
+            <Box display={{ base: 'none', md: 'block' }} w="30px"></Box>
           </HStack>
         </Flex>
       </HStack>
       <VStack gap={3} maxW="100%" overflowX="auto" w="100%">
-        {['item1', 'item2', 'item3'].map(function (item, i) {
-          return <ShopItemRow key={`shop-row-${i}`} name={item} />;
+        {entries.map((entry, i) => {
+          return (
+            <ShopItemRow
+              {...entry}
+              emoji={getEmoji(entry.name)}
+              key={`shop-row-${i}`}
+              name={removeEmoji(entry.name)}
+            />
+          );
         })}
       </VStack>
-      <HStack my={5} visibility={entries.length > 0 ? 'visible' : 'hidden'}>
-        <Button
-          onClick={() => setPage('1')}
-          size="xs"
-          visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
-        >
-          <FaBackwardStep />
-        </Button>
-        <Button
-          onClick={() =>
-            setPage((pageNumber == 1 ? 1 : pageNumber - 1).toString())
-          }
-          size="xs"
-          visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
-        >
-          <IoCaretBack />
-        </Button>
-        <Input
-          max={pageLimit}
-          min={1}
-          onChange={e => {
-            const value = e.target.value;
-            if (value === '') {
-              setPage(value);
-              return;
-            }
-            if (isNaN(Number(value))) {
-              return;
-            }
-            if (Number(value) < 1) {
-              return;
-            }
-            if (Number(value) > pageLimit) {
-              return;
-            }
-            setPage(value);
-          }}
-          p={2}
-          size="sm"
-          value={page}
-          w={10}
+      <Box visibility={entries.length > 0 ? 'visible' : 'hidden'}>
+        <Pagination
+          length={length}
+          page={page}
+          pageLimit={pageLimit}
+          perPage={PER_PAGE}
+          setPage={setPage}
+          setPageLimit={setPageLimit}
         />
-        <Text size="sm">of {pageLimit}</Text>
-        <Button
-          onClick={() =>
-            setPage(
-              (pageNumber < pageLimit ? pageNumber + 1 : pageNumber).toString(),
-            )
-          }
-          size="xs"
-          visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
-        >
-          <IoCaretForward />
-        </Button>
-        <Button
-          onClick={() => setPage(pageLimit.toString())}
-          size="xs"
-          visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
-        >
-          <FaForwardStep />
-        </Button>
-      </HStack>
+      </Box>
     </VStack>
   );
 };
