@@ -13,8 +13,8 @@ import {
     EncounterEntityData,
     Stats,
     StatsData,
-    Actions,
-    ActionsData,
+    Effects,
+    EffectsData,
     Items,
     CharacterEquipment,
     CharacterEquipmentData,
@@ -27,18 +27,11 @@ import {
     Spawned,
     MobsData,
     Counters,
-    ActionOutcome,
-    ActionOutcomeData
+    AttackOutcome,
+    AttackOutcomeData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {
-    MonsterStats,
-    WeaponStats,
-    NPCStats,
-    Action,
-    PhysicalAttackStats,
-    AdjustedCombatStats
-} from "@interfaces/Structs.sol";
+import {MonsterStats, NPCStats, Attack, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -50,7 +43,7 @@ import {
     CRIT_MODIFIER,
     BASE_GOLD_DROP
 } from "../../constants.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract EncounterSystem is System {
     using Math for uint256;
@@ -169,9 +162,9 @@ contract EncounterSystem is System {
 
     /**
      * @param encounterId the bytes32 id of the encounter
-     * @param actions : for a pve encounter player actions are calculated first and the mobs.
+     * @param attacks : for a pve the entity with the highest agi has their attacks calculated first
      */
-    function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) public payable {
+    function endTurn(bytes32 encounterId, bytes32 playerId, Attack[] memory attacks) public payable {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         address playerAddress = IWorld(_world()).UD__getOwnerAddress(playerId);
 
@@ -215,7 +208,7 @@ contract EncounterSystem is System {
                 }
             }
         }
-        _queueActions(encounterId, actions);
+        _queueAttacks(encounterId, attacks);
     }
 
     function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
@@ -259,11 +252,18 @@ contract EncounterSystem is System {
             itemsDropped: itemsDropped
         });
 
+        bytes32[] memory emptyArray = new bytes32[](0);
         for (uint256 i; i < encounterData.attackers.length; i++) {
+            // clear encounterId
             EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
+            // remove combat status effects
+            EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
         }
         for (uint256 i; i < encounterData.defenders.length; i++) {
+            // clear encounter id
             EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+            // remove combat status effects
+            EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
         }
         CombatOutcome.set(encounterId, combatOutcome);
     }
@@ -304,9 +304,9 @@ contract EncounterSystem is System {
         }
     }
 
-    function _queueActions(bytes32 encounterId, Action[] memory actions) internal {
+    function _queueAttacks(bytes32 encounterId, Attack[] memory attacks) internal {
         SystemSwitch.call(
-            abi.encodeCall(IRngSystem.getRng, (encounterId, RngRequestType.Combat, abi.encode(encounterId, actions)))
+            abi.encodeCall(IRngSystem.getRng, (encounterId, RngRequestType.Combat, abi.encode(encounterId, attacks)))
         );
     }
 

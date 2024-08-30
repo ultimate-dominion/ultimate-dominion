@@ -5,7 +5,7 @@ import {Classes} from "@codegen/common.sol";
 import {StatsData, StarterItemsData} from "@codegen/index.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
 import {IERC721Metadata} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Metadata.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract Test_CharacterSystem is SetUp, GasReporter {
     function setUp() public virtual override {

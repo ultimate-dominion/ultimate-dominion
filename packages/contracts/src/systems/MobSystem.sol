@@ -32,7 +32,7 @@ contract MobSystem is System {
 
     function createMobs(MobType[] memory mobTypes, bytes[] memory stats, string[] memory mobMetadataURIs) public {
         uint256 len = mobTypes.length;
-        require(mobMetadataURIs.length == len && stats.length == len, "MOB SYSTEM: Array length misencounter");
+        require(mobMetadataURIs.length == len && stats.length == len, "MOB SYSTEM: Array length mismatch");
         for (uint256 i; i < len; i++) {
             createMob(mobTypes[i], stats[i], mobMetadataURIs[i]);
         }

@@ -26,6 +26,7 @@ import {
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
+import { getEmoji, removeEmoji } from '../utils/helpers';
 import { type Character, EncounterType, type Monster } from '../utils/types';
 import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
@@ -49,7 +50,7 @@ export const TileDetailsPanel = (): JSX.Element => {
   const { inSafetyZone, isSpawned, monstersOnTile, otherCharactersOnTile } =
     useMap();
   const {
-    actionOutcomes,
+    attackOutcomes,
     currentBattle,
     opponent,
     userCharacterForBattleRendering,
@@ -61,27 +62,27 @@ export const TileDetailsPanel = (): JSX.Element => {
   const [isMonsterHit, setIsMonsterHit] = useState(false);
 
   useEffect(() => {
-    if (!(actionOutcomes[0] && currentBattle && opponent)) return;
+    if (!(attackOutcomes[0] && currentBattle && opponent)) return;
 
-    const actionIndex = actionOutcomes.findLastIndex(
-      action => action.attackerId === opponent.id,
+    const attackIndex = attackOutcomes.findLastIndex(
+      attack => attack.attackerId === opponent.id,
     );
 
-    if (actionIndex === -1) return;
+    if (attackIndex === -1) return;
 
     const currentBattleOpponentTurn = localStorage.getItem(
       CURRENT_BATTLE_OPPONENT_TURN_KEY,
     );
 
     if (currentBattleOpponentTurn) {
-      if (currentBattleOpponentTurn === actionIndex.toString()) {
+      if (currentBattleOpponentTurn === attackIndex.toString()) {
         return;
       }
     }
 
     if (
-      actionOutcomes[actionIndex]?.attackerDamageDelt !== '0' &&
-      actionIndex - Number(currentBattle.currentTurn) <= 2
+      attackOutcomes[attackIndex]?.attackerDamageDelt !== '0' &&
+      attackIndex - Number(currentBattle.currentTurn) <= 2
     ) {
       setIsUserHit(true);
       setTimeout(() => {
@@ -90,33 +91,33 @@ export const TileDetailsPanel = (): JSX.Element => {
 
       localStorage.setItem(
         CURRENT_BATTLE_OPPONENT_TURN_KEY,
-        actionIndex.toString(),
+        attackIndex.toString(),
       );
     }
-  }, [actionOutcomes, currentBattle, opponent]);
+  }, [attackOutcomes, currentBattle, opponent]);
 
   useEffect(() => {
-    if (!(actionOutcomes[0] && character && currentBattle)) return;
+    if (!(attackOutcomes[0] && character && currentBattle)) return;
 
-    const actionIndex = actionOutcomes.findLastIndex(
-      action => action.attackerId === character.id,
+    const attackIndex = attackOutcomes.findLastIndex(
+      attack => attack.attackerId === character.id,
     );
 
-    if (actionIndex === -1) return;
+    if (attackIndex === -1) return;
 
     const currentBattleDefenderTurn = localStorage.getItem(
       CURRENT_BATTLE_USER_TURN_KEY,
     );
 
     if (currentBattleDefenderTurn) {
-      if (currentBattleDefenderTurn === actionIndex.toString()) {
+      if (currentBattleDefenderTurn === attackIndex.toString()) {
         return;
       }
     }
 
     if (
-      actionOutcomes[actionIndex]?.attackerDamageDelt !== '0' &&
-      actionIndex - Number(currentBattle.currentTurn) <= 2
+      attackOutcomes[attackIndex]?.attackerDamageDelt !== '0' &&
+      attackIndex - Number(currentBattle.currentTurn) <= 2
     ) {
       setIsMonsterHit(true);
       setTimeout(() => {
@@ -125,10 +126,10 @@ export const TileDetailsPanel = (): JSX.Element => {
 
       localStorage.setItem(
         CURRENT_BATTLE_USER_TURN_KEY,
-        actionIndex.toString(),
+        attackIndex.toString(),
       );
     }
-  }, [actionOutcomes, character, currentBattle]);
+  }, [attackOutcomes, character, currentBattle]);
 
   const onInitiateCombat = useCallback(
     async (opponent: Character | Monster, encounterType: EncounterType) => {
@@ -199,7 +200,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           {currentBattle.encounterType === EncounterType.PvE ? (
             <VStack w="48%">
               <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-                {isDesktop ? opponent.name.slice(0, -3) : opponent.name}
+                {isDesktop ? removeEmoji(opponent.name) : opponent.name}
               </Text>
               {isDesktop && (
                 <Text
@@ -208,7 +209,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                   opacity={isMonsterHit ? 0 : 1}
                   transition="opacity 0.1s ease-in-out"
                 >
-                  {opponent.name.slice(-3)}
+                  {getEmoji(opponent.name)}
                 </Text>
               )}
             </VStack>

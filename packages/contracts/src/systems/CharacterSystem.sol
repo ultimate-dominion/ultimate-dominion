@@ -11,9 +11,9 @@ import {
     StatsData,
     Characters,
     CharactersData,
-    Actions
+    Effects
 } from "@codegen/index.sol";
-import {RngRequestType, ActionType} from "@codegen/common.sol";
+import {RngRequestType, EffectType} from "@codegen/common.sol";
 
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
@@ -30,7 +30,7 @@ import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {_erc721SystemId, _erc1155SystemId, _itemsSystemId} from "../utils.sol";

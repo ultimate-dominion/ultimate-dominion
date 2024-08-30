@@ -17,7 +17,7 @@ import {_erc721SystemId} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {BEFORE_CALL_SYSTEM} from "@latticexyz/world/src/systemHookTypes.sol";
 
 import {UltimateDominionConfig} from "../src/codegen/index.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract DeployCharacters is Script {
     function run(address worldAddress) public returns (address) {
@@ -49,7 +49,7 @@ contract DeployCharacters is Script {
         world.transferOwnership(namespaceId, worldAddress);
 
         UltimateDominionConfig.setCharacterToken(address(characters));
-        console2.log("CHAR: ", address(characters));
+        console.log("CHAR: ", address(characters));
         vm.stopBroadcast();
         return address(characters);
     }

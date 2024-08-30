@@ -248,6 +248,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
           return {
             ...monsterTemplate,
+            baseHp: monsterTemplate?.hitPoints.toString() ?? '0',
             currentHp,
             id: entity,
             inBattle,

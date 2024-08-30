@@ -40,20 +40,71 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "executeAction",
+    "name": "applyEquipmentAndStatusEffects",
     "inputs": [
       {
-        "name": "actionOutcomeData",
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_adjustedStats",
         "type": "tuple",
-        "internalType": "struct ActionOutcomeData",
+        "internalType": "struct AdjustedCombatStats",
         "components": [
           {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "name": "adjustedStrength",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "weaponId",
+            "name": "adjustedAgility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedIntelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedArmor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "adjustedMaxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executeAttack",
+    "inputs": [
+      {
+        "name": "attackOutcomeData",
+        "type": "tuple",
+        "internalType": "struct AttackOutcomeData",
+        "components": [
+          {
+            "name": "itemId",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -66,21 +117,6 @@ declare const abi: [
             "name": "defenderId",
             "type": "bytes32",
             "internalType": "bytes32"
-          },
-          {
-            "name": "hit",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "miss",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "crit",
-            "type": "bool",
-            "internalType": "bool"
           },
           {
             "name": "attackerDamageDelt",
@@ -111,6 +147,31 @@ declare const abi: [
             "name": "timestamp",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "damagePerHit",
+            "type": "int256[]",
+            "internalType": "int256[]"
+          },
+          {
+            "name": "effectIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "hit",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "miss",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "crit",
+            "type": "bool[]",
+            "internalType": "bool[]"
           }
         ]
       },
@@ -124,15 +185,10 @@ declare const abi: [
       {
         "name": "",
         "type": "tuple",
-        "internalType": "struct ActionOutcomeData",
+        "internalType": "struct AttackOutcomeData",
         "components": [
           {
-            "name": "actionId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "weaponId",
+            "name": "itemId",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -145,21 +201,6 @@ declare const abi: [
             "name": "defenderId",
             "type": "bytes32",
             "internalType": "bytes32"
-          },
-          {
-            "name": "hit",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "miss",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "crit",
-            "type": "bool",
-            "internalType": "bool"
           },
           {
             "name": "attackerDamageDelt",
@@ -190,6 +231,31 @@ declare const abi: [
             "name": "timestamp",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "damagePerHit",
+            "type": "int256[]",
+            "internalType": "int256[]"
+          },
+          {
+            "name": "effectIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "hit",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "miss",
+            "type": "bool[]",
+            "internalType": "bool[]"
+          },
+          {
+            "name": "crit",
+            "type": "bool[]",
+            "internalType": "bool[]"
           }
         ]
       }
@@ -335,6 +401,11 @@ declare const abi: [
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "IntOverflow",
+    "inputs": []
   },
   {
     "type": "error",

@@ -5,7 +5,7 @@ pragma solidity >=0.8.24;
 
 import { EncounterType } from "@codegen/common.sol";
 import { CombatEncounterData } from "@codegen/index.sol";
-import { Action } from "@interfaces/Structs.sol";
+import { Attack } from "@interfaces/Structs.sol";
 
 /**
  * @title IEncounterSystem
@@ -23,7 +23,7 @@ interface IEncounterSystem {
     CombatEncounterData memory encounterData
   ) external view returns (bool _encounterEnded, bool _attackersWin);
 
-  function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory actions) external payable;
+  function UD__endTurn(bytes32 encounterId, bytes32 playerId, Attack[] memory attacks) external payable;
 
   function UD__endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) external;
 

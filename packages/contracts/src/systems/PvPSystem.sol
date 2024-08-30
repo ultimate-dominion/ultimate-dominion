@@ -13,8 +13,8 @@ import {
     EncounterEntityData,
     Stats,
     StatsData,
-    Actions,
-    ActionsData,
+    Effects,
+    EffectsData,
     Items,
     CharacterEquipment,
     CharacterEquipmentData,
@@ -27,19 +27,11 @@ import {
     Spawned,
     MobsData,
     Counters,
-    ActionOutcome,
-    ActionOutcomeData,
-    PvPFlag
+    AttackOutcome,
+    AttackOutcomeData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {
-    MonsterStats,
-    WeaponStats,
-    NPCStats,
-    Action,
-    PhysicalAttackStats,
-    AdjustedCombatStats
-} from "@interfaces/Structs.sol";
+import {MonsterStats, NPCStats, Attack, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -51,7 +43,7 @@ import {
     CRIT_MODIFIER,
     BASE_GOLD_DROP
 } from "../../constants.sol";
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 
 contract PvPSystem is System {
     function isValidPvP(bytes32[] memory attackers, bytes32[] memory defenders, uint16 x, uint16 y)
@@ -74,7 +66,8 @@ contract PvPSystem is System {
             }
             if (entityX >= 5 || entityY >= 5) {
                 // intentionally left empty
-            } else {
+            }
+            else {
                 _isValidPvP = false;
                 break;
             }
@@ -95,7 +88,8 @@ contract PvPSystem is System {
                 }
                 if (entityX >= 5 || entityY >= 5) {
                     // intentionally left empty
-                } else {
+                }
+                else {
                     _isValidPvP = false;
                     break;
                 }
@@ -107,28 +101,28 @@ contract PvPSystem is System {
         return _isValidPvP;
     }
 
-    function executePvPCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory actions) public {
+    function executePvPCombat(uint256 prevRandao, bytes32 encounterId, Attack[] memory effects) public {
         // ensure this is an authorised call from the entropy contract
         _requireAccess(address(this), _msgSender());
 
         uint256 randomNumber;
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        ActionOutcomeData memory currentActionData;
-        // execute attacker actions
-        for (uint256 i; i < actions.length; i++) {
-            Action memory currentAction = actions[i];
+        AttackOutcomeData memory currentAttackData;
+        // execute attacker effects
+        for (uint256 i; i < effects.length; i++) {
+            Attack memory currentEffect = effects[i];
 
             randomNumber =
-                uint256(keccak256(abi.encode(prevRandao, currentAction.attackerEntityId, encounterData.currentTurn)));
+                uint256(keccak256(abi.encode(prevRandao, currentEffect.attackerEntityId, encounterData.currentTurn)));
 
-            currentActionData = _getCurrentActionData(currentAction);
+            currentAttackData = _getCurrentAttackData(currentEffect);
 
             // execute action
-            currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
+            currentAttackData = IWorld(_world()).UD__executeAttack(currentAttackData, randomNumber);
 
             // emit action data to offchain table
-            ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
+            AttackOutcome.set(encounterId, encounterData.currentTurn, i, currentAttackData);
         }
 
         encounterData.currentTurnTimer = block.timestamp;
@@ -165,19 +159,25 @@ contract PvPSystem is System {
         }
     }
 
-    function _getCurrentActionData(Action memory currentAction)
+    function _getCurrentAttackData(Attack memory currentAttack)
         internal
         view
-        returns (ActionOutcomeData memory currentActionData)
+        returns (AttackOutcomeData memory currentAttackData)
     {
-        currentActionData = ActionOutcomeData({
-            actionId: currentAction.actionId,
-            weaponId: currentAction.weaponId,
-            attackerId: currentAction.attackerEntityId,
-            defenderId: currentAction.defenderEntityId,
-            hit: false,
-            miss: false,
-            crit: false,
+        bytes32[] memory effects = IWorld(_world()).UD__getItemEffects(currentAttack.itemId);
+        bool[] memory hit = new bool[](effects.length);
+        bool[] memory miss = new bool[](effects.length);
+        bool[] memory crit = new bool[](effects.length);
+        int256[] memory damagePerHit = new int256[](effects.length);
+        currentAttackData = AttackOutcomeData({
+            effectIds: effects,
+            itemId: currentAttack.itemId,
+            attackerId: currentAttack.attackerEntityId,
+            defenderId: currentAttack.defenderEntityId,
+            damagePerHit: damagePerHit,
+            hit: hit,
+            miss: miss,
+            crit: crit,
             attackerDamageDelt: 0,
             defenderDamageDelt: 0,
             attackerDied: false,

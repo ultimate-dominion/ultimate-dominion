@@ -154,8 +154,7 @@ export function createSystemCalls(
     encounterId: Entity,
     playerId: Entity,
     defenderId: Entity,
-    actionId: Entity,
-    weaponId: string,
+    itemId: string,
     previousTurn: string,
   ): SystemCallReturn => {
     try {
@@ -163,8 +162,7 @@ export function createSystemCalls(
         {
           attackerEntityId: playerId.toString() as `0x${string}`,
           defenderEntityId: defenderId.toString() as `0x${string}`,
-          actionId: actionId.toString() as `0x${string}`,
-          weaponId: BigInt(weaponId),
+          itemId: BigInt(itemId),
         },
       ];
 

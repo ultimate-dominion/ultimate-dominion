@@ -113,9 +113,11 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
     function getOrderStatus(bytes32 orderHash) public view returns (OrderStatus orderStatus) {
         return Orders.getOrderStatus(orderHash);
     }
+
     function auctionHouseAddress() external view returns (address){
         return address(this);
     }
+    
     function _transfer(bytes32 orderHash, bool isOffer, address to, address from) internal {
         ConsiderationsData memory c = Considerations.get(orderHash);
         OffersData memory o = Offers.get(orderHash);

@@ -35,20 +35,33 @@ import {
     ITEMS_NAMESPACE,
     TOKEN_URI
 } from "../constants.sol";
+import {
+    ArmorStats,
+    ArmorStatsData,
+    WeaponStats,
+    WeaponStatsData,
+    StatRestrictions,
+    StatRestrictionsData,
+    SpellStatsData,
+    SpellStats,
+    ConsumableStats,
+    ConsumableStatsData
+} from "@codegen/index.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
-import {Classes, ItemType, MobType, ActionType} from "@codegen/common.sol";
+import {Classes, ItemType, MobType, EffectType} from "@codegen/common.sol";
 import {
-    WeaponStats,
     MonsterStats,
     MonsterTemplateDetails,
     WeaponTemplateDetails,
     ArmorTemplateDetails,
-    ArmorStats,
-    PhysicalAttackStats,
     StarterItems,
-    StarterActions,
-    PhysicalAttackTemplate
+    StarterEffects,
+    PhysicalDamageTemplate,
+    WeaponStatDetails,
+    ArmorStatDetails,
+    SpellTemplateDetails,
+    ConsumableTemplateDetails
 } from "@interfaces/Structs.sol";
 
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
@@ -57,7 +70,7 @@ import {IERC1155} from "@erc1155/IERC1155.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {_erc1155SystemId} from "@erc1155/utils.sol";
 
-import "forge-std/console2.sol";
+import "forge-std/console.sol";
 import "forge-std/StdJson.sol";
 
 struct ResourceIds {
@@ -91,7 +104,7 @@ contract PostDeploy is Script {
         // Load the private key from the `PRIVATE_KEY` environment variable (in .env)
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
-        // Start broadcasting transactions from the deployer account
+        // Start broadcasting transeffects from the deployer account
         vm.startBroadcast(deployerPrivateKey);
         if (block.chainid == 31337) {
             // Set entropy contracts
@@ -193,39 +206,51 @@ contract PostDeploy is Script {
         //allow entropy system to call callback on Combat system
         world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
         _createStarterItems();
-        _createActions();
+        _createEffects();
         _createMonsters();
+
+        address _auctionHouseAddress = world.UD__auctionHouseAddress();
+        UltimateDominionConfig.setAuctionHouse(_auctionHouseAddress);
 
         setLevels();
         vm.stopBroadcast();
     }
 
-    function _createActions() internal {
-        string memory json = vm.readFile("actions.json");
+    function _createEffects() internal {
+        string memory json = vm.readFile("effects.json");
         bytes memory data = vm.parseJson(json);
 
-        StarterActions memory actionsData = abi.decode(data, (StarterActions));
+        StarterEffects memory effectsData = abi.decode(data, (StarterEffects));
 
-        for (uint256 i; i < actionsData.physicalAttacks.length; i++) {
-            bytes32 newActionId = world.UD__createAction(
-                ActionType.PhysicalAttack,
-                actionsData.physicalAttacks[i].name,
-                abi.encode(actionsData.physicalAttacks[i].stats)
+        for (uint256 i; i < effectsData.PhysicalDamages.length; i++) {
+            bytes32 newEffectId = world.UD__createEffect(
+                EffectType.PhysicalDamage,
+                effectsData.PhysicalDamages[i].name,
+                abi.encode(effectsData.PhysicalDamages[i].stats)
             );
-            console2.log("Physical action id: ", i + 1);
-            console2.logBytes32(newActionId);
-            require(newActionId == actionsData.physicalAttacks[i].actionId, "Physical action Id mismatch");
+            console.log("Physical action id: ", i + 1);
+            console.logBytes32(newEffectId);
+            require(newEffectId == effectsData.PhysicalDamages[i].effectId, "Physical effect Id mismatch");
         }
 
-        for (uint256 i; i < actionsData.magicAttacks.length; i++) {
-            bytes32 newActionId = world.UD__createAction(
-                ActionType.PhysicalAttack,
-                actionsData.magicAttacks[i].name,
-                abi.encode(actionsData.magicAttacks[i].stats)
+        for (uint256 i; i < effectsData.MagicDamages.length; i++) {
+            bytes32 newEffectId = world.UD__createEffect(
+                EffectType.MagicDamage, effectsData.MagicDamages[i].name, abi.encode(effectsData.MagicDamages[i].stats)
             );
-            console2.log("Magic action Id ", i + 1);
-            console2.logBytes32(newActionId);
-            require(newActionId == actionsData.magicAttacks[i].actionId, "Magical action Id mismatch");
+            console.log("Magic action Id ", i + 1);
+            console.logBytes32(newEffectId);
+            require(newEffectId == effectsData.MagicDamages[i].effectId, "Magical effect Id mismatch");
+        }
+
+        for (uint256 i; i < effectsData.statusEffects.length; i++) {
+            bytes32 newEffectId = world.UD__createEffect(
+                EffectType.MagicDamage,
+                effectsData.statusEffects[i].name,
+                abi.encode(effectsData.statusEffects[i].stats, effectsData.statusEffects[i].validity)
+            );
+            console.log("Magic action Id ", i + 1);
+            console.logBytes32(newEffectId);
+            require(newEffectId == effectsData.statusEffects[i].effectId, "status effect Id mismatch");
         }
     }
 
@@ -272,20 +297,20 @@ contract PostDeploy is Script {
         bytes memory data = vm.parseJson(json);
 
         StarterItems memory itemsData = abi.decode(data, (StarterItems));
-        uint256[] memory warriorItemIds = new uint256[](2);
-        uint256[] memory rogueItemIds = new uint256[](2);
-        uint256[] memory mageItemIds = new uint256[](2);
+
+        uint256[] memory warriorItemIds = new uint256[](3);
+        uint256[] memory rogueItemIds = new uint256[](3);
+        uint256[] memory mageItemIds = new uint256[](4);
 
         for (uint256 i = 0; i < itemsData.armor.length; i++) {
             ArmorTemplateDetails memory armorTemplate = itemsData.armor[i];
 
-            ArmorStats memory newArmor = ArmorStats({
+            ArmorStatsData memory newArmor = ArmorStatsData({
                 agiModifier: armorTemplate.stats.agiModifier,
                 armorModifier: armorTemplate.stats.armorModifier,
-                hitPointModifier: armorTemplate.stats.hitPointModifier,
+                hpModifier: armorTemplate.stats.hpModifier,
                 intModifier: armorTemplate.stats.intModifier,
                 minLevel: armorTemplate.stats.minLevel,
-                statRestrictions: armorTemplate.stats.statRestrictions,
                 strModifier: armorTemplate.stats.strModifier
             });
 
@@ -293,7 +318,7 @@ contract PostDeploy is Script {
                 ItemType.Armor,
                 armorTemplate.initialSupply,
                 armorTemplate.dropChance,
-                abi.encode(newArmor),
+                abi.encode(newArmor, armorTemplate.statRestrictions),
                 armorTemplate.metadataUri
             );
 
@@ -307,14 +332,14 @@ contract PostDeploy is Script {
         for (uint256 i = 0; i < itemsData.weapons.length; i++) {
             WeaponTemplateDetails memory weaponTemplate = itemsData.weapons[i];
 
-            WeaponStats memory newWeapon = WeaponStats({
+            WeaponStatsData memory newWeapon = WeaponStatsData({
                 agiModifier: weaponTemplate.stats.agiModifier,
-                hitPointModifier: weaponTemplate.stats.hitPointModifier,
+                effects: weaponTemplate.stats.effects,
+                hpModifier: weaponTemplate.stats.hpModifier,
                 intModifier: weaponTemplate.stats.intModifier,
                 maxDamage: weaponTemplate.stats.maxDamage,
                 minDamage: weaponTemplate.stats.minDamage,
                 minLevel: weaponTemplate.stats.minLevel,
-                statRestrictions: weaponTemplate.stats.statRestrictions,
                 strModifier: weaponTemplate.stats.strModifier
             });
 
@@ -322,7 +347,7 @@ contract PostDeploy is Script {
                 ItemType.Weapon,
                 weaponTemplate.initialSupply,
                 weaponTemplate.dropChance,
-                abi.encode(newWeapon),
+                abi.encode(newWeapon, weaponTemplate.statRestrictions),
                 weaponTemplate.metadataUri
             );
 
@@ -333,13 +358,68 @@ contract PostDeploy is Script {
             }
         }
 
-        uint256[] memory amounts = new uint256[](2);
+        for (uint256 i = 0; i < itemsData.spells.length; i++) {
+            SpellTemplateDetails memory spellTemplate = itemsData.spells[i];
+
+            SpellStatsData memory newSpell = SpellStatsData({
+                effects: spellTemplate.stats.effects,
+                maxDamage: spellTemplate.stats.maxDamage,
+                minDamage: spellTemplate.stats.minDamage,
+                minLevel: spellTemplate.stats.minLevel
+            });
+
+            uint256 starterSpellId = world.UD__createItem(
+                ItemType.Spell,
+                spellTemplate.initialSupply,
+                spellTemplate.dropChance,
+                abi.encode(newSpell, spellTemplate.statRestrictions),
+                spellTemplate.metadataUri
+            );
+
+            if (i == 0) {
+                mageItemIds[2] = starterSpellId;
+            }
+        }
+
+        for (uint256 i = 0; i < itemsData.consumables.length; i++) {
+            ConsumableTemplateDetails memory consumablesTemplate = itemsData.consumables[i];
+
+            ConsumableStatsData memory newConsumable = ConsumableStatsData({
+                effects: consumablesTemplate.stats.effects,
+                maxDamage: consumablesTemplate.stats.maxDamage,
+                minDamage: consumablesTemplate.stats.minDamage,
+                minLevel: consumablesTemplate.stats.minLevel
+            });
+
+            uint256 starterConsumableId = world.UD__createItem(
+                ItemType.Consumable,
+                consumablesTemplate.initialSupply,
+                consumablesTemplate.dropChance,
+                abi.encode(newConsumable, consumablesTemplate.statRestrictions),
+                consumablesTemplate.metadataUri
+            );
+
+            if (i == 0) {
+                warriorItemIds[2] = starterConsumableId;
+                rogueItemIds[2] = starterConsumableId;
+                mageItemIds[3] = starterConsumableId;
+            }
+        }
+
+        uint256[] memory amounts = new uint256[](3);
         amounts[0] = 1;
         amounts[1] = 1;
+        amounts[2] = 1;
+
+        uint256[] memory mageAmounts = new uint256[](4);
+        mageAmounts[0] = 1;
+        mageAmounts[1] = 1;
+        mageAmounts[2] = 1;
+        mageAmounts[3] = 1;
 
         world.UD__setStarterItems(Classes.Warrior, warriorItemIds, amounts);
         world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);
-        world.UD__setStarterItems(Classes.Mage, mageItemIds, amounts);
+        world.UD__setStarterItems(Classes.Mage, mageItemIds, mageAmounts);
     }
 
     function _createMonsters() internal {
@@ -361,8 +441,7 @@ contract PostDeploy is Script {
                 level: monsterTemplate.stats.level,
                 intelligence: monsterTemplate.stats.intelligence,
                 inventory: monsterTemplate.stats.inventory,
-                strength: monsterTemplate.stats.strength,
-                actions: monsterTemplate.stats.actions
+                strength: monsterTemplate.stats.strength
             });
 
             world.UD__createMob(MobType.Monster, abi.encode(newMonster), monsterTemplate.metadataUri);
