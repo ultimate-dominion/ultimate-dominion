@@ -117,43 +117,100 @@
       }
     }
   ],
-  "metadataUriPrefix": "ipfs://QmcEgdrkuCYj9xjoo8ofuDfdr9kyAk8CCYpzqeMA4f9hp3/",
+  "metadataUriPrefix": "ipfs://QmYHtG9fCneWpeW1htV1j4NUD8LKhYR2tztvRCLviqhiKB/",
   "spells": [
     {
       "dropChance": 20000000,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "4_apprentice_robe.json",
-      "name": "haduken",
+      "metadataUri": "16_thunderwave.json",
+      "name": "Thunderwave",
       "stats": {
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
         ],
         "maxDamage": 5,
         "minDamage": 1,
-        "minLevel": 0
+        "minLevel": 1
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 4,
+        "minIntelligence": 6,
         "minStrength": 0
       }
     },
     {
       "dropChance": 20000000,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "4_apprentice_robe.json",
-      "name": "minor heal",
+      "metadataUri": "17_fireball.json",
+      "name": "Fireball",
       "stats": {
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
         ],
-        "maxDamage": -5,
-        "minDamage": -1,
+        "maxDamage": 8,
+        "minDamage": 4,
+        "minLevel": 3
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 8,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 20000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "18_wall_of_force.json",
+      "name": "Wall of Force",
+      "stats": {
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 10,
+        "minDamage": 6,
         "minLevel": 0
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 4,
+        "minIntelligence": 10,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 20000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "19_ice_lance.json",
+      "name": "Ice Lance",
+      "stats": {
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 12,
+        "minDamage": 8,
+        "minLevel": 4
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 12,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 20000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "20_meteor_swarm.json",
+      "name": "Meteor Swarm",
+      "stats": {
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 15,
+        "minDamage": 10,
+        "minLevel": 5
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 15,
         "minStrength": 0
       }
     }
@@ -272,6 +329,121 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 15
+      }
+    },
+    {
+      "dropChance": 5000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "11_flash_bomb.json",
+      "name": "Flash Bomb",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 8,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 5000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "12_weakening_fumes.json",
+      "name": "Weakening Fumes",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0x98562f2b32aeb98f000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 8,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 5000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "13_glimmerstone.json",
+      "name": "Glimmerstone",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0x54a7e38986f19669000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 8,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 5000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "14_poison_dart.json",
+      "name": "Poison Dart",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 3,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 12,
+        "minIntelligence": 0,
+        "minStrength": 8
+      }
+    },
+    {
+      "dropChance": 5000000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "15_crossbow.json",
+      "name": "Crossbow",
+      "stats": {
+        "agiModifier": 5,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 15,
+        "minDamage": 10,
+        "minLevel": 5,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 5,
+        "minIntelligence": 0,
+        "minStrength": 10
       }
     }
   ]

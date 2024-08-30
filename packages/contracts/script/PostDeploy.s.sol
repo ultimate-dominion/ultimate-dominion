@@ -244,11 +244,11 @@ contract PostDeploy is Script {
 
         for (uint256 i; i < effectsData.statusEffects.length; i++) {
             bytes32 newEffectId = world.UD__createEffect(
-                EffectType.MagicDamage,
+                EffectType.StatusEffect,
                 effectsData.statusEffects[i].name,
                 abi.encode(effectsData.statusEffects[i].stats, effectsData.statusEffects[i].validity)
             );
-            console.log("Magic action Id ", i + 1);
+            console.log("Status Effect Id ", i + 1);
             console.logBytes32(newEffectId);
             require(newEffectId == effectsData.statusEffects[i].effectId, "status effect Id mismatch");
         }
