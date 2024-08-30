@@ -15,7 +15,6 @@ import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 
-// import { FaHatWizard } from 'react-icons/fa';
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import { ArmorTemplate, WeaponTemplate } from '../utils/types';
 import { Pagination } from './Pagination';
