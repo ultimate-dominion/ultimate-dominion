@@ -9,9 +9,9 @@ enum Classes {
 }
 
 enum RngRequestType {
+  World,
   CharacterStats,
-  Combat,
-  WorldGeneration
+  Combat
 }
 
 enum ItemType {
@@ -36,7 +36,8 @@ enum Alignment {
 
 enum EncounterType {
   PvP,
-  PvE
+  PvE,
+  World
 }
 
 enum EffectType {

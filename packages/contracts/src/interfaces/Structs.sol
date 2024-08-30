@@ -140,7 +140,7 @@ struct MonsterStats {
     uint256 experience;
     // hit points
     uint256 hitPoints;
-    // base to hit modifier for magical Attacks = inteligence * magicDefenseConversion
+    // base to hit modifier for magical Actions = inteligence * magicDefenseConversion
     uint256 intelligence;
     // item ids of potential drops
     uint256[] inventory;
@@ -169,7 +169,7 @@ struct QuestEntity {
     uint256 currentStep;
 }
 
-struct Attack {
+struct Action {
     bytes32 attackerEntityId;
     bytes32 defenderEntityId;
     uint256 itemId;

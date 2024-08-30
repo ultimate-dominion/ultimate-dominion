@@ -174,9 +174,10 @@ contract EffectsSystem is System {
     {
         _requireAccess(address(this), _msgSender());
         StatusEffectsValidityData memory statsData = StatusEffectsValidity.get(effectId);
-        if (statsData.validTurns != 0 && EncounterEntity.getEncounterId(entityId) != bytes32(0)) {
+        bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
+        if (statsData.validTurns != 0 && encounterId != bytes32(0)) {
             EncounterEntity.pushAppliedStatusEffects(entityId, effectId);
-        } else if (statsData.validTime != 0) {
+        } else if (statsData.validTime != 0 && encounterId == bytes32(0)) {
             WorldStatusEffects.pushAppliedStatusEffects(entityId, effectId);
         } else {
             revert("invalid effect application");

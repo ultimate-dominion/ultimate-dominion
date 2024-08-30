@@ -244,7 +244,7 @@ contract PostDeploy is Script {
 
         for (uint256 i; i < effectsData.statusEffects.length; i++) {
             bytes32 newEffectId = world.UD__createEffect(
-                EffectType.MagicDamage,
+                EffectType.StatusEffect,
                 effectsData.statusEffects[i].name,
                 abi.encode(effectsData.statusEffects[i].stats, effectsData.statusEffects[i].validity)
             );

@@ -16,11 +16,11 @@ export default defineWorld({
       "Rogue", // 1
       "Mage", // 2
     ],
-    RngRequestType: ["CharacterStats", "Combat", "WorldGeneration"],
+    RngRequestType: ["World", "CharacterStats", "Combat"],
     ItemType: ["Weapon", "Armor", "Spell", "Consumable", "QuestItem"],
     MobType: ["Monster", "NPC"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
-    EncounterType: ["PvP", "PvE"],
+    EncounterType: ["PvP", "PvE", "World"],
     EffectType: ["Temporary", "PhysicalDamage", "MagicDamage", "StatusEffect"],
     ResistanceStat: ["None", "Strength", "Agility", "Intelligence"],
     OrderStatus: ["Canceled", "Active", "Fullfilled"],
@@ -427,7 +427,7 @@ export default defineWorld({
       },
       type: "offchainTable",
     },
-    AttackOutcome: {
+    ActionOutcome: {
       schema: {
         encounterId: "bytes32",
         currentTurn: "uint256",
@@ -449,6 +449,16 @@ export default defineWorld({
       },
       key: ["encounterId", "currentTurn", "attackNumber"],
       type: "offchainTable",
+    },
+    DamageOverTimeApplied: {
+      key: ["encounterId", "turnNumber"],
+      schema: {
+        encounterId: "bytes32",
+        turnNumber: "uint256",
+        entityId: "bytes32",
+        totalDamage: "int256",
+        individualDamages: "int256[]",
+      },
     },
     CombatOutcome: {
       schema: {

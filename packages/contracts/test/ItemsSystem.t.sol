@@ -37,7 +37,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     function test_CreateItem() public {
         startGasReport("creates an item");
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStatsData memory weaponStats = WeaponStatsData({
@@ -71,7 +71,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_CreateItem_Revert_NotNamespaceOwner() public {
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStatsData memory weaponStats = WeaponStatsData({
@@ -112,7 +112,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_GetTotalSupply() public {
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStatsData memory weaponStats = WeaponStatsData({

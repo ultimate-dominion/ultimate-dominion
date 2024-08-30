@@ -183,7 +183,7 @@ declare const abi: [
       {
         "name": "attacks",
         "type": "tuple[]",
-        "internalType": "struct Attack[]",
+        "internalType": "struct Action[]",
         "components": [
           {
             "name": "attackerEntityId",

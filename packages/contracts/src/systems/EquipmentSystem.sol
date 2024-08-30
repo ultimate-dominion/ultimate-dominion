@@ -28,7 +28,9 @@ import {
     SpellStatsData,
     ConsumableStats,
     StatRestrictions,
-    StatRestrictionsData
+    StatRestrictionsData,
+    ConsumableStats,
+    ConsumableStatsData
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
@@ -404,8 +406,12 @@ contract EquipmentSystem is System {
     }
 
     function getSpellStats(uint256 itemId) public view returns (SpellStatsData memory _spellStats) {
-        ItemType itemType = Items.getItemType(itemId);
-        require(itemType == ItemType.Spell, "ITEMS: Not a  Armor");
         _spellStats = SpellStats.get(itemId);
+    }
+
+    function getConsumableStats(uint256 itemId) public view returns (ConsumableStatsData memory _consumableStats) {
+        ItemType itemType = Items.getItemType(itemId);
+        require(itemType == ItemType.Consumable, "ITEMS: Not Consumable");
+        _consumableStats = ConsumableStats.get(itemId);
     }
 }

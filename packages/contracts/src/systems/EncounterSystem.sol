@@ -27,11 +27,14 @@ import {
     Spawned,
     MobsData,
     Counters,
-    AttackOutcome,
-    AttackOutcomeData
+    ActionOutcome,
+    ActionOutcomeData,
+    DamageOverTimeAppliedData,
+    DamageOverTimeApplied,
+    StatusEffectStats
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Attack, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -139,7 +142,7 @@ contract EncounterSystem is System {
         returns (bool _encounterEnded, bool _attackersWin)
     {
         uint256 deadDefenderCounter;
-        uint256 deadAttackerCounter;
+        uint256 deadActionerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
             if (IWorld(_world()).UD__getDied(encounterData.defenders[i])) {
                 deadDefenderCounter++;
@@ -147,12 +150,12 @@ contract EncounterSystem is System {
         }
         for (uint256 i; i < encounterData.attackers.length; i++) {
             if (IWorld(_world()).UD__getDied(encounterData.attackers[i])) {
-                deadAttackerCounter++;
+                deadActionerCounter++;
             }
         }
 
         _encounterEnded = (
-            deadAttackerCounter == encounterData.attackers.length
+            deadActionerCounter == encounterData.attackers.length
                 || deadDefenderCounter == encounterData.defenders.length
                 || encounterData.currentTurn == encounterData.maxTurns
         );
@@ -164,7 +167,7 @@ contract EncounterSystem is System {
      * @param encounterId the bytes32 id of the encounter
      * @param attacks : for a pve the entity with the highest agi has their attacks calculated first
      */
-    function endTurn(bytes32 encounterId, bytes32 playerId, Attack[] memory attacks) public payable {
+    function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory attacks) public payable {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         address playerAddress = IWorld(_world()).UD__getOwnerAddress(playerId);
 
@@ -174,7 +177,7 @@ contract EncounterSystem is System {
             playerAddress == _msgSender() && isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: NON-COMBATANT"
         );
 
-        // check valid pvp turns
+        // is pvp
         if (uint8(encounterData.encounterType) == 0) {
             // should be defender turn
             if (encounterData.currentTurn % 2 == 0) {
@@ -191,6 +194,7 @@ contract EncounterSystem is System {
                 } else {
                     require(isParticipant(playerAddress, encounterData.defenders), "Cannot end defenders turn");
                 }
+                // is pve
             } else {
                 // should be attacker turn unless defender has timed out
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
@@ -208,7 +212,35 @@ contract EncounterSystem is System {
                 }
             }
         }
-        _queueAttacks(encounterId, attacks);
+        _queueActions(encounterId, attacks);
+        _applyDamageOverTime(encounterId, attacks);
+    }
+
+    function _applyDamageOverTime(bytes32 encounterId, Action[] memory attacks) internal {
+        CombatEncounterData memory combatData = CombatEncounter.get(encounterId);
+        bytes32 entityId;
+        int256[] memory damages;
+        int256 totalDamage;
+        if (CombatEncounter.getEncounterType(encounterId) == EncounterType.PvE) {
+            for (uint256 i; i < attacks.length; i++) {
+                entityId = attacks[i].defenderEntityId;
+                bytes32[] memory appliedStatusEffects = EncounterEntity.getAppliedStatusEffects(entityId);
+
+                damages = new int256[](appliedStatusEffects.length);
+                for (uint256 j; j < appliedStatusEffects.length; j++) {
+                    int256 damageToApply = StatusEffectStats.getDamagePerTick(appliedStatusEffects[j]);
+                    damages[i] = damageToApply;
+                    int256 currentHp = Stats.getCurrentHp(entityId) + damageToApply;
+                    if (damageToApply != 0) Stats.setCurrentHp(entityId, currentHp);
+                }
+            }
+        }
+        for (uint256 i; i < damages.length; i++) {
+            totalDamage += damages[i];
+        }
+        DamageOverTimeAppliedData memory dotDamage =
+            DamageOverTimeAppliedData({entityId: entityId, totalDamage: totalDamage, individualDamages: damages});
+        DamageOverTimeApplied.set(encounterId, combatData.currentTurn, dotDamage);
     }
 
     function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
@@ -304,7 +336,7 @@ contract EncounterSystem is System {
         }
     }
 
-    function _queueAttacks(bytes32 encounterId, Attack[] memory attacks) internal {
+    function _queueActions(bytes32 encounterId, Action[] memory attacks) internal {
         SystemSwitch.call(
             abi.encodeCall(IRngSystem.getRng, (encounterId, RngRequestType.Combat, abi.encode(encounterId, attacks)))
         );

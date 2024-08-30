@@ -1216,7 +1216,7 @@ declare const abi: [
       {
         "name": "attacks",
         "type": "tuple[]",
-        "internalType": "struct Attack[]",
+        "internalType": "struct Action[]",
         "components": [
           {
             "name": "attackerEntityId",
@@ -1272,12 +1272,12 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__executeAttack",
+    "name": "UD__executeAction",
     "inputs": [
       {
-        "name": "attackOutcomeData",
+        "name": "actionOutcomeData",
         "type": "tuple",
-        "internalType": "struct AttackOutcomeData",
+        "internalType": "struct ActionOutcomeData",
         "components": [
           {
             "name": "itemId",
@@ -1361,7 +1361,7 @@ declare const abi: [
       {
         "name": "",
         "type": "tuple",
-        "internalType": "struct AttackOutcomeData",
+        "internalType": "struct ActionOutcomeData",
         "components": [
           {
             "name": "itemId",
@@ -1455,7 +1455,7 @@ declare const abi: [
       {
         "name": "attacks",
         "type": "tuple[]",
-        "internalType": "struct Attack[]",
+        "internalType": "struct Action[]",
         "components": [
           {
             "name": "attackerEntityId",
@@ -1495,7 +1495,47 @@ declare const abi: [
       {
         "name": "effects",
         "type": "tuple[]",
-        "internalType": "struct Attack[]",
+        "internalType": "struct Action[]",
+        "components": [
+          {
+            "name": "attackerEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "defenderEntityId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "itemId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__executeWorldRngActions",
+    "inputs": [
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "givingEntity",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "actions",
+        "type": "tuple[]",
+        "internalType": "struct Action[]",
         "components": [
           {
             "name": "attackerEntityId",
@@ -1737,6 +1777,47 @@ declare const abi: [
             "name": "recipient",
             "type": "address",
             "internalType": "address"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getConsumableStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_consumableStats",
+        "type": "tuple",
+        "internalType": "struct ConsumableStatsData",
+        "components": [
+          {
+            "name": "minDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "effects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
           }
         ]
       }
@@ -3741,6 +3822,29 @@ declare const abi: [
         "name": "tokenUri",
         "type": "string",
         "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__useWorldConsumableItem",
+    "inputs": [
+      {
+        "name": "givingEntity",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "receivingEntity",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],

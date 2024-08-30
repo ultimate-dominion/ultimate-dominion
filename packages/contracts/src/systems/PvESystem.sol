@@ -27,11 +27,11 @@ import {
     Spawned,
     MobsData,
     Counters,
-    AttackOutcome,
-    AttackOutcomeData
+    ActionOutcome,
+    ActionOutcomeData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Attack, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -94,19 +94,19 @@ contract PvESystem is System {
         return (_isValidPvE, _attackersAreMobs);
     }
 
-    function executePvECombat(uint256 randomness, bytes32 encounterId, Attack[] memory attacks) public {
+    function executePvECombat(uint256 randomness, bytes32 encounterId, Action[] memory attacks) public {
         // ensure this is an authorised call from the entropy contract
         _requireAccess(address(this), _msgSender());
 
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        uint256 numberOfExecutedAttacks;
+        uint256 numberOfExecutedActions;
         if (encounterData.attackersAreMobs) {
             // execute mob attacks
-            numberOfExecutedAttacks = _executeMobAttack(encounterId, encounterData, randomness, 0);
+            numberOfExecutedActions = _executeMobAction(encounterId, encounterData, randomness, 0);
         } else {
             //execute player attack
-            numberOfExecutedAttacks = _executePlayerAttack(encounterId, encounterData, attacks, randomness, 0);
+            numberOfExecutedActions = _executePlayerAction(encounterId, encounterData, attacks, randomness, 0);
         }
 
         encounterData.currentTurn++;
@@ -119,10 +119,10 @@ contract PvESystem is System {
         } else {
             if (encounterData.attackersAreMobs) {
                 //execute player attack
-                _executePlayerAttack(encounterId, encounterData, attacks, randomness, numberOfExecutedAttacks);
+                _executePlayerAction(encounterId, encounterData, attacks, randomness, numberOfExecutedActions);
             } else {
                 // execute mob attacks
-                _executeMobAttack(encounterId, encounterData, randomness, numberOfExecutedAttacks);
+                _executeMobAction(encounterId, encounterData, randomness, numberOfExecutedActions);
             }
 
             CombatEncounter.set(encounterId, encounterData);
@@ -136,23 +136,23 @@ contract PvESystem is System {
         }
     }
 
-    function _executeMobAttack(
+    function _executeMobAction(
         bytes32 encounterId,
         CombatEncounterData memory encounterData,
         uint256 randomness,
-        uint256 numberOfExecutedAttacks
-    ) internal returns (uint256 _numberOfExecutedAttacks) {
+        uint256 numberOfExecutedActions
+    ) internal returns (uint256 _numberOfExecutedActions) {
         uint256 randomNumber;
 
-        _numberOfExecutedAttacks = encounterData.defenders.length;
+        _numberOfExecutedActions = encounterData.defenders.length;
 
-        for (uint256 i; i < _numberOfExecutedAttacks; i++) {
+        for (uint256 i; i < _numberOfExecutedActions; i++) {
             MonsterStats memory monsterStats = encounterData.attackersAreMobs
                 ? IWorld(_world()).UD__getMonsterStats(encounterData.attackers[i])
                 : IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]);
 
-            AttackOutcomeData memory mobAction = _getCurrentAttackData(
-                Attack({
+            ActionOutcomeData memory mobAction = _getCurrentActionData(
+                Action({
                     attackerEntityId: encounterData.attackersAreMobs
                         ? encounterData.attackers[i]
                         : encounterData.defenders[i],
@@ -164,34 +164,34 @@ contract PvESystem is System {
             );
             randomNumber = uint256(keccak256(abi.encode(randomness, mobAction.attackerId, encounterData.currentTurn)));
 
-            mobAction = IWorld(_world()).UD__executeAttack(mobAction, randomNumber);
+            mobAction = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
 
-            AttackOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedAttacks, mobAction);
+            ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, mobAction);
         }
     }
 
-    function _executePlayerAttack(
+    function _executePlayerAction(
         bytes32 encounterId,
         CombatEncounterData memory encounterData,
-        Attack[] memory attacks,
+        Action[] memory attacks,
         uint256 randomness,
-        uint256 numberOfExecutedAttacks
-    ) internal returns (uint256 _numberOfExecutedAttacks) {
+        uint256 numberOfExecutedActions
+    ) internal returns (uint256 _numberOfExecutedActions) {
         uint256 randomNumber;
-        _numberOfExecutedAttacks = attacks.length;
+        _numberOfExecutedActions = attacks.length;
         // execute attacker effects
-        for (uint256 i; i < _numberOfExecutedAttacks; i++) {
-            Attack memory currentAction = attacks[i];
+        for (uint256 i; i < _numberOfExecutedActions; i++) {
+            Action memory currentAction = attacks[i];
 
             randomNumber =
                 uint256(keccak256(abi.encode(randomness, currentAction.attackerEntityId, encounterData.currentTurn)));
 
-            AttackOutcomeData memory currentAttackData = _getCurrentAttackData(currentAction);
+            ActionOutcomeData memory currentActionData = _getCurrentActionData(currentAction);
 
             // execute action
-            currentAttackData = IWorld(_world()).UD__executeAttack(currentAttackData, randomNumber);
+            currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
             // emit action data to offchain table
-            AttackOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedAttacks, currentAttackData);
+            ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, currentActionData);
         }
     }
 
@@ -217,21 +217,21 @@ contract PvESystem is System {
         }
     }
 
-    function _getCurrentAttackData(Attack memory currentAttack)
+    function _getCurrentActionData(Action memory currentAction)
         internal
         view
-        returns (AttackOutcomeData memory currentAttackData)
+        returns (ActionOutcomeData memory currentActionData)
     {
-        bytes32[] memory effects = IWorld(_world()).UD__getItemEffects(currentAttack.itemId);
+        bytes32[] memory effects = IWorld(_world()).UD__getItemEffects(currentAction.itemId);
         bool[] memory hit = new bool[](effects.length);
         bool[] memory miss = new bool[](effects.length);
         bool[] memory crit = new bool[](effects.length);
         int256[] memory damagePerHit = new int256[](effects.length);
-        currentAttackData = AttackOutcomeData({
+        currentActionData = ActionOutcomeData({
             effectIds: effects,
-            itemId: currentAttack.itemId,
-            attackerId: currentAttack.attackerEntityId,
-            defenderId: currentAttack.defenderEntityId,
+            itemId: currentAction.itemId,
+            attackerId: currentAction.attackerEntityId,
+            defenderId: currentAction.defenderEntityId,
             damagePerHit: damagePerHit,
             hit: hit,
             miss: miss,

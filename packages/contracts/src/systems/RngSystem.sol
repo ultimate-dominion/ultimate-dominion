@@ -16,9 +16,9 @@ import {
 } from "@codegen/index.sol";
 import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
-import {Attack} from "@interfaces/Structs.sol";
+import {Action} from "@interfaces/Structs.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
-import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
+import {IWorld, IPvESystem, IPvPSystem, IWorldActionSystem} from "@world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import "forge-std/console.sol";
@@ -116,11 +116,11 @@ contract RngSystem is System, IEntropyConsumer {
 
         RngLogs.setRandomNumber(_getCounter(1), randomNumber);
 
-        if (uint8(requestType) == uint8(0)) {
+        if (requestType == RngRequestType.CharacterStats) {
             bytes32 characterId = abi.decode(_data, (bytes32));
             _storeStats(randomNumber, characterId);
-        } else if (uint8(requestType) == uint8(1)) {
-            (bytes32 encounterId, Attack[] memory moves) = abi.decode(_data, (bytes32, Attack[]));
+        } else if (requestType == RngRequestType.Combat) {
+            (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
             require(moves.length > 0, "RNG: Invalid moves");
             EncounterType encounterType = CombatEncounter.getEncounterType(encounterId);
             if (encounterType == EncounterType.PvE) {
@@ -130,17 +130,27 @@ contract RngSystem is System, IEntropyConsumer {
             } else {
                 revert("RNG: Unrecognized Combat Type");
             }
+        } else if (requestType == RngRequestType.World) {
+            (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
+            _executeWorldActions(randomNumber, encounterId, moves);
         } else {
             revert("RNG: Unrecognized request type");
         }
     }
 
-    function _executePvECombat(uint256 randomNumber, bytes32 encounterId, Attack[] memory moves) internal {
+    function _executePvECombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
         SystemSwitch.call(abi.encodeCall(IPvESystem.UD__executePvECombat, (randomNumber, encounterId, moves)));
     }
 
-    function _executePvPCombat(uint256 randomNumber, bytes32 encounterId, Attack[] memory moves) internal {
+    function _executePvPCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
         SystemSwitch.call(abi.encodeCall(IPvPSystem.UD__executePvPCombat, (randomNumber, encounterId, moves)));
+    }
+    // to execute a non combat action just pass in the entityID of the acting entity instead of an encounter id;
+
+    function _executeWorldActions(uint256 randomNumber, bytes32 entityId, Action[] memory moves) internal {
+        SystemSwitch.call(
+            abi.encodeCall(IWorldActionSystem.UD__executeWorldRngActions, (randomNumber, entityId, moves))
+        );
     }
 
     function _storeStats(uint256 randomNumber, bytes32 characterId) internal {

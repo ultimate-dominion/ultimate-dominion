@@ -96,12 +96,12 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "executeAttack",
+    "name": "executeAction",
     "inputs": [
       {
-        "name": "attackOutcomeData",
+        "name": "actionOutcomeData",
         "type": "tuple",
-        "internalType": "struct AttackOutcomeData",
+        "internalType": "struct ActionOutcomeData",
         "components": [
           {
             "name": "itemId",
@@ -185,7 +185,7 @@ declare const abi: [
       {
         "name": "",
         "type": "tuple",
-        "internalType": "struct AttackOutcomeData",
+        "internalType": "struct ActionOutcomeData",
         "components": [
           {
             "name": "itemId",

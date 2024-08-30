@@ -63,7 +63,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 1000, minIntelligence: 0, minAgility: 0});
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
             hpModifier: 0,
@@ -97,7 +97,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 10000});
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
             hpModifier: 0,
@@ -131,7 +131,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 1000, minAgility: 0});
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
             hpModifier: 0,
@@ -165,7 +165,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
             hpModifier: 0,

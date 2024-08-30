@@ -29,8 +29,8 @@ import {
     Spawned,
     MobsData,
     Counters,
-    AttackOutcome,
-    AttackOutcomeData,
+    ActionOutcome,
+    ActionOutcomeData,
     ArmorStats,
     ArmorStatsData,
     WeaponStats,
@@ -46,7 +46,7 @@ import {
     MagicDamageStatsData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType, ResistanceStat} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Attack, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -58,7 +58,7 @@ import {
     CRIT_MODIFIER,
     CRIT_MULTIPLIER,
     BASE_GOLD_DROP,
-    PRECISION
+    STAT_MODIFIER
 } from "../../constants.sol";
 import "forge-std/console.sol";
 
@@ -66,84 +66,84 @@ contract CombatSystem is System {
     using Math for uint256;
     using Math for int256;
 
-    function executeAttack(AttackOutcomeData memory attackOutcomeData, uint256 randomNumber)
+    function executeAction(ActionOutcomeData memory actionOutcomeData, uint256 randomNumber)
         public
-        returns (AttackOutcomeData memory)
+        returns (ActionOutcomeData memory)
     {
         _requireAccess(address(this), _msgSender());
         // if the defender is alive and attacker is alive, execute the action
-        if (!getDied(attackOutcomeData.attackerId) && !getDied(attackOutcomeData.defenderId)) {
+        if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
             // executeEffects
-            for (uint256 i; i < attackOutcomeData.effectIds.length; i++) {
-                EffectsData memory effectData = Effects.get(attackOutcomeData.effectIds[i]);
+            for (uint256 i; i < actionOutcomeData.effectIds.length; i++) {
+                EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
 
                 require(effectData.effectExists, "action does not exist");
                 //decode action data according to type
                 if (uint8(effectData.effectType) == 1) {
                     // calculate damage
 
-                    (attackOutcomeData.damagePerHit[i], attackOutcomeData.hit[i], attackOutcomeData.crit[i]) =
+                    (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i]) =
                     _calculatePhysicalEffect(
-                        attackOutcomeData.effectIds[i],
-                        attackOutcomeData.attackerId,
-                        attackOutcomeData.defenderId,
-                        attackOutcomeData.itemId,
+                        actionOutcomeData.effectIds[i],
+                        actionOutcomeData.attackerId,
+                        actionOutcomeData.defenderId,
+                        actionOutcomeData.itemId,
                         randomNumber
                     );
-                    attackOutcomeData.attackerDamageDelt += attackOutcomeData.damagePerHit[i];
+                    actionOutcomeData.attackerDamageDelt += actionOutcomeData.damagePerHit[i];
                     // if hit deduct damage
-                    if (attackOutcomeData.hit[i]) {
-                        int256 currentHp = Stats.getCurrentHp(attackOutcomeData.defenderId)
-                            - int256(attackOutcomeData.damagePerHit[i] / int256(ATTACK_MODIFIER));
-                        if (currentHp <= 0) attackOutcomeData.defenderDied = true;
-                        Stats.setCurrentHp(attackOutcomeData.defenderId, currentHp);
+                    if (actionOutcomeData.hit[i]) {
+                        int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
+                            - int256(actionOutcomeData.damagePerHit[i] / int256(ATTACK_MODIFIER));
+                        if (currentHp <= 0) actionOutcomeData.defenderDied = true;
+                        Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
                     } else {
-                        attackOutcomeData.miss[i] = true;
+                        actionOutcomeData.miss[i] = true;
                     }
                 } else if (uint8(effectData.effectType) == 2) {
                     // calculate damage
 
-                    (attackOutcomeData.damagePerHit[i], attackOutcomeData.hit[i], attackOutcomeData.crit[i]) =
+                    (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i]) =
                     _calculateMagicEffect(
-                        attackOutcomeData.effectIds[i],
-                        attackOutcomeData.attackerId,
-                        attackOutcomeData.defenderId,
-                        attackOutcomeData.itemId,
+                        actionOutcomeData.effectIds[i],
+                        actionOutcomeData.attackerId,
+                        actionOutcomeData.defenderId,
+                        actionOutcomeData.itemId,
                         randomNumber
                     );
-                    attackOutcomeData.attackerDamageDelt += attackOutcomeData.damagePerHit[i];
+                    actionOutcomeData.attackerDamageDelt += actionOutcomeData.damagePerHit[i];
                     // if hit deduct damage
-                    if (attackOutcomeData.hit[i]) {
-                        int256 currentHp = Stats.getCurrentHp(attackOutcomeData.defenderId)
-                            - int256(attackOutcomeData.damagePerHit[i] / int256(ATTACK_MODIFIER));
-                        if (currentHp <= 0) attackOutcomeData.defenderDied = true;
-                        Stats.setCurrentHp(attackOutcomeData.defenderId, currentHp);
+                    if (actionOutcomeData.hit[i]) {
+                        int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
+                            - int256(actionOutcomeData.damagePerHit[i] / int256(ATTACK_MODIFIER));
+                        if (currentHp <= 0) actionOutcomeData.defenderDied = true;
+                        Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
                     } else {
-                        attackOutcomeData.miss[i] = true;
+                        actionOutcomeData.miss[i] = true;
                     }
                 } else if (uint8(effectData.effectType) == 3) {
                     // get statusEffect stats
                     // calculate damage
 
-                    (attackOutcomeData.hit[i]) = _calculateStatusEffect(
-                        attackOutcomeData.effectIds[i],
-                        attackOutcomeData.attackerId,
-                        attackOutcomeData.defenderId,
-                        attackOutcomeData.itemId,
+                    (actionOutcomeData.hit[i]) = _calculateStatusEffect(
+                        actionOutcomeData.effectIds[i],
+                        actionOutcomeData.attackerId,
+                        actionOutcomeData.defenderId,
+                        actionOutcomeData.itemId,
                         randomNumber
                     );
                 } else {
                     revert("action type not recognized");
                 }
             }
-            if (attackOutcomeData.defenderDied) {
-                EncounterEntity.setDied(attackOutcomeData.defenderId, true);
+            if (actionOutcomeData.defenderDied) {
+                EncounterEntity.setDied(actionOutcomeData.defenderId, true);
             }
-            if (attackOutcomeData.attackerDied) {
-                EncounterEntity.setDied(attackOutcomeData.attackerId, true);
+            if (actionOutcomeData.attackerDied) {
+                EncounterEntity.setDied(actionOutcomeData.attackerId, true);
             }
         }
-        return attackOutcomeData;
+        return actionOutcomeData;
     }
 
     function getDied(bytes32 entityId) public view returns (bool isDied) {
@@ -262,8 +262,9 @@ contract CombatSystem is System {
     }
 
     function getStatModifier(int256 stat, int256 modifierBonus) internal pure returns (uint256 multiplier) {
-        multiplier =
-            (stat / int256(2) + modifierBonus) > 0 ? uint256((stat / int256(2) + modifierBonus) * int256(WAD)) : WAD;
+        multiplier = (stat / int256(STAT_MODIFIER) + modifierBonus) > 0
+            ? uint256((stat / int256(STAT_MODIFIER) + modifierBonus) * int256(WAD))
+            : WAD;
     }
 
     function _calculateMagicEffect(
@@ -293,7 +294,6 @@ contract CombatSystem is System {
                 attacker.adjustedIntelligence,
                 defender.adjustedIntelligence
             );
-
             if (hit) {
                 damage = _calculateMagicDamage(
                     attackStats, spell, rnChunks[2], attacker.adjustedIntelligence, defender.adjustedIntelligence, crit

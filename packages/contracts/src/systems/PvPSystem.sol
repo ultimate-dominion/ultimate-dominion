@@ -27,11 +27,11 @@ import {
     Spawned,
     MobsData,
     Counters,
-    AttackOutcome,
-    AttackOutcomeData
+    ActionOutcome,
+    ActionOutcomeData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Attack, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -101,28 +101,28 @@ contract PvPSystem is System {
         return _isValidPvP;
     }
 
-    function executePvPCombat(uint256 prevRandao, bytes32 encounterId, Attack[] memory effects) public {
+    function executePvPCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory effects) public {
         // ensure this is an authorised call from the entropy contract
         _requireAccess(address(this), _msgSender());
 
         uint256 randomNumber;
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        AttackOutcomeData memory currentAttackData;
+        ActionOutcomeData memory currentActionData;
         // execute attacker effects
         for (uint256 i; i < effects.length; i++) {
-            Attack memory currentEffect = effects[i];
+            Action memory currentEffect = effects[i];
 
             randomNumber =
                 uint256(keccak256(abi.encode(prevRandao, currentEffect.attackerEntityId, encounterData.currentTurn)));
 
-            currentAttackData = _getCurrentAttackData(currentEffect);
+            currentActionData = _getCurrentActionData(currentEffect);
 
             // execute action
-            currentAttackData = IWorld(_world()).UD__executeAttack(currentAttackData, randomNumber);
+            currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
 
             // emit action data to offchain table
-            AttackOutcome.set(encounterId, encounterData.currentTurn, i, currentAttackData);
+            ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
         }
 
         encounterData.currentTurnTimer = block.timestamp;
@@ -159,21 +159,21 @@ contract PvPSystem is System {
         }
     }
 
-    function _getCurrentAttackData(Attack memory currentAttack)
+    function _getCurrentActionData(Action memory currentAction)
         internal
         view
-        returns (AttackOutcomeData memory currentAttackData)
+        returns (ActionOutcomeData memory currentActionData)
     {
-        bytes32[] memory effects = IWorld(_world()).UD__getItemEffects(currentAttack.itemId);
+        bytes32[] memory effects = IWorld(_world()).UD__getItemEffects(currentAction.itemId);
         bool[] memory hit = new bool[](effects.length);
         bool[] memory miss = new bool[](effects.length);
         bool[] memory crit = new bool[](effects.length);
         int256[] memory damagePerHit = new int256[](effects.length);
-        currentAttackData = AttackOutcomeData({
+        currentActionData = ActionOutcomeData({
             effectIds: effects,
-            itemId: currentAttack.itemId,
-            attackerId: currentAttack.attackerEntityId,
-            defenderId: currentAttack.defenderEntityId,
+            itemId: currentAction.itemId,
+            attackerId: currentAction.attackerEntityId,
+            defenderId: currentAction.defenderEntityId,
             damagePerHit: damagePerHit,
             hit: hit,
             miss: miss,
