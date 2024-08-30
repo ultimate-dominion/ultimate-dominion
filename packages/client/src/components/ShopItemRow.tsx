@@ -16,36 +16,22 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-// import { FaHatWizard } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoAdd, IoRemove } from 'react-icons/io5';
 
-// import { useNavigate } from 'react-router-dom';
+import { getEmoji, removeEmoji } from '../utils/helpers';
+import { type ArmorTemplate, type WeaponTemplate } from '../utils/types';
 
-// import { SHOP_PATH } from '../Routes';
 export const ShopItemRow = ({
   agiModifier,
   description,
-  emoji,
-  hitPointModifier,
+  hpModifier,
   intModifier,
   minLevel,
   name,
   statRestrictions,
   strModifier,
-}: {
-  agiModifier: string;
-  description: string;
-  emoji: string;
-  hitPointModifier: string;
-  image: string;
-  intModifier: string;
-  minLevel: string;
-  name: string;
-  statRestrictions: object;
-  strModifier: string;
-}): JSX.Element => {
-  // const navigate = useNavigate();
+}: ArmorTemplate | WeaponTemplate): JSX.Element => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
@@ -72,14 +58,14 @@ export const ShopItemRow = ({
         <Avatar
           backgroundColor={'grey300'}
           borderRadius={0}
-          name={' '}
+          name={removeEmoji(name)}
           size="lg"
         >
-          {emoji}
+          {getEmoji(name)}
         </Avatar>
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
+            <Text size={{ base: '2xs', lg: 'sm' }}>{removeEmoji(name)}</Text>
           </HStack>
         </VStack>
       </Flex>
@@ -115,7 +101,7 @@ export const ShopItemRow = ({
             <ModalCloseButton />
             <ModalBody>
               <Text fontWeight={700} fontSize={24}>
-                Buy {name}
+                Buy {removeEmoji(name)}
               </Text>
               <Grid
                 gap={10}
@@ -127,10 +113,10 @@ export const ShopItemRow = ({
                   <Avatar
                     backgroundColor={'grey300'}
                     borderRadius={0}
-                    name={' '}
+                    name={removeEmoji(name)}
                     size="lg"
                   >
-                    {emoji}
+                    {getEmoji(name)}
                   </Avatar>
 
                   <Text fontWeight={400} fontSize={14} mt={8}>
@@ -142,8 +128,8 @@ export const ShopItemRow = ({
                     Stats
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    INT {intModifier} HIT {hitPointModifier} STR {strModifier}{' '}
-                    AGI {agiModifier}
+                    INT {intModifier} HIT {hpModifier} STR {strModifier} AGI{' '}
+                    {agiModifier}
                   </Text>
                   <Text mt={8} fontWeight={700} fontSize={14}>
                     Restrictions
@@ -175,9 +161,6 @@ export const ShopItemRow = ({
                 </GridItem>
               </Grid>
             </ModalBody>
-            {/* <ModalFooter>
-              <Button onClick={onClose}>Close</Button>
-            </ModalFooter> */}
           </ModalContent>
         </Modal>
         <Box display={{ base: 'none', md: 'block' }} w="30px">

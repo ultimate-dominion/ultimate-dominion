@@ -15,7 +15,6 @@ import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 
-import { getEmoji, removeEmoji } from '../utils/helpers';
 import { ArmorTemplate, WeaponTemplate } from '../utils/types';
 import { Pagination } from './Pagination';
 import { ShopItemRow } from './ShopItemRow';
@@ -164,14 +163,7 @@ export const ShopHalf = ({
       </HStack>
       <VStack gap={3} maxW="100%" overflowX="auto" w="100%">
         {entries.map((entry, i) => {
-          return (
-            <ShopItemRow
-              {...entry}
-              emoji={getEmoji(entry.name)}
-              key={`shop-row-${i}`}
-              name={removeEmoji(entry.name)}
-            />
-          );
+          return <ShopItemRow {...entry} key={`shop-row-${i}`} />;
         })}
       </VStack>
       <Box visibility={entries.length > 0 ? 'visible' : 'hidden'}>

@@ -4,19 +4,19 @@ import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
 import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
 
 export const Pagination = ({
+  length,
   page,
   pageLimit,
   perPage,
   setPage,
   setPageLimit,
-  length,
 }: {
+  length: number;
   page: number;
   pageLimit: number;
   perPage: number;
   setPage: (n: number) => void;
   setPageLimit: (n: number) => void;
-  length: number;
 }): JSX.Element => {
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {
@@ -24,6 +24,7 @@ export const Pagination = ({
     }
     return Number(page);
   }, [page]);
+
   useEffect(() => {
     if (pageNumber < 1) {
       return;
@@ -35,6 +36,7 @@ export const Pagination = ({
       setPage(_pageLimit);
     }
   }, [length, pageNumber, perPage, setPage, setPageLimit]);
+
   return (
     <HStack my={5}>
       <Button
