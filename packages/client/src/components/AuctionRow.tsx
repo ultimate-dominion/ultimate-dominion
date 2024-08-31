@@ -12,19 +12,21 @@ import { useNavigate } from 'react-router-dom';
 
 import { ITEM_PATH } from '../Routes';
 import { removeEmoji } from '../utils/helpers';
-import { type ArmorTemplate, type WeaponTemplate } from '../utils/types';
+import {
+  type ArmorTemplate,
+  ItemType,
+  type SpellTemplate,
+  type WeaponTemplate,
+} from '../utils/types';
 
 export const AuctionRow = ({
   name,
-  agiModifier,
-  hpModifier,
-  intModifier,
   minLevel,
-  strModifier,
   emoji,
   tokenId,
   floor,
-}: (ArmorTemplate | WeaponTemplate) & {
+  ...item
+}: (ArmorTemplate | SpellTemplate | WeaponTemplate) & {
   emoji: string;
   floor: string;
 }): JSX.Element => {
@@ -63,10 +65,14 @@ export const AuctionRow = ({
           <HStack w="100%">
             <Text size={{ base: '2xs', lg: 'sm' }}>{removeEmoji(name)}</Text>
           </HStack>
-          <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            HP {hpModifier} • STR {strModifier} • AGI {agiModifier} • INT{' '}
-            {intModifier}
-          </Text>
+          {item.itemType !== ItemType.Spell && (
+            <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
+              HP {(item as ArmorTemplate | WeaponTemplate).hpModifier} • STR{' '}
+              {(item as ArmorTemplate | WeaponTemplate).strModifier} • AGI{' '}
+              {(item as ArmorTemplate | WeaponTemplate).agiModifier} • INT{' '}
+              {(item as ArmorTemplate | WeaponTemplate).intModifier}
+            </Text>
+          )}
         </VStack>
       </Flex>
       <HStack>

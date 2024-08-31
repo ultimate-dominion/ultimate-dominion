@@ -31,12 +31,13 @@ import { useToast } from '../hooks/useToast';
 import { HOME_PATH } from '../Routes';
 import { getEmoji } from '../utils/helpers';
 import {
-  ArmorTemplate,
-  ConsiderationData,
+  type ArmorTemplate,
+  type ConsiderationData,
   ItemType,
-  OfferData,
-  Order,
-  WeaponTemplate,
+  type OfferData,
+  type Order,
+  type SpellTemplate,
+  type WeaponTemplate,
 } from '../utils/types';
 
 interface Price {
@@ -59,15 +60,16 @@ export const AuctionHouse = (): JSX.Element => {
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
+    spellTemplates,
     weaponTemplates,
   } = useItems();
 
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
   const [prices, setPrices] = useState<Price[] | null>(null);
 
-  const [entries, setEntries] = useState<(ArmorTemplate | WeaponTemplate)[]>(
-    [],
-  );
+  const [entries, setEntries] = useState<
+    (ArmorTemplate | SpellTemplate | WeaponTemplate)[]
+  >([]);
   const [, setOrders] = useState<Order[] | null>(null);
 
   const [sort, setSort] = useState({ sorted: 'byLevel', reversed: false });
@@ -174,8 +176,8 @@ export const AuctionHouse = (): JSX.Element => {
   }, [fetchOrders]);
 
   const items = useMemo(
-    () => [...armorTemplates, ...weaponTemplates],
-    [armorTemplates, weaponTemplates],
+    () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
+    [armorTemplates, spellTemplates, weaponTemplates],
   );
 
   useEffect(() => {
@@ -214,6 +216,8 @@ export const AuctionHouse = (): JSX.Element => {
       switch (filter.filtered) {
         case 'byArmor':
           return entry.itemType == ItemType.Armor;
+        case 'bySpell':
+          return entry.itemType == ItemType.Spell;
         case 'byWeapon':
           return entry.itemType == ItemType.Weapon;
         default:
