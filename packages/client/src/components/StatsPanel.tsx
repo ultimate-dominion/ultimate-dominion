@@ -32,7 +32,8 @@ export const StatsPanel = (): JSX.Element => {
   const {
     components: { Levels },
   } = useMUD();
-  const { character, equippedArmor, equippedWeapons } = useCharacter();
+  const { character, equippedArmor, equippedSpells, equippedWeapons } =
+    useCharacter();
 
   const currentLevelXpRequirement =
     useComponentValue(
@@ -67,8 +68,8 @@ export const StatsPanel = (): JSX.Element => {
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
   const allItems = useMemo(
-    () => [...equippedArmor, ...equippedWeapons],
-    [equippedArmor, equippedWeapons],
+    () => [...equippedArmor, ...equippedSpells, ...equippedWeapons],
+    [equippedArmor, equippedSpells, equippedWeapons],
   );
 
   if (!character) {

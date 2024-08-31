@@ -14,10 +14,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import type { Armor, Weapon } from '../utils/types';
+import type { Armor, Spell, Weapon } from '../utils/types';
 import { ItemCard } from './ItemCard';
 
-type ItemEquipModalProps = (Armor | Weapon) & {
+type ItemEquipModalProps = (Armor | Spell | Weapon) & {
   isEquipped: boolean;
   isOpen: boolean;
   onClose: () => void;
