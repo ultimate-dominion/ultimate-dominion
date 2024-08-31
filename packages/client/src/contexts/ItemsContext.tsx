@@ -18,20 +18,23 @@ import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import {
   type ArmorTemplate,
   ItemType,
+  type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
 import { useMUD } from './MUDContext';
 
 type ItemsContextType = {
   armorTemplates: ArmorTemplate[];
-  weaponTemplates: WeaponTemplate[];
   isLoading: boolean;
+  spellTemplates: SpellTemplate[];
+  weaponTemplates: WeaponTemplate[];
 };
 
 const ItemsContext = createContext<ItemsContextType>({
   armorTemplates: [],
-  weaponTemplates: [],
   isLoading: false,
+  spellTemplates: [],
+  weaponTemplates: [],
 });
 
 export const ItemsProvider = ({
@@ -46,6 +49,7 @@ export const ItemsProvider = ({
       Items,
       ItemsBaseURI,
       ItemsTokenURI,
+      SpellStats,
       StatRestrictions,
       WeaponStats,
     },
@@ -53,6 +57,7 @@ export const ItemsProvider = ({
   } = useMUD();
 
   const [armorTemplates, setArmorTemplates] = useState<ArmorTemplate[]>([]);
+  const [spellTemplates, setSpellTemplates] = useState<SpellTemplate[]>([]);
   const [weaponTemplates, setWeaponTemplates] = useState<WeaponTemplate[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -108,6 +113,59 @@ export const ItemsProvider = ({
       return allArmorTemplates;
     },
     [ArmorStats, Items, ItemsBaseURI, ItemsTokenURI, StatRestrictions],
+  );
+
+  const fetchAllSpells = useCallback(
+    async (allSpellIds: bigint[]) => {
+      const allSpellTemplates = await Promise.all(
+        allSpellIds.map(async spellId => {
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: spellId },
+          );
+
+          const statRestrictions = getComponentValueStrict(
+            StatRestrictions,
+            tokenIdEntity,
+          );
+          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+
+          const spellStats = getComponentValueStrict(SpellStats, tokenIdEntity);
+
+          const baseURI = getComponentValueStrict(
+            ItemsBaseURI,
+            singletonEntity,
+          ).uri;
+
+          const tokenURI = getComponentValueStrict(
+            ItemsTokenURI,
+            tokenIdEntity,
+          ).uri;
+
+          const metadata = await fetchMetadataFromUri(
+            uriToHttp(`${baseURI}${tokenURI}`)[0],
+          );
+
+          return {
+            ...metadata,
+            minDamage: spellStats.minDamage.toString(),
+            maxDamage: spellStats.maxDamage.toString(),
+            minLevel: spellStats.minLevel.toString(),
+            effects: spellStats.effects,
+            tokenId: spellId.toString(),
+            itemType: itemTemplate.itemType,
+            statRestrictions: {
+              minAgility: statRestrictions.minAgility.toString(),
+              minIntelligence: statRestrictions.minIntelligence.toString(),
+              minStrength: statRestrictions.minStrength.toString(),
+            },
+          } as SpellTemplate;
+        }),
+      );
+
+      return allSpellTemplates;
+    },
+    [Items, ItemsBaseURI, ItemsTokenURI, SpellStats, StatRestrictions],
   );
 
   const fetchAllWeapons = useCallback(
@@ -191,6 +249,13 @@ export const ItemsProvider = ({
           const _armor = await fetchAllArmor(allArmorIds);
           setArmorTemplates(_armor);
 
+          const allSpellIds = allItemIds
+            .filter(({ itemType }) => itemType === ItemType.Spell)
+            .map(({ tokenId }) => tokenId);
+
+          const _spells = await fetchAllSpells(allSpellIds);
+          setSpellTemplates(_spells);
+
           const allWeaponIds = allItemIds
             .filter(({ itemType }) => itemType === ItemType.Weapon)
             .map(({ tokenId }) => tokenId);
@@ -207,14 +272,22 @@ export const ItemsProvider = ({
         setIsLoading(false);
       }
     })();
-  }, [fetchAllArmor, fetchAllWeapons, isSynced, Items, renderError]);
+  }, [
+    fetchAllArmor,
+    fetchAllSpells,
+    fetchAllWeapons,
+    isSynced,
+    Items,
+    renderError,
+  ]);
 
   return (
     <ItemsContext.Provider
       value={{
         armorTemplates,
-        weaponTemplates,
         isLoading,
+        spellTemplates,
+        weaponTemplates,
       }}
     >
       {children}

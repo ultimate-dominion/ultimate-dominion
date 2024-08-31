@@ -52,6 +52,8 @@ import {
   type ConsiderationData,
   type OfferData,
   type Order,
+  type SpellStats,
+  type SpellTemplate,
   type WeaponStats,
   type WeaponTemplate,
 } from '../utils/types';
@@ -71,12 +73,13 @@ export const AuctionItem = (): JSX.Element => {
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
+    spellTemplates,
     weaponTemplates,
   } = useItems();
   const { character: userCharacter } = useCharacter();
 
   const [selectedItem, setSelectedItem] = useState<
-    ArmorTemplate | WeaponTemplate | null
+    ArmorTemplate | SpellTemplate | WeaponTemplate | null
   >(null);
   const [currentBalance, setCurrentBalance] = useState('0');
   const [floor, setFloor] = useState(maxUint256);
@@ -133,8 +136,8 @@ export const AuctionItem = (): JSX.Element => {
   };
 
   const _sell = async function (
-    wanted: ArmorTemplate | WeaponTemplate | bigint,
-    offered: ArmorTemplate | WeaponTemplate | bigint,
+    wanted: ArmorTemplate | SpellTemplate | WeaponTemplate | bigint,
+    offered: ArmorTemplate | SpellTemplate | WeaponTemplate | bigint,
     purchaser: Character,
     amount: bigint,
   ) {
@@ -245,7 +248,7 @@ export const AuctionItem = (): JSX.Element => {
   const fetchCharacterItems = useCallback(
     async (
       character: Character,
-      _selectedItem: ArmorTemplate | WeaponTemplate,
+      _selectedItem: ArmorTemplate | SpellTemplate | WeaponTemplate,
     ) => {
       try {
         const tokenOwnersEntity = encodeEntity(
@@ -322,14 +325,26 @@ export const AuctionItem = (): JSX.Element => {
   }, [Offers, ceiling, floor, goldToken, worldContract.read]);
 
   const fetchSelectedItem = useCallback(
-    (selectedItemId: string): ArmorTemplate | WeaponTemplate | null => {
-      let _item: ArmorTemplate | WeaponTemplate | undefined =
+    (
+      selectedItemId: string,
+    ): ArmorTemplate | SpellTemplate | WeaponTemplate | null => {
+      let _item: ArmorTemplate | SpellTemplate | WeaponTemplate | undefined =
         armorTemplates.find(
           armor => armor.tokenId.toString() === selectedItemId,
         );
 
       if (_item) {
         setItemType('armor');
+      }
+
+      if (!_item) {
+        _item = spellTemplates.find(
+          spell => spell.tokenId.toString() === selectedItemId,
+        );
+      }
+
+      if (_item) {
+        setItemType('spell');
       }
 
       if (!_item) {
@@ -350,7 +365,7 @@ export const AuctionItem = (): JSX.Element => {
       setSelectedItem(_item);
       return _item;
     },
-    [armorTemplates, renderError, weaponTemplates],
+    [armorTemplates, renderError, spellTemplates, weaponTemplates],
   );
 
   useEffect(() => {
@@ -437,7 +452,9 @@ export const AuctionItem = (): JSX.Element => {
             {selectedItem != null ? (
               [...Object.keys({ ...selectedItem })]
                 .filter(key =>
-                  ['itemId', 'owner', 'statRestrictions'].indexOf(key) > -1
+                  ['effects', 'itemId', 'owner', 'statRestrictions'].indexOf(
+                    key,
+                  ) > -1
                     ? false
                     : true,
                 )
@@ -450,8 +467,9 @@ export const AuctionItem = (): JSX.Element => {
                         {selectedItem
                           ? selectedItem[
                               key as keyof (
-                                | Omit<WeaponStats, 'statRestrictions'>
                                 | Omit<ArmorStats, 'statRestrictions'>
+                                | Omit<SpellStats, 'statRestrictions'>
+                                | Omit<WeaponStats, 'statRestrictions'>
                               )
                             ]
                           : ''}

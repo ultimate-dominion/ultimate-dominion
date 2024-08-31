@@ -271,10 +271,12 @@ export function createSystemCalls(
         characterEntity,
       );
 
-      const { equippedArmor, equippedWeapons } = characterEquipment;
+      const { equippedArmor, equippedSpells, equippedWeapons } =
+        characterEquipment;
 
       const success =
         equippedArmor.some(id => itemIds.includes(id.toString())) ||
+        equippedSpells.some(id => itemIds.includes(id.toString())) ||
         equippedWeapons.some(id => itemIds.includes(id.toString()));
 
       return {

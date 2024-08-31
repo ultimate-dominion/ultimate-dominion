@@ -16,8 +16,7 @@ export enum ItemType {
   Weapon,
   Armor,
   Spell,
-  Potion,
-  Material,
+  Consumable,
   QuestItem,
 }
 
@@ -31,6 +30,27 @@ export enum StatsClasses {
   Rogue,
   Mage,
 }
+
+export type Spell = SpellTemplate & {
+  balance: string;
+  itemId: Entity;
+  owner: string;
+};
+
+export type SpellStats = {
+  effects: string[];
+  itemId: string;
+  maxDamage: string;
+  minDamage: string;
+  minLevel: string;
+};
+
+export type SpellTemplate = SpellStats &
+  Metadata & {
+    itemType: ItemType;
+    statRestrictions: StatRestrictions;
+    tokenId: string;
+  };
 
 export type Armor = ArmorTemplate & {
   balance: string;

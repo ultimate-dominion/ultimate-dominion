@@ -48,6 +48,7 @@ import {
 import {
   type Armor,
   type Character,
+  type Spell,
   StatsClasses,
   type Weapon,
 } from '../utils/types';
@@ -442,6 +443,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
+    spellTemplates,
     weaponTemplates,
   } = useItems();
 
@@ -453,13 +455,17 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
   const [armor, setArmor] = useState<Armor[]>([]);
   const [weapons, setWeapons] = useState<Weapon[]>([]);
+  const [spells, setSpells] = useState<Spell[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<Armor | Weapon | null>(null);
+  const [selectedItem, setSelectedItem] = useState<
+    Armor | Spell | Weapon | null
+  >(null);
 
-  const { equippedArmor, equippedWeapons } =
+  const { equippedArmor, equippedSpells, equippedWeapons } =
     useComponentValue(CharacterEquipment, character.id as Entity | undefined) ??
-    ({ equippedArmor: [], equippedWeapons: [] } as {
+    ({ equippedArmor: [], equippedSpells: [], equippedWeapons: [] } as {
       equippedArmor: bigint[];
+      equippedSpells: bigint[];
       equippedWeapons: bigint[];
     });
 
@@ -490,6 +496,27 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           })
           .filter(a => a.balance !== '0');
 
+        const _spells = spellTemplates
+          .map(spell => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(spell.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...spell,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Spell;
+          })
+          .filter(s => s.balance !== '0');
+
         const _weapons = weaponTemplates
           .map(weapon => {
             const tokenOwnersEntity = encodeEntity(
@@ -512,6 +539,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           .filter(w => w.balance !== '0');
 
         setArmor(_armor);
+        setSpells(_spells);
         setWeapons(_weapons);
       } catch (e) {
         renderError(
@@ -522,13 +550,21 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         setIsLoadingItems(false);
       }
     },
-    [armorTemplates, ItemsOwners, renderError, weaponTemplates],
+    [armorTemplates, ItemsOwners, renderError, spellTemplates, weaponTemplates],
   );
 
   useEffect(() => {
     if (isLoadingItemTemplates) return;
     fetchCharacterItems(character);
   }, [character, fetchCharacterItems, isLoadingItemTemplates]);
+
+  const spellsAndWeapons = useMemo(() => {
+    return [...spells, ...weapons];
+  }, [spells, weapons]);
+
+  const equippedSpellsAndWeapons = useMemo(() => {
+    return [...equippedSpells, ...equippedWeapons];
+  }, [equippedSpells, equippedWeapons]);
 
   if (isLoadingItems) {
     return (
@@ -577,8 +613,8 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         })}
       </Grid>
       <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
-        Weapons {weapons.length} - {equippedWeapons.length}/
-        {MAX_EQUIPPED_WEAPONS} equipped{' '}
+        Weapons & Spells {spellsAndWeapons.length} -{' '}
+        {equippedSpellsAndWeapons.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
       </Text>
       {maxWeaponsEquipped && <Text fontSize="sm">(Max weapons equipped)</Text>}
       <Grid
@@ -591,9 +627,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         gap={2}
         mt={4}
       >
-        {weapons.length === 0 && <Text>No weapons found</Text>}
-        {weapons.map(function (weapon, i) {
-          const isEquipped = equippedWeapons.includes(BigInt(weapon.tokenId));
+        {spellsAndWeapons.length === 0 && <Text>No weapons found</Text>}
+        {spellsAndWeapons.map(function (item, i) {
+          const isEquipped = equippedSpellsAndWeapons.includes(
+            BigInt(item.tokenId),
+          );
+
           return (
             <GridItem key={i}>
               <ItemCard
@@ -602,11 +641,11 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
                   maxWeaponsEquipped && !isEquipped
                     ? undefined
                     : () => {
-                        setSelectedItem(weapon);
+                        setSelectedItem(item);
                         onOpenItemModal();
                       }
                 }
-                {...weapon}
+                {...item}
               />
             </GridItem>
           );
@@ -616,7 +655,9 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         <ItemEquipModal
           isEquipped={
             equippedArmor.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
-            equippedWeapons.includes(BigInt(selectedItem?.tokenId ?? 0))
+            equippedSpellsAndWeapons.includes(
+              BigInt(selectedItem?.tokenId ?? 0),
+            )
           }
           isOpen={isItemModalOpen}
           onClose={() => {

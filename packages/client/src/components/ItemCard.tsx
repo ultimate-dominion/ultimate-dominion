@@ -8,13 +8,14 @@ import {
   Stack,
   Text,
 } from '@chakra-ui/react';
+import { useMemo } from 'react';
 
 import { getEmoji, removeEmoji } from '../utils/helpers';
-import { type Armor, type Weapon } from '../utils/types';
+import { type Armor, ItemType, type Spell, type Weapon } from '../utils/types';
 
 const getStatSymbol = (stat: string): string => (Number(stat) >= 0 ? '+' : '');
 
-type ItemCardProps = (Armor | Weapon) & {
+type ItemCardProps = (Armor | Spell | Weapon) & {
   isEquipped?: boolean;
   onClick?: () => void;
 };
@@ -24,14 +25,73 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   onClick,
   ...item
 }): JSX.Element => {
-  const {
-    agiModifier,
-    balance,
-    intModifier,
-    statRestrictions,
-    strModifier,
-    name,
-  } = item;
+  const { balance, name } = item;
+
+  const itemStats = useMemo(() => {
+    if (item.itemType === ItemType.Spell) {
+      const { minDamage, minLevel, maxDamage, statRestrictions } =
+        item as Spell;
+
+      return (
+        <>
+          <HStack alignItems="start">
+            <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
+              Damage:
+            </Text>
+            <Text size={{ base: '2xs', sm: 'xs' }}>
+              {minDamage} - {maxDamage}
+            </Text>
+          </HStack>
+          <HStack alignItems="start">
+            <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
+              Requirements:
+            </Text>
+            <Text size={{ base: '2xs', sm: 'xs' }}>
+              LVL {minLevel} STR {statRestrictions.minStrength} AGI{' '}
+              {statRestrictions.minAgility} INT{' '}
+              {statRestrictions.minIntelligence}
+            </Text>
+          </HStack>
+        </>
+      );
+    }
+
+    const {
+      minLevel,
+      statRestrictions,
+      strModifier,
+      agiModifier,
+      intModifier,
+    } = item as Armor | Weapon;
+
+    return (
+      <>
+        <HStack alignItems="start">
+          <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
+            Mods:
+          </Text>
+          <Text size={{ base: '2xs', sm: 'xs' }}>
+            STR {getStatSymbol(strModifier)}
+            {strModifier} AGI {getStatSymbol(agiModifier)}
+            {agiModifier} INT {getStatSymbol(intModifier)}
+            {intModifier}{' '}
+            {(item as Armor).armorModifier
+              ? `ARM ${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
+              : ''}
+          </Text>
+        </HStack>
+        <HStack alignItems="start">
+          <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
+            Requirements:
+          </Text>
+          <Text size={{ base: '2xs', sm: 'xs' }}>
+            LVL {minLevel} STR {statRestrictions.minStrength} AGI{' '}
+            {statRestrictions.minAgility} INT {statRestrictions.minIntelligence}
+          </Text>
+        </HStack>
+      </>
+    );
+  }, [item]);
 
   return (
     <Card
@@ -64,29 +124,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           </Text>
         </Text>
 
-        <HStack alignItems="start">
-          <Text fontWeight="bold" size={{ base: '2xs', sm: 'sm' }}>
-            Mods:
-          </Text>
-          <Text size={{ base: '2xs', sm: 'sm' }}>
-            STR {getStatSymbol(strModifier)}
-            {strModifier} AGI {getStatSymbol(agiModifier)}
-            {agiModifier} INT {getStatSymbol(intModifier)}
-            {intModifier}{' '}
-            {(item as Armor).armorModifier
-              ? `ARM ${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
-              : ''}
-          </Text>
-        </HStack>
-        <HStack alignItems="start">
-          <Text fontWeight="bold" size={{ base: '2xs', sm: 'sm' }}>
-            Requirements:
-          </Text>
-          <Text size={{ base: '2xs', sm: 'sm' }}>
-            STR {statRestrictions.minStrength} AGI {statRestrictions.minAgility}{' '}
-            INT {statRestrictions.minIntelligence}
-          </Text>
-        </HStack>
+        {itemStats}
       </CardBody>
     </Card>
   );
@@ -95,6 +133,31 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 export const ItemCardSmall: React.FC<ItemCardProps> = ({
   ...item
 }): JSX.Element => {
+  if (item.itemType === ItemType.Spell) {
+    return (
+      <HStack border="1px solid" borderColor="grey400" w="100%">
+        <Stack
+          alignItems="center"
+          bgColor="grey400"
+          h="50px"
+          justifyContent="center"
+          w="50px"
+        >
+          <Text color="white" fontSize="2xl">
+            {getEmoji(item.name)}
+          </Text>
+        </Stack>
+        <Box>
+          <Text size="xs">{removeEmoji(item.name)}</Text>
+        </Box>
+      </HStack>
+    );
+  }
+
+  const { name, strModifier, agiModifier, intModifier } = item as
+    | Armor
+    | Weapon;
+
   return (
     <HStack border="1px solid" borderColor="grey400" w="100%">
       <Stack
@@ -109,12 +172,12 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
         </Text>
       </Stack>
       <Box>
-        <Text size="xs">{removeEmoji(item.name)}</Text>
+        <Text size="xs">{removeEmoji(name)}</Text>
         <Text size="xs">
-          STR{getStatSymbol(item.strModifier)}
-          {item.strModifier} AGI{getStatSymbol(item.agiModifier)}
-          {item.agiModifier} INT{getStatSymbol(item.intModifier)}
-          {item.intModifier}{' '}
+          STR{getStatSymbol(strModifier)}
+          {strModifier} AGI{getStatSymbol(agiModifier)}
+          {agiModifier} INT{getStatSymbol(intModifier)}
+          {intModifier}{' '}
           {(item as Armor).armorModifier
             ? `ARM${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
             : ''}

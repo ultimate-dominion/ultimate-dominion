@@ -39,7 +39,12 @@ import { useUploadFile } from '../hooks/useUploadFile';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import { shortenAddress } from '../utils/helpers';
-import { type Armor, StatsClasses, type Weapon } from '../utils/types';
+import {
+  type Armor,
+  type Spell,
+  StatsClasses,
+  type Weapon,
+} from '../utils/types';
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
@@ -55,6 +60,7 @@ export const CharacterCreation = (): JSX.Element => {
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
+    spellTemplates,
     weaponTemplates,
   } = useItems();
   const { character, isRefreshing, refreshCharacter } = useCharacter();
@@ -70,8 +76,9 @@ export const CharacterCreation = (): JSX.Element => {
   const [characterClass, setCharacterClass] = useState<StatsClasses>(
     StatsClasses.Warrior,
   );
-  const [starterArmor, setStarterArmor] = useState<Armor[] | null>(null);
-  const [starterWeapons, setStarterWeapons] = useState<Weapon[] | null>(null);
+  const [starterItems, setStarterItems] = useState<
+    (Armor | Spell | Weapon)[][] | null
+  >(null);
 
   const [isCreating, setIsCreating] = useState(false);
   const [showError, setShowError] = useState(false);
@@ -98,43 +105,36 @@ export const CharacterCreation = (): JSX.Element => {
       },
     );
 
-    const starterArmorTokenIds = starterItemTokenIds
-      .map(item => item[0].toString())
-      .filter((value, index, self) => self.indexOf(value) === index);
-    const starterWeaponTokenIds = starterItemTokenIds.map(item =>
-      item[1].toString(),
-    );
+    const allTemplates = [
+      ...armorTemplates,
+      ...spellTemplates,
+      ...weaponTemplates,
+    ];
 
-    const _starterArmor = armorTemplates
-      .filter(armor => starterArmorTokenIds.includes(armor.tokenId))
-      .map(armor => ({
-        ...armor,
-        balance: '1',
-        itemId: zeroHash as Entity,
-        owner: zeroAddress,
-      }));
-    const _starterWeapons = starterWeaponTokenIds
-      .map(tokenId => {
-        const weapon = weaponTemplates.find(
-          weapon => weapon.tokenId === tokenId,
-        );
-        if (!weapon) return null;
+    const _starterItems = starterItemTokenIds.map(tokenId => {
+      const _classSpecificItems = tokenId
+        .map(id => {
+          const item = allTemplates.find(item => BigInt(item.tokenId) === id);
+          if (!item) return null;
 
-        return {
-          ...weapon,
-          balance: '1',
-          itemId: zeroHash as Entity,
-          owner: zeroAddress,
-        };
-      })
-      .filter(Boolean) as Weapon[];
+          return {
+            ...item,
+            balance: '1',
+            itemId: zeroHash as Entity,
+            owner: zeroAddress,
+          };
+        })
+        .filter(Boolean);
 
-    setStarterArmor(_starterArmor);
-    setStarterWeapons(_starterWeapons);
+      return _classSpecificItems;
+    }) as (Armor | Spell | Weapon)[][];
+
+    setStarterItems(_starterItems);
   }, [
     armorTemplates,
     isLoadingItemTemplates,
     Items,
+    spellTemplates,
     StarterItems,
     weaponTemplates,
   ]);
@@ -342,13 +342,6 @@ export const CharacterCreation = (): JSX.Element => {
     rolledOnce,
   ]);
 
-  const numberOfStarterItems = useMemo(() => {
-    return (
-      (starterArmor?.length ?? 0) +
-      (starterWeapons && starterWeapons[characterClass] ? 1 : 0)
-    );
-  }, [characterClass, starterArmor, starterWeapons]);
-
   const UploadedAvatar = useMemo(() => {
     return (
       <Center>
@@ -359,6 +352,14 @@ export const CharacterCreation = (): JSX.Element => {
       </Center>
     );
   }, [avatar]);
+
+  if (!starterItems) {
+    return (
+      <Center h="100vh">
+        <Text>An error occurred.</Text>
+      </Center>
+    );
+  }
 
   return (
     <Stack
@@ -605,18 +606,15 @@ export const CharacterCreation = (): JSX.Element => {
               </HStack>
               <HStack justify="space-between" w="100%">
                 <Heading size="sm">Items</Heading>
-                <Text>{numberOfStarterItems}</Text>
+                <Text>{starterItems[characterClass].length}</Text>
               </HStack>
               <VStack w="100%">
-                {starterArmor?.map(armor => (
+                {starterItems[characterClass].map(item => (
                   <ItemCardSmall
-                    key={`starter-armor-${armor.itemId}`}
-                    {...armor}
+                    key={`starter-item-${StatsClasses[characterClass]}-${item.tokenId}`}
+                    {...item}
                   />
                 ))}
-                {starterWeapons && starterWeapons[characterClass] && (
-                  <ItemCardSmall {...starterWeapons[characterClass]} />
-                )}
               </VStack>
             </VStack>
           </SimpleGrid>
