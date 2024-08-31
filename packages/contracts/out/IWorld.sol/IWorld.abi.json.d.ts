@@ -218,6 +218,24 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__applyDamageOverTime",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__applyEquipmentAndStatusEffects",
     "inputs": [
       {

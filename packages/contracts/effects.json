@@ -10,7 +10,7 @@
       }
     },
     {
-      "effectId": "0xd9d7d852ae6ef09c000000000000000000000000000000000000000000000000",
+      "effectId": "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000",
       "name": "basic magic heal",
       "stats": {
         "attackModifierBonus": 1000,
@@ -38,7 +38,6 @@
       "stats": {
         "agiModifier": -10,
         "armorModifier": 0,
-        "cooldown": 3,
         "damagePerTick": 0,
         "hpModifier": 0,
         "intModifier": 0,
@@ -59,7 +58,6 @@
       "stats": {
         "agiModifier": 0,
         "armorModifier": 0,
-        "cooldown": 3,
         "damagePerTick": 1,
         "hpModifier": 0,
         "intModifier": 0,

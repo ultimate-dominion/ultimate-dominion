@@ -183,7 +183,6 @@ contract EncounterSystem is System {
             if (encounterData.currentTurn % 2 == 0) {
                 // if timestamp is less than timeout
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
-                    // check that player action is for defender
                     require(isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER");
 
                     // if player is attacker add +1 to current turn
@@ -213,34 +212,6 @@ contract EncounterSystem is System {
             }
         }
         _queueActions(encounterId, attacks);
-        _applyDamageOverTime(encounterId, attacks);
-    }
-
-    function _applyDamageOverTime(bytes32 encounterId, Action[] memory attacks) internal {
-        CombatEncounterData memory combatData = CombatEncounter.get(encounterId);
-        bytes32 entityId;
-        int256[] memory damages;
-        int256 totalDamage;
-        if (CombatEncounter.getEncounterType(encounterId) == EncounterType.PvE) {
-            for (uint256 i; i < attacks.length; i++) {
-                entityId = attacks[i].defenderEntityId;
-                bytes32[] memory appliedStatusEffects = EncounterEntity.getAppliedStatusEffects(entityId);
-
-                damages = new int256[](appliedStatusEffects.length);
-                for (uint256 j; j < appliedStatusEffects.length; j++) {
-                    int256 damageToApply = StatusEffectStats.getDamagePerTick(appliedStatusEffects[j]);
-                    damages[i] = damageToApply;
-                    int256 currentHp = Stats.getCurrentHp(entityId) + damageToApply;
-                    if (damageToApply != 0) Stats.setCurrentHp(entityId, currentHp);
-                }
-            }
-        }
-        for (uint256 i; i < damages.length; i++) {
-            totalDamage += damages[i];
-        }
-        DamageOverTimeAppliedData memory dotDamage =
-            DamageOverTimeAppliedData({entityId: entityId, totalDamage: totalDamage, individualDamages: damages});
-        DamageOverTimeApplied.set(encounterId, combatData.currentTurn, dotDamage);
     }
 
     function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
@@ -264,18 +235,24 @@ contract EncounterSystem is System {
                 IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
             }
         }
+
         for (uint256 i; i < encounterData.attackers.length; i++) {
             entityTemp = encounterData.attackers[i];
             if (EncounterEntity.getDied(entityTemp)) {
                 IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
             }
         }
+
         uint256 expAmount;
         uint256 goldAmount;
         uint256[] memory itemsDropped;
-        if (uint8(encounterData.encounterType) == uint8(1)) {
+
+        if (encounterData.encounterType == EncounterType.PvP) {
             (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePveRewards(encounterId, randomNumber);
-        } else {}
+        } else {
+            // distribute pvp rewards
+        }
+
         CombatOutcomeData memory combatOutcome = CombatOutcomeData({
             endTime: block.timestamp,
             attackersWin: attackersWin,
@@ -285,18 +262,21 @@ contract EncounterSystem is System {
         });
 
         bytes32[] memory emptyArray = new bytes32[](0);
+
         for (uint256 i; i < encounterData.attackers.length; i++) {
             // clear encounterId
             EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
             // remove combat status effects
             EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
         }
+
         for (uint256 i; i < encounterData.defenders.length; i++) {
             // clear encounter id
             EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
             // remove combat status effects
             EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
         }
+
         CombatOutcome.set(encounterId, combatOutcome);
     }
 

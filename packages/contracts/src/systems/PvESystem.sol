@@ -100,6 +100,10 @@ contract PvESystem is System {
 
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+
+        encounterData.currentTurn++;
+        CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
+
         uint256 numberOfExecutedActions;
         if (encounterData.attackersAreMobs) {
             // execute mob attacks
@@ -109,14 +113,20 @@ contract PvESystem is System {
             numberOfExecutedActions = _executePlayerAction(encounterId, encounterData, attacks, randomness, 0);
         }
 
-        encounterData.currentTurn++;
+        for (uint256 i; i < encounterData.defenders.length; i++) {
+            // apply damage over time to defenders & attackers
+            IWorld(_world()).UD__applyDamageOverTime(encounterId, encounterData.defenders[i]);
+        }
 
         (bool encounterEnded, bool attackersWin) = IWorld(_world()).UD__checkForEncounterEnd(encounterData);
-
+        // check it encouner has ended
         if (encounterEnded) {
+            // if ended end encounter
             _setCharacterSpawns(encounterData);
             IWorld(_world()).UD__endEncounter(encounterId, randomness, attackersWin);
         } else {
+            encounterData.currentTurn++;
+            // if not execute defender attack
             if (encounterData.attackersAreMobs) {
                 //execute player attack
                 _executePlayerAction(encounterId, encounterData, attacks, randomness, numberOfExecutedActions);
@@ -125,7 +135,14 @@ contract PvESystem is System {
                 _executeMobAction(encounterId, encounterData, randomness, numberOfExecutedActions);
             }
 
+            // set encounter data
             CombatEncounter.set(encounterId, encounterData);
+
+            // apply dot damage to defenders
+            for (uint256 i; i < encounterData.attackers.length; i++) {
+                // apply damage over time to attackers
+                IWorld(_world()).UD__applyDamageOverTime(encounterId, encounterData.attackers[i]);
+            }
 
             (encounterEnded, attackersWin) = IWorld(_world()).UD__checkForEncounterEnd(encounterData);
 
@@ -162,10 +179,12 @@ contract PvESystem is System {
                     itemId: monsterStats.inventory[0]
                 })
             );
+
             randomNumber = uint256(keccak256(abi.encode(randomness, mobAction.attackerId, encounterData.currentTurn)));
 
             mobAction = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
 
+            // set offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, mobAction);
         }
     }
@@ -190,6 +209,7 @@ contract PvESystem is System {
 
             // execute action
             currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
+
             // emit action data to offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, currentActionData);
         }

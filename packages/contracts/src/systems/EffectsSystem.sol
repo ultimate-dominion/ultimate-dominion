@@ -22,13 +22,15 @@ import {
     StatusEffectStatsData,
     StatusEffectsValidity,
     StatusEffectsValidityData,
-    WorldStatusEffects
+    WorldStatusEffects,
+    DamageOverTimeApplied,
+    DamageOverTimeAppliedData
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {RngRequestType, MobType, EncounterType, EffectType, Classes} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
 import {Mobs, MobsData} from "@tables/Mobs.sol";
-import {MonsterStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {MonsterStats, AdjustedCombatStats, Action} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {DEFAULT_MAX_TURNS} from "../../constants.sol";
@@ -224,21 +226,26 @@ contract EffectsSystem is System {
         }
     }
 
-    function _expireStatusEffect(bytes32 appliedEffectId) internal view returns (bytes32) {
-        (bytes32 effectStatId, uint256 timestampApplied, uint256 expiredTime, uint256 turnApplied) =
-            getAppliedEffectInfo(appliedEffectId);
-        if (expiredTime == 0) {
-            expiredTime = block.timestamp;
-            return bytes32(
-                abi.encodePacked(
-                    bytes8(effectStatId),
-                    bytes8(uint64(timestampApplied)),
-                    bytes8(uint64(expiredTime)),
-                    bytes8(uint64(turnApplied))
-                )
-            );
-        } else {
-            return appliedEffectId;
+    function applyDamageOverTime(bytes32 encounterId, bytes32 entityId) public {
+        _requireAccess(address(this), _msgSender());
+        uint256 currentTurn = CombatEncounter.getCurrentTurn(encounterId);
+        int256 totalDamage;
+        bytes32[] memory appliedStatusEffects = EncounterEntity.getAppliedStatusEffects(entityId);
+
+        int256[] memory damages = new int256[](appliedStatusEffects.length);
+
+        for (uint256 i; i < appliedStatusEffects.length; i++) {
+            int256 damageToApply = StatusEffectStats.getDamagePerTick(appliedStatusEffects[i]);
+            damages[i] = damageToApply;
+            totalDamage += damageToApply;
+            int256 currentHp = Stats.getCurrentHp(entityId) + damageToApply;
+            if (damageToApply != 0) Stats.setCurrentHp(entityId, currentHp);
+        }
+
+        if (totalDamage != 0) {
+            DamageOverTimeAppliedData memory dotDamage =
+                DamageOverTimeAppliedData({entityId: entityId, totalDamage: totalDamage, individualDamages: damages});
+            DamageOverTimeApplied.set(encounterId, currentTurn, dotDamage);
         }
     }
 
@@ -317,5 +324,23 @@ contract EffectsSystem is System {
      */
     function getEffectTurnApplied(bytes32 appliedEffectId) public pure returns (uint256 _turnApplied) {
         _turnApplied = uint256(uint64(bytes8(appliedEffectId << 48)));
+    }
+
+    function _expireStatusEffect(bytes32 appliedEffectId) internal view returns (bytes32) {
+        (bytes32 effectStatId, uint256 timestampApplied, uint256 expiredTime, uint256 turnApplied) =
+            getAppliedEffectInfo(appliedEffectId);
+        if (expiredTime == 0) {
+            expiredTime = block.timestamp;
+            return bytes32(
+                abi.encodePacked(
+                    bytes8(effectStatId),
+                    bytes8(uint64(timestampApplied)),
+                    bytes8(uint64(expiredTime)),
+                    bytes8(uint64(turnApplied))
+                )
+            );
+        } else {
+            return appliedEffectId;
+        }
     }
 }
