@@ -129,6 +129,7 @@ contract EquipmentSystem is System {
         ItemsData memory itemData = Items.get(itemId);
         StatsData memory character = abi.decode(Characters.getBaseStats(characterId), (StatsData));
         StatRestrictionsData memory statRestrictions = StatRestrictions.get(itemId);
+
         if (itemData.itemType == ItemType.Weapon) {
             bool isLevel = character.level >= WeaponStats.getMinLevel(itemId);
             bool hasStats = true;
@@ -151,6 +152,7 @@ contract EquipmentSystem is System {
             if (statRestrictions.minAgility > character.agility) hasStats = false;
             if (statRestrictions.minStrength > character.strength) hasStats = false;
             if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
+
             if (isLevel && hasStats) canUse = true;
         }
         if (itemData.itemType == ItemType.Consumable) {
@@ -177,7 +179,6 @@ contract EquipmentSystem is System {
             CharacterEquipment.pushEquippedWeapons(characterId, itemId);
         }
         if (uint8(itemType) == 1) {
-            console.log("equipping armor");
             CharacterEquipment.pushEquippedArmor(characterId, itemId);
         }
 
@@ -226,7 +227,7 @@ contract EquipmentSystem is System {
         require(characterOwner == _msgSender(), "EQUIPMENT: Not Character Owner");
         require(isEquipped(characterId, itemId), "EQUIPMENT: NOT EQUIPPED");
         ItemType itemType = IWorld(_world()).UD__getItemType(itemId);
-        console.log("type", uint8(itemType));
+
         if (itemType == ItemType.Weapon) {
             uint256[] memory sortedArray = _swapToEndOfArray(itemId, CharacterEquipment.getEquippedWeapons(characterId));
             if (sortedArray[sortedArray.length - 1] == itemId) {
@@ -266,9 +267,9 @@ contract EquipmentSystem is System {
         IWorld(_world()).UD__setStats(characterId, calculateEquipmentBonuses(characterId));
     }
 
-    function getCombatStats(bytes32 entityId) public returns (AdjustedCombatStats memory modifiedStats) {
+    function getCombatStats(bytes32 entityId) public view returns (AdjustedCombatStats memory modifiedStats) {
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
-            StatsData memory baseStats = abi.decode(Characters.getBaseStats(entityId), (StatsData));
+            StatsData memory baseStats = Stats.get(entityId);
             modifiedStats.strength = baseStats.strength;
             modifiedStats.agility = baseStats.agility;
             modifiedStats.intelligence = baseStats.intelligence;
@@ -282,22 +283,22 @@ contract EquipmentSystem is System {
     }
 
     /// @dev returns the base stats + the equipment stats of a character
-    function calculateEquipmentBonuses(bytes32 entityId) public returns (AdjustedCombatStats memory) {
-        AdjustedCombatStats memory baseStats = getCombatStats(entityId);
+    function calculateEquipmentBonuses(bytes32 entityId) public view returns (AdjustedCombatStats memory) {
+        AdjustedCombatStats memory combatStats = getCombatStats(entityId);
         ////  REWORKING THIS TO NOT RE_APPLY STATS EVERY ACTION ONLY WHEN STATUS EFFECTS / ITEMS ARE EQUIPPED /  UNEQUIPPED
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
-            // StatsData memory baseStats = abi.decode(Characters.getCombatStats(entityId), (StatsData));
+            StatsData memory baseStats = abi.decode(Characters.getBaseStats(entityId), (StatsData));
             CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
 
-            baseStats.strength += equipmentStats.strBonus;
-            baseStats.agility += equipmentStats.agiBonus;
-            baseStats.intelligence += equipmentStats.intBonus;
-            baseStats.maxHp += equipmentStats.hpBonus;
-            baseStats.armor = equipmentStats.armor;
-            baseStats.currentHp = Stats.getCurrentHp(entityId);
+            combatStats.strength = baseStats.strength + equipmentStats.strBonus;
+            combatStats.agility = baseStats.agility + equipmentStats.agiBonus;
+            combatStats.intelligence = baseStats.intelligence + equipmentStats.intBonus;
+            combatStats.maxHp = baseStats.maxHp + equipmentStats.hpBonus;
+            combatStats.armor = equipmentStats.armor;
+            // add armor bonus to base hp?
         }
 
-        return baseStats;
+        return combatStats;
     }
 
     function _moveIdToEndOfArray(uint256 itemId, uint256[] memory array)

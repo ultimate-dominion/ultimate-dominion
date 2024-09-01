@@ -323,7 +323,7 @@
   },
   {
     "type": "function",
-    "name": "UD__calculateCombatStats",
+    "name": "UD__calculateAllStatusEffects",
     "inputs": [
       {
         "name": "entityId",
@@ -333,7 +333,7 @@
     ],
     "outputs": [
       {
-        "name": "_stats",
+        "name": "_adjustedStats",
         "type": "tuple",
         "internalType": "struct AdjustedCombatStats",
         "components": [
@@ -462,57 +462,6 @@
   },
   {
     "type": "function",
-    "name": "UD__calculateCombatStatusEffects",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_adjustedStats",
-        "type": "tuple",
-        "internalType": "struct AdjustedCombatStats",
-        "components": [
-          {
-            "name": "strength",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "agility",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "intelligence",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "armor",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "maxHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "currentHp",
-            "type": "int256",
-            "internalType": "int256"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "UD__calculateEquipmentBonuses",
     "inputs": [
       {
@@ -560,7 +509,7 @@
         ]
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -1834,7 +1783,7 @@
         ]
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -3361,7 +3310,7 @@
         "internalType": "bool"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",

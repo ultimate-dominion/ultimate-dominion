@@ -37,7 +37,10 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         StatsData memory alicesCharacter = world.UD__getStats(alicesCharacterId);
         assertEq(uint8(alicesCharacter.class), uint8(Classes.Rogue));
         assertEq(
-            (alicesCharacter.strength + alicesCharacter.agility + alicesCharacter.maxHp + alicesCharacter.intelligence),
+            (
+                alicesCharacter.strength + alicesCharacter.agility + (alicesCharacter.maxHp / 1 ether)
+                    + alicesCharacter.intelligence
+            ),
             27
         );
 

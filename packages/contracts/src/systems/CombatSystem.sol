@@ -163,9 +163,9 @@ contract CombatSystem is System {
         uint256 randomNumber
     ) internal returns (int256 damage, bool hit, bool crit) {
         // get attacker
-        AdjustedCombatStats memory attacker = calculateCombatStats(attackerId);
+        AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
         //get defender
-        AdjustedCombatStats memory defender = calculateCombatStats(defenderId);
+        AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
         // get weapon stats
         WeaponStatsData memory weapon = IWorld(_world()).UD__getWeaponStats(itemId);
 
@@ -174,7 +174,7 @@ contract CombatSystem is System {
         PhysicalDamageStatsData memory attackStats = IWorld(_world()).UD__getPhysicalDamageStats(effectId);
         if (Stats.getCurrentHp(defenderId) > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
-            (hit, crit) = _calculateActionModifier(
+            (hit, crit) = _calculateToHit(
                 uint256(rnChunks[0]),
                 uint256(rnChunks[1]),
                 attackStats.attackModifierBonus,
@@ -190,7 +190,7 @@ contract CombatSystem is System {
                                 ? uint256(int256(defender.armor) - attackStats.armorPenetration)
                                 : uint256(0)
                         ) * DEFENSE_MODIFIER
-                    ) / int256(WAD);
+                    );
                 console.log("HIT!");
                 if (crit) {
                     console.log("CRIT!");
@@ -218,27 +218,30 @@ contract CombatSystem is System {
     ) internal view returns (int256 _damage) {
         if (!crit) {
             int256 randomness = Math.toInt(randomNumber ^ 4);
-            int256 baseDamage = attackStats.bonusDamage
-                + int256(
-                    randomness % weapon.maxDamage <= weapon.minDamage ? weapon.minDamage : randomness % weapon.maxDamage
-                );
-            _damage = _getStatBonus(attackerStrength, baseDamage) * int256(ATTACK_MODIFIER);
+            int256 baseDamage = (
+                attackStats.bonusDamage
+                    + int256(
+                        randomness % weapon.maxDamage <= weapon.minDamage ? weapon.minDamage : randomness % weapon.maxDamage
+                    )
+            ) * int256(ATTACK_MODIFIER);
+            _damage = _getStatBonus(attackerStrength, baseDamage);
         } else {
-            _damage = weapon.maxDamage;
+            _damage = _getStatBonus(attackerStrength, weapon.maxDamage * int256(ATTACK_MODIFIER));
         }
     }
 
     function _getStatBonus(int256 stat, int256 baseDamage) internal pure returns (int256 _totalDamage) {
         if (stat > 0) {
-            uint256 multiplier = uint256(Math.wmul(WAD, (stat * int256(5) * int256(WAD) / int256(1000))));
-            _totalDamage = int256(Math.wmul(multiplier, baseDamage * int256(WAD)) / int256(WAD)) + baseDamage;
+            // uint256 multiplier = uint256(Math.wmul(baseDamage * int256(WAD), (stat * int256(WAD) / 200))) ;
+            // _totalDamage = int256(Math.wmul(multiplier, baseDamage)) / int256(WAD);
+            _totalDamage = Math.wmul(baseDamage, ((stat * int256(WAD)) / int256(STAT_MODIFIER))) + baseDamage;
         } else {
             // if you have a negative adjusted stat.  do half damage
-            _totalDamage = baseDamage / 2;
+            _totalDamage = baseDamage / int256(2);
         }
     }
 
-    function _calculateActionModifier(
+    function _calculateToHit(
         uint256 attackRoll,
         uint256 defenseRoll,
         int256 attackModifierBonus,
@@ -248,9 +251,9 @@ contract CombatSystem is System {
     ) internal view returns (bool attackLands, bool crit) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         uint256 attackTotal =
-            (getStatModifier(attackerStat, attackModifierBonus) * (((attackRoll) % 1000))) * TO_HIT_MODIFIER / RAD;
-        // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
-        uint256 defenseTotal = ((((defenseRoll) % 400) * getStatModifier(defenderStat, 0))) * DEFENSE_MODIFIER / RAD;
+            (getStatModifier(attackerStat, attackModifierBonus) * (((attackRoll) % 1000)) * TO_HIT_MODIFIER) / WAD;
+
+        uint256 defenseTotal = ((((defenseRoll) % 400) * getStatModifier(defenderStat, 0)) * DEFENSE_MODIFIER) / WAD;
         attackLands = attackTotal >= defenseTotal;
 
         if (attackLands) {
@@ -259,8 +262,8 @@ contract CombatSystem is System {
     }
 
     function getStatModifier(int256 stat, int256 modifierBonus) internal pure returns (uint256 multiplier) {
-        multiplier = (stat / int256(STAT_MODIFIER) + modifierBonus) > 0
-            ? uint256((stat / int256(STAT_MODIFIER) + modifierBonus) * int256(WAD))
+        multiplier = ((stat + modifierBonus * int256(WAD)) / int256(STAT_MODIFIER)) > 0
+            ? uint256((stat + modifierBonus * int256(WAD)) / int256(STAT_MODIFIER))
             : WAD;
     }
 
@@ -272,9 +275,9 @@ contract CombatSystem is System {
         uint256 randomNumber
     ) internal returns (int256 damage, bool hit, bool crit) {
         // get attacker
-        AdjustedCombatStats memory attacker = calculateCombatStats(attackerId);
+        AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
         //get defender
-        AdjustedCombatStats memory defender = calculateCombatStats(defenderId);
+        AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
         SpellStatsData memory spell = IWorld(_world()).UD__getSpellStats(spellId);
 
         require(IWorld(_world()).UD__checkItemEffect(spellId, effectId), "INVALID ACTION");
@@ -283,7 +286,7 @@ contract CombatSystem is System {
 
         if (Stats.getCurrentHp(defenderId) > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
-            (hit, crit) = _calculateActionModifier(
+            (hit, crit) = _calculateToHit(
                 uint256(rnChunks[0]),
                 uint256(rnChunks[1]),
                 attackStats.attackModifierBonus,
@@ -295,7 +298,7 @@ contract CombatSystem is System {
                 damage = _calculateMagicDamage(
                     attackStats, spell, rnChunks[2], attacker.intelligence, defender.intelligence, crit
                 );
-
+                console.logInt(damage);
                 if (crit) {
                     console.log("CRIT!");
                     damage = damage * int256(CRIT_MULTIPLIER);
@@ -323,37 +326,36 @@ contract CombatSystem is System {
     ) internal view returns (int256 _damage) {
         console.log("MAGIC!");
 
-        if (equippedSpell.minDamage > 0 && equippedSpell.maxDamage > 0) {
-            int256 baseDamage;
-            if (!crit) {
-                baseDamage = attackStats.bonusDamage
-                    + int256(
-                        uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
-                            ? equippedSpell.minDamage
-                            : int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
-                    );
-            } else {
-                baseDamage = equippedSpell.maxDamage + attackStats.bonusDamage;
-            }
-            _damage = _getStatBonus(attackerIntelligence, baseDamage) * int256(ATTACK_MODIFIER)
-                - int256((defenderIntelligence > 0 ? defenderIntelligence : int256(0)) * int256(DEFENSE_MODIFIER))
-                    / int256(WAD);
-        } else if (equippedSpell.minDamage < 0 && equippedSpell.maxDamage < 0) {
-            if (!crit) {
-                _damage = (
-                    (
-                        attackStats.bonusDamage
-                            + int256(
-                                uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
-                                    ? equippedSpell.minDamage
-                                    : -int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
-                            )
-                    ) * int256(ATTACK_MODIFIER)
+        // if (equippedSpell.minDamage > 0 && equippedSpell.maxDamage > 0) {
+        int256 baseDamage;
+        if (!crit) {
+            baseDamage = attackStats.bonusDamage
+                + int256(
+                    uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
+                        ? equippedSpell.minDamage
+                        : int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
                 );
-            } else {
-                _damage = equippedSpell.maxDamage + attackStats.bonusDamage;
-            }
+        } else {
+            baseDamage = equippedSpell.maxDamage + attackStats.bonusDamage;
         }
+        _damage = _getStatBonus(attackerIntelligence, baseDamage) * int256(ATTACK_MODIFIER)
+            - int256((defenderIntelligence > 0 ? defenderIntelligence : int256(0)) * int256(DEFENSE_MODIFIER)) / int256(WAD);
+        // } else if (equippedSpell.minDamage < 0 && equippedSpell.maxDamage < 0) {
+        //     if (!crit) {
+        //         _damage = (
+        //             (
+        //                 attackStats.bonusDamage
+        //                     + int256(
+        //                         uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
+        //                             ? equippedSpell.minDamage
+        //                             : -int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
+        //                     )
+        //             ) * int256(ATTACK_MODIFIER)
+        //         );
+        //     } else {
+        //         _damage = equippedSpell.maxDamage + attackStats.bonusDamage;
+        //     }
+        // }
     }
 
     function _calculateStatusEffect(
@@ -364,9 +366,9 @@ contract CombatSystem is System {
         uint256 randomNumber
     ) internal returns (bool hit) {
         // get attacker
-        AdjustedCombatStats memory attacker = calculateCombatStats(attackerId);
+        AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
         //get defender
-        AdjustedCombatStats memory defender = calculateCombatStats(defenderId);
+        AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
         // get weapon stats
         ResistanceStat resistanceStat = IWorld(_world()).UD__getStatusEffectStats(effectId).resistanceStat;
 
@@ -379,7 +381,7 @@ contract CombatSystem is System {
             if (resistanceStat == ResistanceStat.None) {
                 hit = true;
             } else if (resistanceStat == ResistanceStat.Strength) {
-                (hit,) = _calculateActionModifier(
+                (hit,) = _calculateToHit(
                     uint256(rnChunks[0]),
                     uint256(rnChunks[1]),
                     attackStats.attackModifierBonus,
@@ -388,7 +390,7 @@ contract CombatSystem is System {
                     defender.strength
                 );
             } else if (resistanceStat == ResistanceStat.Agility) {
-                (hit,) = _calculateActionModifier(
+                (hit,) = _calculateToHit(
                     uint256(rnChunks[0]),
                     uint256(rnChunks[1]),
                     attackStats.attackModifierBonus,
@@ -397,7 +399,7 @@ contract CombatSystem is System {
                     defender.agility
                 );
             } else if (resistanceStat == ResistanceStat.Intelligence) {
-                (hit,) = _calculateActionModifier(
+                (hit,) = _calculateToHit(
                     uint256(rnChunks[0]),
                     uint256(rnChunks[1]),
                     attackStats.attackModifierBonus,
@@ -413,9 +415,5 @@ contract CombatSystem is System {
                 IWorld(_world()).UD__applyStatusEffect(defenderId, effectId);
             }
         }
-    }
-
-    function calculateCombatStats(bytes32 entityId) public returns (AdjustedCombatStats memory _stats) {
-        _stats = IWorld(_world()).UD__calculateCombatStatusEffects(entityId);
     }
 }

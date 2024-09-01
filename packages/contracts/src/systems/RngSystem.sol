@@ -14,6 +14,7 @@ import {
     RngLogsData,
     CombatEncounter
 } from "@codegen/index.sol";
+import {Math, WAD} from "@libraries/Math.sol";
 import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
@@ -192,13 +193,13 @@ contract RngSystem is System, IEntropyConsumer {
         // Class-based adjustments; should total to 21
         if (characterClass == Classes.Warrior) {
             stats.strength += 2;
-            stats.maxHp = int256(10);
+            stats.maxHp = int256(10 * WAD);
         } else if (characterClass == Classes.Rogue) {
             stats.agility += 2;
-            stats.maxHp = int256(6);
+            stats.maxHp = int256(6 * WAD);
         } else if (characterClass == Classes.Mage) {
             stats.intelligence += 2;
-            stats.maxHp = int256(8);
+            stats.maxHp = int256(8 * WAD);
         }
 
         Stats.set(characterId, stats);

@@ -43,6 +43,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_equipItems() public {
+        AdjustedCombatStats memory startingStats = world.UD__getCombatStats(bobCharacterId);
         uint256[] memory itemIds = new uint256[](1);
         uint256[] memory amounts = new uint256[](1);
         bytes32[] memory characterIds = new bytes32[](1);
@@ -56,7 +57,13 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         startGasReport("equip 1 item");
         world.UD__equipItems(bobCharacterId, itemsToEquip);
         endGasReport();
+        AdjustedCombatStats memory endingStats = world.UD__getCombatStats(bobCharacterId);
         assertTrue(world.UD__isEquipped(bobCharacterId, newArmorId));
+        assertEq(endingStats.agility, startingStats.agility + 2);
+        assertEq(endingStats.strength, startingStats.strength + 1);
+        assertEq(endingStats.intelligence, startingStats.intelligence + 3);
+        assertEq(endingStats.armor, startingStats.armor + 1);
+        assertEq(endingStats.maxHp, startingStats.maxHp + 4);
     }
 
     function test_equipItems_Revert_LowStr() public {

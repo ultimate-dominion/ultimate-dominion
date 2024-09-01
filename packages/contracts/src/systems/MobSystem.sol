@@ -2,6 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
+import {Math, WAD} from "@libraries/Math.sol";
 import {
     Counters,
     RandomNumbers,
@@ -54,14 +55,14 @@ contract MobSystem is System {
         MobsData memory stats = Mobs.get(mobId);
         if (uint8(stats.mobType) == 0) {
             MonsterStats memory monsterStats = abi.decode(stats.mobStats, (MonsterStats));
-
+            int256 hp = monsterStats.hitPoints * int256(WAD);
             StatsData memory statsData = StatsData({
                 strength: monsterStats.strength,
                 agility: monsterStats.agility,
                 intelligence: monsterStats.intelligence,
-                maxHp: monsterStats.hitPoints,
+                maxHp: hp,
                 class: monsterStats.class,
-                currentHp: int256(monsterStats.hitPoints),
+                currentHp: hp,
                 experience: monsterStats.experience,
                 level: monsterStats.level
             });

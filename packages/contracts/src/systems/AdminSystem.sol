@@ -12,6 +12,7 @@ import {
     Stats,
     StatsData,
     MobStats,
+    Characters,
     CombatEncounter,
     CombatEncounterData,
     CharacterEquipment,
@@ -55,6 +56,7 @@ contract AdminSystem is System {
     }
 
     function adminSetStats(bytes32 entityId, StatsData memory desiredStats) public onlyAdmin {
+        Characters.setBaseStats(entityId, abi.encode(desiredStats));
         Stats.set(entityId, desiredStats);
     }
 

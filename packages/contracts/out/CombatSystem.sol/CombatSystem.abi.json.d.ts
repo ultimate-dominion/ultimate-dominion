@@ -40,57 +40,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "calculateCombatStats",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_stats",
-        "type": "tuple",
-        "internalType": "struct AdjustedCombatStats",
-        "components": [
-          {
-            "name": "strength",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "agility",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "intelligence",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "armor",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "maxHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "currentHp",
-            "type": "int256",
-            "internalType": "int256"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "executeAction",
     "inputs": [
       {

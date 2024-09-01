@@ -32,6 +32,7 @@ import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
+import {Math, WAD} from "@libraries/Math.sol";
 import "forge-std/console.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
@@ -184,9 +185,9 @@ contract CharacterSystem is System {
             "CHARACTER SYSTEM: INVALID STAT CHANGE"
         );
         if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
-            stats.maxHp += 1;
+            stats.maxHp += int256(WAD);
         }
-        stats.maxHp += 1;
+        stats.maxHp += int256(WAD);
         stats.strength = desiredStats.strength;
         stats.agility = desiredStats.agility;
         stats.intelligence = desiredStats.intelligence;

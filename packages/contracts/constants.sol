@@ -19,7 +19,7 @@ uint256 constant CRIT_MULTIPLIER = 2;
 // attack roll has to be CRIT_MODIFIER times greater than the defense roll in order to crit
 uint256 constant CRIT_MODIFIER = 9;
 // the character's stats are divided by STAT_MODIFIER when applying stat bonuses
-int256 constant STAT_MODIFIER = 3;
+int256 constant STAT_MODIFIER = 200;
 
 //Gold Drop constants
 uint256 constant BASE_GOLD_DROP = 1e15; //
