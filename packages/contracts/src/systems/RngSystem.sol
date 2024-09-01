@@ -162,16 +162,16 @@ contract RngSystem is System, IEntropyConsumer {
 
         stats.class = characterClass;
 
-        stats.strength = (chunks[0] % 8) + 3; // Range [3, 10]
-        stats.agility = (chunks[1] % 8) + 3; // Range [3, 10]
+        stats.strength = int256(int64(chunks[0])) % 8 + 3; // Range [3, 10]
+        stats.agility = int256(int64(chunks[1])) % 8 + 3; // Range [3, 10]
 
         // Calculate intelligence to ensure total is 19
-        stats.intelligence = 19 - stats.strength - stats.agility;
+        stats.intelligence = int256(19 - stats.strength - stats.agility);
 
         // Ensure intelligence is within the range [3, 10]
         if (stats.intelligence < 3) {
-            uint256 deficit = 3 - stats.intelligence;
-            stats.intelligence = 3;
+            int256 deficit = int256(3 - stats.intelligence);
+            stats.intelligence = int256(3);
 
             if (stats.strength > stats.agility) {
                 stats.strength -= deficit;
@@ -179,26 +179,26 @@ contract RngSystem is System, IEntropyConsumer {
                 stats.agility -= deficit;
             }
         } else if (stats.intelligence > 10) {
-            uint256 excess = stats.intelligence - 10;
-            stats.intelligence = 10;
+            int256 excess = int256(stats.intelligence - 10);
+            stats.intelligence = int256(10);
 
             if (stats.strength < stats.agility) {
-                stats.strength += excess;
+                stats.strength += int256(excess);
             } else {
-                stats.agility += excess;
+                stats.agility += int256(excess);
             }
         }
 
         // Class-based adjustments; should total to 21
         if (characterClass == Classes.Warrior) {
             stats.strength += 2;
-            stats.baseHp = uint256(10);
+            stats.maxHp = int256(10);
         } else if (characterClass == Classes.Rogue) {
             stats.agility += 2;
-            stats.baseHp = uint256(6);
+            stats.maxHp = int256(6);
         } else if (characterClass == Classes.Mage) {
             stats.intelligence += 2;
-            stats.baseHp = uint256(8);
+            stats.maxHp = int256(8);
         }
 
         Stats.set(characterId, stats);

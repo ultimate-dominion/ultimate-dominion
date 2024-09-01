@@ -20,7 +20,9 @@ interface IEquipmentSystem {
 
   function UD__unequipItem(bytes32 characterId, uint256 itemId) external returns (bool success);
 
-  function UD__applyEquipmentBonuses(bytes32 entityId) external view returns (AdjustedCombatStats memory modifiedStats);
+  function UD__getCombatStats(bytes32 entityId) external returns (AdjustedCombatStats memory modifiedStats);
+
+  function UD__calculateEquipmentBonuses(bytes32 entityId) external returns (AdjustedCombatStats memory);
 
   function UD__checkItemEffect(uint256 itemId, bytes32 effectId) external view returns (bool hasAction);
 

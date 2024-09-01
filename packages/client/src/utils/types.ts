@@ -98,7 +98,7 @@ export type CombatOutcomeType = {
 
 export type EntityStats = {
   agility: string;
-  baseHp: string;
+  maxHp: string;
   currentHp: string;
   entityClass: StatsClasses;
   experience: string;
@@ -126,7 +126,7 @@ export type Metadata = {
 };
 
 export type Monster = MonsterTemplate & {
-  baseHp: string;
+  maxHp: string;
   currentHp: string;
   id: Entity;
   inBattle: boolean;

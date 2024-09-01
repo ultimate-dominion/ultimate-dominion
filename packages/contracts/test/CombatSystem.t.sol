@@ -191,21 +191,21 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         StatsData memory endingStats = Stats.get(bobCharacterId);
         uint256 endingGold = goldToken.balanceOf(bob);
-        int256 bobEndingHp = Stats.get(bobCharacterId).currentHp;
+        int256 bobEndingHp = Stats.getCurrentHp(bobCharacterId);
 
         if (bobEndingHp > 0) {
             assertGt(endingStats.experience, startingStats.experience, "incorrect exp");
-            assertGt(endingGold, startingGold);
-            assertNotEq(startingStats.currentHp, Stats.get(entityId).currentHp);
+            assertGt(endingGold, startingGold, "incorrect gold");
+            assertNotEq(startingStats.currentHp, Stats.get(entityId).currentHp, "incorrect hp");
             bytes32[] memory entities = world.UD__getEntitiesAtPosition(0, 1);
             bool entityIsAtPosition;
             for (uint256 i; i < entities.length; i++) {
                 if (entityId == entities[i]) entityIsAtPosition == true;
             }
-            assertFalse(entityIsAtPosition);
+            assertFalse(entityIsAtPosition, "entity still at position");
             (uint16 entityX, uint16 entityY) = world.UD__getEntityPosition(entityId);
-            assertEq(entityX, 0);
-            assertEq(entityY, 0);
+            assertEq(entityX, 0, "incorrect x");
+            assertEq(entityY, 0, "incorrect y");
         } else {
             assertNotEq(startingStats.currentHp, Stats.get(bobCharacterId).currentHp);
             assertFalse(EncounterEntity.getDied(entityId), "incorrect died");
@@ -217,25 +217,14 @@ contract Test_CombatSystem is SetUp, GasReporter {
             assertFalse(entityIsAtPosition);
         }
 
-        assertEq(EncounterEntity.getEncounterId(bobCharacterId), bytes32(0));
+        assertEq(EncounterEntity.getEncounterId(bobCharacterId), bytes32(0), "incorrect encounter Id");
     }
 
     function test_EndTurn_EndsPvPEncounter() public {
         StatsData memory startingBobStats = Stats.get(bobCharacterId);
+
         StatsData memory startingAliceStats = Stats.get(alicesCharacterId);
         uint256 startingGold = goldToken.balanceOf(bob);
-
-        // // spawn characters
-        // vm.prank(bob);
-        // world.UD__spawn(bobCharacterId);
-        // vm.prank(alice);
-        // world.UD__spawn(alicesCharacterId);
-
-        // // cannot teleport entities from spawn point
-        // vm.prank(bob);
-        // world.UD__move(bobCharacterId, 0, 1);
-        // vm.prank(alice);
-        // world.UD__move(alicesCharacterId, 0, 1);
 
         // move entities to pvp zone
         world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);

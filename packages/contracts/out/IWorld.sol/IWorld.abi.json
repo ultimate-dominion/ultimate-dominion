@@ -1,6 +1,24 @@
 [
   {
     "type": "function",
+    "name": "UD__adminApplyStatusEffect",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "statusEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__adminClearBattleState",
     "inputs": [
       {
@@ -172,13 +190,13 @@
         "components": [
           {
             "name": "strength",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "agility",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "class",
@@ -187,13 +205,13 @@
           },
           {
             "name": "intelligence",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "baseHp",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "currentHp",
@@ -236,118 +254,6 @@
   },
   {
     "type": "function",
-    "name": "UD__applyEquipmentAndStatusEffects",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_adjustedStats",
-        "type": "tuple",
-        "internalType": "struct AdjustedCombatStats",
-        "components": [
-          {
-            "name": "adjustedStrength",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedAgility",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedIntelligence",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedArmor",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedMaxHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "currentHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__applyEquipmentBonuses",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "modifiedStats",
-        "type": "tuple",
-        "internalType": "struct AdjustedCombatStats",
-        "components": [
-          {
-            "name": "adjustedStrength",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedAgility",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedIntelligence",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedArmor",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedMaxHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "currentHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__applyStatusEffect",
     "inputs": [
       {
@@ -368,27 +274,27 @@
         "internalType": "struct AdjustedCombatStats",
         "components": [
           {
-            "name": "adjustedStrength",
+            "name": "strength",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedAgility",
+            "name": "agility",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedIntelligence",
+            "name": "intelligence",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedArmor",
+            "name": "armor",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedMaxHp",
+            "name": "maxHp",
             "type": "int256",
             "internalType": "int256"
           },
@@ -396,11 +302,6 @@
             "name": "currentHp",
             "type": "int256",
             "internalType": "int256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
           }
         ]
       }
@@ -422,84 +323,42 @@
   },
   {
     "type": "function",
-    "name": "UD__calculateAllStatusEffects",
+    "name": "UD__calculateCombatStats",
     "inputs": [
       {
         "name": "entityId",
         "type": "bytes32",
         "internalType": "bytes32"
-      },
-      {
-        "name": "statInput",
-        "type": "tuple",
-        "internalType": "struct AdjustedCombatStats",
-        "components": [
-          {
-            "name": "adjustedStrength",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedAgility",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedIntelligence",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedArmor",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "adjustedMaxHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "currentHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
       }
     ],
     "outputs": [
       {
-        "name": "_adjustedStats",
+        "name": "_stats",
         "type": "tuple",
         "internalType": "struct AdjustedCombatStats",
         "components": [
           {
-            "name": "adjustedStrength",
+            "name": "strength",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedAgility",
+            "name": "agility",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedIntelligence",
+            "name": "intelligence",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedArmor",
+            "name": "armor",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedMaxHp",
+            "name": "maxHp",
             "type": "int256",
             "internalType": "int256"
           },
@@ -507,11 +366,6 @@
             "name": "currentHp",
             "type": "int256",
             "internalType": "int256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
           }
         ]
       }
@@ -520,7 +374,7 @@
   },
   {
     "type": "function",
-    "name": "UD__calculateWorldStatusEffects",
+    "name": "UD__calculateCombatStatusEffects",
     "inputs": [
       {
         "name": "entityId",
@@ -528,32 +382,32 @@
         "internalType": "bytes32"
       },
       {
-        "name": "statInput",
+        "name": "_incomingStats",
         "type": "tuple",
         "internalType": "struct AdjustedCombatStats",
         "components": [
           {
-            "name": "adjustedStrength",
+            "name": "strength",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedAgility",
+            "name": "agility",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedIntelligence",
+            "name": "intelligence",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedArmor",
+            "name": "armor",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedMaxHp",
+            "name": "maxHp",
             "type": "int256",
             "internalType": "int256"
           },
@@ -561,11 +415,6 @@
             "name": "currentHp",
             "type": "int256",
             "internalType": "int256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
           }
         ]
       }
@@ -577,27 +426,27 @@
         "internalType": "struct AdjustedCombatStats",
         "components": [
           {
-            "name": "adjustedStrength",
+            "name": "strength",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedAgility",
+            "name": "agility",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedIntelligence",
+            "name": "intelligence",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedArmor",
+            "name": "armor",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedMaxHp",
+            "name": "maxHp",
             "type": "int256",
             "internalType": "int256"
           },
@@ -605,11 +454,108 @@
             "name": "currentHp",
             "type": "int256",
             "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__calculateCombatStatusEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__calculateEquipmentBonuses",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
           }
         ]
       }
@@ -758,6 +704,19 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__checkWorldStatusEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -1051,12 +1010,22 @@
   },
   {
     "type": "function",
-    "name": "UD__cullExpiredEffects",
+    "name": "UD__cullExpiredWorldEffect",
     "inputs": [
       {
         "name": "entityId",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -1706,6 +1675,67 @@
   },
   {
     "type": "function",
+    "name": "UD__getBaseStats",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getCharacterToken",
     "inputs": [],
     "outputs": [
@@ -1754,6 +1784,57 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getCombatStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "modifiedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -2393,6 +2474,57 @@
   },
   {
     "type": "function",
+    "name": "UD__getMonsterCombatStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_spawnedMonsterStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getMonsterStats",
     "inputs": [
       {
@@ -2409,13 +2541,13 @@
         "components": [
           {
             "name": "agility",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "armor",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "class",
@@ -2429,13 +2561,13 @@
           },
           {
             "name": "hitPoints",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "intelligence",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "inventory",
@@ -2449,74 +2581,8 @@
           },
           {
             "name": "strength",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__getMonsterStats",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct MonsterStats",
-        "components": [
-          {
-            "name": "agility",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "armor",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "class",
-            "type": "uint8",
-            "internalType": "enum Classes"
-          },
-          {
-            "name": "experience",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "hitPoints",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "intelligence",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "inventory",
-            "type": "uint256[]",
-            "internalType": "uint256[]"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "strength",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           }
         ]
       }
@@ -2984,13 +3050,13 @@
         "components": [
           {
             "name": "strength",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "agility",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "class",
@@ -2999,13 +3065,13 @@
           },
           {
             "name": "intelligence",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "baseHp",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "currentHp",
@@ -3400,7 +3466,7 @@
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "_isValidMob",
         "type": "bool",
         "internalType": "bool"
       }
@@ -3533,13 +3599,13 @@
         "components": [
           {
             "name": "strength",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "agility",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "class",
@@ -3548,13 +3614,13 @@
           },
           {
             "name": "intelligence",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "baseHp",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "currentHp",
@@ -3719,6 +3785,56 @@
         "name": "amounts",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "stats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
       }
     ],
     "outputs": [],

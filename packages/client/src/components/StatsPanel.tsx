@@ -81,7 +81,7 @@ export const StatsPanel = (): JSX.Element => {
 
   const {
     agility,
-    baseHp,
+    maxHp,
     currentHp,
     experience,
     goldBalance,
@@ -119,7 +119,7 @@ export const StatsPanel = (): JSX.Element => {
         </GridItem>
         <GridItem>
           <Text>
-            {currentHpWithFloor}/{baseHp}
+            {currentHpWithFloor}/{maxHp}
           </Text>
         </GridItem>
         <GridItem>

@@ -22,8 +22,8 @@ import {
     ConsumableStatsData,
     StatusEffectStats,
     StatusEffectStatsData,
-    StatusEffectsValidity,
-    StatusEffectsValidityData,
+    StatusEffectValidity,
+    StatusEffectValidityData,
     WorldStatusEffects,
     ActionOutcome,
     ActionOutcomeData

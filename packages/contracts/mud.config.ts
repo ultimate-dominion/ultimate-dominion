@@ -81,17 +81,19 @@ export default defineWorld({
         owner: "address",
         name: "bytes32",
         locked: "bool",
+        originalStats: "bytes",
+        baseStats: "bytes",
       },
     },
     Stats: {
       key: ["entityId"],
       schema: {
         entityId: "bytes32",
-        strength: "uint256",
-        agility: "uint256",
+        strength: "int256",
+        agility: "int256",
         class: "Classes",
-        intelligence: "uint256",
-        baseHp: "uint256",
+        intelligence: "int256",
+        maxHp: "int256",
         currentHp: "int256",
         experience: "uint256",
         level: "uint256",
@@ -106,18 +108,11 @@ export default defineWorld({
         mobMetadata: "string",
       },
     },
-    MonsterStats: {
+    MobStats: {
       key: ["mobId"],
       schema: {
-        mobId: "uint256",
-        agility: "uint256",
-        armor: "uint256",
-        class: "Classes",
-        experience: "uint256",
-        hitPoints: "uint256",
-        intelligence: "uint256",
-        level: "uint256",
-        strength: "uint256",
+        mobId: "bytes32",
+        armor: "int256",
         inventory: "uint256[]",
       },
     },
@@ -164,9 +159,9 @@ export default defineWorld({
       key: ["itemId"],
       schema: {
         itemId: "uint256",
-        minAgility: "uint256",
-        minIntelligence: "uint256",
-        minStrength: "uint256",
+        minAgility: "int256",
+        minIntelligence: "int256",
+        minStrength: "int256",
       },
     },
     WeaponStats: {
@@ -266,7 +261,7 @@ export default defineWorld({
         strModifier: "int256",
       },
     },
-    StatusEffectsValidity: {
+    StatusEffectValidity: {
       key: ["effectId"],
       schema: {
         effectId: "bytes32",

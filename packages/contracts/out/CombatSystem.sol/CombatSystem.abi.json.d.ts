@@ -40,7 +40,7 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "applyEquipmentAndStatusEffects",
+    "name": "calculateCombatStats",
     "inputs": [
       {
         "name": "entityId",
@@ -50,32 +50,32 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "_adjustedStats",
+        "name": "_stats",
         "type": "tuple",
         "internalType": "struct AdjustedCombatStats",
         "components": [
           {
-            "name": "adjustedStrength",
+            "name": "strength",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedAgility",
+            "name": "agility",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedIntelligence",
+            "name": "intelligence",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedArmor",
+            "name": "armor",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedMaxHp",
+            "name": "maxHp",
             "type": "int256",
             "internalType": "int256"
           },
@@ -83,11 +83,6 @@ declare const abi: [
             "name": "currentHp",
             "type": "int256",
             "internalType": "int256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
           }
         ]
       }

@@ -21,6 +21,7 @@ import {
     CombatEncounter,
     CombatEncounterData,
     CombatOutcome,
+    MobStats,
     CombatOutcomeData,
     Position,
     Mobs,
@@ -106,9 +107,11 @@ contract PvESystem is System {
 
         uint256 numberOfExecutedActions;
         if (encounterData.attackersAreMobs) {
+            console.log(" MOB IS ATTACKER");
             // execute mob attacks
             numberOfExecutedActions = _executeMobAction(encounterId, encounterData, randomness, 0);
         } else {
+            console.log(" Player IS ATTACKER");
             //execute player attack
             numberOfExecutedActions = _executePlayerAction(encounterId, encounterData, attacks, randomness, 0);
         }
@@ -128,9 +131,11 @@ contract PvESystem is System {
             encounterData.currentTurn++;
             // if not execute defender attack
             if (encounterData.attackersAreMobs) {
+                console.log(" Player IS DEFENDER");
                 //execute player attack
                 _executePlayerAction(encounterId, encounterData, attacks, randomness, numberOfExecutedActions);
             } else {
+                console.log(" Mob IS Defender");
                 // execute mob attacks
                 _executeMobAction(encounterId, encounterData, randomness, numberOfExecutedActions);
             }
@@ -164,9 +169,9 @@ contract PvESystem is System {
         _numberOfExecutedActions = encounterData.defenders.length;
 
         for (uint256 i; i < _numberOfExecutedActions; i++) {
-            MonsterStats memory monsterStats = encounterData.attackersAreMobs
-                ? IWorld(_world()).UD__getMonsterStats(encounterData.attackers[i])
-                : IWorld(_world()).UD__getMonsterStats(encounterData.defenders[i]);
+            uint256 monsterWeapon = encounterData.attackersAreMobs
+                ? MobStats.getItemInventory(encounterData.attackers[i], 0)
+                : MobStats.getItemInventory(encounterData.defenders[i], 0);
 
             ActionOutcomeData memory mobAction = _getCurrentActionData(
                 Action({
@@ -176,12 +181,12 @@ contract PvESystem is System {
                     defenderEntityId: encounterData.attackersAreMobs
                         ? encounterData.defenders[i]
                         : encounterData.attackers[i],
-                    itemId: monsterStats.inventory[0]
+                    itemId: monsterWeapon
                 })
             );
 
             randomNumber = uint256(keccak256(abi.encode(randomness, mobAction.attackerId, encounterData.currentTurn)));
-
+            console.log("executing mob action");
             mobAction = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
 
             // set offchain table

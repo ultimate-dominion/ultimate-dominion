@@ -21,7 +21,5 @@ interface ICombatSystem {
 
   function UD__getEncounter(bytes32 encounterId) external view returns (CombatEncounterData memory);
 
-  function UD__applyEquipmentAndStatusEffects(
-    bytes32 entityId
-  ) external returns (AdjustedCombatStats memory _adjustedStats);
+  function UD__calculateCombatStats(bytes32 entityId) external returns (AdjustedCombatStats memory _stats);
 }

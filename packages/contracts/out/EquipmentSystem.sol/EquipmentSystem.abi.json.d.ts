@@ -40,7 +40,7 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "applyEquipmentBonuses",
+    "name": "calculateEquipmentBonuses",
     "inputs": [
       {
         "name": "entityId",
@@ -50,32 +50,32 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "modifiedStats",
+        "name": "",
         "type": "tuple",
         "internalType": "struct AdjustedCombatStats",
         "components": [
           {
-            "name": "adjustedStrength",
+            "name": "strength",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedAgility",
+            "name": "agility",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedIntelligence",
+            "name": "intelligence",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedArmor",
+            "name": "armor",
             "type": "int256",
             "internalType": "int256"
           },
           {
-            "name": "adjustedMaxHp",
+            "name": "maxHp",
             "type": "int256",
             "internalType": "int256"
           },
@@ -83,16 +83,11 @@ declare const abi: [
             "name": "currentHp",
             "type": "int256",
             "internalType": "int256"
-          },
-          {
-            "name": "level",
-            "type": "uint256",
-            "internalType": "uint256"
           }
         ]
       }
     ],
-    "stateMutability": "view"
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -210,6 +205,57 @@ declare const abi: [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getCombatStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "modifiedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -442,6 +488,43 @@ declare const abi: [
   },
   {
     "type": "event",
+    "name": "Store_SetRecord",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "staticData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      },
+      {
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "EncodedLengths"
+      },
+      {
+        "name": "dynamicData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Store_SpliceDynamicData",
     "inputs": [
       {
@@ -479,37 +562,6 @@ declare const abi: [
         "type": "bytes32",
         "indexed": false,
         "internalType": "EncodedLengths"
-      },
-      {
-        "name": "data",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Store_SpliceStaticData",
-    "inputs": [
-      {
-        "name": "tableId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "keyTuple",
-        "type": "bytes32[]",
-        "indexed": false,
-        "internalType": "bytes32[]"
-      },
-      {
-        "name": "start",
-        "type": "uint48",
-        "indexed": false,
-        "internalType": "uint48"
       },
       {
         "name": "data",

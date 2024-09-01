@@ -58,7 +58,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri/"
         );
 
-        assertEq(newItemId, 13);
+        assertEq(newItemId, 16);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(

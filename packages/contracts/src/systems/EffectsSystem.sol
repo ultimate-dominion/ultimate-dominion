@@ -13,6 +13,7 @@ import {
     CombatEncounterData,
     CharacterEquipment,
     StatsData,
+    MobStats,
     PhysicalDamageStats,
     PhysicalDamageStatsData,
     MagicDamageStats,
@@ -20,8 +21,8 @@ import {
     ConsumableStats,
     StatusEffectStats,
     StatusEffectStatsData,
-    StatusEffectsValidity,
-    StatusEffectsValidityData,
+    StatusEffectValidity,
+    StatusEffectValidityData,
     WorldStatusEffects,
     DamageOverTimeApplied,
     DamageOverTimeAppliedData
@@ -52,8 +53,8 @@ contract EffectsSystem is System {
             MagicDamageStatsData memory magicStats = abi.decode(effectStats, (MagicDamageStatsData));
             MagicDamageStats.set(effectStatsId, magicStats);
         } else if (effectType == EffectType.StatusEffect) {
-            (StatusEffectStatsData memory statusStats, StatusEffectsValidityData memory validityData) =
-                abi.decode(effectStats, (StatusEffectStatsData, StatusEffectsValidityData));
+            (StatusEffectStatsData memory statusStats, StatusEffectValidityData memory validityData) =
+                abi.decode(effectStats, (StatusEffectStatsData, StatusEffectValidityData));
             // a status effect that expires after a certain time cannot expire after a number of turns
             // combat effects and world effects cannot overlap
             // also a world effect cannot cause damage over time
@@ -65,72 +66,39 @@ contract EffectsSystem is System {
                 require(validityData.validTurns != 0, "INVALID EFFECT: TURNS");
             }
             StatusEffectStats.set(effectStatsId, statusStats);
-            StatusEffectsValidity.set(effectStatsId, validityData);
+            StatusEffectValidity.set(effectStatsId, validityData);
         }
         Effects.set(effectStatsId, effectType, true);
     }
 
-    function calculateWorldStatusEffects(bytes32 entityId, AdjustedCombatStats memory statInput)
-        public
-        returns (AdjustedCombatStats memory _adjustedStats)
-    {
+    // world status effects change global stat state
+
+    function checkWorldStatusEffects(bytes32 entityId) public {
         bytes32[] memory appliedEffects = WorldStatusEffects.get(entityId);
         bytes32 effectId;
-        StatusEffectStatsData memory statsData;
         uint256 numberOfExpiredEffects;
 
         for (uint256 i; i < appliedEffects.length; i++) {
             effectId = appliedEffects[i];
-            statsData = getStatusEffectStats(getEffectStatId(effectId));
             bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
-            if (isNotExpired(updatedEffectId)) {
-                statInput.adjustedAgility += statsData.agiModifier;
-                statInput.adjustedIntelligence += statsData.agiModifier;
-                statInput.adjustedStrength += statsData.strModifier;
-                statInput.adjustedMaxHp += statsData.hpModifier;
-                statInput.adjustedArmor += statsData.armorModifier;
-            } else {
+            if (!isNotExpired(updatedEffectId)) {
                 WorldStatusEffects.updateAppliedStatusEffects(entityId, i, updatedEffectId);
-                numberOfExpiredEffects++;
+                cullExpiredWorldEffect(entityId, updatedEffectId, i);
             }
         }
-
-        if (numberOfExpiredEffects > 0) {
-            cullExpiredEffects(entityId);
-        }
-
-        _adjustedStats = statInput;
     }
 
-    function calculateAllStatusEffects(bytes32 entityId, AdjustedCombatStats memory statInput)
+    // combat status effects are not applied to the global stats only calculated during each round
+
+    function calculateCombatStatusEffects(bytes32 entityId, AdjustedCombatStats memory _incomingStats)
         public
         returns (AdjustedCombatStats memory _adjustedStats)
     {
         StatusEffectStatsData memory statsData;
+
         bytes32 effectId;
 
-        bytes32[] memory worldStatusEffects = WorldStatusEffects.get(entityId);
-        uint256 numberOfExpiredEffects;
-        if (worldStatusEffects.length != 0) {
-            for (uint256 i; i < worldStatusEffects.length; i++) {
-                effectId = worldStatusEffects[i];
-                statsData = getStatusEffectStats(getEffectStatId(effectId));
-                bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
-                if (isNotExpired(updatedEffectId)) {
-                    statInput.adjustedAgility += statsData.agiModifier;
-                    statInput.adjustedIntelligence += statsData.agiModifier;
-                    statInput.adjustedStrength += statsData.strModifier;
-                    statInput.adjustedMaxHp += statsData.hpModifier;
-                    statInput.adjustedArmor += statsData.armorModifier;
-                } else {
-                    WorldStatusEffects.updateAppliedStatusEffects(entityId, i, updatedEffectId);
-                    numberOfExpiredEffects++;
-                }
-            }
-        }
-        if (numberOfExpiredEffects > 0) {
-            cullExpiredEffects(entityId);
-        }
+        _adjustedStats = _incomingStats;
 
         EncounterEntityData memory encounterData = EncounterEntity.get(entityId);
 
@@ -140,33 +108,51 @@ contract EffectsSystem is System {
                 statsData = getStatusEffectStats(getEffectStatId(effectId));
                 bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
                 if (isNotExpired(updatedEffectId)) {
-                    statInput.adjustedAgility += statsData.agiModifier;
-                    statInput.adjustedIntelligence += statsData.agiModifier;
-                    statInput.adjustedStrength += statsData.strModifier;
-                    statInput.adjustedMaxHp += statsData.hpModifier;
-                    statInput.adjustedArmor += statsData.armorModifier;
+                    _adjustedStats.agility += statsData.agiModifier;
+                    _adjustedStats.intelligence += statsData.agiModifier;
+                    _adjustedStats.strength += statsData.strModifier;
+                    _adjustedStats.maxHp += statsData.hpModifier;
+                    _adjustedStats.armor += statsData.armorModifier;
                 } else {
                     EncounterEntity.updateAppliedStatusEffects(entityId, i, updatedEffectId);
                 }
             }
         }
-        _adjustedStats = statInput;
     }
 
-    function cullExpiredEffects(bytes32 entityId) public {
-        bytes32[] memory worldStatusEffects = WorldStatusEffects.get(entityId);
-        bytes32 effectId;
-        uint256 removedEffects;
-        if (worldStatusEffects.length != 0) {
-            for (uint256 i = worldStatusEffects.length - 1; i >= 0; i--) {
-                effectId = worldStatusEffects[i];
-                if (!isNotExpired(effectId)) {
-                    bytes32 lastEffectId =
-                        WorldStatusEffects.getItemAppliedStatusEffects(entityId, worldStatusEffects.length - 1);
-                    WorldStatusEffects.updateAppliedStatusEffects(entityId, i, lastEffectId);
-                    WorldStatusEffects.popAppliedStatusEffects(entityId);
+    function calculateCombatStatusEffects(bytes32 entityId)
+        public
+        returns (AdjustedCombatStats memory _adjustedStats)
+    {
+        checkWorldStatusEffects(entityId);
+        _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
+        _adjustedStats = calculateCombatStatusEffects(entityId, _adjustedStats);
+    }
+
+    function cullExpiredWorldEffect(bytes32 entityId, bytes32 effectId, uint256 index) public {
+        bytes32 worldStatusEffect = WorldStatusEffects.getItem(entityId, index);
+        AdjustedCombatStats memory _statInput = IWorld(_world()).UD__getCombatStats(entityId);
+
+        if (worldStatusEffect != bytes32(0)) {
+            if (!isNotExpired(effectId) && worldStatusEffect == effectId) {
+                StatusEffectStatsData memory effectStats = getStatusEffectStats(effectId);
+                uint256 effectsLength = WorldStatusEffects.length(entityId);
+                if (effectsLength > 1) {
+                    bytes32 lastEffectId = WorldStatusEffects.getItemAppliedStatusEffects(entityId, effectsLength - 1);
+                    WorldStatusEffects.updateAppliedStatusEffects(entityId, index, lastEffectId);
                 }
+                WorldStatusEffects.popAppliedStatusEffects(entityId);
+                _statInput.agility -= effectStats.agiModifier;
+                _statInput.strength -= effectStats.strModifier;
+                _statInput.intelligence -= effectStats.intModifier;
+                _statInput.maxHp -= effectStats.hpModifier;
+                _statInput.armor -= effectStats.armorModifier;
+                IWorld(_world()).UD__setStats(entityId, _statInput);
+            } else {
+                revert("Invalid effect");
             }
+        } else {
+            revert("invalid culling");
         }
     }
 
@@ -175,14 +161,37 @@ contract EffectsSystem is System {
         returns (AdjustedCombatStats memory _adjustedStats)
     {
         _requireAccess(address(this), _msgSender());
-        StatusEffectsValidityData memory statsData = StatusEffectsValidity.get(effectId);
+        _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
+        StatusEffectValidityData memory effectValidity = StatusEffectValidity.get(effectId);
+        StatusEffectStatsData memory effectStats = getStatusEffectStats(effectId);
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
-        if (statsData.validTurns != 0 && encounterId != bytes32(0)) {
+        if (effectValidity.validTurns != 0 && encounterId != bytes32(0)) {
             EncounterEntity.pushAppliedStatusEffects(entityId, effectId);
-        } else if (statsData.validTime != 0 && encounterId == bytes32(0)) {
+            checkWorldStatusEffects(entityId);
+        } else if (effectValidity.validTime != 0 && encounterId == bytes32(0)) {
             WorldStatusEffects.pushAppliedStatusEffects(entityId, effectId);
+            _adjustedStats.agility += effectStats.agiModifier;
+            _adjustedStats.strength += effectStats.strModifier;
+            _adjustedStats.intelligence += effectStats.intModifier;
+            _adjustedStats.armor += effectStats.armorModifier;
+            _adjustedStats.maxHp += effectStats.hpModifier;
+            checkWorldStatusEffects(entityId);
+            IWorld(_world()).UD__setStats(entityId, _adjustedStats);
         } else {
             revert("invalid effect application");
+        }
+    }
+
+    // because of the size limits on tables we had to put the armor in a seperate table from the normal stats
+    function _removeArmorEffect(bytes32 entityId, bytes32 effectId) internal {
+        int256 currentArmor;
+        int256 effectArmorBonus = getStatusEffectStats(effectId).armorModifier;
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            currentArmor = CharacterEquipment.getArmor(entityId);
+            CharacterEquipment.setArmor(entityId, currentArmor - effectArmorBonus);
+        } else {
+            currentArmor = MobStats.getArmor(entityId);
+            MobStats.setArmor(entityId, currentArmor - effectArmorBonus);
         }
     }
 
@@ -201,7 +210,7 @@ contract EffectsSystem is System {
 
             require(bytes32(bytes8(appliedEffectId)) != appliedEffectId, "effect not applied");
 
-            StatusEffectsValidityData memory validityData = StatusEffectsValidity.get(getEffectStatId(appliedEffectId));
+            StatusEffectValidityData memory validityData = StatusEffectValidity.get(getEffectStatId(appliedEffectId));
 
             bool isValidTime;
             bool isValidTurn;

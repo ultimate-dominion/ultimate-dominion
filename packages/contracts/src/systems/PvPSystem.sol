@@ -111,12 +111,11 @@ contract PvPSystem is System {
         ActionOutcomeData memory currentActionData;
         // execute attacker effects
         for (uint256 i; i < effects.length; i++) {
-            Action memory currentEffect = effects[i];
-
+            Action memory currentAction = effects[i];
             randomNumber =
-                uint256(keccak256(abi.encode(prevRandao, currentEffect.attackerEntityId, encounterData.currentTurn)));
+                uint256(keccak256(abi.encode(prevRandao, currentAction.attackerEntityId, encounterData.currentTurn)));
 
-            currentActionData = _getCurrentActionData(currentEffect);
+            currentActionData = _getCurrentActionData(currentAction);
 
             // execute action
             currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);

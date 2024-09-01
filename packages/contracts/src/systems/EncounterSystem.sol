@@ -247,10 +247,13 @@ contract EncounterSystem is System {
         uint256 goldAmount;
         uint256[] memory itemsDropped;
 
-        if (encounterData.encounterType == EncounterType.PvP) {
+        if (encounterData.encounterType == EncounterType.PvE) {
             (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePveRewards(encounterId, randomNumber);
-        } else {
+        } else if (encounterData.encounterType == EncounterType.PvP) {
             // distribute pvp rewards
+        }
+        else {
+            revert("unrecognized enocounter type");
         }
 
         CombatOutcomeData memory combatOutcome = CombatOutcomeData({
@@ -327,8 +330,8 @@ contract EncounterSystem is System {
         view
         returns (bytes32[] memory _attackers, bytes32[] memory _defenders)
     {
-        uint256 group1TotalAgi;
-        uint256 group2TotalAgi;
+        int256 group1TotalAgi;
+        int256 group2TotalAgi;
 
         // add up group1 agi
         for (uint256 i; i < _group1.length; i++) {

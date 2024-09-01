@@ -111,7 +111,7 @@ export const Leaderboard = (): JSX.Element => {
             return {
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
-              baseHp: characterStats.baseHp.toString(),
+              maxHp: characterStats.maxHp.toString(),
               entityClass: characterStats.class,
               experience: characterStats.experience.toString(),
               goldBalance: formatEther(goldBalance as bigint).toString(),
