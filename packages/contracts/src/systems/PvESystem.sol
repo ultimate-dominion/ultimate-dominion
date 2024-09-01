@@ -107,11 +107,9 @@ contract PvESystem is System {
 
         uint256 numberOfExecutedActions;
         if (encounterData.attackersAreMobs) {
-            console.log(" MOB IS ATTACKER");
             // execute mob attacks
             numberOfExecutedActions = _executeMobAction(encounterId, encounterData, randomness, 0);
         } else {
-            console.log(" Player IS ATTACKER");
             //execute player attack
             numberOfExecutedActions = _executePlayerAction(encounterId, encounterData, attacks, randomness, 0);
         }
@@ -131,11 +129,9 @@ contract PvESystem is System {
             encounterData.currentTurn++;
             // if not execute defender attack
             if (encounterData.attackersAreMobs) {
-                console.log(" Player IS DEFENDER");
                 //execute player attack
                 _executePlayerAction(encounterId, encounterData, attacks, randomness, numberOfExecutedActions);
             } else {
-                console.log(" Mob IS Defender");
                 // execute mob attacks
                 _executeMobAction(encounterId, encounterData, randomness, numberOfExecutedActions);
             }
@@ -186,7 +182,6 @@ contract PvESystem is System {
             );
 
             randomNumber = uint256(keccak256(abi.encode(randomness, mobAction.attackerId, encounterData.currentTurn)));
-            console.log("executing mob action");
             mobAction = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
 
             // set offchain table
@@ -214,7 +209,6 @@ contract PvESystem is System {
 
             // execute action
             currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
-
             // emit action data to offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, currentActionData);
         }

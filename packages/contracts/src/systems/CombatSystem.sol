@@ -339,23 +339,8 @@ contract CombatSystem is System {
             baseDamage = equippedSpell.maxDamage + attackStats.bonusDamage;
         }
         _damage = _getStatBonus(attackerIntelligence, baseDamage) * int256(ATTACK_MODIFIER)
-            - int256((defenderIntelligence > 0 ? defenderIntelligence : int256(0)) * int256(DEFENSE_MODIFIER)) / int256(WAD);
-        // } else if (equippedSpell.minDamage < 0 && equippedSpell.maxDamage < 0) {
-        //     if (!crit) {
-        //         _damage = (
-        //             (
-        //                 attackStats.bonusDamage
-        //                     + int256(
-        //                         uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
-        //                             ? equippedSpell.minDamage
-        //                             : -int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
-        //                     )
-        //             ) * int256(ATTACK_MODIFIER)
-        //         );
-        //     } else {
-        //         _damage = equippedSpell.maxDamage + attackStats.bonusDamage;
-        //     }
-        // }
+            - int256((defenderIntelligence > 0 ? defenderIntelligence * int256(DEFENSE_MODIFIER) / 2 : int256(WAD)))
+                / int256(WAD);
     }
 
     function _calculateStatusEffect(

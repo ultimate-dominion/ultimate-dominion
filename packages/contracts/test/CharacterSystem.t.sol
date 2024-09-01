@@ -38,7 +38,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         assertEq(uint8(alicesCharacter.class), uint8(Classes.Rogue));
         assertEq(
             (
-                alicesCharacter.strength + alicesCharacter.agility + (alicesCharacter.maxHp / 1 ether)
+                alicesCharacter.strength + alicesCharacter.agility + (alicesCharacter.maxHp / 1 ether / 10)
                     + alicesCharacter.intelligence
             ),
             27
