@@ -24,7 +24,8 @@ enum ItemType {
 
 enum MobType {
   Monster,
-  NPC
+  NPC,
+  Shop
 }
 
 enum Alignment {

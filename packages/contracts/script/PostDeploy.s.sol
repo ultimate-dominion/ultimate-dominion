@@ -51,6 +51,7 @@ import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
 import {Classes, ItemType, MobType, EffectType} from "@codegen/common.sol";
 import {
+    Shop,
     MonsterStats,
     MonsterTemplateDetails,
     WeaponTemplateDetails,
@@ -421,7 +422,20 @@ contract PostDeploy is Script {
         world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);
         world.UD__setStarterItems(Classes.Mage, mageItemIds, mageAmounts);
     }
+    function _createShops() internal {
+        uint256[] memory sellableItems = new uint256[](2);
+        sellableItems[0] = uint256(0);
+        sellableItems[1] = uint256(1);
+        Shop memory newShop = Shop({
+            mobId: 0,
+            priceMarkup: 0,
+            priceMarkdown: 0,
+            sellableItems: sellableItems,
+            buyableItems: sellableItems
+        });
 
+        world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
+    }
     function _createMonsters() internal {
         string memory json = vm.readFile("monsters.json");
         bytes memory monsterStatsData = vm.parseJson(json, ".monsters");

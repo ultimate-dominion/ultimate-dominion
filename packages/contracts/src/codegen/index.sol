@@ -38,6 +38,7 @@ import { UltimateDominionConfig, UltimateDominionConfigData } from "./tables/Ult
 import { Orders, OrdersData } from "./tables/Orders.sol";
 import { Considerations, ConsiderationsData } from "./tables/Considerations.sol";
 import { Offers, OffersData } from "./tables/Offers.sol";
+import { Shops, ShopsData } from "./tables/Shops.sol";
 import { RngLogs, RngLogsData } from "./tables/RngLogs.sol";
 import { AttackOutcome, AttackOutcomeData } from "./tables/AttackOutcome.sol";
 import { CombatOutcome, CombatOutcomeData } from "./tables/CombatOutcome.sol";
