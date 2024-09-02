@@ -13,7 +13,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { Has, runQuery } from '@latticexyz/recs';
+import { getComponentValueStrict, Has, runQuery } from '@latticexyz/recs';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -21,7 +21,7 @@ import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
 import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
-import { Address, maxUint256 } from 'viem';
+import { maxUint256 } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { AuctionRow } from '../components/AuctionRow';
@@ -36,16 +36,12 @@ import {
   ItemType,
   type OfferData,
   type Order,
+  type Price,
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
 
-interface Price {
-  tokenId: string;
-  floor: string;
-  ceiling: string;
-}
-const PER_PAGE = 10;
+const ITEMS_PER_PAGE = 10;
 
 export const AuctionHouse = (): JSX.Element => {
   const { renderError } = useToast();
@@ -53,9 +49,7 @@ export const AuctionHouse = (): JSX.Element => {
   const { isConnected } = useAccount();
 
   const {
-    components: { UltimateDominionConfig, Offers },
-
-    network: { worldContract },
+    components: { Considerations, Offers, Orders, UltimateDominionConfig },
   } = useMUD();
   const {
     armorTemplates,
@@ -64,17 +58,18 @@ export const AuctionHouse = (): JSX.Element => {
     weaponTemplates,
   } = useItems();
 
+  const [, setOrders] = useState<Order[] | null>(null);
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
   const [prices, setPrices] = useState<Price[] | null>(null);
 
-  const [entries, setEntries] = useState<
+  const [items, setItems] = useState<
     (ArmorTemplate | SpellTemplate | WeaponTemplate)[]
   >([]);
-  const [, setOrders] = useState<Order[] | null>(null);
 
   const [sort, setSort] = useState({ sorted: 'byLevel', reversed: false });
   const [filter, setFilter] = useState({ filtered: 'all' });
   const [query, setQuery] = useState('');
+
   const [page, setPage] = useState('1');
   const [pageLimit, setPageLimit] = useState(0);
 
@@ -83,77 +78,84 @@ export const AuctionHouse = (): JSX.Element => {
     singletonEntity,
   ) ?? { goldToken: null };
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(() => {
     try {
       setIsFetchingOrders(true);
+
+      const _orders = Array.from(
+        runQuery([Has(Considerations), Has(Offers), Has(Orders)]),
+      ).map(orderHash => {
+        const considerationData = getComponentValueStrict(
+          Considerations,
+          orderHash,
+        );
+        const offerData = getComponentValueStrict(Offers, orderHash);
+        const orderStatus = getComponentValueStrict(
+          Orders,
+          orderHash,
+        ).orderStatus;
+
+        const price = {
+          tokenId:
+            considerationData.token == goldToken
+              ? offerData.identifier.toString()
+              : considerationData.identifier.toString(),
+          floor: '0',
+          ceiling: maxUint256.toString(),
+        } as Price;
+
+        if (considerationData.token == goldToken && orderStatus == 1) {
+          price.floor = (
+            considerationData.amount / offerData.amount < BigInt(price.floor)
+              ? considerationData.amount / offerData.amount
+              : BigInt(price.floor)
+          ).toString();
+        }
+
+        if (offerData.token == goldToken && orderStatus == 1) {
+          price.ceiling = (
+            offerData.amount / considerationData.amount > BigInt(price.ceiling)
+              ? offerData.amount / considerationData.amount
+              : BigInt(price.ceiling)
+          ).toString();
+        }
+
+        // if (price != null) setPrices([price]);
+        // else {
+        //   setPrices(prev => [...(prev as []), price]);
+        // }
+
+        return {
+          orderHash: orderHash.toString(),
+          orderStatus: orderStatus.toString(),
+          offer: {
+            amount: offerData.amount.toString(),
+            identifier: offerData.identifier.toString(),
+            token: offerData.token.toString(),
+            tokenType: offerData.tokenType.toString(),
+          } as OfferData,
+          consideration: {
+            amount: considerationData.amount.toString(),
+            identifier: considerationData.identifier.toString(),
+            token: considerationData.token.toString(),
+            tokenType: considerationData.tokenType.toString(),
+            recipient: considerationData.recipient.toString(),
+          } as ConsiderationData,
+        } as Order;
+      });
+
+      setOrders(_orders);
       setPrices(null);
-      setOrders(
-        await Promise.all(
-          Array.from(runQuery([Has(Offers)])).map(async orderHash => {
-            const offerData = await worldContract.read.UD__getOffer([
-              orderHash as Address,
-            ]);
-            const considerationData =
-              await worldContract.read.UD__getConsideration([
-                orderHash as Address,
-              ]);
-            const orderStatus = await worldContract.read.UD__getOrderStatus([
-              orderHash as Address,
-            ]);
-            const price = {
-              tokenId:
-                considerationData.token == goldToken
-                  ? offerData.identifier.toString()
-                  : considerationData.identifier.toString(),
-              floor: '0',
-              ceiling: maxUint256.toString(),
-            } as Price;
-            if (considerationData.token == goldToken && orderStatus == 1) {
-              price.floor = BigInt(
-                considerationData.amount / offerData.amount <
-                  BigInt(price.floor)
-                  ? considerationData.amount / offerData.amount
-                  : BigInt(price.floor),
-              ).toString();
-            }
-            if (offerData.token == goldToken && orderStatus == 1) {
-              price.ceiling = BigInt(
-                offerData.amount / considerationData.amount >
-                  BigInt(price.ceiling)
-                  ? offerData.amount / considerationData.amount
-                  : BigInt(price.ceiling),
-              ).toString();
-            }
-            if (price != null) setPrices([price]);
-            else {
-              setPrices(prev => [...(prev as []), price]);
-            }
-            return {
-              orderHash: orderHash.toString(),
-              orderStatus: orderStatus.toString(),
-              offer: {
-                amount: offerData.amount.toString(),
-                identifier: offerData.identifier.toString(),
-                token: offerData.token.toString(),
-                tokenType: offerData.tokenType.toString(),
-              } as OfferData,
-              consideration: {
-                amount: considerationData.amount.toString(),
-                identifier: considerationData.identifier.toString(),
-                token: considerationData.token.toString(),
-                tokenType: considerationData.tokenType.toString(),
-                recipient: considerationData.recipient.toString(),
-              } as ConsiderationData,
-            } as Order;
-          }),
-        ),
-      );
-    } catch (err) {
-      renderError('Could not get order data.');
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Failed to get order data.', e);
     } finally {
       setIsFetchingOrders(false);
     }
-  }, [Offers, goldToken, renderError, worldContract.read]);
+  }, [Considerations, Offers, Orders, goldToken, renderError]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   useEffect(() => {
     if (!isConnected) {
@@ -169,13 +171,7 @@ export const AuctionHouse = (): JSX.Element => {
     return Number(page);
   }, [page]);
 
-  useEffect(() => {
-    (async (): Promise<void> => {
-      await fetchOrders();
-    })();
-  }, [fetchOrders]);
-
-  const items = useMemo(
+  const unfilteredItems = useMemo(
     () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
     [armorTemplates, spellTemplates, weaponTemplates],
   );
@@ -184,7 +180,7 @@ export const AuctionHouse = (): JSX.Element => {
     if (pageNumber < 1 || isLoadingItemTemplates) {
       return;
     }
-    let entriesCopy = items;
+    let entriesCopy = unfilteredItems;
 
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
       let result = false;
@@ -231,10 +227,13 @@ export const AuctionHouse = (): JSX.Element => {
     );
     entriesCopy = searcher.search(query);
     const _pageLimit =
-      Math.floor(Math.ceil(entriesCopy.length / PER_PAGE)) || 1;
+      Math.floor(Math.ceil(entriesCopy.length / ITEMS_PER_PAGE)) || 1;
     setPageLimit(_pageLimit);
-    setEntries(
-      entriesCopy.slice((pageNumber - 1) * PER_PAGE, pageNumber * PER_PAGE),
+    setItems(
+      entriesCopy.slice(
+        (pageNumber - 1) * ITEMS_PER_PAGE,
+        pageNumber * ITEMS_PER_PAGE,
+      ),
     );
 
     if (pageNumber > _pageLimit) {
@@ -243,12 +242,12 @@ export const AuctionHouse = (): JSX.Element => {
   }, [
     filter.filtered,
     isLoadingItemTemplates,
-    items,
     pageNumber,
     prices,
     query,
     sort.reversed,
     sort.sorted,
+    unfilteredItems,
   ]);
 
   if (isLoadingItemTemplates || isFetchingOrders) {
@@ -291,8 +290,8 @@ export const AuctionHouse = (): JSX.Element => {
             )
             .sort()
             .filter(key =>
-              items
-                ? items?.filter(
+              unfilteredItems
+                ? unfilteredItems?.filter(
                     item =>
                       item.itemType == ItemType[key as keyof typeof ItemType],
                   )?.length > 0
@@ -313,7 +312,7 @@ export const AuctionHouse = (): JSX.Element => {
         </HStack>
       </Stack>
       <Flex justify="space-between" w="100%">
-        <Text>Items {entries.length}</Text>
+        <Text>Items {items.length}</Text>
         <HStack>
           <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
             {['byLevel', 'byPrice'].map(s => {
@@ -348,8 +347,8 @@ export const AuctionHouse = (): JSX.Element => {
       </Flex>
 
       <VStack gap={3} overflowX="auto" w="100%">
-        {entries && entries.length > 0 ? (
-          entries.map(function (item, i) {
+        {items && items.length > 0 ? (
+          items.map((item, i) => {
             return (
               <AuctionRow
                 key={`auction-row-${i}`}
@@ -373,7 +372,9 @@ export const AuctionHouse = (): JSX.Element => {
       </VStack>
       <HStack
         my={5}
-        visibility={items && items.length > 0 ? 'visible' : 'hidden'}
+        visibility={
+          unfilteredItems && unfilteredItems.length > 0 ? 'visible' : 'hidden'
+        }
       >
         <Button
           onClick={() => setPage('1')}

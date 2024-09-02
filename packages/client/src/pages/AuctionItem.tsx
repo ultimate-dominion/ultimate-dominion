@@ -30,11 +30,9 @@ import {
   runQuery,
 } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
-import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Address, erc20Abi, formatEther, maxUint256, parseEther } from 'viem';
-import { useWalletClient } from 'wagmi';
 
 import { AuctionAllowance } from '../components/AuctionAllowance';
 import { OrderRow } from '../components/OrderRow';
@@ -54,21 +52,28 @@ import {
   type Order,
   type SpellStats,
   type SpellTemplate,
+  TokenType,
   type WeaponStats,
   type WeaponTemplate,
 } from '../utils/types';
 
 export const AuctionItem = (): JSX.Element => {
-  const { data: externalWalletClient } = useWalletClient();
-
   const { renderSuccess, renderError } = useToast();
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
 
   const {
-    components: { UltimateDominionConfig, Characters, ItemsOwners, Offers },
+    components: {
+      Characters,
+      Considerations,
+      ItemsOwners,
+      Offers,
+      Orders,
+      UltimateDominionConfig,
+    },
     isSynced,
     network: { worldContract, publicClient },
+    systemCalls: { createOrder },
   } = useMUD();
   const {
     armorTemplates,
@@ -82,9 +87,11 @@ export const AuctionItem = (): JSX.Element => {
     ArmorTemplate | SpellTemplate | WeaponTemplate | null
   >(null);
   const [currentBalance, setCurrentBalance] = useState('0');
-  const [floor, setFloor] = useState(maxUint256);
-  const [ceiling, setCeiling] = useState(0n);
-  const [isSelling, setIsSelling] = useState(false);
+
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+
+  const [floor /* setFloor */] = useState(maxUint256);
+  const [ceiling /* setCeiling */] = useState(0n);
   const [offerAmount, setOfferAmount] = useState('1');
   const [offerPrice, setOfferPrice] = useState('1');
   const [listingAmount, setListingAmount] = useState('1');
@@ -103,7 +110,7 @@ export const AuctionItem = (): JSX.Element => {
     singletonEntity,
   ) ?? { items: null };
 
-  const _getAllowances = async function () {
+  const _getAllowances = useCallback(async () => {
     let allowances = { goldAllowance: 0n, itemAllowance: false };
     try {
       const _goldAllowance = await publicClient.readContract({
@@ -128,122 +135,117 @@ export const AuctionItem = (): JSX.Element => {
       renderError((e as Error)?.message ?? 'Could not get allowances', e);
       return allowances;
     }
-  };
+  }, [
+    auctionHouseAddress,
+    goldToken,
+    itemsContract,
+    publicClient,
+    renderError,
+    userCharacter?.owner,
+  ]);
 
-  const onClose = function () {
+  const onClose = () => {
     setIsOpen(false);
     navigate(0);
   };
 
-  const _sell = async function (
-    wanted: ArmorTemplate | SpellTemplate | WeaponTemplate | bigint,
-    offered: ArmorTemplate | SpellTemplate | WeaponTemplate | bigint,
-    purchaser: Character,
-    amount: bigint,
-  ) {
-    if (!externalWalletClient || !auctionHouseAddress || !userCharacter) {
-      renderError('Wallet not connected.');
-      return;
-    }
-    try {
-      setIsSelling(true);
-      const allowances = await _getAllowances();
-      if (typeof offered != 'bigint' && !allowances.itemAllowance) {
-        renderError('Items allowance is off');
-        setIsOpen(true);
-        return;
-      }
-      if (
-        typeof offered == 'bigint' &&
-        (!allowances.goldAllowance || allowances.goldAllowance < offered)
-      ) {
-        renderError('Gold allowance is insufficient');
-        setIsOpen(true);
-        return;
-      } // this is covering both selling an item for gold or gold for an item
-      // wanted is either an item or a bigint (representing a gold amount)
-      const { request } = await publicClient.simulateContract({
-        address: worldContract.address,
-        abi: worldAbi,
-        functionName: 'UD__createOrder',
-        account: externalWalletClient.account,
-        args: [
-          {
-            signature: '' as Address,
-            offerer: purchaser.owner as Address,
-            offer: {
-              // 1 is ERC20 in the contracts. 3 is ERC1155
-              tokenType: typeof offered === 'bigint' ? 1 : 3,
-              token:
-                typeof offered === 'bigint'
-                  ? (goldToken as Address)
-                  : (itemsContract as Address),
-              // Identifier will be ignored if it's a bigint (representing gold), otherwise it represents the ERC1155 token ID
-              identifier:
-                typeof offered === 'bigint'
-                  ? 0n
-                  : BigInt((offered as ArmorTemplate | WeaponTemplate).tokenId),
-              // Amount is the amount of the ERC1155 token that is offered. For ERC20, use the offered value
-              amount: typeof offered === 'bigint' ? offered : amount,
-            },
-            consideration: {
-              // 1 is ERC20 in the contracts. 3 is ERC1155
-              tokenType: typeof wanted === 'bigint' ? 1 : 3,
-              token:
-                // Identifier will be ignored if it's a bigint (representing gold), otherwise it represents the ERC1155 token ID
-                typeof wanted === 'bigint'
-                  ? (goldToken as Address)
-                  : (itemsContract as Address),
-              identifier:
-                typeof wanted === 'bigint'
-                  ? 0n
-                  : BigInt((wanted as ArmorTemplate | WeaponTemplate).tokenId),
-              // Amount is the amount of the ERC1155 token that is wanted. For ERC20, use the offered value
-              amount: typeof wanted === 'bigint' ? wanted : amount,
-              recipient: purchaser.owner as Address,
-            },
+  const onCreateOrder = useCallback(
+    async (
+      offerType: TokenType,
+      considerationType: TokenType,
+      amount: string,
+      price: string,
+    ) => {
+      try {
+        setIsCreatingOrder(true);
+
+        if (!userCharacter) throw new Error('Character not found.');
+        if (!selectedItem) throw new Error('Item not found.');
+        if (!goldToken || !itemsContract) {
+          throw new Error('Token contracts not found.');
+        }
+
+        const allowances = await _getAllowances();
+        if (!allowances.itemAllowance) {
+          setIsOpen(true);
+          throw new Error('Items allowance is off.');
+        }
+
+        if (
+          offerType === TokenType.ERC1155 &&
+          Number(amount) > Number(currentBalance)
+        ) {
+          throw new Error(
+            `You do not have enough ${selectedItem.name} to sell.`,
+          );
+        }
+
+        if (
+          offerType === TokenType.ERC20 &&
+          (!allowances.goldAllowance ||
+            allowances.goldAllowance < BigInt(price))
+        ) {
+          setIsOpen(true);
+          throw new Error('Gold allowance is insufficient.');
+        }
+
+        const _order = {
+          consideration: {
+            amount:
+              considerationType === TokenType.ERC20
+                ? parseEther(price)
+                : BigInt(price),
+            identifier:
+              considerationType === TokenType.ERC20
+                ? 0n
+                : BigInt(selectedItem.tokenId),
+            recipient: userCharacter.owner as Address,
+            token: (considerationType === TokenType.ERC20
+              ? goldToken
+              : itemsContract) as Address,
+            tokenType: considerationType,
           },
-        ],
-      });
-      await externalWalletClient?.writeContract(request);
-      renderSuccess('Order placed successfully!');
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error placing order.', e);
-    } finally {
-      setIsSelling(false);
-    }
-  };
+          offer: {
+            amount:
+              offerType === TokenType.ERC20
+                ? parseEther(amount)
+                : BigInt(amount),
+            identifier:
+              offerType === TokenType.ERC20 ? 0n : BigInt(selectedItem.tokenId),
+            token: (offerType === TokenType.ERC20
+              ? goldToken
+              : itemsContract) as Address,
+            tokenType: offerType,
+          },
+          offerer: userCharacter.owner as Address,
+          signature: '' as Address,
+        };
 
-  const sellItem = async function (
-    amount: string | number,
-    price: string | number,
-  ) {
-    if (
-      !selectedItemId ||
-      !currentBalance ||
-      Number(amount) > Number(currentBalance)
-    ) {
-      renderError('You do not have enough items to sell');
-    } else if (selectedItem && userCharacter) {
-      _sell(
-        parseEther(price.toString()),
-        selectedItem,
-        userCharacter,
-        BigInt(amount),
-      );
-    }
-  };
+        const { error, success } = await createOrder(_order);
 
-  const orderItem = async function (amount: string, price: string) {
-    if (selectedItem && userCharacter) {
-      _sell(
-        selectedItem,
-        parseEther(price.toString()),
-        userCharacter,
-        BigInt(amount),
-      );
-    }
-  };
+        if (error && !success) {
+          throw new Error(error);
+        }
+
+        renderSuccess('Order placed successfully!');
+      } catch (e) {
+        renderError((e as Error)?.message ?? 'Failed to create order.', e);
+      } finally {
+        setIsCreatingOrder(false);
+      }
+    },
+    [
+      createOrder,
+      currentBalance,
+      goldToken,
+      itemsContract,
+      renderError,
+      renderSuccess,
+      selectedItem,
+      userCharacter,
+      _getAllowances,
+    ],
+  );
 
   const fetchCharacterItems = useCallback(
     async (
@@ -270,59 +272,59 @@ export const AuctionItem = (): JSX.Element => {
   );
 
   const fetchOrders = useCallback(async () => {
-    setOrders(
-      await Promise.all(
-        Array.from(runQuery([Has(Offers)])).map(async orderHash => {
-          const offerData = await worldContract.read.UD__getOffer([
-            orderHash as Address,
-          ]);
-          const considerationData =
-            await worldContract.read.UD__getConsideration([
-              orderHash as Address,
-            ]);
-          const orderStatus = await worldContract.read.UD__getOrderStatus([
-            orderHash as Address,
-          ]);
-          if (considerationData.token == goldToken && orderStatus == 1) {
-            setFloor(
-              BigInt(
-                considerationData.amount / offerData.amount < floor
-                  ? considerationData.amount / offerData.amount
-                  : floor,
-              ),
-            );
-          }
-          if (offerData.token == goldToken && orderStatus == 1) {
-            setCeiling(
-              BigInt(
-                offerData.amount / considerationData.amount > ceiling
-                  ? offerData.amount / considerationData.amount
-                  : ceiling,
-              ),
-            );
-          }
+    const _orders = Array.from(
+      runQuery([Has(Considerations), Has(Offers), Has(Orders)]),
+    ).map(orderHash => {
+      const considerationData = getComponentValueStrict(
+        Considerations,
+        orderHash,
+      );
+      const offerData = getComponentValueStrict(Offers, orderHash);
+      const orderStatus = getComponentValueStrict(
+        Orders,
+        orderHash,
+      ).orderStatus;
 
-          return {
-            orderHash: orderHash.toString(),
-            orderStatus: orderStatus.toString(),
-            offer: {
-              amount: offerData.amount.toString(),
-              identifier: offerData.identifier.toString(),
-              token: offerData.token.toString(),
-              tokenType: offerData.tokenType.toString(),
-            } as OfferData,
-            consideration: {
-              amount: considerationData.amount.toString(),
-              identifier: considerationData.identifier.toString(),
-              token: considerationData.token.toString(),
-              tokenType: considerationData.tokenType.toString(),
-              recipient: considerationData.recipient.toString(),
-            } as ConsiderationData,
-          } as Order;
-        }),
-      ),
-    );
-  }, [Offers, ceiling, floor, goldToken, worldContract.read]);
+      // if (considerationData.token == goldToken && orderStatus == 1) {
+      //   setFloor(
+      //     BigInt(
+      //       considerationData.amount / offerData.amount < floor
+      //         ? considerationData.amount / offerData.amount
+      //         : floor,
+      //     ),
+      //   );
+      // }
+      // if (offerData.token == goldToken && orderStatus == 1) {
+      //   setCeiling(
+      //     BigInt(
+      //       offerData.amount / considerationData.amount > ceiling
+      //         ? offerData.amount / considerationData.amount
+      //         : ceiling,
+      //     ),
+      //   );
+      // }
+
+      return {
+        orderHash: orderHash.toString(),
+        orderStatus: orderStatus.toString(),
+        offer: {
+          amount: offerData.amount.toString(),
+          identifier: offerData.identifier.toString(),
+          token: offerData.token.toString(),
+          tokenType: offerData.tokenType.toString(),
+        } as OfferData,
+        consideration: {
+          amount: considerationData.amount.toString(),
+          identifier: considerationData.identifier.toString(),
+          token: considerationData.token.toString(),
+          tokenType: considerationData.tokenType.toString(),
+          recipient: considerationData.recipient.toString(),
+        } as ConsiderationData,
+      } as Order;
+    });
+
+    setOrders(_orders);
+  }, [Considerations, Offers, Orders]);
 
   const fetchSelectedItem = useCallback(
     (
@@ -559,9 +561,14 @@ export const AuctionItem = (): JSX.Element => {
             <Button
               w="100%"
               onClick={() =>
-                orderItem(offerAmount.toString(), offerPrice.toString())
+                onCreateOrder(
+                  TokenType.ERC20,
+                  TokenType.ERC1155,
+                  offerAmount,
+                  offerPrice,
+                )
               }
-              isLoading={isSelling}
+              isLoading={isCreatingOrder}
               size="sm"
               variant="solid"
             >
@@ -596,9 +603,14 @@ export const AuctionItem = (): JSX.Element => {
             <Button
               w="100%"
               onClick={() =>
-                sellItem(listingAmount.toString(), listingPrice.toString())
+                onCreateOrder(
+                  TokenType.ERC1155,
+                  TokenType.ERC20,
+                  listingAmount,
+                  listingPrice,
+                )
               }
-              isLoading={isSelling}
+              isLoading={isCreatingOrder}
               size="sm"
               variant="solid"
             >

@@ -1,4 +1,5 @@
 import { Entity } from '@latticexyz/recs';
+import { Address, Hash } from 'viem';
 
 export enum AttackType {
   Temporary,
@@ -31,26 +32,12 @@ export enum StatsClasses {
   Mage,
 }
 
-export type Spell = SpellTemplate & {
-  balance: string;
-  itemId: Entity;
-  owner: string;
-};
-
-export type SpellStats = {
-  effects: string[];
-  itemId: string;
-  maxDamage: string;
-  minDamage: string;
-  minLevel: string;
-};
-
-export type SpellTemplate = SpellStats &
-  Metadata & {
-    itemType: ItemType;
-    statRestrictions: StatRestrictions;
-    tokenId: string;
-  };
+export enum TokenType {
+  NATIVE,
+  ERC20,
+  ERC721,
+  ERC1155,
+}
 
 export type Armor = ArmorTemplate & {
   balance: string;
@@ -116,6 +103,14 @@ export type CombatOutcomeType = {
   winner: Entity;
 };
 
+export type ConsiderationData = {
+  amount: string;
+  identifier: string;
+  recipient: string;
+  token: string;
+  tokenType: string;
+};
+
 export type EntityStats = {
   agility: string;
   baseHp: string;
@@ -171,6 +166,75 @@ export type MonsterTemplate = MonsterStats &
     mobId: string;
   };
 
+export type NewConsideration = {
+  amount: bigint;
+  identifier: bigint;
+  recipient: Address;
+  token: Address;
+  tokenType: TokenType;
+};
+
+export type NewOffer = {
+  amount: bigint;
+  identifier: bigint;
+  token: Address;
+  tokenType: TokenType;
+};
+
+export type NewOrder = {
+  consideration: NewConsideration;
+  offer: NewOffer;
+  offerer: Address;
+  signature: Hash;
+};
+
+export type OfferData = {
+  amount: string;
+  identifier: string;
+  token: string;
+  tokenType: string;
+};
+
+export type Order = {
+  orderHash: string;
+  orderStatus: string;
+  offer: OfferData;
+  consideration: ConsiderationData;
+};
+
+export type Price = {
+  ceiling: string;
+  floor: string;
+  tokenId: string;
+};
+
+export type Spell = SpellTemplate & {
+  balance: string;
+  itemId: Entity;
+  owner: string;
+};
+
+export type SpellStats = {
+  effects: string[];
+  itemId: string;
+  maxDamage: string;
+  minDamage: string;
+  minLevel: string;
+};
+
+export type SpellTemplate = SpellStats &
+  Metadata & {
+    itemType: ItemType;
+    statRestrictions: StatRestrictions;
+    tokenId: string;
+  };
+
+export type StatRestrictions = {
+  minAgility: string;
+  minIntelligence: string;
+  minStrength: string;
+};
+
 export type Weapon = WeaponTemplate & {
   balance: string;
   itemId: Entity;
@@ -194,36 +258,3 @@ export type WeaponTemplate = WeaponStats &
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
-
-export type Item = Metadata & {
-  itemId: Entity;
-  itemType: ItemType;
-  class: StatsClasses;
-  stats: WeaponStats | ArmorStats | null;
-  tokenId: string;
-};
-export type Order = {
-  orderHash: string;
-  orderStatus: string;
-  offer: OfferData;
-  consideration: ConsiderationData;
-};
-export type OfferData = {
-  amount: string;
-  identifier: string;
-  token: string;
-  tokenType: string;
-};
-export type ConsiderationData = {
-  amount: string;
-  identifier: string;
-  token: string;
-  tokenType: string;
-  recipient: string;
-};
-
-export type StatRestrictions = {
-  minAgility: string;
-  minIntelligence: string;
-  minStrength: string;
-};

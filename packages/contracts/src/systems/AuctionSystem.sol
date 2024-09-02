@@ -34,23 +34,30 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
     function createOrder(Order memory order) public nonReentrant returns (bytes32 _orderHash) {
         require(order.offerer == _msgSender(), "You cannot offer someone else's items");
         require(order.consideration.recipient == _msgSender(), "You cannot purchase an item for someone else");
+
         // create OffersData
         OffersData memory newOffer = OffersData({tokenType: order.offer.tokenType, token: order.offer.token, identifier: order.offer.identifier, amount: order.offer.amount});
         // create ConsiderationsData
         ConsiderationsData memory newConsideration = ConsiderationsData({tokenType: order.consideration.tokenType, token: order.consideration.token, identifier: order.consideration.identifier, amount: order.consideration.amount, recipient: order.consideration.recipient});
+
         require(order.offer.tokenType == TokenType.ERC20 || order.offer.tokenType == TokenType.ERC1155, "Token not accepted");
         require(order.consideration.tokenType == TokenType.ERC20 || order.consideration.tokenType == TokenType.ERC1155, "Token not accepted");
         require(order.offer.tokenType != order.consideration.tokenType, "Cannot cross trade");
+        
         // create order Hash out of offer and consideration data and the Counter for the offerer
         uint256 offerCounter = Counters.getCounter(order.offerer, 0) + 1;
         Counters.setCounter(order.consideration.recipient, 0, (offerCounter));
         _orderHash = getOrderHash(order);
+
         // store offer in offers table
         Offers.set(_orderHash, newOffer);
+
         // store consideration in considerations table
         Considerations.set(_orderHash, newConsideration);
+
         // transfer offer items to world contract
         _transfer(_orderHash, true, address(this), order.offerer);
+
         // store order in order table
         Orders.set(_orderHash, order.offerer, 0, OrderStatus.Active);
     }
@@ -58,16 +65,22 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
     function fulfillOrder(bytes32 orderHash) public nonReentrant returns (bool fulfilled)  {
         OffersData memory o = Offers.get(orderHash);
         ConsiderationsData memory c = Considerations.get(orderHash);
+
         // check that order is active
         require(Orders.getOrderStatus(orderHash) == OrderStatus.Active, "Order is not active");
+
         // check item balances
         require(_balanceOf(orderHash, false, _msgSender()) >= c.amount, "Insufficient balance");
+
         // transfer consideration items to consideration recipient
         _transfer(orderHash, false, c.recipient, _msgSender());
+
         // transfer offer item to _msgSender()
         _transfer(orderHash, true, _msgSender(), address(this));
+
         // set order status to fulfilled
         Orders.set(orderHash, _msgSender(), 0, OrderStatus.Fullfilled);
+        
         // assert balances
         return true;
 
@@ -79,8 +92,10 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
         require(getOrderStatus(_orderHash) == OrderStatus.Active, 'Order is not active');
         ConsiderationsData memory c = getConsideration(_orderHash);
         require(_msgSender() == c.recipient);
+
         // change the status to canceled
         Orders.setOrderStatus(_orderHash, OrderStatus.Canceled);
+        
         // send the order item back to the user
         _transfer(_orderHash, true, c.recipient, address(this));
     }

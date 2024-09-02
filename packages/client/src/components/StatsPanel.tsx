@@ -239,39 +239,37 @@ export const StatsPanel = (): JSX.Element => {
       </HStack>
 
       {isDesktop && (
-        <>
-          <VStack alignSelf="start" alignItems="start">
-            <Link
-              as={RouterLink}
-              to={AUCTION_HOUSE_PATH}
-              borderBottom="2px solid"
-              borderColor="grey400"
-              fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-              pb={1}
-              textAlign="left"
-              _hover={{
-                borderColor: 'grey500',
-                textDecoration: 'none',
-              }}
-            >
-              Auction House
-            </Link>
-            <Link
-              as={RouterLink}
-              borderBottom="2px solid"
-              borderColor="grey400"
-              fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-              to={LEADERBOARD_PATH}
-              pb={1}
-              _hover={{
-                borderColor: 'grey500',
-                textDecoration: 'none',
-              }}
-            >
-              Leaderboard
-            </Link>
-          </VStack>
-        </>
+        <VStack alignItems="start" pb={8}>
+          <Link
+            as={RouterLink}
+            to={AUCTION_HOUSE_PATH}
+            borderBottom="2px solid"
+            borderColor="grey400"
+            fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
+            pb={1}
+            textAlign="left"
+            _hover={{
+              borderColor: 'grey500',
+              textDecoration: 'none',
+            }}
+          >
+            Auction House
+          </Link>
+          <Link
+            as={RouterLink}
+            borderBottom="2px solid"
+            borderColor="grey400"
+            fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
+            to={LEADERBOARD_PATH}
+            pb={1}
+            _hover={{
+              borderColor: 'grey500',
+              textDecoration: 'none',
+            }}
+          >
+            Leaderboard
+          </Link>
+        </VStack>
       )}
     </VStack>
   );

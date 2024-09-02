@@ -27,7 +27,12 @@ import {
 } from 'viem';
 
 import { INSUFFICIENT_FUNDS_MESSAGE } from '../../utils/errors';
-import { EncounterType, EntityStats, StatsClasses } from '../../utils/types';
+import {
+  EncounterType,
+  type EntityStats,
+  type NewOrder,
+  StatsClasses,
+} from '../../utils/types';
 import { ClientComponents } from './createClientComponents';
 import { SetupNetworkResult } from './setupNetwork';
 
@@ -87,6 +92,7 @@ export function createSystemCalls(
     Characters,
     CharactersTokenURI,
     CombatEncounter,
+    Orders,
     Position,
     Spawned,
     Stats,
@@ -140,6 +146,38 @@ export function createSystemCalls(
 
       return {
         error: success ? undefined : 'Failed to create encounter.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
+  const createOrder = async (order: NewOrder): SystemCallReturn => {
+    try {
+      const simulatedTx = await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [order],
+        functionName: 'UD__createOrder',
+      });
+
+      const orderHash = simulatedTx.result;
+
+      const tx = await worldContract.write.UD__createOrder([order]);
+      await waitForTransaction(tx);
+
+      const success = !!getComponentValue(
+        Orders,
+        encodeEntity({ orderHash: 'bytes32' }, { orderHash: orderHash }),
+      );
+
+      return {
+        error: success ? undefined : 'Failed to create order.',
         success,
       };
     } catch (e) {
@@ -630,6 +668,7 @@ export function createSystemCalls(
 
   return {
     createEncounter,
+    createOrder,
     endTurn,
     enterGame,
     equipItems,
