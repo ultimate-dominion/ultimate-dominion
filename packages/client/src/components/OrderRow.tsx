@@ -96,11 +96,6 @@ export const OrderRow = ({ item, order }: OrderRowProps): JSX.Element => {
             <Text size={{ base: '2xs', lg: 'sm' }}>
               From: {consideration.recipient}
             </Text>
-            {/* <Center>
-              {entityClass == StatsClasses.Warrior && <GiAxeSword size={15} />}
-              {entityClass == StatsClasses.Rogue && <GiRogue size={15} />}
-              {entityClass == StatsClasses.Mage && <FaHatWizard size={15} />}
-            </Center> */}
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
             Wants {consideration.amount}{' '}

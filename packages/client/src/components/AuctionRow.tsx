@@ -76,18 +76,6 @@ export const AuctionRow = ({
       </Flex>
       <HStack>
         <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
-          {/* <Text
-            fontWeight={500}
-            size={{ base: 'xs', lg: 'md' }}
-            textAlign="center"
-            w="100%"
-          >
-            <Center>
-              {itemClass == '0' && <GiAxeSword size={15} />}
-              {itemClass == '1' && <GiRogue size={15} />}
-              {itemClass == '2' && <FaHatWizard size={15} />}
-            </Center>
-          </Text> */}
           <Text
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
