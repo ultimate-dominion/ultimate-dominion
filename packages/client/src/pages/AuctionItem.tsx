@@ -82,6 +82,7 @@ export const AuctionItem = (): JSX.Element => {
 
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [isFetchingOrders, setIsFetchingOrders] = useState(true);
+  const [refetchCounter, setRefetchCounter] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
 
   const [offerAmount, setOfferAmount] = useState('1');
@@ -145,6 +146,7 @@ export const AuctionItem = (): JSX.Element => {
       } as Order;
     });
 
+    setRefetchCounter(prev => prev + 1);
     setOrders(_orders);
     setIsFetchingOrders(false);
   }, [Considerations, Offers, Orders]);
@@ -175,6 +177,7 @@ export const AuctionItem = (): JSX.Element => {
 
   const userItemBalance = useMemo(() => {
     if (!(userCharacter && selectedItem)) return '0';
+    if (refetchCounter === 0) return '0';
 
     const tokenOwnersEntity = encodeEntity(
       { owner: 'address', tokenId: 'uint256' },
@@ -186,7 +189,7 @@ export const AuctionItem = (): JSX.Element => {
 
     const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
     return itemOwner ? itemOwner.balance.toString() : '0';
-  }, [ItemsOwners, selectedItem, userCharacter]);
+  }, [ItemsOwners, refetchCounter, selectedItem, userCharacter]);
 
   const fetchAllowances = useCallback(async () => {
     let allowances = { goldAllowance: 0n, itemAllowance: false };
