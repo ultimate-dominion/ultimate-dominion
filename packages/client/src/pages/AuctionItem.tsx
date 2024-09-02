@@ -21,6 +21,7 @@ import {
   TabPanels,
   Tabs,
   Text,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import {
@@ -34,14 +35,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Address, erc20Abi, formatEther, maxUint256, parseEther } from 'viem';
 
-import { AuctionAllowance } from '../components/AuctionAllowance';
+import { AuctionAllowanceModal } from '../components/AuctionAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { AUCTION_HOUSE_PATH } from '../Routes';
-import { ERC_1155ABI } from '../utils/constants';
+import { ERC_1155_ABI } from '../utils/constants';
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorStats,
@@ -99,18 +100,20 @@ export const AuctionItem = (): JSX.Element => {
   const [itemType, setItemType] = useState<string | null>(null);
   const [auctionHouseAddress, setAuctionHouseAddress] = useState('');
   const [orders, setOrders] = useState<Order[] | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+
+  const { isOpen, onClose, onOpen } = useDisclosure();
 
   const { goldToken } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
   ) ?? { goldToken: null };
+
   const { items: itemsContract } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
   ) ?? { items: null };
 
-  const _getAllowances = useCallback(async () => {
+  const fetchAllowances = useCallback(async () => {
     let allowances = { goldAllowance: 0n, itemAllowance: false };
     try {
       const _goldAllowance = await publicClient.readContract({
@@ -122,7 +125,7 @@ export const AuctionItem = (): JSX.Element => {
 
       const _itemAllowance = (await publicClient.readContract({
         address: itemsContract as Address,
-        abi: ERC_1155ABI,
+        abi: ERC_1155_ABI,
         functionName: 'isApprovedForAll',
         args: [userCharacter?.owner as Address, auctionHouseAddress as Address],
       })) as boolean;
@@ -144,11 +147,6 @@ export const AuctionItem = (): JSX.Element => {
     userCharacter?.owner,
   ]);
 
-  const onClose = () => {
-    setIsOpen(false);
-    navigate(0);
-  };
-
   const onCreateOrder = useCallback(
     async (
       offerType: TokenType,
@@ -165,9 +163,19 @@ export const AuctionItem = (): JSX.Element => {
           throw new Error('Token contracts not found.');
         }
 
-        const allowances = await _getAllowances();
-        if (!allowances.itemAllowance) {
-          setIsOpen(true);
+        const allowances = await fetchAllowances();
+
+        if (
+          offerType === TokenType.ERC20 &&
+          (!allowances.goldAllowance ||
+            allowances.goldAllowance < BigInt(price))
+        ) {
+          onOpen();
+          throw new Error('Gold allowance is insufficient.');
+        }
+
+        if (offerType === TokenType.ERC1155 && !allowances.itemAllowance) {
+          onOpen();
           throw new Error('Items allowance is off.');
         }
 
@@ -178,15 +186,6 @@ export const AuctionItem = (): JSX.Element => {
           throw new Error(
             `You do not have enough ${selectedItem.name} to sell.`,
           );
-        }
-
-        if (
-          offerType === TokenType.ERC20 &&
-          (!allowances.goldAllowance ||
-            allowances.goldAllowance < BigInt(price))
-        ) {
-          setIsOpen(true);
-          throw new Error('Gold allowance is insufficient.');
         }
 
         const _order = {
@@ -237,13 +236,14 @@ export const AuctionItem = (): JSX.Element => {
     [
       createOrder,
       currentBalance,
+      fetchAllowances,
       goldToken,
       itemsContract,
+      onOpen,
       renderError,
       renderSuccess,
       selectedItem,
       userCharacter,
-      _getAllowances,
     ],
   );
 
@@ -404,7 +404,7 @@ export const AuctionItem = (): JSX.Element => {
 
   return (
     <Stack>
-      <AuctionAllowance isOpen={isOpen} onClose={onClose}></AuctionAllowance>
+      <AuctionAllowanceModal isOpen={isOpen} onClose={onClose} />
       <Box>
         <Button
           mt={5}
@@ -489,7 +489,7 @@ export const AuctionItem = (): JSX.Element => {
             <GridItem>
               <HStack>
                 <Text>Floor Price</Text>
-                <Spacer></Spacer>
+                <Spacer />
                 <Text>
                   {floor.toString() == maxUint256.toString()
                     ? 'not enough data'
@@ -500,7 +500,7 @@ export const AuctionItem = (): JSX.Element => {
             <GridItem>
               <HStack>
                 <Text>Ceiling Price</Text>
-                <Spacer></Spacer>
+                <Spacer />
                 <Text>
                   {formatEther(ceiling).toString() == '0'
                     ? 'not enough data'

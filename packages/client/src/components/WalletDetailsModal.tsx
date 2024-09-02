@@ -26,7 +26,7 @@ import { useAccount, useBalance, useWalletClient } from 'wagmi';
 
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { ERC_1155ABI } from '../utils/constants';
+import { ERC_1155_ABI } from '../utils/constants';
 import { shortenAddress } from '../utils/helpers';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { CopyText } from './CopyText';
@@ -101,7 +101,7 @@ export const WalletDetailsModal = ({
           const auction = await worldContract.read.UD__auctionHouseAddress();
           const t = await publicClient.readContract({
             address: itemsContract as Address,
-            abi: ERC_1155ABI,
+            abi: ERC_1155_ABI,
             functionName: 'isApprovedForAll',
             args: [externalWalletClient.account.address, auction as Address],
           });
@@ -245,7 +245,7 @@ export const WalletDetailsModal = ({
 
       const { request } = await publicClient.simulateContract({
         address: itemsContract as Address,
-        abi: ERC_1155ABI,
+        abi: ERC_1155_ABI,
         functionName: 'setApprovalForAll',
         args: [auction as Address, !itemAllowed],
       });
