@@ -56,7 +56,7 @@ enum ResistanceStat {
 enum OrderStatus {
   Canceled,
   Active,
-  Fullfilled
+  Fulfilled
 }
 
 enum TokenType {

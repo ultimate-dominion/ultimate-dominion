@@ -11,7 +11,7 @@ import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
 import { ITEM_PATH } from '../Routes';
-import { removeEmoji } from '../utils/helpers';
+import { getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
   ItemType,
@@ -20,14 +20,13 @@ import {
 } from '../utils/types';
 
 export const AuctionRow = ({
-  name,
-  minLevel,
-  emoji,
-  tokenId,
   floor,
+  itemType,
+  minLevel,
+  name,
+  tokenId,
   ...item
 }: (ArmorTemplate | SpellTemplate | WeaponTemplate) & {
-  emoji: string;
   floor: string;
 }): JSX.Element => {
   const navigate = useNavigate();
@@ -59,13 +58,13 @@ export const AuctionRow = ({
           name={' '}
           backgroundColor={'grey300'}
         >
-          {emoji}
+          {getEmoji(name)}
         </Avatar>
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
             <Text size={{ base: '2xs', lg: 'sm' }}>{removeEmoji(name)}</Text>
           </HStack>
-          {item.itemType !== ItemType.Spell && (
+          {itemType !== ItemType.Spell && (
             <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
               HP {(item as ArmorTemplate | WeaponTemplate).hpModifier} • STR{' '}
               {(item as ArmorTemplate | WeaponTemplate).strModifier} • AGI{' '}

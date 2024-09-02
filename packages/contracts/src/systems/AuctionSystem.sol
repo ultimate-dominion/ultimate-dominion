@@ -79,7 +79,7 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
         _transfer(orderHash, true, _msgSender(), address(this));
 
         // set order status to fulfilled
-        Orders.set(orderHash, _msgSender(), 0, OrderStatus.Fullfilled);
+        Orders.set(orderHash, _msgSender(), 0, OrderStatus.Fulfilled);
         
         // assert balances
         return true;
@@ -95,7 +95,7 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
 
         // change the status to canceled
         Orders.setOrderStatus(_orderHash, OrderStatus.Canceled);
-        
+
         // send the order item back to the user
         _transfer(_orderHash, true, c.recipient, address(this));
     }

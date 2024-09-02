@@ -208,12 +208,6 @@ export type Order = {
   consideration: ConsiderationData;
 };
 
-export type Price = {
-  ceiling: string;
-  floor: string;
-  tokenId: string;
-};
-
 export type Spell = SpellTemplate & {
   balance: string;
   itemId: Entity;
