@@ -12,22 +12,20 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Skeleton,
-  Switch,
   Text,
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useState } from 'react';
-import { Address, erc20Abi, parseEther } from 'viem';
-import { useAccount, useBalance, useWalletClient } from 'wagmi';
+import { Address, erc20Abi, formatEther, parseEther } from 'viem';
+import { useAccount, useWalletClient } from 'wagmi';
 
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { ERC_1155ABI } from '../utils/constants';
+import { ERC_1155_ABI } from '../utils/constants';
 import { ConnectWalletButton } from './ConnectWalletButton';
-export const AuctionAllowance = ({
+export const AuctionAllowanceModal = ({
   isOpen,
   onClose,
 }: {
@@ -38,12 +36,10 @@ export const AuctionAllowance = ({
   const { data: externalWalletClient } = useWalletClient();
   const { isConnected, address } = useAccount();
   const {
-    network: { walletClient, worldContract, publicClient },
+    network: { publicClient },
     components: { UltimateDominionConfig },
   } = useMUD();
-  useBalance({
-    address: externalWalletClient?.account.address,
-  });
+
   const { goldToken } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
@@ -54,15 +50,17 @@ export const AuctionAllowance = ({
     singletonEntity,
   ) ?? { items: null };
 
-  const [goldAllowance, setGoldAllowance] = useState<string>('100');
+  const [goldAllowance, setGoldAllowance] = useState<string>('0');
   const [isApprovingGold, setIsApprovingGold] = useState(false);
   const [goldErrorMessage, setGoldErrorMessage] = useState<string | null>(null);
 
-  const [itemsApprovedInitial, setItemsApprovedInitial] = useState<
-    boolean | null
-  >(null);
-  const [itemAllowed, setItemAllowed] = useState(false);
+  const [itemsApproved, setItemsApproved] = useState(false);
   const [isApprovingItems, setIsApprovingItems] = useState(false);
+
+  const { auctionHouse: auctionHouseAddress } = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  ) ?? { auctionHouse: null };
 
   // Reset errorMessage state when any of the form fields change
   useEffect(() => {
@@ -71,52 +69,71 @@ export const AuctionAllowance = ({
 
   useEffect(() => {
     if (isOpen) {
-      setGoldAllowance('100');
-      if (externalWalletClient && itemsApprovedInitial == null) {
-        (async function () {
-          const auction = await worldContract.read.UD__auctionHouseAddress();
-          const t = await publicClient.readContract({
+      if (auctionHouseAddress && externalWalletClient) {
+        (async () => {
+          const _itemsApproved = !!(await publicClient.readContract({
             address: itemsContract as Address,
-            abi: ERC_1155ABI,
+            abi: ERC_1155_ABI,
             functionName: 'isApprovedForAll',
-            args: [externalWalletClient.account.address, auction as Address],
+            args: [externalWalletClient.account.address, auctionHouseAddress],
+          })) as boolean;
+
+          const _goldAllowance = await publicClient.readContract({
+            address: goldToken as Address,
+            abi: erc20Abi,
+            functionName: 'allowance',
+            args: [
+              externalWalletClient.account.address,
+              auctionHouseAddress as Address,
+            ],
           });
-          setItemAllowed(t as boolean);
-          setItemsApprovedInitial(true);
+
+          setItemsApproved(_itemsApproved);
+          setGoldAllowance(formatEther(_goldAllowance));
         })();
       }
     }
   }, [
+    auctionHouseAddress,
     externalWalletClient,
+    goldToken,
     isOpen,
-    itemsApprovedInitial,
     itemsContract,
     publicClient,
-    walletClient.account,
-    worldContract.read,
   ]);
 
-  const onGoldAllowance = useCallback(async () => {
+  const onApproveGoldAllowance = useCallback(async () => {
     try {
+      setIsApprovingGold(true);
+
       if (!externalWalletClient) {
         throw new Error('No external wallet client found.');
       }
 
-      setIsApprovingGold(true);
+      if (!auctionHouseAddress) {
+        throw new Error('No Auction House address found.');
+      }
+
       if (!goldAllowance || parseEther(goldAllowance) <= 0) {
         setGoldErrorMessage('Amount must be greater than 0.');
         return;
       }
 
-      const auction = await worldContract.read.UD__auctionHouseAddress();
-
       const { request } = await publicClient.simulateContract({
         address: goldToken as Address,
         abi: erc20Abi,
         functionName: 'approve',
-        args: [auction, parseEther(goldAllowance)],
+        args: [auctionHouseAddress as Address, parseEther(goldAllowance)],
       });
-      await externalWalletClient.writeContract(request);
+
+      const txHash = await externalWalletClient.writeContract(request);
+      const { status } = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+      });
+
+      if (status !== 'success') {
+        throw new Error('Transaction failed.');
+      }
 
       setGoldAllowance(goldAllowance);
       renderSuccess('Gold allowance successfully set!');
@@ -126,46 +143,60 @@ export const AuctionAllowance = ({
       setIsApprovingGold(false);
     }
   }, [
+    auctionHouseAddress,
     externalWalletClient,
     goldAllowance,
     goldToken,
     publicClient,
     renderError,
     renderSuccess,
-    worldContract.read,
   ]);
-  const onItemsApproved = useCallback(async () => {
+
+  const onSetApprovalForAllItems = useCallback(async () => {
     try {
+      setIsApprovingItems(true);
+
       if (!externalWalletClient) {
         throw new Error('No external wallet client found.');
       }
 
-      setIsApprovingItems(true);
-      const auction = await worldContract.read.UD__auctionHouseAddress();
+      if (!auctionHouseAddress) {
+        throw new Error('No Auction House address found.');
+      }
 
       const { request } = await publicClient.simulateContract({
         address: itemsContract as Address,
-        abi: ERC_1155ABI,
+        abi: ERC_1155_ABI,
         functionName: 'setApprovalForAll',
-        args: [auction as Address, !itemAllowed],
+        args: [auctionHouseAddress, !itemsApproved],
       });
-      await externalWalletClient.writeContract(request);
-      setItemAllowed(!itemAllowed);
-      setIsApprovingItems(false);
-      renderSuccess('Item allowance successfully set!');
+
+      const txHash = await externalWalletClient.writeContract(request);
+      const { status } = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+      });
+
+      if (status !== 'success') {
+        throw new Error('Transaction failed.');
+      }
+
+      setItemsApproved(!itemsApproved);
+      renderSuccess(
+        `Item allowance successfully ${itemsApproved ? 'disallowed' : 'allowed'}!`,
+      );
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error setting item allowance.', e);
     } finally {
       setIsApprovingItems(false);
     }
   }, [
+    auctionHouseAddress,
     externalWalletClient,
-    itemAllowed,
+    itemsApproved,
     itemsContract,
     publicClient,
     renderError,
     renderSuccess,
-    worldContract.read,
   ]);
 
   return (
@@ -201,7 +232,7 @@ export const AuctionAllowance = ({
                   <Button
                     alignSelf="end"
                     isLoading={isApprovingGold}
-                    onClick={onGoldAllowance}
+                    onClick={onApproveGoldAllowance}
                     size="sm"
                   >
                     Allow
@@ -212,17 +243,13 @@ export const AuctionAllowance = ({
                     <FormLabel fontSize="xs">
                       Set Auction House item approval
                     </FormLabel>
-                    {!itemsApprovedInitial ? (
-                      <Skeleton>
-                        <Switch />
-                      </Skeleton>
-                    ) : (
-                      <Switch
-                        isDisabled={isApprovingItems}
-                        onChange={onItemsApproved}
-                        isChecked={itemAllowed}
-                      ></Switch>
-                    )}
+                    <Button
+                      isLoading={isApprovingItems}
+                      onClick={onSetApprovalForAllItems}
+                      size="sm"
+                    >
+                      {itemsApproved ? 'Disallow' : 'Allow'}
+                    </Button>
                   </FormControl>
                 </HStack>
               </VStack>

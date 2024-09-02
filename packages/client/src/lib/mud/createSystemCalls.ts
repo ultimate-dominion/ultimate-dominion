@@ -20,6 +20,7 @@ import {
   Address,
   BaseError,
   ContractFunctionRevertedError,
+  Hash,
   InsufficientFundsError,
   keccak256,
   stringToHex,
@@ -27,7 +28,13 @@ import {
 } from 'viem';
 
 import { INSUFFICIENT_FUNDS_MESSAGE } from '../../utils/errors';
-import { EncounterType, EntityStats, StatsClasses } from '../../utils/types';
+import {
+  EncounterType,
+  type EntityStats,
+  type NewOrder,
+  OrderStatus,
+  StatsClasses,
+} from '../../utils/types';
 import { ClientComponents } from './createClientComponents';
 import { SetupNetworkResult } from './setupNetwork';
 
@@ -44,7 +51,7 @@ const getContractError = (error: BaseError): string => {
   );
   if (revertError instanceof ContractFunctionRevertedError) {
     const args = revertError.data?.args ?? [];
-    return args[0] as string;
+    return (args[0] as string) ?? 'An error occurred calling the contract.';
   }
   const insufficientFundsError = error.walk(
     e => e instanceof InsufficientFundsError,
@@ -87,11 +94,47 @@ export function createSystemCalls(
     Characters,
     CharactersTokenURI,
     CombatEncounter,
+    Orders,
     Position,
     Spawned,
     Stats,
   }: ClientComponents,
 ) {
+  const cancelOrder = async (orderHash: string): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [orderHash as Hash],
+        functionName: 'UD__cancelOrder',
+      });
+
+      const tx = await worldContract.write.UD__cancelOrder([orderHash as Hash]);
+
+      await waitForTransaction(tx);
+
+      const success =
+        getComponentValue(
+          Orders,
+          encodeEntity(
+            { orderHash: 'bytes32' },
+            { orderHash: orderHash as Hash },
+          ),
+        )?.orderStatus === OrderStatus.Canceled;
+
+      return {
+        error: success ? undefined : 'Failed to cancel order.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const createEncounter = async (
     encounterType: EncounterType,
     attackers: string[],
@@ -140,6 +183,38 @@ export function createSystemCalls(
 
       return {
         error: success ? undefined : 'Failed to create encounter.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
+  const createOrder = async (order: NewOrder): SystemCallReturn => {
+    try {
+      const simulatedTx = await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [order],
+        functionName: 'UD__createOrder',
+      });
+
+      const orderHash = simulatedTx.result;
+
+      const tx = await worldContract.write.UD__createOrder([order]);
+      await waitForTransaction(tx);
+
+      const success = !!getComponentValue(
+        Orders,
+        encodeEntity({ orderHash: 'bytes32' }, { orderHash: orderHash }),
+      );
+
+      return {
+        error: success ? undefined : 'Failed to create order.',
         success,
       };
     } catch (e) {
@@ -281,6 +356,43 @@ export function createSystemCalls(
 
       return {
         error: success ? undefined : 'Failed to equip items.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
+  const fulfillOrder = async (orderHash: string): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [orderHash as Hash],
+        functionName: 'UD__fulfillOrder',
+      });
+
+      const tx = await worldContract.write.UD__fulfillOrder([
+        orderHash as Hash,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const success =
+        getComponentValue(
+          Orders,
+          encodeEntity(
+            { orderHash: 'bytes32' },
+            { orderHash: orderHash as Hash },
+          ),
+        )?.orderStatus === OrderStatus.Fulfilled;
+
+      return {
+        error: success ? undefined : 'Failed to fulfill order.',
         success,
       };
     } catch (e) {
@@ -629,10 +741,13 @@ export function createSystemCalls(
   // };
 
   return {
+    cancelOrder,
     createEncounter,
+    createOrder,
     endTurn,
     enterGame,
     equipItems,
+    fulfillOrder,
     levelCharacter,
     mintCharacter,
     move,
