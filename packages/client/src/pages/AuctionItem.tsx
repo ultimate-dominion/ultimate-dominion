@@ -302,6 +302,7 @@ export const AuctionItem = (): JSX.Element => {
         }
 
         renderSuccess('Order placed successfully!');
+        fetchOrders();
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to create order.', e);
       } finally {
@@ -311,6 +312,7 @@ export const AuctionItem = (): JSX.Element => {
     [
       createOrder,
       fetchAllowances,
+      fetchOrders,
       goldToken,
       itemsContract,
       onOpen,
@@ -601,6 +603,7 @@ export const AuctionItem = (): JSX.Element => {
                       key={`order-${i}`}
                       item={selectedItem}
                       order={order}
+                      refetchOrders={fetchOrders}
                     />
                   ))}
               </Stack>
@@ -620,6 +623,7 @@ export const AuctionItem = (): JSX.Element => {
                       key={`order-${i}`}
                       item={selectedItem}
                       order={order}
+                      refetchOrders={fetchOrders}
                     />
                   ))}
               </Stack>

@@ -25,9 +25,14 @@ import {
 type OrderRowProps = {
   item: ArmorTemplate | WeaponTemplate | SpellTemplate;
   order: Order;
+  refetchOrders: () => void;
 };
 
-export const OrderRow = ({ item, order }: OrderRowProps): JSX.Element => {
+export const OrderRow = ({
+  item,
+  order,
+  refetchOrders,
+}: OrderRowProps): JSX.Element => {
   const {
     systemCalls: { cancelOrder, fulfillOrder },
   } = useMUD();
@@ -47,12 +52,13 @@ export const OrderRow = ({ item, order }: OrderRowProps): JSX.Element => {
       }
 
       renderSuccess('Order canceled successfully!');
+      refetchOrders();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error cancelling order.', e);
     } finally {
       setIsCancelling(false);
     }
-  }, [cancelOrder, order, renderError, renderSuccess]);
+  }, [cancelOrder, order, refetchOrders, renderError, renderSuccess]);
 
   const onFulfillOrder = useCallback(async () => {
     try {
@@ -65,12 +71,13 @@ export const OrderRow = ({ item, order }: OrderRowProps): JSX.Element => {
       }
 
       renderSuccess('Order filled successfully!');
+      refetchOrders();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error cancelling order.', e);
     } finally {
       setIsFilling(false);
     }
-  }, [fulfillOrder, order, renderError, renderSuccess]);
+  }, [fulfillOrder, order, refetchOrders, renderError, renderSuccess]);
 
   const { consideration, offer } = order;
 
