@@ -46,6 +46,13 @@ import {
   type WeaponTemplate,
 } from '../utils/types';
 
+enum FilterOptions {
+  All = 'all',
+  Armor = 'armor',
+  Spell = 'spell',
+  Weapon = 'weapon',
+}
+
 enum SortOptions {
   Level = 'Level',
   FloorPrice = 'Floor Price',
@@ -79,7 +86,7 @@ export const AuctionHouse = (): JSX.Element => {
     reversed: false,
     sorted: SortOptions.Level,
   });
-  const [filter, setFilter] = useState({ filtered: 'all' });
+  const [filter, setFilter] = useState<FilterOptions>(FilterOptions.All);
   const [query, setQuery] = useState('');
 
   const [page, setPage] = useState('1');
@@ -190,18 +197,18 @@ export const AuctionHouse = (): JSX.Element => {
     if (pageNumber < 1 || isLoadingItemTemplates) {
       return;
     }
-    let entriesCopy = unfilteredItems;
+    let itemsCopy = unfilteredItems;
 
-    entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
+    itemsCopy = [...itemsCopy].sort((itemA, itemB) => {
       let result = false;
-      const floorA = itemFloorPrices[entryA.tokenId] ?? '0';
-      const floorB = itemFloorPrices[entryB.tokenId] ?? '0';
+      const floorA = itemFloorPrices[itemA.tokenId] ?? '0';
+      const floorB = itemFloorPrices[itemB.tokenId] ?? '0';
 
       switch (sort.sorted) {
         case SortOptions.Level:
           result = sort.reversed
-            ? BigInt(entryA?.minLevel || '0') >= BigInt(entryB?.minLevel || '0')
-            : BigInt(entryB?.minLevel || '0') > BigInt(entryA?.minLevel || '0');
+            ? BigInt(itemA?.minLevel || '0') >= BigInt(itemB?.minLevel || '0')
+            : BigInt(itemB?.minLevel || '0') > BigInt(itemA?.minLevel || '0');
           break;
         case SortOptions.FloorPrice:
           result = sort.reversed
@@ -213,29 +220,27 @@ export const AuctionHouse = (): JSX.Element => {
       }
       return result ? 1 : -1;
     });
-    entriesCopy = [...entriesCopy].filter(entry => {
-      switch (filter.filtered) {
-        case 'byArmor':
+    itemsCopy = [...itemsCopy].filter(entry => {
+      switch (filter) {
+        case FilterOptions.Armor:
           return entry.itemType == ItemType.Armor;
-        case 'bySpell':
+        case FilterOptions.Spell:
           return entry.itemType == ItemType.Spell;
-        case 'byWeapon':
+        case FilterOptions.Weapon:
           return entry.itemType == ItemType.Weapon;
         default:
           return true;
       }
     });
-    const searcher = new FuzzySearch(
-      [...entriesCopy],
-      ['name', 'description'],
-      { caseSensitive: false },
-    );
-    entriesCopy = searcher.search(query);
+    const searcher = new FuzzySearch([...itemsCopy], ['name', 'description']);
+    itemsCopy = searcher.search(query);
+
     const _pageLimit =
-      Math.floor(Math.ceil(entriesCopy.length / ITEMS_PER_PAGE)) || 1;
+      Math.floor(Math.ceil(itemsCopy.length / ITEMS_PER_PAGE)) || 1;
+
     setPageLimit(_pageLimit);
     setItems(
-      entriesCopy.slice(
+      itemsCopy.slice(
         (pageNumber - 1) * ITEMS_PER_PAGE,
         pageNumber * ITEMS_PER_PAGE,
       ),
@@ -245,7 +250,7 @@ export const AuctionHouse = (): JSX.Element => {
       setPage(_pageLimit.toString());
     }
   }, [
-    filter.filtered,
+    filter,
     isLoadingItemTemplates,
     itemFloorPrices,
     pageNumber,
@@ -282,38 +287,24 @@ export const AuctionHouse = (): JSX.Element => {
           />
         </InputGroup>
         <HStack>
-          <Button
-            onClick={() => setFilter({ filtered: 'all' })}
-            size="sm"
-            variant={filter.filtered == 'all' ? 'solid' : 'outline'}
-          >
-            All
-          </Button>
-          {Object.values(ItemType)
-            .filter(
-              key => !isNaN(Number(ItemType[key as keyof typeof ItemType])),
-            )
-            .sort()
-            .filter(key =>
-              unfilteredItems
-                ? unfilteredItems?.filter(
-                    item =>
-                      item.itemType == ItemType[key as keyof typeof ItemType],
-                  )?.length > 0
-                : false,
-            )
-            .map(k => {
-              return (
-                <Button
-                  key={`filter-${k}`}
-                  onClick={() => setFilter({ filtered: `by${k}` })}
-                  size="sm"
-                  variant={filter.filtered == `by${k}` ? 'solid' : 'outline'}
-                >
-                  {k}
-                </Button>
-              );
-            })}
+          {Object.keys(FilterOptions).map(k => {
+            return (
+              <Button
+                key={`filter-${k}`}
+                onClick={() =>
+                  setFilter(FilterOptions[k as keyof typeof FilterOptions])
+                }
+                size="sm"
+                variant={
+                  filter === FilterOptions[k as keyof typeof FilterOptions]
+                    ? 'solid'
+                    : 'outline'
+                }
+              >
+                {k}
+              </Button>
+            );
+          })}
         </HStack>
       </Stack>
       <Flex justify="space-between" w="100%">
@@ -326,12 +317,13 @@ export const AuctionHouse = (): JSX.Element => {
                   key={`filter-${s}`}
                   display={{ base: 'none', lg: 'flex' }}
                   fontWeight={sort.sorted == s ? 'bold' : 'normal'}
-                  onClick={() =>
+                  onClick={() => {
                     setSort({
                       sorted: s,
                       reversed: !sort.reversed,
-                    })
-                  }
+                    });
+                    setPage('1');
+                  }}
                   p={1}
                   size={{ base: '2xs', lg: 'sm' }}
                   variant="ghost"
