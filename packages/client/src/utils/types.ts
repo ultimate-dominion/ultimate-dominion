@@ -26,6 +26,12 @@ export enum MobType {
   NPC,
 }
 
+export enum OrderStatus {
+  Canceled,
+  Active,
+  Fulfilled,
+}
+
 export enum StatsClasses {
   Warrior,
   Rogue,
@@ -108,7 +114,7 @@ export type ConsiderationData = {
   identifier: string;
   recipient: string;
   token: string;
-  tokenType: string;
+  tokenType: TokenType;
 };
 
 export type EntityStats = {
@@ -192,7 +198,7 @@ export type OfferData = {
   amount: string;
   identifier: string;
   token: string;
-  tokenType: string;
+  tokenType: TokenType;
 };
 
 export type Order = {

@@ -20,6 +20,7 @@ import {
   Address,
   BaseError,
   ContractFunctionRevertedError,
+  Hash,
   InsufficientFundsError,
   keccak256,
   stringToHex,
@@ -31,6 +32,7 @@ import {
   EncounterType,
   type EntityStats,
   type NewOrder,
+  OrderStatus,
   StatsClasses,
 } from '../../utils/types';
 import { ClientComponents } from './createClientComponents';
@@ -49,7 +51,7 @@ const getContractError = (error: BaseError): string => {
   );
   if (revertError instanceof ContractFunctionRevertedError) {
     const args = revertError.data?.args ?? [];
-    return args[0] as string;
+    return (args[0] as string) ?? 'An error occurred calling the contract.';
   }
   const insufficientFundsError = error.walk(
     e => e instanceof InsufficientFundsError,
@@ -98,6 +100,41 @@ export function createSystemCalls(
     Stats,
   }: ClientComponents,
 ) {
+  const cancelOrder = async (orderHash: string): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [orderHash as Hash],
+        functionName: 'UD__cancelOrder',
+      });
+
+      const tx = await worldContract.write.UD__cancelOrder([orderHash as Hash]);
+
+      await waitForTransaction(tx);
+
+      const success =
+        getComponentValue(
+          Orders,
+          encodeEntity(
+            { orderHash: 'bytes32' },
+            { orderHash: orderHash as Hash },
+          ),
+        )?.orderStatus === OrderStatus.Canceled;
+
+      return {
+        error: success ? undefined : 'Failed to cancel order.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const createEncounter = async (
     encounterType: EncounterType,
     attackers: string[],
@@ -319,6 +356,43 @@ export function createSystemCalls(
 
       return {
         error: success ? undefined : 'Failed to equip items.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
+  const fulfillOrder = async (orderHash: string): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [orderHash as Hash],
+        functionName: 'UD__fulfillOrder',
+      });
+
+      const tx = await worldContract.write.UD__fulfillOrder([
+        orderHash as Hash,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const success =
+        getComponentValue(
+          Orders,
+          encodeEntity(
+            { orderHash: 'bytes32' },
+            { orderHash: orderHash as Hash },
+          ),
+        )?.orderStatus === OrderStatus.Fulfilled;
+
+      return {
+        error: success ? undefined : 'Failed to fulfill order.',
         success,
       };
     } catch (e) {
@@ -667,11 +741,13 @@ export function createSystemCalls(
   // };
 
   return {
+    cancelOrder,
     createEncounter,
     createOrder,
     endTurn,
     enterGame,
     equipItems,
+    fulfillOrder,
     levelCharacter,
     mintCharacter,
     move,

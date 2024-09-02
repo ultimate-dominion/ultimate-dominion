@@ -308,16 +308,22 @@ export const AuctionItem = (): JSX.Element => {
         orderHash: orderHash.toString(),
         orderStatus: orderStatus.toString(),
         offer: {
-          amount: offerData.amount.toString(),
+          amount:
+            offerData.tokenType === TokenType.ERC20
+              ? formatEther(offerData.amount)
+              : offerData.amount.toString(),
           identifier: offerData.identifier.toString(),
           token: offerData.token.toString(),
-          tokenType: offerData.tokenType.toString(),
+          tokenType: offerData.tokenType,
         } as OfferData,
         consideration: {
-          amount: considerationData.amount.toString(),
+          amount:
+            considerationData.tokenType === TokenType.ERC20
+              ? formatEther(considerationData.amount)
+              : considerationData.amount.toString(),
           identifier: considerationData.identifier.toString(),
           token: considerationData.token.toString(),
-          tokenType: considerationData.tokenType.toString(),
+          tokenType: considerationData.tokenType,
           recipient: considerationData.recipient.toString(),
         } as ConsiderationData,
       } as Order;
@@ -628,7 +634,7 @@ export const AuctionItem = (): JSX.Element => {
           <TabPanels>
             <TabPanel>
               <Stack gap={2}>
-                {orders != null && itemType != null
+                {selectedItem && orders != null && itemType != null
                   ? orders
                       .filter(
                         item =>
@@ -640,16 +646,8 @@ export const AuctionItem = (): JSX.Element => {
                       .map((order, i) => (
                         <OrderRow
                           key={`order-${i}`}
-                          from={order.consideration.recipient}
-                          orderHash={order.orderHash}
-                          offer={order.offer.amount}
-                          consideration={formatEther(
-                            BigInt(order.consideration.amount),
-                          )}
-                          considerationItem={'$GOLD'}
-                          offerItem={removeEmoji(selectedItem?.name as string)}
-                          emoji={getEmoji(selectedItem?.name as string)}
-                          recipient={order.consideration.recipient}
+                          item={selectedItem}
+                          order={order}
                         />
                       ))
                   : ''}
@@ -657,7 +655,7 @@ export const AuctionItem = (): JSX.Element => {
             </TabPanel>
             <TabPanel>
               <Stack gap={2}>
-                {orders != null && itemType != null && selectedItem != null
+                {selectedItem && orders != null && itemType != null
                   ? orders
                       .filter(
                         item =>
@@ -669,16 +667,8 @@ export const AuctionItem = (): JSX.Element => {
                       .map((order, i) => (
                         <OrderRow
                           key={`order-${i}`}
-                          from={order.consideration.recipient}
-                          orderHash={order.orderHash}
-                          consideration={order.consideration.amount}
-                          offer={formatEther(
-                            BigInt(order.offer.amount),
-                          ).toString()}
-                          offerItem={'$GOLD'}
-                          considerationItem={removeEmoji(selectedItem.name)}
-                          emoji={getEmoji(selectedItem.name)}
-                          recipient={order.consideration.recipient}
+                          item={selectedItem}
+                          order={order}
                         />
                       ))
                   : ''}
