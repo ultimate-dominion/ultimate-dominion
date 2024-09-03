@@ -63,16 +63,6 @@ contract MobSystem is System {
             Shops.set(entityId, shopStats);
         }
 
-        if(uint8(stats.mobType) == 2) {
-            ShopsData memory data = abi.decode(stats.mobStats, (ShopsData));
-            ShopsData memory shopData = ShopsData({
-                priceMarkup: data.priceMarkup,
-                priceMarkdown: data.priceMarkdown,
-                sellableItems: data.sellableItems,
-                buyableItems: data.buyableItems
-            });
-            Shops.set(entityId, shopData);
-        }
         Position.set(entityId, x, y);
         EntitiesAtPosition.pushEntities(x, y, entityId);
         Spawned.set(entityId, true);
