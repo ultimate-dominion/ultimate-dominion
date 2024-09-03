@@ -191,9 +191,13 @@ contract CombatSystem is System {
                                 : uint256(0)
                         ) * DEFENSE_MODIFIER
                     );
-                console.log("HIT!");
+                if (!crit) {
+                    console.logInt(damage);
+                    console.log("HIT!");
+                }
                 if (crit) {
                     console.log("CRIT!");
+                    console.logInt(damage);
                     damage = damage * int256(CRIT_MULTIPLIER);
                     crit = true;
                 }
