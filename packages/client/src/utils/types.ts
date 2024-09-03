@@ -24,6 +24,7 @@ export enum ItemType {
 export enum MobType {
   Monster,
   NPC,
+  Shop,
 }
 
 export enum StatsClasses {
@@ -206,4 +207,13 @@ export type StatRestrictions = {
   minAgility: string;
   minIntelligence: string;
   minStrength: string;
+};
+
+export type Shop = {
+  mobId: string;
+  priceMarkup: string;
+  priceMarkdown: string;
+  sellableItems: string[];
+  buyableItems: string[];
+  position: { x: number; y: number };
 };

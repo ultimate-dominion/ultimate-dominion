@@ -47,8 +47,13 @@ export const TileDetailsPanel = (): JSX.Element => {
     systemCalls: { createEncounter },
   } = useMUD();
   const { character } = useCharacter();
-  const { inSafetyZone, isSpawned, monstersOnTile, otherCharactersOnTile } =
-    useMap();
+  const {
+    inSafetyZone,
+    isSpawned,
+    monstersOnTile,
+    otherCharactersOnTile,
+    allShops,
+  } = useMap();
   const {
     attackOutcomes,
     currentBattle,
@@ -368,6 +373,8 @@ export const TileDetailsPanel = (): JSX.Element => {
             </Text>
           )}
         </GridItem>
+
+        <GridItem>{JSON.stringify(allShops)}</GridItem>
       </Grid>
       <InfoModal
         heading="Cannot Battle in the Safety Zone"

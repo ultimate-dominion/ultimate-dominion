@@ -208,8 +208,8 @@ contract PostDeploy is Script {
         world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
         _createStarterItems();
         _createEffects();
+        _createShops();
         _createMonsters();
-
         address _auctionHouseAddress = world.UD__auctionHouseAddress();
         UltimateDominionConfig.setAuctionHouse(_auctionHouseAddress);
 
@@ -434,7 +434,8 @@ contract PostDeploy is Script {
             buyableItems: sellableItems
         });
 
-        world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
+        uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
+        world.UD__spawnMob(shopMobId, 0, 0);
     }
     function _createMonsters() internal {
         string memory json = vm.readFile("monsters.json");

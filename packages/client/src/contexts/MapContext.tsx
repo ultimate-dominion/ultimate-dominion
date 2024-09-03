@@ -4,6 +4,7 @@ import {
   getComponentValue,
   getComponentValueStrict,
   Has,
+  HasValue,
   Not,
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
@@ -24,12 +25,13 @@ import {
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
-import { type Character, type Monster } from '../utils/types';
+import { type Character, MobType, type Monster, Shop } from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
 
 type MapContextType = {
+  allShops: Shop[];
   allCharacters: Character[];
   allMonsters: Monster[];
   inSafetyZone: boolean;
@@ -43,6 +45,7 @@ type MapContextType = {
 };
 
 const MapContext = createContext<MapContextType>({
+  allShops: [],
   allCharacters: [],
   allMonsters: [],
   inSafetyZone: false,
@@ -63,6 +66,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
   const {
     components: {
+      Mobs,
       Characters,
       CharactersTokenURI,
       EncounterEntity,
@@ -87,6 +91,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     Character[]
   >([]);
   const [allMonsters, setAllMonsters] = useState<Monster[]>([]);
+  const [allShops, setAllShops] = useState<Shop[]>([]);
   const [monstersOnTile, setMonstersOnTile] = useState<Monster[]>([]);
 
   const position = useComponentValue(
@@ -109,6 +114,13 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       { characterId: BigInt(character?.id ?? 0) },
     ),
   )?.spawned;
+
+  const allShopEntities = useEntityQuery([
+    Has(Mobs),
+    Has(Spawned),
+    Has(Position),
+    HasValue(Mobs, { mobType: MobType.Shop }),
+  ]);
 
   const allMonsterEntities = useEntityQuery([
     Has(Spawned),
@@ -265,7 +277,40 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     },
     [EncounterEntity, monsterTemplates, Position, renderError, Spawned, Stats],
   );
+  const getShops = useCallback(
+    (entities: Entity[]): Shop[] => {
+      try {
+        const _shops: Shop[] = entities.map(entity => {
+          //const { mobId } = decodeMonsterId(entity as `0x${string}`);
 
+          const _position = getComponentValueStrict(Position, entity);
+          // const _priceMarkup = getComponentValueStrict(Shop, entity);
+          // const _priceMarkdown = getComponentValueStrict(Shop, entity);
+          // const _sellableItems = getComponentValueStrict(Shop, entity);
+          // const _buyableItems = getComponentValueStrict(Shop, entity);
+
+          return {
+            mobId: entity,
+            priceMarkup: '0',
+            priceMarkdown: '0',
+            sellableItems: ['0'],
+            buyableItems: ['0'],
+            // priceMarkup: _priceMarkup,
+            // priceMarkdown: _priceMarkdown,
+            // sellableItems: _sellableItems,
+            // buyableItems: _buyableItems,
+            position: { x: _position.x, y: _position.y },
+          } as Shop;
+        });
+
+        return _shops;
+      } catch (e) {
+        renderError((e as Error)?.message ?? 'Failed to fetch shops.', e);
+        return [];
+      }
+    },
+    [Position, renderError],
+  );
   useEffect(() => {
     (async () => {
       if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;
@@ -274,14 +319,18 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       setAllCharacters(_allCharacters as Character[]);
 
       const _monsters = getMonsters(allMonsterEntities);
+      const _shops = getShops(allShopEntities);
       setAllMonsters(_monsters);
+      setAllShops(_shops);
     })();
   }, [
     allCharacterEntities,
+    allShopEntities,
     allMonsterEntities,
     getAllCharacters,
     getMonsters,
     isSynced,
+    getShops,
   ]);
 
   useEffect(() => {
@@ -369,6 +418,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   return (
     <MapContext.Provider
       value={{
+        allShops,
         allMonsters,
         allCharacters,
         inSafetyZone,
