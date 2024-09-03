@@ -212,7 +212,6 @@ struct Order {
 //////////////////////////////////// Shop /////////////////////////////////////
 
 struct Shop {
-    uint256 mobId;
     uint256 priceMarkup;
     uint256 priceMarkdown;
     uint256[] sellableItems;
