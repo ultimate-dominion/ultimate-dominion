@@ -66,7 +66,7 @@ contract EncounterSystem is System {
         // higher agi attacks first
         (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
 
-        if (uint256(encounterType) == 1) {
+        if (encounterType == encounterType.PvE) {
             (bool isValidPvE, bool attackersAreMobs) = IWorld(_world()).UD__isValidPvE(attackers, defenders, x, y);
             require(isValidPvE, "ENCOUNTER SYSTEM: INVALID PVE");
             uint256 startTime = block.timestamp;
@@ -88,7 +88,7 @@ contract EncounterSystem is System {
             CombatEncounter.set(encounterId, combatData);
         }
 
-        if (uint8(encounterType) == 0) {
+        if (encounterType == encounterType.PvP) {
             require(IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y), "ENCOUNTER SYSTEM: INVALID PVP");
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
@@ -142,7 +142,7 @@ contract EncounterSystem is System {
         returns (bool _encounterEnded, bool _attackersWin)
     {
         uint256 deadDefenderCounter;
-        uint256 deadActionerCounter;
+        uint256 deadAttackerCounter;
         for (uint256 i; i < encounterData.defenders.length; i++) {
             if (IWorld(_world()).UD__getDied(encounterData.defenders[i])) {
                 deadDefenderCounter++;
@@ -150,12 +150,12 @@ contract EncounterSystem is System {
         }
         for (uint256 i; i < encounterData.attackers.length; i++) {
             if (IWorld(_world()).UD__getDied(encounterData.attackers[i])) {
-                deadActionerCounter++;
+                deadAttackerCounter++;
             }
         }
 
         _encounterEnded = (
-            deadActionerCounter == encounterData.attackers.length
+            deadAttackerCounter == encounterData.attackers.length
                 || deadDefenderCounter == encounterData.defenders.length
                 || encounterData.currentTurn == encounterData.maxTurns
         );

@@ -178,11 +178,10 @@ contract CharacterSystem is System {
         int256 strChange = desiredStats.strength - stats.strength;
         int256 agiChange = desiredStats.agility - stats.agility;
         int256 intChange = desiredStats.intelligence - stats.intelligence;
-        int256 hpChange = desiredStats.maxHp - stats.maxHp;
+        // int256 hpChange = desiredStats.maxHp - stats.maxHp;
 
         require(
-            (strChange + agiChange + intChange + hpChange) == ABILITY_POINTS_PER_LEVEL,
-            "CHARACTER SYSTEM: INVALID STAT CHANGE"
+            (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
         );
         if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
             stats.maxHp += int256(WAD);
@@ -191,8 +190,11 @@ contract CharacterSystem is System {
         stats.strength = desiredStats.strength;
         stats.agility = desiredStats.agility;
         stats.intelligence = desiredStats.intelligence;
+        stats.level += 1;
+
         // set base stats
         Characters.setBaseStats(characterId, abi.encode(stats));
+
         // apply equipment bonuses and set them to stat table
         _setStats(characterId, IWorld(_world()).UD__calculateEquipmentBonuses(characterId));
     }
