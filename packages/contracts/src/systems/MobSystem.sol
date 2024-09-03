@@ -43,7 +43,7 @@ contract MobSystem is System {
         require(Counters.getCounter(address(this), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
         entityId = bytes32(abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), x, y));
         MobsData memory stats = Mobs.get(mobId);
-        if (uint8(stats.mobType) == 0) {
+        if (stats.mobType == MobType.Monster) {
             MonsterStats memory monsterStats = abi.decode(stats.mobStats, (MonsterStats));
 
             StatsData memory statsData = StatsData({
@@ -57,6 +57,10 @@ contract MobSystem is System {
                 level: monsterStats.level
             });
             Stats.set(entityId, statsData);
+        } else if (stats.mobType == MobType.Shop) {
+            ShopStatsData memory shopStats = abi.decode(stats.mobStats, (ShopStatsData));
+
+            Shops.set(entityId, shopStats);
         }
 
         Position.set(entityId, x, y);
