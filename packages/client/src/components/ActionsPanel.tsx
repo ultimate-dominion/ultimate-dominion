@@ -156,6 +156,20 @@ export const ActionsPanel = (): JSX.Element => {
 
   return (
     <Box maxH="100%" overflowY="auto" pb={4} ref={parentDivRef}>
+      {currentBattle && equippedSpellsAndWeapons.length === 0 && (
+        <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
+          You have no equipped items. In order to attack, you must go to your{' '}
+          <Text
+            as={Link}
+            color="blue"
+            to={`/characters/${character?.id}`}
+            _hover={{ textDecoration: 'underline' }}
+          >
+            character page
+          </Text>{' '}
+          and equip at least 1 item.
+        </Text>
+      )}
       {!battleOver &&
         currentBattle &&
         equippedSpellsAndWeapons.length !== 0 &&
@@ -198,21 +212,6 @@ export const ActionsPanel = (): JSX.Element => {
                     <Text as="span" fontWeight={700}>
                       You can now attack!
                     </Text>
-                  </Text>
-                )}
-                {equippedSpellsAndWeapons.length === 0 && (
-                  <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
-                    You have no equipped items. In order to attack, you must go
-                    to your{' '}
-                    <Text
-                      as={Link}
-                      color="blue"
-                      to={`/characters/${character?.id}`}
-                      _hover={{ textDecoration: 'underline' }}
-                    >
-                      character page
-                    </Text>{' '}
-                    and equip at least 1 item.
                   </Text>
                 )}
               </>

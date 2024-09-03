@@ -142,6 +142,9 @@ const Progress = {
     track: {
       borderRadius: 5,
     },
+    filledTrack: {
+      transition: 'width 0.5s',
+    },
   },
   defaultProps: {
     variant: 'filling',
