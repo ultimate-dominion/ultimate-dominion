@@ -41,7 +41,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
                 alicesCharacter.strength + alicesCharacter.agility + (alicesCharacter.maxHp / 1 ether / 10)
                     + alicesCharacter.intelligence
             ),
-            27
+            21
         );
 
         endGasReport();

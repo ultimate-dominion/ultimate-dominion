@@ -186,7 +186,7 @@ contract CombatSystem is System {
                 damage = _calculateWeaponDamage(attackStats, attacker.strength, weapon, rnChunks[2], crit)
                     - int256(
                         (
-                            int256(defender.armor) - attackStats.armorPenetration > 0
+                            int256(defender.armor) - attackStats.armorPenetration > damage
                                 ? uint256(int256(defender.armor) - attackStats.armorPenetration)
                                 : uint256(0)
                         ) * DEFENSE_MODIFIER
