@@ -117,8 +117,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   const allShopEntities = useEntityQuery([
     Has(Mobs),
-    Has(Spawned),
-    Has(Position),
+    // Has(Position),
+    // Has(Spawned),
     HasValue(Mobs, { mobType: MobType.Shop }),
   ]);
 
@@ -281,7 +281,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     (entities: Entity[]): Shop[] => {
       try {
         const _shops: Shop[] = entities.map(entity => {
-          //const { mobId } = decodeMonsterId(entity as `0x${string}`);
+          const { mobId } = decodeMonsterId(entity as `0x${string}`);
 
           const _position = getComponentValueStrict(Position, entity);
           // const _priceMarkup = getComponentValueStrict(Shop, entity);
@@ -290,7 +290,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           // const _buyableItems = getComponentValueStrict(Shop, entity);
 
           return {
-            mobId: entity,
+            mobId: mobId,
             priceMarkup: '0',
             priceMarkdown: '0',
             sellableItems: ['0'],

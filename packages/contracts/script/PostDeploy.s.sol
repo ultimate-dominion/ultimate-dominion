@@ -427,7 +427,6 @@ contract PostDeploy is Script {
         sellableItems[0] = uint256(0);
         sellableItems[1] = uint256(1);
         Shop memory newShop = Shop({
-            mobId: 0,
             priceMarkup: 0,
             priceMarkdown: 0,
             sellableItems: sellableItems,

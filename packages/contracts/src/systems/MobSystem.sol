@@ -8,7 +8,7 @@ import {Counters} from "@tables/Counters.sol";
 import {Mobs, MobsData} from "@tables/Mobs.sol";
 import {MonsterStats, NPCStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig, Stats, StatsData, Spawned} from "@codegen/index.sol";
+import {UltimateDominionConfig, Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
 
 contract MobSystem is System {
     /**
@@ -59,6 +59,16 @@ contract MobSystem is System {
             Stats.set(entityId, statsData);
         }
 
+        if(uint8(stats.mobType) == 2) {
+            ShopsData memory data = abi.decode(stats.mobStats, (ShopsData));
+            ShopsData memory shopData = ShopsData({
+                priceMarkup: data.priceMarkup,
+                priceMarkdown: data.priceMarkdown,
+                sellableItems: data.sellableItems,
+                buyableItems: data.buyableItems
+            });
+            Shops.set(entityId, shopData);
+        }
         Position.set(entityId, x, y);
         EntitiesAtPosition.pushEntities(x, y, entityId);
         Spawned.set(entityId, true);

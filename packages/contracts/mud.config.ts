@@ -415,7 +415,7 @@ export default defineWorld({
     Shops: {
       key: ["mobId"],
       schema: {
-        mobId: "uint256",
+        mobId: "bytes32",
         priceMarkup: "uint256",
         priceMarkdown: "uint256",
         sellableItems: "uint256[]",
