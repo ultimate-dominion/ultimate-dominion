@@ -58,7 +58,7 @@ contract MobSystem is System {
             });
             Stats.set(entityId, statsData);
         } else if (stats.mobType == MobType.Shop) {
-            ShopStatsData memory shopStats = abi.decode(stats.mobStats, (ShopStatsData));
+            ShopsData memory shopStats = abi.decode(stats.mobStats, (ShopsData));
 
             Shops.set(entityId, shopStats);
         }

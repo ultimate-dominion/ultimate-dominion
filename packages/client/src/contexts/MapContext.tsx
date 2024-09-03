@@ -66,7 +66,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
   const {
     components: {
-      Mobs,
+      Shops,
       Characters,
       CharactersTokenURI,
       EncounterEntity,
@@ -116,10 +116,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   )?.spawned;
 
   const allShopEntities = useEntityQuery([
-    Has(Mobs),
-    // Has(Position),
-    // Has(Spawned),
-    HasValue(Mobs, { mobType: MobType.Shop }),
+    //Has(Mobs),
+    Has(Position),
+    Has(Spawned),
+    Has(Shops),
+    //HasValue(Mobs, { mobType: MobType.Shop }),
   ]);
 
   const allMonsterEntities = useEntityQuery([
@@ -288,7 +289,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           // const _priceMarkdown = getComponentValueStrict(Shop, entity);
           // const _sellableItems = getComponentValueStrict(Shop, entity);
           // const _buyableItems = getComponentValueStrict(Shop, entity);
-
+          console.log("position: " + JSON.stringify(_position))
           return {
             mobId: mobId,
             priceMarkup: '0',
