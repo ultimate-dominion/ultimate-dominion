@@ -4,7 +4,6 @@ import {
   getComponentValue,
   getComponentValueStrict,
   Has,
-  HasValue,
   Not,
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
@@ -25,7 +24,7 @@ import {
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
-import { type Character, MobType, type Monster, Shop } from '../utils/types';
+import { type Character, type Monster, Shop } from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
@@ -39,6 +38,7 @@ type MapContextType = {
   isSpawned: boolean;
   isSpawning: boolean;
   monstersOnTile: Monster[];
+  shopsOnTile: Shop[];
   onSpawn: () => void;
   otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
@@ -53,6 +53,7 @@ const MapContext = createContext<MapContextType>({
   isSpawned: false,
   isSpawning: false,
   monstersOnTile: [],
+  shopsOnTile: [],
   onSpawn: () => {},
   otherCharactersOnTile: [],
   position: null,
@@ -91,9 +92,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     Character[]
   >([]);
   const [allMonsters, setAllMonsters] = useState<Monster[]>([]);
-  const [allShops, setAllShops] = useState<Shop[]>([]);
   const [monstersOnTile, setMonstersOnTile] = useState<Monster[]>([]);
 
+  const [allShops, setAllShops] = useState<Shop[]>([]);
+  const [shopsOnTile, setShopsOnTile] = useState<Shop[]>([]);
   const position = useComponentValue(
     Position,
     encodeEntity(
@@ -285,11 +287,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           const { mobId } = decodeMonsterId(entity as `0x${string}`);
 
           const _position = getComponentValueStrict(Position, entity);
-          // const _priceMarkup = getComponentValueStrict(Shop, entity);
-          // const _priceMarkdown = getComponentValueStrict(Shop, entity);
-          // const _sellableItems = getComponentValueStrict(Shop, entity);
-          // const _buyableItems = getComponentValueStrict(Shop, entity);
-          console.log("position: " + JSON.stringify(_position))
           return {
             mobId: mobId,
             priceMarkup: '0',
@@ -339,6 +336,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       if (!position || (position.x === 0 && position.y === 0)) {
         setOtherCharactersOnTile([]);
         setMonstersOnTile([]);
+        setShopsOnTile([]);
       }
 
       if (allMonsters.length > 0 && position) {
@@ -353,6 +351,18 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               Number(m.currentHp) > 0 &&
               m.position.x === position.x &&
               m.position.y === position.y,
+          ),
+        );
+      }
+      if (allShops.length > 0 && position) {
+        setShopsOnTile(
+          (
+            allShops as (Shop & {
+              isSpawned: boolean;
+              position: { x: number; y: number };
+            })[]
+          ).filter(
+            m => m.position.x === position.x && m.position.y === position.y,
           ),
         );
       }
@@ -380,7 +390,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
       setIsFetchingEntities(false);
     })();
-  }, [allCharacters, allMonsters, character, delegatorAddress, position]);
+  }, [
+    allCharacters,
+    allMonsters,
+    allShops,
+    character,
+    delegatorAddress,
+    position,
+  ]);
 
   const onSpawn = useCallback(async () => {
     try {
@@ -427,6 +444,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         isSpawned,
         isSpawning,
         monstersOnTile,
+        shopsOnTile,
         onSpawn,
         otherCharactersOnTile,
         position: position ? { x: position.x, y: position.y } : null,

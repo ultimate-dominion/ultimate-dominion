@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  Button,
   Flex,
   Grid,
   GridItem,
@@ -15,6 +16,8 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosWarning } from 'react-icons/io';
+import { useNavigate } from 'react-router-dom';
+import Typist from 'react-typist';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -34,6 +37,8 @@ import { InfoModal } from './InfoModal';
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const TileDetailsPanel = (): JSX.Element => {
+  const navigate = useNavigate();
+
   const { renderError, renderSuccess } = useToast();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
@@ -52,7 +57,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     isSpawned,
     monstersOnTile,
     otherCharactersOnTile,
-    allShops,
+    shopsOnTile,
   } = useMap();
   const {
     attackOutcomes,
@@ -317,88 +322,103 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   return (
     <Box>
-      <Grid gap={5} templateColumns="repeat(4, 1fr)">
-        <GridItem colSpan={2}>
-          <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-            Monsters
-          </Text>
-        </GridItem>
-        <GridItem colSpan={2}>
-          <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-            Players
-            <Text as="span" size="sm">
-              {' '}
-              {inSafetyZone ? '(Safety Zone)' : '(Outer Realms)'}
+      {shopsOnTile.length > 0 ? (
+        <Stack>
+          <Typist
+            avgTypingDelay={10}
+            cursor={{ show: false }}
+            stdTypingDelay={10}
+          >
+            <Text mb={8}>
+              You have found yourself in the town square market!
             </Text>
-          </Text>
-        </GridItem>
-      </Grid>
-      <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
-        <GridItem colSpan={2}>
-          {monstersOnTile.length > 0 &&
-            monstersOnTile.map((monster, i) => (
-              <OpponentRow
-                encounterType={EncounterType.PvE}
-                key={`tile-monster-${i}-${monster.name}`}
-                onClick={() => {
-                  onInitiateCombat(monster, EncounterType.PvE);
-                }}
-                opponent={monster}
-              />
-            ))}
-          {monstersOnTile.length === 0 && (
-            <Text size={{ base: '2xs', lg: 'sm' }}>
-              No monsters in this area
-            </Text>
-          )}
-        </GridItem>
+          </Typist>
+          <Button onClick={() => navigate('/shops')}>Enter</Button>
+        </Stack>
+      ) : (
+        <Box>
+          <Grid gap={5} templateColumns="repeat(4, 1fr)">
+            <GridItem colSpan={2}>
+              <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+                Monsters
+              </Text>
+            </GridItem>
+            <GridItem colSpan={2}>
+              <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+                Players
+                <Text as="span" size="sm">
+                  {' '}
+                  {inSafetyZone ? '(Safety Zone)' : '(Outer Realms)'}
+                </Text>
+              </Text>
+            </GridItem>
+          </Grid>
+          <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
+            <GridItem colSpan={2}>
+              {monstersOnTile.length > 0 &&
+                monstersOnTile.map((monster, i) => (
+                  <OpponentRow
+                    encounterType={EncounterType.PvE}
+                    key={`tile-monster-${i}-${monster.name}`}
+                    onClick={() => {
+                      onInitiateCombat(monster, EncounterType.PvE);
+                    }}
+                    opponent={monster}
+                  />
+                ))}
+              {monstersOnTile.length === 0 && (
+                <Text size={{ base: '2xs', lg: 'sm' }}>
+                  No monsters in this area
+                </Text>
+              )}
+            </GridItem>
 
-        <GridItem colSpan={2}>
-          {otherCharactersOnTile.length > 0 &&
-            otherCharactersOnTile.map((player, i) => (
-              <OpponentRow
-                encounterType={EncounterType.PvP}
-                key={`tile-player-${i}-${player.name}`}
-                onClick={() =>
-                  inSafetyZone
-                    ? onOpenSafetyZoneInfoModal()
-                    : onInitiateCombat(player, EncounterType.PvP)
-                }
-                opponent={player}
-              />
-            ))}
-          {otherCharactersOnTile.length === 0 && (
-            <Text size={{ base: '2xs', lg: 'sm' }}>
-              No players in this area
-            </Text>
-          )}
-        </GridItem>
-
-        <GridItem>{JSON.stringify(allShops)}</GridItem>
-      </Grid>
-      <InfoModal
-        heading="Cannot Battle in the Safety Zone"
-        isOpen={isSafetyZoneInfoModalOpen}
-        onClose={onCloseSafetyZoneInfoModal}
-      >
-        <VStack p={4} spacing={4}>
-          <IoIosWarning color="orange" size={40} />
-          <Text mt={4}>
-            You are currently in the{' '}
-            <Text as="span" fontWeight={700}>
-              Safety Zone
-            </Text>
-            .
-          </Text>
-          <Text textAlign="center">
-            In order to battle other players, you must enter the{' '}
-            <Text as="span" fontWeight={700}>
-              Outer Realms
-            </Text>
-            .
-          </Text>
-        </VStack>
-      </InfoModal>
+            <GridItem colSpan={2}>
+              {otherCharactersOnTile.length > 0 &&
+                otherCharactersOnTile.map((player, i) => (
+                  <OpponentRow
+                    encounterType={EncounterType.PvP}
+                    key={`tile-player-${i}-${player.name}`}
+                    onClick={() =>
+                      inSafetyZone
+                        ? onOpenSafetyZoneInfoModal()
+                        : onInitiateCombat(player, EncounterType.PvP)
+                    }
+                    opponent={player}
+                  />
+                ))}
+              {otherCharactersOnTile.length === 0 && (
+                <Text size={{ base: '2xs', lg: 'sm' }}>
+                  No players in this area
+                </Text>
+              )}
+            </GridItem>
+          </Grid>
+          <InfoModal
+            heading="Cannot Battle in the Safety Zone"
+            isOpen={isSafetyZoneInfoModalOpen}
+            onClose={onCloseSafetyZoneInfoModal}
+          >
+            <VStack p={4} spacing={4}>
+              <IoIosWarning color="orange" size={40} />
+              <Text mt={4}>
+                You are currently in the{' '}
+                <Text as="span" fontWeight={700}>
+                  Safety Zone
+                </Text>
+                .
+              </Text>
+              <Text textAlign="center">
+                In order to battle other players, you must enter the{' '}
+                <Text as="span" fontWeight={700}>
+                  Outer Realms
+                </Text>
+                .
+              </Text>
+            </VStack>
+          </InfoModal>
+        </Box>
+      )}
     </Box>
   );
 };
