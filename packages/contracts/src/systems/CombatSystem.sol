@@ -133,6 +133,8 @@ contract CombatSystem is System {
                         actionOutcomeData.itemId,
                         randomNumber
                     );
+                    // if combat consumable, consume the item
+                    // IWorld(_world()).UD__consumeItem(actionOutcomeData.attackerId, actionOutcomeData.itemId);
                 } else {
                     revert("action type not recognized");
                 }
@@ -228,20 +230,21 @@ contract CombatSystem is System {
                         randomness % weapon.maxDamage <= weapon.minDamage ? weapon.minDamage : randomness % weapon.maxDamage
                     )
             ) * int256(ATTACK_MODIFIER);
-            _damage = _getStatBonus(attackerStrength, baseDamage);
+            _damage = _addStatBonus(attackerStrength, baseDamage);
         } else {
-            _damage = _getStatBonus(attackerStrength, weapon.maxDamage * int256(ATTACK_MODIFIER));
+            _damage = _addStatBonus(attackerStrength, weapon.maxDamage * int256(ATTACK_MODIFIER));
         }
     }
 
-    function _getStatBonus(int256 stat, int256 baseDamage) internal pure returns (int256 _totalDamage) {
+    function _addStatBonus(int256 stat, int256 baseDamage) internal pure returns (int256 _totalDamage) {
         if (stat > 0) {
             // uint256 multiplier = uint256(Math.wmul(baseDamage * int256(WAD), (stat * int256(WAD) / 200))) ;
-            // _totalDamage = int256(Math.wmul(multiplier, baseDamage)) / int256(WAD);
-            _totalDamage = Math.wmul(baseDamage, ((stat * int256(WAD)) / int256(STAT_MODIFIER))) + baseDamage;
+            int256 _unroundedDamage =
+                (Math.wmul(baseDamage, ((stat * int256(WAD)) / int256(STAT_MODIFIER))) + baseDamage);
+            _totalDamage = Math.roundInt(_unroundedDamage, int256(1 ether)) / int256(WAD);
         } else {
             // if you have a negative adjusted stat.  do half damage
-            _totalDamage = baseDamage / int256(2);
+            _totalDamage = Math.roundInt(baseDamage / int256(2), int256(1 ether)) / int256(WAD);
         }
     }
 
@@ -333,18 +336,25 @@ contract CombatSystem is System {
         // if (equippedSpell.minDamage > 0 && equippedSpell.maxDamage > 0) {
         int256 baseDamage;
         if (!crit) {
-            baseDamage = attackStats.bonusDamage
-                + int256(
-                    uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
-                        ? equippedSpell.minDamage
-                        : int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
-                );
+            baseDamage = (
+                attackStats.bonusDamage
+                    + int256(
+                        uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
+                            ? equippedSpell.minDamage
+                            : int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
+                    )
+            ) * int256(ATTACK_MODIFIER);
         } else {
-            baseDamage = equippedSpell.maxDamage + attackStats.bonusDamage;
+            baseDamage = (equippedSpell.maxDamage + attackStats.bonusDamage) * int256(ATTACK_MODIFIER);
         }
-        _damage = _getStatBonus(attackerIntelligence, baseDamage) * int256(ATTACK_MODIFIER)
-            - int256((defenderIntelligence > 0 ? defenderIntelligence * int256(DEFENSE_MODIFIER) / 2 : int256(WAD)))
-                / int256(WAD);
+        _damage = (_addStatBonus(attackerIntelligence, baseDamage) - _addStatBonus(defenderIntelligence, 1 ether));
+        // - int256(
+        //     (
+        //         defenderIntelligence > 0
+        //             ? (defenderIntelligence / STAT_MODIFIER) * int256(DEFENSE_MODIFIER)
+        //             : int256(defenderIntelligence * int256(DEFENSE_MODIFIER))
+        //     )
+        // ) / int256(WAD)
     }
 
     function _calculateStatusEffect(

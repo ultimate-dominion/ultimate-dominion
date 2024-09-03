@@ -163,8 +163,8 @@ contract RngSystem is System, IEntropyConsumer {
 
         stats.class = characterClass;
 
-        stats.strength = int256(int64(chunks[0])) % 8 + 3; // Range [3, 10]
-        stats.agility = int256(int64(chunks[1])) % 8 + 3; // Range [3, 10]
+        stats.strength = int256(Math.absolute(int256(int64(chunks[0]))) % 8 + 3); // Range [3, 10]
+        stats.agility = int256(Math.absolute(int256(int64(chunks[1]))) % 8 + 3); // Range [3, 10]
 
         // Calculate intelligence to ensure total is 19
         stats.intelligence = int256(19 - stats.strength - stats.agility);
@@ -193,13 +193,13 @@ contract RngSystem is System, IEntropyConsumer {
         // Class-based adjustments; should total to 21
         if (characterClass == Classes.Warrior) {
             stats.strength += 2;
-            stats.maxHp = int256(10 * WAD);
+            stats.maxHp = int256(10);
         } else if (characterClass == Classes.Rogue) {
             stats.agility += 2;
-            stats.maxHp = int256(6 * WAD);
+            stats.maxHp = int256(6);
         } else if (characterClass == Classes.Mage) {
             stats.intelligence += 2;
-            stats.maxHp = int256(8 * WAD);
+            stats.maxHp = int256(8);
         }
 
         Stats.set(characterId, stats);

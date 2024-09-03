@@ -147,8 +147,8 @@
         "effects": [
           "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
         ],
-        "maxDamage": -5,
-        "minDamage": -1,
+        "maxDamage": -10,
+        "minDamage": -5,
         "minLevel": 0
       },
       "statRestrictions": {

@@ -229,6 +229,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
 
         while (world.UD__getEncounter(encounterId).end == 0) {
+            console.log("bob's move");
             vm.prank(bob);
             world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
         }
@@ -292,7 +293,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         while (world.UD__getEncounter(encounterId).end == 0) {
             vm.prank(bob);
-            console.log("bob move magic");
+            console.log("bob move");
             world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
             // break if bob wins
             if (world.UD__getEncounter(encounterId).end != 0) {
@@ -300,8 +301,12 @@ contract Test_CombatSystem is SetUp, GasReporter {
             }
             // bob's move
             vm.prank(alice);
-            console.log("alice move physical");
+            console.log("alice move");
             world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+            // break if bob wins
+            if (world.UD__getEncounter(encounterId).end != 0) {
+                break;
+            }
         }
 
         StatsData memory endingBobStats = Stats.get(bobCharacterId);

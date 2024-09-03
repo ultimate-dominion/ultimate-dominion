@@ -102,9 +102,6 @@ contract PvESystem is System {
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
 
-        encounterData.currentTurn++;
-        CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
-
         uint256 numberOfExecutedActions;
         if (encounterData.attackersAreMobs) {
             // execute mob attacks
@@ -127,6 +124,8 @@ contract PvESystem is System {
             IWorld(_world()).UD__endEncounter(encounterId, randomness, attackersWin);
         } else {
             encounterData.currentTurn++;
+            // set encounter data
+
             // if not execute defender attack
             if (encounterData.attackersAreMobs) {
                 //execute player attack
@@ -136,9 +135,7 @@ contract PvESystem is System {
                 _executeMobAction(encounterId, encounterData, randomness, numberOfExecutedActions);
             }
 
-            // set encounter data
             CombatEncounter.set(encounterId, encounterData);
-
             // apply dot damage to defenders
             for (uint256 i; i < encounterData.attackers.length; i++) {
                 // apply damage over time to attackers

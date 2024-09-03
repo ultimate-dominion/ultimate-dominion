@@ -66,7 +66,7 @@ contract EncounterSystem is System {
         // higher agi attacks first
         (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
 
-        if (encounterType == encounterType.PvE) {
+        if (encounterType == EncounterType.PvE) {
             (bool isValidPvE, bool attackersAreMobs) = IWorld(_world()).UD__isValidPvE(attackers, defenders, x, y);
             require(isValidPvE, "ENCOUNTER SYSTEM: INVALID PVE");
             uint256 startTime = block.timestamp;
@@ -88,7 +88,7 @@ contract EncounterSystem is System {
             CombatEncounter.set(encounterId, combatData);
         }
 
-        if (encounterType == encounterType.PvP) {
+        if (encounterType == EncounterType.PvP) {
             require(IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y), "ENCOUNTER SYSTEM: INVALID PVP");
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
@@ -178,7 +178,7 @@ contract EncounterSystem is System {
         );
 
         // is pvp
-        if (uint8(encounterData.encounterType) == 0) {
+        if (encounterData.encounterType == EncounterType.PvP) {
             // should be defender turn
             if (encounterData.currentTurn % 2 == 0) {
                 // if timestamp is less than timeout
