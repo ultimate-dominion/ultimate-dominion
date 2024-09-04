@@ -28,7 +28,7 @@ export const ShopRow = (): JSX.Element => {
     >
       <HStack justifyContent="start" spacing={4}>
         <Text size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}>
-          {'General Store 🏪'}
+          General Store 🏪
         </Text>
       </HStack>
     </HStack>

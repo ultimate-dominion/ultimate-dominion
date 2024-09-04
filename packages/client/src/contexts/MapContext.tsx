@@ -118,11 +118,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   )?.spawned;
 
   const allShopEntities = useEntityQuery([
-    //Has(Mobs),
     Has(Position),
     Has(Spawned),
     Has(Shops),
-    //HasValue(Mobs, { mobType: MobType.Shop }),
   ]);
 
   const allMonsterEntities = useEntityQuery([
@@ -293,10 +291,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             priceMarkdown: '0',
             sellableItems: ['0'],
             buyableItems: ['0'],
-            // priceMarkup: _priceMarkup,
-            // priceMarkdown: _priceMarkdown,
-            // sellableItems: _sellableItems,
-            // buyableItems: _buyableItems,
             position: { x: _position.x, y: _position.y },
           } as Shop;
         });
