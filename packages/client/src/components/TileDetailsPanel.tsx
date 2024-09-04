@@ -1,7 +1,6 @@
 import {
   Avatar,
   Box,
-  Button,
   Flex,
   Grid,
   GridItem,
@@ -16,8 +15,6 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosWarning } from 'react-icons/io';
-import { useNavigate } from 'react-router-dom';
-import Typist from 'react-typist';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -33,12 +30,11 @@ import { getEmoji, removeEmoji } from '../utils/helpers';
 import { type Character, EncounterType, type Monster } from '../utils/types';
 import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
+import { ShopRow } from './ShopRow';
 
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const TileDetailsPanel = (): JSX.Element => {
-  const navigate = useNavigate();
-
   const { renderError, renderSuccess } = useToast();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
@@ -324,16 +320,20 @@ export const TileDetailsPanel = (): JSX.Element => {
     <Box>
       {shopsOnTile.length > 0 ? (
         <Stack>
-          <Typist
-            avgTypingDelay={10}
-            cursor={{ show: false }}
-            stdTypingDelay={10}
-          >
-            <Text mb={8}>
-              You have found yourself in the town square market!
-            </Text>
-          </Typist>
-          <Button onClick={() => navigate('/shops')}>Enter</Button>
+          <Grid gap={5} templateColumns="repeat(4, 1fr)">
+            <GridItem colSpan={2}>
+              <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+                Town Square
+              </Text>
+            </GridItem>
+          </Grid>
+          <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
+            <GridItem colSpan={2}>
+              {shopsOnTile.map((shop, i) => (
+                <ShopRow key={`tile-shop-${i}`} />
+              ))}
+            </GridItem>
+          </Grid>
         </Stack>
       ) : (
         <Box>
