@@ -24,6 +24,7 @@ import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
+import { IoMdArrowRoundBack } from 'react-icons/io';
 import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
@@ -32,7 +33,7 @@ import { useAccount } from 'wagmi';
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { HOME_PATH } from '../Routes';
+import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import { Character, StatsClasses } from '../utils/types';
 
@@ -228,7 +229,17 @@ export const Leaderboard = (): JSX.Element => {
   }
 
   return (
-    <VStack mt={16}>
+    <VStack>
+      <Button
+        alignSelf="start"
+        leftIcon={<IoMdArrowRoundBack />}
+        my={4}
+        onClick={() => navigate(GAME_BOARD_PATH)}
+        size="xs"
+        variant="outline"
+      >
+        Back to Game Board
+      </Button>
       <Stack
         direction={{ base: 'column', md: 'row' }}
         mb={8}

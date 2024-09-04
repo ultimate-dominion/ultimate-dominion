@@ -1,4 +1,12 @@
-import { Box, Button, Heading, HStack, Stack, Text } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Heading,
+  HStack,
+  Stack,
+  Text,
+  Tooltip,
+} from '@chakra-ui/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useMUD } from '../contexts/MUDContext';
@@ -39,7 +47,9 @@ export const Header = ({
         >
           Wallet Details
         </Button>
-        <Text size="2xs">Balance: {Number(burnerBalance).toFixed(5)}</Text>
+        <Tooltip label="Your session wallet balance">
+          <Text size="2xs">Balance: {Number(burnerBalance).toFixed(5)}</Text>
+        </Tooltip>
       </HStack>
       <Heading
         as="button"
