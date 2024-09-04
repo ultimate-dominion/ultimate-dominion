@@ -256,7 +256,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         <HStack alignItems="start" w="100%">
           <VStack spacing={{ base: 0, lg: 2 }} w="48%">
             <HealthBar
-              baseHp={opponent.baseHp}
+              maxHp={opponent.maxHp}
               currentHp={opponent.currentHp}
               level={opponent.level}
               w="90%"
@@ -275,7 +275,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           </VStack>
           <VStack spacing={{ base: 0, lg: 2 }} w="48%">
             <HealthBar
-              baseHp={userCharacterForBattleRendering.baseHp}
+              maxHp={userCharacterForBattleRendering.maxHp}
               currentHp={userCharacterForBattleRendering.currentHp}
               level={userCharacterForBattleRendering.level}
               w="90%"

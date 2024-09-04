@@ -162,7 +162,7 @@ export const LevelingPanel = ({
 
       const newStats = {
         agility: newAgility,
-        baseHp: character.baseHp,
+        maxHp: character.maxHp,
         currentHp: character.currentHp,
         class: character.entityClass,
         experience: character.experience,
@@ -218,7 +218,7 @@ export const LevelingPanel = ({
         <HStack justify="space-between" w="100%">
           <Text>HP - Hit Points</Text>
           <Text>
-            {currentHpWithFloor}/{character.baseHp}
+            {currentHpWithFloor}/{character.maxHp}
           </Text>
         </HStack>
 

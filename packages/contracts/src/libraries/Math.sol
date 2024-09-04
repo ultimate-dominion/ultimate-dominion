@@ -242,4 +242,28 @@ library Math {
     function absolute(int256 _x) internal pure returns (uint256 _z) {
         _z = (_x < 0) ? uint256(-_x) : uint256(_x);
     }
+
+    function roundUint(uint256 value, uint256 baseUnit) public pure returns (uint256) {
+        uint256 fractionalPart = value % baseUnit;
+
+        if (fractionalPart >= baseUnit / 2) {
+            // Round up
+            return ((value + baseUnit - 1) / baseUnit) * baseUnit;
+        } else {
+            // Round down
+            return (value / baseUnit) * baseUnit;
+        }
+    }
+
+    function roundInt(int256 value, int256 baseUnit) public pure returns (int256) {
+        int256 fractionalPart = value % baseUnit;
+
+        if (fractionalPart >= baseUnit / 2) {
+            // Round up
+            return ((value + baseUnit - 1) / baseUnit) * baseUnit;
+        } else {
+            // Round down
+            return (value / baseUnit) * baseUnit;
+        }
+    }
 }

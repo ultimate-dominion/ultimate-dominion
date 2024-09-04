@@ -134,7 +134,7 @@ export const CharacterPage = (): JSX.Element => {
       const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility.toString(),
-        baseHp: characterStats.baseHp.toString(),
+        maxHp: characterStats.maxHp.toString(),
         entityClass: characterStats.class,
         currentHp: characterStats.currentHp.toString(),
         experience: characterStats.experience.toString(),

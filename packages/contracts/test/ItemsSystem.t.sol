@@ -37,7 +37,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     function test_CreateItem() public {
         startGasReport("creates an item");
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStatsData memory weaponStats = WeaponStatsData({
@@ -58,7 +58,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri/"
         );
 
-        assertEq(newItemId, 13);
+        assertEq(newItemId, 16);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
@@ -71,7 +71,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_CreateItem_Revert_NotNamespaceOwner() public {
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStatsData memory weaponStats = WeaponStatsData({
@@ -112,7 +112,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_GetTotalSupply() public {
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStatsData memory weaponStats = WeaponStatsData({

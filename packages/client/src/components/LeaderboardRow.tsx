@@ -18,7 +18,7 @@ import { type Character, StatsClasses } from '../utils/types';
 
 export const LeaderboardRow = ({
   agility,
-  baseHp,
+  maxHp,
   entityClass,
   id,
   image,
@@ -67,7 +67,7 @@ export const LeaderboardRow = ({
             </Center>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            HP {baseHp} • STR {strength} • AGI
+            HP {maxHp} • STR {strength} • AGI
             {agility} • INT {intelligence}
           </Text>
         </VStack>

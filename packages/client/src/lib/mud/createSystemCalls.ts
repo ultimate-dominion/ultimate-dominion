@@ -412,7 +412,7 @@ export function createSystemCalls(
     try {
       const formattedNewStats = {
         agility: BigInt(entityStats.agility),
-        baseHp: BigInt(entityStats.baseHp),
+        maxHp: BigInt(entityStats.maxHp),
         class: entityStats.class,
         currentHp: BigInt(entityStats.currentHp),
         experience: BigInt(entityStats.experience),

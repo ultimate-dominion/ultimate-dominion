@@ -5,6 +5,7 @@ pragma solidity >=0.8.24;
 
 import { Classes } from "@codegen/common.sol";
 import { StatsData } from "@codegen/index.sol";
+import { AdjustedCombatStats } from "@interfaces/Structs.sol";
 
 /**
  * @title ICharacterSystem
@@ -40,6 +41,8 @@ interface ICharacterSystem {
 
   function UD__levelCharacter(bytes32 characterId, StatsData memory desiredStats) external;
 
+  function UD__setStats(bytes32 entityId, AdjustedCombatStats memory stats) external;
+
   function UD__updateTokenUri(bytes32 characterId, string memory tokenUri) external;
 
   function UD__getOwner(bytes32 characterId) external view returns (address);
@@ -47,4 +50,6 @@ interface ICharacterSystem {
   function UD__getExperience(bytes32 characterId) external view returns (uint256);
 
   function UD__getStats(bytes32 characterId) external view returns (StatsData memory);
+
+  function UD__getBaseStats(bytes32 characterId) external view returns (StatsData memory);
 }
