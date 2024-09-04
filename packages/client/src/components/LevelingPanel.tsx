@@ -244,6 +244,7 @@ export const LevelingPanel = ({
             {canLevel && (
               <Button
                 borderWidth="1.5px"
+                isDisabled={abilityPoints <= 0}
                 onClick={() => onIncrementStat('str')}
                 size="xs"
                 variant="outline"
@@ -276,6 +277,7 @@ export const LevelingPanel = ({
             {canLevel && (
               <Button
                 borderWidth="1.5px"
+                isDisabled={abilityPoints <= 0}
                 onClick={() => onIncrementStat('agi')}
                 size="xs"
                 variant="outline"
@@ -308,6 +310,7 @@ export const LevelingPanel = ({
             {canLevel && (
               <Button
                 borderWidth="1.5px"
+                isDisabled={abilityPoints <= 0}
                 onClick={() => onIncrementStat('int')}
                 size="xs"
                 variant="outline"
