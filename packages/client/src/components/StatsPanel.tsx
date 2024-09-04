@@ -1,5 +1,6 @@
 import {
   Avatar,
+  Box,
   Button,
   Grid,
   GridItem,
@@ -8,14 +9,15 @@ import {
   Spacer,
   Spinner,
   Text,
+  Tooltip,
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
+import { BsBackpack4Fill } from 'react-icons/bs';
 import { IoIosArrowForward } from 'react-icons/io';
-import { MdBackpack } from 'react-icons/md';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -32,7 +34,8 @@ export const StatsPanel = (): JSX.Element => {
   const {
     components: { Levels },
   } = useMUD();
-  const { character, equippedArmor, equippedWeapons } = useCharacter();
+  const { character, equippedArmor, equippedSpells, equippedWeapons } =
+    useCharacter();
 
   const currentLevelXpRequirement =
     useComponentValue(
@@ -67,8 +70,8 @@ export const StatsPanel = (): JSX.Element => {
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
   const allItems = useMemo(
-    () => [...equippedArmor, ...equippedWeapons],
-    [equippedArmor, equippedWeapons],
+    () => [...equippedArmor, ...equippedSpells, ...equippedWeapons],
+    [equippedArmor, equippedSpells, equippedWeapons],
   );
 
   if (!character) {
@@ -185,6 +188,20 @@ export const StatsPanel = (): JSX.Element => {
       <VStack align="stretch" alignItems="start" mt={4} spacing={2} w="100%">
         <HStack fontWeight="bold" w="100%">
           <Text>Equipped Items</Text>
+          <Tooltip
+            hasArrow
+            label="Visit the character page to equip items"
+            placement="top"
+          >
+            <Button
+              onClick={() => navigate(`/characters/${character.id}`)}
+              p="0 2px"
+              size="sm"
+              variant="ghost"
+            >
+              <BsBackpack4Fill size={12} />
+            </Button>
+          </Tooltip>
           <Spacer />
           <Text>
             {allItems.length}/{MAX_EQUIPPED_ITEMS}
@@ -199,14 +216,7 @@ export const StatsPanel = (): JSX.Element => {
             w="100%"
           >
             <Text>{item.name}</Text>
-            <Button
-              onClick={() => navigate(`/characters/${character.id}`)}
-              p="0 2px"
-              size="sm"
-              variant="ghost"
-            >
-              <MdBackpack size={12} />
-            </Button>
+            <Box h={6} />
           </HStack>
         ))}
         {Array.from({
@@ -221,6 +231,7 @@ export const StatsPanel = (): JSX.Element => {
           >
             <Text>Empty Slot</Text>
             <Button
+              h={6}
               onClick={() => navigate(`/characters/${character.id}`)}
               p="0 2px"
               size="sm"
@@ -238,39 +249,37 @@ export const StatsPanel = (): JSX.Element => {
       </HStack>
 
       {isDesktop && (
-        <>
-          <VStack alignSelf="start" alignItems="start">
-            <Link
-              as={RouterLink}
-              to={AUCTION_HOUSE_PATH}
-              borderBottom="2px solid"
-              borderColor="grey400"
-              fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-              pb={1}
-              textAlign="left"
-              _hover={{
-                borderColor: 'grey500',
-                textDecoration: 'none',
-              }}
-            >
-              Auction House
-            </Link>
-            <Link
-              as={RouterLink}
-              borderBottom="2px solid"
-              borderColor="grey400"
-              fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-              to={LEADERBOARD_PATH}
-              pb={1}
-              _hover={{
-                borderColor: 'grey500',
-                textDecoration: 'none',
-              }}
-            >
-              Leaderboard
-            </Link>
-          </VStack>
-        </>
+        <VStack alignItems="start" pb={8}>
+          <Link
+            as={RouterLink}
+            to={AUCTION_HOUSE_PATH}
+            borderBottom="2px solid"
+            borderColor="grey400"
+            fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
+            pb={1}
+            textAlign="left"
+            _hover={{
+              borderColor: 'grey500',
+              textDecoration: 'none',
+            }}
+          >
+            Auction House
+          </Link>
+          <Link
+            as={RouterLink}
+            borderBottom="2px solid"
+            borderColor="grey400"
+            fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
+            to={LEADERBOARD_PATH}
+            pb={1}
+            _hover={{
+              borderColor: 'grey500',
+              textDecoration: 'none',
+            }}
+          >
+            Leaderboard
+          </Link>
+        </VStack>
       )}
     </VStack>
   );

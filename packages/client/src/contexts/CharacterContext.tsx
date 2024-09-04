@@ -22,6 +22,7 @@ import type {
   Character,
   CharacterData,
   EntityStats,
+  Spell,
   Weapon,
 } from '../utils/types';
 import { useItems } from './ItemsContext';
@@ -30,6 +31,7 @@ import { useMUD } from './MUDContext';
 type CharacterContextType = {
   character: Character | null;
   equippedArmor: Armor[];
+  equippedSpells: Spell[];
   equippedWeapons: Weapon[];
   isRefreshing: boolean;
   refreshCharacter: () => Promise<void>;
@@ -38,6 +40,7 @@ type CharacterContextType = {
 const CharacterContext = createContext<CharacterContextType>({
   character: null,
   equippedArmor: [],
+  equippedSpells: [],
   equippedWeapons: [],
   isRefreshing: false,
   refreshCharacter: async () => {},
@@ -68,12 +71,14 @@ export const CharacterProvider = ({
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
+    spellTemplates,
     weaponTemplates,
   } = useItems();
 
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(true);
   const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
+  const [equippedSpells, setEquippedSpells] = useState<Spell[]>([]);
   const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
 
   const fetchCharacterData = useCallback(async () => {
@@ -180,17 +185,28 @@ export const CharacterProvider = ({
     (
       _character: Character,
       _equippedArmor: bigint[],
+      _equippedSpells: bigint[],
       _equippedWeapons: bigint[],
     ) => {
       try {
         if (_equippedArmor.length === 0) {
           setEquippedArmor([]);
         }
+
+        if (_equippedSpells.length === 0) {
+          setEquippedSpells([]);
+        }
+
         if (_equippedWeapons.length === 0) {
           setEquippedWeapons([]);
         }
 
-        if (_equippedArmor.length + _equippedWeapons.length === 0) {
+        if (
+          _equippedArmor.length +
+            _equippedSpells.length +
+            _equippedWeapons.length ===
+          0
+        ) {
           return;
         }
 
@@ -218,6 +234,37 @@ export const CharacterProvider = ({
             owner: _character.owner,
           } as Armor;
         });
+
+        const _spells = _equippedSpells
+          .map(tokenId => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(tokenId),
+              },
+            );
+            const itemOwner = getComponentValueStrict(
+              ItemsOwners,
+              tokenOwnersEntity,
+            );
+
+            const spellDetails = spellTemplates.find(
+              item => item.tokenId === tokenId.toString(),
+            );
+
+            return {
+              ...spellDetails,
+              balance: itemOwner.balance.toString(),
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+              tokenId: tokenId.toString(),
+            } as Spell;
+          })
+          .filter(item => item.owner === _character.owner)
+          .sort((a, b) => {
+            return Number(a.tokenId) - Number(b.tokenId);
+          });
 
         const _weapons = _equippedWeapons
           .map(tokenId => {
@@ -251,6 +298,7 @@ export const CharacterProvider = ({
           });
 
         setEquippedArmor(_armor);
+        setEquippedSpells(_spells);
         setEquippedWeapons(_weapons);
       } catch (e) {
         renderError(
@@ -259,20 +307,26 @@ export const CharacterProvider = ({
         );
       }
     },
-    [armorTemplates, ItemsOwners, renderError, weaponTemplates],
+    [armorTemplates, ItemsOwners, renderError, spellTemplates, weaponTemplates],
   );
 
   useEffect(() => {
     if (!(isSynced && userCharacter) || isLoadingItemTemplates) return;
 
-    const { equippedArmor, equippedWeapons } =
+    const { equippedArmor, equippedSpells, equippedWeapons } =
       getComponentValue(CharacterEquipment, userCharacter.id) ??
-      ({ equippedArmor: [], equippedWeapons: [] } as {
+      ({ equippedArmor: [], equippedSpells: [], equippedWeapons: [] } as {
         equippedArmor: bigint[];
+        equippedSpells: bigint[];
         equippedWeapons: bigint[];
       });
 
-    fetchCharacterItems(userCharacter, equippedArmor, equippedWeapons);
+    fetchCharacterItems(
+      userCharacter,
+      equippedArmor,
+      equippedSpells,
+      equippedWeapons,
+    );
   }, [
     CharacterEquipment,
     fetchCharacterItems,
@@ -286,6 +340,7 @@ export const CharacterProvider = ({
       value={{
         character: userCharacter,
         equippedArmor,
+        equippedSpells,
         equippedWeapons,
         isRefreshing,
         refreshCharacter,

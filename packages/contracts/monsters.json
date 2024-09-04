@@ -25,7 +25,7 @@
         "experience": 30,
         "hitPoints": 8,
         "intelligence": 8,
-        "inventory": [6],
+        "inventory": [16],
         "level": 1,
         "strength": 2
       }
@@ -40,7 +40,7 @@
         "experience": 60,
         "hitPoints": 6,
         "intelligence": 6,
-        "inventory": [6],
+        "inventory": [6, 11],
         "level": 2,
         "strength": 8
       }
@@ -55,7 +55,7 @@
         "experience": 55,
         "hitPoints": 9,
         "intelligence": 8,
-        "inventory": [6],
+        "inventory": [16],
         "level": 2,
         "strength": 2
       }
@@ -85,7 +85,7 @@
         "experience": 85,
         "hitPoints": 10,
         "intelligence": 6,
-        "inventory": [6],
+        "inventory": [6, 12],
         "level": 3,
         "strength": 8
       }
@@ -115,7 +115,7 @@
         "experience": 155,
         "hitPoints": 12,
         "intelligence": 7,
-        "inventory": [9],
+        "inventory": [9, 13],
         "level": 4,
         "strength": 12
       }
@@ -130,7 +130,7 @@
         "experience": 205,
         "hitPoints": 14,
         "intelligence": 12,
-        "inventory": [8],
+        "inventory": [17],
         "level": 5,
         "strength": 14
       }
@@ -160,7 +160,7 @@
         "experience": 310,
         "hitPoints": 17,
         "intelligence": 18,
-        "inventory": [8],
+        "inventory": [18],
         "level": 6,
         "strength": 16
       }
@@ -175,7 +175,7 @@
         "experience": 300,
         "hitPoints": 15,
         "intelligence": 13,
-        "inventory": [9],
+        "inventory": [9, 13],
         "level": 6,
         "strength": 18
       }
@@ -205,7 +205,7 @@
         "experience": 440,
         "hitPoints": 18,
         "intelligence": 21,
-        "inventory": [8],
+        "inventory": [18],
         "level": 7,
         "strength": 16
       }
@@ -220,7 +220,7 @@
         "experience": 610,
         "hitPoints": 18,
         "intelligence": 14,
-        "inventory": [9],
+        "inventory": [9, 14],
         "level": 8,
         "strength": 20
       }
@@ -250,7 +250,7 @@
         "experience": 880,
         "hitPoints": 24,
         "intelligence": 25,
-        "inventory": [8],
+        "inventory": [19],
         "level": 9,
         "strength": 22
       }
@@ -265,7 +265,7 @@
         "experience": 900,
         "hitPoints": 22,
         "intelligence": 22,
-        "inventory": [9],
+        "inventory": [9, 14],
         "level": 9,
         "strength": 22
       }
@@ -280,7 +280,7 @@
         "experience": 3600,
         "hitPoints": 28,
         "intelligence": 25,
-        "inventory": [9],
+        "inventory": [9, 15],
         "level": 10,
         "strength": 26
       }
@@ -310,7 +310,7 @@
         "experience": 4000,
         "hitPoints": 32,
         "intelligence": 36,
-        "inventory": [8],
+        "inventory": [20],
         "level": 10,
         "strength": 30
       }
