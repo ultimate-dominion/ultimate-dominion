@@ -186,22 +186,16 @@ contract CombatSystem is System {
             );
             if (hit) {
                 damage = _calculateWeaponDamage(attackStats, attacker.strength, weapon, rnChunks[2], crit)
-                    - int256(
-                        (
-                            int256(defender.armor) - attackStats.armorPenetration > damage
-                                ? uint256(int256(defender.armor) - attackStats.armorPenetration)
-                                : uint256(0)
-                        ) * DEFENSE_MODIFIER
-                    );
+                    - _calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
                 if (!crit) {
-                    console.logInt(damage);
                     console.log("HIT!");
+                    console.logInt(damage);
                 }
                 if (crit) {
-                    console.log("CRIT!");
-                    console.logInt(damage);
                     damage = damage * int256(CRIT_MULTIPLIER);
                     crit = true;
+                    console.log("CRIT!");
+                    console.logInt(damage);
                 }
             } else {
                 console.log("MISS!");
@@ -212,6 +206,18 @@ contract CombatSystem is System {
             damage = 0;
             hit = false;
             crit = false;
+        }
+    }
+
+    function _calculateArmorModifier(int256 armor, int256 armorPenetration, int256 damage)
+        internal
+        returns (int256 _totalArmorModifier)
+    {
+        if (armor - armorPenetration > 0) {
+            _totalArmorModifier = (armor - armorPenetration) * int256(DEFENSE_MODIFIER);
+        }
+        if (damage - (int256(armor) - armorPenetration) < 0) {
+            _totalArmorModifier = damage;
         }
     }
 
@@ -305,14 +311,19 @@ contract CombatSystem is System {
                 damage = _calculateMagicDamage(
                     attackStats, spell, rnChunks[2], attacker.intelligence, defender.intelligence, crit
                 );
-                console.logInt(damage);
+                if (!crit) {
+                    console.log("magic damage: ");
+                    console.logInt(damage);
+                }
+
                 if (crit) {
-                    console.log("CRIT!");
                     damage = damage * int256(CRIT_MULTIPLIER);
+                    console.log("magic CRIT!");
+                    console.logInt(damage);
                     crit = true;
                 }
             } else {
-                console.log("MISS!");
+                console.log("magic MISS!");
                 damage = 0;
                 hit = false;
             }
@@ -331,8 +342,6 @@ contract CombatSystem is System {
         int256 defenderIntelligence,
         bool crit
     ) internal view returns (int256 _damage) {
-        console.log("MAGIC!");
-
         // if (equippedSpell.minDamage > 0 && equippedSpell.maxDamage > 0) {
         int256 baseDamage;
         if (!crit) {
@@ -347,14 +356,10 @@ contract CombatSystem is System {
         } else {
             baseDamage = (equippedSpell.maxDamage + attackStats.bonusDamage) * int256(ATTACK_MODIFIER);
         }
-        _damage = (_addStatBonus(attackerIntelligence, baseDamage) - _addStatBonus(defenderIntelligence, 1 ether));
-        // - int256(
-        //     (
-        //         defenderIntelligence > 0
-        //             ? (defenderIntelligence / STAT_MODIFIER) * int256(DEFENSE_MODIFIER)
-        //             : int256(defenderIntelligence * int256(DEFENSE_MODIFIER))
-        //     )
-        // ) / int256(WAD)
+        _damage = (
+            _addStatBonus(attackerIntelligence, baseDamage)
+                - int256(_addStatBonus(defenderIntelligence, int256(DEFENSE_MODIFIER)))
+        );
     }
 
     function _calculateStatusEffect(

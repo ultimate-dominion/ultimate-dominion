@@ -15,7 +15,7 @@ uint256 constant TO_HIT_MODIFIER = 1.2 ether;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
 uint256 constant ATTACK_MODIFIER = 1 ether;
 // the amount crits damage is multiplied by
-uint256 constant CRIT_MULTIPLIER = 3;
+uint256 constant CRIT_MULTIPLIER = 2;
 // attack roll has to be CRIT_MODIFIER times greater than the defense roll in order to crit
 uint256 constant CRIT_MODIFIER = 9;
 // the character's stats are divided by STAT_MODIFIER when applying stat bonuses
