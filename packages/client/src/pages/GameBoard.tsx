@@ -17,6 +17,7 @@ import { useAccount } from 'wagmi';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
+import { ChatBox } from '../components/ChatBox';
 import { InfoModal } from '../components/InfoModal';
 import { MapPanel } from '../components/MapPanel';
 import { StatsPanel } from '../components/StatsPanel';
@@ -192,10 +193,19 @@ export const GameBoard = (): JSX.Element => {
       <GridItem
         colSpan={{ base: 1, lg: 4 }}
         colStart={{ base: 0, lg: 13 }}
-        rowSpan={{ base: 3, lg: 12 }}
+        rowSpan={{ base: 3, lg: 6 }}
         rowStart={{ base: 8, lg: 0 }}
       >
         <MapPanel />
+      </GridItem>
+      <GridItem
+        border="2px solid"
+        colSpan={{ base: 1, lg: 4 }}
+        colStart={{ base: 0, lg: 13 }}
+        rowSpan={{ base: 4, lg: 6 }}
+        rowStart={{ base: 5, lg: 7 }}
+      >
+        <ChatBox />
       </GridItem>
       <Box
         bottom={2}
