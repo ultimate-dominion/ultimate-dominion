@@ -12,6 +12,7 @@ import { useToast } from '../hooks/useToast';
 import { GAME_BOARD_PATH } from '../Routes';
 import { useBattle } from './BattleContext';
 import { useCharacter } from './CharacterContext';
+import { useChat } from './ChatContext';
 import { useMap } from './MapContext';
 import { useMUD } from './MUDContext';
 
@@ -42,6 +43,7 @@ export const MovementProvider = ({
   const { character } = useCharacter();
   const { isFetchingEntities, isSpawned, position } = useMap();
   const { currentBattle } = useBattle();
+  const { isMessageInputFocused } = useChat();
 
   const [isMoving, setIsMoving] = useState(false);
 
@@ -50,6 +52,8 @@ export const MovementProvider = ({
       try {
         if (!isSpawned) return;
         if (currentBattle) return;
+        if (isMessageInputFocused) return;
+
         setIsMoving(true);
 
         if (!delegatorAddress) {
@@ -110,6 +114,7 @@ export const MovementProvider = ({
       character,
       currentBattle,
       delegatorAddress,
+      isMessageInputFocused,
       isSpawned,
       move,
       position,

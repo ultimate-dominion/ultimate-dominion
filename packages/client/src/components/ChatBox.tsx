@@ -9,29 +9,20 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { IoIosSend } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 
-type ChatMessage = {
-  text: string;
-  isMyMessage?: boolean;
-};
-
-export const OTHER_MESSAGES = [
-  {
-    text: 'This is dummy text. Is anyone there?',
-    isMyMessage: false,
-  },
-  {
-    text: 'Helllooooo???',
-    isMyMessage: false,
-  },
-];
+import { useChat } from '../contexts/ChatContext';
 
 export const ChatBox: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>(OTHER_MESSAGES);
-  const [newMessage, setNewMessage] = useState<string>('');
+  const {
+    messages,
+    newMessage,
+    onSendMesssage,
+    onSetNewMessage,
+    onSetMessageInputFocus,
+  } = useChat();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -41,13 +32,6 @@ export const ChatBox: React.FC = () => {
     onOpen: onOpenChatBox,
     onClose: onCloseChatBox,
   } = useDisclosure();
-
-  const onSendMesssage = useCallback(() => {
-    if (newMessage.trim()) {
-      setMessages([...messages, { text: newMessage, isMyMessage: true }]);
-      setNewMessage('');
-    }
-  }, [messages, newMessage]);
 
   const adjustTextareaHeight = useCallback(() => {
     if (textareaRef.current) {
@@ -70,21 +54,6 @@ export const ChatBox: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [scrollToBottom, messages]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        onSendMesssage();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [onSendMesssage]);
 
   return (
     <>
@@ -132,13 +101,15 @@ export const ChatBox: React.FC = () => {
               h="auto"
               maxH="50px"
               minH="40px"
-              onChange={e => setNewMessage(e.target.value)}
+              onChange={e => onSetNewMessage(e.target.value)}
               overflow="hidden"
               placeholder="Type a message..."
               ref={textareaRef}
               resize="none"
               size="xs"
               value={newMessage}
+              onFocus={() => onSetMessageInputFocus(true)}
+              onBlur={() => onSetMessageInputFocus(false)}
             />
             <Button
               onClick={onSendMesssage}

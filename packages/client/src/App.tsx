@@ -8,6 +8,7 @@ import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { WalletDetailsModal } from './components/WalletDetailsModal';
 import { BattleProvider } from './contexts/BattleContext';
+import { ChatProvider } from './contexts/ChatContext';
 import { MapProvider } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
@@ -19,9 +20,11 @@ export const App = (): JSX.Element => {
     <Router>
       <MapProvider>
         <BattleProvider>
-          <MovementProvider>
-            <AppInner />
-          </MovementProvider>
+          <ChatProvider>
+            <MovementProvider>
+              <AppInner />
+            </MovementProvider>
+          </ChatProvider>
         </BattleProvider>
       </MapProvider>
     </Router>
