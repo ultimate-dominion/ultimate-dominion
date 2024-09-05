@@ -21,11 +21,11 @@ export const LevelingPanel = ({
   const { refreshCharacter } = useCharacter();
 
   const [abilityPoints, setAbilityPoints] = useState(0);
-  const [newAgility, setNewAgility] = useState(character.agility);
+  const [newAgility, setNewAgility] = useState(character.baseStats.agility);
   const [newIntelligence, setNewIntelligence] = useState(
-    character.intelligence,
+    character.baseStats.intelligence,
   );
-  const [newStrength, setNewStrength] = useState(character.strength);
+  const [newStrength, setNewStrength] = useState(character.baseStats.strength);
 
   const [isLeveling, setIsLeveling] = useState(false);
 
@@ -35,24 +35,29 @@ export const LevelingPanel = ({
     } else {
       setAbilityPoints(0);
     }
-    setNewAgility(character.agility);
-    setNewIntelligence(character.intelligence);
-    setNewStrength(character.strength);
-  }, [canLevel, character.agility, character.intelligence, character.strength]);
+    setNewAgility(character.baseStats.agility);
+    setNewIntelligence(character.baseStats.intelligence);
+    setNewStrength(character.baseStats.strength);
+  }, [
+    canLevel,
+    character.baseStats.agility,
+    character.baseStats.intelligence,
+    character.baseStats.strength,
+  ]);
 
   const strengthIncreased = useMemo(
-    () => BigInt(newStrength) > BigInt(character.strength),
-    [newStrength, character.strength],
+    () => BigInt(newStrength) > BigInt(character.baseStats.strength),
+    [newStrength, character.baseStats.strength],
   );
 
   const agilityIncreased = useMemo(
-    () => BigInt(newAgility) > BigInt(character.agility),
-    [newAgility, character.agility],
+    () => BigInt(newAgility) > BigInt(character.baseStats.agility),
+    [newAgility, character.baseStats.agility],
   );
 
   const intelligenceIncreased = useMemo(
-    () => BigInt(newIntelligence) > BigInt(character.intelligence),
-    [newIntelligence, character.intelligence],
+    () => BigInt(newIntelligence) > BigInt(character.baseStats.intelligence),
+    [newIntelligence, character.baseStats.intelligence],
   );
 
   const onDecrementStat = useCallback(
@@ -63,7 +68,7 @@ export const LevelingPanel = ({
 
       switch (stat) {
         case 'str':
-          if (newStrength === character.strength) return;
+          if (newStrength === character.baseStats.strength) return;
           if (strengthIncreased) {
             replenishAbilityPoint = true;
           }
@@ -75,7 +80,7 @@ export const LevelingPanel = ({
           setNewStrength(prev => (BigInt(prev) - BigInt(1)).toString());
           break;
         case 'agi':
-          if (newAgility === character.agility) return;
+          if (newAgility === character.baseStats.agility) return;
           if (agilityIncreased) {
             replenishAbilityPoint = true;
           }
@@ -87,7 +92,7 @@ export const LevelingPanel = ({
           setNewAgility(prev => (BigInt(prev) - BigInt(1)).toString());
           break;
         case 'int':
-          if (newIntelligence === character.intelligence) return;
+          if (newIntelligence === character.baseStats.intelligence) return;
           if (intelligenceIncreased) {
             replenishAbilityPoint = true;
           }
@@ -110,9 +115,9 @@ export const LevelingPanel = ({
     [
       abilityPoints,
       agilityIncreased,
-      character.agility,
-      character.intelligence,
-      character.strength,
+      character.baseStats.agility,
+      character.baseStats.intelligence,
+      character.baseStats.strength,
       intelligenceIncreased,
       isLeveling,
       newAgility,

@@ -16,7 +16,11 @@ import {
 import { formatEther, hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import {
+  decodeBaseStats,
+  fetchMetadataFromUri,
+  uriToHttp,
+} from '../utils/helpers';
 import type {
   Armor,
   Character,
@@ -107,9 +111,23 @@ export const CharacterProvider = ({
       )?.encounterId;
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
+      let decodedBaseStats = {
+        agility: '0',
+        currentHp: '0',
+        entityClass: 0,
+        experience: '0',
+        intelligence: '0',
+        level: '0',
+        maxHp: '0',
+        strength: '0',
+      };
+
+      if (characterData.baseStats !== '0x') {
+        decodedBaseStats = decodeBaseStats(characterData.baseStats);
+      }
       return {
         agility: characterStats?.agility.toString() ?? '0',
-        maxHp: characterStats?.maxHp.toString() ?? '0',
+        baseStats: decodedBaseStats,
         currentHp: characterStats?.currentHp.toString() ?? '0',
         entityClass: characterStats?.class ?? 0,
         experience: characterStats?.experience.toString() ?? '0',
@@ -119,6 +137,7 @@ export const CharacterProvider = ({
         intelligence: characterStats?.intelligence.toString() ?? '0',
         level: characterStats?.level.toString() ?? '0',
         locked: characterData.locked,
+        maxHp: characterStats?.maxHp.toString() ?? '0',
         name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
         owner: characterData.owner,
         strength: characterStats?.strength.toString() ?? '0',

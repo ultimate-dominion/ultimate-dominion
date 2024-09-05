@@ -47,6 +47,7 @@ import {
 } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
+  decodeBaseStats,
   decodeCharacterId,
   fetchMetadataFromUri,
   uriToHttp,
@@ -131,12 +132,14 @@ export const CharacterPage = (): JSX.Element => {
       )?.encounterId;
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
+      const decodedBaseStats = decodeBaseStats(characterData.baseStats);
+
       const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility.toString(),
-        maxHp: characterStats.maxHp.toString(),
-        entityClass: characterStats.class,
+        baseStats: decodedBaseStats,
         currentHp: characterStats.currentHp.toString(),
+        entityClass: characterStats.class,
         experience: characterStats.experience.toString(),
         goldBalance: formatEther(goldBalance as bigint).toString(),
         id: id as Entity,
@@ -144,6 +147,7 @@ export const CharacterPage = (): JSX.Element => {
         intelligence: characterStats.intelligence.toString(),
         level: characterStats.level.toString(),
         locked: characterData.locked,
+        maxHp: characterStats.maxHp.toString(),
         name: hexToString(characterData.name as `0x${string}`, {
           size: 32,
         }),
