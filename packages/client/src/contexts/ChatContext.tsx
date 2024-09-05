@@ -28,7 +28,7 @@ const GROUP_CHAT_ID =
 type Message = {
   from: string;
   message: string;
-  timestamp: string;
+  timestamp: number;
 };
 
 type ChatContextType = {
@@ -133,7 +133,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         const _userMessages = chatHistory.map(message => ({
           from: message.fromDID.split(':')[1],
           message: message.messageContent,
-          timestamp: message.timestamp.toString(),
+          timestamp: Number(message.timestamp),
         }));
 
         setMessages(_userMessages.reverse());
@@ -152,7 +152,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
               {
                 from: message.from.split(':')[1],
                 message: message.message.content,
-                timestamp: message.timestamp,
+                timestamp: Number(message.timestamp),
               },
             ]);
           }

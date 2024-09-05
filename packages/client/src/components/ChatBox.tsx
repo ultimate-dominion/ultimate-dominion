@@ -14,6 +14,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { IoIosSend, IoMdInformationCircleOutline } from 'react-icons/io';
 
 import { useChat } from '../contexts/ChatContext';
+import { shortenAddress } from '../utils/helpers';
 
 export const ChatBox: React.FC = () => {
   const {
@@ -108,31 +109,61 @@ export const ChatBox: React.FC = () => {
         )}
         {!isInitializing && isGroupMember && chatUser && (
           <>
-            <VStack bg="grey300" flex="1" overflowY="auto" p={2} spacing={1}>
-              {messages.map((message, index) => (
-                <HStack
-                  justify={
-                    message.from === chatUser.account
-                      ? 'flex-end'
-                      : 'flex-start'
-                  }
-                  key={`message-${index}`}
-                  w="100%"
-                >
-                  <Box
-                    bg={message.from === chatUser.account ? 'blue' : 'white'}
-                    borderRadius="md"
-                    color={
-                      message.from === chatUser.account ? 'white' : 'black'
-                    }
-                    maxW="70%"
-                    p={2}
-                    shadow="sm"
-                  >
-                    <Text size="xs">{message.message}</Text>
-                  </Box>
-                </HStack>
-              ))}
+            <VStack bg="grey300" flex="1" overflowY="auto" p={2} spacing={2}>
+              {messages.map((message, index) => {
+                const isUser = message.from === chatUser.account;
+
+                // Only show timestamp if it's been more than 30 minutes since the last message
+                const prevMessage = messages[index - 1];
+                const showTimestamp =
+                  !prevMessage ||
+                  new Date(message.timestamp).getTime() -
+                    new Date(prevMessage.timestamp).getTime() >
+                    1000 * 60 * 30;
+
+                return (
+                  <VStack key={`message-${index}`} w="100%">
+                    {showTimestamp && (
+                      <Text size="2xs">
+                        {new Date(message.timestamp).toLocaleString()}
+                      </Text>
+                    )}
+                    <HStack
+                      justify={isUser ? 'flex-end' : 'flex-start'}
+                      w="100%"
+                    >
+                      <VStack
+                        alignItems={isUser ? 'flex-end' : 'flex-start'}
+                        maxW="70%"
+                        spacing={1}
+                      >
+                        {!isUser && (
+                          <Text size="2xs">{shortenAddress(message.from)}</Text>
+                        )}
+                        <Tooltip
+                          bg="black"
+                          hasArrow
+                          label={`Sent: ${new Date(message.timestamp).toLocaleString()}`}
+                          placement={isUser ? 'left' : 'right'}
+                          shouldWrapChildren
+                          fontSize="xs"
+                        >
+                          <Box
+                            bg={isUser ? 'blue' : 'white'}
+                            borderRadius="md"
+                            color={isUser ? 'white' : 'black'}
+                            cursor="pointer"
+                            p={2}
+                            shadow="sm"
+                          >
+                            <Text size="xs">{message.message}</Text>
+                          </Box>
+                        </Tooltip>
+                      </VStack>
+                    </HStack>
+                  </VStack>
+                );
+              })}
               <Box ref={messagesEndRef} />
             </VStack>
 
