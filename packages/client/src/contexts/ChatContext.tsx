@@ -17,7 +17,7 @@ import {
 } from 'react';
 import { createWalletClient, fallback, Hex, http } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import { anvil } from 'viem/chains';
+import { useChains } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 
@@ -74,6 +74,7 @@ export type ChatProviderProps = {
 export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { renderError } = useToast();
   const { isOpen, onClose, onOpen } = useDisclosure();
+  const chains = useChains();
 
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [user, setUser] = useState<PushAPI | null>(null);
@@ -107,7 +108,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
         const walletClient = createWalletClient({
           account: userAccount,
-          chain: anvil,
+          chain: chains[0],
           transport: transportObserver(fallback([http()])),
         });
 
@@ -164,7 +165,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         renderError((e as Error)?.message ?? 'Failed to initialize chat.', e);
       }
     })();
-  }, [isOpen, renderError, user]);
+  }, [chains, isOpen, renderError, user]);
 
   const onSetMessageInputFocus = useCallback((isFocused: boolean) => {
     setIsMessageInputFocused(isFocused);
