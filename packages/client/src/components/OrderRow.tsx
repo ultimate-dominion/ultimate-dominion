@@ -7,89 +7,80 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { BiPurchaseTagAlt } from 'react-icons/bi';
 import { FaTimes } from 'react-icons/fa';
-import { Address } from 'viem';
-import { useWalletClient } from 'wagmi';
 
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { getEmoji, removeEmoji } from '../utils/helpers';
+import {
+  type ArmorTemplate,
+  type Order,
+  type SpellTemplate,
+  TokenType,
+  type WeaponTemplate,
+} from '../utils/types';
+
+type OrderRowProps = {
+  item: ArmorTemplate | WeaponTemplate | SpellTemplate;
+  order: Order;
+  refetchOrders: () => void;
+};
 
 export const OrderRow = ({
-  from,
-  orderHash,
-  consideration,
-  offer,
-  offerItem,
-  emoji,
-  considerationItem,
-}: {
-  from: string;
-  orderHash: string;
-  consideration: string;
-  considerationItem: string;
-  offer: string;
-  offerItem: string;
-  emoji: string;
-  recipient: string;
-}): JSX.Element => {
-  const { data: externalWalletClient } = useWalletClient();
-
+  item,
+  order,
+  refetchOrders,
+}: OrderRowProps): JSX.Element => {
   const {
-    network: { publicClient, worldContract },
+    systemCalls: { cancelOrder, fulfillOrder },
   } = useMUD();
   const { renderSuccess, renderError } = useToast();
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [isFilling, setIsFilling] = useState(false);
 
-  const cancelOrder = async function () {
-    if (!externalWalletClient) {
-      renderError('Wallet not connected.');
-      return;
-    }
+  const onCancelOrder = useCallback(async () => {
     try {
       setIsCancelling(true);
-      const { request } = await publicClient.simulateContract({
-        address: worldContract.address,
-        abi: worldAbi,
-        functionName: 'UD__cancelOrder',
-        args: [orderHash as Address],
-        account: externalWalletClient.account,
-      });
-      await externalWalletClient.writeContract(request);
+
+      const { error, success } = await cancelOrder(order.orderHash);
+
+      if (error && !success) {
+        throw new Error(error);
+      }
+
       renderSuccess('Order canceled successfully!');
+      refetchOrders();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error cancelling order.', e);
     } finally {
       setIsCancelling(false);
     }
-  };
+  }, [cancelOrder, order, refetchOrders, renderError, renderSuccess]);
 
-  const fillOrder = async function () {
-    if (!externalWalletClient) {
-      renderError('Wallet not connected.');
-      return;
-    }
+  const onFulfillOrder = useCallback(async () => {
     try {
       setIsFilling(true);
-      const { request } = await publicClient.simulateContract({
-        address: worldContract.address,
-        abi: worldAbi,
-        functionName: 'UD__fulfillOrder',
-        args: [orderHash as Address],
-        account: externalWalletClient.account,
-      });
-      await externalWalletClient?.writeContract(request);
+
+      const { error, success } = await fulfillOrder(order.orderHash);
+
+      if (error && !success) {
+        throw new Error(error);
+      }
+
       renderSuccess('Order filled successfully!');
+      refetchOrders();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error cancelling order.', e);
     } finally {
       setIsFilling(false);
     }
-  };
+  }, [fulfillOrder, order, refetchOrders, renderError, renderSuccess]);
+
+  const { consideration, offer } = order;
+
   return (
     <Flex
       border="2px solid"
@@ -105,20 +96,23 @@ export const OrderRow = ({
           name={' '}
           backgroundColor={'grey300'}
         >
-          {emoji}
+          {getEmoji(item.name)}
         </Avatar>
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>From: {from}</Text>
-            {/* <Center>
-              {entityClass == StatsClasses.Warrior && <GiAxeSword size={15} />}
-              {entityClass == StatsClasses.Rogue && <GiRogue size={15} />}
-              {entityClass == StatsClasses.Mage && <FaHatWizard size={15} />}
-            </Center> */}
+            <Text size={{ base: '2xs', lg: 'sm' }}>
+              From: {consideration.recipient}
+            </Text>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            Wants {consideration} {considerationItem.trim()} for {offer}{' '}
-            {offerItem.trim()}
+            Wants {consideration.amount}{' '}
+            {consideration.tokenType === TokenType.ERC20
+              ? '$GOLD'
+              : removeEmoji(item.name)}{' '}
+            for {offer.amount}{' '}
+            {offer.tokenType === TokenType.ERC20
+              ? '$GOLD'
+              : removeEmoji(item.name)}
           </Text>
         </VStack>
       </Flex>
@@ -130,7 +124,7 @@ export const OrderRow = ({
             size="sm"
             variant="solid"
             isLoading={isFilling}
-            onClick={() => fillOrder()}
+            onClick={onFulfillOrder}
           >
             <BiPurchaseTagAlt />
           </Button>{' '}
@@ -142,7 +136,7 @@ export const OrderRow = ({
             backgroundColor="red"
             color="white"
             isLoading={isCancelling}
-            onClick={() => cancelOrder()}
+            onClick={onCancelOrder}
           >
             <FaTimes />
           </Button>

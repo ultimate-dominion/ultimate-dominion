@@ -245,11 +245,11 @@ contract PostDeploy is Script {
 
         for (uint256 i; i < effectsData.statusEffects.length; i++) {
             bytes32 newEffectId = world.UD__createEffect(
-                EffectType.MagicDamage,
+                EffectType.StatusEffect,
                 effectsData.statusEffects[i].name,
                 abi.encode(effectsData.statusEffects[i].stats, effectsData.statusEffects[i].validity)
             );
-            console.log("Magic action Id ", i + 1);
+            console.log("Status Effect Id ", i + 1);
             console.logBytes32(newEffectId);
             require(newEffectId == effectsData.statusEffects[i].effectId, "status effect Id mismatch");
         }
@@ -301,7 +301,7 @@ contract PostDeploy is Script {
 
         uint256[] memory warriorItemIds = new uint256[](3);
         uint256[] memory rogueItemIds = new uint256[](3);
-        uint256[] memory mageItemIds = new uint256[](4);
+        uint256[] memory mageItemIds = new uint256[](3);
 
         for (uint256 i = 0; i < itemsData.armor.length; i++) {
             ArmorTemplateDetails memory armorTemplate = itemsData.armor[i];
@@ -325,8 +325,6 @@ contract PostDeploy is Script {
 
             if (i == 0) {
                 warriorItemIds[0] = starterArmorId;
-                rogueItemIds[0] = starterArmorId;
-                mageItemIds[0] = starterArmorId;
             }
         }
 
@@ -354,8 +352,12 @@ contract PostDeploy is Script {
 
             if (i == 0) {
                 warriorItemIds[1] = starterWeaponId;
+                rogueItemIds[0] = starterWeaponId;
+                mageItemIds[0] = starterWeaponId;
+            }
+
+            if (i == 5) {
                 rogueItemIds[1] = starterWeaponId;
-                mageItemIds[1] = starterWeaponId;
             }
         }
 
@@ -378,7 +380,7 @@ contract PostDeploy is Script {
             );
 
             if (i == 0) {
-                mageItemIds[2] = starterSpellId;
+                mageItemIds[1] = starterSpellId;
             }
         }
 
@@ -403,7 +405,7 @@ contract PostDeploy is Script {
             if (i == 0) {
                 warriorItemIds[2] = starterConsumableId;
                 rogueItemIds[2] = starterConsumableId;
-                mageItemIds[3] = starterConsumableId;
+                mageItemIds[2] = starterConsumableId;
             }
         }
 
@@ -412,11 +414,10 @@ contract PostDeploy is Script {
         amounts[1] = 1;
         amounts[2] = 1;
 
-        uint256[] memory mageAmounts = new uint256[](4);
+        uint256[] memory mageAmounts = new uint256[](3);
         mageAmounts[0] = 1;
         mageAmounts[1] = 1;
         mageAmounts[2] = 1;
-        mageAmounts[3] = 1;
 
         world.UD__setStarterItems(Classes.Warrior, warriorItemIds, amounts);
         world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);

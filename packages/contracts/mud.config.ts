@@ -23,7 +23,7 @@ export default defineWorld({
     EncounterType: ["PvP", "PvE"],
     EffectType: ["Temporary", "PhysicalDamage", "MagicDamage", "StatusEffect"],
     ResistanceStat: ["None", "Strength", "Agility", "Intelligence"],
-    OrderStatus: ["Canceled", "Active", "Fullfilled"],
+    OrderStatus: ["Canceled", "Active", "Fulfilled"],
     TokenType: ["NATIVE", "ERC20", "ERC721", "ERC1155"],
     StatusEffects: [
       "ToHitModifier",
