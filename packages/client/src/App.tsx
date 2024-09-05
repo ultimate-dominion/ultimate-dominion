@@ -1,6 +1,13 @@
-import { Box, Grid, useBreakpointValue } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Grid,
+  ScaleFade,
+  useBreakpointValue,
+} from '@chakra-ui/react';
 import { garnet } from '@latticexyz/common/chains';
 import { useEffect } from 'react';
+import { IoChatbubble } from 'react-icons/io5';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
 import { ChatBox } from './components/ChatBox';
@@ -8,7 +15,7 @@ import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { WalletDetailsModal } from './components/WalletDetailsModal';
 import { BattleProvider } from './contexts/BattleContext';
-import { ChatProvider } from './contexts/ChatContext';
+import { ChatProvider, useChat } from './contexts/ChatContext';
 import { MapProvider } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
@@ -46,6 +53,7 @@ const AppInner = (): JSX.Element => {
     onCloseWalletDetailsModal,
     onOpenWalletDetailsModal,
   } = useMUD();
+  const { isOpen: isChatBoxOpen, onOpen: onOpenChatBox } = useChat();
 
   useEffect(() => {
     if (pathname === HOME_PATH) return;
@@ -78,13 +86,32 @@ const AppInner = (): JSX.Element => {
       <AppRoutes />
       {isDesktop && <Footer />}
       {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && (
-        <Box
-          bottom={{ base: 2, lg: 6 }}
-          position="fixed"
-          right={{ base: 2, lg: 6 }}
-        >
-          <ChatBox />
-        </Box>
+        <>
+          <Box
+            bottom={{ base: 2, lg: 6 }}
+            position="fixed"
+            right={{ base: 2, lg: 6 }}
+          >
+            <ScaleFade initialScale={0.9} in={!isChatBoxOpen}>
+              <Button
+                onClick={onOpenChatBox}
+                opacity={isChatBoxOpen ? 0 : 1}
+                px={4}
+                py={{ base: 5, lg: 6 }}
+                transition="opacity 0.3s ease"
+              >
+                <IoChatbubble size={isDesktop ? 28 : 24} />
+              </Button>
+            </ScaleFade>
+          </Box>
+          <Box
+            bottom={{ base: 2, lg: 6 }}
+            position="fixed"
+            right={{ base: 2, lg: 6 }}
+          >
+            <ChatBox />
+          </Box>
+        </>
       )}
 
       <WalletDetailsModal
