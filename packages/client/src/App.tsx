@@ -1,8 +1,9 @@
-import { Grid, useBreakpointValue } from '@chakra-ui/react';
+import { Box, Grid, useBreakpointValue } from '@chakra-ui/react';
 import { garnet } from '@latticexyz/common/chains';
 import { useEffect } from 'react';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
+import { ChatBox } from './components/ChatBox';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { WalletDetailsModal } from './components/WalletDetailsModal';
@@ -11,7 +12,7 @@ import { MapProvider } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
 import { DEFAULT_CHAIN_ID } from './lib/web3';
-import AppRoutes, { HOME_PATH } from './Routes';
+import AppRoutes, { CHARACTER_CREATION_PATH, HOME_PATH } from './Routes';
 
 export const App = (): JSX.Element => {
   return (
@@ -28,6 +29,8 @@ export const App = (): JSX.Element => {
 };
 
 export default App;
+
+const CHAT_NOT_ALLOWED_PATHS = [CHARACTER_CREATION_PATH, HOME_PATH];
 
 const AppInner = (): JSX.Element => {
   const { pathname } = useLocation();
@@ -71,6 +74,12 @@ const AppInner = (): JSX.Element => {
       <Header onOpenWalletDetailsModal={onOpenWalletDetailsModal} />
       <AppRoutes />
       {isDesktop && <Footer />}
+      {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && (
+        <Box bottom={6} position="fixed" right={6}>
+          <ChatBox />
+        </Box>
+      )}
+
       <WalletDetailsModal
         isOpen={isWalletDetailsModalOpen}
         onClose={onCloseWalletDetailsModal}

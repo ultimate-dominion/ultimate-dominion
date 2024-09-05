@@ -1,6 +1,17 @@
-import { Box, Button, HStack, Text, Textarea, VStack } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  CloseButton,
+  HStack,
+  ScaleFade,
+  Text,
+  Textarea,
+  useDisclosure,
+  VStack,
+} from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IoIosSend } from 'react-icons/io';
+import { IoChatbubble } from 'react-icons/io5';
 
 type ChatMessage = {
   text: string;
@@ -24,6 +35,12 @@ export const ChatBox: React.FC = () => {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const {
+    isOpen: isChatBoxOpen,
+    onOpen: onOpenChatBox,
+    onClose: onCloseChatBox,
+  } = useDisclosure();
 
   const onSendMesssage = useCallback(() => {
     if (newMessage.trim()) {
@@ -70,52 +87,84 @@ export const ChatBox: React.FC = () => {
   }, [onSendMesssage]);
 
   return (
-    <Box display="flex" flexDirection="column" h="100%" p={2} w="100%">
-      <VStack bg="grey300" overflowY="auto" flex="1" p={2} spacing={1}>
-        {messages.map((message, index) => (
-          <HStack
-            justify={message.isMyMessage ? 'flex-end' : 'flex-start'}
-            key={`message-${index}`}
-            w="100%"
-          >
-            <Box
-              bg={message.isMyMessage ? 'blue' : 'white'}
-              borderRadius="md"
-              color={message.isMyMessage ? 'white' : 'black'}
-              maxW="70%"
-              p={2}
-              shadow="sm"
-            >
-              <Text size="xs">{message.text}</Text>
-            </Box>
-          </HStack>
-        ))}
-        <Box ref={messagesEndRef} />
-      </VStack>
-
-      <HStack alignItems="center" mt={4}>
-        <Textarea
-          h="auto"
-          minH="40px"
-          maxH="50px"
-          onChange={e => setNewMessage(e.target.value)}
-          overflow="hidden"
-          placeholder="Type a message..."
-          ref={textareaRef}
-          resize="none"
-          size="xs"
-          value={newMessage}
-        />
-        <Button
-          onClick={onSendMesssage}
-          px={2}
-          py={6}
-          size="sm"
-          variant="ghost"
+    <>
+      <ScaleFade initialScale={0.9} in={isChatBoxOpen}>
+        <Box
+          bg="white"
+          border="2px black solid"
+          display="flex"
+          flexDirection="column"
+          h={isChatBoxOpen ? '350px' : '0'}
+          p={2}
+          transition="height 0.3s ease"
+          w="350px"
         >
-          <IoIosSend size={32} />
+          <VStack alignItems="flex-start" mb={2} spacing={2}>
+            <HStack justify="space-between" w="100%">
+              <Text fontSize="lg">Chat</Text>
+              <CloseButton onClick={onCloseChatBox} />
+            </HStack>
+          </VStack>
+          <VStack bg="grey300" flex="1" overflowY="auto" p={2} spacing={1}>
+            {messages.map((message, index) => (
+              <HStack
+                justify={message.isMyMessage ? 'flex-end' : 'flex-start'}
+                key={`message-${index}`}
+                w="100%"
+              >
+                <Box
+                  bg={message.isMyMessage ? 'blue' : 'white'}
+                  borderRadius="md"
+                  color={message.isMyMessage ? 'white' : 'black'}
+                  maxW="70%"
+                  p={2}
+                  shadow="sm"
+                >
+                  <Text size="xs">{message.text}</Text>
+                </Box>
+              </HStack>
+            ))}
+            <Box ref={messagesEndRef} />
+          </VStack>
+
+          <HStack alignItems="center" mt={4}>
+            <Textarea
+              h="auto"
+              maxH="50px"
+              minH="40px"
+              onChange={e => setNewMessage(e.target.value)}
+              overflow="hidden"
+              placeholder="Type a message..."
+              ref={textareaRef}
+              resize="none"
+              size="xs"
+              value={newMessage}
+            />
+            <Button
+              onClick={onSendMesssage}
+              px={2}
+              py={6}
+              size="sm"
+              variant="ghost"
+            >
+              <IoIosSend size={32} />
+            </Button>
+          </HStack>
+        </Box>
+      </ScaleFade>
+
+      <ScaleFade initialScale={0.9} in={!isChatBoxOpen}>
+        <Button
+          position="absolute"
+          bottom={0}
+          right={0}
+          onClick={onOpenChatBox}
+          px={4}
+          py={6}
+        >
+          <IoChatbubble size={28} />
         </Button>
-      </HStack>
-    </Box>
+      </ScaleFade>
+    </>
   );
 };
