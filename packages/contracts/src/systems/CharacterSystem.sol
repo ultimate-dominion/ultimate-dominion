@@ -184,9 +184,9 @@ contract CharacterSystem is System {
             (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
         );
         if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
-            stats.maxHp += int256(WAD);
+            stats.maxHp += 1;
         }
-        stats.maxHp += int256(WAD);
+        stats.maxHp += 1;
         stats.strength = desiredStats.strength;
         stats.agility = desiredStats.agility;
         stats.intelligence = desiredStats.intelligence;
@@ -196,7 +196,7 @@ contract CharacterSystem is System {
         Characters.setBaseStats(characterId, abi.encode(stats));
 
         // apply equipment bonuses and set them to stat table
-        _setStats(characterId, IWorld(_world()).UD__calculateEquipmentBonuses(characterId));
+        _setStats(characterId, IWorld(_world()).UD__calculateEquipmentBonuses(characterId), stats.level);
     }
 
     function setStats(bytes32 entityId, AdjustedCombatStats memory stats) public {
@@ -221,12 +221,14 @@ contract CharacterSystem is System {
         Stats.set(entityId, statsData);
     }
 
-    function _setStats(bytes32 entityId, AdjustedCombatStats memory stats) internal {
+    function _setStats(bytes32 entityId, AdjustedCombatStats memory stats, uint256 level) internal {
         StatsData memory statsData = Stats.get(entityId);
         statsData.strength = stats.strength;
         statsData.agility = stats.agility;
         statsData.intelligence = stats.intelligence;
         statsData.maxHp = stats.maxHp;
+        statsData.currentHp = stats.maxHp;
+        statsData.level = level;
         CharacterEquipment.setArmor(entityId, stats.armor);
 
         Stats.set(entityId, statsData);

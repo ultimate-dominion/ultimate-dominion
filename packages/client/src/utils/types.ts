@@ -90,6 +90,7 @@ export type AttackOutcomeType = {
 export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
+  baseStats: EntityStats;
   goldBalance: string;
   id: Entity;
   inBattle: boolean;
