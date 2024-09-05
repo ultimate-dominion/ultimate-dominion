@@ -209,7 +209,7 @@ export const GameBoard = (): JSX.Element => {
         <Popover>
           <PopoverTrigger>
             <VStack>
-              <Button size="sm" w="100%">
+              <Button alignSelf="start" size="sm" w="calc(100% - 67px)">
                 Stats
               </Button>
             </VStack>

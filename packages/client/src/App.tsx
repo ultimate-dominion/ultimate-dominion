@@ -78,7 +78,11 @@ const AppInner = (): JSX.Element => {
       <AppRoutes />
       {isDesktop && <Footer />}
       {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && (
-        <Box bottom={6} position="fixed" right={6}>
+        <Box
+          bottom={{ base: 2, lg: 6 }}
+          position="fixed"
+          right={{ base: 2, lg: 6 }}
+        >
           <ChatBox />
         </Box>
       )}

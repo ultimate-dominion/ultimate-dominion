@@ -7,6 +7,7 @@ import {
   Text,
   Textarea,
   Tooltip,
+  useBreakpointValue,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
@@ -17,6 +18,8 @@ import { IoChatbubble } from 'react-icons/io5';
 import { useChat } from '../contexts/ChatContext';
 
 export const ChatBox: React.FC = () => {
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
+
   const {
     messages,
     newMessage,
@@ -67,7 +70,7 @@ export const ChatBox: React.FC = () => {
           h={isChatBoxOpen ? '350px' : '0'}
           p={2}
           transition="height 0.3s ease"
-          w="350px"
+          w={{ base: '100%', lg: '350px' }}
         >
           <VStack alignItems="flex-start" mb={2} spacing={2}>
             <HStack justify="space-between" w="100%">
@@ -143,9 +146,9 @@ export const ChatBox: React.FC = () => {
           right={0}
           onClick={onOpenChatBox}
           px={4}
-          py={6}
+          py={{ base: 5, lg: 6 }}
         >
-          <IoChatbubble size={28} />
+          <IoChatbubble size={isDesktop ? 28 : 24} />
         </Button>
       </ScaleFade>
     </>
