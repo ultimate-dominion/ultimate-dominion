@@ -6,11 +6,12 @@ import {
   ScaleFade,
   Text,
   Textarea,
+  Tooltip,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef } from 'react';
-import { IoIosSend } from 'react-icons/io';
+import { IoIosSend, IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 
 import { useChat } from '../contexts/ChatContext';
@@ -70,7 +71,18 @@ export const ChatBox: React.FC = () => {
         >
           <VStack alignItems="flex-start" mb={2} spacing={2}>
             <HStack justify="space-between" w="100%">
-              <Text fontSize="lg">Chat</Text>
+              <HStack>
+                <Text fontSize="lg">Chat</Text>
+                <Tooltip
+                  bg="black"
+                  hasArrow
+                  label="This chat is permanent and public to all other players. Do not share personal information or sensitive data."
+                  placement="top"
+                  shouldWrapChildren
+                >
+                  <IoMdInformationCircleOutline />
+                </Tooltip>
+              </HStack>
               <CloseButton onClick={onCloseChatBox} />
             </HStack>
           </VStack>

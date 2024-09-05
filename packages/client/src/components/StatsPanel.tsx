@@ -189,6 +189,7 @@ export const StatsPanel = (): JSX.Element => {
         <HStack fontWeight="bold" w="100%">
           <Text>Equipped Items</Text>
           <Tooltip
+            bg="black"
             hasArrow
             label="Visit the character page to equip items"
             placement="top"
