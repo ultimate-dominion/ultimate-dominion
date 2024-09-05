@@ -25,6 +25,7 @@ import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaHatWizard } from 'react-icons/fa';
 import { GiAxeSword, GiRogue } from 'react-icons/gi';
+import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatEther, hexToString, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
@@ -38,9 +39,15 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { AUCTION_HOUSE_PATH, HOME_PATH, LEADERBOARD_PATH } from '../Routes';
+import {
+  AUCTION_HOUSE_PATH,
+  GAME_BOARD_PATH,
+  HOME_PATH,
+  LEADERBOARD_PATH,
+} from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
+  decodeBaseStats,
   decodeCharacterId,
   fetchMetadataFromUri,
   uriToHttp,
@@ -125,12 +132,14 @@ export const CharacterPage = (): JSX.Element => {
       )?.encounterId;
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
+      const decodedBaseStats = decodeBaseStats(characterData.baseStats);
+
       const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility.toString(),
-        baseHp: characterStats.baseHp.toString(),
-        entityClass: characterStats.class,
+        baseStats: decodedBaseStats,
         currentHp: characterStats.currentHp.toString(),
+        entityClass: characterStats.class,
         experience: characterStats.experience.toString(),
         goldBalance: formatEther(goldBalance as bigint).toString(),
         id: id as Entity,
@@ -138,6 +147,7 @@ export const CharacterPage = (): JSX.Element => {
         intelligence: characterStats.intelligence.toString(),
         level: characterStats.level.toString(),
         locked: characterData.locked,
+        maxHp: characterStats.maxHp.toString(),
         name: hexToString(characterData.name as `0x${string}`, {
           size: 32,
         }),
@@ -235,10 +245,18 @@ export const CharacterPage = (): JSX.Element => {
 
   return (
     <Box>
+      <Button
+        leftIcon={<IoMdArrowRoundBack />}
+        my={4}
+        onClick={() => navigate(GAME_BOARD_PATH)}
+        size="xs"
+        variant="outline"
+      >
+        Back to Game Board
+      </Button>
       {character ? (
         <Grid
           gap={2}
-          mt={4}
           rowGap={{ base: 3, lg: 10 }}
           sx={{
             filter: character ? 'blur(0px)' : 'blur(10px)',

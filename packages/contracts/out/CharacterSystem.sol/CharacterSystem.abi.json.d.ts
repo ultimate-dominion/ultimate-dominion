@@ -53,6 +53,67 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "getBaseStats",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getCharacterTokenId",
     "inputs": [
       {
@@ -221,13 +282,13 @@ declare const abi: [
         "components": [
           {
             "name": "strength",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "agility",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "class",
@@ -236,13 +297,13 @@ declare const abi: [
           },
           {
             "name": "intelligence",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "baseHp",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "currentHp",
@@ -323,13 +384,13 @@ declare const abi: [
         "components": [
           {
             "name": "strength",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "agility",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "class",
@@ -338,13 +399,13 @@ declare const abi: [
           },
           {
             "name": "intelligence",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "int256",
+            "internalType": "int256"
           },
           {
-            "name": "baseHp",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
           },
           {
             "name": "currentHp",
@@ -418,6 +479,56 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "setStats",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "stats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",

@@ -8,6 +8,8 @@ import {
     NameExists,
     Counters,
     Stats,
+    MobStats,
+    CharacterEquipment,
     StatsData,
     Characters,
     CharactersData,
@@ -30,10 +32,12 @@ import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
+import {Math, WAD} from "@libraries/Math.sol";
 import "forge-std/console.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
-import {_erc721SystemId, _erc1155SystemId, _itemsSystemId} from "../utils.sol";
+import {AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {_erc721SystemId, _erc1155SystemId, _itemsSystemId, _requireAccess} from "../utils.sol";
 import {
     GOLD_NAMESPACE,
     CHARACTERS_NAMESPACE,
@@ -135,12 +139,17 @@ contract CharacterSystem is System {
         require(!Characters.getLocked(characterId), "you have entered the game");
         StatsData memory tempStats = Stats.get(characterId);
         tempStats.level = 1;
-        tempStats.currentHp = int256(tempStats.baseHp);
+        tempStats.currentHp = int256(tempStats.maxHp);
         Stats.set(characterId, tempStats);
         IWorld(_world()).UD__dropGold(characterId, 5 ether);
         // issue starter gear
         IWorld(_world()).UD__issueStarterItems(characterId);
-        Characters.setLocked(characterId, true);
+        CharactersData memory charData = Characters.get(characterId);
+        charData.locked = true;
+        bytes memory encodedStats = abi.encode(tempStats);
+        charData.baseStats = encodedStats;
+        charData.originalStats = encodedStats;
+        Characters.set(characterId, charData);
     }
 
     function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentAvailibleLevel) {
@@ -160,29 +169,69 @@ contract CharacterSystem is System {
     }
 
     function levelCharacter(bytes32 characterId, StatsData memory desiredStats) public onlyOwner(characterId) {
-        StatsData memory stats = Stats.get(characterId);
+        StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
+        stats.currentHp = Stats.getCurrentHp(characterId);
         uint256 availableLevel = getCurrentAvailableLevel(stats.experience);
         if (availableLevel > stats.level) {
             stats.level++;
         }
-        uint256 strChange = desiredStats.strength - stats.strength;
-        uint256 agiChange = desiredStats.agility - stats.agility;
-        uint256 intChange = desiredStats.intelligence - stats.intelligence;
-        uint256 hpChange = desiredStats.baseHp - stats.baseHp;
+        int256 strChange = desiredStats.strength - stats.strength;
+        int256 agiChange = desiredStats.agility - stats.agility;
+        int256 intChange = desiredStats.intelligence - stats.intelligence;
+        // int256 hpChange = desiredStats.maxHp - stats.maxHp;
 
         require(
-            (strChange + agiChange + intChange + hpChange) == ABILITY_POINTS_PER_LEVEL,
-            "CHARACTER SYSTEM: INVALID STAT CHANGE"
+            (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
         );
         if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
-            stats.baseHp += 1;
+            stats.maxHp += 1;
         }
-        stats.baseHp += 1;
+        stats.maxHp += 1;
         stats.strength = desiredStats.strength;
         stats.agility = desiredStats.agility;
         stats.intelligence = desiredStats.intelligence;
+        stats.level += 1;
 
-        Stats.set(characterId, stats);
+        // set base stats
+        Characters.setBaseStats(characterId, abi.encode(stats));
+
+        // apply equipment bonuses and set them to stat table
+        _setStats(characterId, IWorld(_world()).UD__calculateEquipmentBonuses(characterId), stats.level);
+    }
+
+    function setStats(bytes32 entityId, AdjustedCombatStats memory stats) public {
+        _requireAccess(address(this), _msgSender());
+        StatsData memory statsData = Stats.get(entityId);
+
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            statsData.strength = stats.strength;
+            statsData.agility = stats.agility;
+            statsData.intelligence = stats.intelligence;
+            statsData.maxHp = stats.maxHp;
+            CharacterEquipment.setArmor(entityId, stats.armor);
+        } else if (IWorld(_world()).UD__isValidMob(entityId)) {
+            statsData.strength = stats.strength;
+            statsData.agility = stats.agility;
+            statsData.intelligence = stats.intelligence;
+            statsData.maxHp = stats.maxHp;
+            MobStats.setArmor(entityId, stats.armor);
+        } else {
+            revert("unrecognized id");
+        }
+        Stats.set(entityId, statsData);
+    }
+
+    function _setStats(bytes32 entityId, AdjustedCombatStats memory stats, uint256 level) internal {
+        StatsData memory statsData = Stats.get(entityId);
+        statsData.strength = stats.strength;
+        statsData.agility = stats.agility;
+        statsData.intelligence = stats.intelligence;
+        statsData.maxHp = stats.maxHp;
+        statsData.currentHp = stats.maxHp;
+        statsData.level = level;
+        CharacterEquipment.setArmor(entityId, stats.armor);
+
+        Stats.set(entityId, statsData);
     }
 
     function updateTokenUri(bytes32 characterId, string memory tokenUri) public onlyOwner(characterId) {
@@ -214,5 +263,9 @@ contract CharacterSystem is System {
 
     function getStats(bytes32 characterId) public view returns (StatsData memory) {
         return Stats.get(characterId);
+    }
+
+    function getBaseStats(bytes32 characterId) public view returns (StatsData memory) {
+        return abi.decode(Characters.getBaseStats(characterId), (StatsData));
     }
 }

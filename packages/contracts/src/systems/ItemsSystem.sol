@@ -195,8 +195,6 @@ contract ItemsSystem is System {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
 
-    // function getArmorStats(uint256 itemId)public view returns(){}
-
     function consumeItem(bytes32 characterId, uint256 itemId) public {
         _requireAccess(address(this), _msgSender());
 
@@ -205,8 +203,4 @@ contract ItemsSystem is System {
         //will require approval
         _items().safeTransferFrom(playerAddr, lootManager, itemId, 1, "");
     }
-
-    // function getConsumableStats(uint256 itemId)public view returns(){}
-    // function getScrollStats(uint256 itemId)public view returns(){}
-    // function getMaterialStats(uint256 itemId)public view returns(){}
 }

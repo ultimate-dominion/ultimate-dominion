@@ -1,4 +1,5 @@
 import { Grid, useBreakpointValue } from '@chakra-ui/react';
+import { garnet } from '@latticexyz/common/chains';
 import { useEffect } from 'react';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
@@ -9,6 +10,7 @@ import { BattleProvider } from './contexts/BattleContext';
 import { MapProvider } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
+import { DEFAULT_CHAIN_ID } from './lib/web3';
 import AppRoutes, { HOME_PATH } from './Routes';
 
 export const App = (): JSX.Element => {
@@ -42,7 +44,12 @@ const AppInner = (): JSX.Element => {
   useEffect(() => {
     if (pathname === HOME_PATH) return;
 
-    if (burnerBalanceFetched && burnerBalance === '0' && isSynced) {
+    if (
+      burnerBalanceFetched &&
+      burnerBalance === '0' &&
+      isSynced &&
+      DEFAULT_CHAIN_ID !== garnet.id
+    ) {
       onOpenWalletDetailsModal();
     }
   }, [

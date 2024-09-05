@@ -188,7 +188,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             return {
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
-              baseHp: characterStats.baseHp.toString(),
+              maxHp: characterStats.maxHp.toString(),
               currentHp: characterStats.currentHp.toString(),
               entityClass: characterStats.class,
               experience: characterStats.experience.toString(),
@@ -261,7 +261,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
           return {
             ...monsterTemplate,
-            baseHp: monsterTemplate?.hitPoints.toString() ?? '0',
+            maxHp: monsterTemplate?.hitPoints.toString() ?? '0',
             currentHp,
             id: entity,
             inBattle,

@@ -37,8 +37,11 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         StatsData memory alicesCharacter = world.UD__getStats(alicesCharacterId);
         assertEq(uint8(alicesCharacter.class), uint8(Classes.Rogue));
         assertEq(
-            (alicesCharacter.strength + alicesCharacter.agility + alicesCharacter.baseHp + alicesCharacter.intelligence),
-            27
+            (
+                alicesCharacter.strength + alicesCharacter.agility + (alicesCharacter.maxHp / 1 ether / 10)
+                    + alicesCharacter.intelligence
+            ),
+            21
         );
 
         endGasReport();
@@ -80,13 +83,13 @@ contract Test_CharacterSystem is SetUp, GasReporter {
 
     function test_levelCharacter() public {
         StatsData memory bobStats = world.UD__getStats(bobCharacterId);
-        uint256 startingStr = bobStats.strength;
+        int256 startingStr = bobStats.strength;
         bobStats.experience = 100_000;
 
         world.UD__adminSetStats(bobCharacterId, bobStats);
         bobStats.strength += 2;
         vm.prank(bob);
         world.UD__levelCharacter(bobCharacterId, bobStats);
-        assertEq(world.UD__getStats(bobCharacterId).strength, startingStr + 2);
+        assertEq(world.UD__getBaseStats(bobCharacterId).strength, int256(startingStr + 2));
     }
 }

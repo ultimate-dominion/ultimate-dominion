@@ -43,6 +43,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_equipItems() public {
+        AdjustedCombatStats memory startingStats = world.UD__getCombatStats(bobCharacterId);
         uint256[] memory itemIds = new uint256[](1);
         uint256[] memory amounts = new uint256[](1);
         bytes32[] memory characterIds = new bytes32[](1);
@@ -56,14 +57,20 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         startGasReport("equip 1 item");
         world.UD__equipItems(bobCharacterId, itemsToEquip);
         endGasReport();
+        AdjustedCombatStats memory endingStats = world.UD__getCombatStats(bobCharacterId);
         assertTrue(world.UD__isEquipped(bobCharacterId, newArmorId));
+        assertEq(endingStats.agility, startingStats.agility + 2);
+        assertEq(endingStats.strength, startingStats.strength + 1);
+        assertEq(endingStats.intelligence, startingStats.intelligence + 3);
+        assertEq(endingStats.armor, startingStats.armor + 1);
+        assertEq(endingStats.maxHp, startingStats.maxHp + 4);
     }
 
     function test_equipItems_Revert_LowStr() public {
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 1000, minIntelligence: 0, minAgility: 0});
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
             hpModifier: 0,
@@ -97,7 +104,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 10000});
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
             hpModifier: 0,
@@ -131,7 +138,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 1000, minAgility: 0});
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
             hpModifier: 0,
@@ -165,7 +172,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         WeaponStatsData memory weaponStats = WeaponStatsData({
             agiModifier: 0,
             hpModifier: 0,
@@ -195,7 +202,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         world.UD__equipItems(bobCharacterId, itemsToEquip);
     }
 
-    function test_applyEquipmentBonuses() public {
+    function test_calculateEquipmentBonuses() public {
         uint256[] memory itemIds = new uint256[](1);
         uint256[] memory amounts = new uint256[](1);
         bytes32[] memory characterIds = new bytes32[](1);
@@ -209,20 +216,20 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         itemsToEquip[0] = newArmorId;
 
         ArmorStatsData memory itemStats = world.UD__getArmorStats(newArmorId);
-        StatsData memory baseStats = world.UD__getStats(bobCharacterId);
+        AdjustedCombatStats memory baseStats = world.UD__getCombatStats(bobCharacterId);
 
         world.UD__equipItems(bobCharacterId, itemsToEquip);
 
         startGasReport("apply stat bonuses");
-        AdjustedCombatStats memory modifiedStats = world.UD__applyEquipmentBonuses(bobCharacterId);
+        AdjustedCombatStats memory modifiedStats = world.UD__calculateEquipmentBonuses(bobCharacterId);
         endGasReport();
         ArmorStatsData memory armorStats = world.UD__getArmorStats(newArmorId);
         assertTrue(world.UD__isEquipped(bobCharacterId, newArmorId));
 
-        assertEq(modifiedStats.adjustedStrength, int256(baseStats.strength) + armorStats.strModifier);
-        assertEq(modifiedStats.adjustedAgility, int256(baseStats.agility) + armorStats.agiModifier);
-        assertEq(modifiedStats.adjustedIntelligence, int256(baseStats.intelligence) + armorStats.intModifier);
-        assertEq(modifiedStats.adjustedMaxHp, int256(baseStats.baseHp) + armorStats.hpModifier);
+        assertEq(modifiedStats.strength, int256(baseStats.strength) + armorStats.strModifier);
+        assertEq(modifiedStats.agility, int256(baseStats.agility) + armorStats.agiModifier);
+        assertEq(modifiedStats.intelligence, int256(baseStats.intelligence) + armorStats.intModifier);
+        assertEq(modifiedStats.maxHp, int256(baseStats.maxHp) + armorStats.hpModifier);
     }
 
     function test_unequipItem() public {
@@ -233,10 +240,15 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
 
         world.UD__equipItems(alicesCharacterId, starterDat.itemIds);
+        AdjustedCombatStats memory equippedStats = world.UD__getCombatStats(alicesCharacterId);
+        assertEq(equippedStats.armor, 1);
         assertTrue(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
         startGasReport("uneqip 1 item");
         world.UD__unequipItem(alicesCharacterId, starterDat.itemIds[0]);
+
         endGasReport();
+        AdjustedCombatStats memory unEquippedStats = world.UD__getCombatStats(alicesCharacterId);
         assertFalse(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
+        assertEq(unEquippedStats.armor, 0);
     }
 }

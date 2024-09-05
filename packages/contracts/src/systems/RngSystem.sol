@@ -14,11 +14,12 @@ import {
     RngLogsData,
     CombatEncounter
 } from "@codegen/index.sol";
+import {Math, WAD} from "@libraries/Math.sol";
 import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
-import {Attack} from "@interfaces/Structs.sol";
+import {Action} from "@interfaces/Structs.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
-import {IWorld, IPvESystem, IPvPSystem} from "@world/IWorld.sol";
+import {IWorld, IPvESystem, IPvPSystem, IWorldActionSystem} from "@world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import "forge-std/console.sol";
@@ -116,11 +117,11 @@ contract RngSystem is System, IEntropyConsumer {
 
         RngLogs.setRandomNumber(_getCounter(1), randomNumber);
 
-        if (uint8(requestType) == uint8(0)) {
+        if (requestType == RngRequestType.CharacterStats) {
             bytes32 characterId = abi.decode(_data, (bytes32));
             _storeStats(randomNumber, characterId);
-        } else if (uint8(requestType) == uint8(1)) {
-            (bytes32 encounterId, Attack[] memory moves) = abi.decode(_data, (bytes32, Attack[]));
+        } else if (requestType == RngRequestType.Combat) {
+            (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
             require(moves.length > 0, "RNG: Invalid moves");
             EncounterType encounterType = CombatEncounter.getEncounterType(encounterId);
             if (encounterType == EncounterType.PvE) {
@@ -130,17 +131,27 @@ contract RngSystem is System, IEntropyConsumer {
             } else {
                 revert("RNG: Unrecognized Combat Type");
             }
+        } else if (requestType == RngRequestType.World) {
+            (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
+            _executeWorldActions(randomNumber, encounterId, moves);
         } else {
             revert("RNG: Unrecognized request type");
         }
     }
 
-    function _executePvECombat(uint256 randomNumber, bytes32 encounterId, Attack[] memory moves) internal {
+    function _executePvECombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
         SystemSwitch.call(abi.encodeCall(IPvESystem.UD__executePvECombat, (randomNumber, encounterId, moves)));
     }
 
-    function _executePvPCombat(uint256 randomNumber, bytes32 encounterId, Attack[] memory moves) internal {
+    function _executePvPCombat(uint256 randomNumber, bytes32 encounterId, Action[] memory moves) internal {
         SystemSwitch.call(abi.encodeCall(IPvPSystem.UD__executePvPCombat, (randomNumber, encounterId, moves)));
+    }
+    // to execute a non combat action just pass in the entityID of the acting entity instead of an encounter id;
+
+    function _executeWorldActions(uint256 randomNumber, bytes32 entityId, Action[] memory moves) internal {
+        SystemSwitch.call(
+            abi.encodeCall(IWorldActionSystem.UD__executeWorldRngActions, (randomNumber, entityId, moves))
+        );
     }
 
     function _storeStats(uint256 randomNumber, bytes32 characterId) internal {
@@ -152,16 +163,16 @@ contract RngSystem is System, IEntropyConsumer {
 
         stats.class = characterClass;
 
-        stats.strength = (chunks[0] % 8) + 3; // Range [3, 10]
-        stats.agility = (chunks[1] % 8) + 3; // Range [3, 10]
+        stats.strength = int256(Math.absolute(int256(int64(chunks[0]))) % 8 + 3); // Range [3, 10]
+        stats.agility = int256(Math.absolute(int256(int64(chunks[1]))) % 8 + 3); // Range [3, 10]
 
         // Calculate intelligence to ensure total is 19
-        stats.intelligence = 19 - stats.strength - stats.agility;
+        stats.intelligence = int256(19 - stats.strength - stats.agility);
 
         // Ensure intelligence is within the range [3, 10]
         if (stats.intelligence < 3) {
-            uint256 deficit = 3 - stats.intelligence;
-            stats.intelligence = 3;
+            int256 deficit = int256(3 - stats.intelligence);
+            stats.intelligence = int256(3);
 
             if (stats.strength > stats.agility) {
                 stats.strength -= deficit;
@@ -169,26 +180,26 @@ contract RngSystem is System, IEntropyConsumer {
                 stats.agility -= deficit;
             }
         } else if (stats.intelligence > 10) {
-            uint256 excess = stats.intelligence - 10;
-            stats.intelligence = 10;
+            int256 excess = int256(stats.intelligence - 10);
+            stats.intelligence = int256(10);
 
             if (stats.strength < stats.agility) {
-                stats.strength += excess;
+                stats.strength += int256(excess);
             } else {
-                stats.agility += excess;
+                stats.agility += int256(excess);
             }
         }
 
         // Class-based adjustments; should total to 21
         if (characterClass == Classes.Warrior) {
             stats.strength += 2;
-            stats.baseHp = uint256(10);
+            stats.maxHp = int256(10);
         } else if (characterClass == Classes.Rogue) {
             stats.agility += 2;
-            stats.baseHp = uint256(6);
+            stats.maxHp = int256(6);
         } else if (characterClass == Classes.Mage) {
             stats.intelligence += 2;
-            stats.baseHp = uint256(8);
+            stats.maxHp = int256(8);
         }
 
         Stats.set(characterId, stats);

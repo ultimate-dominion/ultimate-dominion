@@ -27,11 +27,14 @@ import {
     Spawned,
     MobsData,
     Counters,
-    AttackOutcome,
-    AttackOutcomeData
+    ActionOutcome,
+    ActionOutcomeData,
+    DamageOverTimeAppliedData,
+    DamageOverTimeApplied,
+    StatusEffectStats
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Attack, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -63,7 +66,7 @@ contract EncounterSystem is System {
         // higher agi attacks first
         (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
 
-        if (uint256(encounterType) == 1) {
+        if (encounterType == EncounterType.PvE) {
             (bool isValidPvE, bool attackersAreMobs) = IWorld(_world()).UD__isValidPvE(attackers, defenders, x, y);
             require(isValidPvE, "ENCOUNTER SYSTEM: INVALID PVE");
             uint256 startTime = block.timestamp;
@@ -85,7 +88,7 @@ contract EncounterSystem is System {
             CombatEncounter.set(encounterId, combatData);
         }
 
-        if (uint8(encounterType) == 0) {
+        if (encounterType == EncounterType.PvP) {
             require(IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y), "ENCOUNTER SYSTEM: INVALID PVP");
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
@@ -164,7 +167,7 @@ contract EncounterSystem is System {
      * @param encounterId the bytes32 id of the encounter
      * @param attacks : for a pve the entity with the highest agi has their attacks calculated first
      */
-    function endTurn(bytes32 encounterId, bytes32 playerId, Attack[] memory attacks) public payable {
+    function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory attacks) public payable {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         address playerAddress = IWorld(_world()).UD__getOwnerAddress(playerId);
 
@@ -174,13 +177,12 @@ contract EncounterSystem is System {
             playerAddress == _msgSender() && isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: NON-COMBATANT"
         );
 
-        // check valid pvp turns
-        if (uint8(encounterData.encounterType) == 0) {
+        // is pvp
+        if (encounterData.encounterType == EncounterType.PvP) {
             // should be defender turn
             if (encounterData.currentTurn % 2 == 0) {
                 // if timestamp is less than timeout
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
-                    // check that player action is for defender
                     require(isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER");
 
                     // if player is attacker add +1 to current turn
@@ -191,6 +193,7 @@ contract EncounterSystem is System {
                 } else {
                     require(isParticipant(playerAddress, encounterData.defenders), "Cannot end defenders turn");
                 }
+                // is pve
             } else {
                 // should be attacker turn unless defender has timed out
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
@@ -208,7 +211,7 @@ contract EncounterSystem is System {
                 }
             }
         }
-        _queueAttacks(encounterId, attacks);
+        _queueActions(encounterId, attacks);
     }
 
     function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
@@ -232,18 +235,27 @@ contract EncounterSystem is System {
                 IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
             }
         }
+
         for (uint256 i; i < encounterData.attackers.length; i++) {
             entityTemp = encounterData.attackers[i];
             if (EncounterEntity.getDied(entityTemp)) {
                 IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
             }
         }
+
         uint256 expAmount;
         uint256 goldAmount;
         uint256[] memory itemsDropped;
-        if (uint8(encounterData.encounterType) == uint8(1)) {
+
+        if (encounterData.encounterType == EncounterType.PvE) {
             (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePveRewards(encounterId, randomNumber);
-        } else {}
+        } else if (encounterData.encounterType == EncounterType.PvP) {
+            // distribute pvp rewards
+        }
+        else {
+            revert("unrecognized enocounter type");
+        }
+
         CombatOutcomeData memory combatOutcome = CombatOutcomeData({
             endTime: block.timestamp,
             attackersWin: attackersWin,
@@ -253,18 +265,21 @@ contract EncounterSystem is System {
         });
 
         bytes32[] memory emptyArray = new bytes32[](0);
+
         for (uint256 i; i < encounterData.attackers.length; i++) {
             // clear encounterId
             EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
             // remove combat status effects
             EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
         }
+
         for (uint256 i; i < encounterData.defenders.length; i++) {
             // clear encounter id
             EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
             // remove combat status effects
             EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
         }
+
         CombatOutcome.set(encounterId, combatOutcome);
     }
 
@@ -304,7 +319,7 @@ contract EncounterSystem is System {
         }
     }
 
-    function _queueAttacks(bytes32 encounterId, Attack[] memory attacks) internal {
+    function _queueActions(bytes32 encounterId, Action[] memory attacks) internal {
         SystemSwitch.call(
             abi.encodeCall(IRngSystem.getRng, (encounterId, RngRequestType.Combat, abi.encode(encounterId, attacks)))
         );
@@ -315,8 +330,8 @@ contract EncounterSystem is System {
         view
         returns (bytes32[] memory _attackers, bytes32[] memory _defenders)
     {
-        uint256 group1TotalAgi;
-        uint256 group2TotalAgi;
+        int256 group1TotalAgi;
+        int256 group2TotalAgi;
 
         // add up group1 agi
         for (uint256 i; i < _group1.length; i++) {

@@ -18,6 +18,7 @@ import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {_requireAccess} from "../utils.sol";
+import "forge-std/console.sol";
 
 contract MapSystem is System {
     using LibChunks for uint256;
@@ -44,17 +45,18 @@ contract MapSystem is System {
         require(_msgSender() == owner, "Only the owner can spawn a character");
 
         require(!Spawned.getSpawned(entityId), "Character already spawned");
-        uint256 baseHp = Stats.getBaseHp(entityId);
+        int256 maxHp = Stats.getMaxHp(entityId);
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
-            int256 currentHp = int256(baseHp) + CharacterEquipment.getHpBonus(entityId);
+            int256 currentHp = maxHp + CharacterEquipment.getHpBonus(entityId);
             if (currentHp > 0) {
                 Stats.setCurrentHp(entityId, currentHp);
             } else {
                 Stats.setCurrentHp(entityId, 1);
             }
         } else {
-            Stats.setCurrentHp(entityId, int256(baseHp));
+            Stats.setCurrentHp(entityId, maxHp);
         }
+
         // set character position to home point
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
@@ -154,9 +156,8 @@ contract MapSystem is System {
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             if (senderIsOwner) {
                 // if sender is owner execute removal
-            } else {
-                _requireAccess(address(this), _msgSender());
             }
+            else _requireAccess(address(this), _msgSender());
         } else {
             _requireAccess(address(this), _msgSender());
         }

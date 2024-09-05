@@ -17,9 +17,9 @@ import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/Encoded
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 struct StatRestrictionsData {
-  uint256 minAgility;
-  uint256 minIntelligence;
-  uint256 minStrength;
+  int256 minAgility;
+  int256 minIntelligence;
+  int256 minStrength;
 }
 
 library StatRestrictions {
@@ -31,8 +31,8 @@ library StatRestrictions {
 
   // Hex-encoded key schema of (uint256)
   Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint256, uint256, uint256)
-  Schema constant _valueSchema = Schema.wrap(0x006003001f1f1f00000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (int256, int256, int256)
+  Schema constant _valueSchema = Schema.wrap(0x006003003f3f3f00000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -71,29 +71,29 @@ library StatRestrictions {
   /**
    * @notice Get minAgility.
    */
-  function getMinAgility(uint256 itemId) internal view returns (uint256 minAgility) {
+  function getMinAgility(uint256 itemId) internal view returns (int256 minAgility) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (int256(uint256(bytes32(_blob))));
   }
 
   /**
    * @notice Get minAgility.
    */
-  function _getMinAgility(uint256 itemId) internal view returns (uint256 minAgility) {
+  function _getMinAgility(uint256 itemId) internal view returns (int256 minAgility) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (int256(uint256(bytes32(_blob))));
   }
 
   /**
    * @notice Set minAgility.
    */
-  function setMinAgility(uint256 itemId, uint256 minAgility) internal {
+  function setMinAgility(uint256 itemId, int256 minAgility) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -103,7 +103,7 @@ library StatRestrictions {
   /**
    * @notice Set minAgility.
    */
-  function _setMinAgility(uint256 itemId, uint256 minAgility) internal {
+  function _setMinAgility(uint256 itemId, int256 minAgility) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -113,29 +113,29 @@ library StatRestrictions {
   /**
    * @notice Get minIntelligence.
    */
-  function getMinIntelligence(uint256 itemId) internal view returns (uint256 minIntelligence) {
+  function getMinIntelligence(uint256 itemId) internal view returns (int256 minIntelligence) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (int256(uint256(bytes32(_blob))));
   }
 
   /**
    * @notice Get minIntelligence.
    */
-  function _getMinIntelligence(uint256 itemId) internal view returns (uint256 minIntelligence) {
+  function _getMinIntelligence(uint256 itemId) internal view returns (int256 minIntelligence) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (int256(uint256(bytes32(_blob))));
   }
 
   /**
    * @notice Set minIntelligence.
    */
-  function setMinIntelligence(uint256 itemId, uint256 minIntelligence) internal {
+  function setMinIntelligence(uint256 itemId, int256 minIntelligence) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -145,7 +145,7 @@ library StatRestrictions {
   /**
    * @notice Set minIntelligence.
    */
-  function _setMinIntelligence(uint256 itemId, uint256 minIntelligence) internal {
+  function _setMinIntelligence(uint256 itemId, int256 minIntelligence) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -155,29 +155,29 @@ library StatRestrictions {
   /**
    * @notice Get minStrength.
    */
-  function getMinStrength(uint256 itemId) internal view returns (uint256 minStrength) {
+  function getMinStrength(uint256 itemId) internal view returns (int256 minStrength) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (int256(uint256(bytes32(_blob))));
   }
 
   /**
    * @notice Get minStrength.
    */
-  function _getMinStrength(uint256 itemId) internal view returns (uint256 minStrength) {
+  function _getMinStrength(uint256 itemId) internal view returns (int256 minStrength) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (int256(uint256(bytes32(_blob))));
   }
 
   /**
    * @notice Set minStrength.
    */
-  function setMinStrength(uint256 itemId, uint256 minStrength) internal {
+  function setMinStrength(uint256 itemId, int256 minStrength) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -187,7 +187,7 @@ library StatRestrictions {
   /**
    * @notice Set minStrength.
    */
-  function _setMinStrength(uint256 itemId, uint256 minStrength) internal {
+  function _setMinStrength(uint256 itemId, int256 minStrength) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(itemId));
 
@@ -227,7 +227,7 @@ library StatRestrictions {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(uint256 itemId, uint256 minAgility, uint256 minIntelligence, uint256 minStrength) internal {
+  function set(uint256 itemId, int256 minAgility, int256 minIntelligence, int256 minStrength) internal {
     bytes memory _staticData = encodeStatic(minAgility, minIntelligence, minStrength);
 
     EncodedLengths _encodedLengths;
@@ -242,7 +242,7 @@ library StatRestrictions {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(uint256 itemId, uint256 minAgility, uint256 minIntelligence, uint256 minStrength) internal {
+  function _set(uint256 itemId, int256 minAgility, int256 minIntelligence, int256 minStrength) internal {
     bytes memory _staticData = encodeStatic(minAgility, minIntelligence, minStrength);
 
     EncodedLengths _encodedLengths;
@@ -289,12 +289,12 @@ library StatRestrictions {
    */
   function decodeStatic(
     bytes memory _blob
-  ) internal pure returns (uint256 minAgility, uint256 minIntelligence, uint256 minStrength) {
-    minAgility = (uint256(Bytes.getBytes32(_blob, 0)));
+  ) internal pure returns (int256 minAgility, int256 minIntelligence, int256 minStrength) {
+    minAgility = (int256(uint256(Bytes.getBytes32(_blob, 0))));
 
-    minIntelligence = (uint256(Bytes.getBytes32(_blob, 32)));
+    minIntelligence = (int256(uint256(Bytes.getBytes32(_blob, 32))));
 
-    minStrength = (uint256(Bytes.getBytes32(_blob, 64)));
+    minStrength = (int256(uint256(Bytes.getBytes32(_blob, 64))));
   }
 
   /**
@@ -336,9 +336,9 @@ library StatRestrictions {
    * @return The static data, encoded into a sequence of bytes.
    */
   function encodeStatic(
-    uint256 minAgility,
-    uint256 minIntelligence,
-    uint256 minStrength
+    int256 minAgility,
+    int256 minIntelligence,
+    int256 minStrength
   ) internal pure returns (bytes memory) {
     return abi.encodePacked(minAgility, minIntelligence, minStrength);
   }
@@ -350,9 +350,9 @@ library StatRestrictions {
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
   function encode(
-    uint256 minAgility,
-    uint256 minIntelligence,
-    uint256 minStrength
+    int256 minAgility,
+    int256 minIntelligence,
+    int256 minStrength
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(minAgility, minIntelligence, minStrength);
 

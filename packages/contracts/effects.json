@@ -8,6 +8,15 @@
         "bonusDamage": 0,
         "critChanceBonus": 0
       }
+    },
+    {
+      "effectId": "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000",
+      "name": "basic magic heal",
+      "stats": {
+        "attackModifierBonus": 100,
+        "bonusDamage": -2,
+        "critChanceBonus": 10
+      }
     }
   ],
   "physicalDamage": [
