@@ -646,7 +646,7 @@ export const CharacterCreation = (): JSX.Element => {
                 type="button"
                 width="100%"
               >
-                Wake Up
+                Enter Game
               </Button>
             </Box>
           )}
@@ -676,7 +676,7 @@ export const CharacterCreation = (): JSX.Element => {
               type="button"
               width="100%"
             >
-              Wake Up
+              Enter Game
             </Button>
             {showError && !rolledOnce && (
               <Text color="red" fontSize="sm" mt={2} textAlign="center">
