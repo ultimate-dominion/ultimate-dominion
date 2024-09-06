@@ -78,7 +78,7 @@ export const ShopItemRow = ({
             textAlign="center"
             w="75px"
           >
-            {minLevel}
+            {0}
           </Text>
           <Text
             display={{ base: 'none', lg: 'block' }}

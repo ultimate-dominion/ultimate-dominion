@@ -162,9 +162,13 @@ export const ShopHalf = ({
         </Flex>
       </HStack>
       <VStack gap={3} maxW="100%" overflowX="auto" w="100%">
-        {entries.map((entry, i) => {
-          return <ShopItemRow {...entry} key={`shop-row-${i}`} />;
-        })}
+        {entries.length > 0 ? (
+          entries.map((entry, i) => {
+            return <ShopItemRow {...entry} key={`shop-row-${i}`} />;
+          })
+        ) : (
+          <Text mt={4}>No Data</Text>
+        )}
       </VStack>
       <Box visibility={entries.length > 0 ? 'visible' : 'hidden'}>
         <Pagination

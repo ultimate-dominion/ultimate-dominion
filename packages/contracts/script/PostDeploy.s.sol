@@ -424,9 +424,11 @@ contract PostDeploy is Script {
         world.UD__setStarterItems(Classes.Mage, mageItemIds, mageAmounts);
     }
     function _createShops() internal {
-        uint256[] memory sellableItems = new uint256[](2);
+        uint256[] memory sellableItems = new uint256[](4);
         sellableItems[0] = uint256(0);
         sellableItems[1] = uint256(1);
+        sellableItems[2] = uint256(2);
+        sellableItems[3] = uint256(3);
         Shop memory newShop = Shop({
             priceMarkup: 0,
             priceMarkdown: 0,
