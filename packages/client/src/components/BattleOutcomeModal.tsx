@@ -28,6 +28,7 @@ import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 import {
   type Armor,
   type CombatOutcomeType,
+  type Spell,
   type Weapon,
 } from '../utils/types';
 import { ItemCard } from './ItemCard';
@@ -47,11 +48,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const {
     components: { Levels },
   } = useMUD();
-  const { armorTemplates, weaponTemplates } = useItems();
+  const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
   const { character } = useCharacter();
   const { onContinueToBattleOutcome, opponent } = useBattle();
 
   const [armor, setArmor] = useState<Armor[]>([]);
+  const [spells, setSpells] = useState<Spell[]>([]);
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
 
@@ -89,6 +91,17 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
             } as Armor;
           });
 
+        const _spells = spellTemplates
+          .filter(s => _lootedItemIds.includes(s.tokenId))
+          .map(spell => {
+            return {
+              ...spell,
+              balance: '1',
+              itemId: zeroHash,
+              owner: zeroAddress,
+            } as Spell;
+          });
+
         const _weapons = weaponTemplates
           .filter(w => _lootedItemIds.includes(w.tokenId))
           .map(weapon => {
@@ -101,6 +114,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
           });
 
         setArmor(_armor);
+        setSpells(_spells);
         setWeapons(_weapons);
       } catch (e) {
         renderError(
@@ -111,7 +125,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
         setIsLoadingItems(false);
       }
     },
-    [armorTemplates, renderError, weaponTemplates],
+    [armorTemplates, renderError, spellTemplates, weaponTemplates],
   );
 
   useEffect(() => {
@@ -121,6 +135,10 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
       setIsLoadingItems(false);
     }
   }, [battleOutcome, fetchLootedItems, isOpen]);
+
+  const spellsAndWeapons = useMemo(() => {
+    return spells.concat(weapons);
+  }, [spells, weapons]);
 
   if (!character) {
     return <Box />;
@@ -166,10 +184,10 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 {armor.map(item => (
                   <ItemCard key={item.tokenId} {...item} />
                 ))}
-                {weapons.length > 0 && (
+                {spellsAndWeapons.length > 0 && (
                   <Text fontWeight="bold">Looted Weapons:</Text>
                 )}
-                {weapons.map(item => (
+                {spellsAndWeapons.map(item => (
                   <ItemCard key={item.tokenId} {...item} />
                 ))}
               </>

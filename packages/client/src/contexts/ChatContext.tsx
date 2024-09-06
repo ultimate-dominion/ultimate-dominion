@@ -229,6 +229,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      if (!isMessageInputFocused) return;
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         onSendMessage();
@@ -240,7 +242,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onSendMessage]);
+  }, [isMessageInputFocused, isOpen, onSendMessage]);
 
   return (
     <ChatContext.Provider
