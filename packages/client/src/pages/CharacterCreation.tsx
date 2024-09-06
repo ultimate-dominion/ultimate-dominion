@@ -430,9 +430,14 @@ export const CharacterCreation = (): JSX.Element => {
             p={{ base: 4, sm: 10 }}
             pos="relative"
           >
-            <Heading mb={6} size="sm" textAlign="left">
+            <Heading mb={2} size="sm" textAlign="left">
               Create Your Character
             </Heading>
+            <Text fontSize="xs" mb={6}>
+              Your name, avatar, and description should fit a character you
+              might find in a fantasy world. Something like &quot;Sir
+              Lancelot&quot; or &quot;A young wizard from the east&quot;.
+            </Text>
             <VStack spacing={8}>
               <Stack
                 alignItems="start"
@@ -484,7 +489,7 @@ export const CharacterCreation = (): JSX.Element => {
               </Stack>
               <FormControl isInvalid={showError && !description}>
                 <Textarea
-                  height="200px"
+                  height="150px"
                   isDisabled={isCreating}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="Bio"
