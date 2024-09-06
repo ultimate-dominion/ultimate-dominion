@@ -237,11 +237,40 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         vm.startPrank(alice);
         world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
+        vm.stopPrank();
+        StatsData memory alicesStats = world.UD__getStats(alicesCharacterId);
+        alicesStats.agility = 9;
+        vm.prank(deployer);
+        world.UD__setAdmin(address(this), true);
+        world.UD__adminSetStats(alicesCharacterId, alicesStats);
+
+        vm.startPrank(alice);
+        StatsData memory baseStats = world.UD__getBaseStats(alicesCharacterId);
         StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
+
+        assertLt(StatRestrictions.getMinAgility(starterDat.itemIds[0]), baseStats.agility, "incorrect agility");
+        assertLt(StatRestrictions.getMinStrength(starterDat.itemIds[0]), baseStats.strength, "incorrect strength");
+        assertLt(
+            StatRestrictions.getMinIntelligence(starterDat.itemIds[0]), baseStats.intelligence, "incorrect intelligence"
+        );
+        assertLt(StatRestrictions.getMinAgility(starterDat.itemIds[1]), baseStats.agility, "incorrect 1 agility");
+        assertLt(StatRestrictions.getMinStrength(starterDat.itemIds[1]), baseStats.strength, "incorrect 1 strength");
+        assertLt(
+            StatRestrictions.getMinIntelligence(starterDat.itemIds[1]),
+            baseStats.intelligence,
+            "incorrect 1 intelligence"
+        );
+        assertLt(StatRestrictions.getMinAgility(starterDat.itemIds[2]), baseStats.agility, "incorrect 2 agility");
+        assertLt(StatRestrictions.getMinStrength(starterDat.itemIds[2]), baseStats.strength, "incorrect 2 strength");
+        assertLt(
+            StatRestrictions.getMinIntelligence(starterDat.itemIds[2]),
+            baseStats.intelligence,
+            "incorrect 2 intelligence"
+        );
 
         world.UD__equipItems(alicesCharacterId, starterDat.itemIds);
         AdjustedCombatStats memory equippedStats = world.UD__getCombatStats(alicesCharacterId);
-        assertEq(equippedStats.armor, 1);
+        assertEq(equippedStats.strength, 8);
         assertTrue(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
         startGasReport("uneqip 1 item");
         world.UD__unequipItem(alicesCharacterId, starterDat.itemIds[0]);
@@ -249,6 +278,6 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         endGasReport();
         AdjustedCombatStats memory unEquippedStats = world.UD__getCombatStats(alicesCharacterId);
         assertFalse(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
-        assertEq(unEquippedStats.armor, 0);
+        assertEq(unEquippedStats.strength, 6);
     }
 }

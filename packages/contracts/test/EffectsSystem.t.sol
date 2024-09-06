@@ -77,12 +77,15 @@ contract Test_EffectsSystem is SetUp, GasReporter {
     }
 
     function test_applyStatusEffect() public {
+        entityId = world.UD__spawnMob(1, 0, 1);
+        vm.prank(bob);
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
+        CombatEncounterData memory encounterData = world.UD__getEncounter(encounterId);
         StatsData memory startingStats = world.UD__getStats(bobCharacterId);
-        console.logInt(startingStats.agility);
         world.UD__adminApplyStatusEffect(
             bobCharacterId, bytes32(0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000)
         );
-        StatsData memory endingStats = world.UD__getStats(bobCharacterId);
-        assertEq(endingStats.agility, startingStats.agility - int256(10));
+        AdjustedCombatStats memory endingStats = world.UD__calculateAllStatusEffects(bobCharacterId);
+        assertEq(endingStats.agility, startingStats.agility - int256(8));
     }
 }

@@ -115,8 +115,8 @@ contract CombatSystem is System {
                     actionOutcomeData.attackerDamageDelt += actionOutcomeData.damagePerHit[i];
                     // if hit deduct damage
                     if (actionOutcomeData.hit[i]) {
-                        int256 currentHp = Stats.getCurrentHp(actionOutcomeData.defenderId)
-                            - int256(actionOutcomeData.damagePerHit[i] / int256(ATTACK_MODIFIER));
+                        int256 currentHp =
+                            Stats.getCurrentHp(actionOutcomeData.defenderId) - int256(actionOutcomeData.damagePerHit[i]);
                         if (currentHp <= 0) actionOutcomeData.defenderDied = true;
                         Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
                     } else {
