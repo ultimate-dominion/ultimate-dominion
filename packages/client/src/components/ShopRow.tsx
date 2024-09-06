@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
-export const ShopRow = (): JSX.Element => {
+export const ShopRow = ({ mobId }: { mobId: string }): JSX.Element => {
   const navigate = useNavigate();
 
   return (
@@ -12,7 +12,7 @@ export const ShopRow = (): JSX.Element => {
       border="1px solid transparent"
       h={ROW_HEIGHT}
       justifyContent="space-between"
-      onClick={() => navigate('/shops')}
+      onClick={() => navigate(`/shops/${mobId}`)}
       px={{ base: 1, sm: 2, md: 4 }}
       transition="all 0.3s ease"
       w="100%"

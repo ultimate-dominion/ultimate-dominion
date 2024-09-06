@@ -55,12 +55,7 @@ export const ShopItemRow = ({
       onClick={onOpen}
     >
       <Flex>
-        <Avatar
-          backgroundColor={'grey300'}
-          borderRadius={0}
-          name={removeEmoji(name)}
-          size="lg"
-        >
+        <Avatar backgroundColor={'grey300'} borderRadius={0} name=" " size="lg">
           {getEmoji(name)}
         </Avatar>
         <VStack align="start" justify="center" ml={4}>
@@ -113,7 +108,7 @@ export const ShopItemRow = ({
                   <Avatar
                     backgroundColor={'grey300'}
                     borderRadius={0}
-                    name={removeEmoji(name)}
+                    name={' '}
                     size="lg"
                   >
                     {getEmoji(name)}

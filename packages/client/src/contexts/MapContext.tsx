@@ -282,15 +282,17 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     (entities: Entity[]): Shop[] => {
       try {
         const _shops: Shop[] = entities.map(entity => {
-          const { mobId } = decodeMonsterId(entity as `0x${string}`);
+          //const { mobId } = decodeMonsterId(entity as `0x${string}`);
 
           const _position = getComponentValueStrict(Position, entity);
+          const shopData = getComponentValueStrict(Shops, entity);
+
           return {
-            mobId: mobId,
-            priceMarkup: '0',
-            priceMarkdown: '0',
-            sellableItems: ['0'],
-            buyableItems: ['0'],
+            mobId: entity,
+            priceMarkup: shopData.priceMarkup.toString(),
+            priceMarkdown: shopData.priceMarkdown.toString(),
+            sellableItems: shopData.sellableItems.map(item => item.toString()),
+            buyableItems: shopData.buyableItems.map(item => item.toString()),
             position: { x: _position.x, y: _position.y },
           } as Shop;
         });
@@ -301,7 +303,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         return [];
       }
     },
-    [Position, renderError],
+    [Position, Shops, renderError],
   );
   useEffect(() => {
     (async () => {

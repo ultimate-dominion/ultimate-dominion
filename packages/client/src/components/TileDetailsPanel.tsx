@@ -330,7 +330,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
             <GridItem colSpan={2}>
               {shopsOnTile.map((shop, i) => (
-                <ShopRow key={`tile-shop-${i}`} />
+                <ShopRow key={`tile-shop-${i}`} mobId={shop.mobId} />
               ))}
             </GridItem>
           </Grid>
