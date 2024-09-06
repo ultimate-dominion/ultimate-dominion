@@ -108,11 +108,9 @@ contract EffectsSystem is System {
         if (encounterData.encounterId != bytes32(0)) {
             for (uint256 i; i < encounterData.appliedStatusEffects.length; i++) {
                 effectId = encounterData.appliedStatusEffects[i];
-                console.logBytes32(effectId);
                 statsData = getStatusEffectStats(getEffectStatId(effectId));
                 bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
                 if (isNotExpired(updatedEffectId)) {
-                    console.log("applying effect");
                     _adjustedStats.agility += statsData.agiModifier;
                     _adjustedStats.intelligence += statsData.agiModifier;
                     _adjustedStats.strength += statsData.strModifier;
