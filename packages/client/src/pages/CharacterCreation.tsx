@@ -66,9 +66,10 @@ export const CharacterCreation = (): JSX.Element => {
   const { character, isRefreshing, refreshCharacter } = useCharacter();
   const {
     file: avatar,
-    setFile: setAvatar,
-    onUpload,
     isUploading,
+    onRemove,
+    onUpload,
+    setFile: setAvatar,
   } = useUploadFile({ fileName: 'characterAvatar' });
 
   const [name, setName] = useState('');
@@ -147,6 +148,15 @@ export const CharacterCreation = (): JSX.Element => {
     }
   }, []);
 
+  const onRemoveAvatar = useCallback(() => {
+    const input = document.getElementById('avatarInput');
+
+    if (input) {
+      (input as HTMLInputElement).value = '';
+      onRemove();
+    }
+  }, [onRemove]);
+
   const onCreateCharacter = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -158,19 +168,23 @@ export const CharacterCreation = (): JSX.Element => {
           throw new Error('Missing delegation.');
         }
 
-        if (!(avatar && description && name)) {
+        if (!(description && name)) {
           setShowError(true);
           renderWarning('Missing required fields.');
           return;
         }
 
-        const avatarCid = await onUpload();
-        if (!avatarCid)
-          throw new Error(
-            'Something went wrong uploading your character avatar.',
-          );
+        let image = `https://effigy.im/a/${delegatorAddress}.svg`;
 
-        const image = `ipfs://${avatarCid}`;
+        if (avatar) {
+          const avatarCid = await onUpload();
+          if (!avatarCid)
+            throw new Error(
+              'Something went wrong uploading your character avatar.',
+            );
+
+          image = `ipfs://${avatarCid}`;
+        }
 
         const characterMetadata = {
           name,
@@ -347,11 +361,15 @@ export const CharacterCreation = (): JSX.Element => {
       <Center>
         <Avatar
           size={{ base: 'lg', sm: 'xl' }}
-          src={avatar ? URL.createObjectURL(avatar) : undefined}
+          src={
+            avatar
+              ? URL.createObjectURL(avatar)
+              : `https://effigy.im/a/${delegatorAddress}.svg`
+          }
         />
       </Center>
     );
-  }, [avatar]);
+  }, [avatar, delegatorAddress]);
 
   if (!starterItems) {
     return (
@@ -439,7 +457,7 @@ export const CharacterCreation = (): JSX.Element => {
                       </FormHelperText>
                     )}
                   </FormControl>
-                  <FormControl isInvalid={showError && !avatar}>
+                  <FormControl>
                     <Input
                       accept=".png, .jpg, .jpeg, .webp, .svg"
                       id="avatarInput"
@@ -455,17 +473,12 @@ export const CharacterCreation = (): JSX.Element => {
                       isDisabled={isCreating}
                       isLoading={isUploading}
                       loadingText="Uploading..."
-                      onClick={onUploadAvatar}
+                      onClick={avatar ? onRemoveAvatar : onUploadAvatar}
                       size="sm"
                       type="button"
                     >
-                      Upload Avatar Image
+                      {avatar ? 'Remove Avatar' : 'Upload Avatar Image'}
                     </Button>
-                    {showError && !avatar && (
-                      <FormHelperText color="red">
-                        Avatar is required
-                      </FormHelperText>
-                    )}
                   </FormControl>
                 </VStack>
               </Stack>
