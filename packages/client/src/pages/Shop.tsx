@@ -6,12 +6,14 @@ import { useParams } from 'react-router-dom';
 import Typist from 'react-typist';
 
 import { ShopHalf } from '../components/ShopHalf';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 
 export const Shop = (): JSX.Element => {
   const { shopId } = useParams();
   const { armorTemplates, weaponTemplates } = useItems();
+  const { character: userCharacter } = useCharacter();
 
   const {
     components: { Shops },
@@ -52,7 +54,7 @@ export const Shop = (): JSX.Element => {
             {sellable && sellable.length > 0 ? (
               <ShopHalf
                 items={sellable}
-                name="Character’s Inventory - 55 $GOLD"
+                name={`Character’s Inventory - ${userCharacter?.goldBalance} $GOLD`}
               />
             ) : (
               <Text>No Data</Text>
@@ -68,7 +70,7 @@ export const Shop = (): JSX.Element => {
           {buyable && buyable.length > 0 ? (
             <ShopHalf
               items={buyable}
-              name="Shopkeeper's Inventory - 55 $GOLD"
+              name="Shopkeeper’s Inventory - 55 $GOLD"
             />
           ) : (
             <Text>No Data</Text>
