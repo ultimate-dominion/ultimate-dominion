@@ -231,11 +231,7 @@ export const ActionsPanel = (): JSX.Element => {
                 <Button
                   borderLeft={index === 0 ? 'none' : '2px'}
                   borderRadius={0}
-                  borderRight={
-                    index === 0 || index === equippedSpellsAndWeapons.length - 1
-                      ? 'none'
-                      : '2px'
-                  }
+                  borderRight="none"
                   isDisabled={attackingItemId !== null || !canAttack}
                   isLoading={attackingItemId === item.tokenId}
                   key={`equipped-item-${index}`}
