@@ -50,6 +50,7 @@ export const MovementProvider = ({
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
       try {
+        if (isMoving) return;
         if (!isSpawned) return;
         if (currentBattle) return;
         if (isMessageInputFocused) return;
@@ -115,6 +116,7 @@ export const MovementProvider = ({
       currentBattle,
       delegatorAddress,
       isMessageInputFocused,
+      isMoving,
       isSpawned,
       move,
       position,

@@ -68,7 +68,7 @@ export const ChatBox: React.FC = () => {
         h={isChatBoxOpen ? '350px' : '0'}
         p={2}
         transition="height 0.3s ease"
-        w={{ base: '100%', lg: '350px' }}
+        w={{ base: '100%', sm: '350px' }}
       >
         <VStack alignItems="flex-start" mb={2} spacing={2}>
           <HStack justify="space-between" w="100%">

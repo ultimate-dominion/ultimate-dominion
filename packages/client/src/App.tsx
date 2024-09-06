@@ -105,7 +105,7 @@ const AppInner = (): JSX.Element => {
             </ScaleFade>
           </Box>
           <Box
-            bottom={{ base: 2, lg: 6 }}
+            bottom={isChatBoxOpen ? { base: 2, lg: 6 } : { base: -1 }}
             position="fixed"
             right={{ base: 2, lg: 6 }}
           >
