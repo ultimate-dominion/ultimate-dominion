@@ -85,8 +85,8 @@ contract Test_CombatSystem is SetUp, GasReporter {
         CombatEncounterData memory encounterData = world.UD__getEncounter(encounterId);
         assertEq(encounterData.start, block.timestamp);
         assertEq(encounterData.end, 0);
-        assertEq(encounterData.attackers[0], entityId);
-        assertEq(encounterData.defenders[0], bobCharacterId);
+        assertEq(encounterData.attackers[0], bobCharacterId);
+        assertEq(encounterData.defenders[0], entityId);
         assertEq(encounterData.attackers.length, encounterData.defenders.length);
     }
 
