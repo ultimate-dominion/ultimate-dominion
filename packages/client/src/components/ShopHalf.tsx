@@ -15,7 +15,7 @@ import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 
-import { ArmorTemplate, WeaponTemplate } from '../utils/types';
+import { ArmorTemplate, SpellTemplate, WeaponTemplate } from '../utils/types';
 import { Pagination } from './Pagination';
 import { ShopItemRow } from './ShopItemRow';
 const PER_PAGE = 5;
@@ -24,11 +24,11 @@ export const ShopHalf = ({
   items,
 }: {
   name: string;
-  items: Array<ArmorTemplate | WeaponTemplate>;
+  items: Array<ArmorTemplate | WeaponTemplate | SpellTemplate>;
 }): JSX.Element => {
-  const [entries, setEntries] = useState<Array<ArmorTemplate | WeaponTemplate>>(
-    [],
-  );
+  const [entries, setEntries] = useState<
+    Array<ArmorTemplate | WeaponTemplate | SpellTemplate>
+  >([]);
   const [page, setPage] = useState(1);
   const [pageLimit, setPageLimit] = useState(1);
   const [length, setLength] = useState(1);
@@ -46,7 +46,9 @@ export const ShopHalf = ({
     if (pageNumber < 1) {
       return;
     }
-    let entriesCopy: Array<ArmorTemplate | WeaponTemplate> = [...items];
+    let entriesCopy: Array<ArmorTemplate | WeaponTemplate | SpellTemplate> = [
+      ...items,
+    ];
     const searcher = new FuzzySearch(
       [...entriesCopy],
       ['name', 'characterId', 'description'],
@@ -56,7 +58,10 @@ export const ShopHalf = ({
     entriesCopy = [...entriesCopy].filter(entry => {
       switch (filter.filtered) {
         case 'byWeapon':
-          return Object.keys(entry).indexOf('armorModifier') > -1 ? 0 : 1;
+          return entry.itemType == 0 ? 1 : 0;
+        case 'byArmor':
+          return entry.itemType == 1 ? 1 : 0;
+
         default:
           return true;
       }
@@ -70,7 +75,7 @@ export const ShopHalf = ({
     }
   }, [filter.filtered, items, pageLimit, pageNumber, query]);
   return (
-    <VStack>
+    <VStack h="100%">
       <Text fontWeight={700} fontSize={24} textAlign="left" w="100%">
         {name}
       </Text>
@@ -81,7 +86,7 @@ export const ShopHalf = ({
         w="100%"
       >
         <InputGroup w="100%">
-          <InputLeftElement h="100%" pointerEvents="none">
+          <InputLeftElement pointerEvents="none">
             <FaSearch />
           </InputLeftElement>
           <Input
@@ -97,6 +102,13 @@ export const ShopHalf = ({
             variant={filter.filtered == 'all' ? 'solid' : 'outline'}
           >
             All
+          </Button>
+          <Button
+            onClick={() => setFilter({ filtered: 'byArmor' })}
+            size="sm"
+            variant={filter.filtered == 'byArmor' ? 'solid' : 'outline'}
+          >
+            Armor
           </Button>
           <Button
             onClick={() => setFilter({ filtered: 'byWeapon' })}
@@ -170,6 +182,7 @@ export const ShopHalf = ({
           <Text mt={4}>No Data</Text>
         )}
       </VStack>
+      <Spacer />
       <Box visibility={entries.length > 0 ? 'visible' : 'hidden'}>
         <Pagination
           length={length}

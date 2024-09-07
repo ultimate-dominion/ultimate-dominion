@@ -282,8 +282,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     (entities: Entity[]): Shop[] => {
       try {
         const _shops: Shop[] = entities.map(entity => {
-          //const { mobId } = decodeMonsterId(entity as `0x${string}`);
-
           const _position = getComponentValueStrict(Position, entity);
           const shopData = getComponentValueStrict(Shops, entity);
 

@@ -20,7 +20,6 @@ import { IoIosArrowForward } from 'react-icons/io';
 import { IoAdd, IoRemove } from 'react-icons/io5';
 
 import { getEmoji, removeEmoji } from '../utils/helpers';
-import { type ArmorTemplate, type WeaponTemplate } from '../utils/types';
 
 export const ShopItemRow = ({
   agiModifier,
@@ -31,7 +30,19 @@ export const ShopItemRow = ({
   name,
   statRestrictions,
   strModifier,
-}: ArmorTemplate | WeaponTemplate): JSX.Element => {
+}: {
+  agiModifier: string | number | bigint | undefined;
+  description: string | number | bigint | undefined;
+  hpModifier: string | number | bigint | undefined;
+  intModifier: string | number | bigint | undefined;
+  minLevel: string | number | bigint | undefined;
+  name: string | number | bigint | undefined;
+  statRestrictions: {
+    minIntelligence: string | number | bigint | undefined;
+    minStrength: string | number | bigint | undefined;
+  };
+  strModifier: string | number | bigint | undefined;
+}): JSX.Element => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
@@ -56,11 +67,13 @@ export const ShopItemRow = ({
     >
       <Flex>
         <Avatar backgroundColor={'grey300'} borderRadius={0} name=" " size="lg">
-          {getEmoji(name)}
+          {name ? getEmoji(name.toString()) : ''}
         </Avatar>
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>{removeEmoji(name)}</Text>
+            <Text size={{ base: '2xs', lg: 'sm' }}>
+              {name ? removeEmoji(name.toString()) : ''}
+            </Text>
           </HStack>
         </VStack>
       </Flex>
@@ -96,7 +109,7 @@ export const ShopItemRow = ({
             <ModalCloseButton />
             <ModalBody>
               <Text fontWeight={700} fontSize={24}>
-                Buy {removeEmoji(name)}
+                Buy {name ? removeEmoji(name.toString()) : ''}
               </Text>
               <Grid
                 gap={10}
@@ -111,11 +124,11 @@ export const ShopItemRow = ({
                     name={' '}
                     size="lg"
                   >
-                    {getEmoji(name)}
+                    {name ? getEmoji(name.toString()) : ''}
                   </Avatar>
 
                   <Text fontWeight={400} fontSize={14} mt={8}>
-                    {description}
+                    {description ? description.toString() : ''}
                   </Text>
                 </GridItem>
                 <GridItem>
@@ -123,20 +136,30 @@ export const ShopItemRow = ({
                     Stats
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    INT {intModifier} HIT {hpModifier} STR {strModifier} AGI{' '}
-                    {agiModifier}
+                    INT {intModifier ? intModifier.toString() : 0} HIT{' '}
+                    {hpModifier ? hpModifier.toString() : 0} STR{' '}
+                    {strModifier ? strModifier.toString() : 0} AGI{' '}
+                    {agiModifier ? agiModifier.toString() : 0}
                   </Text>
                   <Text mt={8} fontWeight={700} fontSize={14}>
                     Restrictions
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    - LVL {minLevel}
+                    - LVL {minLevel ? minLevel.toString() : 0}
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    - {statRestrictions.minIntelligence} INT
+                    -{' '}
+                    {statRestrictions['minIntelligence']
+                      ? statRestrictions.minIntelligence.toString()
+                      : 0}{' '}
+                    INT
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    - {statRestrictions.minStrength} STR
+                    -{' '}
+                    {statRestrictions['minStrength']
+                      ? statRestrictions.minIntelligence?.toString()
+                      : 0}{' '}
+                    STR
                   </Text>
                 </GridItem>
                 <GridItem colSpan={2} textAlign="center">
