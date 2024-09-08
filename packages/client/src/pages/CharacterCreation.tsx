@@ -436,7 +436,7 @@ export const CharacterCreation = (): JSX.Element => {
             <Text fontSize="xs" mb={6}>
               Your name, avatar, and description should fit a character you
               might find in a fantasy world. Something like &quot;Sir
-              Lancelot&quot; or &quot;A young wizard from the east&quot;.
+              Lancelot&quot; or &quot;A young wizard from the east.&quot;
             </Text>
             <VStack spacing={8}>
               <Stack
@@ -537,12 +537,13 @@ export const CharacterCreation = (): JSX.Element => {
           p={{ base: 4, sm: 10 }}
           pos="relative"
         >
-          <VStack alignItems="left" spacing={6}>
+          <VStack alignItems="left" spacing={4}>
             <Heading size="sm" textAlign="left">
               Choose Your Class
             </Heading>
             <ButtonGroup justifyContent="space-between">
               <Button
+                isDisabled={isDisabled}
                 onClick={() => setCharacterClass(StatsClasses.Warrior)}
                 size="sm"
                 variant={characterClass === 0 ? 'solid' : 'outline'}
@@ -551,6 +552,7 @@ export const CharacterCreation = (): JSX.Element => {
                 Warrior
               </Button>
               <Button
+                isDisabled={isDisabled}
                 onClick={() => setCharacterClass(StatsClasses.Rogue)}
                 size="sm"
                 variant={characterClass === 1 ? 'solid' : 'outline'}
@@ -559,6 +561,7 @@ export const CharacterCreation = (): JSX.Element => {
                 Rogue
               </Button>
               <Button
+                isDisabled={isDisabled}
                 onClick={() => setCharacterClass(StatsClasses.Mage)}
                 size="sm"
                 variant={characterClass === 2 ? 'solid' : 'outline'}
@@ -582,21 +585,25 @@ export const CharacterCreation = (): JSX.Element => {
           <SimpleGrid
             columns={{ base: 1, xl: 2 }}
             mb={{ base: 0, lg: 24 }}
-            mt={{ base: 12, sm: 20 }}
+            mt={{ base: 8, sm: 12 }}
             spacing={{ base: 12, sm: 16 }}
           >
             <VStack spacing={8}>
               <HStack justify="space-between" w="100%">
-                <Heading size="sm">Stats</Heading>
-                <Button
-                  isDisabled={isDisabled}
-                  isLoading={isRollingStats}
-                  loadingText="Rolling..."
-                  onClick={onRollStats}
-                  size="sm"
-                >
-                  {rolledOnce ? 'Re-roll' : 'Roll Stats'}
-                </Button>
+                <VStack alignItems="left" spacing={4}>
+                  <Heading size="sm" textAlign="left">
+                    Roll Stats
+                  </Heading>
+                  <Button
+                    isDisabled={isDisabled}
+                    isLoading={isRollingStats}
+                    loadingText="Rolling..."
+                    onClick={onRollStats}
+                    size="sm"
+                  >
+                    {rolledOnce ? 'Re-roll' : 'Roll'}
+                  </Button>
+                </VStack>
               </HStack>
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
