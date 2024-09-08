@@ -15,6 +15,7 @@ import Typist from 'react-typist';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { EncounterType } from '../utils/types';
@@ -32,6 +33,7 @@ export const ActionsPanel = (): JSX.Element => {
     opponent,
   } = useBattle();
   const { isRefreshing } = useMovement();
+  const { spellTemplates, weaponTemplates } = useItems();
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
   const [attackButtonFocus, setAttackButtonFocus] = useState<number>(0);
@@ -152,6 +154,11 @@ export const ActionsPanel = (): JSX.Element => {
   const equippedSpellsAndWeapons = useMemo(
     () => [...equippedSpells, ...equippedWeapons],
     [equippedSpells, equippedWeapons],
+  );
+
+  const spellAndWeaponTemplates = useMemo(
+    () => [...spellTemplates, ...weaponTemplates],
+    [spellTemplates, weaponTemplates],
   );
 
   return (
@@ -331,6 +338,11 @@ export const ActionsPanel = (): JSX.Element => {
 
         {opponent?.name &&
           attackOutcomes.map((attack, i) => {
+            const attackItem = spellAndWeaponTemplates.find(
+              item => item.tokenId === attack.itemId,
+            );
+            const itemName = attackItem?.name ?? 'an item';
+
             if (attack.miss[0]) {
               return (
                 <Typist
@@ -347,8 +359,8 @@ export const ActionsPanel = (): JSX.Element => {
                       You missed{' '}
                       <Text as="span" color="green">
                         {opponent.name}
-                      </Text>
-                      .
+                      </Text>{' '}
+                      with {itemName}.
                     </Text>
                   ) : (
                     <Text
@@ -358,7 +370,7 @@ export const ActionsPanel = (): JSX.Element => {
                       <Text as="span" color="green">
                         {opponent.name}
                       </Text>{' '}
-                      missed you.
+                      missed you with {itemName}.
                     </Text>
                   )}
                 </Typist>
@@ -380,6 +392,7 @@ export const ActionsPanel = (): JSX.Element => {
                     <Text as="span" color="green">
                       {opponent?.name}
                     </Text>{' '}
+                    with {itemName}
                     for{' '}
                     <Text as="span" color="red">
                       {attack.attackerDamageDelt}
@@ -392,7 +405,7 @@ export const ActionsPanel = (): JSX.Element => {
                     <Text as="span" color="green">
                       {opponent?.name}
                     </Text>{' '}
-                    attacked you for{' '}
+                    attacked you with {itemName} for{' '}
                     <Text as="span" color="red">
                       {attack.attackerDamageDelt}
                     </Text>{' '}

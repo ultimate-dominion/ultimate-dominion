@@ -189,8 +189,8 @@ export const CharacterCreation = (): JSX.Element => {
         }
 
         const characterMetadata = {
-          name,
-          description,
+          name: name.trim(),
+          description: description.trim(),
           image,
         };
 
