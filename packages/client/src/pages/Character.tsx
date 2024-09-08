@@ -23,13 +23,12 @@ import {
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaHatWizard } from 'react-icons/fa';
-import { GiAxeSword, GiRogue } from 'react-icons/gi';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatEther, hexToString, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
+import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
 import { ItemCard } from '../components/ItemCard';
 import { ItemEquipModal } from '../components/ItemEquipModal';
@@ -56,7 +55,6 @@ import {
   type Armor,
   type Character,
   type Spell,
-  StatsClasses,
   type Weapon,
 } from '../utils/types';
 
@@ -294,15 +292,7 @@ export const CharacterPage = (): JSX.Element => {
                   </Center>
                   <Spacer />
                   <Center>
-                    {character.entityClass === StatsClasses.Warrior && (
-                      <GiAxeSword size={28} />
-                    )}
-                    {character.entityClass === StatsClasses.Rogue && (
-                      <GiRogue size={28} />
-                    )}
-                    {character.entityClass === StatsClasses.Mage && (
-                      <FaHatWizard size={28} />
-                    )}
+                    <ClassSymbol entityClass={character.entityClass} />
                   </Center>
                 </HStack>
                 <Spacer />
