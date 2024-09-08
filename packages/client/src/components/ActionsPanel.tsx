@@ -431,7 +431,7 @@ export const ActionsPanel = (): JSX.Element => {
             >
               {lastestBattleOutcome?.winner === character?.id
                 ? 'You won!'
-                : 'You lost...'}
+                : 'You died...'}
             </Text>
           </Typist>
           <HStack justifyContent="center">

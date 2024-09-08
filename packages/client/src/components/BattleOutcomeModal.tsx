@@ -159,8 +159,14 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
             <Text>
               {winner === character.id
                 ? `You defeated ${opponent?.name}!`
-                : `You lost to ${opponent?.name}.`}
+                : `You were killed by ${opponent?.name}.`}
             </Text>
+            {winner !== character.id && (
+              <Text>
+                When you die, your health is restored, but you are forced to
+                respawn at the Town Square.
+              </Text>
+            )}
             {winner === character.id && (
               <Text>
                 You earned{' '}
