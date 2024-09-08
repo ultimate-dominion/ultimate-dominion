@@ -9,6 +9,7 @@ import {
   Heading,
   HStack,
   Input,
+  Link,
   SimpleGrid,
   Stack,
   Text,
@@ -36,6 +37,7 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
+import { EXPLORER_URLS } from '../lib/web3';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import { shortenAddress } from '../utils/helpers';
@@ -50,7 +52,7 @@ export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
-  const { isConnected } = useAccount();
+  const { chainId, isConnected } = useAccount();
   const {
     components: { Items, StarterItems, UltimateDominionConfig },
     delegatorAddress,
@@ -397,16 +399,38 @@ export const CharacterCreation = (): JSX.Element => {
             <HStack spacing={4}>
               <Text fontSize={{ base: 'xs', md: 'sm' }}>
                 Address:{' '}
-                <Text as="span" fontWeight={700}>
-                  {shortenAddress(characterToken)}
-                </Text>
+                {chainId && EXPLORER_URLS[chainId] ? (
+                  <Link
+                    color="blue"
+                    fontWeight={700}
+                    href={`${EXPLORER_URLS[chainId]}/token/${characterToken}`}
+                    isExternal
+                  >
+                    {shortenAddress(characterToken)}
+                  </Link>
+                ) : (
+                  <Text as="span" fontWeight={700}>
+                    {shortenAddress(characterToken)}
+                  </Text>
+                )}
               </Text>
               <Text>|</Text>
               <Text fontSize={{ base: 'xs', md: 'sm' }}>
                 Token ID:{' '}
-                <Text as="span" fontWeight={700}>
-                  {character.tokenId}
-                </Text>
+                {chainId && EXPLORER_URLS[chainId] ? (
+                  <Link
+                    color="blue"
+                    fontWeight={700}
+                    href={`${EXPLORER_URLS[chainId]}/token/${characterToken}/instance/${character.tokenId}`}
+                    isExternal
+                  >
+                    {character.tokenId}
+                  </Link>
+                ) : (
+                  <Text as="span" fontWeight={700}>
+                    {character.tokenId}
+                  </Text>
+                )}
               </Text>
             </HStack>
             <VStack>
