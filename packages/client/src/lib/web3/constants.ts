@@ -16,6 +16,10 @@ export const CHAIN_ID_TO_LABEL: { [key: number]: string } = {
   [garnet.id]: 'Garnet Holesky',
 };
 
+export const EXPLORER_URLS: { [key: number]: string } = {
+  [garnet.id]: garnet.blockExplorers.default.url,
+};
+
 const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, garnet, anvil];
 
 export const DEFAULT_CHAIN_ID = import.meta.env.VITE_CHAIN_ID

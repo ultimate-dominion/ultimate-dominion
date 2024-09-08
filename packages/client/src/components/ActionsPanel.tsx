@@ -4,17 +4,19 @@ import {
   Divider,
   HStack,
   Progress,
+  Spinner,
   Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 // eslint-disable-next-line import/no-named-as-default
 import Typist from 'react-typist';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { EncounterType } from '../utils/types';
@@ -32,6 +34,11 @@ export const ActionsPanel = (): JSX.Element => {
     opponent,
   } = useBattle();
   const { isRefreshing } = useMovement();
+  const {
+    isLoading: isItemTemplatesLoading,
+    spellTemplates,
+    weaponTemplates,
+  } = useItems();
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
   const [attackButtonFocus, setAttackButtonFocus] = useState<number>(0);
@@ -39,6 +46,23 @@ export const ActionsPanel = (): JSX.Element => {
   const parentDivRef = useRef<HTMLDivElement>(null);
   const attackButton1Ref = useRef<HTMLButtonElement>(null);
   const attackButton2Ref = useRef<HTMLButtonElement>(null);
+  const attackButton3Ref = useRef<HTMLButtonElement>(null);
+  const attackButton4Ref = useRef<HTMLButtonElement>(null);
+
+  const getButtonRef = useCallback((index: number) => {
+    switch (index) {
+      case 0:
+        return attackButton1Ref;
+      case 1:
+        return attackButton2Ref;
+      case 2:
+        return attackButton3Ref;
+      case 3:
+        return attackButton4Ref;
+      default:
+        return null;
+    }
+  }, []);
 
   useEffect(() => {
     if (parentDivRef.current) {
@@ -62,11 +86,27 @@ export const ActionsPanel = (): JSX.Element => {
             attackButton1Ref.current?.focus();
             setAttackButtonFocus(0);
           }
+          if (attackButtonFocus === 2 && attackButton3Ref.current) {
+            attackButton2Ref.current?.focus();
+            setAttackButtonFocus(1);
+          }
+          if (attackButtonFocus === 3 && attackButton4Ref.current) {
+            attackButton3Ref.current?.focus();
+            setAttackButtonFocus(2);
+          }
           break;
         case 'ArrowRight':
           if (attackButtonFocus === 0 && attackButton1Ref.current) {
             attackButton2Ref.current?.focus();
             setAttackButtonFocus(1);
+          }
+          if (attackButtonFocus === 1 && attackButton2Ref.current) {
+            attackButton3Ref.current?.focus();
+            setAttackButtonFocus(2);
+          }
+          if (attackButtonFocus === 2 && attackButton3Ref.current) {
+            attackButton4Ref.current?.focus();
+            setAttackButtonFocus(3);
           }
           break;
         default:
@@ -153,6 +193,19 @@ export const ActionsPanel = (): JSX.Element => {
     () => [...equippedSpells, ...equippedWeapons],
     [equippedSpells, equippedWeapons],
   );
+
+  const spellAndWeaponTemplates = useMemo(
+    () => [...spellTemplates, ...weaponTemplates],
+    [spellTemplates, weaponTemplates],
+  );
+
+  if (isItemTemplatesLoading) {
+    return (
+      <VStack mt={12}>
+        <Spinner size="lg" />
+      </VStack>
+    );
+  }
 
   return (
     <Box maxH="100%" overflowY="auto" pb={4} ref={parentDivRef}>
@@ -247,7 +300,7 @@ export const ActionsPanel = (): JSX.Element => {
                           ).toString(),
                     )
                   }
-                  ref={index === 0 ? attackButton1Ref : attackButton2Ref}
+                  ref={getButtonRef(index)}
                   variant="outline"
                   w="100%"
                 >
@@ -331,6 +384,11 @@ export const ActionsPanel = (): JSX.Element => {
 
         {opponent?.name &&
           attackOutcomes.map((attack, i) => {
+            const attackItem = spellAndWeaponTemplates.find(
+              item => item.tokenId === attack.itemId,
+            );
+            const itemName = attackItem?.name ?? 'an item';
+
             if (attack.miss[0]) {
               return (
                 <Typist
@@ -347,8 +405,8 @@ export const ActionsPanel = (): JSX.Element => {
                       You missed{' '}
                       <Text as="span" color="green">
                         {opponent.name}
-                      </Text>
-                      .
+                      </Text>{' '}
+                      with {itemName}.
                     </Text>
                   ) : (
                     <Text
@@ -358,7 +416,7 @@ export const ActionsPanel = (): JSX.Element => {
                       <Text as="span" color="green">
                         {opponent.name}
                       </Text>{' '}
-                      missed you.
+                      missed you with {itemName}.
                     </Text>
                   )}
                 </Typist>
@@ -380,7 +438,7 @@ export const ActionsPanel = (): JSX.Element => {
                     <Text as="span" color="green">
                       {opponent?.name}
                     </Text>{' '}
-                    for{' '}
+                    with {itemName} for{' '}
                     <Text as="span" color="red">
                       {attack.attackerDamageDelt}
                     </Text>{' '}
@@ -392,7 +450,7 @@ export const ActionsPanel = (): JSX.Element => {
                     <Text as="span" color="green">
                       {opponent?.name}
                     </Text>{' '}
-                    attacked you for{' '}
+                    attacked you with {itemName} for{' '}
                     <Text as="span" color="red">
                       {attack.attackerDamageDelt}
                     </Text>{' '}
@@ -418,7 +476,7 @@ export const ActionsPanel = (): JSX.Element => {
             >
               {lastestBattleOutcome?.winner === character?.id
                 ? 'You won!'
-                : 'You lost...'}
+                : 'You died...'}
             </Text>
           </Typist>
           <HStack justifyContent="center">
