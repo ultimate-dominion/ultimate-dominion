@@ -30,9 +30,9 @@ import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
 
 type MapContextType = {
-  allShops: Shop[];
   allCharacters: Character[];
   allMonsters: Monster[];
+  allShops: Shop[];
   inSafetyZone: boolean;
   isFetchingEntities: boolean;
   isSpawned: boolean;
@@ -45,9 +45,9 @@ type MapContextType = {
 };
 
 const MapContext = createContext<MapContextType>({
-  allShops: [],
   allCharacters: [],
   allMonsters: [],
+  allShops: [],
   inSafetyZone: false,
   isFetchingEntities: false,
   isSpawned: false,
@@ -67,12 +67,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
   const {
     components: {
-      Shops,
       Characters,
       CharactersTokenURI,
       EncounterEntity,
       GoldBalances,
       Position,
+      Shops,
       Spawned,
       Stats,
     },
@@ -321,8 +321,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     allMonsterEntities,
     getAllCharacters,
     getMonsters,
-    isSynced,
     getShops,
+    isSynced,
   ]);
 
   useEffect(() => {
@@ -430,18 +430,18 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   return (
     <MapContext.Provider
       value={{
-        allShops,
-        allMonsters,
         allCharacters,
+        allMonsters,
+        allShops,
         inSafetyZone,
         isFetchingEntities,
         isSpawned,
         isSpawning,
         monstersOnTile,
-        shopsOnTile,
         onSpawn,
         otherCharactersOnTile,
         position: position ? { x: position.x, y: position.y } : null,
+        shopsOnTile,
       }}
     >
       {children}

@@ -40,18 +40,19 @@ import {
     ArmorStatsData,
     WeaponStats,
     WeaponStatsData,
+    ShopsData,
     StatRestrictions,
     StatRestrictionsData,
     SpellStatsData,
     SpellStats,
     ConsumableStats,
     ConsumableStatsData
+
 } from "@codegen/index.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
 import {Classes, ItemType, MobType, EffectType} from "@codegen/common.sol";
 import {
-    Shop,
     MonsterStats,
     MonsterTemplateDetails,
     WeaponTemplateDetails,
@@ -427,7 +428,7 @@ contract PostDeploy is Script {
         uint256[] memory sellableItems = new uint256[](2);
         sellableItems[0] = uint256(0);
         sellableItems[1] = uint256(1);
-        Shop memory newShop = Shop({
+        ShopsData memory newShop = ShopsData({
             priceMarkup: 0,
             priceMarkdown: 0,
             sellableItems: sellableItems,

@@ -323,7 +323,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           <Grid gap={5} templateColumns="repeat(4, 1fr)">
             <GridItem colSpan={2}>
               <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-                Town Square
+                Shops
               </Text>
             </GridItem>
           </Grid>

@@ -210,10 +210,10 @@ struct Order {
 }
 //////////////////////////////////// Shop /////////////////////////////////////
 
-struct Shop {
-    uint256 priceMarkup;
-    uint256 priceMarkdown;
-    uint256[] sellableItems;
-    uint256[] buyableItems;
+// struct Shop {
+//     uint256 priceMarkup;
+//     uint256 priceMarkdown;
+//     uint256[] sellableItems;
+//     uint256[] buyableItems;
 
-}
+// }

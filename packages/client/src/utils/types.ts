@@ -262,10 +262,10 @@ export type WeaponTemplate = WeaponStats &
   };
 
 export type Shop = {
-  mobId: string;
-  priceMarkup: string;
-  priceMarkdown: string;
-  sellableItems: string[];
   buyableItems: string[];
+  mobId: string;
   position: { x: number; y: number };
+  priceMarkdown: string;
+  priceMarkup: string;
+  sellableItems: string[];
 };
