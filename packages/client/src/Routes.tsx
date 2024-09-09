@@ -17,6 +17,7 @@ import { Welcome } from './pages/Welcome';
 export const HOME_PATH = '/';
 export const CHARACTER_CREATION_PATH = '/character-creation';
 export const GAME_BOARD_PATH = '/game-board';
+export const CHARACTERS_PATH = '/characters';
 export const LEADERBOARD_PATH = '/leaderboard';
 export const AUCTION_HOUSE_PATH = '/auction-house';
 export const ITEM_PATH = AUCTION_HOUSE_PATH + '/items/';
@@ -51,7 +52,7 @@ const AppRoutes: React.FC = () => {
       <Route path={HOME_PATH} element={<Welcome />} />
       <Route path={CHARACTER_CREATION_PATH} element={<CharacterCreation />} />
       <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
-      <Route path="/characters/:id" element={<CharacterPage />} />
+      <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
       <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
       <Route path={AUCTION_HOUSE_PATH} element={<AuctionHouse />} />
       <Route path={ITEM_PATH + ':itemId'} element={<AuctionItem />} />

@@ -9,6 +9,7 @@ import {
   Heading,
   HStack,
   Input,
+  Link,
   SimpleGrid,
   Stack,
   Text,
@@ -36,6 +37,7 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
+import { EXPLORER_URLS } from '../lib/web3';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import { shortenAddress } from '../utils/helpers';
@@ -50,7 +52,7 @@ export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
-  const { isConnected } = useAccount();
+  const { chainId, isConnected } = useAccount();
   const {
     components: { Items, StarterItems, UltimateDominionConfig },
     delegatorAddress,
@@ -66,9 +68,10 @@ export const CharacterCreation = (): JSX.Element => {
   const { character, isRefreshing, refreshCharacter } = useCharacter();
   const {
     file: avatar,
-    setFile: setAvatar,
-    onUpload,
     isUploading,
+    onRemove,
+    onUpload,
+    setFile: setAvatar,
   } = useUploadFile({ fileName: 'characterAvatar' });
 
   const [name, setName] = useState('');
@@ -147,6 +150,15 @@ export const CharacterCreation = (): JSX.Element => {
     }
   }, []);
 
+  const onRemoveAvatar = useCallback(() => {
+    const input = document.getElementById('avatarInput');
+
+    if (input) {
+      (input as HTMLInputElement).value = '';
+      onRemove();
+    }
+  }, [onRemove]);
+
   const onCreateCharacter = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -158,23 +170,27 @@ export const CharacterCreation = (): JSX.Element => {
           throw new Error('Missing delegation.');
         }
 
-        if (!(avatar && description && name)) {
+        if (!(description && name)) {
           setShowError(true);
           renderWarning('Missing required fields.');
           return;
         }
 
-        const avatarCid = await onUpload();
-        if (!avatarCid)
-          throw new Error(
-            'Something went wrong uploading your character avatar.',
-          );
+        let image = `https://effigy.im/a/${delegatorAddress}.svg`;
 
-        const image = `ipfs://${avatarCid}`;
+        if (avatar) {
+          const avatarCid = await onUpload();
+          if (!avatarCid)
+            throw new Error(
+              'Something went wrong uploading your character avatar.',
+            );
+
+          image = `ipfs://${avatarCid}`;
+        }
 
         const characterMetadata = {
-          name,
-          description,
+          name: name.trim(),
+          description: description.trim(),
           image,
         };
 
@@ -347,11 +363,15 @@ export const CharacterCreation = (): JSX.Element => {
       <Center>
         <Avatar
           size={{ base: 'lg', sm: 'xl' }}
-          src={avatar ? URL.createObjectURL(avatar) : undefined}
+          src={
+            avatar
+              ? URL.createObjectURL(avatar)
+              : `https://effigy.im/a/${delegatorAddress}.svg`
+          }
         />
       </Center>
     );
-  }, [avatar]);
+  }, [avatar, delegatorAddress]);
 
   if (!starterItems) {
     return (
@@ -379,16 +399,38 @@ export const CharacterCreation = (): JSX.Element => {
             <HStack spacing={4}>
               <Text fontSize={{ base: 'xs', md: 'sm' }}>
                 Address:{' '}
-                <Text as="span" fontWeight={700}>
-                  {shortenAddress(characterToken)}
-                </Text>
+                {chainId && EXPLORER_URLS[chainId] ? (
+                  <Link
+                    color="blue"
+                    fontWeight={700}
+                    href={`${EXPLORER_URLS[chainId]}/token/${characterToken}`}
+                    isExternal
+                  >
+                    {shortenAddress(characterToken)}
+                  </Link>
+                ) : (
+                  <Text as="span" fontWeight={700}>
+                    {shortenAddress(characterToken)}
+                  </Text>
+                )}
               </Text>
               <Text>|</Text>
               <Text fontSize={{ base: 'xs', md: 'sm' }}>
                 Token ID:{' '}
-                <Text as="span" fontWeight={700}>
-                  {character.tokenId}
-                </Text>
+                {chainId && EXPLORER_URLS[chainId] ? (
+                  <Link
+                    color="blue"
+                    fontWeight={700}
+                    href={`${EXPLORER_URLS[chainId]}/token/${characterToken}/instance/${character.tokenId}`}
+                    isExternal
+                  >
+                    {character.tokenId}
+                  </Link>
+                ) : (
+                  <Text as="span" fontWeight={700}>
+                    {character.tokenId}
+                  </Text>
+                )}
               </Text>
             </HStack>
             <VStack>
@@ -412,9 +454,14 @@ export const CharacterCreation = (): JSX.Element => {
             p={{ base: 4, sm: 10 }}
             pos="relative"
           >
-            <Heading mb={6} size="sm" textAlign="left">
+            <Heading mb={2} size="sm" textAlign="left">
               Create Your Character
             </Heading>
+            <Text fontSize="xs" mb={6}>
+              Your name, avatar, and description should fit a character you
+              might find in a fantasy world. Something like &quot;Sir
+              Lancelot&quot; or &quot;A young wizard from the east.&quot;
+            </Text>
             <VStack spacing={8}>
               <Stack
                 alignItems="start"
@@ -439,7 +486,7 @@ export const CharacterCreation = (): JSX.Element => {
                       </FormHelperText>
                     )}
                   </FormControl>
-                  <FormControl isInvalid={showError && !avatar}>
+                  <FormControl>
                     <Input
                       accept=".png, .jpg, .jpeg, .webp, .svg"
                       id="avatarInput"
@@ -455,23 +502,18 @@ export const CharacterCreation = (): JSX.Element => {
                       isDisabled={isCreating}
                       isLoading={isUploading}
                       loadingText="Uploading..."
-                      onClick={onUploadAvatar}
+                      onClick={avatar ? onRemoveAvatar : onUploadAvatar}
                       size="sm"
                       type="button"
                     >
-                      Upload Avatar Image
+                      {avatar ? 'Remove Avatar' : 'Upload Avatar Image'}
                     </Button>
-                    {showError && !avatar && (
-                      <FormHelperText color="red">
-                        Avatar is required
-                      </FormHelperText>
-                    )}
                   </FormControl>
                 </VStack>
               </Stack>
               <FormControl isInvalid={showError && !description}>
                 <Textarea
-                  height="200px"
+                  height="150px"
                   isDisabled={isCreating}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="Bio"
@@ -519,12 +561,13 @@ export const CharacterCreation = (): JSX.Element => {
           p={{ base: 4, sm: 10 }}
           pos="relative"
         >
-          <VStack alignItems="left" spacing={6}>
+          <VStack alignItems="left" spacing={4}>
             <Heading size="sm" textAlign="left">
               Choose Your Class
             </Heading>
             <ButtonGroup justifyContent="space-between">
               <Button
+                isDisabled={isDisabled}
                 onClick={() => setCharacterClass(StatsClasses.Warrior)}
                 size="sm"
                 variant={characterClass === 0 ? 'solid' : 'outline'}
@@ -533,6 +576,7 @@ export const CharacterCreation = (): JSX.Element => {
                 Warrior
               </Button>
               <Button
+                isDisabled={isDisabled}
                 onClick={() => setCharacterClass(StatsClasses.Rogue)}
                 size="sm"
                 variant={characterClass === 1 ? 'solid' : 'outline'}
@@ -541,6 +585,7 @@ export const CharacterCreation = (): JSX.Element => {
                 Rogue
               </Button>
               <Button
+                isDisabled={isDisabled}
                 onClick={() => setCharacterClass(StatsClasses.Mage)}
                 size="sm"
                 variant={characterClass === 2 ? 'solid' : 'outline'}
@@ -564,21 +609,25 @@ export const CharacterCreation = (): JSX.Element => {
           <SimpleGrid
             columns={{ base: 1, xl: 2 }}
             mb={{ base: 0, lg: 24 }}
-            mt={{ base: 12, sm: 20 }}
+            mt={{ base: 8, sm: 12 }}
             spacing={{ base: 12, sm: 16 }}
           >
             <VStack spacing={8}>
               <HStack justify="space-between" w="100%">
-                <Heading size="sm">Stats</Heading>
-                <Button
-                  isDisabled={isDisabled}
-                  isLoading={isRollingStats}
-                  loadingText="Rolling..."
-                  onClick={onRollStats}
-                  size="sm"
-                >
-                  {rolledOnce ? 'Re-roll' : 'Roll Stats'}
-                </Button>
+                <VStack alignItems="left" spacing={4}>
+                  <Heading size="sm" textAlign="left">
+                    Roll Stats
+                  </Heading>
+                  <Button
+                    isDisabled={isDisabled}
+                    isLoading={isRollingStats}
+                    loadingText="Rolling..."
+                    onClick={onRollStats}
+                    size="sm"
+                  >
+                    {rolledOnce ? 'Re-roll' : 'Roll'}
+                  </Button>
+                </VStack>
               </HStack>
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
@@ -633,7 +682,7 @@ export const CharacterCreation = (): JSX.Element => {
                 type="button"
                 width="100%"
               >
-                Wake Up
+                Enter Game
               </Button>
             </Box>
           )}
@@ -663,7 +712,7 @@ export const CharacterCreation = (): JSX.Element => {
               type="button"
               width="100%"
             >
-              Wake Up
+              Enter Game
             </Button>
             {showError && !rolledOnce && (
               <Text color="red" fontSize="sm" mt={2} textAlign="center">

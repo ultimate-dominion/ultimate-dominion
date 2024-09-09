@@ -213,6 +213,15 @@ const Textarea = {
   },
 };
 
+const Tooltip = {
+  baseStyle: {
+    bg: 'black',
+    borderRadius: 0,
+    color: 'white',
+    p: 4,
+  },
+};
+
 export const theme = extendTheme({
   config: { initialColorMode: 'light', useSystemColorMode: false },
   fonts: {
@@ -238,5 +247,6 @@ export const theme = extendTheme({
     Progress,
     Text,
     Textarea,
+    Tooltip,
   },
 });

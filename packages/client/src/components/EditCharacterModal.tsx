@@ -1,5 +1,6 @@
 import {
   Avatar,
+  Box,
   Button,
   Center,
   FormControl,
@@ -193,87 +194,89 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent as="form" onSubmit={onEditCharacter}>
-        <ModalHeader>
-          <Text>Edit Character</Text>
-        </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody p={4}>
-          <VStack gap={5}>
-            <HStack w="100%" gap={5}>
-              {UploadedAvatar}
-              <VStack w="100%">
-                <FormControl isInvalid={showError && !newName}>
-                  <Input
-                    isDisabled={isUpdating}
-                    onChange={e => setNewName(e.target.value)}
-                    placeholder={'Name'}
-                    type="text"
-                    value={newName}
-                    maxLength={15}
-                  />
-                  {showError && !newName && (
-                    <FormHelperText color="red">
-                      Name is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-                <FormControl isInvalid={showError && !(avatar || image)}>
-                  <Input
-                    accept=".png, .jpg, .jpeg, .webp, .svg"
-                    id="avatarInput"
-                    isDisabled={isUpdating}
-                    onChange={e => setAvatar(e.target.files?.[0] ?? null)}
-                    style={{ display: 'none' }}
-                    type="file"
-                  />
-                  <Button
-                    alignSelf="start"
-                    isDisabled={isUpdating}
-                    isLoading={isUploading}
-                    loadingText="Uploading..."
-                    onClick={onUploadAvatar}
-                    size="sm"
-                    type="button"
-                  >
-                    Upload Avatar Image
-                  </Button>
-                  {showError && !(avatar || image) && (
-                    <FormHelperText color="red">
-                      Avatar is required
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </VStack>
-            </HStack>
-            <FormControl isInvalid={showError && !newDescription}>
-              <Textarea
-                height="200px"
-                isDisabled={isUpdating}
-                onChange={e => setNewDescription(e.target.value)}
-                placeholder="Bio"
-                value={newDescription}
-              />
-              {showError && !newDescription && (
-                <FormHelperText color="red">Bio is required</FormHelperText>
-              )}
-            </FormControl>
-          </VStack>
-        </ModalBody>
-        <ModalFooter>
-          <Button onClick={onClose} variant="ghost">
-            Cancel
-          </Button>
-          <Spacer />
-          <Button
-            isDisabled={!hasChanged}
-            isLoading={isUpdating}
-            loadingText="Updating..."
-            type="submit"
-          >
-            Update
-          </Button>
-        </ModalFooter>
+      <ModalContent>
+        <Box as="form" onSubmit={onEditCharacter}>
+          <ModalHeader>
+            <Text>Edit Character</Text>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody p={4}>
+            <VStack gap={5}>
+              <HStack w="100%" gap={5}>
+                {UploadedAvatar}
+                <VStack w="100%">
+                  <FormControl isInvalid={showError && !newName}>
+                    <Input
+                      isDisabled={isUpdating}
+                      onChange={e => setNewName(e.target.value)}
+                      placeholder={'Name'}
+                      type="text"
+                      value={newName}
+                      maxLength={15}
+                    />
+                    {showError && !newName && (
+                      <FormHelperText color="red">
+                        Name is required
+                      </FormHelperText>
+                    )}
+                  </FormControl>
+                  <FormControl isInvalid={showError && !(avatar || image)}>
+                    <Input
+                      accept=".png, .jpg, .jpeg, .webp, .svg"
+                      id="avatarInput"
+                      isDisabled={isUpdating}
+                      onChange={e => setAvatar(e.target.files?.[0] ?? null)}
+                      style={{ display: 'none' }}
+                      type="file"
+                    />
+                    <Button
+                      alignSelf="start"
+                      isDisabled={isUpdating}
+                      isLoading={isUploading}
+                      loadingText="Uploading..."
+                      onClick={onUploadAvatar}
+                      size="sm"
+                      type="button"
+                    >
+                      Upload Avatar Image
+                    </Button>
+                    {showError && !(avatar || image) && (
+                      <FormHelperText color="red">
+                        Avatar is required
+                      </FormHelperText>
+                    )}
+                  </FormControl>
+                </VStack>
+              </HStack>
+              <FormControl isInvalid={showError && !newDescription}>
+                <Textarea
+                  height="200px"
+                  isDisabled={isUpdating}
+                  onChange={e => setNewDescription(e.target.value)}
+                  placeholder="Bio"
+                  value={newDescription}
+                />
+                {showError && !newDescription && (
+                  <FormHelperText color="red">Bio is required</FormHelperText>
+                )}
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose} variant="ghost">
+              Cancel
+            </Button>
+            <Spacer />
+            <Button
+              isDisabled={!hasChanged}
+              isLoading={isUpdating}
+              loadingText="Updating..."
+              type="submit"
+            >
+              Update
+            </Button>
+          </ModalFooter>
+        </Box>
       </ModalContent>
     </Modal>
   );
