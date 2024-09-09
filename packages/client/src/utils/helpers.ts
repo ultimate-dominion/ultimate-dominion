@@ -65,7 +65,7 @@ export const decodeCharacterId = (
   return { ownerAddress, characterTokenId: characterTokenId.toString() };
 };
 
-export const decodeMonsterId = (
+export const decodeMobInstanceId = (
   monsterId: `0x${string}`,
 ): {
   mobId: string;

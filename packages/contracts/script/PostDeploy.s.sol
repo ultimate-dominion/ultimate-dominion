@@ -431,8 +431,8 @@ contract PostDeploy is Script {
         ShopsData memory newShop = ShopsData({
             priceMarkup: 0,
             priceMarkdown: 0,
-            sellableItems: sellableItems,
-            buyableItems: sellableItems
+            buyableItems: sellableItems,
+            sellableItems: sellableItems
         });
 
         uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");

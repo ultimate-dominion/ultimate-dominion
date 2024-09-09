@@ -408,13 +408,13 @@ export default defineWorld({
     },
     ///////////////////////////////////// SHOPS ///////////////////////////////////
     Shops: {
-      key: ["mobId"],
+      key: ["entityId"],
       schema: {
-        mobId: "bytes32",
-        priceMarkup: "uint256",
+        entityId: "bytes32",
         priceMarkdown: "uint256",
-        sellableItems: "uint256[]",
+        priceMarkup: "uint256",
         buyableItems: "uint256[]",
+        sellableItems: "uint256[]",
       },
     },
     ////////////////////////////////////////// OFFCHAIN TABLES////////////////////////////////////////

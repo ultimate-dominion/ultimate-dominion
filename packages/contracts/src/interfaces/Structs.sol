@@ -208,12 +208,3 @@ struct Order {
     bytes signature;
     address offerer;
 }
-//////////////////////////////////// Shop /////////////////////////////////////
-
-// struct Shop {
-//     uint256 priceMarkup;
-//     uint256 priceMarkdown;
-//     uint256[] sellableItems;
-//     uint256[] buyableItems;
-
-// }

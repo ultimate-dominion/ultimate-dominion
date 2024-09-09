@@ -20,7 +20,7 @@ import { formatEther, hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
-  decodeMonsterId,
+  decodeMobInstanceId,
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
@@ -38,10 +38,10 @@ type MapContextType = {
   isSpawned: boolean;
   isSpawning: boolean;
   monstersOnTile: Monster[];
-  shopsOnTile: Shop[];
   onSpawn: () => void;
   otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
+  shopsOnTile: Shop[];
 };
 
 const MapContext = createContext<MapContextType>({
@@ -53,10 +53,10 @@ const MapContext = createContext<MapContextType>({
   isSpawned: false,
   isSpawning: false,
   monstersOnTile: [],
-  shopsOnTile: [],
   onSpawn: () => {},
   otherCharactersOnTile: [],
   position: null,
+  shopsOnTile: [],
 });
 
 export type MapProviderProps = {
@@ -241,7 +241,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     (entities: Entity[]): Monster[] => {
       try {
         const _monsters: Monster[] = entities.map(entity => {
-          const { mobId } = decodeMonsterId(entity as `0x${string}`);
+          const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
           const encounterId = getComponentValue(
             EncounterEntity,
             entity,
@@ -282,11 +282,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     (entities: Entity[]): Shop[] => {
       try {
         const _shops: Shop[] = entities.map(entity => {
-          const { mobId } = decodeMonsterId(entity as `0x${string}`);
+          const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
 
           const _position = getComponentValueStrict(Position, entity);
           return {
-            mobId: mobId,
+            entityId: mobId,
             priceMarkup: '0',
             priceMarkdown: '0',
             sellableItems: ['0'],
@@ -317,8 +317,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     })();
   }, [
     allCharacterEntities,
-    allShopEntities,
     allMonsterEntities,
+    allShopEntities,
     getAllCharacters,
     getMonsters,
     getShops,
