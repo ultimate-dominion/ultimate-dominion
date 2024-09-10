@@ -426,10 +426,6 @@ contract PostDeploy is Script {
     }
     function _createShops() internal {
         uint256[] memory sellableItems = new uint256[](4);
-        // sellableItems[0] = uint256(0);
-        // sellableItems[1] = uint256(1);
-        // sellableItems[2] = uint256(2);
-        // sellableItems[3] = uint256(3);
         sellableItems[0] = uint256(4);
         sellableItems[1] = uint256(5);
         sellableItems[2] = uint256(6);
