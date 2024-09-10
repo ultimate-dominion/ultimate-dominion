@@ -39,10 +39,10 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import {
-  AUCTION_HOUSE_PATH,
   GAME_BOARD_PATH,
   HOME_PATH,
   LEADERBOARD_PATH,
+  MARKETPLACE_PATH,
 } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
@@ -381,11 +381,11 @@ export const CharacterPage = (): JSX.Element => {
                   w="100%"
                   onClick={() => {
                     if (isOwner) {
-                      navigate(AUCTION_HOUSE_PATH);
+                      navigate(MARKETPLACE_PATH);
                     }
                   }}
                 >
-                  {isOwner ? 'Auction House' : 'Chat'}
+                  {isOwner ? 'Marketplace' : 'Chat'}
                 </Button>
                 <Button
                   m="5px 0"

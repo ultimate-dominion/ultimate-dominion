@@ -30,7 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
 
-import { AuctionRow } from '../components/AuctionRow';
+import { MarketplaceRow } from '../components/MarketplaceRow';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -55,7 +55,7 @@ enum SortOptions {
 
 const ITEMS_PER_PAGE = 10;
 
-export const AuctionHouse = (): JSX.Element => {
+export const Marketplace = (): JSX.Element => {
   const { renderError } = useToast();
   const navigate = useNavigate();
   const { isConnected } = useAccount();
@@ -357,8 +357,8 @@ export const AuctionHouse = (): JSX.Element => {
         {items.length > 0 ? (
           items.map((item, i) => {
             return (
-              <AuctionRow
-                key={`auction-row-${i}`}
+              <MarketplaceRow
+                key={`marketplace-row-${i}`}
                 {...item}
                 floor={itemFloorPrices[item.tokenId] ?? '0'}
               />

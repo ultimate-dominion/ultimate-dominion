@@ -35,13 +35,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Address, erc20Abi, formatEther, parseEther } from 'viem';
 
-import { AuctionAllowanceModal } from '../components/AuctionAllowanceModal';
+import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { AUCTION_HOUSE_PATH } from '../Routes';
+import { MARKETPLACE_PATH } from '../Routes';
 import { ERC_1155_ABI } from '../utils/constants';
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import {
@@ -55,7 +55,7 @@ import {
   type WeaponStats,
 } from '../utils/types';
 
-export const AuctionItem = (): JSX.Element => {
+export const MarketplaceItem = (): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
@@ -92,10 +92,10 @@ export const AuctionItem = (): JSX.Element => {
 
   const { isOpen, onClose, onOpen } = useDisclosure();
 
-  const { auctionHouse: auctionHouseAddress, goldToken } = useComponentValue(
+  const { marketplace: marketplaceAddress, goldToken } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
-  ) ?? { auctionHouse: null, goldToken: null };
+  ) ?? { marketplace: null, goldToken: null };
 
   const { items: itemsContract } = useComponentValue(
     UltimateDominionConfig,
@@ -198,14 +198,14 @@ export const AuctionItem = (): JSX.Element => {
         address: goldToken as Address,
         abi: erc20Abi,
         functionName: 'allowance',
-        args: [userCharacter?.owner as Address, auctionHouseAddress as Address],
+        args: [userCharacter?.owner as Address, marketplaceAddress as Address],
       });
 
       const _itemAllowance = (await publicClient.readContract({
         address: itemsContract as Address,
         abi: ERC_1155_ABI,
         functionName: 'isApprovedForAll',
-        args: [userCharacter?.owner as Address, auctionHouseAddress as Address],
+        args: [userCharacter?.owner as Address, marketplaceAddress as Address],
       })) as boolean;
       allowances = {
         goldAllowance: _goldAllowance,
@@ -217,9 +217,9 @@ export const AuctionItem = (): JSX.Element => {
       return allowances;
     }
   }, [
-    auctionHouseAddress,
     goldToken,
     itemsContract,
+    marketplaceAddress,
     publicClient,
     renderError,
     userCharacter?.owner,
@@ -365,10 +365,10 @@ export const AuctionItem = (): JSX.Element => {
         <Button
           mt={5}
           size="sm"
-          onClick={() => navigate(AUCTION_HOUSE_PATH)}
+          onClick={() => navigate(MARKETPLACE_PATH)}
           variant="outline"
         >
-          Back to Auction House
+          Back to Marketplace
         </Button>
         <Text>Item not found</Text>
       </Box>
@@ -381,10 +381,10 @@ export const AuctionItem = (): JSX.Element => {
         <Button
           mt={5}
           size="sm"
-          onClick={() => navigate(AUCTION_HOUSE_PATH)}
+          onClick={() => navigate(MARKETPLACE_PATH)}
           variant="outline"
         >
-          Back to Auction House
+          Back to Marketplace
         </Button>
         <HStack h="100%" justifyContent="center" w="100%">
           <Spinner size="xl" />
@@ -395,15 +395,15 @@ export const AuctionItem = (): JSX.Element => {
 
   return (
     <Stack>
-      <AuctionAllowanceModal isOpen={isOpen} onClose={onClose} />
+      <MarketplaceAllowanceModal isOpen={isOpen} onClose={onClose} />
       <Box>
         <Button
           mt={5}
           size="sm"
-          onClick={() => navigate(AUCTION_HOUSE_PATH)}
+          onClick={() => navigate(MARKETPLACE_PATH)}
           variant="outline"
         >
-          Back to Auction House
+          Back to Marketplace
         </Button>
         <HStack alignItems="start" spacing={12}>
           <Stack w="50%">

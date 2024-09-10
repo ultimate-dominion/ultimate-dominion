@@ -25,7 +25,8 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { ERC_1155_ABI } from '../utils/constants';
 import { ConnectWalletButton } from './ConnectWalletButton';
-export const AuctionAllowanceModal = ({
+
+export const MarketplaceAllowanceModal = ({
   isOpen,
   onClose,
 }: {
@@ -57,10 +58,10 @@ export const AuctionAllowanceModal = ({
   const [itemsApproved, setItemsApproved] = useState(false);
   const [isApprovingItems, setIsApprovingItems] = useState(false);
 
-  const { auctionHouse: auctionHouseAddress } = useComponentValue(
+  const { marketplace: marketplaceAddress } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
-  ) ?? { auctionHouse: null };
+  ) ?? { marketplace: null };
 
   // Reset errorMessage state when any of the form fields change
   useEffect(() => {
@@ -69,13 +70,13 @@ export const AuctionAllowanceModal = ({
 
   useEffect(() => {
     if (isOpen) {
-      if (auctionHouseAddress && externalWalletClient) {
+      if (marketplaceAddress && externalWalletClient) {
         (async () => {
           const _itemsApproved = !!(await publicClient.readContract({
             address: itemsContract as Address,
             abi: ERC_1155_ABI,
             functionName: 'isApprovedForAll',
-            args: [externalWalletClient.account.address, auctionHouseAddress],
+            args: [externalWalletClient.account.address, marketplaceAddress],
           })) as boolean;
 
           const _goldAllowance = await publicClient.readContract({
@@ -84,7 +85,7 @@ export const AuctionAllowanceModal = ({
             functionName: 'allowance',
             args: [
               externalWalletClient.account.address,
-              auctionHouseAddress as Address,
+              marketplaceAddress as Address,
             ],
           });
 
@@ -94,11 +95,11 @@ export const AuctionAllowanceModal = ({
       }
     }
   }, [
-    auctionHouseAddress,
     externalWalletClient,
     goldToken,
     isOpen,
     itemsContract,
+    marketplaceAddress,
     publicClient,
   ]);
 
@@ -110,8 +111,8 @@ export const AuctionAllowanceModal = ({
         throw new Error('No external wallet client found.');
       }
 
-      if (!auctionHouseAddress) {
-        throw new Error('No Auction House address found.');
+      if (!marketplaceAddress) {
+        throw new Error('No Marketplace address found.');
       }
 
       if (!goldAllowance || parseEther(goldAllowance) <= 0) {
@@ -123,7 +124,7 @@ export const AuctionAllowanceModal = ({
         address: goldToken as Address,
         abi: erc20Abi,
         functionName: 'approve',
-        args: [auctionHouseAddress as Address, parseEther(goldAllowance)],
+        args: [marketplaceAddress as Address, parseEther(goldAllowance)],
       });
 
       const txHash = await externalWalletClient.writeContract(request);
@@ -143,10 +144,10 @@ export const AuctionAllowanceModal = ({
       setIsApprovingGold(false);
     }
   }, [
-    auctionHouseAddress,
     externalWalletClient,
     goldAllowance,
     goldToken,
+    marketplaceAddress,
     publicClient,
     renderError,
     renderSuccess,
@@ -160,15 +161,15 @@ export const AuctionAllowanceModal = ({
         throw new Error('No external wallet client found.');
       }
 
-      if (!auctionHouseAddress) {
-        throw new Error('No Auction House address found.');
+      if (!marketplaceAddress) {
+        throw new Error('No Marketplace address found.');
       }
 
       const { request } = await publicClient.simulateContract({
         address: itemsContract as Address,
         abi: ERC_1155_ABI,
         functionName: 'setApprovalForAll',
-        args: [auctionHouseAddress, !itemsApproved],
+        args: [marketplaceAddress, !itemsApproved],
       });
 
       const txHash = await externalWalletClient.writeContract(request);
@@ -190,10 +191,10 @@ export const AuctionAllowanceModal = ({
       setIsApprovingItems(false);
     }
   }, [
-    auctionHouseAddress,
     externalWalletClient,
     itemsApproved,
     itemsContract,
+    marketplaceAddress,
     publicClient,
     renderError,
     renderSuccess,
@@ -204,7 +205,7 @@ export const AuctionAllowanceModal = ({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>
-          {isConnected ? 'Auction House Allowances' : 'Connect Wallet'}
+          {isConnected ? 'Marketplace Allowances' : 'Connect Wallet'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
@@ -214,7 +215,7 @@ export const AuctionAllowanceModal = ({
                 <HStack>
                   <FormControl isInvalid={!!goldErrorMessage}>
                     <FormLabel fontSize="xs">
-                      Set Auction House gold allowance
+                      Set Marketplace gold allowance
                     </FormLabel>
                     {!!goldErrorMessage && (
                       <FormHelperText color="red" fontSize="xs" mb={2}>
@@ -241,7 +242,7 @@ export const AuctionAllowanceModal = ({
                 <HStack>
                   <FormControl>
                     <FormLabel fontSize="xs">
-                      Set Auction House item approval
+                      Set Marketplace item approval
                     </FormLabel>
                     <Button
                       isLoading={isApprovingItems}

@@ -19,7 +19,7 @@ import {
   type WeaponTemplate,
 } from '../utils/types';
 
-export const AuctionRow = ({
+export const MarketplaceRow = ({
   floor,
   itemType,
   minLevel,

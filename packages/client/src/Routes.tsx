@@ -5,12 +5,12 @@ import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { useMUD } from './contexts/MUDContext';
-import { AuctionHouse } from './pages/AuctionHouse';
-import { AuctionItem } from './pages/AuctionItem';
 import { CharacterPage } from './pages/Character';
 import { CharacterCreation } from './pages/CharacterCreation';
 import { GameBoard } from './pages/GameBoard';
 import { Leaderboard } from './pages/Leaderboard';
+import { Marketplace } from './pages/Marketplace';
+import { MarketplaceItem } from './pages/MarketplaceItem';
 import { Shop } from './pages/Shop';
 import { Welcome } from './pages/Welcome';
 
@@ -19,8 +19,8 @@ export const CHARACTER_CREATION_PATH = '/character-creation';
 export const GAME_BOARD_PATH = '/game-board';
 export const CHARACTERS_PATH = '/characters';
 export const LEADERBOARD_PATH = '/leaderboard';
-export const AUCTION_HOUSE_PATH = '/auction-house';
-export const ITEM_PATH = AUCTION_HOUSE_PATH + '/items/';
+export const MARKETPLACE_PATH = '/marketplace';
+export const ITEM_PATH = MARKETPLACE_PATH + '/items/';
 export const SHOP_PATH = '/shops/';
 
 const AppRoutes: React.FC = () => {
@@ -54,8 +54,8 @@ const AppRoutes: React.FC = () => {
       <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
       <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
       <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
-      <Route path={AUCTION_HOUSE_PATH} element={<AuctionHouse />} />
-      <Route path={ITEM_PATH + ':itemId'} element={<AuctionItem />} />
+      <Route path={MARKETPLACE_PATH} element={<Marketplace />} />
+      <Route path={ITEM_PATH + ':itemId'} element={<MarketplaceItem />} />
       <Route path={SHOP_PATH + ':mobId'} element={<Shop />} />
     </Routes>
   );
