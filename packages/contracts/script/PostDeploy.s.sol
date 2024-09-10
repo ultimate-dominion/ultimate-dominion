@@ -40,18 +40,19 @@ import {
     ArmorStatsData,
     WeaponStats,
     WeaponStatsData,
+    ShopsData,
     StatRestrictions,
     StatRestrictionsData,
     SpellStatsData,
     SpellStats,
     ConsumableStats,
     ConsumableStatsData
+
 } from "@codegen/index.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
 import {Classes, ItemType, MobType, EffectType} from "@codegen/common.sol";
 import {
-    Shop,
     MonsterStats,
     MonsterTemplateDetails,
     WeaponTemplateDetails,
@@ -443,11 +444,11 @@ contract PostDeploy is Script {
         buyableItems[6] = uint256(6);
         buyableItems[7] = uint256(7);
 
-        Shop memory newShop = Shop({
+        ShopsData memory newShop = ShopsData({
             priceMarkup: 0,
             priceMarkdown: 0,
-            sellableItems: sellableItems,
-            buyableItems: buyableItems
+            buyableItems: sellableItems,
+            sellableItems: sellableItems
         });
 
         uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");

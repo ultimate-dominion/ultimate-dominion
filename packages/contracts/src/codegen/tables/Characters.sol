@@ -21,6 +21,8 @@ struct CharactersData {
   address owner;
   bytes32 name;
   bool locked;
+  bytes originalStats;
+  bytes baseStats;
 }
 
 library Characters {
@@ -28,12 +30,12 @@ library Characters {
   ResourceId constant _tableId = ResourceId.wrap(0x7462554400000000000000000000000043686172616374657273000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0055040020142001000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0055040220142001000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint256, address, bytes32, bool)
-  Schema constant _valueSchema = Schema.wrap(0x005504001f615f60000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint256, address, bytes32, bool, bytes, bytes)
+  Schema constant _valueSchema = Schema.wrap(0x005504021f615f60c4c400000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -49,11 +51,13 @@ library Characters {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](4);
+    fieldNames = new string[](6);
     fieldNames[0] = "tokenId";
     fieldNames[1] = "owner";
     fieldNames[2] = "name";
     fieldNames[3] = "locked";
+    fieldNames[4] = "originalStats";
+    fieldNames[5] = "baseStats";
   }
 
   /**
@@ -239,6 +243,330 @@ library Characters {
   }
 
   /**
+   * @notice Get originalStats.
+   */
+  function getOriginalStats(bytes32 characterId) internal view returns (bytes memory originalStats) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 0);
+    return (bytes(_blob));
+  }
+
+  /**
+   * @notice Get originalStats.
+   */
+  function _getOriginalStats(bytes32 characterId) internal view returns (bytes memory originalStats) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 0);
+    return (bytes(_blob));
+  }
+
+  /**
+   * @notice Set originalStats.
+   */
+  function setOriginalStats(bytes32 characterId, bytes memory originalStats) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 0, bytes((originalStats)));
+  }
+
+  /**
+   * @notice Set originalStats.
+   */
+  function _setOriginalStats(bytes32 characterId, bytes memory originalStats) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreCore.setDynamicField(_tableId, _keyTuple, 0, bytes((originalStats)));
+  }
+
+  /**
+   * @notice Get the length of originalStats.
+   */
+  function lengthOriginalStats(bytes32 characterId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 0);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get the length of originalStats.
+   */
+  function _lengthOriginalStats(bytes32 characterId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 0);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get an item of originalStats.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function getItemOriginalStats(bytes32 characterId, uint256 _index) internal view returns (bytes memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    unchecked {
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 1, (_index + 1) * 1);
+      return (bytes(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of originalStats.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function _getItemOriginalStats(bytes32 characterId, uint256 _index) internal view returns (bytes memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    unchecked {
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 0, _index * 1, (_index + 1) * 1);
+      return (bytes(_blob));
+    }
+  }
+
+  /**
+   * @notice Push a slice to originalStats.
+   */
+  function pushOriginalStats(bytes32 characterId, bytes memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 0, bytes((_slice)));
+  }
+
+  /**
+   * @notice Push a slice to originalStats.
+   */
+  function _pushOriginalStats(bytes32 characterId, bytes memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 0, bytes((_slice)));
+  }
+
+  /**
+   * @notice Pop a slice from originalStats.
+   */
+  function popOriginalStats(bytes32 characterId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 0, 1);
+  }
+
+  /**
+   * @notice Pop a slice from originalStats.
+   */
+  function _popOriginalStats(bytes32 characterId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 0, 1);
+  }
+
+  /**
+   * @notice Update a slice of originalStats at `_index`.
+   */
+  function updateOriginalStats(bytes32 characterId, uint256 _index, bytes memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 0, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update a slice of originalStats at `_index`.
+   */
+  function _updateOriginalStats(bytes32 characterId, uint256 _index, bytes memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 0, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Get baseStats.
+   */
+  function getBaseStats(bytes32 characterId) internal view returns (bytes memory baseStats) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 1);
+    return (bytes(_blob));
+  }
+
+  /**
+   * @notice Get baseStats.
+   */
+  function _getBaseStats(bytes32 characterId) internal view returns (bytes memory baseStats) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 1);
+    return (bytes(_blob));
+  }
+
+  /**
+   * @notice Set baseStats.
+   */
+  function setBaseStats(bytes32 characterId, bytes memory baseStats) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreSwitch.setDynamicField(_tableId, _keyTuple, 1, bytes((baseStats)));
+  }
+
+  /**
+   * @notice Set baseStats.
+   */
+  function _setBaseStats(bytes32 characterId, bytes memory baseStats) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreCore.setDynamicField(_tableId, _keyTuple, 1, bytes((baseStats)));
+  }
+
+  /**
+   * @notice Get the length of baseStats.
+   */
+  function lengthBaseStats(bytes32 characterId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get the length of baseStats.
+   */
+  function _lengthBaseStats(bytes32 characterId) internal view returns (uint256) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 1);
+    unchecked {
+      return _byteLength / 1;
+    }
+  }
+
+  /**
+   * @notice Get an item of baseStats.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function getItemBaseStats(bytes32 characterId, uint256 _index) internal view returns (bytes memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    unchecked {
+      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      return (bytes(_blob));
+    }
+  }
+
+  /**
+   * @notice Get an item of baseStats.
+   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
+   */
+  function _getItemBaseStats(bytes32 characterId, uint256 _index) internal view returns (bytes memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    unchecked {
+      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
+      return (bytes(_blob));
+    }
+  }
+
+  /**
+   * @notice Push a slice to baseStats.
+   */
+  function pushBaseStats(bytes32 characterId, bytes memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+  }
+
+  /**
+   * @notice Push a slice to baseStats.
+   */
+  function _pushBaseStats(bytes32 characterId, bytes memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreCore.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
+  }
+
+  /**
+   * @notice Pop a slice from baseStats.
+   */
+  function popBaseStats(bytes32 characterId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+  }
+
+  /**
+   * @notice Pop a slice from baseStats.
+   */
+  function _popBaseStats(bytes32 characterId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    StoreCore.popFromDynamicField(_tableId, _keyTuple, 1, 1);
+  }
+
+  /**
+   * @notice Update a slice of baseStats at `_index`.
+   */
+  function updateBaseStats(bytes32 characterId, uint256 _index, bytes memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
+   * @notice Update a slice of baseStats at `_index`.
+   */
+  function _updateBaseStats(bytes32 characterId, uint256 _index, bytes memory _slice) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = characterId;
+
+    unchecked {
+      bytes memory _encoded = bytes((_slice));
+      StoreCore.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
+    }
+  }
+
+  /**
    * @notice Get the full data.
    */
   function get(bytes32 characterId) internal view returns (CharactersData memory _table) {
@@ -271,11 +599,19 @@ library Characters {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(bytes32 characterId, uint256 tokenId, address owner, bytes32 name, bool locked) internal {
+  function set(
+    bytes32 characterId,
+    uint256 tokenId,
+    address owner,
+    bytes32 name,
+    bool locked,
+    bytes memory originalStats,
+    bytes memory baseStats
+  ) internal {
     bytes memory _staticData = encodeStatic(tokenId, owner, name, locked);
 
-    EncodedLengths _encodedLengths;
-    bytes memory _dynamicData;
+    EncodedLengths _encodedLengths = encodeLengths(originalStats, baseStats);
+    bytes memory _dynamicData = encodeDynamic(originalStats, baseStats);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
@@ -286,11 +622,19 @@ library Characters {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(bytes32 characterId, uint256 tokenId, address owner, bytes32 name, bool locked) internal {
+  function _set(
+    bytes32 characterId,
+    uint256 tokenId,
+    address owner,
+    bytes32 name,
+    bool locked,
+    bytes memory originalStats,
+    bytes memory baseStats
+  ) internal {
     bytes memory _staticData = encodeStatic(tokenId, owner, name, locked);
 
-    EncodedLengths _encodedLengths;
-    bytes memory _dynamicData;
+    EncodedLengths _encodedLengths = encodeLengths(originalStats, baseStats);
+    bytes memory _dynamicData = encodeDynamic(originalStats, baseStats);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
@@ -304,8 +648,8 @@ library Characters {
   function set(bytes32 characterId, CharactersData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.tokenId, _table.owner, _table.name, _table.locked);
 
-    EncodedLengths _encodedLengths;
-    bytes memory _dynamicData;
+    EncodedLengths _encodedLengths = encodeLengths(_table.originalStats, _table.baseStats);
+    bytes memory _dynamicData = encodeDynamic(_table.originalStats, _table.baseStats);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
@@ -319,8 +663,8 @@ library Characters {
   function _set(bytes32 characterId, CharactersData memory _table) internal {
     bytes memory _staticData = encodeStatic(_table.tokenId, _table.owner, _table.name, _table.locked);
 
-    EncodedLengths _encodedLengths;
-    bytes memory _dynamicData;
+    EncodedLengths _encodedLengths = encodeLengths(_table.originalStats, _table.baseStats);
+    bytes memory _dynamicData = encodeDynamic(_table.originalStats, _table.baseStats);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = characterId;
@@ -344,17 +688,40 @@ library Characters {
   }
 
   /**
+   * @notice Decode the tightly packed blob of dynamic data using the encoded lengths.
+   */
+  function decodeDynamic(
+    EncodedLengths _encodedLengths,
+    bytes memory _blob
+  ) internal pure returns (bytes memory originalStats, bytes memory baseStats) {
+    uint256 _start;
+    uint256 _end;
+    unchecked {
+      _end = _encodedLengths.atIndex(0);
+    }
+    originalStats = (bytes(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+
+    _start = _end;
+    unchecked {
+      _end += _encodedLengths.atIndex(1);
+    }
+    baseStats = (bytes(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+  }
+
+  /**
    * @notice Decode the tightly packed blobs using this table's field layout.
    * @param _staticData Tightly packed static fields.
-   *
-   *
+   * @param _encodedLengths Encoded lengths of dynamic fields.
+   * @param _dynamicData Tightly packed dynamic fields.
    */
   function decode(
     bytes memory _staticData,
-    EncodedLengths,
-    bytes memory
+    EncodedLengths _encodedLengths,
+    bytes memory _dynamicData
   ) internal pure returns (CharactersData memory _table) {
     (_table.tokenId, _table.owner, _table.name, _table.locked) = decodeStatic(_staticData);
+
+    (_table.originalStats, _table.baseStats) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -391,6 +758,28 @@ library Characters {
   }
 
   /**
+   * @notice Tightly pack dynamic data lengths using this table's schema.
+   * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
+   */
+  function encodeLengths(
+    bytes memory originalStats,
+    bytes memory baseStats
+  ) internal pure returns (EncodedLengths _encodedLengths) {
+    // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
+    unchecked {
+      _encodedLengths = EncodedLengthsLib.pack(bytes(originalStats).length, bytes(baseStats).length);
+    }
+  }
+
+  /**
+   * @notice Tightly pack dynamic (variable length) data using this table's schema.
+   * @return The dynamic data, encoded into a sequence of bytes.
+   */
+  function encodeDynamic(bytes memory originalStats, bytes memory baseStats) internal pure returns (bytes memory) {
+    return abi.encodePacked(bytes((originalStats)), bytes((baseStats)));
+  }
+
+  /**
    * @notice Encode all of a record's fields.
    * @return The static (fixed length) data, encoded into a sequence of bytes.
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
@@ -400,12 +789,14 @@ library Characters {
     uint256 tokenId,
     address owner,
     bytes32 name,
-    bool locked
+    bool locked,
+    bytes memory originalStats,
+    bytes memory baseStats
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(tokenId, owner, name, locked);
 
-    EncodedLengths _encodedLengths;
-    bytes memory _dynamicData;
+    EncodedLengths _encodedLengths = encodeLengths(originalStats, baseStats);
+    bytes memory _dynamicData = encodeDynamic(originalStats, baseStats);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

@@ -9,7 +9,7 @@ import {
     MagicDamageStatsData,
     PhysicalDamageStatsData,
     StatRestrictionsData,
-    StatusEffectsValidityData
+    StatusEffectValidityData
 } from "@codegen/index.sol";
 
 /////////////////// Items ///////////////////////
@@ -102,7 +102,7 @@ struct StatusEffectTemplate {
     bytes32 effectId;
     string name;
     StatusEffectStatsData stats;
-    StatusEffectsValidityData validity;
+    StatusEffectValidityData validity;
 }
 
 struct MagicDamageTemplate {
@@ -118,36 +118,35 @@ struct PhysicalDamageTemplate {
 }
 
 struct AdjustedCombatStats {
-    int256 adjustedStrength;
-    int256 adjustedAgility;
-    int256 adjustedIntelligence;
-    int256 adjustedArmor;
-    int256 adjustedMaxHp;
+    int256 strength;
+    int256 agility;
+    int256 intelligence;
+    int256 armor;
+    int256 maxHp;
     int256 currentHp;
-    uint256 level;
 }
 
 /////////////////////////////////// MONSTERS /////////////////////////////////////
 
 struct MonsterStats {
     //base to hit number for this mob for physical attacks = agility * PhysicalDamageConversion
-    uint256 agility;
+    int256 agility;
     // damage reduction: subtracted from total damage
-    uint256 armor;
+    int256 armor;
     // monster's class
     Classes class;
     // the amount of experience this monster is worth
     uint256 experience;
     // hit points
-    uint256 hitPoints;
-    // base to hit modifier for magical Attacks = inteligence * magicDefenseConversion
-    uint256 intelligence;
+    int256 hitPoints;
+    // base to hit modifier for magical Actions = inteligence * magicDefenseConversion
+    int256 intelligence;
     // item ids of potential drops
     uint256[] inventory;
     // monster level
     uint256 level;
     // base damage = strength * damangeConversion
-    uint256 strength;
+    int256 strength;
 }
 
 struct MonsterTemplateDetails {
@@ -169,7 +168,7 @@ struct QuestEntity {
     uint256 currentStep;
 }
 
-struct Attack {
+struct Action {
     bytes32 attackerEntityId;
     bytes32 defenderEntityId;
     uint256 itemId;
@@ -208,13 +207,4 @@ struct Order {
     Consideration consideration;
     bytes signature;
     address offerer;
-}
-//////////////////////////////////// Shop /////////////////////////////////////
-
-struct Shop {
-    uint256 priceMarkup;
-    uint256 priceMarkdown;
-    uint256[] sellableItems;
-    uint256[] buyableItems;
-
 }

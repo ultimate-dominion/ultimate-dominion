@@ -192,7 +192,7 @@ export const GameBoard = (): JSX.Element => {
       <GridItem
         colSpan={{ base: 1, lg: 4 }}
         colStart={{ base: 0, lg: 13 }}
-        rowSpan={{ base: 3, lg: 12 }}
+        rowSpan={{ base: 3, lg: 7 }}
         rowStart={{ base: 8, lg: 0 }}
       >
         <MapPanel />
@@ -209,7 +209,7 @@ export const GameBoard = (): JSX.Element => {
         <Popover>
           <PopoverTrigger>
             <VStack>
-              <Button size="sm" w="100%">
+              <Button alignSelf="start" size="sm" w="calc(100% - 67px)">
                 Stats
               </Button>
             </VStack>

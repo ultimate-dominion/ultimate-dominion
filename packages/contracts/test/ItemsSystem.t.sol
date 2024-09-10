@@ -37,7 +37,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     function test_CreateItem() public {
         startGasReport("creates an item");
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStatsData memory weaponStats = WeaponStatsData({
@@ -58,12 +58,12 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri/"
         );
 
-        assertEq(newItemId, 13);
+        assertEq(newItemId, 24);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
             keccak256(abi.encode(erc1155System.uri(newItemId))),
-            keccak256(abi.encode("ipfs://QmcEgdrkuCYj9xjoo8ofuDfdr9kyAk8CCYpzqeMA4f9hp3/test_Weapon_uri/"))
+            keccak256(abi.encode("ipfs://QmYHtG9fCneWpeW1htV1j4NUD8LKhYR2tztvRCLviqhiKB/test_Weapon_uri/"))
         );
 
         endGasReport();
@@ -71,7 +71,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_CreateItem_Revert_NotNamespaceOwner() public {
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStatsData memory weaponStats = WeaponStatsData({
@@ -90,7 +90,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
     }
 
     function test_getItemBalance() public {
-        assertEq(world.UD__getItemBalance(bobCharacterId, 1), 1);
+        assertEq(world.UD__getItemBalance(bobCharacterId, 6), 1);
     }
 
     function test_resupplyLootManager() public {
@@ -112,7 +112,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
 
     function test_GetTotalSupply() public {
         bytes32[] memory effectIds = new bytes32[](1);
-        effectIds[0] = basicAttackIdStatsId;
+        effectIds[0] = basicActionIdStatsId;
         StatRestrictionsData memory statRestrictions =
             StatRestrictionsData({minStrength: 0, minIntelligence: 0, minAgility: 0});
         WeaponStatsData memory weaponStats = WeaponStatsData({

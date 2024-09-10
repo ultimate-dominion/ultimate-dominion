@@ -20,7 +20,7 @@ import { formatEther, hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
-  decodeMonsterId,
+  decodeMobInstanceId,
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
@@ -30,33 +30,33 @@ import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
 
 type MapContextType = {
-  allShops: Shop[];
   allCharacters: Character[];
   allMonsters: Monster[];
+  allShops: Shop[];
   inSafetyZone: boolean;
   isFetchingEntities: boolean;
   isSpawned: boolean;
   isSpawning: boolean;
   monstersOnTile: Monster[];
-  shopsOnTile: Shop[];
   onSpawn: () => void;
   otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
+  shopsOnTile: Shop[];
 };
 
 const MapContext = createContext<MapContextType>({
-  allShops: [],
   allCharacters: [],
   allMonsters: [],
+  allShops: [],
   inSafetyZone: false,
   isFetchingEntities: false,
   isSpawned: false,
   isSpawning: false,
   monstersOnTile: [],
-  shopsOnTile: [],
   onSpawn: () => {},
   otherCharactersOnTile: [],
   position: null,
+  shopsOnTile: [],
 });
 
 export type MapProviderProps = {
@@ -67,12 +67,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
   const {
     components: {
-      Shops,
       Characters,
       CharactersTokenURI,
       EncounterEntity,
       GoldBalances,
       Position,
+      Shops,
       Spawned,
       Stats,
     },
@@ -188,7 +188,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             return {
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
-              baseHp: characterStats.baseHp.toString(),
+              maxHp: characterStats.maxHp.toString(),
               currentHp: characterStats.currentHp.toString(),
               entityClass: characterStats.class,
               experience: characterStats.experience.toString(),
@@ -241,7 +241,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     (entities: Entity[]): Monster[] => {
       try {
         const _monsters: Monster[] = entities.map(entity => {
-          const { mobId } = decodeMonsterId(entity as `0x${string}`);
+          const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
           const encounterId = getComponentValue(
             EncounterEntity,
             entity,
@@ -261,7 +261,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
           return {
             ...monsterTemplate,
-            baseHp: monsterTemplate?.hitPoints.toString() ?? '0',
+            maxHp: monsterTemplate?.hitPoints.toString() ?? '0',
             currentHp,
             id: entity,
             inBattle,
@@ -278,18 +278,21 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     },
     [EncounterEntity, monsterTemplates, Position, renderError, Spawned, Stats],
   );
+
   const getShops = useCallback(
     (entities: Entity[]): Shop[] => {
       try {
         const _shops: Shop[] = entities.map(entity => {
+          const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
           const _position = getComponentValueStrict(Position, entity);
           const shopData = getComponentValueStrict(Shops, entity);
 
           return {
-            mobId: entity,
+            mobId,
             priceMarkup: shopData.priceMarkup.toString(),
             priceMarkdown: shopData.priceMarkdown.toString(),
             sellableItems: shopData.sellableItems.map(item => item.toString()),
+            shopId: entity,
             buyableItems: shopData.buyableItems.map(item => item.toString()),
             position: { x: _position.x, y: _position.y },
           } as Shop;
@@ -303,6 +306,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     },
     [Position, Shops, renderError],
   );
+
   useEffect(() => {
     (async () => {
       if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;
@@ -317,12 +321,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     })();
   }, [
     allCharacterEntities,
-    allShopEntities,
     allMonsterEntities,
+    allShopEntities,
     getAllCharacters,
     getMonsters,
-    isSynced,
     getShops,
+    isSynced,
   ]);
 
   useEffect(() => {
@@ -430,18 +434,18 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   return (
     <MapContext.Provider
       value={{
-        allShops,
-        allMonsters,
         allCharacters,
+        allMonsters,
+        allShops,
         inSafetyZone,
         isFetchingEntities,
         isSpawned,
         isSpawning,
         monstersOnTile,
-        shopsOnTile,
         onSpawn,
         otherCharactersOnTile,
         position: position ? { x: position.x, y: position.y } : null,
+        shopsOnTile,
       }}
     >
       {children}

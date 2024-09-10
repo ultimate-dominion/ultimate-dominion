@@ -66,7 +66,7 @@ export const BattleProvider = ({
 }: BattleProviderProps): JSX.Element => {
   const { renderError } = useToast();
   const {
-    components: { AttackOutcome, CombatEncounter, CombatOutcome },
+    components: { ActionOutcome, CombatEncounter, CombatOutcome },
     delegatorAddress,
     systemCalls: { endTurn },
   } = useMUD();
@@ -173,9 +173,9 @@ export const BattleProvider = ({
     return allCharacters.find(char => char.id === character.id) ?? null;
   }, [allCharacters, character]);
 
-  const allAttackOutcomes = useEntityQuery([Has(AttackOutcome)])
+  const allAttackOutcomes = useEntityQuery([Has(ActionOutcome)])
     .map(entity => {
-      const _attackOutcome = getComponentValueStrict(AttackOutcome, entity);
+      const _attackOutcome = getComponentValueStrict(ActionOutcome, entity);
 
       const { encounterId, currentTurn, attackNumber } = decodeEntity(
         {

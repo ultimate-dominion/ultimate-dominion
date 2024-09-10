@@ -1,5 +1,6 @@
 import {
   Avatar,
+  Box,
   Button,
   Grid,
   GridItem,
@@ -8,14 +9,15 @@ import {
   Spacer,
   Spinner,
   Text,
+  Tooltip,
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
+import { BsBackpack4Fill } from 'react-icons/bs';
 import { IoIosArrowForward } from 'react-icons/io';
-import { MdBackpack } from 'react-icons/md';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -82,7 +84,7 @@ export const StatsPanel = (): JSX.Element => {
 
   const {
     agility,
-    baseHp,
+    maxHp,
     currentHp,
     experience,
     goldBalance,
@@ -120,7 +122,7 @@ export const StatsPanel = (): JSX.Element => {
         </GridItem>
         <GridItem>
           <Text>
-            {currentHpWithFloor}/{baseHp}
+            {currentHpWithFloor}/{maxHp}
           </Text>
         </GridItem>
         <GridItem>
@@ -186,6 +188,21 @@ export const StatsPanel = (): JSX.Element => {
       <VStack align="stretch" alignItems="start" mt={4} spacing={2} w="100%">
         <HStack fontWeight="bold" w="100%">
           <Text>Equipped Items</Text>
+          <Tooltip
+            bg="black"
+            hasArrow
+            label="Visit the character page to equip items"
+            placement="top"
+          >
+            <Button
+              onClick={() => navigate(`/characters/${character.id}`)}
+              p="0 2px"
+              size="sm"
+              variant="ghost"
+            >
+              <BsBackpack4Fill size={12} />
+            </Button>
+          </Tooltip>
           <Spacer />
           <Text>
             {allItems.length}/{MAX_EQUIPPED_ITEMS}
@@ -200,14 +217,7 @@ export const StatsPanel = (): JSX.Element => {
             w="100%"
           >
             <Text>{item.name}</Text>
-            <Button
-              onClick={() => navigate(`/characters/${character.id}`)}
-              p="0 2px"
-              size="sm"
-              variant="ghost"
-            >
-              <MdBackpack size={12} />
-            </Button>
+            <Box h={6} />
           </HStack>
         ))}
         {Array.from({
@@ -222,6 +232,7 @@ export const StatsPanel = (): JSX.Element => {
           >
             <Text>Empty Slot</Text>
             <Button
+              h={6}
               onClick={() => navigate(`/characters/${character.id}`)}
               p="0 2px"
               size="sm"

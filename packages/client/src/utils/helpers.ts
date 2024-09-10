@@ -1,6 +1,10 @@
 import { decodeAbiParameters, hexToBigInt } from 'viem';
 
-import { type Metadata, type MonsterStats } from '../utils/types';
+import {
+  type EntityStats,
+  type Metadata,
+  type MonsterStats,
+} from '../utils/types';
 
 export const getEmoji = (name: string): string => {
   return name
@@ -11,6 +15,40 @@ export const getEmoji = (name: string): string => {
 export const removeEmoji = (name: string): string => {
   return name ? name.replace(/[\p{Emoji}\u200d]+/gu, '') || '' : name || '';
 };
+
+export const decodeBaseStats = (statsBytes: string): EntityStats => {
+  const characterBaseStats = decodeAbiParameters(
+    [
+      {
+        name: 'baseStats',
+        type: 'tuple',
+        components: [
+          { name: 'strength', type: 'int256' },
+          { name: 'agility', type: 'int256' },
+          { name: 'class', type: 'uint8' },
+          { name: 'intelligence', type: 'int256' },
+          { name: 'maxHp', type: 'int256' },
+          { name: 'currentHp', type: 'int256' },
+          { name: 'experience', type: 'uint256' },
+          { name: 'level', type: 'uint256' },
+        ],
+      },
+    ],
+    statsBytes as `0x${string}`,
+  )[0];
+
+  return {
+    agility: characterBaseStats.agility.toString(),
+    entityClass: characterBaseStats.class,
+    currentHp: characterBaseStats.currentHp.toString(),
+    experience: characterBaseStats.experience.toString(),
+    intelligence: characterBaseStats.intelligence.toString(),
+    level: characterBaseStats.level.toString(),
+    maxHp: characterBaseStats.maxHp.toString(),
+    strength: characterBaseStats.strength.toString(),
+  };
+};
+
 export const decodeCharacterId = (
   characterId: `0x${string}`,
 ): {
@@ -27,7 +65,7 @@ export const decodeCharacterId = (
   return { ownerAddress, characterTokenId: characterTokenId.toString() };
 };
 
-export const decodeMonsterId = (
+export const decodeMobInstanceId = (
   monsterId: `0x${string}`,
 ): {
   mobId: string;

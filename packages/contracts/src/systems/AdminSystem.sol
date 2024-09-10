@@ -11,6 +11,8 @@ import {
     Effects,
     Stats,
     StatsData,
+    MobStats,
+    Characters,
     CombatEncounter,
     CombatEncounterData,
     CharacterEquipment,
@@ -54,6 +56,7 @@ contract AdminSystem is System {
     }
 
     function adminSetStats(bytes32 entityId, StatsData memory desiredStats) public onlyAdmin {
+        Characters.setBaseStats(entityId, abi.encode(desiredStats));
         Stats.set(entityId, desiredStats);
     }
 
@@ -79,5 +82,9 @@ contract AdminSystem is System {
 
     function getSystemAddress(ResourceId systemId) public view returns (address) {
         return Systems.getSystem(systemId);
+    }
+
+    function adminApplyStatusEffect(bytes32 entityId, bytes32 statusEffectId) public onlyAdmin {
+        IWorld(_world()).UD__applyStatusEffect(entityId, statusEffectId);
     }
 }

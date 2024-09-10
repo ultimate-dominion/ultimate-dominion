@@ -4,7 +4,7 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {Math, WAD} from "@libraries/Math.sol";
+import {Math, WAD, RAD} from "@libraries/Math.sol";
 import {LibChunks} from "@libraries/LibChunks.sol";
 import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
@@ -16,6 +16,7 @@ import {
     Stats,
     StatsData,
     Effects,
+    MobStats,
     EffectsData,
     Items,
     CharacterEquipment,
@@ -29,8 +30,8 @@ import {
     Spawned,
     MobsData,
     Counters,
-    AttackOutcome,
-    AttackOutcomeData,
+    ActionOutcome,
+    ActionOutcomeData,
     ArmorStats,
     ArmorStatsData,
     WeaponStats,
@@ -45,8 +46,8 @@ import {
     MagicDamageStats,
     MagicDamageStatsData
 } from "@codegen/index.sol";
-import {RngRequestType, MobType, Alignment, EncounterType, ResistanceStat} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Attack, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {RngRequestType, MobType, Alignment, EncounterType, ResistanceStat, EffectType} from "@codegen/common.sol";
+import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -58,7 +59,7 @@ import {
     CRIT_MODIFIER,
     CRIT_MULTIPLIER,
     BASE_GOLD_DROP,
-    PRECISION
+    STAT_MODIFIER
 } from "../../constants.sol";
 import "forge-std/console.sol";
 
@@ -66,84 +67,86 @@ contract CombatSystem is System {
     using Math for uint256;
     using Math for int256;
 
-    function executeAttack(AttackOutcomeData memory attackOutcomeData, uint256 randomNumber)
+    function executeAction(ActionOutcomeData memory actionOutcomeData, uint256 randomNumber)
         public
-        returns (AttackOutcomeData memory)
+        returns (ActionOutcomeData memory)
     {
         _requireAccess(address(this), _msgSender());
         // if the defender is alive and attacker is alive, execute the action
-        if (!getDied(attackOutcomeData.attackerId) && !getDied(attackOutcomeData.defenderId)) {
+        if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
             // executeEffects
-            for (uint256 i; i < attackOutcomeData.effectIds.length; i++) {
-                EffectsData memory effectData = Effects.get(attackOutcomeData.effectIds[i]);
+            for (uint256 i; i < actionOutcomeData.effectIds.length; i++) {
+                EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
 
                 require(effectData.effectExists, "action does not exist");
                 //decode action data according to type
-                if (uint8(effectData.effectType) == 1) {
+                if (effectData.effectType == EffectType.PhysicalDamage) {
                     // calculate damage
 
-                    (attackOutcomeData.damagePerHit[i], attackOutcomeData.hit[i], attackOutcomeData.crit[i]) =
+                    (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i]) =
                     _calculatePhysicalEffect(
-                        attackOutcomeData.effectIds[i],
-                        attackOutcomeData.attackerId,
-                        attackOutcomeData.defenderId,
-                        attackOutcomeData.itemId,
+                        actionOutcomeData.effectIds[i],
+                        actionOutcomeData.attackerId,
+                        actionOutcomeData.defenderId,
+                        actionOutcomeData.itemId,
                         randomNumber
                     );
-                    attackOutcomeData.attackerDamageDelt += attackOutcomeData.damagePerHit[i];
+                    actionOutcomeData.attackerDamageDelt += actionOutcomeData.damagePerHit[i];
                     // if hit deduct damage
-                    if (attackOutcomeData.hit[i]) {
-                        int256 currentHp = Stats.getCurrentHp(attackOutcomeData.defenderId)
-                            - int256(attackOutcomeData.damagePerHit[i] / int256(ATTACK_MODIFIER));
-                        if (currentHp <= 0) attackOutcomeData.defenderDied = true;
-                        Stats.setCurrentHp(attackOutcomeData.defenderId, currentHp);
+                    if (actionOutcomeData.hit[i]) {
+                        int256 currentHp =
+                            Stats.getCurrentHp(actionOutcomeData.defenderId) - int256(actionOutcomeData.damagePerHit[i]);
+                        if (currentHp <= 0) actionOutcomeData.defenderDied = true;
+                        Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
                     } else {
-                        attackOutcomeData.miss[i] = true;
+                        actionOutcomeData.miss[i] = true;
                     }
-                } else if (uint8(effectData.effectType) == 2) {
+                } else if (effectData.effectType == EffectType.MagicDamage) {
                     // calculate damage
 
-                    (attackOutcomeData.damagePerHit[i], attackOutcomeData.hit[i], attackOutcomeData.crit[i]) =
+                    (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i]) =
                     _calculateMagicEffect(
-                        attackOutcomeData.effectIds[i],
-                        attackOutcomeData.attackerId,
-                        attackOutcomeData.defenderId,
-                        attackOutcomeData.itemId,
+                        actionOutcomeData.effectIds[i],
+                        actionOutcomeData.attackerId,
+                        actionOutcomeData.defenderId,
+                        actionOutcomeData.itemId,
                         randomNumber
                     );
-                    attackOutcomeData.attackerDamageDelt += attackOutcomeData.damagePerHit[i];
+                    actionOutcomeData.attackerDamageDelt += actionOutcomeData.damagePerHit[i];
                     // if hit deduct damage
-                    if (attackOutcomeData.hit[i]) {
-                        int256 currentHp = Stats.getCurrentHp(attackOutcomeData.defenderId)
-                            - int256(attackOutcomeData.damagePerHit[i] / int256(ATTACK_MODIFIER));
-                        if (currentHp <= 0) attackOutcomeData.defenderDied = true;
-                        Stats.setCurrentHp(attackOutcomeData.defenderId, currentHp);
+                    if (actionOutcomeData.hit[i]) {
+                        int256 currentHp =
+                            Stats.getCurrentHp(actionOutcomeData.defenderId) - int256(actionOutcomeData.damagePerHit[i]);
+                        if (currentHp <= 0) actionOutcomeData.defenderDied = true;
+                        Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
                     } else {
-                        attackOutcomeData.miss[i] = true;
+                        actionOutcomeData.miss[i] = true;
                     }
-                } else if (uint8(effectData.effectType) == 3) {
+                } else if (effectData.effectType == EffectType.StatusEffect) {
                     // get statusEffect stats
                     // calculate damage
 
-                    (attackOutcomeData.hit[i]) = _calculateStatusEffect(
-                        attackOutcomeData.effectIds[i],
-                        attackOutcomeData.attackerId,
-                        attackOutcomeData.defenderId,
-                        attackOutcomeData.itemId,
+                    (actionOutcomeData.hit[i]) = _calculateStatusEffect(
+                        actionOutcomeData.effectIds[i],
+                        actionOutcomeData.attackerId,
+                        actionOutcomeData.defenderId,
+                        actionOutcomeData.itemId,
                         randomNumber
                     );
+                    // if combat consumable, consume the item
+                    // IWorld(_world()).UD__consumeItem(actionOutcomeData.attackerId, actionOutcomeData.itemId);
                 } else {
                     revert("action type not recognized");
                 }
             }
-            if (attackOutcomeData.defenderDied) {
-                EncounterEntity.setDied(attackOutcomeData.defenderId, true);
+            if (actionOutcomeData.defenderDied) {
+                EncounterEntity.setDied(actionOutcomeData.defenderId, true);
             }
-            if (attackOutcomeData.attackerDied) {
-                EncounterEntity.setDied(attackOutcomeData.attackerId, true);
+            if (actionOutcomeData.attackerDied) {
+                EncounterEntity.setDied(actionOutcomeData.attackerId, true);
             }
         }
-        return attackOutcomeData;
+        return actionOutcomeData;
     }
 
     function getDied(bytes32 entityId) public view returns (bool isDied) {
@@ -162,41 +165,37 @@ contract CombatSystem is System {
         uint256 randomNumber
     ) internal returns (int256 damage, bool hit, bool crit) {
         // get attacker
-        AdjustedCombatStats memory attacker = applyEquipmentAndStatusEffects(attackerId);
+        AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
         //get defender
-        AdjustedCombatStats memory defender = applyEquipmentAndStatusEffects(defenderId);
+        AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
         // get weapon stats
         WeaponStatsData memory weapon = IWorld(_world()).UD__getWeaponStats(itemId);
 
         require(IWorld(_world()).UD__checkItemEffect(itemId, effectId), "INVALID ACTION");
 
         PhysicalDamageStatsData memory attackStats = IWorld(_world()).UD__getPhysicalDamageStats(effectId);
-
-        if (defender.currentHp > 0) {
+        if (Stats.getCurrentHp(defenderId) > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
-            (hit, crit) = _calculateActionModifier(
+            (hit, crit) = _calculateToHit(
                 uint256(rnChunks[0]),
                 uint256(rnChunks[1]),
                 attackStats.attackModifierBonus,
                 attackStats.critChanceBonus,
-                attacker.adjustedAgility,
-                defender.adjustedAgility
+                attacker.agility,
+                defender.agility
             );
-
             if (hit) {
-                damage = _calculateWeaponDamage(attackStats, attacker.adjustedStrength, weapon, rnChunks[2], crit)
-                    - int256(
-                        (
-                            int256(defender.adjustedArmor) - attackStats.armorPenetration > 0
-                                ? uint256(int256(defender.adjustedArmor) - attackStats.armorPenetration)
-                                : uint256(0)
-                        ) * DEFENSE_MODIFIER
-                    );
-                console.log("HIT!");
+                damage = _calculateWeaponDamage(attackStats, attacker.strength, weapon, rnChunks[2], crit)
+                    - _calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
+                if (!crit) {
+                    console.log("HIT!");
+                    console.logInt(damage);
+                }
                 if (crit) {
-                    console.log("CRIT!");
                     damage = damage * int256(CRIT_MULTIPLIER);
                     crit = true;
+                    console.log("CRIT!");
+                    console.logInt(damage);
                 }
             } else {
                 console.log("MISS!");
@@ -210,6 +209,18 @@ contract CombatSystem is System {
         }
     }
 
+    function _calculateArmorModifier(int256 armor, int256 armorPenetration, int256 damage)
+        internal
+        returns (int256 _totalArmorModifier)
+    {
+        if (armor - armorPenetration > 0) {
+            _totalArmorModifier = (armor - armorPenetration) * int256(DEFENSE_MODIFIER);
+        }
+        if (damage - (int256(armor) - armorPenetration) < 0) {
+            _totalArmorModifier = damage;
+        }
+    }
+
     function _calculateWeaponDamage(
         PhysicalDamageStatsData memory attackStats,
         int256 attackerStrength,
@@ -219,29 +230,31 @@ contract CombatSystem is System {
     ) internal view returns (int256 _damage) {
         if (!crit) {
             int256 randomness = Math.toInt(randomNumber ^ 4);
-            int256 baseDamage = attackStats.bonusDamage
-                + int256(
-                    randomness % weapon.maxDamage <= weapon.minDamage ? weapon.minDamage : randomness % weapon.maxDamage
-                );
-            _damage = _getStatBonus(attackerStrength, baseDamage) * int256(ATTACK_MODIFIER);
+            int256 baseDamage = (
+                attackStats.bonusDamage
+                    + int256(
+                        randomness % weapon.maxDamage <= weapon.minDamage ? weapon.minDamage : randomness % weapon.maxDamage
+                    )
+            ) * int256(ATTACK_MODIFIER);
+            _damage = _addStatBonus(attackerStrength, baseDamage);
         } else {
-            _damage = weapon.maxDamage;
+            _damage = _addStatBonus(attackerStrength, weapon.maxDamage * int256(ATTACK_MODIFIER));
         }
-        console.log("DAMAGE");
-        console.logInt(_damage);
     }
 
-    function _getStatBonus(int256 adjustedStat, int256 baseDamage) internal pure returns (int256 _totalDamage) {
-        if (adjustedStat > 0) {
-            uint256 multiplier = uint256(Math.wmul(WAD, (adjustedStat * int256(5) * int256(WAD) / int256(1000))));
-            _totalDamage = int256(Math.wmul(multiplier, baseDamage * int256(WAD)) / int256(WAD)) + baseDamage;
+    function _addStatBonus(int256 stat, int256 baseDamage) internal pure returns (int256 _totalDamage) {
+        if (stat > 0) {
+            // uint256 multiplier = uint256(Math.wmul(baseDamage * int256(WAD), (stat * int256(WAD) / 200))) ;
+            int256 _unroundedDamage =
+                (Math.wmul(baseDamage, ((stat * int256(WAD)) / int256(STAT_MODIFIER))) + baseDamage);
+            _totalDamage = Math.roundInt(_unroundedDamage, int256(1 ether)) / int256(WAD);
         } else {
             // if you have a negative adjusted stat.  do half damage
-            _totalDamage = baseDamage / 2;
+            _totalDamage = Math.roundInt(baseDamage / int256(2), int256(1 ether)) / int256(WAD);
         }
     }
 
-    function _calculateActionModifier(
+    function _calculateToHit(
         uint256 attackRoll,
         uint256 defenseRoll,
         int256 attackModifierBonus,
@@ -251,9 +264,9 @@ contract CombatSystem is System {
     ) internal view returns (bool attackLands, bool crit) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         uint256 attackTotal =
-            (getStatModifier(attackerStat, attackModifierBonus) * (((attackRoll) % 1000))) / WAD * TO_HIT_MODIFIER;
-        // attacker.agility + attackStats.attackModifierBonus + attackRoll * TO_HIT_MODIFIER
-        uint256 defenseTotal = ((((defenseRoll) % 400) * getStatModifier(defenderStat, 0)) / WAD) * DEFENSE_MODIFIER;
+            (getStatModifier(attackerStat, attackModifierBonus) * (((attackRoll) % 1000)) * TO_HIT_MODIFIER) / WAD;
+
+        uint256 defenseTotal = ((((defenseRoll) % 400) * getStatModifier(defenderStat, 0)) * DEFENSE_MODIFIER) / WAD;
         attackLands = attackTotal >= defenseTotal;
 
         if (attackLands) {
@@ -262,8 +275,9 @@ contract CombatSystem is System {
     }
 
     function getStatModifier(int256 stat, int256 modifierBonus) internal pure returns (uint256 multiplier) {
-        multiplier =
-            (stat / int256(2) + modifierBonus) > 0 ? uint256((stat / int256(2) + modifierBonus) * int256(WAD)) : WAD;
+        multiplier = ((stat + modifierBonus * int256(WAD)) / int256(STAT_MODIFIER)) > 0
+            ? uint256((stat + modifierBonus * int256(WAD)) / int256(STAT_MODIFIER))
+            : WAD;
     }
 
     function _calculateMagicEffect(
@@ -274,39 +288,42 @@ contract CombatSystem is System {
         uint256 randomNumber
     ) internal returns (int256 damage, bool hit, bool crit) {
         // get attacker
-        AdjustedCombatStats memory attacker = applyEquipmentAndStatusEffects(attackerId);
+        AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
         //get defender
-        AdjustedCombatStats memory defender = applyEquipmentAndStatusEffects(defenderId);
+        AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
         SpellStatsData memory spell = IWorld(_world()).UD__getSpellStats(spellId);
 
         require(IWorld(_world()).UD__checkItemEffect(spellId, effectId), "INVALID ACTION");
 
         MagicDamageStatsData memory attackStats = IWorld(_world()).UD__getMagicDamageStats(effectId);
 
-        if (defender.currentHp > 0) {
+        if (Stats.getCurrentHp(defenderId) > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
-            (hit, crit) = _calculateActionModifier(
+            (hit, crit) = _calculateToHit(
                 uint256(rnChunks[0]),
                 uint256(rnChunks[1]),
                 attackStats.attackModifierBonus,
                 attackStats.critChanceBonus,
-                attacker.adjustedIntelligence,
-                defender.adjustedIntelligence
+                attacker.intelligence,
+                defender.intelligence
             );
-
             if (hit) {
                 damage = _calculateMagicDamage(
-                    attackStats, spell, rnChunks[2], attacker.adjustedIntelligence, defender.adjustedIntelligence, crit
+                    attackStats, spell, rnChunks[2], attacker.intelligence, defender.intelligence, crit
                 );
-                console.log("Magic damage");
-                console.logInt(damage);
+                if (!crit) {
+                    console.log("magic damage: ");
+                    console.logInt(damage);
+                }
+
                 if (crit) {
-                    console.log("CRIT!");
                     damage = damage * int256(CRIT_MULTIPLIER);
+                    console.log("magic CRIT!");
+                    console.logInt(damage);
                     crit = true;
                 }
             } else {
-                console.log("MISS!");
+                console.log("magic MISS!");
                 damage = 0;
                 hit = false;
             }
@@ -325,38 +342,24 @@ contract CombatSystem is System {
         int256 defenderIntelligence,
         bool crit
     ) internal view returns (int256 _damage) {
-        console.log("MAGIC!");
-
-        if (equippedSpell.minDamage > 0 && equippedSpell.maxDamage > 0) {
-            int256 baseDamage;
-            if (!crit) {
-                baseDamage = attackStats.bonusDamage
+        // if (equippedSpell.minDamage > 0 && equippedSpell.maxDamage > 0) {
+        int256 baseDamage;
+        if (!crit) {
+            baseDamage = (
+                attackStats.bonusDamage
                     + int256(
                         uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
                             ? equippedSpell.minDamage
                             : int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
-                    );
-            } else {
-                baseDamage = equippedSpell.maxDamage + attackStats.bonusDamage;
-            }
-            _damage = _getStatBonus(attackerIntelligence, baseDamage) * int256(ATTACK_MODIFIER)
-                - int256((defenderIntelligence > 0 ? defenderIntelligence : int256(0)) * int256(DEFENSE_MODIFIER));
-        } else if (equippedSpell.minDamage < 0 && equippedSpell.maxDamage < 0) {
-            if (!crit) {
-                _damage = (
-                    (
-                        attackStats.bonusDamage
-                            + int256(
-                                uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
-                                    ? equippedSpell.minDamage
-                                    : -int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
-                            )
-                    ) * int256(ATTACK_MODIFIER)
-                );
-            } else {
-                _damage = equippedSpell.maxDamage + attackStats.bonusDamage;
-            }
+                    )
+            ) * int256(ATTACK_MODIFIER);
+        } else {
+            baseDamage = (equippedSpell.maxDamage + attackStats.bonusDamage) * int256(ATTACK_MODIFIER);
         }
+        _damage = (
+            _addStatBonus(attackerIntelligence, baseDamage)
+                - int256(_addStatBonus(defenderIntelligence, int256(DEFENSE_MODIFIER)))
+        );
     }
 
     function _calculateStatusEffect(
@@ -367,9 +370,9 @@ contract CombatSystem is System {
         uint256 randomNumber
     ) internal returns (bool hit) {
         // get attacker
-        AdjustedCombatStats memory attacker = applyEquipmentAndStatusEffects(attackerId);
+        AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
         //get defender
-        AdjustedCombatStats memory defender = applyEquipmentAndStatusEffects(defenderId);
+        AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
         // get weapon stats
         ResistanceStat resistanceStat = IWorld(_world()).UD__getStatusEffectStats(effectId).resistanceStat;
 
@@ -377,36 +380,36 @@ contract CombatSystem is System {
 
         PhysicalDamageStatsData memory attackStats;
 
-        if (defender.currentHp > 0) {
+        if (Stats.getCurrentHp(defenderId) > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
             if (resistanceStat == ResistanceStat.None) {
                 hit = true;
             } else if (resistanceStat == ResistanceStat.Strength) {
-                (hit,) = _calculateActionModifier(
+                (hit,) = _calculateToHit(
                     uint256(rnChunks[0]),
                     uint256(rnChunks[1]),
                     attackStats.attackModifierBonus,
                     attackStats.critChanceBonus,
-                    attacker.adjustedStrength,
-                    defender.adjustedStrength
+                    attacker.strength,
+                    defender.strength
                 );
             } else if (resistanceStat == ResistanceStat.Agility) {
-                (hit,) = _calculateActionModifier(
+                (hit,) = _calculateToHit(
                     uint256(rnChunks[0]),
                     uint256(rnChunks[1]),
                     attackStats.attackModifierBonus,
                     attackStats.critChanceBonus,
-                    attacker.adjustedAgility,
-                    defender.adjustedAgility
+                    attacker.agility,
+                    defender.agility
                 );
             } else if (resistanceStat == ResistanceStat.Intelligence) {
-                (hit,) = _calculateActionModifier(
+                (hit,) = _calculateToHit(
                     uint256(rnChunks[0]),
                     uint256(rnChunks[1]),
                     attackStats.attackModifierBonus,
                     attackStats.critChanceBonus,
-                    attacker.adjustedIntelligence,
-                    defender.adjustedIntelligence
+                    attacker.intelligence,
+                    defender.intelligence
                 );
             } else {
                 revert("Unrecognized resistance stat");
@@ -416,14 +419,5 @@ contract CombatSystem is System {
                 IWorld(_world()).UD__applyStatusEffect(defenderId, effectId);
             }
         }
-    }
-
-    function applyEquipmentAndStatusEffects(bytes32 entityId)
-        public
-        returns (AdjustedCombatStats memory _adjustedStats)
-    {
-        AdjustedCombatStats memory entityEquipmentStats = IWorld(_world()).UD__applyEquipmentBonuses(entityId);
-
-        _adjustedStats = IWorld(_world()).UD__calculateAllStatusEffects(entityId, entityEquipmentStats);
     }
 }

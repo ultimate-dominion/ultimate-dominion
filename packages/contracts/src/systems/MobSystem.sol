@@ -2,11 +2,21 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {RandomNumbers, Position, EntitiesAtPosition, EncounterEntity, MobsByLevel} from "@codegen/index.sol";
+import {Math, WAD} from "@libraries/Math.sol";
+import {
+    Counters,
+    RandomNumbers,
+    Position,
+    EntitiesAtPosition,
+    EncounterEntity,
+    MobsByLevel,
+    Mobs,
+    MobsData,
+    MobStatsData,
+    MobStats
+} from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment} from "@codegen/common.sol";
-import {Counters} from "@tables/Counters.sol";
-import {Mobs, MobsData} from "@tables/Mobs.sol";
-import {MonsterStats, NPCStats} from "@interfaces/Structs.sol";
+import {MonsterStats, NPCStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig, Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
 
@@ -45,14 +55,13 @@ contract MobSystem is System {
         MobsData memory stats = Mobs.get(mobId);
         if (stats.mobType == MobType.Monster) {
             MonsterStats memory monsterStats = abi.decode(stats.mobStats, (MonsterStats));
-
             StatsData memory statsData = StatsData({
                 strength: monsterStats.strength,
                 agility: monsterStats.agility,
                 intelligence: monsterStats.intelligence,
-                baseHp: monsterStats.hitPoints,
+                maxHp: monsterStats.hitPoints,
                 class: monsterStats.class,
-                currentHp: int256(monsterStats.hitPoints),
+                currentHp: monsterStats.hitPoints,
                 experience: monsterStats.experience,
                 level: monsterStats.level
             });
@@ -104,16 +113,28 @@ contract MobSystem is System {
         return monsterStats;
     }
 
-    function getMonsterStats(bytes32 entityId) public view returns (MonsterStats memory) {
-        uint256 mobId = getMobId(entityId);
-        MobsData memory mobData = Mobs.get(mobId);
-        require(mobData.mobType == MobType.Monster, "MOB SYSTEM: Wrong Mob Type");
-
-        MonsterStats memory monsterStats = abi.decode(mobData.mobStats, (MonsterStats));
-        return monsterStats;
+    function getMonsterCombatStats(bytes32 entityId)
+        public
+        view
+        returns (AdjustedCombatStats memory _spawnedMonsterStats)
+    {
+        MobsData memory mobData = Mobs.get(getMobId(entityId));
+        require(mobData.mobType == MobType.Monster, "MOB SYSTEM: Wrong Entity Type");
+        StatsData memory statsData = Stats.get(entityId);
+        _spawnedMonsterStats.agility = statsData.agility;
+        _spawnedMonsterStats.armor = MobStats.getArmor(entityId);
+        _spawnedMonsterStats.strength = statsData.strength;
+        _spawnedMonsterStats.intelligence = statsData.intelligence;
+        _spawnedMonsterStats.maxHp = statsData.maxHp;
+        _spawnedMonsterStats.currentHp = statsData.currentHp;
     }
 
-    function isValidMob(bytes32 entityId) public view returns (bool) {}
+    function isValidMob(bytes32 entityId) public view returns (bool _isValidMob) {
+        uint256 mobId = getMobId(entityId);
+        if (Mobs.getMobStats(mobId).length != 0) {
+            _isValidMob = true;
+        }
+    }
 
     function getMob(uint256 mobId) public view returns (MobsData memory) {
         return Mobs.get(mobId);
