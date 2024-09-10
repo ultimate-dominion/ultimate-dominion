@@ -318,7 +318,7 @@ export const Marketplace = (): JSX.Element => {
         </HStack>
       </Stack>
       <Flex justify="space-between" w="100%">
-        <Text>Items {items.length}</Text>
+        <Text>Items {unfilteredItems.length}</Text>
         <HStack>
           <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
             {Array.from(Object.values(SortOptions)).map(s => {
