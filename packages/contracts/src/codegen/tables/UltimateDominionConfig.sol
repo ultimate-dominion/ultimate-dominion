@@ -23,7 +23,7 @@ struct UltimateDominionConfigData {
   address entropy;
   address pythProvider;
   address items;
-  address auctionHouse;
+  address marketplace;
 }
 
 library UltimateDominionConfig {
@@ -58,7 +58,7 @@ library UltimateDominionConfig {
     fieldNames[3] = "entropy";
     fieldNames[4] = "pythProvider";
     fieldNames[5] = "items";
-    fieldNames[6] = "auctionHouse";
+    fieldNames[6] = "marketplace";
   }
 
   /**
@@ -304,9 +304,9 @@ library UltimateDominionConfig {
   }
 
   /**
-   * @notice Get auctionHouse.
+   * @notice Get marketplace.
    */
-  function getAuctionHouse() internal view returns (address auctionHouse) {
+  function getMarketplace() internal view returns (address marketplace) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
@@ -314,9 +314,9 @@ library UltimateDominionConfig {
   }
 
   /**
-   * @notice Get auctionHouse.
+   * @notice Get marketplace.
    */
-  function _getAuctionHouse() internal view returns (address auctionHouse) {
+  function _getMarketplace() internal view returns (address marketplace) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
@@ -324,21 +324,21 @@ library UltimateDominionConfig {
   }
 
   /**
-   * @notice Set auctionHouse.
+   * @notice Set marketplace.
    */
-  function setAuctionHouse(address auctionHouse) internal {
+  function setMarketplace(address marketplace) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((auctionHouse)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((marketplace)), _fieldLayout);
   }
 
   /**
-   * @notice Set auctionHouse.
+   * @notice Set marketplace.
    */
-  function _setAuctionHouse(address auctionHouse) internal {
+  function _setMarketplace(address marketplace) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((auctionHouse)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((marketplace)), _fieldLayout);
   }
 
   /**
@@ -379,7 +379,7 @@ library UltimateDominionConfig {
     address entropy,
     address pythProvider,
     address items,
-    address auctionHouse
+    address marketplace
   ) internal {
     bytes memory _staticData = encodeStatic(
       locked,
@@ -388,7 +388,7 @@ library UltimateDominionConfig {
       entropy,
       pythProvider,
       items,
-      auctionHouse
+      marketplace
     );
 
     EncodedLengths _encodedLengths;
@@ -409,7 +409,7 @@ library UltimateDominionConfig {
     address entropy,
     address pythProvider,
     address items,
-    address auctionHouse
+    address marketplace
   ) internal {
     bytes memory _staticData = encodeStatic(
       locked,
@@ -418,7 +418,7 @@ library UltimateDominionConfig {
       entropy,
       pythProvider,
       items,
-      auctionHouse
+      marketplace
     );
 
     EncodedLengths _encodedLengths;
@@ -440,7 +440,7 @@ library UltimateDominionConfig {
       _table.entropy,
       _table.pythProvider,
       _table.items,
-      _table.auctionHouse
+      _table.marketplace
     );
 
     EncodedLengths _encodedLengths;
@@ -462,7 +462,7 @@ library UltimateDominionConfig {
       _table.entropy,
       _table.pythProvider,
       _table.items,
-      _table.auctionHouse
+      _table.marketplace
     );
 
     EncodedLengths _encodedLengths;
@@ -488,7 +488,7 @@ library UltimateDominionConfig {
       address entropy,
       address pythProvider,
       address items,
-      address auctionHouse
+      address marketplace
     )
   {
     locked = (_toBool(uint8(Bytes.getBytes1(_blob, 0))));
@@ -503,7 +503,7 @@ library UltimateDominionConfig {
 
     items = (address(Bytes.getBytes20(_blob, 81)));
 
-    auctionHouse = (address(Bytes.getBytes20(_blob, 101)));
+    marketplace = (address(Bytes.getBytes20(_blob, 101)));
   }
 
   /**
@@ -524,7 +524,7 @@ library UltimateDominionConfig {
       _table.entropy,
       _table.pythProvider,
       _table.items,
-      _table.auctionHouse
+      _table.marketplace
     ) = decodeStatic(_staticData);
   }
 
@@ -557,9 +557,9 @@ library UltimateDominionConfig {
     address entropy,
     address pythProvider,
     address items,
-    address auctionHouse
+    address marketplace
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(locked, goldToken, characterToken, entropy, pythProvider, items, auctionHouse);
+    return abi.encodePacked(locked, goldToken, characterToken, entropy, pythProvider, items, marketplace);
   }
 
   /**
@@ -575,7 +575,7 @@ library UltimateDominionConfig {
     address entropy,
     address pythProvider,
     address items,
-    address auctionHouse
+    address marketplace
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(
       locked,
@@ -584,7 +584,7 @@ library UltimateDominionConfig {
       entropy,
       pythProvider,
       items,
-      auctionHouse
+      marketplace
     );
 
     EncodedLengths _encodedLengths;

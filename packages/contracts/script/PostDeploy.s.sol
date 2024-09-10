@@ -211,8 +211,8 @@ contract PostDeploy is Script {
         _createEffects();
         _createShops();
         _createMonsters();
-        address _auctionHouseAddress = world.UD__auctionHouseAddress();
-        UltimateDominionConfig.setAuctionHouse(_auctionHouseAddress);
+        address _marketplaceAddress = world.UD__marketplaceAddress();
+        UltimateDominionConfig.setMarketplace(_marketplaceAddress);
 
         setLevels();
         vm.stopBroadcast();

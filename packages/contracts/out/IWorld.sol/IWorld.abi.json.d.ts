@@ -310,19 +310,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__auctionHouseAddress",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__calculateAllStatusEffects",
     "inputs": [
       {
@@ -3591,6 +3578,19 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__marketplaceAddress",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",

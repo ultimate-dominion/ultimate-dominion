@@ -22,7 +22,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { WorldContextConsumer } from "@latticexyz/world/src/WorldContext.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
+contract MarketplaceSystem is ERC1155Holder, System, ReentrancyGuard {
     function supportsInterface(bytes4 interfaceId) public pure virtual override(ERC1155Holder, WorldContextConsumer) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
@@ -129,7 +129,7 @@ contract AuctionSystem is ERC1155Holder, System, ReentrancyGuard {
         return Orders.getOrderStatus(orderHash);
     }
 
-    function auctionHouseAddress() external view returns (address){
+    function marketplaceAddress() external view returns (address){
         return address(this);
     }
     
