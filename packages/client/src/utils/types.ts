@@ -24,6 +24,7 @@ export enum ItemType {
 export enum MobType {
   Monster,
   NPC,
+  Shop,
 }
 
 export enum OrderStatus {
@@ -207,6 +208,15 @@ export type Order = {
   orderStatus: string;
   offer: OfferData;
   consideration: ConsiderationData;
+};
+
+export type Shop = {
+  buyableItems: string[];
+  entityId: string;
+  position: { x: number; y: number };
+  priceMarkdown: string;
+  priceMarkup: string;
+  sellableItems: string[];
 };
 
 export type Spell = SpellTemplate & {

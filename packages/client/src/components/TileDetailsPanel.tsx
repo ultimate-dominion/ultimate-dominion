@@ -30,6 +30,7 @@ import { getEmoji, removeEmoji } from '../utils/helpers';
 import { type Character, EncounterType, type Monster } from '../utils/types';
 import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
+import { ShopRow } from './ShopRow';
 
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
@@ -47,8 +48,13 @@ export const TileDetailsPanel = (): JSX.Element => {
     systemCalls: { createEncounter },
   } = useMUD();
   const { character } = useCharacter();
-  const { inSafetyZone, isSpawned, monstersOnTile, otherCharactersOnTile } =
-    useMap();
+  const {
+    inSafetyZone,
+    isSpawned,
+    monstersOnTile,
+    otherCharactersOnTile,
+    shopsOnTile,
+  } = useMap();
   const {
     attackOutcomes,
     currentBattle,
@@ -313,6 +319,20 @@ export const TileDetailsPanel = (): JSX.Element => {
   return (
     <Box>
       <Grid gap={5} templateColumns="repeat(4, 1fr)">
+        {shopsOnTile.length > 0 && (
+          <>
+            <GridItem colSpan={2}>
+              <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+                Shops
+              </Text>
+            </GridItem>
+            <GridItem colSpan={4}>
+              {shopsOnTile.map((_, i) => (
+                <ShopRow key={`tile-shop-${i}`} />
+              ))}
+            </GridItem>
+          </>
+        )}
         <GridItem colSpan={2}>
           <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
             Monsters

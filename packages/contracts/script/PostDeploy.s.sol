@@ -40,12 +40,14 @@ import {
     ArmorStatsData,
     WeaponStats,
     WeaponStatsData,
+    ShopsData,
     StatRestrictions,
     StatRestrictionsData,
     SpellStatsData,
     SpellStats,
     ConsumableStats,
     ConsumableStatsData
+
 } from "@codegen/index.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
@@ -207,8 +209,8 @@ contract PostDeploy is Script {
         world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
         _createStarterItems();
         _createEffects();
+        _createShops();
         _createMonsters();
-
         address _auctionHouseAddress = world.UD__auctionHouseAddress();
         UltimateDominionConfig.setAuctionHouse(_auctionHouseAddress);
 
@@ -422,7 +424,20 @@ contract PostDeploy is Script {
         world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);
         world.UD__setStarterItems(Classes.Mage, mageItemIds, mageAmounts);
     }
+    function _createShops() internal {
+        uint256[] memory sellableItems = new uint256[](2);
+        sellableItems[0] = uint256(0);
+        sellableItems[1] = uint256(1);
+        ShopsData memory newShop = ShopsData({
+            priceMarkup: 0,
+            priceMarkdown: 0,
+            buyableItems: sellableItems,
+            sellableItems: sellableItems
+        });
 
+        uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
+        world.UD__spawnMob(shopMobId, 0, 0);
+    }
     function _createMonsters() internal {
         string memory json = vm.readFile("monsters.json");
         bytes memory monsterStatsData = vm.parseJson(json, ".monsters");

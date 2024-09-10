@@ -18,7 +18,7 @@ import {
 import {RngRequestType, MobType, Alignment} from "@codegen/common.sol";
 import {MonsterStats, NPCStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig, Stats, StatsData, Spawned} from "@codegen/index.sol";
+import {UltimateDominionConfig, Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
 
 contract MobSystem is System {
     /**
@@ -53,7 +53,7 @@ contract MobSystem is System {
         require(Counters.getCounter(address(this), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
         entityId = bytes32(abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), x, y));
         MobsData memory stats = Mobs.get(mobId);
-        if (uint8(stats.mobType) == 0) {
+        if (stats.mobType == MobType.Monster) {
             MonsterStats memory monsterStats = abi.decode(stats.mobStats, (MonsterStats));
             StatsData memory statsData = StatsData({
                 strength: monsterStats.strength,
@@ -66,9 +66,10 @@ contract MobSystem is System {
                 level: monsterStats.level
             });
             Stats.set(entityId, statsData);
-            MobStatsData memory mobStatsData =
-                MobStatsData({armor: monsterStats.armor, inventory: monsterStats.inventory});
-            MobStats.set(entityId, mobStatsData);
+        } else if (stats.mobType == MobType.Shop) {
+            ShopsData memory shopStats = abi.decode(stats.mobStats, (ShopsData));
+
+            Shops.set(entityId, shopStats);
         }
 
         Position.set(entityId, x, y);

@@ -18,7 +18,7 @@ export default defineWorld({
     ],
     RngRequestType: ["World", "CharacterStats", "Combat"],
     ItemType: ["Weapon", "Armor", "Spell", "Consumable", "QuestItem"],
-    MobType: ["Monster", "NPC"],
+    MobType: ["Monster", "NPC", "Shop"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE", "World"],
     EffectType: ["Temporary", "PhysicalDamage", "MagicDamage", "StatusEffect"],
@@ -404,6 +404,17 @@ export default defineWorld({
         token: "address",
         identifier: "uint256",
         amount: "uint256",
+      },
+    },
+    ///////////////////////////////////// SHOPS ///////////////////////////////////
+    Shops: {
+      key: ["entityId"],
+      schema: {
+        entityId: "bytes32",
+        priceMarkdown: "uint256",
+        priceMarkup: "uint256",
+        buyableItems: "uint256[]",
+        sellableItems: "uint256[]",
       },
     },
     ////////////////////////////////////////// OFFCHAIN TABLES////////////////////////////////////////
