@@ -10,10 +10,8 @@ import {
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
 
-import { getEmoji, removeEmoji } from '../utils/helpers';
+import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
 import { type Armor, ItemType, type Spell, type Weapon } from '../utils/types';
-
-const getStatSymbol = (stat: string): string => (Number(stat) >= 0 ? '+' : '');
 
 type ItemCardProps = (Armor | Spell | Weapon) & {
   isEquipped?: boolean;

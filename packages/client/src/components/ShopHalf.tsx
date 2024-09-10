@@ -15,26 +15,43 @@ import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 
-import { ArmorTemplate, SpellTemplate, WeaponTemplate } from '../utils/types';
+import {
+  type ArmorTemplate,
+  ItemFilterOptions,
+  type SpellTemplate,
+  type WeaponTemplate,
+} from '../utils/types';
 import { Pagination } from './Pagination';
 import { ShopItemRow } from './ShopItemRow';
+
+enum SortOptions {
+  Price = 'Price',
+  Stock = 'Stock',
+}
+
 const PER_PAGE = 5;
+
 export const ShopHalf = ({
   name,
   items,
 }: {
   name: string;
-  items: Array<ArmorTemplate | WeaponTemplate | SpellTemplate>;
+  items: Array<ArmorTemplate | SpellTemplate | WeaponTemplate>;
 }): JSX.Element => {
   const [entries, setEntries] = useState<
-    Array<ArmorTemplate | WeaponTemplate | SpellTemplate>
+    Array<ArmorTemplate | SpellTemplate | WeaponTemplate>
   >([]);
   const [page, setPage] = useState(1);
   const [pageLimit, setPageLimit] = useState(1);
   const [length, setLength] = useState(1);
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
-  const [filter, setFilter] = useState({ filtered: 'all' });
+  const [sort, setSort] = useState({
+    sorted: SortOptions.Price,
+    reversed: false,
+  });
+  const [filter, setFilter] = useState<ItemFilterOptions>(
+    ItemFilterOptions.All,
+  );
 
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {
@@ -42,11 +59,12 @@ export const ShopHalf = ({
     }
     return Number(page);
   }, [page]);
+
   useEffect(() => {
     if (pageNumber < 1) {
       return;
     }
-    let entriesCopy: Array<ArmorTemplate | WeaponTemplate | SpellTemplate> = [
+    let entriesCopy: Array<ArmorTemplate | SpellTemplate | WeaponTemplate> = [
       ...items,
     ];
     const searcher = new FuzzySearch(
@@ -56,10 +74,10 @@ export const ShopHalf = ({
     );
     entriesCopy = searcher.search(query);
     entriesCopy = [...entriesCopy].filter(entry => {
-      switch (filter.filtered) {
-        case 'byWeapon':
+      switch (filter) {
+        case ItemFilterOptions.Weapon:
           return entry.itemType == 0 ? 1 : 0;
-        case 'byArmor':
+        case ItemFilterOptions.Armor:
           return entry.itemType == 1 ? 1 : 0;
 
         default:
@@ -73,9 +91,10 @@ export const ShopHalf = ({
     if (pageNumber > pageLimit) {
       setPage(pageLimit);
     }
-  }, [filter.filtered, items, pageLimit, pageNumber, query]);
+  }, [filter, items, pageLimit, pageNumber, query]);
+
   return (
-    <VStack h="100%">
+    <VStack>
       <Text fontWeight={700} fontSize={24} textAlign="left" w="100%">
         {name}
       </Text>
@@ -93,27 +112,27 @@ export const ShopHalf = ({
             onChange={e => setQuery(e.target.value)}
             placeholder="Search"
             value={query}
-          />{' '}
+          />
         </InputGroup>
         <HStack>
           <Button
-            onClick={() => setFilter({ filtered: 'all' })}
+            onClick={() => setFilter(ItemFilterOptions.All)}
             size="sm"
-            variant={filter.filtered == 'all' ? 'solid' : 'outline'}
+            variant={filter === ItemFilterOptions.All ? 'solid' : 'outline'}
           >
             All
           </Button>
           <Button
-            onClick={() => setFilter({ filtered: 'byArmor' })}
+            onClick={() => setFilter(ItemFilterOptions.Armor)}
             size="sm"
-            variant={filter.filtered == 'byArmor' ? 'solid' : 'outline'}
+            variant={filter === ItemFilterOptions.Armor ? 'solid' : 'outline'}
           >
             Armor
           </Button>
           <Button
-            onClick={() => setFilter({ filtered: 'byWeapon' })}
+            onClick={() => setFilter(ItemFilterOptions.Weapon)}
             size="sm"
-            variant={filter.filtered == 'byWeapon' ? 'solid' : 'outline'}
+            variant={filter === ItemFilterOptions.Weapon ? 'solid' : 'outline'}
           >
             Weapon
           </Button>
@@ -125,10 +144,10 @@ export const ShopHalf = ({
             <Spacer />
             <Button
               display={{ base: 'none', lg: 'flex' }}
-              fontWeight={sort.sorted == 'byStock' ? 'bold' : 'normal'}
+              fontWeight={sort.sorted === SortOptions.Stock ? 'bold' : 'normal'}
               onClick={() =>
                 setSort({
-                  sorted: 'byStock',
+                  sorted: SortOptions.Stock,
                   reversed: !sort.reversed,
                 })
               }
@@ -140,18 +159,22 @@ export const ShopHalf = ({
               <Text mr={2} size={{ base: '2xs' }}>
                 Stock
               </Text>
-              {sort.sorted == 'byStock' && sort.reversed && <FaSortAmountUp />}
-              {sort.sorted == 'byStock' && !sort.reversed && (
+              {sort.sorted === SortOptions.Stock && sort.reversed && (
+                <FaSortAmountUp />
+              )}
+              {sort.sorted === SortOptions.Stock && !sort.reversed && (
                 <FaSortAmountDown />
               )}
-              {sort.sorted != 'byStock' && <FaSortAmountDown color="grey" />}
+              {sort.sorted !== SortOptions.Stock && (
+                <FaSortAmountDown color="grey" />
+              )}
             </Button>
             <Button
               display={{ base: 'none', lg: 'flex' }}
-              fontWeight={sort.sorted == 'byPrice' ? 'bold' : 'normal'}
+              fontWeight={sort.sorted === SortOptions.Price ? 'bold' : 'normal'}
               onClick={() =>
                 setSort({
-                  sorted: 'byPrice',
+                  sorted: SortOptions.Price,
                   reversed: !sort.reversed,
                 })
               }
@@ -163,11 +186,15 @@ export const ShopHalf = ({
               <Text mr={2} size={{ base: '2xs' }}>
                 Price
               </Text>
-              {sort.sorted == 'byPrice' && sort.reversed && <FaSortAmountUp />}
-              {sort.sorted == 'byPrice' && !sort.reversed && (
+              {sort.sorted === SortOptions.Price && sort.reversed && (
+                <FaSortAmountUp />
+              )}
+              {sort.sorted === SortOptions.Price && !sort.reversed && (
                 <FaSortAmountDown />
               )}
-              {sort.sorted != 'byPrice' && <FaSortAmountDown color="grey" />}
+              {sort.sorted !== SortOptions.Price && (
+                <FaSortAmountDown color="grey" />
+              )}
             </Button>
             <Box display={{ base: 'none', md: 'block' }} w="30px"></Box>
           </HStack>

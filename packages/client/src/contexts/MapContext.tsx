@@ -288,13 +288,13 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           const shopData = getComponentValueStrict(Shops, entity);
 
           return {
+            buyableItems: shopData.buyableItems.map(item => item.toString()),
             mobId,
+            position: { x: _position.x, y: _position.y },
             priceMarkup: shopData.priceMarkup.toString(),
             priceMarkdown: shopData.priceMarkdown.toString(),
             sellableItems: shopData.sellableItems.map(item => item.toString()),
             shopId: entity,
-            buyableItems: shopData.buyableItems.map(item => item.toString()),
-            position: { x: _position.x, y: _position.y },
           } as Shop;
         });
 

@@ -19,31 +19,32 @@ import {
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoAdd, IoRemove } from 'react-icons/io5';
 
-import { getEmoji, removeEmoji } from '../utils/helpers';
+import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
+import {
+  type ArmorTemplate,
+  ItemType,
+  type SpellTemplate,
+  type WeaponTemplate,
+} from '../utils/types';
 
 export const ShopItemRow = ({
-  agiModifier,
-  description,
-  hpModifier,
-  intModifier,
-  minLevel,
-  name,
-  statRestrictions,
-  strModifier,
-}: {
-  agiModifier: string | number | bigint | undefined;
-  description: string | number | bigint | undefined;
-  hpModifier: string | number | bigint | undefined;
-  intModifier: string | number | bigint | undefined;
-  minLevel: string | number | bigint | undefined;
-  name: string | number | bigint | undefined;
-  statRestrictions: {
-    minIntelligence: string | number | bigint | undefined;
-    minStrength: string | number | bigint | undefined;
-  };
-  strModifier: string | number | bigint | undefined;
-}): JSX.Element => {
+  ...item
+}: ArmorTemplate | SpellTemplate | WeaponTemplate): JSX.Element => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  if (item.itemType === ItemType.Spell) {
+    return <Text>TODO</Text>;
+  }
+
+  const {
+    description,
+    minLevel,
+    name,
+    statRestrictions,
+    strModifier,
+    agiModifier,
+    intModifier,
+  } = item as ArmorTemplate | WeaponTemplate;
 
   return (
     <Flex
@@ -136,10 +137,13 @@ export const ShopItemRow = ({
                     Stats
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    INT {intModifier ? intModifier.toString() : 0} HIT{' '}
-                    {hpModifier ? hpModifier.toString() : 0} STR{' '}
-                    {strModifier ? strModifier.toString() : 0} AGI{' '}
-                    {agiModifier ? agiModifier.toString() : 0}
+                    STR{getStatSymbol(strModifier)}
+                    {strModifier} AGI{getStatSymbol(agiModifier)}
+                    {agiModifier} INT{getStatSymbol(intModifier)}
+                    {intModifier}{' '}
+                    {(item as ArmorTemplate).armorModifier
+                      ? `ARM${getStatSymbol((item as ArmorTemplate).armorModifier)}${(item as ArmorTemplate).armorModifier}`
+                      : ''}
                   </Text>
                   <Text mt={8} fontWeight={700} fontSize={14}>
                     Restrictions

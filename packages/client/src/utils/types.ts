@@ -13,6 +13,13 @@ export enum EncounterType {
   PvE,
 }
 
+export enum ItemFilterOptions {
+  All = 'all',
+  Armor = 'armor',
+  Spell = 'spell',
+  Weapon = 'weapon',
+}
+
 export enum ItemType {
   Weapon,
   Armor,

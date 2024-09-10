@@ -56,7 +56,7 @@ const AppRoutes: React.FC = () => {
       <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
       <Route path={AUCTION_HOUSE_PATH} element={<AuctionHouse />} />
       <Route path={ITEM_PATH + ':itemId'} element={<AuctionItem />} />
-      <Route path={SHOP_PATH + ':shopId'} element={<Shop />} />
+      <Route path={SHOP_PATH + ':mobId'} element={<Shop />} />
     </Routes>
   );
 };

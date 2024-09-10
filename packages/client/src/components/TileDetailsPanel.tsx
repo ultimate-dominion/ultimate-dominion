@@ -12,7 +12,7 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosWarning } from 'react-icons/io';
 
@@ -53,6 +53,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     isSpawned,
     monstersOnTile,
     otherCharactersOnTile,
+    position,
     shopsOnTile,
   } = useMap();
   const {
@@ -169,6 +170,10 @@ export const TileDetailsPanel = (): JSX.Element => {
     },
     [character, createEncounter, delegatorAddress, renderError, renderSuccess],
   );
+
+  const isHomeTile = useMemo(() => {
+    return position?.x === 0 && position?.y === 0;
+  }, [position]);
 
   if (!currentBattle && isRefreshing) {
     return (
@@ -318,26 +323,21 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   return (
     <Box>
-      <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
+      <Grid gap={5} templateColumns="repeat(4, 1fr)">
         {shopsOnTile.length > 0 && (
-          <>
-            <GridItem colSpan={2}>
-              <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-                Shops
-              </Text>
-            </GridItem>
-            <GridItem colSpan={2}>
-              {shopsOnTile.map((shop, i) => (
-                <ShopRow key={`tile-shop-${i}`} mobId={shop.mobId} />
-              ))}
-            </GridItem>
-          </>
+          <GridItem colSpan={2}>
+            <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+              Shops
+            </Text>
+          </GridItem>
         )}
-        <GridItem colSpan={2}>
-          <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-            Monsters
-          </Text>
-        </GridItem>
+        {!isHomeTile && (
+          <GridItem colSpan={2}>
+            <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+              Monsters
+            </Text>
+          </GridItem>
+        )}
         <GridItem colSpan={2}>
           <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
             Players
@@ -349,24 +349,34 @@ export const TileDetailsPanel = (): JSX.Element => {
         </GridItem>
       </Grid>
       <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
-        <GridItem colSpan={2}>
-          {monstersOnTile.length > 0 &&
-            monstersOnTile.map((monster, i) => (
-              <OpponentRow
-                encounterType={EncounterType.PvE}
-                key={`tile-monster-${i}-${monster.name}`}
-                onClick={() => {
-                  onInitiateCombat(monster, EncounterType.PvE);
-                }}
-                opponent={monster}
-              />
+        {isHomeTile && (
+          <GridItem colSpan={2}>
+            {shopsOnTile.map((shop, i) => (
+              <ShopRow key={`tile-shop-${i}`} mobId={shop.mobId} />
             ))}
-          {monstersOnTile.length === 0 && (
-            <Text size={{ base: '2xs', lg: 'sm' }}>
-              No monsters in this area
-            </Text>
-          )}
-        </GridItem>
+          </GridItem>
+        )}
+
+        {!isHomeTile && (
+          <GridItem colSpan={2}>
+            {monstersOnTile.length > 0 &&
+              monstersOnTile.map((monster, i) => (
+                <OpponentRow
+                  encounterType={EncounterType.PvE}
+                  key={`tile-monster-${i}-${monster.name}`}
+                  onClick={() => {
+                    onInitiateCombat(monster, EncounterType.PvE);
+                  }}
+                  opponent={monster}
+                />
+              ))}
+            {monstersOnTile.length === 0 && (
+              <Text size={{ base: '2xs', lg: 'sm' }}>
+                No monsters in this area
+              </Text>
+            )}
+          </GridItem>
+        )}
 
         <GridItem colSpan={2}>
           {otherCharactersOnTile.length > 0 &&

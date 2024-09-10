@@ -1,4 +1,5 @@
 import {
+  Button,
   Center,
   Divider,
   HStack,
@@ -7,19 +8,21 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
 import { getComponentValue } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { IoMdArrowRoundBack } from 'react-icons/io';
+import { useNavigate, useParams } from 'react-router-dom';
 // eslint-disable-next-line import/no-named-as-default
 import Typist from 'react-typist';
 
 import { ShopHalf } from '../components/ShopHalf';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { GAME_BOARD_PATH } from '../Routes';
 import {
   Armor,
   ArmorTemplate,
@@ -31,7 +34,10 @@ import {
 } from '../utils/types';
 
 export const Shop = (): JSX.Element => {
-  const { shopId } = useParams();
+  const { renderError } = useToast();
+  const navigate = useNavigate();
+  const { mobId } = useParams();
+
   const {
     armorTemplates,
     weaponTemplates,
@@ -39,16 +45,17 @@ export const Shop = (): JSX.Element => {
     isLoading: isItemsLoading,
   } = useItems();
   const { character: userCharacter } = useCharacter();
-  const { renderError } = useToast();
+  const { allShops } = useMap();
 
   const {
-    components: { Shops, ItemsOwners },
+    components: { ItemsOwners },
     isSynced,
   } = useMUD();
-  const shop = useComponentValue(
-    Shops,
-    encodeEntity({ mobId: 'uint256' }, { mobId: BigInt(shopId || 1) }),
-  );
+
+  const shop = useMemo(() => {
+    if (!mobId || !allShops) return null;
+    return allShops.find(shop => shop.mobId === mobId);
+  }, [allShops, mobId]);
 
   const [sellable, setSellable] = useState<
     Array<ArmorTemplate | WeaponTemplate | SpellTemplate>
@@ -138,68 +145,87 @@ export const Shop = (): JSX.Element => {
     },
     [armorTemplates, spellTemplates, weaponTemplates, ItemsOwners, renderError],
   );
+
   useEffect(() => {
     if (userCharacter && isSynced && !isItemsLoading) {
-      (async (): Promise<void> => {
-        fetchCharacterItems(userCharacter);
-      })();
+      fetchCharacterItems(userCharacter);
     }
   }, [
     fetchCharacterItems,
     shop,
     userCharacter,
-    isSynced,
     isItemsLoading,
+    isSynced,
     spellTemplates,
   ]);
+
   const items = useMemo(
     () => [...weapons, ...armor, ...spells],
     [weapons, armor, spells],
   );
+
   useEffect(() => {
-    if (items.length > 0) {
-      const sellableInventory = [
-        ...weaponTemplates,
-        ...spellTemplates,
-        ...armorTemplates,
-      ]
-        .filter(item =>
-          shop
-            ? shop.sellableItems
-                .map(item => item.toString())
-                .indexOf(item.tokenId.toString()) > -1
-            : false,
-        )
-        .filter(
-          item =>
-            items
-              .map(x => x.tokenId.toString())
-              .indexOf(item.tokenId.toString()) > -1,
-        );
-      setSellable(sellableInventory);
-      const buyableStock = [
-        ...weaponTemplates,
-        ...spellTemplates,
-        ...armorTemplates,
-      ].filter(item =>
-        shop
-          ? shop.buyableItems
-              .map(item => item.toString())
-              .indexOf(item.tokenId.toString()) > -1
-          : false,
+    if (isItemsLoading) return;
+    if (items.length === 0) return;
+    if (!shop) return;
+
+    const sellableInventory = [
+      ...armorTemplates,
+      ...spellTemplates,
+      ...weaponTemplates,
+    ]
+      .filter(
+        item =>
+          shop.sellableItems
+            .map(item => item.toString())
+            .indexOf(item.tokenId.toString()) > -1,
+      )
+      .filter(
+        item =>
+          items
+            .map(x => x.tokenId.toString())
+            .indexOf(item.tokenId.toString()) > -1,
       );
-      setBuyable(buyableStock);
-    }
+
+    const buyableStock = [
+      ...weaponTemplates,
+      ...spellTemplates,
+      ...armorTemplates,
+    ].filter(
+      item =>
+        shop.buyableItems
+          .map(item => item.toString())
+          .indexOf(item.tokenId.toString()) > -1,
+    );
+
+    setSellable(sellableInventory);
+    setBuyable(buyableStock);
   }, [
-    armor,
     armorTemplates,
+    isItemsLoading,
     items,
     shop,
     spellTemplates,
-    spells,
     weaponTemplates,
-    weapons,
   ]);
+
+  if (!shop) {
+    return (
+      <VStack>
+        <Button
+          alignSelf="flex-start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
+          onClick={() => navigate(GAME_BOARD_PATH)}
+          size="xs"
+          variant="outline"
+        >
+          Back to Game Board
+        </Button>
+        <Text>Shop not found</Text>
+      </VStack>
+    );
+  }
 
   return (
     <VStack mt={16}>
@@ -209,26 +235,20 @@ export const Shop = (): JSX.Element => {
           know if you need any help.
         </Text>
       </Typist>
-      <HStack border="2px solid" h="100%" mt={8} p={8} w="100%">
+      <HStack border="2px solid" mt={8} p={8} w="100%">
         <Spacer />
-        {shopId ? (
-          <Stack h="100%" w="100%">
-            {sellable && sellable.length > 0 ? (
-              <ShopHalf
-                items={sellable}
-                name={`Character’s Inventory - ${userCharacter?.goldBalance} $GOLD`}
-              />
-            ) : (
-              <Center>
-                <Text>No Sellable Items</Text>
-              </Center>
-            )}
-          </Stack>
-        ) : (
-          <Stack>
-            <Text>No Data</Text>
-          </Stack>
-        )}
+        <Stack h="100%" w="100%">
+          {sellable && sellable.length > 0 ? (
+            <ShopHalf
+              items={sellable}
+              name={`Character’s Inventory - ${userCharacter?.goldBalance} $GOLD`}
+            />
+          ) : (
+            <Center>
+              <Text>No Sellable Items</Text>
+            </Center>
+          )}
+        </Stack>
         <Divider border="1px solid black" mx={8} orientation="vertical" />
         <Stack h="100%" w="100%">
           {buyable && buyable.length > 0 ? (
@@ -237,7 +257,7 @@ export const Shop = (): JSX.Element => {
               name="Shopkeeper’s Inventory - 55 $GOLD"
             />
           ) : (
-            <Text>No Data</Text>
+            <Text>No buyable items</Text>
           )}
         </Stack>
         <Spacer />
