@@ -23,14 +23,13 @@ import { singletonEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
-import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
 import { IoMdArrowRoundBack } from 'react-icons/io';
-import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { MarketplaceRow } from '../components/MarketplaceRow';
+import { Pagination } from '../components/Pagination';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -86,8 +85,9 @@ export const Marketplace = (): JSX.Element => {
   );
   const [query, setQuery] = useState('');
 
-  const [page, setPage] = useState('1');
-  const [pageLimit, setPageLimit] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageLimit, setPageLimit] = useState(1);
+  const [length, setLength] = useState(1);
 
   const { goldToken } = useComponentValue(
     UltimateDominionConfig,
@@ -178,17 +178,17 @@ export const Marketplace = (): JSX.Element => {
     }
   }, [isConnected, navigate]);
 
+  const unfilteredItems = useMemo(
+    () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
+    [armorTemplates, spellTemplates, weaponTemplates],
+  );
+
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {
       return 1;
     }
     return Number(page);
   }, [page]);
-
-  const unfilteredItems = useMemo(
-    () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
-    [armorTemplates, spellTemplates, weaponTemplates],
-  );
 
   useEffect(() => {
     if (pageNumber < 1 || isLoadingItemTemplates) {
@@ -232,10 +232,7 @@ export const Marketplace = (): JSX.Element => {
     const searcher = new FuzzySearch([...itemsCopy], ['name', 'description']);
     itemsCopy = searcher.search(query);
 
-    const _pageLimit =
-      Math.floor(Math.ceil(itemsCopy.length / ITEMS_PER_PAGE)) || 1;
-
-    setPageLimit(_pageLimit);
+    setLength(itemsCopy.length);
     setItems(
       itemsCopy.slice(
         (pageNumber - 1) * ITEMS_PER_PAGE,
@@ -243,13 +240,14 @@ export const Marketplace = (): JSX.Element => {
       ),
     );
 
-    if (pageNumber > _pageLimit) {
-      setPage(_pageLimit.toString());
+    if (pageNumber > pageLimit) {
+      setPage(pageLimit);
     }
   }, [
     filter,
     isLoadingItemTemplates,
     itemFloorPrices,
+    pageLimit,
     pageNumber,
     query,
     sort.reversed,
@@ -259,7 +257,7 @@ export const Marketplace = (): JSX.Element => {
 
   if (isLoadingItemTemplates || isFetchingOrders) {
     return (
-      <Center h="100%">
+      <Center>
         <Spinner size="lg" />
       </Center>
     );
@@ -324,15 +322,15 @@ export const Marketplace = (): JSX.Element => {
             {Array.from(Object.values(SortOptions)).map(s => {
               return (
                 <Button
-                  key={`filter-${s}`}
                   display={{ base: 'none', lg: 'flex' }}
                   fontWeight={sort.sorted == s ? 'bold' : 'normal'}
+                  key={`filter-${s}`}
                   onClick={() => {
                     setSort({
                       sorted: s,
                       reversed: !sort.reversed,
                     });
-                    setPage('1');
+                    setPage(1);
                   }}
                   p={1}
                   size={{ base: '2xs', lg: 'sm' }}
@@ -358,9 +356,9 @@ export const Marketplace = (): JSX.Element => {
           items.map((item, i) => {
             return (
               <MarketplaceRow
+                floor={itemFloorPrices[item.tokenId] ?? '0'}
                 key={`marketplace-row-${i}`}
                 {...item}
-                floor={itemFloorPrices[item.tokenId] ?? '0'}
               />
             );
           })
@@ -368,72 +366,19 @@ export const Marketplace = (): JSX.Element => {
           <Text mt={12}>No items</Text>
         )}
       </VStack>
+
       <HStack
         my={5}
-        visibility={
-          unfilteredItems && unfilteredItems.length > 0 ? 'visible' : 'hidden'
-        }
+        visibility={unfilteredItems?.length > 0 ? 'visible' : 'hidden'}
       >
-        <Button
-          onClick={() => setPage('1')}
-          size="xs"
-          visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
-        >
-          <FaBackwardStep />
-        </Button>
-        <Button
-          onClick={() =>
-            setPage((pageNumber == 1 ? 1 : pageNumber - 1).toString())
-          }
-          size="xs"
-          visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
-        >
-          <IoCaretBack />
-        </Button>
-        <Input
-          max={pageLimit}
-          min={1}
-          onChange={e => {
-            const value = e.target.value;
-            if (value === '') {
-              setPage(value);
-              return;
-            }
-            if (isNaN(Number(value))) {
-              return;
-            }
-            if (Number(value) < 1) {
-              return;
-            }
-            if (Number(value) > pageLimit) {
-              return;
-            }
-            setPage(value);
-          }}
-          p={2}
-          size="sm"
-          value={page}
-          w={10}
+        <Pagination
+          length={length}
+          page={page}
+          pageLimit={pageLimit}
+          perPage={ITEMS_PER_PAGE}
+          setPage={setPage}
+          setPageLimit={setPageLimit}
         />
-        <Text size="sm">of {pageLimit}</Text>
-        <Button
-          onClick={() =>
-            setPage(
-              (pageNumber < pageLimit ? pageNumber + 1 : pageNumber).toString(),
-            )
-          }
-          size="xs"
-          visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
-        >
-          <IoCaretForward />
-        </Button>
-        <Button
-          onClick={() => setPage(pageLimit.toString())}
-          size="xs"
-          visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
-        >
-          <FaForwardStep />
-        </Button>
       </HStack>
     </VStack>
   );

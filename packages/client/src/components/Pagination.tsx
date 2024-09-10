@@ -59,7 +59,7 @@ export const Pagination = ({
         onChange={e => {
           const value = e.target.value;
           if (value === '') {
-            setPage(Number(value));
+            setPage(0);
             return;
           }
           if (isNaN(Number(value))) {
@@ -68,14 +68,11 @@ export const Pagination = ({
           if (Number(value) < 1) {
             return;
           }
-          if (Number(value) > pageLimit) {
-            return;
-          }
           setPage(Number(value));
         }}
         p={2}
         size="sm"
-        value={page}
+        value={page === 0 ? '' : page}
         w={10}
       />
       <Text size="sm">of {pageLimit}</Text>
