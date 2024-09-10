@@ -278,6 +278,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     },
     [EncounterEntity, monsterTemplates, Position, renderError, Spawned, Stats],
   );
+
   const getShops = useCallback(
     (entities: Entity[]): Shop[] => {
       try {
@@ -303,6 +304,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     },
     [Position, renderError],
   );
+
   useEffect(() => {
     (async () => {
       if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;

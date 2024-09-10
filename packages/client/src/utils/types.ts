@@ -210,6 +210,15 @@ export type Order = {
   consideration: ConsiderationData;
 };
 
+export type Shop = {
+  buyableItems: string[];
+  entityId: string;
+  position: { x: number; y: number };
+  priceMarkdown: string;
+  priceMarkup: string;
+  sellableItems: string[];
+};
+
 export type Spell = SpellTemplate & {
   balance: string;
   itemId: Entity;
@@ -260,12 +269,3 @@ export type WeaponTemplate = WeaponStats &
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
-
-export type Shop = {
-  entityId: string;
-  position: { x: number; y: number };
-  priceMarkdown: string;
-  priceMarkup: string;
-  buyableItems: string[];
-  sellableItems: string[];
-};

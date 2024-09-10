@@ -319,19 +319,20 @@ export const TileDetailsPanel = (): JSX.Element => {
   return (
     <Box>
       <Grid gap={5} templateColumns="repeat(4, 1fr)">
-        <GridItem colSpan={2}>
-          <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-            Shops
-          </Text>{' '}
-        </GridItem>
-        <GridItem colSpan={4}>
-          {shopsOnTile.map((shop, i) => (
-            <ShopRow key={`tile-shop-${i}`} />
-          ))}
-          {shopsOnTile.length === 0 && (
-            <Text size={{ base: '2xs', lg: 'sm' }}>No shops in this area</Text>
-          )}
-        </GridItem>
+        {shopsOnTile.length > 0 && (
+          <>
+            <GridItem colSpan={2}>
+              <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+                Shops
+              </Text>
+            </GridItem>
+            <GridItem colSpan={4}>
+              {shopsOnTile.map((_, i) => (
+                <ShopRow key={`tile-shop-${i}`} />
+              ))}
+            </GridItem>
+          </>
+        )}
         <GridItem colSpan={2}>
           <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
             Monsters
