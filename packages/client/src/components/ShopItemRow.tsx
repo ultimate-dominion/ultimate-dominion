@@ -19,20 +19,32 @@ import {
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoAdd, IoRemove } from 'react-icons/io5';
 
-import { getEmoji, removeEmoji } from '../utils/helpers';
-import { type ArmorTemplate, type WeaponTemplate } from '../utils/types';
+import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
+import {
+  type ArmorTemplate,
+  ItemType,
+  type SpellTemplate,
+  type WeaponTemplate,
+} from '../utils/types';
 
 export const ShopItemRow = ({
-  agiModifier,
-  description,
-  hpModifier,
-  intModifier,
-  minLevel,
-  name,
-  statRestrictions,
-  strModifier,
-}: ArmorTemplate | WeaponTemplate): JSX.Element => {
+  ...item
+}: ArmorTemplate | SpellTemplate | WeaponTemplate): JSX.Element => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  if (item.itemType === ItemType.Spell) {
+    return <Text>TODO</Text>;
+  }
+
+  const {
+    description,
+    minLevel,
+    name,
+    statRestrictions,
+    strModifier,
+    agiModifier,
+    intModifier,
+  } = item as ArmorTemplate | WeaponTemplate;
 
   return (
     <Flex
@@ -55,17 +67,14 @@ export const ShopItemRow = ({
       onClick={onOpen}
     >
       <Flex>
-        <Avatar
-          backgroundColor={'grey300'}
-          borderRadius={0}
-          name={removeEmoji(name)}
-          size="lg"
-        >
-          {getEmoji(name)}
+        <Avatar backgroundColor={'grey300'} borderRadius={0} name=" " size="lg">
+          {name ? getEmoji(name.toString()) : ''}
         </Avatar>
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>{removeEmoji(name)}</Text>
+            <Text size={{ base: '2xs', lg: 'sm' }}>
+              {name ? removeEmoji(name.toString()) : ''}
+            </Text>
           </HStack>
         </VStack>
       </Flex>
@@ -83,7 +92,7 @@ export const ShopItemRow = ({
             textAlign="center"
             w="75px"
           >
-            {minLevel}
+            {0}
           </Text>
           <Text
             display={{ base: 'none', lg: 'block' }}
@@ -101,7 +110,7 @@ export const ShopItemRow = ({
             <ModalCloseButton />
             <ModalBody>
               <Text fontWeight={700} fontSize={24}>
-                Buy {removeEmoji(name)}
+                Buy {name ? removeEmoji(name.toString()) : ''}
               </Text>
               <Grid
                 gap={10}
@@ -113,14 +122,14 @@ export const ShopItemRow = ({
                   <Avatar
                     backgroundColor={'grey300'}
                     borderRadius={0}
-                    name={removeEmoji(name)}
+                    name={' '}
                     size="lg"
                   >
-                    {getEmoji(name)}
+                    {name ? getEmoji(name.toString()) : ''}
                   </Avatar>
 
                   <Text fontWeight={400} fontSize={14} mt={8}>
-                    {description}
+                    {description ? description.toString() : ''}
                   </Text>
                 </GridItem>
                 <GridItem>
@@ -128,20 +137,33 @@ export const ShopItemRow = ({
                     Stats
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    INT {intModifier} HIT {hpModifier} STR {strModifier} AGI{' '}
-                    {agiModifier}
+                    STR{getStatSymbol(strModifier)}
+                    {strModifier} AGI{getStatSymbol(agiModifier)}
+                    {agiModifier} INT{getStatSymbol(intModifier)}
+                    {intModifier}{' '}
+                    {(item as ArmorTemplate).armorModifier
+                      ? `ARM${getStatSymbol((item as ArmorTemplate).armorModifier)}${(item as ArmorTemplate).armorModifier}`
+                      : ''}
                   </Text>
                   <Text mt={8} fontWeight={700} fontSize={14}>
                     Restrictions
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    - LVL {minLevel}
+                    - LVL {minLevel ? minLevel.toString() : 0}
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    - {statRestrictions.minIntelligence} INT
+                    -{' '}
+                    {statRestrictions['minIntelligence']
+                      ? statRestrictions.minIntelligence.toString()
+                      : 0}{' '}
+                    INT
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    - {statRestrictions.minStrength} STR
+                    -{' '}
+                    {statRestrictions['minStrength']
+                      ? statRestrictions.minIntelligence?.toString()
+                      : 0}{' '}
+                    STR
                   </Text>
                 </GridItem>
                 <GridItem colSpan={2} textAlign="center">

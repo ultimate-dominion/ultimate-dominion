@@ -38,6 +38,7 @@ import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import {
   type ArmorTemplate,
   type ConsiderationData,
+  ItemFilterOptions,
   ItemType,
   type OfferData,
   type Order,
@@ -46,13 +47,6 @@ import {
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
-
-enum FilterOptions {
-  All = 'all',
-  Armor = 'armor',
-  Spell = 'spell',
-  Weapon = 'weapon',
-}
 
 enum SortOptions {
   Level = 'Level',
@@ -87,7 +81,9 @@ export const AuctionHouse = (): JSX.Element => {
     reversed: false,
     sorted: SortOptions.Level,
   });
-  const [filter, setFilter] = useState<FilterOptions>(FilterOptions.All);
+  const [filter, setFilter] = useState<ItemFilterOptions>(
+    ItemFilterOptions.All,
+  );
   const [query, setQuery] = useState('');
 
   const [page, setPage] = useState('1');
@@ -223,11 +219,11 @@ export const AuctionHouse = (): JSX.Element => {
     });
     itemsCopy = [...itemsCopy].filter(entry => {
       switch (filter) {
-        case FilterOptions.Armor:
+        case ItemFilterOptions.Armor:
           return entry.itemType == ItemType.Armor;
-        case FilterOptions.Spell:
+        case ItemFilterOptions.Spell:
           return entry.itemType == ItemType.Spell;
-        case FilterOptions.Weapon:
+        case ItemFilterOptions.Weapon:
           return entry.itemType == ItemType.Weapon;
         default:
           return true;
@@ -298,16 +294,19 @@ export const AuctionHouse = (): JSX.Element => {
           />
         </InputGroup>
         <HStack>
-          {Object.keys(FilterOptions).map(k => {
+          {Object.keys(ItemFilterOptions).map(k => {
             return (
               <Button
                 key={`filter-${k}`}
                 onClick={() =>
-                  setFilter(FilterOptions[k as keyof typeof FilterOptions])
+                  setFilter(
+                    ItemFilterOptions[k as keyof typeof ItemFilterOptions],
+                  )
                 }
                 size="sm"
                 variant={
-                  filter === FilterOptions[k as keyof typeof FilterOptions]
+                  filter ===
+                  ItemFilterOptions[k as keyof typeof ItemFilterOptions]
                     ? 'solid'
                     : 'outline'
                 }

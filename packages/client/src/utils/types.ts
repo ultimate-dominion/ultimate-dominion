@@ -13,6 +13,13 @@ export enum EncounterType {
   PvE,
 }
 
+export enum ItemFilterOptions {
+  All = 'all',
+  Armor = 'armor',
+  Spell = 'spell',
+  Weapon = 'weapon',
+}
+
 export enum ItemType {
   Weapon,
   Armor,
@@ -212,11 +219,12 @@ export type Order = {
 
 export type Shop = {
   buyableItems: string[];
-  entityId: string;
+  mobId: string;
   position: { x: number; y: number };
   priceMarkdown: string;
   priceMarkup: string;
   sellableItems: string[];
+  shopId: string;
 };
 
 export type Spell = SpellTemplate & {

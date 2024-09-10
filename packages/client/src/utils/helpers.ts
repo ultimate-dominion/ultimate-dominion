@@ -111,6 +111,9 @@ export const decodeMonsterStats = (statsBytes: string): MonsterStats => {
   };
 };
 
+export const getStatSymbol = (stat: string): string =>
+  Number(stat) >= 0 ? '+' : '';
+
 export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
   const res = await fetch(uri);
   if (!res.ok) throw new Error('Failed to fetch');
