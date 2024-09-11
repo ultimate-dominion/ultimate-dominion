@@ -567,7 +567,7 @@ export const Marketplace = (): JSX.Element => {
               To start the process, either create a listing or select an item
               based on what items are for sale or what items have a $GOLD offer
               on them. If there are $GOLD offers on an item, anyone who owns the
-              item can accept the offer.
+              item can accept any of the offers.
             </Text>
             <Text size="sm">
               To coordinate a sale with another player, you can use the chat box
