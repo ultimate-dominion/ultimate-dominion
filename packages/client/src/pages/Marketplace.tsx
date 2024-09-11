@@ -30,6 +30,7 @@ import { formatEther, parseEther } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { CreateListingModal } from '../components/CreateListingModal';
+import { InfoModal } from '../components/InfoModal';
 import { MarketplaceRow } from '../components/MarketplaceRow';
 import { Pagination } from '../components/Pagination';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -63,6 +64,7 @@ enum SortOptions {
 }
 
 const ITEMS_PER_PAGE = 10;
+const MARKETPLACE_INFO_SEEN_KEY = 'marketplace-info-seen';
 
 export const Marketplace = (): JSX.Element => {
   const { renderError } = useToast();
@@ -82,8 +84,13 @@ export const Marketplace = (): JSX.Element => {
 
   const {
     isOpen: isCreateListingModalOpen,
-    onOpen: onOpenCreateListingModal,
     onClose: onCloseCreateListingModal,
+    onOpen: onOpenCreateListingModal,
+  } = useDisclosure();
+  const {
+    isOpen: isMarketplaceInfoModalOpen,
+    onClose: onCloseMarketplaceInfoModal,
+    onOpen: onOpenMarketplaceInfoModal,
   } = useDisclosure();
 
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
@@ -343,6 +350,20 @@ export const Marketplace = (): JSX.Element => {
     unfilteredItems,
   ]);
 
+  // Open marketplace info modal if this is the first time the user is visiting the page
+  useEffect(() => {
+    const hasSeenMarketplaceInfo = localStorage.getItem(
+      MARKETPLACE_INFO_SEEN_KEY,
+    );
+    if (hasSeenMarketplaceInfo) return;
+    onOpenMarketplaceInfoModal();
+  }, [onOpenMarketplaceInfoModal]);
+
+  const onAcknowledgeMarketplaceInfo = useCallback(() => {
+    localStorage.setItem(MARKETPLACE_INFO_SEEN_KEY, 'true');
+    onCloseMarketplaceInfoModal();
+  }, [onCloseMarketplaceInfoModal]);
+
   if (isLoadingItemTemplates || isFetchingOrders) {
     return (
       <Center>
@@ -528,6 +549,33 @@ export const Marketplace = (): JSX.Element => {
         isOpen={isCreateListingModalOpen}
         onClose={onCloseCreateListingModal}
       />
+      <InfoModal
+        heading="Welcome to the Marketplace!"
+        isOpen={isMarketplaceInfoModalOpen}
+        onClose={onAcknowledgeMarketplaceInfo}
+      >
+        <VStack>
+          <Text alignSelf="center" fontSize="60px">
+            🤝
+          </Text>
+          <VStack spacing={4}>
+            <Text>
+              Here you can buy and sell armor, potions, spells, and weapons with
+              other players.
+            </Text>
+            <Text size="sm">
+              To start the process, either create a listing or select an item
+              based on what items are for sale or what items have a $GOLD offer
+              on them. If there are $GOLD offers on an item, anyone who owns the
+              item can accept the offer.
+            </Text>
+            <Text size="sm">
+              To coordinate a sale with another player, you can use the chat box
+              in the bottom-right.
+            </Text>
+          </VStack>
+        </VStack>
+      </InfoModal>
     </VStack>
   );
 };
