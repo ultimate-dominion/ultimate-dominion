@@ -23,21 +23,20 @@ import { encodeEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
-import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
 import { IoMdArrowRoundBack } from 'react-icons/io';
-import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { LeaderboardRow } from '../components/LeaderboardRow';
+import { Pagination } from '../components/Pagination';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import { Character, StatsClasses } from '../utils/types';
 
-const PER_PAGE = 10;
+const PLAYERS_PER_PAGE = 10;
 
 export const Leaderboard = (): JSX.Element => {
   const { renderError } = useToast();
@@ -57,8 +56,10 @@ export const Leaderboard = (): JSX.Element => {
   const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
   const [filter, setFilter] = useState({ filtered: 'all' });
   const [query, setQuery] = useState('');
-  const [page, setPage] = useState('1');
-  const [pageLimit, setPageLimit] = useState(0);
+
+  const [page, setPage] = useState(1);
+  const [pageLimit, setPageLimit] = useState(1);
+  const [length, setLength] = useState(1);
 
   useEffect(() => {
     if (!isConnected) {
@@ -201,19 +202,22 @@ export const Leaderboard = (): JSX.Element => {
       { caseSensitive: false },
     );
     entriesCopy = searcher.search(query);
-    const _pageLimit =
-      Math.floor(Math.ceil(entriesCopy.length / PER_PAGE)) || 1;
-    setPageLimit(_pageLimit);
+
+    setLength(entriesCopy.length);
     setEntries(
-      entriesCopy.slice((pageNumber - 1) * PER_PAGE, pageNumber * PER_PAGE),
+      entriesCopy.slice(
+        (pageNumber - 1) * PLAYERS_PER_PAGE,
+        pageNumber * PLAYERS_PER_PAGE,
+      ),
     );
 
-    if (pageNumber > _pageLimit) {
-      setPage(_pageLimit.toString());
+    if (pageNumber > pageLimit) {
+      setPage(pageLimit);
     }
   }, [
     characters,
     filter.filtered,
+    pageLimit,
     pageNumber,
     query,
     sort.reversed,
@@ -377,66 +381,14 @@ export const Leaderboard = (): JSX.Element => {
         )}
       </VStack>
       <HStack my={5} visibility={entries.length > 0 ? 'visible' : 'hidden'}>
-        <Button
-          onClick={() => setPage('1')}
-          size="xs"
-          visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
-        >
-          <FaBackwardStep />
-        </Button>
-        <Button
-          onClick={() =>
-            setPage((pageNumber == 1 ? 1 : pageNumber - 1).toString())
-          }
-          size="xs"
-          visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
-        >
-          <IoCaretBack />
-        </Button>
-        <Input
-          max={pageLimit}
-          min={1}
-          onChange={e => {
-            const value = e.target.value;
-            if (value === '') {
-              setPage(value);
-              return;
-            }
-            if (isNaN(Number(value))) {
-              return;
-            }
-            if (Number(value) < 1) {
-              return;
-            }
-            if (Number(value) > pageLimit) {
-              return;
-            }
-            setPage(value);
-          }}
-          p={2}
-          size="sm"
-          value={page}
-          w={10}
+        <Pagination
+          length={length}
+          page={page}
+          pageLimit={pageLimit}
+          perPage={PLAYERS_PER_PAGE}
+          setPage={setPage}
+          setPageLimit={setPageLimit}
         />
-        <Text size="sm">of {pageLimit}</Text>
-        <Button
-          onClick={() =>
-            setPage(
-              (pageNumber < pageLimit ? pageNumber + 1 : pageNumber).toString(),
-            )
-          }
-          size="xs"
-          visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
-        >
-          <IoCaretForward />
-        </Button>
-        <Button
-          onClick={() => setPage(pageLimit.toString())}
-          size="xs"
-          visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
-        >
-          <FaForwardStep />
-        </Button>
       </HStack>
     </VStack>
   );

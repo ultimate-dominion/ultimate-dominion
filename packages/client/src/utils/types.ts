@@ -214,6 +214,7 @@ export type Order = {
   orderHash: string;
   orderStatus: string;
   offer: OfferData;
+  offerer: string;
   consideration: ConsiderationData;
 };
 

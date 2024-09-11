@@ -37,6 +37,9 @@ type CharacterContextType = {
   equippedArmor: Armor[];
   equippedSpells: Spell[];
   equippedWeapons: Weapon[];
+  inventoryArmor: Armor[];
+  inventorySpells: Spell[];
+  inventoryWeapons: Weapon[];
   isRefreshing: boolean;
   refreshCharacter: () => Promise<void>;
 };
@@ -46,6 +49,9 @@ const CharacterContext = createContext<CharacterContextType>({
   equippedArmor: [],
   equippedSpells: [],
   equippedWeapons: [],
+  inventoryArmor: [],
+  inventorySpells: [],
+  inventoryWeapons: [],
   isRefreshing: false,
   refreshCharacter: async () => {},
 });
@@ -81,6 +87,9 @@ export const CharacterProvider = ({
 
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(true);
+  const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
+  const [inventorySpells, setInventorySpells] = useState<Spell[]>([]);
+  const [inventoryWeapons, setInventoryWeapons] = useState<Weapon[]>([]);
   const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
   const [equippedSpells, setEquippedSpells] = useState<Spell[]>([]);
   const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
@@ -203,122 +212,91 @@ export const CharacterProvider = ({
   const fetchCharacterItems = useCallback(
     (
       _character: Character,
-      _equippedArmor: bigint[],
-      _equippedSpells: bigint[],
-      _equippedWeapons: bigint[],
+      _equippedArmorIds: bigint[],
+      _equippedSpellsIds: bigint[],
+      _equippedWeaponsIds: bigint[],
     ) => {
       try {
-        if (_equippedArmor.length === 0) {
-          setEquippedArmor([]);
-        }
-
-        if (_equippedSpells.length === 0) {
-          setEquippedSpells([]);
-        }
-
-        if (_equippedWeapons.length === 0) {
-          setEquippedWeapons([]);
-        }
-
-        if (
-          _equippedArmor.length +
-            _equippedSpells.length +
-            _equippedWeapons.length ===
-          0
-        ) {
-          return;
-        }
-
-        const _armor = _equippedArmor.map(tokenId => {
-          const tokenOwnersEntity = encodeEntity(
-            { owner: 'address', tokenId: 'uint256' },
-            {
-              owner: _character.owner as `0x${string}`,
-              tokenId: BigInt(tokenId),
-            },
-          );
-          const itemOwner = getComponentValueStrict(
-            ItemsOwners,
-            tokenOwnersEntity,
-          );
-
-          const armorDetails = armorTemplates.find(
-            item => item.tokenId === tokenId.toString(),
-          );
-
-          return {
-            ...armorDetails,
-            balance: itemOwner.balance.toString(),
-            itemId: tokenOwnersEntity,
-            owner: _character.owner,
-          } as Armor;
-        });
-
-        const _spells = _equippedSpells
-          .map(tokenId => {
+        const _armor = armorTemplates
+          .map(armor => {
             const tokenOwnersEntity = encodeEntity(
               { owner: 'address', tokenId: 'uint256' },
               {
                 owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(tokenId),
+                tokenId: BigInt(armor.tokenId),
               },
             );
-            const itemOwner = getComponentValueStrict(
-              ItemsOwners,
-              tokenOwnersEntity,
-            );
 
-            const spellDetails = spellTemplates.find(
-              item => item.tokenId === tokenId.toString(),
-            );
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
 
             return {
-              ...spellDetails,
-              balance: itemOwner.balance.toString(),
+              ...armor,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
               itemId: tokenOwnersEntity,
               owner: _character.owner,
-              tokenId: tokenId.toString(),
+            } as Armor;
+          })
+          .filter(a => a.balance !== '0');
+
+        const _spells = spellTemplates
+          .map(spell => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(spell.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...spell,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
             } as Spell;
           })
-          .filter(item => item.owner === _character.owner)
-          .sort((a, b) => {
-            return Number(a.tokenId) - Number(b.tokenId);
-          });
+          .filter(s => s.balance !== '0');
 
-        const _weapons = _equippedWeapons
-          .map(tokenId => {
+        const _weapons = weaponTemplates
+          .map(weapon => {
             const tokenOwnersEntity = encodeEntity(
               { owner: 'address', tokenId: 'uint256' },
               {
                 owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(tokenId),
+                tokenId: BigInt(weapon.tokenId),
               },
             );
-            const itemOwner = getComponentValueStrict(
-              ItemsOwners,
-              tokenOwnersEntity,
-            );
 
-            const weaponDetails = weaponTemplates.find(
-              item => item.tokenId === tokenId.toString(),
-            );
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
 
             return {
-              ...weaponDetails,
-              balance: itemOwner.balance.toString(),
+              ...weapon,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
               itemId: tokenOwnersEntity,
               owner: _character.owner,
-              tokenId: tokenId.toString(),
             } as Weapon;
           })
-          .filter(item => item.owner === _character.owner)
-          .sort((a, b) => {
-            return Number(a.tokenId) - Number(b.tokenId);
-          });
+          .filter(w => w.balance !== '0');
 
-        setEquippedArmor(_armor);
-        setEquippedSpells(_spells);
-        setEquippedWeapons(_weapons);
+        const _equippedArmor = _equippedArmorIds.map(id =>
+          _armor.find(a => a.tokenId === id.toString()),
+        ) as Armor[];
+        const _equippedSpells = _equippedSpellsIds.map(id =>
+          _spells.find(s => s.tokenId === id.toString()),
+        ) as Spell[];
+        const _equippedWeapons = _equippedWeaponsIds.map(id =>
+          _weapons.find(w => w.tokenId === id.toString()),
+        ) as Weapon[];
+
+        setInventoryArmor(_armor);
+        setInventorySpells(_spells);
+        setInventoryWeapons(_weapons);
+
+        setEquippedArmor(_equippedArmor);
+        setEquippedSpells(_equippedSpells);
+        setEquippedWeapons(_equippedWeapons);
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Failed to fetch character data.',
@@ -361,6 +339,9 @@ export const CharacterProvider = ({
         equippedArmor,
         equippedSpells,
         equippedWeapons,
+        inventoryArmor,
+        inventorySpells,
+        inventoryWeapons,
         isRefreshing,
         refreshCharacter,
       }}

@@ -10,6 +10,7 @@ import {
   Spinner,
   Stack,
   Text,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
@@ -23,14 +24,16 @@ import { singletonEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
-import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
 import { IoMdArrowRoundBack } from 'react-icons/io';
-import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
-import { formatEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 import { useAccount } from 'wagmi';
 
+import { CreateListingModal } from '../components/CreateListingModal';
+import { InfoModal } from '../components/InfoModal';
 import { MarketplaceRow } from '../components/MarketplaceRow';
+import { Pagination } from '../components/Pagination';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -48,12 +51,20 @@ import {
   type WeaponTemplate,
 } from '../utils/types';
 
+enum MarketplaceFilter {
+  ForSale = 'For Sale',
+  GoldOffers = '$GOLD Offers',
+  MyListings = 'My Listings',
+}
+
 enum SortOptions {
   Level = 'Level',
-  FloorPrice = 'Floor Price',
+  LowestPrice = 'Lowest Price',
+  HighestOffer = 'Highest Offer',
 }
 
 const ITEMS_PER_PAGE = 10;
+const MARKETPLACE_INFO_SEEN_KEY = 'marketplace-info-seen';
 
 export const Marketplace = (): JSX.Element => {
   const { renderError } = useToast();
@@ -69,6 +80,18 @@ export const Marketplace = (): JSX.Element => {
     spellTemplates,
     weaponTemplates,
   } = useItems();
+  const { character } = useCharacter();
+
+  const {
+    isOpen: isCreateListingModalOpen,
+    onClose: onCloseCreateListingModal,
+    onOpen: onOpenCreateListingModal,
+  } = useDisclosure();
+  const {
+    isOpen: isMarketplaceInfoModalOpen,
+    onClose: onCloseMarketplaceInfoModal,
+    onOpen: onOpenMarketplaceInfoModal,
+  } = useDisclosure();
 
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
@@ -81,18 +104,29 @@ export const Marketplace = (): JSX.Element => {
     reversed: false,
     sorted: SortOptions.Level,
   });
-  const [filter, setFilter] = useState<ItemFilterOptions>(
+  const [marketplaceFilter, setMarketplaceFilter] = useState<MarketplaceFilter>(
+    MarketplaceFilter.ForSale,
+  );
+  const [itemTypeFilter, setItemTypeFilter] = useState<ItemFilterOptions>(
     ItemFilterOptions.All,
   );
   const [query, setQuery] = useState('');
 
-  const [page, setPage] = useState('1');
-  const [pageLimit, setPageLimit] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageLimit, setPageLimit] = useState(1);
+  const [length, setLength] = useState(1);
 
   const { goldToken } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
   ) ?? { goldToken: null };
+
+  useEffect(() => {
+    if (!isConnected) {
+      navigate(HOME_PATH);
+      window.location.reload();
+    }
+  }, [isConnected, navigate]);
 
   const fetchOrders = useCallback(() => {
     try {
@@ -110,6 +144,7 @@ export const Marketplace = (): JSX.Element => {
           Considerations,
           orderHash,
         );
+        const orderData = getComponentValueStrict(Orders, orderHash);
         const offerData = getComponentValueStrict(Offers, orderHash);
         const orderStatus = getComponentValueStrict(
           Orders,
@@ -117,17 +152,6 @@ export const Marketplace = (): JSX.Element => {
         ).orderStatus;
 
         return {
-          orderHash: orderHash.toString(),
-          orderStatus: orderStatus.toString(),
-          offer: {
-            amount:
-              offerData.tokenType === TokenType.ERC20
-                ? formatEther(offerData.amount)
-                : offerData.amount.toString(),
-            identifier: offerData.identifier.toString(),
-            token: offerData.token.toString(),
-            tokenType: offerData.tokenType,
-          } as OfferData,
           consideration: {
             amount:
               considerationData.tokenType === TokenType.ERC20
@@ -138,6 +162,18 @@ export const Marketplace = (): JSX.Element => {
             tokenType: considerationData.tokenType,
             recipient: considerationData.recipient.toString(),
           } as ConsiderationData,
+          offer: {
+            amount:
+              offerData.tokenType === TokenType.ERC20
+                ? formatEther(offerData.amount)
+                : offerData.amount.toString(),
+            identifier: offerData.identifier.toString(),
+            token: offerData.token.toString(),
+            tokenType: offerData.tokenType,
+          } as OfferData,
+          offerer: orderData.offerer.toString(),
+          orderHash: orderHash.toString(),
+          orderStatus: orderStatus.toString(),
         } as Order;
       });
 
@@ -153,30 +189,49 @@ export const Marketplace = (): JSX.Element => {
     fetchOrders();
   }, [fetchOrders]);
 
-  const itemFloorPrices = useMemo(() => {
-    const itemFloorPrices: { [key: string]: string } = {};
+  const lowestPrices = useMemo(() => {
+    const lowestPrices: { [key: string]: bigint } = {};
 
     activeOrders.forEach(order => {
-      const price = itemFloorPrices[order.offer.identifier];
+      const price = lowestPrices[order.offer.identifier];
       if (
         !price ||
         BigInt(
           order.consideration.amount && order.consideration.token === goldToken,
         ) < BigInt(price)
       ) {
-        itemFloorPrices[order.offer.identifier] = order.consideration.amount;
+        lowestPrices[order.offer.identifier] = parseEther(
+          order.consideration.amount,
+        );
       }
     });
 
-    return itemFloorPrices;
+    return lowestPrices;
   }, [activeOrders, goldToken]);
 
-  useEffect(() => {
-    if (!isConnected) {
-      navigate(HOME_PATH);
-      window.location.reload();
-    }
-  }, [isConnected, navigate]);
+  const highestOffers = useMemo(() => {
+    const highestOffers: { [key: string]: bigint } = {};
+
+    activeOrders.forEach(order => {
+      const offer = highestOffers[order.consideration.identifier];
+      if (
+        !offer ||
+        BigInt(order.offer.amount) > BigInt(offer) ||
+        order.offer.tokenType === TokenType.ERC20
+      ) {
+        highestOffers[order.consideration.identifier] = parseEther(
+          order.offer.amount,
+        );
+      }
+    });
+
+    return highestOffers;
+  }, [activeOrders]);
+
+  const unfilteredItems = useMemo(
+    () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
+    [armorTemplates, spellTemplates, weaponTemplates],
+  );
 
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {
@@ -185,12 +240,8 @@ export const Marketplace = (): JSX.Element => {
     return Number(page);
   }, [page]);
 
-  const unfilteredItems = useMemo(
-    () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
-    [armorTemplates, spellTemplates, weaponTemplates],
-  );
-
   useEffect(() => {
+    if (!character) return;
     if (pageNumber < 1 || isLoadingItemTemplates) {
       return;
     }
@@ -198,8 +249,11 @@ export const Marketplace = (): JSX.Element => {
 
     itemsCopy = [...itemsCopy].sort((itemA, itemB) => {
       let result = false;
-      const floorA = itemFloorPrices[itemA.tokenId] ?? '0';
-      const floorB = itemFloorPrices[itemB.tokenId] ?? '0';
+      const lowestPriceA = lowestPrices[itemA.tokenId] ?? '0';
+      const lowestPriceB = lowestPrices[itemB.tokenId] ?? '0';
+
+      const highestOfferA = highestOffers[itemA.tokenId] ?? '0';
+      const highestOfferB = highestOffers[itemB.tokenId] ?? '0';
 
       switch (sort.sorted) {
         case SortOptions.Level:
@@ -207,18 +261,54 @@ export const Marketplace = (): JSX.Element => {
             ? BigInt(itemA?.minLevel || '0') >= BigInt(itemB?.minLevel || '0')
             : BigInt(itemB?.minLevel || '0') > BigInt(itemA?.minLevel || '0');
           break;
-        case SortOptions.FloorPrice:
+        case SortOptions.LowestPrice:
           result = sort.reversed
-            ? BigInt(floorA) >= BigInt(floorB)
-            : BigInt(floorB) > BigInt(floorA);
+            ? BigInt(lowestPriceA) >= BigInt(lowestPriceB)
+            : BigInt(lowestPriceB) > BigInt(lowestPriceA);
+          break;
+        case SortOptions.HighestOffer:
+          result = sort.reversed
+            ? BigInt(highestOfferA) >= BigInt(highestOfferB)
+            : BigInt(highestOfferB) > BigInt(highestOfferA);
           break;
         default:
           break;
       }
       return result ? 1 : -1;
     });
+
+    itemsCopy = itemsCopy.filter(item => {
+      switch (marketplaceFilter) {
+        case MarketplaceFilter.ForSale:
+          return activeOrders
+            .filter(order => order.offer.tokenType === TokenType.ERC1155)
+            .map(order => order.offer.identifier)
+            .includes(item.tokenId);
+        case MarketplaceFilter.GoldOffers:
+          return activeOrders
+            .filter(order => order.offer.tokenType === TokenType.ERC20)
+            .map(order => order.consideration.identifier)
+            .includes(item.tokenId);
+        case MarketplaceFilter.MyListings:
+          return activeOrders
+            .filter(
+              order =>
+                order.offerer === character.owner ||
+                order.consideration.recipient === character.owner,
+            )
+            .map(order =>
+              order.offer.tokenType === TokenType.ERC1155
+                ? order.offer.identifier
+                : order.consideration.identifier,
+            )
+            .includes(item.tokenId);
+        default:
+          return true;
+      }
+    });
+
     itemsCopy = [...itemsCopy].filter(entry => {
-      switch (filter) {
+      switch (itemTypeFilter) {
         case ItemFilterOptions.Armor:
           return entry.itemType == ItemType.Armor;
         case ItemFilterOptions.Spell:
@@ -229,13 +319,11 @@ export const Marketplace = (): JSX.Element => {
           return true;
       }
     });
+
     const searcher = new FuzzySearch([...itemsCopy], ['name', 'description']);
     itemsCopy = searcher.search(query);
 
-    const _pageLimit =
-      Math.floor(Math.ceil(itemsCopy.length / ITEMS_PER_PAGE)) || 1;
-
-    setPageLimit(_pageLimit);
+    setLength(itemsCopy.length);
     setItems(
       itemsCopy.slice(
         (pageNumber - 1) * ITEMS_PER_PAGE,
@@ -243,13 +331,18 @@ export const Marketplace = (): JSX.Element => {
       ),
     );
 
-    if (pageNumber > _pageLimit) {
-      setPage(_pageLimit.toString());
+    if (pageNumber > pageLimit) {
+      setPage(pageLimit);
     }
   }, [
-    filter,
+    activeOrders,
+    character,
+    highestOffers,
     isLoadingItemTemplates,
-    itemFloorPrices,
+    itemTypeFilter,
+    lowestPrices,
+    marketplaceFilter,
+    pageLimit,
     pageNumber,
     query,
     sort.reversed,
@@ -257,9 +350,23 @@ export const Marketplace = (): JSX.Element => {
     unfilteredItems,
   ]);
 
+  // Open marketplace info modal if this is the first time the user is visiting the page
+  useEffect(() => {
+    const hasSeenMarketplaceInfo = localStorage.getItem(
+      MARKETPLACE_INFO_SEEN_KEY,
+    );
+    if (hasSeenMarketplaceInfo) return;
+    onOpenMarketplaceInfoModal();
+  }, [onOpenMarketplaceInfoModal]);
+
+  const onAcknowledgeMarketplaceInfo = useCallback(() => {
+    localStorage.setItem(MARKETPLACE_INFO_SEEN_KEY, 'true');
+    onCloseMarketplaceInfoModal();
+  }, [onCloseMarketplaceInfoModal]);
+
   if (isLoadingItemTemplates || isFetchingOrders) {
     return (
-      <Center h="100%">
+      <Center>
         <Spinner size="lg" />
       </Center>
     );
@@ -294,45 +401,91 @@ export const Marketplace = (): JSX.Element => {
           />
         </InputGroup>
         <HStack>
-          {Object.keys(ItemFilterOptions).map(k => {
+          {Object.keys(MarketplaceFilter).map(k => {
             return (
               <Button
-                key={`filter-${k}`}
+                key={`marketplace-filter-${k}`}
                 onClick={() =>
-                  setFilter(
-                    ItemFilterOptions[k as keyof typeof ItemFilterOptions],
+                  setMarketplaceFilter(
+                    MarketplaceFilter[k as keyof typeof MarketplaceFilter],
                   )
                 }
-                size="sm"
+                size={{ base: 'xs', sm: 'sm' }}
                 variant={
-                  filter ===
-                  ItemFilterOptions[k as keyof typeof ItemFilterOptions]
+                  marketplaceFilter ===
+                  MarketplaceFilter[k as keyof typeof MarketplaceFilter]
                     ? 'solid'
                     : 'outline'
                 }
               >
-                {k}
+                {MarketplaceFilter[k as keyof typeof MarketplaceFilter]}
               </Button>
             );
           })}
         </HStack>
       </Stack>
-      <Flex justify="space-between" w="100%">
-        <Text>Items {items.length}</Text>
-        <HStack>
-          <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
-            {Array.from(Object.values(SortOptions)).map(s => {
+      <Stack
+        alignItems="center"
+        direction={{ base: 'column', md: 'row' }}
+        gap={{ base: 8, md: 0 }}
+        justify="space-between"
+        mb={8}
+        w="100%"
+      >
+        <Stack
+          alignItems="center"
+          direction={{ base: 'column', md: 'row' }}
+          spacing={{ base: 4, md: 8 }}
+        >
+          <Text>Filter by:</Text>
+          <HStack>
+            {Object.keys(ItemFilterOptions).map(k => {
               return (
                 <Button
-                  key={`filter-${s}`}
-                  display={{ base: 'none', lg: 'flex' }}
+                  key={`item-type-filter-${k}`}
+                  onClick={() =>
+                    setItemTypeFilter(
+                      ItemFilterOptions[k as keyof typeof ItemFilterOptions],
+                    )
+                  }
+                  size={{ base: 'xs', sm: 'sm' }}
+                  variant={
+                    itemTypeFilter ===
+                    ItemFilterOptions[k as keyof typeof ItemFilterOptions]
+                      ? 'solid'
+                      : 'outline'
+                  }
+                >
+                  {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
+                </Button>
+              );
+            })}
+          </HStack>
+        </Stack>
+        <Button bg="blue" onClick={onOpenCreateListingModal} size="sm">
+          Create Listing
+        </Button>
+      </Stack>
+      <Flex justify="space-between" w="100%">
+        <Text>Items {length}</Text>
+        <HStack>
+          <HStack w={{ base: '0px', sm: '300px', md: '350px', lg: '500px' }}>
+            {Array.from(Object.values(SortOptions)).map((s, i) => {
+              return (
+                <Button
+                  display={
+                    i === 0
+                      ? { base: 'none', md: 'flex' }
+                      : { base: 'none', sm: 'flex' }
+                  }
                   fontWeight={sort.sorted == s ? 'bold' : 'normal'}
+                  key={`filter-${s}`}
                   onClick={() => {
                     setSort({
                       sorted: s,
                       reversed: !sort.reversed,
                     });
-                    setPage('1');
+                    setPage(1);
                   }}
                   p={1}
                   size={{ base: '2xs', lg: 'sm' }}
@@ -358,9 +511,18 @@ export const Marketplace = (): JSX.Element => {
           items.map((item, i) => {
             return (
               <MarketplaceRow
+                highestOffer={
+                  highestOffers[item.tokenId]
+                    ? formatEther(highestOffers[item.tokenId])
+                    : '0'
+                }
+                lowestPrice={
+                  lowestPrices[item.tokenId]
+                    ? formatEther(lowestPrices[item.tokenId])
+                    : '0'
+                }
                 key={`marketplace-row-${i}`}
                 {...item}
-                floor={itemFloorPrices[item.tokenId] ?? '0'}
               />
             );
           })
@@ -368,73 +530,52 @@ export const Marketplace = (): JSX.Element => {
           <Text mt={12}>No items</Text>
         )}
       </VStack>
+
       <HStack
         my={5}
-        visibility={
-          unfilteredItems && unfilteredItems.length > 0 ? 'visible' : 'hidden'
-        }
+        visibility={unfilteredItems?.length > 0 ? 'visible' : 'hidden'}
       >
-        <Button
-          onClick={() => setPage('1')}
-          size="xs"
-          visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
-        >
-          <FaBackwardStep />
-        </Button>
-        <Button
-          onClick={() =>
-            setPage((pageNumber == 1 ? 1 : pageNumber - 1).toString())
-          }
-          size="xs"
-          visibility={pageNumber <= 1 ? 'hidden' : 'visible'}
-        >
-          <IoCaretBack />
-        </Button>
-        <Input
-          max={pageLimit}
-          min={1}
-          onChange={e => {
-            const value = e.target.value;
-            if (value === '') {
-              setPage(value);
-              return;
-            }
-            if (isNaN(Number(value))) {
-              return;
-            }
-            if (Number(value) < 1) {
-              return;
-            }
-            if (Number(value) > pageLimit) {
-              return;
-            }
-            setPage(value);
-          }}
-          p={2}
-          size="sm"
-          value={page}
-          w={10}
+        <Pagination
+          length={length}
+          page={page}
+          pageLimit={pageLimit}
+          perPage={ITEMS_PER_PAGE}
+          setPage={setPage}
+          setPageLimit={setPageLimit}
         />
-        <Text size="sm">of {pageLimit}</Text>
-        <Button
-          onClick={() =>
-            setPage(
-              (pageNumber < pageLimit ? pageNumber + 1 : pageNumber).toString(),
-            )
-          }
-          size="xs"
-          visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
-        >
-          <IoCaretForward />
-        </Button>
-        <Button
-          onClick={() => setPage(pageLimit.toString())}
-          size="xs"
-          visibility={pageNumber == pageLimit ? 'hidden' : 'visible'}
-        >
-          <FaForwardStep />
-        </Button>
       </HStack>
+
+      <CreateListingModal
+        isOpen={isCreateListingModalOpen}
+        onClose={onCloseCreateListingModal}
+      />
+      <InfoModal
+        heading="Welcome to the Marketplace!"
+        isOpen={isMarketplaceInfoModalOpen}
+        onClose={onAcknowledgeMarketplaceInfo}
+      >
+        <VStack>
+          <Text alignSelf="center" fontSize="60px">
+            🤝
+          </Text>
+          <VStack spacing={4}>
+            <Text>
+              Here you can buy and sell armor, potions, spells, and weapons with
+              other players.
+            </Text>
+            <Text size="sm">
+              To start the process, either create a listing or select an item
+              based on what items are for sale or what items have a $GOLD offer
+              on them. If there are $GOLD offers on an item, anyone who owns the
+              item can accept any of the offers.
+            </Text>
+            <Text size="sm">
+              To coordinate a sale with another player, you can use the chat box
+              in the bottom-right.
+            </Text>
+          </VStack>
+        </VStack>
+      </InfoModal>
     </VStack>
   );
 };
