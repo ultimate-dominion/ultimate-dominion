@@ -64,7 +64,9 @@ contract MapSystem is System {
         // set character position to home point
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
-
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            SessionTimer.set(entityId, block.timestamp);
+        }
         EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
     }
@@ -161,13 +163,13 @@ contract MapSystem is System {
             if (senderIsOwner) {
                 // if sender is owner execute removal
             }
-            else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) != bytes32(0)) {
-                _requireAccess(address(this), _msgSender());
-            } else {
+            else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
                 require(
-                    SessionTimer.get(entityId) + SESSION_TIMEOUT < block.timestamp,
+                    (SessionTimer.get(entityId) + SESSION_TIMEOUT) < block.timestamp,
                     "This player's session has not timed out"
                 );
+            } else {
+                _requireAccess(address(this), _msgSender());
             }
         } else {
             _requireAccess(address(this), _msgSender());
