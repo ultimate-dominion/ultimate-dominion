@@ -20,14 +20,16 @@ import {
 } from '../utils/types';
 
 export const MarketplaceRow = ({
-  floor,
+  highestOffer,
   itemType,
+  lowestPrice,
   minLevel,
   name,
   tokenId,
   ...item
 }: (ArmorTemplate | SpellTemplate | WeaponTemplate) & {
-  floor: string;
+  highestOffer: string;
+  lowestPrice: string;
 }): JSX.Element => {
   const navigate = useNavigate();
 
@@ -75,8 +77,9 @@ export const MarketplaceRow = ({
         </VStack>
       </Flex>
       <HStack>
-        <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
+        <HStack w={{ base: '0px', sm: '250px', md: '350px', lg: '500px' }}>
           <Text
+            display={{ base: 'none', md: 'block' }}
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -85,13 +88,26 @@ export const MarketplaceRow = ({
             {Number(minLevel).toLocaleString()}
           </Text>
           <Text
-            display={{ base: 'none', lg: 'block' }}
+            display={{ base: 'none', sm: 'block' }}
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
             w="100%"
           >
-            {Number(floor) == 0 ? 'N/A' : Number(floor).toLocaleString()}
+            {Number(lowestPrice) == 0
+              ? 'N/A'
+              : `${Number(lowestPrice).toLocaleString()} $GOLD`}
+          </Text>
+          <Text
+            display={{ base: 'none', sm: 'block' }}
+            fontWeight={500}
+            size={{ base: 'xs', lg: 'md' }}
+            textAlign="center"
+            w="100%"
+          >
+            {Number(highestOffer) == 0
+              ? 'N/A'
+              : `${Number(highestOffer).toLocaleString()} $GOLD`}
           </Text>
         </HStack>
         <Box display={{ base: 'none', md: 'block' }} w="50px">

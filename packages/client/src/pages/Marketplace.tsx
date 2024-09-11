@@ -58,7 +58,8 @@ enum MarketplaceFilter {
 
 enum SortOptions {
   Level = 'Level',
-  FloorPrice = 'Floor Price',
+  LowestPrice = 'Lowest Price',
+  HighestOffer = 'Highest Offer',
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -181,25 +182,44 @@ export const Marketplace = (): JSX.Element => {
     fetchOrders();
   }, [fetchOrders]);
 
-  const itemFloorPrices = useMemo(() => {
-    const itemFloorPrices: { [key: string]: bigint } = {};
+  const lowestPrices = useMemo(() => {
+    const lowestPrices: { [key: string]: bigint } = {};
 
     activeOrders.forEach(order => {
-      const price = itemFloorPrices[order.offer.identifier];
+      const price = lowestPrices[order.offer.identifier];
       if (
         !price ||
         BigInt(
           order.consideration.amount && order.consideration.token === goldToken,
         ) < BigInt(price)
       ) {
-        itemFloorPrices[order.offer.identifier] = parseEther(
+        lowestPrices[order.offer.identifier] = parseEther(
           order.consideration.amount,
         );
       }
     });
 
-    return itemFloorPrices;
+    return lowestPrices;
   }, [activeOrders, goldToken]);
+
+  const highestOffers = useMemo(() => {
+    const highestOffers: { [key: string]: bigint } = {};
+
+    activeOrders.forEach(order => {
+      const offer = highestOffers[order.consideration.identifier];
+      if (
+        !offer ||
+        BigInt(order.offer.amount) > BigInt(offer) ||
+        order.offer.tokenType === TokenType.ERC20
+      ) {
+        highestOffers[order.consideration.identifier] = parseEther(
+          order.offer.amount,
+        );
+      }
+    });
+
+    return highestOffers;
+  }, [activeOrders]);
 
   const unfilteredItems = useMemo(
     () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
@@ -222,8 +242,11 @@ export const Marketplace = (): JSX.Element => {
 
     itemsCopy = [...itemsCopy].sort((itemA, itemB) => {
       let result = false;
-      const floorA = itemFloorPrices[itemA.tokenId] ?? '0';
-      const floorB = itemFloorPrices[itemB.tokenId] ?? '0';
+      const lowestPriceA = lowestPrices[itemA.tokenId] ?? '0';
+      const lowestPriceB = lowestPrices[itemB.tokenId] ?? '0';
+
+      const highestOfferA = highestOffers[itemA.tokenId] ?? '0';
+      const highestOfferB = highestOffers[itemB.tokenId] ?? '0';
 
       switch (sort.sorted) {
         case SortOptions.Level:
@@ -231,10 +254,15 @@ export const Marketplace = (): JSX.Element => {
             ? BigInt(itemA?.minLevel || '0') >= BigInt(itemB?.minLevel || '0')
             : BigInt(itemB?.minLevel || '0') > BigInt(itemA?.minLevel || '0');
           break;
-        case SortOptions.FloorPrice:
+        case SortOptions.LowestPrice:
           result = sort.reversed
-            ? BigInt(floorA) >= BigInt(floorB)
-            : BigInt(floorB) > BigInt(floorA);
+            ? BigInt(lowestPriceA) >= BigInt(lowestPriceB)
+            : BigInt(lowestPriceB) > BigInt(lowestPriceA);
+          break;
+        case SortOptions.HighestOffer:
+          result = sort.reversed
+            ? BigInt(highestOfferA) >= BigInt(highestOfferB)
+            : BigInt(highestOfferB) > BigInt(highestOfferA);
           break;
         default:
           break;
@@ -302,9 +330,10 @@ export const Marketplace = (): JSX.Element => {
   }, [
     activeOrders,
     character,
+    highestOffers,
     isLoadingItemTemplates,
-    itemFloorPrices,
     itemTypeFilter,
+    lowestPrices,
     marketplaceFilter,
     pageLimit,
     pageNumber,
@@ -419,11 +448,15 @@ export const Marketplace = (): JSX.Element => {
       <Flex justify="space-between" w="100%">
         <Text>Items {length}</Text>
         <HStack>
-          <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
-            {Array.from(Object.values(SortOptions)).map(s => {
+          <HStack w={{ base: '0px', sm: '300px', md: '350px', lg: '500px' }}>
+            {Array.from(Object.values(SortOptions)).map((s, i) => {
               return (
                 <Button
-                  display={{ base: 'none', lg: 'flex' }}
+                  display={
+                    i === 0
+                      ? { base: 'none', md: 'flex' }
+                      : { base: 'none', sm: 'flex' }
+                  }
                   fontWeight={sort.sorted == s ? 'bold' : 'normal'}
                   key={`filter-${s}`}
                   onClick={() => {
@@ -457,9 +490,14 @@ export const Marketplace = (): JSX.Element => {
           items.map((item, i) => {
             return (
               <MarketplaceRow
-                floor={
-                  itemFloorPrices[item.tokenId]
-                    ? formatEther(itemFloorPrices[item.tokenId])
+                highestOffer={
+                  highestOffers[item.tokenId]
+                    ? formatEther(highestOffers[item.tokenId])
+                    : '0'
+                }
+                lowestPrice={
+                  lowestPrices[item.tokenId]
+                    ? formatEther(lowestPrices[item.tokenId])
                     : '0'
                 }
                 key={`marketplace-row-${i}`}
