@@ -10,6 +10,7 @@ import {
   Spinner,
   Stack,
   Text,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
@@ -28,6 +29,7 @@ import { useNavigate } from 'react-router-dom';
 import { formatEther, parseEther } from 'viem';
 import { useAccount } from 'wagmi';
 
+import { CreateListingModal } from '../components/CreateListingModal';
 import { MarketplaceRow } from '../components/MarketplaceRow';
 import { Pagination } from '../components/Pagination';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -76,6 +78,12 @@ export const Marketplace = (): JSX.Element => {
     weaponTemplates,
   } = useItems();
   const { character } = useCharacter();
+
+  const {
+    isOpen: isCreateListingModalOpen,
+    onOpen: onOpenCreateListingModal,
+    onClose: onCloseCreateListingModal,
+  } = useDisclosure();
 
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
@@ -404,12 +412,12 @@ export const Marketplace = (): JSX.Element => {
             })}
           </HStack>
         </Stack>
-        <Button bg="blue" size="sm">
+        <Button bg="blue" onClick={onOpenCreateListingModal} size="sm">
           Create Listing
         </Button>
       </Stack>
       <Flex justify="space-between" w="100%">
-        <Text>Items {unfilteredItems.length}</Text>
+        <Text>Items {length}</Text>
         <HStack>
           <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
             {Array.from(Object.values(SortOptions)).map(s => {
@@ -477,6 +485,11 @@ export const Marketplace = (): JSX.Element => {
           setPageLimit={setPageLimit}
         />
       </HStack>
+
+      <CreateListingModal
+        isOpen={isCreateListingModalOpen}
+        onClose={onCloseCreateListingModal}
+      />
     </VStack>
   );
 };

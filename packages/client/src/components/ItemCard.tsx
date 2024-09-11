@@ -16,11 +16,13 @@ import { type Armor, ItemType, type Spell, type Weapon } from '../utils/types';
 type ItemCardProps = (Armor | Spell | Weapon) & {
   isEquipped?: boolean;
   onClick?: () => void;
+  showBalance?: boolean;
 };
 
 export const ItemCard: React.FC<ItemCardProps> = ({
   isEquipped = false,
   onClick,
+  showBalance = true,
   ...item
 }): JSX.Element => {
   const { balance, name } = item;
@@ -100,15 +102,22 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       direction="row"
       onClick={onClick}
       overflow="hidden"
+      transition="all 0.2s"
       variant="light"
+      w="100%"
       _active={
         onClick && {
           bgColor: 'rgba(0, 0, 0, .04)',
           borderColor: 'black',
         }
       }
+      _hover={
+        onClick && {
+          borderColor: 'black',
+        }
+      }
     >
-      <CardHeader backgroundColor="grey300">
+      <CardHeader backgroundColor="grey300" w="75px">
         <Center h="100%">
           <Text fontSize={{ base: 'xl', lg: '3xl' }}>{getEmoji(name)}</Text>
         </Center>
@@ -116,10 +125,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       <CardBody>
         <Text fontWeight="bold" size={{ base: 'xs', sm: 'md' }}>
           {removeEmoji(name)}
-          <Text as="span" size="xs">
-            {' '}
-            x {balance}
-          </Text>
+          {showBalance && (
+            <Text as="span" size="xs">
+              {' '}
+              x {balance}
+            </Text>
+          )}
         </Text>
 
         {itemStats}

@@ -8,9 +8,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { getComponentValue } from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
 // eslint-disable-next-line import/no-named-as-default
@@ -20,21 +18,10 @@ import { ShopHalf } from '../components/ShopHalf';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
-import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
 import { GAME_BOARD_PATH } from '../Routes';
-import {
-  Armor,
-  ArmorTemplate,
-  Character,
-  Spell,
-  SpellTemplate,
-  Weapon,
-  WeaponTemplate,
-} from '../utils/types';
+import { ArmorTemplate, SpellTemplate, WeaponTemplate } from '../utils/types';
 
 export const Shop = (): JSX.Element => {
-  const { renderError } = useToast();
   const navigate = useNavigate();
   const { mobId } = useParams();
 
@@ -44,13 +31,13 @@ export const Shop = (): JSX.Element => {
     spellTemplates,
     isLoading: isItemsLoading,
   } = useItems();
-  const { character: userCharacter } = useCharacter();
-  const { allShops } = useMap();
-
   const {
-    components: { ItemsOwners },
-    isSynced,
-  } = useMUD();
+    character: userCharacter,
+    inventoryArmor,
+    inventorySpells,
+    inventoryWeapons,
+  } = useCharacter();
+  const { allShops } = useMap();
 
   const shop = useMemo(() => {
     if (!mobId || !allShops) return null;
@@ -63,105 +50,10 @@ export const Shop = (): JSX.Element => {
   const [buyable, setBuyable] = useState<
     Array<ArmorTemplate | WeaponTemplate | SpellTemplate>
   >([]);
-  const [armor, setArmor] = useState<Armor[]>([]);
-  const [weapons, setWeapons] = useState<Weapon[]>([]);
-  const [spells, setSpells] = useState<Spell[]>([]);
-
-  const fetchCharacterItems = useCallback(
-    (_character: Character) => {
-      try {
-        const _armor = armorTemplates
-          .map(armor => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(armor.tokenId),
-              },
-            );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
-
-            return {
-              ...armor,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
-              itemId: tokenOwnersEntity,
-              owner: _character.owner,
-            } as Armor;
-          })
-          .filter(a => a.balance !== '0');
-
-        const _spells = spellTemplates
-          .map(spell => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(spell.tokenId),
-              },
-            );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
-
-            return {
-              ...spell,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
-              itemId: tokenOwnersEntity,
-              owner: _character.owner,
-            } as Spell;
-          })
-          .filter(s => s.balance !== '0');
-
-        const _weapons = weaponTemplates
-          .map(weapon => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(weapon.tokenId),
-              },
-            );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
-
-            return {
-              ...weapon,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
-              itemId: tokenOwnersEntity,
-              owner: _character.owner,
-            } as Weapon;
-          })
-          .filter(w => w.balance !== '0');
-
-        setArmor(_armor);
-        setSpells(_spells);
-        setWeapons(_weapons);
-      } catch (e) {
-        renderError(
-          (e as Error)?.message ?? 'Failed to fetch character items.',
-          e,
-        );
-      }
-    },
-    [armorTemplates, spellTemplates, weaponTemplates, ItemsOwners, renderError],
-  );
-
-  useEffect(() => {
-    if (userCharacter && isSynced && !isItemsLoading) {
-      fetchCharacterItems(userCharacter);
-    }
-  }, [
-    fetchCharacterItems,
-    shop,
-    userCharacter,
-    isItemsLoading,
-    isSynced,
-    spellTemplates,
-  ]);
 
   const items = useMemo(
-    () => [...weapons, ...armor, ...spells],
-    [weapons, armor, spells],
+    () => [...inventoryArmor, ...inventorySpells, ...inventoryWeapons],
+    [inventoryArmor, inventorySpells, inventoryWeapons],
   );
 
   useEffect(() => {
