@@ -25,11 +25,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
-import { formatEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { MarketplaceRow } from '../components/MarketplaceRow';
 import { Pagination } from '../components/Pagination';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -46,6 +47,12 @@ import {
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
+
+enum MarketplaceFilter {
+  ForSale = 'For Sale',
+  GoldOffers = '$GOLD Offers',
+  MyListings = 'My Listings',
+}
 
 enum SortOptions {
   Level = 'Level',
@@ -68,6 +75,7 @@ export const Marketplace = (): JSX.Element => {
     spellTemplates,
     weaponTemplates,
   } = useItems();
+  const { character } = useCharacter();
 
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
@@ -80,7 +88,10 @@ export const Marketplace = (): JSX.Element => {
     reversed: false,
     sorted: SortOptions.Level,
   });
-  const [filter, setFilter] = useState<ItemFilterOptions>(
+  const [marketplaceFilter, setMarketplaceFilter] = useState<MarketplaceFilter>(
+    MarketplaceFilter.ForSale,
+  );
+  const [itemTypeFilter, setItemTypeFilter] = useState<ItemFilterOptions>(
     ItemFilterOptions.All,
   );
   const [query, setQuery] = useState('');
@@ -93,6 +104,13 @@ export const Marketplace = (): JSX.Element => {
     UltimateDominionConfig,
     singletonEntity,
   ) ?? { goldToken: null };
+
+  useEffect(() => {
+    if (!isConnected) {
+      navigate(HOME_PATH);
+      window.location.reload();
+    }
+  }, [isConnected, navigate]);
 
   const fetchOrders = useCallback(() => {
     try {
@@ -110,6 +128,7 @@ export const Marketplace = (): JSX.Element => {
           Considerations,
           orderHash,
         );
+        const orderData = getComponentValueStrict(Orders, orderHash);
         const offerData = getComponentValueStrict(Offers, orderHash);
         const orderStatus = getComponentValueStrict(
           Orders,
@@ -117,17 +136,6 @@ export const Marketplace = (): JSX.Element => {
         ).orderStatus;
 
         return {
-          orderHash: orderHash.toString(),
-          orderStatus: orderStatus.toString(),
-          offer: {
-            amount:
-              offerData.tokenType === TokenType.ERC20
-                ? formatEther(offerData.amount)
-                : offerData.amount.toString(),
-            identifier: offerData.identifier.toString(),
-            token: offerData.token.toString(),
-            tokenType: offerData.tokenType,
-          } as OfferData,
           consideration: {
             amount:
               considerationData.tokenType === TokenType.ERC20
@@ -138,6 +146,18 @@ export const Marketplace = (): JSX.Element => {
             tokenType: considerationData.tokenType,
             recipient: considerationData.recipient.toString(),
           } as ConsiderationData,
+          offer: {
+            amount:
+              offerData.tokenType === TokenType.ERC20
+                ? formatEther(offerData.amount)
+                : offerData.amount.toString(),
+            identifier: offerData.identifier.toString(),
+            token: offerData.token.toString(),
+            tokenType: offerData.tokenType,
+          } as OfferData,
+          offerer: orderData.offerer.toString(),
+          orderHash: orderHash.toString(),
+          orderStatus: orderStatus.toString(),
         } as Order;
       });
 
@@ -154,7 +174,7 @@ export const Marketplace = (): JSX.Element => {
   }, [fetchOrders]);
 
   const itemFloorPrices = useMemo(() => {
-    const itemFloorPrices: { [key: string]: string } = {};
+    const itemFloorPrices: { [key: string]: bigint } = {};
 
     activeOrders.forEach(order => {
       const price = itemFloorPrices[order.offer.identifier];
@@ -164,19 +184,14 @@ export const Marketplace = (): JSX.Element => {
           order.consideration.amount && order.consideration.token === goldToken,
         ) < BigInt(price)
       ) {
-        itemFloorPrices[order.offer.identifier] = order.consideration.amount;
+        itemFloorPrices[order.offer.identifier] = parseEther(
+          order.consideration.amount,
+        );
       }
     });
 
     return itemFloorPrices;
   }, [activeOrders, goldToken]);
-
-  useEffect(() => {
-    if (!isConnected) {
-      navigate(HOME_PATH);
-      window.location.reload();
-    }
-  }, [isConnected, navigate]);
 
   const unfilteredItems = useMemo(
     () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
@@ -191,6 +206,7 @@ export const Marketplace = (): JSX.Element => {
   }, [page]);
 
   useEffect(() => {
+    if (!character) return;
     if (pageNumber < 1 || isLoadingItemTemplates) {
       return;
     }
@@ -217,8 +233,39 @@ export const Marketplace = (): JSX.Element => {
       }
       return result ? 1 : -1;
     });
+
+    itemsCopy = itemsCopy.filter(item => {
+      switch (marketplaceFilter) {
+        case MarketplaceFilter.ForSale:
+          return activeOrders
+            .filter(order => order.offer.tokenType === TokenType.ERC1155)
+            .map(order => order.offer.identifier)
+            .includes(item.tokenId);
+        case MarketplaceFilter.GoldOffers:
+          return activeOrders
+            .filter(order => order.offer.tokenType === TokenType.ERC20)
+            .map(order => order.consideration.identifier)
+            .includes(item.tokenId);
+        case MarketplaceFilter.MyListings:
+          return activeOrders
+            .filter(
+              order =>
+                order.offerer === character.owner ||
+                order.consideration.recipient === character.owner,
+            )
+            .map(order =>
+              order.offer.tokenType === TokenType.ERC1155
+                ? order.offer.identifier
+                : order.consideration.identifier,
+            )
+            .includes(item.tokenId);
+        default:
+          return true;
+      }
+    });
+
     itemsCopy = [...itemsCopy].filter(entry => {
-      switch (filter) {
+      switch (itemTypeFilter) {
         case ItemFilterOptions.Armor:
           return entry.itemType == ItemType.Armor;
         case ItemFilterOptions.Spell:
@@ -229,6 +276,7 @@ export const Marketplace = (): JSX.Element => {
           return true;
       }
     });
+
     const searcher = new FuzzySearch([...itemsCopy], ['name', 'description']);
     itemsCopy = searcher.search(query);
 
@@ -244,9 +292,12 @@ export const Marketplace = (): JSX.Element => {
       setPage(pageLimit);
     }
   }, [
-    filter,
+    activeOrders,
+    character,
     isLoadingItemTemplates,
     itemFloorPrices,
+    itemTypeFilter,
+    marketplaceFilter,
     pageLimit,
     pageNumber,
     query,
@@ -292,28 +343,70 @@ export const Marketplace = (): JSX.Element => {
           />
         </InputGroup>
         <HStack>
-          {Object.keys(ItemFilterOptions).map(k => {
+          {Object.keys(MarketplaceFilter).map(k => {
             return (
               <Button
-                key={`filter-${k}`}
+                key={`marketplace-filter-${k}`}
                 onClick={() =>
-                  setFilter(
-                    ItemFilterOptions[k as keyof typeof ItemFilterOptions],
+                  setMarketplaceFilter(
+                    MarketplaceFilter[k as keyof typeof MarketplaceFilter],
                   )
                 }
-                size="sm"
+                size={{ base: 'xs', sm: 'sm' }}
                 variant={
-                  filter ===
-                  ItemFilterOptions[k as keyof typeof ItemFilterOptions]
+                  marketplaceFilter ===
+                  MarketplaceFilter[k as keyof typeof MarketplaceFilter]
                     ? 'solid'
                     : 'outline'
                 }
               >
-                {k}
+                {MarketplaceFilter[k as keyof typeof MarketplaceFilter]}
               </Button>
             );
           })}
         </HStack>
+      </Stack>
+      <Stack
+        alignItems="center"
+        direction={{ base: 'column', md: 'row' }}
+        gap={{ base: 8, md: 0 }}
+        justify="space-between"
+        mb={8}
+        w="100%"
+      >
+        <Stack
+          alignItems="center"
+          direction={{ base: 'column', md: 'row' }}
+          spacing={{ base: 4, md: 8 }}
+        >
+          <Text>Filter by:</Text>
+          <HStack>
+            {Object.keys(ItemFilterOptions).map(k => {
+              return (
+                <Button
+                  key={`item-type-filter-${k}`}
+                  onClick={() =>
+                    setItemTypeFilter(
+                      ItemFilterOptions[k as keyof typeof ItemFilterOptions],
+                    )
+                  }
+                  size={{ base: 'xs', sm: 'sm' }}
+                  variant={
+                    itemTypeFilter ===
+                    ItemFilterOptions[k as keyof typeof ItemFilterOptions]
+                      ? 'solid'
+                      : 'outline'
+                  }
+                >
+                  {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
+                </Button>
+              );
+            })}
+          </HStack>
+        </Stack>
+        <Button bg="blue" size="sm">
+          Create Listing
+        </Button>
       </Stack>
       <Flex justify="space-between" w="100%">
         <Text>Items {unfilteredItems.length}</Text>
@@ -356,7 +449,11 @@ export const Marketplace = (): JSX.Element => {
           items.map((item, i) => {
             return (
               <MarketplaceRow
-                floor={itemFloorPrices[item.tokenId] ?? '0'}
+                floor={
+                  itemFloorPrices[item.tokenId]
+                    ? formatEther(itemFloorPrices[item.tokenId])
+                    : '0'
+                }
                 key={`marketplace-row-${i}`}
                 {...item}
               />
