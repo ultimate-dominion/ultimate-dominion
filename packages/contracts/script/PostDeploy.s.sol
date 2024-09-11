@@ -425,26 +425,26 @@ contract PostDeploy is Script {
         world.UD__setStarterItems(Classes.Mage, mageItemIds, mageAmounts);
     }
     function _createShops() internal {
-        uint256[] memory sellableItems = new uint256[](4);
-        sellableItems[0] = uint256(4);
-        sellableItems[1] = uint256(5);
-        sellableItems[2] = uint256(6);
-        sellableItems[3] = uint256(7);
-        uint256[] memory buyableItems = new uint256[](8);
-        buyableItems[0] = uint256(0);
-        buyableItems[1] = uint256(1);
-        buyableItems[2] = uint256(2);
-        buyableItems[3] = uint256(3);
-        buyableItems[4] = uint256(4);
-        buyableItems[5] = uint256(5);
-        buyableItems[6] = uint256(6);
-        buyableItems[7] = uint256(7);
+
+        uint256[] memory sellableItems = new uint256[](3);
+        uint256[] memory buyableItems = new uint256[](6);
+        uint256[] memory stock = new uint256[](buyableItems.length);
+        for(uint i = 0; i < 10; ++i){
+            if(i < 3) sellableItems[i] = i;
+            if(i < 6) buyableItems[i] = i;
+            if(i < buyableItems.length) stock[i] = 5;
+        }
 
         ShopsData memory newShop = ShopsData({
+            gold: 100,
+            maxGold: 100,
             priceMarkup: 0,
             priceMarkdown: 0,
+            timestamp: block.timestamp,
+            sellableItems: sellableItems,
             buyableItems: sellableItems,
-            sellableItems: sellableItems
+            restock: stock,
+            stock: stock
         });
 
         uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");

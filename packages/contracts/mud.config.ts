@@ -411,10 +411,15 @@ export default defineWorld({
       key: ["entityId"],
       schema: {
         entityId: "bytes32",
-        priceMarkdown: "uint256",
+        gold: "uint256",
+        maxGold: "uint256",
         priceMarkup: "uint256",
-        buyableItems: "uint256[]",
+        priceMarkdown: "uint256",
+        timestamp: "uint256",
         sellableItems: "uint256[]",
+        buyableItems: "uint256[]",
+        restock: "uint256[]",
+        stock: "uint256[]",
       },
     },
     ////////////////////////////////////////// OFFCHAIN TABLES////////////////////////////////////////
