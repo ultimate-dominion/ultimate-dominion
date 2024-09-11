@@ -21,6 +21,7 @@ import {
   Tabs,
   Text,
   useDisclosure,
+  VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import {
@@ -32,6 +33,7 @@ import {
 } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Address, erc20Abi, formatEther, parseEther } from 'viem';
 
@@ -361,27 +363,31 @@ export const MarketplaceItem = (): JSX.Element => {
 
   if (selectedItem == null) {
     return (
-      <Box>
+      <VStack>
         <Button
-          mt={5}
-          size="sm"
+          alignSelf="start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
           onClick={() => navigate(MARKETPLACE_PATH)}
+          size="xs"
           variant="outline"
         >
           Back to Marketplace
         </Button>
         <Text>Item not found</Text>
-      </Box>
+      </VStack>
     );
   }
 
   if (isFetchingOrders || isLoadingItemTemplates) {
     return (
-      <Box h="100%">
+      <VStack>
         <Button
-          mt={5}
-          size="sm"
+          alignSelf="start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
           onClick={() => navigate(MARKETPLACE_PATH)}
+          size="xs"
           variant="outline"
         >
           Back to Marketplace
@@ -389,18 +395,20 @@ export const MarketplaceItem = (): JSX.Element => {
         <HStack h="100%" justifyContent="center" w="100%">
           <Spinner size="xl" />
         </HStack>
-      </Box>
+      </VStack>
     );
   }
 
   return (
-    <Stack>
+    <VStack>
       <MarketplaceAllowanceModal isOpen={isOpen} onClose={onClose} />
       <Box>
         <Button
-          mt={5}
-          size="sm"
+          alignSelf="start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
           onClick={() => navigate(MARKETPLACE_PATH)}
+          size="xs"
           variant="outline"
         >
           Back to Marketplace
@@ -635,6 +643,6 @@ export const MarketplaceItem = (): JSX.Element => {
           </TabPanels>
         </Tabs>
       </Box>
-    </Stack>
+    </VStack>
   );
 };
