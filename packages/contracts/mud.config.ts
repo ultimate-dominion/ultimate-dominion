@@ -99,6 +99,13 @@ export default defineWorld({
         level: "uint256",
       },
     },
+    SessionTimer: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        lastAction: "uint256",
+      },
+    },
     Mobs: {
       key: ["mobId"],
       schema: {

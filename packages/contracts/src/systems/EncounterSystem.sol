@@ -8,30 +8,21 @@ import {Math} from "@libraries/Math.sol";
 import {LibChunks} from "@libraries/LibChunks.sol";
 import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
     EncounterEntityData,
     Stats,
-    StatsData,
     Effects,
-    EffectsData,
     Items,
     CharacterEquipment,
-    CharacterEquipmentData,
     CombatEncounter,
     CombatEncounterData,
     CombatOutcome,
     CombatOutcomeData,
     Position,
     Mobs,
-    Spawned,
-    MobsData,
     Counters,
     ActionOutcome,
-    ActionOutcomeData,
-    DamageOverTimeAppliedData,
-    DamageOverTimeApplied,
-    StatusEffectStats
+    SessionTimer
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
@@ -320,6 +311,7 @@ contract EncounterSystem is System {
     }
 
     function _queueActions(bytes32 encounterId, Action[] memory attacks) internal {
+        SessionTimer.set(attacks[0].attackerEntityId, block.timestamp);
         SystemSwitch.call(
             abi.encodeCall(IRngSystem.getRng, (encounterId, RngRequestType.Combat, abi.encode(encounterId, attacks)))
         );

@@ -2,6 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
+import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {
     Characters,
@@ -12,11 +13,14 @@ import {
     Spawned,
     Stats,
     MobsByLevel,
-    EncounterEntity
+    EncounterEntity,
+    SessionTimer
 } from "../codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
+import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
+import {SESSION_TIMEOUT} from "../../constants.sol";
 import {_requireAccess} from "../utils.sol";
 import "forge-std/console.sol";
 
@@ -157,7 +161,14 @@ contract MapSystem is System {
             if (senderIsOwner) {
                 // if sender is owner execute removal
             }
-            else _requireAccess(address(this), _msgSender());
+            else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) != bytes32(0)) {
+                _requireAccess(address(this), _msgSender());
+            } else {
+                require(
+                    SessionTimer.get(entityId) + SESSION_TIMEOUT < block.timestamp,
+                    "This player's session has not timed out"
+                );
+            }
         } else {
             _requireAccess(address(this), _msgSender());
         }
@@ -196,6 +207,10 @@ contract MapSystem is System {
             }
         }
         require(entityWasAtPosition, "Entity not at position");
+        // if character set session timer
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            SessionTimer.set(entityId, block.timestamp);
+        }
         Position.set(entityId, x, y);
         EntitiesAtPosition.pushEntities(x, y, entityId);
     }
