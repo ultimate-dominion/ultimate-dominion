@@ -14,10 +14,10 @@ export enum EncounterType {
 }
 
 export enum ItemFilterOptions {
-  All = 'all',
-  Armor = 'armor',
-  Spell = 'spell',
-  Weapon = 'weapon',
+  All = 'All',
+  Armor = 'Armor',
+  Spell = 'Spell',
+  Weapon = 'Weapon',
 }
 
 export enum ItemType {
