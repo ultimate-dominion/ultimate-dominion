@@ -2,10 +2,7 @@ import {
   Avatar,
   Box,
   Button,
-  Center,
   Divider,
-  Grid,
-  GridItem,
   Heading,
   HStack,
   Input,
@@ -47,14 +44,15 @@ import { MARKETPLACE_PATH } from '../Routes';
 import { ERC_1155_ABI } from '../utils/constants';
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import {
-  type ArmorStats,
+  type ArmorTemplate,
   type ConsiderationData,
+  ItemType,
   type OfferData,
   type Order,
   OrderStatus,
-  type SpellStats,
+  type SpellTemplate,
   TokenType,
-  type WeaponStats,
+  type WeaponTemplate,
 } from '../utils/types';
 
 export const MarketplaceItem = (): JSX.Element => {
@@ -329,35 +327,31 @@ export const MarketplaceItem = (): JSX.Element => {
     ],
   );
 
-  const itemFloorPrice = useMemo(() => {
+  const lowestPrice = useMemo(() => {
     const itemOrders = orders.filter(
       order => order.consideration.token == goldToken,
     );
 
     if (itemOrders.length == 0) return null;
 
-    const floorPrices = itemOrders.map(order =>
+    const prices = itemOrders.map(order =>
       parseEther(order.consideration.amount),
     );
 
     return formatEther(
-      floorPrices.reduce((prev, curr) => (prev < curr ? prev : curr)),
+      prices.reduce((prev, curr) => (prev < curr ? prev : curr)),
     );
   }, [goldToken, orders]);
 
-  const itemCeilingPrice = useMemo(() => {
-    const itemOrders = orders.filter(
-      order => order.consideration.token == goldToken,
-    );
+  const highestOffer = useMemo(() => {
+    const itemOrders = orders.filter(order => order.offer.token == goldToken);
 
     if (itemOrders.length == 0) return null;
 
-    const ceilingPrices = itemOrders.map(order =>
-      parseEther(order.consideration.amount),
-    );
+    const prices = itemOrders.map(order => parseEther(order.offer.amount));
 
     return formatEther(
-      ceilingPrices.reduce((prev, curr) => (prev > curr ? prev : curr)),
+      prices.reduce((prev, curr) => (prev > curr ? prev : curr)),
     );
   }, [goldToken, orders]);
 
@@ -415,13 +409,11 @@ export const MarketplaceItem = (): JSX.Element => {
         </Button>
         <HStack alignItems="start" spacing={12}>
           <Stack w="50%">
-            <HStack>
-              <Heading textAlign="center">
-                {removeEmoji(selectedItem.name)}
-              </Heading>
-            </HStack>
+            <Heading textAlign="center">
+              {removeEmoji(selectedItem.name)}
+            </Heading>
 
-            <Center my={5}>
+            <HStack>
               <Avatar
                 borderRadius={0}
                 size="2xl"
@@ -430,58 +422,129 @@ export const MarketplaceItem = (): JSX.Element => {
               >
                 {getEmoji(selectedItem.name)}
               </Avatar>
-            </Center>
-            <Text>{selectedItem.description}</Text>
-          </Stack>
-          <Grid templateColumns="repeat(, 1fr)" w="50%">
-            {[...Object.keys({ ...selectedItem })]
-              .filter(key =>
-                ['effects', 'itemId', 'owner', 'statRestrictions'].indexOf(
-                  key,
-                ) > -1
-                  ? false
-                  : true,
-              )
-              .map((key, i) => (
-                <GridItem key={`detail-${i}`}>
-                  <HStack>
-                    <Text textTransform="capitalize">{key}</Text>
+              <Text size="sm">{selectedItem.description}</Text>
+            </HStack>
+            <HStack alignItems="start" spacing={8}>
+              <VStack spacing={1} w="50%">
+                <Text fontWeight="bold" mb={2} textAlign="center">
+                  Stats
+                </Text>
+                {selectedItem.itemType !== ItemType.Spell && (
+                  <>
+                    <HStack w="100%">
+                      <Text size="sm">Agility Modifier</Text>
+                      <Spacer />
+                      <Text>
+                        {
+                          (selectedItem as ArmorTemplate | WeaponTemplate)
+                            .agiModifier
+                        }
+                      </Text>
+                    </HStack>
+                    <HStack w="100%">
+                      <Text size="sm">Intelligence Modifier</Text>
+                      <Spacer />
+                      <Text>
+                        {
+                          (selectedItem as ArmorTemplate | WeaponTemplate)
+                            .intModifier
+                        }
+                      </Text>
+                    </HStack>
+                    <HStack w="100%">
+                      <Text size="sm">Strength Modifier</Text>
+                      <Spacer />
+                      <Text>
+                        {
+                          (selectedItem as ArmorTemplate | WeaponTemplate)
+                            .strModifier
+                        }
+                      </Text>
+                    </HStack>
+                    <HStack w="100%">
+                      <Text size="sm">HP Modifier</Text>
+                      <Spacer />
+                      <Text>
+                        {
+                          (selectedItem as ArmorTemplate | WeaponTemplate)
+                            .hpModifier
+                        }
+                      </Text>
+                    </HStack>
+                  </>
+                )}
+                {selectedItem.itemType === ItemType.Armor && (
+                  <HStack w="100%">
+                    <Text size="sm">Armor Modifier</Text>
                     <Spacer />
-                    <Text>
-                      {selectedItem
-                        ? selectedItem[
-                            key as keyof (
-                              | Omit<ArmorStats, 'statRestrictions'>
-                              | Omit<SpellStats, 'statRestrictions'>
-                              | Omit<WeaponStats, 'statRestrictions'>
-                            )
-                          ]
-                        : ''}
-                    </Text>
+                    <Text>{(selectedItem as ArmorTemplate).armorModifier}</Text>
                   </HStack>
-                </GridItem>
-              ))}
-            <GridItem>
-              <HStack>
-                <Text>Floor Price</Text>
-                <Spacer />
-                <Text>
-                  {itemFloorPrice == null ? 'not enough data' : itemFloorPrice}
+                )}
+                {selectedItem.itemType !== ItemType.Armor && (
+                  <>
+                    <HStack w="100%">
+                      <Text size="sm">Min Damage</Text>
+                      <Spacer />
+                      <Text>
+                        {
+                          (selectedItem as SpellTemplate | WeaponTemplate)
+                            .minDamage
+                        }
+                      </Text>
+                    </HStack>
+                    <HStack w="100%">
+                      <Text size="sm">Max Damage</Text>
+                      <Spacer />
+                      <Text>
+                        {
+                          (selectedItem as SpellTemplate | WeaponTemplate)
+                            .maxDamage
+                        }
+                      </Text>
+                    </HStack>
+                  </>
+                )}
+              </VStack>
+
+              <VStack spacing={1} w="50%">
+                <Text fontWeight="bold" mb={2} textAlign="center">
+                  Requirements
                 </Text>
-              </HStack>
-            </GridItem>
-            <GridItem>
-              <HStack>
-                <Text>Ceiling Price</Text>
-                <Spacer />
-                <Text>
-                  {itemCeilingPrice == null
-                    ? 'not enough data'
-                    : itemCeilingPrice}
-                </Text>
-              </HStack>
-            </GridItem>
-          </Grid>
+                <HStack w="100%">
+                  <Text size="sm">Min Level</Text>
+                  <Spacer />
+                  <Text>{selectedItem.minLevel}</Text>
+                </HStack>
+                <HStack w="100%">
+                  <Text size="sm">Min Agility</Text>
+                  <Spacer />
+                  <Text>{selectedItem.statRestrictions.minAgility}</Text>
+                </HStack>
+                <HStack w="100%">
+                  <Text size="sm">Min Intelligence</Text>
+                  <Spacer />
+                  <Text>{selectedItem.statRestrictions.minIntelligence}</Text>
+                </HStack>
+                <HStack w="100%">
+                  <Text size="sm">Min Strength</Text>
+                  <Spacer />
+                  <Text>{selectedItem.statRestrictions.minStrength}</Text>
+                </HStack>
+              </VStack>
+            </HStack>
+          </Stack>
+          <Stack w="50%">
+            <HStack w="100%">
+              <Text size="sm">Lowest Price</Text>
+              <Spacer />
+              <Text>{lowestPrice ? `${lowestPrice} $GOLD` : 'N/A'}</Text>
+            </HStack>
+            <HStack w="100%">
+              <Text size="sm">Highest Offer</Text>
+              <Spacer />
+              <Text>{highestOffer ? `${highestOffer} $GOLD` : 'N/A'}</Text>
+            </HStack>
+          </Stack>
         </HStack>
         <Divider my={8} />
         <HStack alignItems="start" spacing={12}>
