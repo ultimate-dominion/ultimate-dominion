@@ -13,20 +13,12 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import {
-  getComponentValueStrict,
-  Has,
-  HasValue,
-  runQuery,
-} from '@latticexyz/recs';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
-import { formatEther, parseEther } from 'viem';
+import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { CreateListingModal } from '../components/CreateListingModal';
@@ -35,17 +27,12 @@ import { MarketplaceRow } from '../components/MarketplaceRow';
 import { Pagination } from '../components/Pagination';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
-import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
+import { useOrders } from '../contexts/OrdersContext';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import {
   type ArmorTemplate,
-  type ConsiderationData,
   ItemFilterOptions,
   ItemType,
-  type OfferData,
-  type Order,
-  OrderStatus,
   type SpellTemplate,
   TokenType,
   type WeaponTemplate,
@@ -67,19 +54,21 @@ const ITEMS_PER_PAGE = 10;
 const MARKETPLACE_INFO_SEEN_KEY = 'marketplace-info-seen';
 
 export const Marketplace = (): JSX.Element => {
-  const { renderError } = useToast();
   const navigate = useNavigate();
   const { isConnected } = useAccount();
 
-  const {
-    components: { Considerations, Offers, Orders, UltimateDominionConfig },
-  } = useMUD();
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
     spellTemplates,
     weaponTemplates,
   } = useItems();
+  const {
+    activeOrders,
+    highestOffers,
+    isLoading: isLoadingOrders,
+    lowestPrices,
+  } = useOrders();
   const { character } = useCharacter();
 
   const {
@@ -92,9 +81,6 @@ export const Marketplace = (): JSX.Element => {
     onClose: onCloseMarketplaceInfoModal,
     onOpen: onOpenMarketplaceInfoModal,
   } = useDisclosure();
-
-  const [isFetchingOrders, setIsFetchingOrders] = useState(false);
-  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
 
   const [items, setItems] = useState<
     (ArmorTemplate | SpellTemplate | WeaponTemplate)[]
@@ -116,117 +102,12 @@ export const Marketplace = (): JSX.Element => {
   const [pageLimit, setPageLimit] = useState(1);
   const [length, setLength] = useState(1);
 
-  const { goldToken } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { goldToken: null };
-
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
       window.location.reload();
     }
   }, [isConnected, navigate]);
-
-  const fetchOrders = useCallback(() => {
-    try {
-      setIsFetchingOrders(true);
-
-      const _activeOrders = Array.from(
-        runQuery([
-          Has(Considerations),
-          Has(Offers),
-          Has(Orders),
-          HasValue(Orders, { orderStatus: OrderStatus.Active }),
-        ]),
-      ).map(orderHash => {
-        const considerationData = getComponentValueStrict(
-          Considerations,
-          orderHash,
-        );
-        const orderData = getComponentValueStrict(Orders, orderHash);
-        const offerData = getComponentValueStrict(Offers, orderHash);
-        const orderStatus = getComponentValueStrict(
-          Orders,
-          orderHash,
-        ).orderStatus;
-
-        return {
-          consideration: {
-            amount:
-              considerationData.tokenType === TokenType.ERC20
-                ? formatEther(considerationData.amount)
-                : considerationData.amount.toString(),
-            identifier: considerationData.identifier.toString(),
-            token: considerationData.token.toString(),
-            tokenType: considerationData.tokenType,
-            recipient: considerationData.recipient.toString(),
-          } as ConsiderationData,
-          offer: {
-            amount:
-              offerData.tokenType === TokenType.ERC20
-                ? formatEther(offerData.amount)
-                : offerData.amount.toString(),
-            identifier: offerData.identifier.toString(),
-            token: offerData.token.toString(),
-            tokenType: offerData.tokenType,
-          } as OfferData,
-          offerer: orderData.offerer.toString(),
-          orderHash: orderHash.toString(),
-          orderStatus: orderStatus.toString(),
-        } as Order;
-      });
-
-      setActiveOrders(_activeOrders);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to get order data.', e);
-    } finally {
-      setIsFetchingOrders(false);
-    }
-  }, [Considerations, Offers, Orders, renderError]);
-
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
-
-  const lowestPrices = useMemo(() => {
-    const lowestPrices: { [key: string]: bigint } = {};
-
-    activeOrders.forEach(order => {
-      const price = lowestPrices[order.offer.identifier];
-      if (
-        !price ||
-        BigInt(
-          order.consideration.amount && order.consideration.token === goldToken,
-        ) < BigInt(price)
-      ) {
-        lowestPrices[order.offer.identifier] = parseEther(
-          order.consideration.amount,
-        );
-      }
-    });
-
-    return lowestPrices;
-  }, [activeOrders, goldToken]);
-
-  const highestOffers = useMemo(() => {
-    const highestOffers: { [key: string]: bigint } = {};
-
-    activeOrders.forEach(order => {
-      const offer = highestOffers[order.consideration.identifier];
-      if (
-        !offer ||
-        BigInt(order.offer.amount) > BigInt(offer) ||
-        order.offer.tokenType === TokenType.ERC20
-      ) {
-        highestOffers[order.consideration.identifier] = parseEther(
-          order.offer.amount,
-        );
-      }
-    });
-
-    return highestOffers;
-  }, [activeOrders]);
 
   const unfilteredItems = useMemo(
     () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
@@ -364,7 +245,7 @@ export const Marketplace = (): JSX.Element => {
     onCloseMarketplaceInfoModal();
   }, [onCloseMarketplaceInfoModal]);
 
-  if (isLoadingItemTemplates || isFetchingOrders) {
+  if (isLoadingItemTemplates || isLoadingOrders) {
     return (
       <Center>
         <Spinner size="lg" />

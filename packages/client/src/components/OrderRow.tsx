@@ -25,13 +25,13 @@ import {
 type OrderRowProps = {
   item: ArmorTemplate | WeaponTemplate | SpellTemplate;
   order: Order;
-  refetchOrders: () => void;
+  refreshOrders: () => void;
 };
 
 export const OrderRow = ({
   item,
   order,
-  refetchOrders,
+  refreshOrders,
 }: OrderRowProps): JSX.Element => {
   const {
     systemCalls: { cancelOrder, fulfillOrder },
@@ -52,13 +52,13 @@ export const OrderRow = ({
       }
 
       renderSuccess('Order canceled successfully!');
-      refetchOrders();
+      refreshOrders();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error cancelling order.', e);
     } finally {
       setIsCancelling(false);
     }
-  }, [cancelOrder, order, refetchOrders, renderError, renderSuccess]);
+  }, [cancelOrder, order, refreshOrders, renderError, renderSuccess]);
 
   const onFulfillOrder = useCallback(async () => {
     try {
@@ -71,13 +71,13 @@ export const OrderRow = ({
       }
 
       renderSuccess('Order filled successfully!');
-      refetchOrders();
+      refreshOrders();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error cancelling order.', e);
     } finally {
       setIsFilling(false);
     }
-  }, [fulfillOrder, order, refetchOrders, renderError, renderSuccess]);
+  }, [fulfillOrder, order, refreshOrders, renderError, renderSuccess]);
 
   const { consideration, offer } = order;
 

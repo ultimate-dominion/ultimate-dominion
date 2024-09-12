@@ -21,35 +21,26 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import {
-  getComponentValue,
-  getComponentValueStrict,
-  Has,
-  HasValue,
-  runQuery,
-} from '@latticexyz/recs';
+import { getComponentValue } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Address, erc20Abi, formatEther, parseEther } from 'viem';
+import { Address, erc20Abi, parseEther } from 'viem';
 
 import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
 import { MARKETPLACE_PATH } from '../Routes';
 import { ERC_1155_ABI } from '../utils/constants';
-import { getEmoji, removeEmoji } from '../utils/helpers';
+import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
-  type ConsiderationData,
   ItemType,
-  type OfferData,
-  type Order,
-  OrderStatus,
   type SpellTemplate,
   TokenType,
   type WeaponTemplate,
@@ -61,14 +52,7 @@ export const MarketplaceItem = (): JSX.Element => {
   const { itemId: selectedItemId } = useParams();
 
   const {
-    components: {
-      Considerations,
-      ItemsOwners,
-      Offers,
-      Orders,
-      UltimateDominionConfig,
-    },
-    isSynced,
+    components: { ItemsOwners, UltimateDominionConfig },
     network: { publicClient },
     systemCalls: { createOrder },
   } = useMUD();
@@ -78,12 +62,16 @@ export const MarketplaceItem = (): JSX.Element => {
     spellTemplates,
     weaponTemplates,
   } = useItems();
-  const { character: userCharacter } = useCharacter();
+  const {
+    activeOrders,
+    highestOffers,
+    isLoading: isLoadingOrders,
+    lowestPrices,
+    refreshOrders,
+  } = useOrders();
+  const { character: userCharacter, refreshCharacter } = useCharacter();
 
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-  const [isFetchingOrders, setIsFetchingOrders] = useState(true);
-  const [refetchCounter, setRefetchCounter] = useState(0);
-  const [orders, setOrders] = useState<Order[]>([]);
 
   const [offerAmount, setOfferAmount] = useState('1');
   const [offerPrice, setOfferPrice] = useState('1');
@@ -101,60 +89,6 @@ export const MarketplaceItem = (): JSX.Element => {
     UltimateDominionConfig,
     singletonEntity,
   ) ?? { items: null };
-
-  const fetchOrders = useCallback(() => {
-    const _orders = Array.from(
-      runQuery([
-        Has(Considerations),
-        Has(Offers),
-        Has(Orders),
-        HasValue(Orders, { orderStatus: OrderStatus.Active }),
-      ]),
-    ).map(orderHash => {
-      const considerationData = getComponentValueStrict(
-        Considerations,
-        orderHash,
-      );
-      const offerData = getComponentValueStrict(Offers, orderHash);
-      const orderStatus = getComponentValueStrict(
-        Orders,
-        orderHash,
-      ).orderStatus;
-
-      return {
-        orderHash: orderHash.toString(),
-        orderStatus: orderStatus.toString(),
-        offer: {
-          amount:
-            offerData.tokenType === TokenType.ERC20
-              ? formatEther(offerData.amount)
-              : offerData.amount.toString(),
-          identifier: offerData.identifier.toString(),
-          token: offerData.token.toString(),
-          tokenType: offerData.tokenType,
-        } as OfferData,
-        consideration: {
-          amount:
-            considerationData.tokenType === TokenType.ERC20
-              ? formatEther(considerationData.amount)
-              : considerationData.amount.toString(),
-          identifier: considerationData.identifier.toString(),
-          token: considerationData.token.toString(),
-          tokenType: considerationData.tokenType,
-          recipient: considerationData.recipient.toString(),
-        } as ConsiderationData,
-      } as Order;
-    });
-
-    setRefetchCounter(prev => prev + 1);
-    setOrders(_orders);
-    setIsFetchingOrders(false);
-  }, [Considerations, Offers, Orders]);
-
-  useEffect(() => {
-    if (!isSynced) return;
-    fetchOrders();
-  }, [fetchOrders, isSynced]);
 
   const selectedItem = useMemo(() => {
     const armor = armorTemplates.find(
@@ -177,7 +111,6 @@ export const MarketplaceItem = (): JSX.Element => {
 
   const userItemBalance = useMemo(() => {
     if (!(userCharacter && selectedItem)) return '0';
-    if (refetchCounter === 0) return '0';
 
     const tokenOwnersEntity = encodeEntity(
       { owner: 'address', tokenId: 'uint256' },
@@ -189,7 +122,7 @@ export const MarketplaceItem = (): JSX.Element => {
 
     const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
     return itemOwner ? itemOwner.balance.toString() : '0';
-  }, [ItemsOwners, refetchCounter, selectedItem, userCharacter]);
+  }, [ItemsOwners, selectedItem, userCharacter]);
 
   const fetchAllowances = useCallback(async () => {
     let allowances = { goldAllowance: 0n, itemAllowance: false };
@@ -305,7 +238,8 @@ export const MarketplaceItem = (): JSX.Element => {
         }
 
         renderSuccess('Order placed successfully!');
-        fetchOrders();
+        refreshCharacter();
+        refreshOrders();
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to create order.', e);
       } finally {
@@ -315,10 +249,11 @@ export const MarketplaceItem = (): JSX.Element => {
     [
       createOrder,
       fetchAllowances,
-      fetchOrders,
       goldToken,
       itemsContract,
       onOpen,
+      refreshCharacter,
+      refreshOrders,
       renderError,
       renderSuccess,
       selectedItem,
@@ -326,34 +261,6 @@ export const MarketplaceItem = (): JSX.Element => {
       userItemBalance,
     ],
   );
-
-  const lowestPrice = useMemo(() => {
-    const itemOrders = orders.filter(
-      order => order.consideration.token == goldToken,
-    );
-
-    if (itemOrders.length == 0) return null;
-
-    const prices = itemOrders.map(order =>
-      parseEther(order.consideration.amount),
-    );
-
-    return formatEther(
-      prices.reduce((prev, curr) => (prev < curr ? prev : curr)),
-    );
-  }, [goldToken, orders]);
-
-  const highestOffer = useMemo(() => {
-    const itemOrders = orders.filter(order => order.offer.token == goldToken);
-
-    if (itemOrders.length == 0) return null;
-
-    const prices = itemOrders.map(order => parseEther(order.offer.amount));
-
-    return formatEther(
-      prices.reduce((prev, curr) => (prev > curr ? prev : curr)),
-    );
-  }, [goldToken, orders]);
 
   if (selectedItem == null) {
     return (
@@ -373,7 +280,7 @@ export const MarketplaceItem = (): JSX.Element => {
     );
   }
 
-  if (isFetchingOrders || isLoadingItemTemplates) {
+  if (isLoadingItemTemplates || isLoadingOrders) {
     return (
       <VStack>
         <Button
@@ -537,12 +444,20 @@ export const MarketplaceItem = (): JSX.Element => {
             <HStack w="100%">
               <Text size="sm">Lowest Price</Text>
               <Spacer />
-              <Text>{lowestPrice ? `${lowestPrice} $GOLD` : 'N/A'}</Text>
+              <Text>
+                {lowestPrices[selectedItem.tokenId]
+                  ? `${etherToFixedNumber(lowestPrices[selectedItem.tokenId])} $GOLD`
+                  : 'N/A'}
+              </Text>
             </HStack>
             <HStack w="100%">
               <Text size="sm">Highest Offer</Text>
               <Spacer />
-              <Text>{highestOffer ? `${highestOffer} $GOLD` : 'N/A'}</Text>
+              <Text>
+                {highestOffers[selectedItem.tokenId]
+                  ? `${etherToFixedNumber(highestOffers[selectedItem.tokenId])} $GOLD`
+                  : 'N/A'}
+              </Text>
             </HStack>
           </Stack>
         </HStack>
@@ -664,40 +579,40 @@ export const MarketplaceItem = (): JSX.Element => {
           <TabPanels>
             <TabPanel>
               <Stack gap={2}>
-                {orders
+                {activeOrders
                   .filter(
-                    item =>
-                      item.offer.token == itemsContract &&
-                      item.consideration.token == goldToken &&
-                      item.offer.identifier == selectedItemId,
+                    order =>
+                      order.offer.token == itemsContract &&
+                      order.consideration.token == goldToken &&
+                      order.offer.identifier == selectedItemId,
                   )
-                  .filter(item => item.orderStatus == '1')
+                  .filter(order => order.orderStatus == '1')
                   .map((order, i) => (
                     <OrderRow
                       key={`order-${i}`}
                       item={selectedItem}
                       order={order}
-                      refetchOrders={fetchOrders}
+                      refreshOrders={refreshOrders}
                     />
                   ))}
               </Stack>
             </TabPanel>
             <TabPanel>
               <Stack gap={2}>
-                {orders
+                {activeOrders
                   .filter(
-                    item =>
-                      item.offer.token == goldToken &&
-                      item.consideration.token == itemsContract &&
-                      item.consideration.identifier == selectedItemId,
+                    order =>
+                      order.offer.token == goldToken &&
+                      order.consideration.token == itemsContract &&
+                      order.consideration.identifier == selectedItemId,
                   )
-                  .filter(item => item.orderStatus == '1')
+                  .filter(order => order.orderStatus == '1')
                   .map((order, i) => (
                     <OrderRow
                       key={`order-${i}`}
                       item={selectedItem}
                       order={order}
-                      refetchOrders={fetchOrders}
+                      refreshOrders={refreshOrders}
                     />
                   ))}
               </Stack>
