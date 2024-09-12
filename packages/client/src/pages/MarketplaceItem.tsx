@@ -46,6 +46,12 @@ import {
   type WeaponTemplate,
 } from '../utils/types';
 
+enum RequestOptions {
+  None = 'None',
+  Buying = 'Buying',
+  Selling = 'Selling',
+}
+
 export const MarketplaceItem = (): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
   const navigate = useNavigate();
@@ -73,10 +79,8 @@ export const MarketplaceItem = (): JSX.Element => {
 
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
-  const [offerAmount, setOfferAmount] = useState('1');
-  const [offerPrice, setOfferPrice] = useState('1');
-  const [listingAmount, setListingAmount] = useState('1');
-  const [listingPrice, setListingPrice] = useState('1');
+  const [requestOption, setRequestOption] = useState(RequestOptions.None);
+  const [requestPrice, setRequestPrice] = useState('');
 
   const { isOpen, onClose, onOpen } = useDisclosure();
 
@@ -314,24 +318,25 @@ export const MarketplaceItem = (): JSX.Element => {
         >
           Back to Marketplace
         </Button>
-        <HStack alignItems="start" spacing={12}>
+        <Heading textAlign="center">{removeEmoji(selectedItem.name)}</Heading>
+        <HStack alignItems="start" mt={12} spacing={12}>
           <Stack w="50%">
-            <Heading textAlign="center">
-              {removeEmoji(selectedItem.name)}
-            </Heading>
-
-            <HStack>
+            <Text fontWeight="bold" mb={2} textAlign="center">
+              Description
+            </Text>
+            <HStack align="center">
               <Avatar
-                borderRadius={0}
-                size="2xl"
-                name={' '}
                 backgroundColor="transparent"
+                borderRadius={0}
+                h={14}
+                name={' '}
+                size="2xl"
               >
                 {getEmoji(selectedItem.name)}
               </Avatar>
               <Text size="sm">{selectedItem.description}</Text>
             </HStack>
-            <HStack alignItems="start" spacing={8}>
+            <HStack alignItems="start" mt={8} spacing={8}>
               <VStack spacing={1} w="50%">
                 <Text fontWeight="bold" mb={2} textAlign="center">
                   Stats
@@ -441,8 +446,11 @@ export const MarketplaceItem = (): JSX.Element => {
             </HStack>
           </Stack>
           <Stack w="50%">
+            <Text fontWeight="bold" mb={2} textAlign="center">
+              Create a request
+            </Text>
             <HStack w="100%">
-              <Text size="sm">Lowest Price</Text>
+              <Text size="sm">Lowest Item Price</Text>
               <Spacer />
               <Text>
                 {lowestPrices[selectedItem.tokenId]
@@ -451,7 +459,7 @@ export const MarketplaceItem = (): JSX.Element => {
               </Text>
             </HStack>
             <HStack w="100%">
-              <Text size="sm">Highest Offer</Text>
+              <Text size="sm">Highest $GOLD Offer</Text>
               <Spacer />
               <Text>
                 {highestOffers[selectedItem.tokenId]
@@ -459,118 +467,101 @@ export const MarketplaceItem = (): JSX.Element => {
                   : 'N/A'}
               </Text>
             </HStack>
-          </Stack>
-        </HStack>
-        <Divider my={8} />
-        <HStack alignItems="start" spacing={12}>
-          <Stack w="50%">
-            <Text fontWeight="bold">Make an Offer</Text>
-            <Text>
-              Want to make a $GOLD offer for {selectedItem.name}? Your offer
-              will be listed in the &quot;$GOLD Offers&quot; tab below.
-            </Text>
-          </Stack>
-          <Stack w="50%">
-            <Text fontWeight="bold">List for Sale</Text>
-            {userItemBalance === '0' ? (
-              <Text>
-                You don&apos;t have any {selectedItem.name} in your inventory.
-              </Text>
-            ) : (
-              <Text>
-                You currently have {userItemBalance} {selectedItem.name}. Want
-                to list some for sale? Your listing will be shown in the
-                &quot;Item Listings&quot; tab below.
-              </Text>
+            <Divider my={4} />
+            <Text>Buying or selling?</Text>
+            <HStack>
+              <Button
+                onClick={() => setRequestOption(RequestOptions.Buying)}
+                size="sm"
+                variant={
+                  requestOption === RequestOptions.Buying ? 'solid' : 'outline'
+                }
+              >
+                Buying
+              </Button>
+              <Button
+                onClick={() => setRequestOption(RequestOptions.Selling)}
+                size="sm"
+                variant={
+                  requestOption === RequestOptions.Selling ? 'solid' : 'outline'
+                }
+              >
+                Selling
+              </Button>
+            </HStack>
+            {requestOption === RequestOptions.Buying && (
+              <VStack alignItems="start" as="form">
+                <Text mt={4}>How much $GOLD are you offering?</Text>
+                <InputGroup>
+                  <InputLeftAddon>$GOLD</InputLeftAddon>
+                  <Input
+                    isDisabled={isCreatingOrder}
+                    min={0}
+                    onChange={e => setRequestPrice(e.target.value)}
+                    placeholder="0.00"
+                    py={0}
+                    type="number"
+                    value={requestPrice}
+                  />
+                </InputGroup>
+                <Button
+                  isLoading={isCreatingOrder}
+                  onClick={() =>
+                    onCreateOrder(
+                      TokenType.ERC20,
+                      TokenType.ERC1155,
+                      requestPrice,
+                      '1',
+                    )
+                  }
+                  size="sm"
+                  w="100%"
+                >
+                  Make an Offer for {selectedItem.name}
+                </Button>
+              </VStack>
             )}
+            {requestOption === RequestOptions.Selling &&
+              (userItemBalance === '0' ? (
+                <Text mt={4} size="sm">
+                  You don&apos;t have any {selectedItem.name} in your inventory.
+                </Text>
+              ) : (
+                <>
+                  <Text mt={4}>How much $GOLD are you asking for?</Text>
+                  <InputGroup>
+                    <InputLeftAddon>$GOLD</InputLeftAddon>
+                    <Input
+                      isDisabled={isCreatingOrder}
+                      min={0}
+                      onChange={e => setRequestPrice(e.target.value)}
+                      placeholder="0.00"
+                      py={0}
+                      type="number"
+                      value={requestPrice}
+                    />
+                  </InputGroup>
+                  <Button
+                    isLoading={isCreatingOrder}
+                    onClick={() =>
+                      onCreateOrder(
+                        TokenType.ERC1155,
+                        TokenType.ERC20,
+                        '1',
+                        requestPrice,
+                      )
+                    }
+                    size="sm"
+                    w="100%"
+                  >
+                    List {selectedItem.name} for sale
+                  </Button>
+                </>
+              ))}
           </Stack>
         </HStack>
-        <HStack alignItems="start" spacing={12}>
-          <Stack w="50%">
-            <Stack direction="row" mb={2} mt={8} w="100%">
-              <InputGroup size="lg" w="100%">
-                <InputLeftAddon>Price</InputLeftAddon>
-                <Input
-                  onChange={e => setOfferPrice(e.target.value)}
-                  placeholder="0.00"
-                  type="number"
-                  min={0}
-                  value={offerPrice.toString()}
-                />
-              </InputGroup>
-              <InputGroup size="lg" w="100%">
-                <InputLeftAddon>Amount</InputLeftAddon>
-                <Input
-                  onChange={e => setOfferAmount(e.target.value)}
-                  placeholder="0.00"
-                  type="number"
-                  min={0}
-                  value={offerAmount.toString()}
-                />
-              </InputGroup>
-            </Stack>
-            <Button
-              w="100%"
-              onClick={() =>
-                onCreateOrder(
-                  TokenType.ERC20,
-                  TokenType.ERC1155,
-                  offerAmount,
-                  offerPrice,
-                )
-              }
-              isLoading={isCreatingOrder}
-              size="sm"
-              variant="solid"
-            >
-              Offer {offerPrice} $GOLD for {offerAmount} item
-            </Button>
-          </Stack>
-          <Stack w="50%">
-            <Stack direction="row" mb={2} mt={8} w="100%">
-              <InputGroup size="lg" w="100%">
-                <InputLeftAddon>Amount</InputLeftAddon>
-                <Input
-                  onChange={e => setListingAmount(e.target.value)}
-                  placeholder="0.00"
-                  type="number"
-                  min={0}
-                  step={1}
-                  max={Number(userItemBalance)}
-                  value={listingAmount.toString()}
-                />
-              </InputGroup>
-              <InputGroup size="lg" w="100%">
-                <InputLeftAddon>Price</InputLeftAddon>
-                <Input
-                  onChange={e => setListingPrice(e.target.value)}
-                  placeholder="0.00"
-                  type="number"
-                  min={0}
-                  value={listingPrice.toString()}
-                />
-              </InputGroup>
-            </Stack>
-            <Button
-              w="100%"
-              onClick={() =>
-                onCreateOrder(
-                  TokenType.ERC1155,
-                  TokenType.ERC20,
-                  listingAmount,
-                  listingPrice,
-                )
-              }
-              isLoading={isCreatingOrder}
-              size="sm"
-              variant="solid"
-            >
-              List {listingAmount} of your item for {listingPrice} $GOLD
-            </Button>
-          </Stack>
-        </HStack>
-        <Divider my={8} />
-        <Tabs variant="enclosed" size="lg">
+
+        <Tabs mt={12} variant="enclosed">
           <TabList>
             <Tab>Item Listings</Tab>
             <Tab>$GOLD Offers</Tab>
