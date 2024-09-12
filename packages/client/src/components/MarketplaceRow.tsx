@@ -7,6 +7,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useMemo } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,6 +16,7 @@ import { getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
   ItemType,
+  OrderType,
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
@@ -25,13 +27,21 @@ export const MarketplaceRow = ({
   lowestPrice,
   minLevel,
   name,
+  orderType,
   tokenId,
   ...item
 }: (ArmorTemplate | SpellTemplate | WeaponTemplate) & {
   highestOffer: string;
   lowestPrice: string;
+  orderType: OrderType;
 }): JSX.Element => {
   const navigate = useNavigate();
+
+  const newSearchParams = useMemo(() => {
+    const searchParams = new URLSearchParams();
+    searchParams.set('orderType', orderType);
+    return searchParams;
+  }, [orderType]);
 
   return (
     <Flex
@@ -39,7 +49,7 @@ export const MarketplaceRow = ({
       borderColor="grey400"
       borderRadius={2}
       justify="space-between"
-      onClick={() => navigate(`${ITEM_PATH}${tokenId}`)}
+      onClick={() => navigate(`${ITEM_PATH}${tokenId}?${newSearchParams}`)}
       w="100%"
       _hover={{
         cursor: 'pointer',

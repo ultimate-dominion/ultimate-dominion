@@ -40,6 +40,12 @@ export enum OrderStatus {
   Fulfilled,
 }
 
+export enum OrderType {
+  None = 'none',
+  Buying = 'buying',
+  Selling = 'selling',
+}
+
 export enum StatsClasses {
   Warrior,
   Rogue,

@@ -1,6 +1,5 @@
 import {
   Avatar,
-  Box,
   Button,
   Divider,
   Heading,
@@ -23,9 +22,9 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { getComponentValue } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IoMdArrowRoundBack } from 'react-icons/io';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Address, erc20Abi, parseEther } from 'viem';
 
 import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
@@ -41,21 +40,17 @@ import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
   ItemType,
+  OrderType,
   type SpellTemplate,
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
 
-enum RequestOptions {
-  None = 'None',
-  Buying = 'Buying',
-  Selling = 'Selling',
-}
-
 export const MarketplaceItem = (): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
+  const [searchParams] = useSearchParams();
 
   const {
     components: { ItemsOwners, UltimateDominionConfig },
@@ -79,8 +74,8 @@ export const MarketplaceItem = (): JSX.Element => {
 
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
-  const [requestOption, setRequestOption] = useState(RequestOptions.None);
-  const [requestPrice, setRequestPrice] = useState('');
+  const [orderType, setOrderType] = useState(OrderType.None);
+  const [orderPrice, setOrderPrice] = useState('');
 
   const { isOpen, onClose, onOpen } = useDisclosure();
 
@@ -266,6 +261,14 @@ export const MarketplaceItem = (): JSX.Element => {
     ],
   );
 
+  useEffect(() => {
+    if (searchParams.get('orderType') === OrderType.Buying) {
+      setOrderType(OrderType.Buying);
+    } else if (searchParams.get('orderType') === OrderType.Selling) {
+      setOrderType(OrderType.Selling);
+    }
+  }, [searchParams]);
+
   if (selectedItem == null) {
     return (
       <VStack>
@@ -306,312 +309,317 @@ export const MarketplaceItem = (): JSX.Element => {
 
   return (
     <VStack>
-      <MarketplaceAllowanceModal isOpen={isOpen} onClose={onClose} />
-      <Box>
-        <Button
-          alignSelf="start"
-          leftIcon={<IoMdArrowRoundBack />}
-          my={4}
-          onClick={() => navigate(MARKETPLACE_PATH)}
-          size="xs"
-          variant="outline"
-        >
-          Back to Marketplace
-        </Button>
-        <Heading textAlign="center">{removeEmoji(selectedItem.name)}</Heading>
-        <HStack alignItems="start" mt={12} spacing={12}>
-          <Stack w="50%">
-            <Text fontWeight="bold" mb={2} textAlign="center">
-              Description
-            </Text>
-            <HStack align="center">
-              <Avatar
-                backgroundColor="transparent"
-                borderRadius={0}
-                h={14}
-                name={' '}
-                size="2xl"
-              >
-                {getEmoji(selectedItem.name)}
-              </Avatar>
-              <Text size="sm">{selectedItem.description}</Text>
-            </HStack>
-            <HStack alignItems="start" mt={8} spacing={8}>
-              <VStack spacing={1} w="50%">
-                <Text fontWeight="bold" mb={2} textAlign="center">
-                  Stats
-                </Text>
-                {selectedItem.itemType !== ItemType.Spell && (
-                  <>
-                    <HStack w="100%">
-                      <Text size="sm">Agility Modifier</Text>
-                      <Spacer />
-                      <Text>
-                        {
-                          (selectedItem as ArmorTemplate | WeaponTemplate)
-                            .agiModifier
-                        }
-                      </Text>
-                    </HStack>
-                    <HStack w="100%">
-                      <Text size="sm">Intelligence Modifier</Text>
-                      <Spacer />
-                      <Text>
-                        {
-                          (selectedItem as ArmorTemplate | WeaponTemplate)
-                            .intModifier
-                        }
-                      </Text>
-                    </HStack>
-                    <HStack w="100%">
-                      <Text size="sm">Strength Modifier</Text>
-                      <Spacer />
-                      <Text>
-                        {
-                          (selectedItem as ArmorTemplate | WeaponTemplate)
-                            .strModifier
-                        }
-                      </Text>
-                    </HStack>
-                    <HStack w="100%">
-                      <Text size="sm">HP Modifier</Text>
-                      <Spacer />
-                      <Text>
-                        {
-                          (selectedItem as ArmorTemplate | WeaponTemplate)
-                            .hpModifier
-                        }
-                      </Text>
-                    </HStack>
-                  </>
-                )}
-                {selectedItem.itemType === ItemType.Armor && (
+      <Button
+        alignSelf="start"
+        leftIcon={<IoMdArrowRoundBack />}
+        my={4}
+        onClick={() => navigate(MARKETPLACE_PATH)}
+        size="xs"
+        variant="outline"
+      >
+        Back to Marketplace
+      </Button>
+      <Heading textAlign="center">{removeEmoji(selectedItem.name)}</Heading>
+      <HStack alignItems="start" mt={12} spacing={12} w="100%">
+        <Stack w="50%">
+          <Text fontWeight="bold" mb={2} textAlign="center">
+            Description
+          </Text>
+          <HStack align="center">
+            <Avatar
+              backgroundColor="transparent"
+              borderRadius={0}
+              h={14}
+              name={' '}
+              size="2xl"
+            >
+              {getEmoji(selectedItem.name)}
+            </Avatar>
+            <Text size="sm">{selectedItem.description}</Text>
+          </HStack>
+          <HStack alignItems="start" mt={8} spacing={8}>
+            <VStack spacing={1} w="50%">
+              <Text fontWeight="bold" mb={2} textAlign="center">
+                Stats
+              </Text>
+              {selectedItem.itemType !== ItemType.Spell && (
+                <>
                   <HStack w="100%">
-                    <Text size="sm">Armor Modifier</Text>
+                    <Text size="sm">Agility Modifier</Text>
                     <Spacer />
-                    <Text>{(selectedItem as ArmorTemplate).armorModifier}</Text>
+                    <Text>
+                      {
+                        (selectedItem as ArmorTemplate | WeaponTemplate)
+                          .agiModifier
+                      }
+                    </Text>
                   </HStack>
-                )}
-                {selectedItem.itemType !== ItemType.Armor && (
-                  <>
-                    <HStack w="100%">
-                      <Text size="sm">Min Damage</Text>
-                      <Spacer />
-                      <Text>
-                        {
-                          (selectedItem as SpellTemplate | WeaponTemplate)
-                            .minDamage
-                        }
-                      </Text>
-                    </HStack>
-                    <HStack w="100%">
-                      <Text size="sm">Max Damage</Text>
-                      <Spacer />
-                      <Text>
-                        {
-                          (selectedItem as SpellTemplate | WeaponTemplate)
-                            .maxDamage
-                        }
-                      </Text>
-                    </HStack>
-                  </>
-                )}
-              </VStack>
+                  <HStack w="100%">
+                    <Text size="sm">Intelligence Modifier</Text>
+                    <Spacer />
+                    <Text>
+                      {
+                        (selectedItem as ArmorTemplate | WeaponTemplate)
+                          .intModifier
+                      }
+                    </Text>
+                  </HStack>
+                  <HStack w="100%">
+                    <Text size="sm">Strength Modifier</Text>
+                    <Spacer />
+                    <Text>
+                      {
+                        (selectedItem as ArmorTemplate | WeaponTemplate)
+                          .strModifier
+                      }
+                    </Text>
+                  </HStack>
+                  <HStack w="100%">
+                    <Text size="sm">HP Modifier</Text>
+                    <Spacer />
+                    <Text>
+                      {
+                        (selectedItem as ArmorTemplate | WeaponTemplate)
+                          .hpModifier
+                      }
+                    </Text>
+                  </HStack>
+                </>
+              )}
+              {selectedItem.itemType === ItemType.Armor && (
+                <HStack w="100%">
+                  <Text size="sm">Armor Modifier</Text>
+                  <Spacer />
+                  <Text>{(selectedItem as ArmorTemplate).armorModifier}</Text>
+                </HStack>
+              )}
+              {selectedItem.itemType !== ItemType.Armor && (
+                <>
+                  <HStack w="100%">
+                    <Text size="sm">Min Damage</Text>
+                    <Spacer />
+                    <Text>
+                      {
+                        (selectedItem as SpellTemplate | WeaponTemplate)
+                          .minDamage
+                      }
+                    </Text>
+                  </HStack>
+                  <HStack w="100%">
+                    <Text size="sm">Max Damage</Text>
+                    <Spacer />
+                    <Text>
+                      {
+                        (selectedItem as SpellTemplate | WeaponTemplate)
+                          .maxDamage
+                      }
+                    </Text>
+                  </HStack>
+                </>
+              )}
+            </VStack>
 
-              <VStack spacing={1} w="50%">
-                <Text fontWeight="bold" mb={2} textAlign="center">
-                  Requirements
-                </Text>
-                <HStack w="100%">
-                  <Text size="sm">Min Level</Text>
-                  <Spacer />
-                  <Text>{selectedItem.minLevel}</Text>
-                </HStack>
-                <HStack w="100%">
-                  <Text size="sm">Min Agility</Text>
-                  <Spacer />
-                  <Text>{selectedItem.statRestrictions.minAgility}</Text>
-                </HStack>
-                <HStack w="100%">
-                  <Text size="sm">Min Intelligence</Text>
-                  <Spacer />
-                  <Text>{selectedItem.statRestrictions.minIntelligence}</Text>
-                </HStack>
-                <HStack w="100%">
-                  <Text size="sm">Min Strength</Text>
-                  <Spacer />
-                  <Text>{selectedItem.statRestrictions.minStrength}</Text>
-                </HStack>
-              </VStack>
-            </HStack>
-          </Stack>
-          <Stack w="50%">
-            <Text fontWeight="bold" mb={2} textAlign="center">
-              Create a request
+            <VStack spacing={1} w="50%">
+              <Text fontWeight="bold" mb={2} textAlign="center">
+                Requirements
+              </Text>
+              <HStack w="100%">
+                <Text size="sm">Min Level</Text>
+                <Spacer />
+                <Text>{selectedItem.minLevel}</Text>
+              </HStack>
+              <HStack w="100%">
+                <Text size="sm">Min Agility</Text>
+                <Spacer />
+                <Text>{selectedItem.statRestrictions.minAgility}</Text>
+              </HStack>
+              <HStack w="100%">
+                <Text size="sm">Min Intelligence</Text>
+                <Spacer />
+                <Text>{selectedItem.statRestrictions.minIntelligence}</Text>
+              </HStack>
+              <HStack w="100%">
+                <Text size="sm">Min Strength</Text>
+                <Spacer />
+                <Text>{selectedItem.statRestrictions.minStrength}</Text>
+              </HStack>
+            </VStack>
+          </HStack>
+        </Stack>
+        <Divider orientation="vertical" />
+        <Stack w="50%">
+          <Text fontWeight="bold" mb={2} textAlign="center">
+            Create a request
+          </Text>
+          <HStack w="100%">
+            <Text size="sm">Lowest Item Price</Text>
+            <Spacer />
+            <Text>
+              {lowestPrices[selectedItem.tokenId]
+                ? `${etherToFixedNumber(lowestPrices[selectedItem.tokenId])} $GOLD`
+                : 'N/A'}
             </Text>
-            <HStack w="100%">
-              <Text size="sm">Lowest Item Price</Text>
-              <Spacer />
-              <Text>
-                {lowestPrices[selectedItem.tokenId]
-                  ? `${etherToFixedNumber(lowestPrices[selectedItem.tokenId])} $GOLD`
-                  : 'N/A'}
-              </Text>
-            </HStack>
-            <HStack w="100%">
-              <Text size="sm">Highest $GOLD Offer</Text>
-              <Spacer />
-              <Text>
-                {highestOffers[selectedItem.tokenId]
-                  ? `${etherToFixedNumber(highestOffers[selectedItem.tokenId])} $GOLD`
-                  : 'N/A'}
-              </Text>
-            </HStack>
-            <Divider my={4} />
-            <Text>Buying or selling?</Text>
-            <HStack>
+          </HStack>
+          <HStack w="100%">
+            <Text size="sm">Highest $GOLD Offer</Text>
+            <Spacer />
+            <Text>
+              {highestOffers[selectedItem.tokenId]
+                ? `${etherToFixedNumber(highestOffers[selectedItem.tokenId])} $GOLD`
+                : 'N/A'}
+            </Text>
+          </HStack>
+          <Divider my={4} />
+          <Text>Buying or selling?</Text>
+          <HStack>
+            <Button
+              onClick={() => {
+                const newSearchParams = new URLSearchParams();
+                newSearchParams.set('orderType', OrderType.Buying);
+                navigate(`?${newSearchParams}`);
+                setOrderType(OrderType.Buying);
+              }}
+              size="sm"
+              variant={orderType === OrderType.Buying ? 'solid' : 'outline'}
+            >
+              Buying
+            </Button>
+            <Button
+              onClick={() => {
+                const newSearchParams = new URLSearchParams();
+                newSearchParams.set('orderType', OrderType.Selling);
+                navigate(`?${newSearchParams}`);
+                setOrderType(OrderType.Selling);
+              }}
+              size="sm"
+              variant={orderType === OrderType.Selling ? 'solid' : 'outline'}
+            >
+              Selling
+            </Button>
+          </HStack>
+          {orderType === OrderType.Buying && (
+            <VStack alignItems="start" as="form">
+              <Text mt={4}>How much $GOLD are you offering?</Text>
+              <InputGroup>
+                <InputLeftAddon>$GOLD</InputLeftAddon>
+                <Input
+                  isDisabled={isCreatingOrder}
+                  min={0}
+                  onChange={e => setOrderPrice(e.target.value)}
+                  placeholder="0.00"
+                  py={0}
+                  type="number"
+                  value={orderPrice}
+                />
+              </InputGroup>
               <Button
-                onClick={() => setRequestOption(RequestOptions.Buying)}
-                size="sm"
-                variant={
-                  requestOption === RequestOptions.Buying ? 'solid' : 'outline'
+                isLoading={isCreatingOrder}
+                onClick={() =>
+                  onCreateOrder(
+                    TokenType.ERC20,
+                    TokenType.ERC1155,
+                    orderPrice,
+                    '1',
+                  )
                 }
-              >
-                Buying
-              </Button>
-              <Button
-                onClick={() => setRequestOption(RequestOptions.Selling)}
                 size="sm"
-                variant={
-                  requestOption === RequestOptions.Selling ? 'solid' : 'outline'
-                }
+                w="100%"
               >
-                Selling
+                Make an Offer for {selectedItem.name}
               </Button>
-            </HStack>
-            {requestOption === RequestOptions.Buying && (
-              <VStack alignItems="start" as="form">
-                <Text mt={4}>How much $GOLD are you offering?</Text>
+            </VStack>
+          )}
+          {orderType === OrderType.Selling &&
+            (userItemBalance === '0' ? (
+              <Text mt={4} size="sm">
+                You don&apos;t have any {selectedItem.name} in your inventory.
+              </Text>
+            ) : (
+              <>
+                <Text mt={4}>How much $GOLD are you asking for?</Text>
                 <InputGroup>
                   <InputLeftAddon>$GOLD</InputLeftAddon>
                   <Input
                     isDisabled={isCreatingOrder}
                     min={0}
-                    onChange={e => setRequestPrice(e.target.value)}
+                    onChange={e => setOrderPrice(e.target.value)}
                     placeholder="0.00"
                     py={0}
                     type="number"
-                    value={requestPrice}
+                    value={orderPrice}
                   />
                 </InputGroup>
                 <Button
                   isLoading={isCreatingOrder}
                   onClick={() =>
                     onCreateOrder(
-                      TokenType.ERC20,
                       TokenType.ERC1155,
-                      requestPrice,
+                      TokenType.ERC20,
                       '1',
+                      orderPrice,
                     )
                   }
                   size="sm"
                   w="100%"
                 >
-                  Make an Offer for {selectedItem.name}
+                  List {selectedItem.name} for sale
                 </Button>
-              </VStack>
-            )}
-            {requestOption === RequestOptions.Selling &&
-              (userItemBalance === '0' ? (
-                <Text mt={4} size="sm">
-                  You don&apos;t have any {selectedItem.name} in your inventory.
-                </Text>
-              ) : (
-                <>
-                  <Text mt={4}>How much $GOLD are you asking for?</Text>
-                  <InputGroup>
-                    <InputLeftAddon>$GOLD</InputLeftAddon>
-                    <Input
-                      isDisabled={isCreatingOrder}
-                      min={0}
-                      onChange={e => setRequestPrice(e.target.value)}
-                      placeholder="0.00"
-                      py={0}
-                      type="number"
-                      value={requestPrice}
-                    />
-                  </InputGroup>
-                  <Button
-                    isLoading={isCreatingOrder}
-                    onClick={() =>
-                      onCreateOrder(
-                        TokenType.ERC1155,
-                        TokenType.ERC20,
-                        '1',
-                        requestPrice,
-                      )
-                    }
-                    size="sm"
-                    w="100%"
-                  >
-                    List {selectedItem.name} for sale
-                  </Button>
-                </>
-              ))}
-          </Stack>
-        </HStack>
+              </>
+            ))}
+        </Stack>
+      </HStack>
 
-        <Tabs mt={12} variant="enclosed">
-          <TabList>
-            <Tab>Item Listings</Tab>
-            <Tab>$GOLD Offers</Tab>
-            <Tab>History</Tab>
-          </TabList>
-          <TabPanels>
-            <TabPanel>
-              <Stack gap={2}>
-                {activeOrders
-                  .filter(
-                    order =>
-                      order.offer.token == itemsContract &&
-                      order.consideration.token == goldToken &&
-                      order.offer.identifier == selectedItemId,
-                  )
-                  .filter(order => order.orderStatus == '1')
-                  .map((order, i) => (
-                    <OrderRow
-                      key={`order-${i}`}
-                      item={selectedItem}
-                      order={order}
-                      refreshOrders={refreshOrders}
-                    />
-                  ))}
-              </Stack>
-            </TabPanel>
-            <TabPanel>
-              <Stack gap={2}>
-                {activeOrders
-                  .filter(
-                    order =>
-                      order.offer.token == goldToken &&
-                      order.consideration.token == itemsContract &&
-                      order.consideration.identifier == selectedItemId,
-                  )
-                  .filter(order => order.orderStatus == '1')
-                  .map((order, i) => (
-                    <OrderRow
-                      key={`order-${i}`}
-                      item={selectedItem}
-                      order={order}
-                      refreshOrders={refreshOrders}
-                    />
-                  ))}
-              </Stack>
-            </TabPanel>
-            <TabPanel>Coming soon...</TabPanel>
-          </TabPanels>
-        </Tabs>
-      </Box>
+      <Tabs mt={12} variant="enclosed">
+        <TabList>
+          <Tab>Item Listings</Tab>
+          <Tab>$GOLD Offers</Tab>
+          <Tab>History</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel>
+            <Stack gap={2}>
+              {activeOrders
+                .filter(
+                  order =>
+                    order.offer.token == itemsContract &&
+                    order.consideration.token == goldToken &&
+                    order.offer.identifier == selectedItemId,
+                )
+                .filter(order => order.orderStatus == '1')
+                .map((order, i) => (
+                  <OrderRow
+                    key={`order-${i}`}
+                    item={selectedItem}
+                    order={order}
+                    refreshOrders={refreshOrders}
+                  />
+                ))}
+            </Stack>
+          </TabPanel>
+          <TabPanel>
+            <Stack gap={2}>
+              {activeOrders
+                .filter(
+                  order =>
+                    order.offer.token == goldToken &&
+                    order.consideration.token == itemsContract &&
+                    order.consideration.identifier == selectedItemId,
+                )
+                .filter(order => order.orderStatus == '1')
+                .map((order, i) => (
+                  <OrderRow
+                    key={`order-${i}`}
+                    item={selectedItem}
+                    order={order}
+                    refreshOrders={refreshOrders}
+                  />
+                ))}
+            </Stack>
+          </TabPanel>
+          <TabPanel>Coming soon...</TabPanel>
+        </TabPanels>
+      </Tabs>
+      <MarketplaceAllowanceModal isOpen={isOpen} onClose={onClose} />
     </VStack>
   );
 };

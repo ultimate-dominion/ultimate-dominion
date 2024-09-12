@@ -33,6 +33,7 @@ import {
   type ArmorTemplate,
   ItemFilterOptions,
   ItemType,
+  OrderType,
   type SpellTemplate,
   TokenType,
   type WeaponTemplate,
@@ -397,12 +398,17 @@ export const Marketplace = (): JSX.Element => {
                     ? formatEther(highestOffers[item.tokenId])
                     : '0'
                 }
+                key={`marketplace-row-${i}`}
                 lowestPrice={
                   lowestPrices[item.tokenId]
                     ? formatEther(lowestPrices[item.tokenId])
                     : '0'
                 }
-                key={`marketplace-row-${i}`}
+                orderType={
+                  marketplaceFilter === MarketplaceFilter.ForSale
+                    ? OrderType.Buying
+                    : OrderType.Selling
+                }
                 {...item}
               />
             );
