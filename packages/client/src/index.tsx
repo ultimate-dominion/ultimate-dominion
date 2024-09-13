@@ -13,6 +13,7 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from './App';
 import { DevTools } from './components/DevTools';
+import { AllowanceProvider } from './contexts/AllowanceContext';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { ItemsProvider } from './contexts/ItemsContext';
 import { MonstersProvider } from './contexts/MonstersContext';
@@ -37,7 +38,9 @@ setup().then(async result => {
             <MonstersProvider>
               <OrdersProvider>
                 <CharacterProvider>
-                  <App />
+                  <AllowanceProvider>
+                    <App />
+                  </AllowanceProvider>
                 </CharacterProvider>
               </OrdersProvider>
             </MonstersProvider>

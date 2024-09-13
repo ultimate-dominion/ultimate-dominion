@@ -12,16 +12,18 @@ import {
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Address, erc20Abi, parseEther } from 'viem';
 import { useAccount, useWalletClient } from 'wagmi';
 
+import { useAllowance } from '../contexts/AllowanceContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { ERC_1155_ABI } from '../utils/constants';
 import { OrderType } from '../utils/types';
 
 export const MarketplaceAllowanceModal = ({
+  isCreatingOrder,
   isOpen,
   itemName,
   onClose,
@@ -29,6 +31,7 @@ export const MarketplaceAllowanceModal = ({
   orderPrice,
   orderType,
 }: {
+  isCreatingOrder: boolean;
   isOpen: boolean;
   itemName: string;
   onClose: () => void;
@@ -43,68 +46,21 @@ export const MarketplaceAllowanceModal = ({
     network: { publicClient },
     components: { UltimateDominionConfig },
   } = useMUD();
-  const { goldToken } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { goldToken: null };
+  const { goldAllowance, itemsAllowance, refreshAllowances } = useAllowance();
 
-  const { items: itemsContract } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { items: null };
+  const { goldToken: goldTokenAddress, items: itemsAddress } =
+    useComponentValue(UltimateDominionConfig, singletonEntity) ?? {
+      goldToken: null,
+      items: null,
+    };
 
   const [isApprovingGold, setIsApprovingGold] = useState(false);
   const [isApprovingItems, setIsApprovingItems] = useState(false);
-  const [allowances, setAllowances] = useState({
-    goldAllowance: 0n,
-    itemAllowance: false,
-  });
 
   const { marketplace: marketplaceAddress } = useComponentValue(
     UltimateDominionConfig,
     singletonEntity,
   ) ?? { marketplace: null };
-
-  const fetchAllowances = useCallback(async () => {
-    if (!address) return;
-
-    let _allowances = { goldAllowance: 0n, itemAllowance: false };
-    try {
-      const _goldAllowance = await publicClient.readContract({
-        address: goldToken as Address,
-        abi: erc20Abi,
-        functionName: 'allowance',
-        args: [address, marketplaceAddress as Address],
-      });
-
-      const _itemAllowance = (await publicClient.readContract({
-        address: itemsContract as Address,
-        abi: ERC_1155_ABI,
-        functionName: 'isApprovedForAll',
-        args: [address, marketplaceAddress as Address],
-      })) as boolean;
-      _allowances = {
-        goldAllowance: _goldAllowance,
-        itemAllowance: _itemAllowance,
-      };
-      setAllowances(_allowances);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Could not get allowances', e);
-    }
-  }, [
-    address,
-    goldToken,
-    itemsContract,
-    marketplaceAddress,
-    publicClient,
-    renderError,
-  ]);
-
-  useEffect(() => {
-    if (address) {
-      fetchAllowances();
-    }
-  }, [address, fetchAllowances]);
 
   const onApproveGoldAllowance = useCallback(
     async (e: React.FormEvent) => {
@@ -126,7 +82,7 @@ export const MarketplaceAllowanceModal = ({
         }
 
         const { request } = await publicClient.simulateContract({
-          address: goldToken as Address,
+          address: goldTokenAddress as Address,
           abi: erc20Abi,
           functionName: 'approve',
           args: [marketplaceAddress as Address, parseEther(orderPrice)],
@@ -142,7 +98,7 @@ export const MarketplaceAllowanceModal = ({
         }
 
         renderSuccess('Gold allowance successfully set!');
-        fetchAllowances();
+        refreshAllowances();
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Error setting gold allowance.',
@@ -154,11 +110,11 @@ export const MarketplaceAllowanceModal = ({
     },
     [
       externalWalletClient,
-      fetchAllowances,
-      goldToken,
+      goldTokenAddress,
       marketplaceAddress,
       orderPrice,
       publicClient,
+      refreshAllowances,
       renderError,
       renderSuccess,
     ],
@@ -177,7 +133,7 @@ export const MarketplaceAllowanceModal = ({
       }
 
       const { request } = await publicClient.simulateContract({
-        address: itemsContract as Address,
+        address: itemsAddress as Address,
         abi: ERC_1155_ABI,
         functionName: 'setApprovalForAll',
         args: [marketplaceAddress, true],
@@ -193,7 +149,7 @@ export const MarketplaceAllowanceModal = ({
       }
 
       renderSuccess('Items allowance successfully set!');
-      fetchAllowances();
+      refreshAllowances();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error setting item allowance.', e);
     } finally {
@@ -201,10 +157,10 @@ export const MarketplaceAllowanceModal = ({
     }
   }, [
     externalWalletClient,
-    fetchAllowances,
-    itemsContract,
+    itemsAddress,
     marketplaceAddress,
     publicClient,
+    refreshAllowances,
     renderError,
     renderSuccess,
   ]);
@@ -232,9 +188,8 @@ export const MarketplaceAllowanceModal = ({
   }
 
   if (
-    (allowances.goldAllowance >= BigInt(orderPrice) &&
-      orderType === OrderType.Buying) ||
-    (allowances.itemAllowance && orderType === OrderType.Selling)
+    (goldAllowance >= BigInt(orderPrice) && orderType === OrderType.Buying) ||
+    (itemsAllowance && orderType === OrderType.Selling)
   ) {
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -247,7 +202,9 @@ export const MarketplaceAllowanceModal = ({
               <Text textAlign="center">
                 Allowance was successful! You can now complete your listing.
               </Text>
-              <Button type="submit">Complete</Button>
+              <Button isLoading={isCreatingOrder} type="submit">
+                Complete
+              </Button>
             </VStack>
           </ModalBody>
           <ModalFooter>

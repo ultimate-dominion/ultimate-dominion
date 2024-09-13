@@ -27,11 +27,12 @@ import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Address, erc20Abi, parseEther } from 'viem';
+import { Address, parseEther } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
+import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -42,7 +43,6 @@ import {
   HOME_PATH,
   MARKETPLACE_PATH,
 } from '../Routes';
-import { ERC_1155_ABI } from '../utils/constants';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -65,7 +65,6 @@ export const MarketplaceItem = (): JSX.Element => {
     components: { ItemsOwners, UltimateDominionConfig },
     delegatorAddress,
     isSynced,
-    network: { publicClient },
     systemCalls: { createOrder },
   } = useMUD();
   const {
@@ -74,6 +73,7 @@ export const MarketplaceItem = (): JSX.Element => {
     spellTemplates,
     weaponTemplates,
   } = useItems();
+  const { goldAllowance, itemsAllowance } = useAllowance();
   const {
     activeOrders,
     highestOffers,
@@ -95,22 +95,13 @@ export const MarketplaceItem = (): JSX.Element => {
   const [orderPrice, setOrderPrice] = useState('');
   const [tabIndex, setTabIndex] = useState(0);
 
-  const [allowances, setAllowances] = useState({
-    goldAllowance: 0n,
-    itemAllowance: false,
-  });
-
   const { isOpen, onClose, onOpen } = useDisclosure();
 
-  const { marketplace: marketplaceAddress, goldToken } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { marketplace: null, goldToken: null };
-
-  const { items: itemsContract } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { items: null };
+  const { goldToken: goldTokenAddress, items: itemsAddress } =
+    useComponentValue(UltimateDominionConfig, singletonEntity) ?? {
+      goldToken: null,
+      items: null,
+    };
 
   // Redirect to home if synced, but missing other requirements
   useEffect(() => {
@@ -179,45 +170,6 @@ export const MarketplaceItem = (): JSX.Element => {
     return itemOwner ? itemOwner.balance.toString() : '0';
   }, [ItemsOwners, selectedItem, userCharacter]);
 
-  const fetchAllowances = useCallback(async () => {
-    let _allowances = { goldAllowance: 0n, itemAllowance: false };
-    try {
-      const _goldAllowance = await publicClient.readContract({
-        address: goldToken as Address,
-        abi: erc20Abi,
-        functionName: 'allowance',
-        args: [userCharacter?.owner as Address, marketplaceAddress as Address],
-      });
-
-      const _itemAllowance = (await publicClient.readContract({
-        address: itemsContract as Address,
-        abi: ERC_1155_ABI,
-        functionName: 'isApprovedForAll',
-        args: [userCharacter?.owner as Address, marketplaceAddress as Address],
-      })) as boolean;
-      _allowances = {
-        goldAllowance: _goldAllowance,
-        itemAllowance: _itemAllowance,
-      };
-      setAllowances(_allowances);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Could not get allowances', e);
-    }
-  }, [
-    goldToken,
-    itemsContract,
-    marketplaceAddress,
-    publicClient,
-    renderError,
-    userCharacter?.owner,
-  ]);
-
-  useEffect(() => {
-    if (userCharacter) {
-      fetchAllowances();
-    }
-  }, [fetchAllowances, userCharacter]);
-
   const invalidOrderPrice = useMemo(() => {
     return !(parseEther(orderPrice) > BigInt('0'));
   }, [orderPrice]);
@@ -231,7 +183,7 @@ export const MarketplaceItem = (): JSX.Element => {
 
         if (!userCharacter) throw new Error('Character not found.');
         if (!selectedItem) throw new Error('Item not found.');
-        if (!goldToken || !itemsContract) {
+        if (!goldTokenAddress || !itemsAddress) {
           throw new Error('Token contracts not found.');
         }
 
@@ -242,14 +194,13 @@ export const MarketplaceItem = (): JSX.Element => {
 
         if (
           orderType === OrderType.Buying &&
-          (!allowances.goldAllowance ||
-            allowances.goldAllowance < BigInt(orderPrice))
+          goldAllowance < BigInt(orderPrice)
         ) {
           onOpen();
           return;
         }
 
-        if (orderType === OrderType.Selling && !allowances.itemAllowance) {
+        if (orderType === OrderType.Selling && !itemsAllowance) {
           onOpen();
           return;
         }
@@ -272,8 +223,8 @@ export const MarketplaceItem = (): JSX.Element => {
                 : BigInt(selectedItem.tokenId),
             recipient: userCharacter.owner as Address,
             token: (orderType === OrderType.Selling
-              ? goldToken
-              : itemsContract) as Address,
+              ? goldTokenAddress
+              : itemsAddress) as Address,
             tokenType:
               orderType === OrderType.Selling
                 ? TokenType.ERC20
@@ -289,8 +240,8 @@ export const MarketplaceItem = (): JSX.Element => {
                 ? 0n
                 : BigInt(selectedItem.tokenId),
             token: (orderType === OrderType.Buying
-              ? goldToken
-              : itemsContract) as Address,
+              ? goldTokenAddress
+              : itemsAddress) as Address,
             tokenType:
               orderType === OrderType.Buying
                 ? TokenType.ERC20
@@ -309,6 +260,7 @@ export const MarketplaceItem = (): JSX.Element => {
         renderSuccess('Order placed successfully!');
         refreshCharacter();
         refreshOrders();
+        onClose();
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to create order.', e);
       } finally {
@@ -316,11 +268,13 @@ export const MarketplaceItem = (): JSX.Element => {
       }
     },
     [
-      allowances,
       createOrder,
-      goldToken,
+      goldAllowance,
+      goldTokenAddress,
       invalidOrderPrice,
-      itemsContract,
+      itemsAddress,
+      itemsAllowance,
+      onClose,
       onOpen,
       orderPrice,
       orderType,
@@ -771,6 +725,7 @@ export const MarketplaceItem = (): JSX.Element => {
         </TabPanels>
       </Tabs>
       <MarketplaceAllowanceModal
+        isCreatingOrder={isCreatingOrder}
         isOpen={isOpen}
         itemName={selectedItem.name}
         onClose={onClose}
