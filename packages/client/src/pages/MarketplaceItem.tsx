@@ -34,6 +34,7 @@ import { useAccount } from 'wagmi';
 import { InfoModal } from '../components/InfoModal';
 import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
+import { Pagination } from '../components/Pagination';
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
@@ -55,6 +56,8 @@ import {
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
+
+const ITEMS_PER_PAGE = 10;
 
 export const MarketplaceItem = (): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
@@ -96,6 +99,9 @@ export const MarketplaceItem = (): JSX.Element => {
   const [orderType, setOrderType] = useState(OrderType.None);
   const [orderPrice, setOrderPrice] = useState('');
   const [tabIndex, setTabIndex] = useState(0);
+
+  const [page, setPage] = useState(1);
+  const [pageLimit, setPageLimit] = useState(1);
 
   const {
     isOpen: isAllowanceModalOpen,
@@ -328,6 +334,11 @@ export const MarketplaceItem = (): JSX.Element => {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (tabIndex === -1) return;
+    setPage(1);
+  }, [tabIndex]);
+
   const forSaleItems = useMemo(() => {
     if (!selectedItem) return [];
     return activeOrders
@@ -338,8 +349,8 @@ export const MarketplaceItem = (): JSX.Element => {
       )
       .sort((a, b) => {
         return Number(
-          parseEther(b.consideration.amount) -
-            parseEther(a.consideration.amount),
+          parseEther(a.consideration.amount) -
+            parseEther(b.consideration.amount),
         );
       });
   }, [activeOrders, selectedItem]);
@@ -749,40 +760,68 @@ export const MarketplaceItem = (): JSX.Element => {
         <TabPanels>
           <TabPanel>
             <Stack gap={2}>
-              {forSaleItems.map((order, i) => (
-                <OrderRow
-                  key={`order-${i}`}
-                  item={selectedItem}
-                  order={order}
-                  refreshOrders={refreshOrders}
-                />
-              ))}
+              {forSaleItems
+                .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+                .map((order, i) => (
+                  <OrderRow
+                    key={`order-${i}`}
+                    item={selectedItem}
+                    order={order}
+                    refreshOrders={refreshOrders}
+                  />
+                ))}
             </Stack>
           </TabPanel>
           <TabPanel>
             <Stack gap={2}>
-              {goldOfferItems.map((order, i) => (
-                <OrderRow
-                  key={`order-${i}`}
-                  item={selectedItem}
-                  order={order}
-                  refreshOrders={refreshOrders}
-                />
-              ))}
+              {goldOfferItems
+                .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+                .map((order, i) => (
+                  <OrderRow
+                    key={`order-${i}`}
+                    item={selectedItem}
+                    order={order}
+                    refreshOrders={refreshOrders}
+                  />
+                ))}
             </Stack>
           </TabPanel>
           <TabPanel>
             <Stack gap={2}>
-              {myListings.map((order, i) => (
-                <OrderRow
-                  key={`order-${i}`}
-                  item={selectedItem}
-                  order={order}
-                  refreshOrders={refreshOrders}
-                />
-              ))}
+              {myListings
+                .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+                .map((order, i) => (
+                  <OrderRow
+                    key={`order-${i}`}
+                    item={selectedItem}
+                    order={order}
+                    refreshOrders={refreshOrders}
+                  />
+                ))}
             </Stack>
           </TabPanel>
+
+          <HStack
+            justify="center"
+            my={5}
+            visibility={forSaleItems.length > 0 ? 'visible' : 'hidden'}
+            w="100%"
+          >
+            <Pagination
+              length={
+                tabIndex === 0
+                  ? forSaleItems.length
+                  : tabIndex === 1
+                    ? goldOfferItems.length
+                    : myListings.length
+              }
+              page={page}
+              pageLimit={pageLimit}
+              perPage={ITEMS_PER_PAGE}
+              setPage={setPage}
+              setPageLimit={setPageLimit}
+            />
+          </HStack>
         </TabPanels>
       </Tabs>
       <MarketplaceAllowanceModal
