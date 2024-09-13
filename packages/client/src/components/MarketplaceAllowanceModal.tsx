@@ -23,19 +23,21 @@ import { ERC_1155_ABI } from '../utils/constants';
 import { OrderType } from '../utils/types';
 
 export const MarketplaceAllowanceModal = ({
-  isCreatingOrder,
+  completeMessage = 'Allowance was successful!',
+  isCompleting,
   isOpen,
   itemName,
   onClose,
-  onCreateOrder,
+  onComplete,
   orderPrice,
   orderType,
 }: {
-  isCreatingOrder: boolean;
+  completeMessage?: string;
+  isCompleting: boolean;
   isOpen: boolean;
   itemName: string;
   onClose: () => void;
-  onCreateOrder: (e: React.FormEvent) => void;
+  onComplete: (e: React.FormEvent) => void;
   orderPrice: string;
   orderType: OrderType;
 }): JSX.Element => {
@@ -199,11 +201,9 @@ export const MarketplaceAllowanceModal = ({
           <ModalHeader>Marketplace Allowances</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <VStack as="form" onSubmit={onCreateOrder} p={4} spacing={10}>
-              <Text textAlign="center">
-                Allowance was successful! You can now complete your listing.
-              </Text>
-              <Button isLoading={isCreatingOrder} type="submit">
+            <VStack p={4} spacing={10}>
+              <Text textAlign="center">{completeMessage}</Text>
+              <Button isLoading={isCompleting} onClick={onComplete}>
                 Complete
               </Button>
             </VStack>
@@ -226,12 +226,15 @@ export const MarketplaceAllowanceModal = ({
         <ModalCloseButton />
         <ModalBody p={4}>
           {orderType === OrderType.Buying && (
-            <VStack as="form" onSubmit={onApproveGoldAllowance} spacing={10}>
+            <VStack spacing={10}>
               <Text alignSelf="start">
                 In order to buy {itemName}, you must allow the marketplace to
                 use {orderPrice} of your $GOLD.
               </Text>
-              <Button isLoading={isApprovingGold} type="submit">
+              <Button
+                isLoading={isApprovingGold}
+                onClick={onApproveGoldAllowance}
+              >
                 Allow
               </Button>
             </VStack>

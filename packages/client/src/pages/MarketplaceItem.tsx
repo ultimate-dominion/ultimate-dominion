@@ -78,7 +78,6 @@ export const MarketplaceItem = (): JSX.Element => {
     spellTemplates,
     weaponTemplates,
   } = useItems();
-  const { goldAllowance, itemsAllowance } = useAllowance();
   const {
     activeOrders,
     highestOffers,
@@ -91,6 +90,7 @@ export const MarketplaceItem = (): JSX.Element => {
     isRefreshing,
     refreshCharacter,
   } = useCharacter();
+  const { goldAllowance, itemsAllowance } = useAllowance();
 
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -825,11 +825,12 @@ export const MarketplaceItem = (): JSX.Element => {
         </TabPanels>
       </Tabs>
       <MarketplaceAllowanceModal
-        isCreatingOrder={isCreatingOrder}
+        completeMessage="Allowance was successful! You can now complete your listing."
+        isCompleting={isCreatingOrder}
         isOpen={isAllowanceModalOpen}
         itemName={selectedItem.name}
         onClose={onCloseAllowanceModal}
-        onCreateOrder={onCreateOrder}
+        onComplete={onCreateOrder}
         orderPrice={orderPrice}
         orderType={orderType}
       />

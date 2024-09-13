@@ -5,6 +5,7 @@ import {
   HStack,
   Text,
   Tooltip,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useEntityQuery } from '@latticexyz/react';
@@ -12,8 +13,9 @@ import { getComponentValueStrict, Has, HasValue } from '@latticexyz/recs';
 import { useCallback, useMemo, useState } from 'react';
 import { BiPurchaseTagAlt } from 'react-icons/bi';
 import { FaTimes } from 'react-icons/fa';
-import { hexToString } from 'viem';
+import { hexToString, parseEther } from 'viem';
 
+import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -21,10 +23,12 @@ import { getEmoji, removeEmoji, shortenAddress } from '../utils/helpers';
 import {
   type ArmorTemplate,
   type Order,
+  OrderType,
   type SpellTemplate,
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
+import { MarketplaceAllowanceModal } from './MarketplaceAllowanceModal';
 
 type OrderRowProps = {
   item: ArmorTemplate | WeaponTemplate | SpellTemplate;
@@ -37,15 +41,22 @@ export const OrderRow = ({
   order,
   refreshOrders,
 }: OrderRowProps): JSX.Element => {
+  const { renderError, renderSuccess } = useToast();
   const {
     components: { Characters },
     systemCalls: { cancelOrder, fulfillOrder },
   } = useMUD();
-  const { renderSuccess, renderError } = useToast();
-  const { character } = useCharacter();
+  const { character, refreshCharacter } = useCharacter();
+  const { goldAllowance, itemsAllowance } = useAllowance();
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [isFilling, setIsFilling] = useState(false);
+
+  const {
+    isOpen: isAllowanceModalOpen,
+    onClose: onCloseAllowanceModal,
+    onOpen: onOpenAllowanceModal,
+  } = useDisclosure();
 
   const ownerCharacterName = useEntityQuery([
     Has(Characters),
@@ -65,18 +76,51 @@ export const OrderRow = ({
         throw new Error(error);
       }
 
-      renderSuccess('Order canceled successfully!');
+      renderSuccess('Listing removed successfully!');
+      refreshCharacter();
       refreshOrders();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error cancelling order.', e);
     } finally {
       setIsCancelling(false);
     }
-  }, [cancelOrder, order, refreshOrders, renderError, renderSuccess]);
+  }, [
+    cancelOrder,
+    order,
+    refreshCharacter,
+    refreshOrders,
+    renderError,
+    renderSuccess,
+  ]);
+
+  const insufficientGold = useMemo(() => {
+    if (!character) return false;
+    if (order.offer.tokenType === TokenType.ERC20) return false;
+    return (
+      parseEther(order.consideration.amount) > BigInt(character.goldBalance)
+    );
+  }, [character, order]);
 
   const onFulfillOrder = useCallback(async () => {
     try {
       setIsFilling(true);
+
+      if (insufficientGold) {
+        throw new Error('Insufficient gold balance.');
+      }
+
+      if (
+        order.consideration.tokenType === TokenType.ERC20 &&
+        goldAllowance < parseEther(order.consideration.amount)
+      ) {
+        onOpenAllowanceModal();
+        return;
+      }
+
+      if (order.offer.tokenType === TokenType.ERC20 && !itemsAllowance) {
+        onOpenAllowanceModal();
+        return;
+      }
 
       const { error, success } = await fulfillOrder(order.orderHash);
 
@@ -85,13 +129,27 @@ export const OrderRow = ({
       }
 
       renderSuccess('Order filled successfully!');
+      onCloseAllowanceModal();
+      refreshCharacter();
       refreshOrders();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error cancelling order.', e);
     } finally {
       setIsFilling(false);
     }
-  }, [fulfillOrder, order, refreshOrders, renderError, renderSuccess]);
+  }, [
+    fulfillOrder,
+    goldAllowance,
+    insufficientGold,
+    itemsAllowance,
+    onCloseAllowanceModal,
+    onOpenAllowanceModal,
+    order,
+    refreshCharacter,
+    refreshOrders,
+    renderError,
+    renderSuccess,
+  ]);
 
   const isOfferer = useMemo(
     () => order.offerer === character?.owner,
@@ -163,10 +221,10 @@ export const OrderRow = ({
         )}
         {isOfferer && (
           <Tooltip
-            aria-label="Cancel order"
+            aria-label="Remove listing"
             bg="black"
             hasArrow
-            label="Cancel order"
+            label="Remove listing"
             placement="top"
           >
             <Button
@@ -182,6 +240,24 @@ export const OrderRow = ({
           </Tooltip>
         )}
       </HStack>
+      <MarketplaceAllowanceModal
+        completeMessage="Allowance was successful! You can now complete the order."
+        isCompleting={isFilling}
+        isOpen={isAllowanceModalOpen}
+        itemName={item.name}
+        onClose={onCloseAllowanceModal}
+        onComplete={onFulfillOrder}
+        orderPrice={
+          consideration.tokenType === TokenType.ERC20
+            ? consideration.amount
+            : offer.amount
+        }
+        orderType={
+          consideration.tokenType === TokenType.ERC20
+            ? OrderType.Buying
+            : OrderType.Selling
+        }
+      />
     </Flex>
   );
 };
