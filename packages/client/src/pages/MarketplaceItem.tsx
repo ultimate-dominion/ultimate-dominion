@@ -2,6 +2,8 @@ import {
   Avatar,
   Button,
   Divider,
+  FormControl,
+  FormHelperText,
   Heading,
   HStack,
   Input,
@@ -87,6 +89,7 @@ export const MarketplaceItem = (): JSX.Element => {
 
   const tabsRef = useRef<HTMLDivElement>(null);
 
+  const [showError, setShowError] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderType, setOrderType] = useState(OrderType.None);
   const [orderPrice, setOrderPrice] = useState('');
@@ -136,6 +139,11 @@ export const MarketplaceItem = (): JSX.Element => {
     isSynced,
     navigate,
   ]);
+
+  // Reset showError state when any of the form fields change
+  useEffect(() => {
+    setShowError(false);
+  }, [orderPrice]);
 
   const selectedItem = useMemo(() => {
     const armor = armorTemplates.find(
@@ -191,10 +199,9 @@ export const MarketplaceItem = (): JSX.Element => {
         goldAllowance: _goldAllowance,
         itemAllowance: _itemAllowance,
       };
-      return _allowances;
+      setAllowances(_allowances);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Could not get allowances', e);
-      return _allowances;
     }
   }, [
     goldToken,
@@ -207,9 +214,13 @@ export const MarketplaceItem = (): JSX.Element => {
 
   useEffect(() => {
     if (userCharacter) {
-      fetchAllowances().then(setAllowances);
+      fetchAllowances();
     }
   }, [fetchAllowances, userCharacter]);
+
+  const invalidOrderPrice = useMemo(() => {
+    return !(parseEther(orderPrice) > BigInt('0'));
+  }, [orderPrice]);
 
   const onCreateOrder = useCallback(
     async (e: React.FormEvent) => {
@@ -224,18 +235,23 @@ export const MarketplaceItem = (): JSX.Element => {
           throw new Error('Token contracts not found.');
         }
 
+        if (invalidOrderPrice) {
+          setShowError(true);
+          return;
+        }
+
         if (
           orderType === OrderType.Buying &&
           (!allowances.goldAllowance ||
             allowances.goldAllowance < BigInt(orderPrice))
         ) {
           onOpen();
-          throw new Error('Gold allowance is insufficient.');
+          return;
         }
 
         if (orderType === OrderType.Selling && !allowances.itemAllowance) {
           onOpen();
-          throw new Error('Items allowance is off.');
+          return;
         }
 
         if (orderType === OrderType.Selling && Number(userItemBalance) < 1) {
@@ -303,6 +319,7 @@ export const MarketplaceItem = (): JSX.Element => {
       allowances,
       createOrder,
       goldToken,
+      invalidOrderPrice,
       itemsContract,
       onOpen,
       orderPrice,
@@ -628,18 +645,25 @@ export const MarketplaceItem = (): JSX.Element => {
                   </Text>
                 )}
                 <Text mt={4}>How much $GOLD are you offering?</Text>
-                <InputGroup>
-                  <InputLeftAddon>$GOLD</InputLeftAddon>
-                  <Input
-                    isDisabled={isCreatingOrder}
-                    min={0}
-                    onChange={e => setOrderPrice(e.target.value)}
-                    placeholder="0.00"
-                    py={0}
-                    type="number"
-                    value={orderPrice}
-                  />
-                </InputGroup>
+                <FormControl isInvalid={showError && invalidOrderPrice}>
+                  <InputGroup>
+                    <InputLeftAddon>$GOLD</InputLeftAddon>
+                    <Input
+                      isDisabled={isCreatingOrder}
+                      min={0}
+                      onChange={e => setOrderPrice(e.target.value)}
+                      placeholder="0.00"
+                      py={0}
+                      type="number"
+                      value={orderPrice}
+                    />
+                  </InputGroup>
+                  {showError && invalidOrderPrice && (
+                    <FormHelperText color="red">
+                      Offer price must be greater than 0.
+                    </FormHelperText>
+                  )}
+                </FormControl>
                 <Button
                   isLoading={isCreatingOrder}
                   size="sm"
@@ -676,18 +700,25 @@ export const MarketplaceItem = (): JSX.Element => {
                   </Text>
                 )}
                 <Text mt={4}>How much $GOLD are you asking for?</Text>
-                <InputGroup>
-                  <InputLeftAddon>$GOLD</InputLeftAddon>
-                  <Input
-                    isDisabled={isCreatingOrder}
-                    min={0}
-                    onChange={e => setOrderPrice(e.target.value)}
-                    placeholder="0.00"
-                    py={0}
-                    type="number"
-                    value={orderPrice}
-                  />
-                </InputGroup>
+                <FormControl isInvalid={showError && invalidOrderPrice}>
+                  <InputGroup>
+                    <InputLeftAddon>$GOLD</InputLeftAddon>
+                    <Input
+                      isDisabled={isCreatingOrder}
+                      min={0}
+                      onChange={e => setOrderPrice(e.target.value)}
+                      placeholder="0.00"
+                      py={0}
+                      type="number"
+                      value={orderPrice}
+                    />
+                  </InputGroup>
+                  {showError && invalidOrderPrice && (
+                    <FormHelperText color="red">
+                      Asking price must be greater than 0.
+                    </FormHelperText>
+                  )}
+                </FormControl>
                 <Button
                   isLoading={isCreatingOrder}
                   size="sm"
@@ -739,7 +770,14 @@ export const MarketplaceItem = (): JSX.Element => {
           <TabPanel>Coming soon...</TabPanel>
         </TabPanels>
       </Tabs>
-      <MarketplaceAllowanceModal isOpen={isOpen} onClose={onClose} />
+      <MarketplaceAllowanceModal
+        isOpen={isOpen}
+        itemName={selectedItem.name}
+        onClose={onClose}
+        onCreateOrder={onCreateOrder}
+        orderPrice={orderPrice}
+        orderType={orderType}
+      />
     </VStack>
   );
 };
