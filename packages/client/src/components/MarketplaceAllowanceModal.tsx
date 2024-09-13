@@ -224,7 +224,7 @@ export const MarketplaceAllowanceModal = ({
       <ModalContent>
         <ModalHeader>Marketplace Allowances</ModalHeader>
         <ModalCloseButton />
-        <ModalBody py={8}>
+        <ModalBody p={4}>
           {orderType === OrderType.Buying && (
             <VStack as="form" onSubmit={onApproveGoldAllowance} spacing={10}>
               <Text alignSelf="start">

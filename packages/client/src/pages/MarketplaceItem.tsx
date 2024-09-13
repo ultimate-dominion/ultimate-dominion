@@ -725,7 +725,7 @@ export const MarketplaceItem = (): JSX.Element => {
         </Stack>
       </HStack>
 
-      <Tabs index={tabIndex} mt={12} ref={tabsRef} variant="enclosed" w="100%">
+      <Tabs index={tabIndex} mt={12} ref={tabsRef} variant="line" w="100%">
         <TabList>
           <Tab onClick={() => setTabIndex(0)}>{MarketplaceFilter.ForSale}</Tab>
           <Tab onClick={() => setTabIndex(1)}>
@@ -787,6 +787,8 @@ export const MarketplaceItem = (): JSX.Element => {
         heading="Listing created!"
         isOpen={isConfirmationModalOpen}
         onClose={() => {
+          onScrollToTabs();
+          setTabIndex(2);
           setOrderPrice('');
           onCloseConfirmationModal();
         }}
