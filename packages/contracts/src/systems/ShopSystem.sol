@@ -36,6 +36,7 @@ contract ShopSystem is System, ReentrancyGuard {
         // check that the character is the player
         require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "Cannot buy an item for someone else");
         // check that the players position is the same as the shop's position
+        // isAtPosition
         (uint16 characterX, uint16 characterY)= IWorld(_world()).UD__getMobPosition(shopId);
         (uint16 shopX, uint16 shopY) = IWorld(_world()).UD__getMobPosition(shopId);
         require(characterX == shopX && characterY == shopY, "Cannot buy from a shop from a distance");
@@ -48,12 +49,12 @@ contract ShopSystem is System, ReentrancyGuard {
         // decrease stock by [amount]
         stock[itemIndex] = stock[itemIndex - amount];
         Shops.setStock(shopId, stock);
-        Shops.setGold(shopId, amount * itemMarkup(shopId, itemIndex));
+        Shops.setGold(shopId, amount * itemMarkup(shopId/* , itemIndex */));
         // take [amount*price] of the users' gold
-        IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(_msgSender(), address(this), amount * itemMarkup(shopId, itemIndex));
+        // IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(_msgSender(), address(this), amount * itemMarkup(shopId, itemIndex));
         // // give [amount] items
         AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
-        IERC1155System(UltimateDominionConfig.getItems()).transferFrom(address(this), _msgSender(), buyableItems[itemIndex], amount);
+        IERC1155System(items).transferFrom(address(this), _msgSender(), buyableItems[itemIndex], amount);
         
     }
 
@@ -72,28 +73,29 @@ contract ShopSystem is System, ReentrancyGuard {
         (uint16 shopX, uint16 shopY) = IWorld(_world()).UD__getMobPosition(shopId);
         require(characterX == shopX && characterY == shopY, "Cannot buy from a shop from a distance");
         // check if the shop has enough gold
-        require(Shops.getGold(shopId) >= amount * itemMarkdown(shopId, itemIndex), "Shop does not have enough gold");
+        require(Shops.getGold(shopId) >= amount * itemMarkdown(shopId/* , itemIndex */), "Shop does not have enough gold");
         // increase stock by [amount]
         // decrease gold by [amount * price]
         uint256[] memory stock = Shops.getStock(shopId);
         stock[itemIndex] = stock[itemIndex + amount];
         Shops.setStock(shopId, stock);
-        Shops.setGold(shopId, amount * itemMarkdown(shopId, itemIndex));
+        Shops.setGold(shopId, amount * itemMarkdown(shopId/* , itemIndex */));
         // // take [amount] of the users' item
-        uint256[] memory sellableItems = Shops.getSellableItems(shopId);
+        //uint256[] memory sellableItems = Shops.getSellableItems(shopId);
 
         AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
-        IERC1155(UltimateDominionConfig.getItems()).safeTransferFrom(_msgSender(), address(this), sellableItems[itemIndex], amount, "");
+        // IERC1155(UltimateDominionConfig.getItems()).safeTransferFrom(_msgSender(), address(this), sellableItems[itemIndex], amount, "");
         // give [amount*price] gold
-        IERC20(UltimateDominionConfig.getGoldToken()).transfer( _msgSender(), amount * itemMarkdown(shopId, itemIndex));
+        IERC20(UltimateDominionConfig.getGoldToken()).transfer( _msgSender(), amount * itemMarkdown(shopId/* , itemIndex */));
     }
 
     /**
      * Resets the shop inventory after 12 hours
      * @param shopId the shop Id
      */
-    function restock(bytes32 shopId) public nonReentrant {
-        require(Shops.getTimestamp(shopId) + 12 hours < block.timestamp, "You must wait 12 hours to restock");
+    // make this happen when the user clicks the shop button
+    function restock(bytes32 shopId) public {
+        require(canRestock(shopId), "You must wait 12 hours to restock");
         uint256[] memory stock = Shops.getRestock(shopId);
         uint256 gold = Shops.getMaxGold(shopId);
         Shops.setStock(shopId, stock);
@@ -101,20 +103,25 @@ contract ShopSystem is System, ReentrancyGuard {
         Shops.setTimestamp(shopId, block.timestamp);
     }
 
+    function canRestock(bytes32 shopId) public view returns(bool) {
+        uint256 lastRecordedIntervalTimestamp = Shops.getTimestamp(shopId);
+        uint256 timeSinceLastInterval = (block.timestamp - lastRecordedIntervalTimestamp) % 12 hours;
+        uint256 lastIntervalTimestamp = block.timestamp - timeSinceLastInterval;
+        return lastIntervalTimestamp > 0;
+    }
+
     /**
      * Gets the markup price of an item
      * @param shopId the shopId
-     * @param itemIndex tbd
      */
-    function itemMarkup(bytes32 shopId, uint256 itemIndex) public view returns (uint256){
-        return 100 * Shops.getPriceMarkup(shopId) / 10000;
+    function itemMarkup(bytes32 shopId/* , uint256 itemIndex */) public view returns (uint256){
+        return 100 + (100 * Shops.getPriceMarkup(shopId) / 10000);
     }
     /**
      * Gets the markdown price of an item
      * @param shopId the shopId
-     * @param itemIndex tbd
      */
-    function itemMarkdown(bytes32 shopId, uint256 itemIndex) public view returns (uint256){
+    function itemMarkdown(bytes32 shopId/*,  uint256 itemIndex */) public view returns (uint256){
         return 100 * Shops.getPriceMarkdown(shopId)/ 10000;
     }
     function shopSystemAddress() external view returns (address){

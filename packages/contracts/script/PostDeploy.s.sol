@@ -425,24 +425,25 @@ contract PostDeploy is Script {
         world.UD__setStarterItems(Classes.Mage, mageItemIds, mageAmounts);
     }
     function _createShops() internal {
-
-        uint256[] memory sellableItems = new uint256[](3);
-        uint256[] memory buyableItems = new uint256[](6);
-        uint256[] memory stock = new uint256[](buyableItems.length);
+        uint256[] memory sellableItems = new uint256[](10);
+        uint256[] memory buyableItems = new uint256[](10);
+        uint256[] memory stock = new uint256[](10);
         for(uint i = 0; i < 10; ++i){
-            if(i < 3) sellableItems[i] = i;
-            if(i < 6) buyableItems[i] = i;
-            if(i < buyableItems.length) stock[i] = 5;
+            sellableItems[i] = i;
+            buyableItems[i] = i;
+            if(i < buyableItems.length){
+                stock[i] = 10;
+            }
         }
 
         ShopsData memory newShop = ShopsData({
             gold: 100,
             maxGold: 100,
-            priceMarkup: 0,
-            priceMarkdown: 0,
-            timestamp: block.timestamp,
+            priceMarkup: 20,
+            priceMarkdown: 50,
+            timestamp: 1725962400,
             sellableItems: sellableItems,
-            buyableItems: sellableItems,
+            buyableItems: buyableItems,
             restock: stock,
             stock: stock
         });
