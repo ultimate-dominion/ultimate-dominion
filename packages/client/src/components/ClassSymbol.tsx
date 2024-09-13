@@ -14,19 +14,37 @@ export const ClassSymbol = ({
   switch (entityClass) {
     case StatsClasses.Warrior:
       return (
-        <Tooltip aria-label="Warrior" label="Warrior" shouldWrapChildren>
+        <Tooltip
+          aria-label="Warrior"
+          bg="black"
+          hasArrow
+          label="Warrior"
+          shouldWrapChildren
+        >
           <GiAxeSword size={size} />
         </Tooltip>
       );
     case StatsClasses.Rogue:
       return (
-        <Tooltip aria-label="Rogue" label="Rogue" shouldWrapChildren>
+        <Tooltip
+          aria-label="Rogue"
+          bg="black"
+          hasArrow
+          label="Rogue"
+          shouldWrapChildren
+        >
           <GiRogue size={size} />
         </Tooltip>
       );
     case StatsClasses.Mage:
       return (
-        <Tooltip aria-label="Mage" label="Mage" shouldWrapChildren>
+        <Tooltip
+          aria-label="Mage"
+          bg="black"
+          hasArrow
+          label="Mage"
+          shouldWrapChildren
+        >
           <FaHatWizard size={size} />
         </Tooltip>
       );

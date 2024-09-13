@@ -14,10 +14,10 @@ export enum EncounterType {
 }
 
 export enum ItemFilterOptions {
-  All = 'all',
-  Armor = 'armor',
-  Spell = 'spell',
-  Weapon = 'weapon',
+  All = 'All',
+  Armor = 'Armor',
+  Spell = 'Spell',
+  Weapon = 'Weapon',
 }
 
 export enum ItemType {
@@ -26,6 +26,12 @@ export enum ItemType {
   Spell,
   Consumable,
   QuestItem,
+}
+
+export enum MarketplaceFilter {
+  ForSale = 'For Sale',
+  GoldOffers = '$GOLD Offers',
+  MyListings = 'My Listings',
 }
 
 export enum MobType {
@@ -38,6 +44,12 @@ export enum OrderStatus {
   Canceled,
   Active,
   Fulfilled,
+}
+
+export enum OrderType {
+  None = 'none',
+  Buying = 'buying',
+  Selling = 'selling',
 }
 
 export enum StatsClasses {
@@ -99,7 +111,7 @@ export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
   baseStats: EntityStats;
-  goldBalance: string;
+  goldBalance: bigint;
   id: Entity;
   inBattle: boolean;
   locked: boolean;

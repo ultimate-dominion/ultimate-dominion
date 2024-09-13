@@ -1,10 +1,18 @@
-import { decodeAbiParameters, hexToBigInt } from 'viem';
+import { decodeAbiParameters, formatEther, hexToBigInt } from 'viem';
 
 import {
   type EntityStats,
   type Metadata,
   type MonsterStats,
 } from '../utils/types';
+
+export const etherToFixedNumber = (
+  value: bigint | string,
+  decimals = 2,
+): string => {
+  const formattedValue = formatEther(BigInt(value));
+  return Number(formattedValue).toFixed(decimals);
+};
 
 export const getEmoji = (name: string): string => {
   return name

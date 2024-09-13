@@ -13,20 +13,12 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import {
-  getComponentValueStrict,
-  Has,
-  HasValue,
-  runQuery,
-} from '@latticexyz/recs';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
-import { formatEther, parseEther } from 'viem';
+import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { CreateListingModal } from '../components/CreateListingModal';
@@ -36,26 +28,19 @@ import { Pagination } from '../components/Pagination';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
-import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { useOrders } from '../contexts/OrdersContext';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { etherToFixedNumber } from '../utils/helpers';
 import {
   type ArmorTemplate,
-  type ConsiderationData,
   ItemFilterOptions,
   ItemType,
-  type OfferData,
-  type Order,
-  OrderStatus,
+  MarketplaceFilter,
+  OrderType,
   type SpellTemplate,
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
-
-enum MarketplaceFilter {
-  ForSale = 'For Sale',
-  GoldOffers = '$GOLD Offers',
-  MyListings = 'My Listings',
-}
 
 enum SortOptions {
   Level = 'Level',
@@ -67,20 +52,23 @@ const ITEMS_PER_PAGE = 10;
 const MARKETPLACE_INFO_SEEN_KEY = 'marketplace-info-seen';
 
 export const Marketplace = (): JSX.Element => {
-  const { renderError } = useToast();
   const navigate = useNavigate();
   const { isConnected } = useAccount();
 
-  const {
-    components: { Considerations, Offers, Orders, UltimateDominionConfig },
-  } = useMUD();
+  const { delegatorAddress, isSynced } = useMUD();
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
     spellTemplates,
     weaponTemplates,
   } = useItems();
-  const { character } = useCharacter();
+  const {
+    activeOrders,
+    highestOffers,
+    isLoading: isLoadingOrders,
+    lowestPrices,
+  } = useOrders();
+  const { character, isRefreshing } = useCharacter();
 
   const {
     isOpen: isCreateListingModalOpen,
@@ -92,9 +80,6 @@ export const Marketplace = (): JSX.Element => {
     onClose: onCloseMarketplaceInfoModal,
     onOpen: onOpenMarketplaceInfoModal,
   } = useDisclosure();
-
-  const [isFetchingOrders, setIsFetchingOrders] = useState(false);
-  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
 
   const [items, setItems] = useState<
     (ArmorTemplate | SpellTemplate | WeaponTemplate)[]
@@ -116,117 +101,33 @@ export const Marketplace = (): JSX.Element => {
   const [pageLimit, setPageLimit] = useState(1);
   const [length, setLength] = useState(1);
 
-  const { goldToken } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { goldToken: null };
-
+  // Redirect to home if synced, but missing other requirements
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
       window.location.reload();
+      return;
     }
-  }, [isConnected, navigate]);
 
-  const fetchOrders = useCallback(() => {
-    try {
-      setIsFetchingOrders(true);
+    if (!isSynced) return;
 
-      const _activeOrders = Array.from(
-        runQuery([
-          Has(Considerations),
-          Has(Offers),
-          Has(Orders),
-          HasValue(Orders, { orderStatus: OrderStatus.Active }),
-        ]),
-      ).map(orderHash => {
-        const considerationData = getComponentValueStrict(
-          Considerations,
-          orderHash,
-        );
-        const orderData = getComponentValueStrict(Orders, orderHash);
-        const offerData = getComponentValueStrict(Offers, orderHash);
-        const orderStatus = getComponentValueStrict(
-          Orders,
-          orderHash,
-        ).orderStatus;
-
-        return {
-          consideration: {
-            amount:
-              considerationData.tokenType === TokenType.ERC20
-                ? formatEther(considerationData.amount)
-                : considerationData.amount.toString(),
-            identifier: considerationData.identifier.toString(),
-            token: considerationData.token.toString(),
-            tokenType: considerationData.tokenType,
-            recipient: considerationData.recipient.toString(),
-          } as ConsiderationData,
-          offer: {
-            amount:
-              offerData.tokenType === TokenType.ERC20
-                ? formatEther(offerData.amount)
-                : offerData.amount.toString(),
-            identifier: offerData.identifier.toString(),
-            token: offerData.token.toString(),
-            tokenType: offerData.tokenType,
-          } as OfferData,
-          offerer: orderData.offerer.toString(),
-          orderHash: orderHash.toString(),
-          orderStatus: orderStatus.toString(),
-        } as Order;
-      });
-
-      setActiveOrders(_activeOrders);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to get order data.', e);
-    } finally {
-      setIsFetchingOrders(false);
+    if (!delegatorAddress) {
+      navigate(HOME_PATH);
+      return;
     }
-  }, [Considerations, Offers, Orders, renderError]);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
-
-  const lowestPrices = useMemo(() => {
-    const lowestPrices: { [key: string]: bigint } = {};
-
-    activeOrders.forEach(order => {
-      const price = lowestPrices[order.offer.identifier];
-      if (
-        !price ||
-        BigInt(
-          order.consideration.amount && order.consideration.token === goldToken,
-        ) < BigInt(price)
-      ) {
-        lowestPrices[order.offer.identifier] = parseEther(
-          order.consideration.amount,
-        );
-      }
-    });
-
-    return lowestPrices;
-  }, [activeOrders, goldToken]);
-
-  const highestOffers = useMemo(() => {
-    const highestOffers: { [key: string]: bigint } = {};
-
-    activeOrders.forEach(order => {
-      const offer = highestOffers[order.consideration.identifier];
-      if (
-        !offer ||
-        BigInt(order.offer.amount) > BigInt(offer) ||
-        order.offer.tokenType === TokenType.ERC20
-      ) {
-        highestOffers[order.consideration.identifier] = parseEther(
-          order.offer.amount,
-        );
-      }
-    });
-
-    return highestOffers;
-  }, [activeOrders]);
+    if (!character?.locked && !isRefreshing) {
+      navigate(CHARACTER_CREATION_PATH);
+      return;
+    }
+  }, [
+    character,
+    delegatorAddress,
+    isConnected,
+    isRefreshing,
+    isSynced,
+    navigate,
+  ]);
 
   const unfilteredItems = useMemo(
     () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
@@ -364,7 +265,7 @@ export const Marketplace = (): JSX.Element => {
     onCloseMarketplaceInfoModal();
   }, [onCloseMarketplaceInfoModal]);
 
-  if (isLoadingItemTemplates || isFetchingOrders) {
+  if (isLoadingItemTemplates || isLoadingOrders) {
     return (
       <Center>
         <Spinner size="lg" />
@@ -372,18 +273,41 @@ export const Marketplace = (): JSX.Element => {
     );
   }
 
+  if (!character) {
+    return (
+      <VStack w="100%">
+        <Button
+          alignSelf="start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
+          onClick={() => navigate(GAME_BOARD_PATH)}
+          size="xs"
+          variant="outline"
+        >
+          Back to Game Board
+        </Button>
+        <Text mt={12}>An erro occurred</Text>
+      </VStack>
+    );
+  }
+
   return (
     <VStack>
-      <Button
-        alignSelf="start"
-        leftIcon={<IoMdArrowRoundBack />}
-        my={4}
-        onClick={() => navigate(GAME_BOARD_PATH)}
-        size="xs"
-        variant="outline"
-      >
-        Back to Game Board
-      </Button>
+      <HStack justify="space-between" w="100%">
+        <Button
+          alignSelf="start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
+          onClick={() => navigate(GAME_BOARD_PATH)}
+          size="xs"
+          variant="outline"
+        >
+          Back to Game Board
+        </Button>
+        <Text size="sm">
+          $GOLD Balance: {etherToFixedNumber(character.goldBalance)}
+        </Text>
+      </HStack>
       <Stack
         direction={{ base: 'column', md: 'row' }}
         mb={8}
@@ -516,12 +440,17 @@ export const Marketplace = (): JSX.Element => {
                     ? formatEther(highestOffers[item.tokenId])
                     : '0'
                 }
+                key={`marketplace-row-${i}`}
                 lowestPrice={
                   lowestPrices[item.tokenId]
                     ? formatEther(lowestPrices[item.tokenId])
                     : '0'
                 }
-                key={`marketplace-row-${i}`}
+                orderType={
+                  marketplaceFilter === MarketplaceFilter.ForSale
+                    ? OrderType.Buying
+                    : OrderType.Selling
+                }
                 {...item}
               />
             );
@@ -565,9 +494,9 @@ export const Marketplace = (): JSX.Element => {
             </Text>
             <Text size="sm">
               To start the process, either create a listing or select an item
-              based on what items are for sale or what items have a $GOLD offer
-              on them. If there are $GOLD offers on an item, anyone who owns the
-              item can accept any of the offers.
+              based on which items are for sale or which items have a $GOLD
+              offer on them. If there are $GOLD offers on an item, anyone who
+              owns the item can accept any of the offers.
             </Text>
             <Text size="sm">
               To coordinate a sale with another player, you can use the chat box

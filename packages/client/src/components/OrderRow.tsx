@@ -3,43 +3,68 @@ import {
   Button,
   Flex,
   HStack,
-  Stack,
   Text,
+  Tooltip,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useState } from 'react';
+import { useEntityQuery } from '@latticexyz/react';
+import { getComponentValueStrict, Has, HasValue } from '@latticexyz/recs';
+import { useCallback, useMemo, useState } from 'react';
 import { BiPurchaseTagAlt } from 'react-icons/bi';
 import { FaTimes } from 'react-icons/fa';
+import { hexToString, parseEther } from 'viem';
 
+import { useAllowance } from '../contexts/AllowanceContext';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { getEmoji, removeEmoji } from '../utils/helpers';
+import { getEmoji, removeEmoji, shortenAddress } from '../utils/helpers';
 import {
   type ArmorTemplate,
   type Order,
+  OrderType,
   type SpellTemplate,
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
+import { MarketplaceAllowanceModal } from './MarketplaceAllowanceModal';
 
 type OrderRowProps = {
   item: ArmorTemplate | WeaponTemplate | SpellTemplate;
   order: Order;
-  refetchOrders: () => void;
+  refreshOrders: () => void;
 };
 
 export const OrderRow = ({
   item,
   order,
-  refetchOrders,
+  refreshOrders,
 }: OrderRowProps): JSX.Element => {
+  const { renderError, renderSuccess } = useToast();
   const {
+    components: { Characters },
     systemCalls: { cancelOrder, fulfillOrder },
   } = useMUD();
-  const { renderSuccess, renderError } = useToast();
+  const { character, refreshCharacter } = useCharacter();
+  const { goldAllowance, itemsAllowance } = useAllowance();
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [isFilling, setIsFilling] = useState(false);
+
+  const {
+    isOpen: isAllowanceModalOpen,
+    onClose: onCloseAllowanceModal,
+    onOpen: onOpenAllowanceModal,
+  } = useDisclosure();
+
+  const ownerCharacterName = useEntityQuery([
+    Has(Characters),
+    HasValue(Characters, { owner: order.offerer }),
+  ]).map(entity => {
+    const { name: nameBytes } = getComponentValueStrict(Characters, entity);
+    return hexToString(nameBytes as `0x${string}`, { size: 32 });
+  })[0];
 
   const onCancelOrder = useCallback(async () => {
     try {
@@ -51,18 +76,51 @@ export const OrderRow = ({
         throw new Error(error);
       }
 
-      renderSuccess('Order canceled successfully!');
-      refetchOrders();
+      renderSuccess('Listing removed successfully!');
+      refreshCharacter();
+      refreshOrders();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error cancelling order.', e);
     } finally {
       setIsCancelling(false);
     }
-  }, [cancelOrder, order, refetchOrders, renderError, renderSuccess]);
+  }, [
+    cancelOrder,
+    order,
+    refreshCharacter,
+    refreshOrders,
+    renderError,
+    renderSuccess,
+  ]);
+
+  const insufficientGold = useMemo(() => {
+    if (!character) return false;
+    if (order.offer.tokenType === TokenType.ERC20) return false;
+    return (
+      parseEther(order.consideration.amount) > BigInt(character.goldBalance)
+    );
+  }, [character, order]);
 
   const onFulfillOrder = useCallback(async () => {
     try {
       setIsFilling(true);
+
+      if (insufficientGold) {
+        throw new Error('Insufficient gold balance.');
+      }
+
+      if (
+        order.consideration.tokenType === TokenType.ERC20 &&
+        goldAllowance < parseEther(order.consideration.amount)
+      ) {
+        onOpenAllowanceModal();
+        return;
+      }
+
+      if (order.offer.tokenType === TokenType.ERC20 && !itemsAllowance) {
+        onOpenAllowanceModal();
+        return;
+      }
 
       const { error, success } = await fulfillOrder(order.orderHash);
 
@@ -71,13 +129,32 @@ export const OrderRow = ({
       }
 
       renderSuccess('Order filled successfully!');
-      refetchOrders();
+      onCloseAllowanceModal();
+      refreshCharacter();
+      refreshOrders();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error cancelling order.', e);
     } finally {
       setIsFilling(false);
     }
-  }, [fulfillOrder, order, refetchOrders, renderError, renderSuccess]);
+  }, [
+    fulfillOrder,
+    goldAllowance,
+    insufficientGold,
+    itemsAllowance,
+    onCloseAllowanceModal,
+    onOpenAllowanceModal,
+    order,
+    refreshCharacter,
+    refreshOrders,
+    renderError,
+    renderSuccess,
+  ]);
+
+  const isOfferer = useMemo(
+    () => order.offerer === character?.owner,
+    [character, order.offerer],
+  );
 
   const { consideration, offer } = order;
 
@@ -101,7 +178,9 @@ export const OrderRow = ({
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
             <Text size={{ base: '2xs', lg: 'sm' }}>
-              From: {consideration.recipient}
+              From: {ownerCharacterName} {'('}
+              {shortenAddress(consideration.recipient)}
+              {')'}
             </Text>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
@@ -116,32 +195,69 @@ export const OrderRow = ({
           </Text>
         </VStack>
       </Flex>
-      <HStack>
-        <Stack display={{ base: 'none', md: 'block' }} w="100px">
-          <Button
-            ml={1}
-            p={3}
-            size="sm"
-            variant="solid"
-            isLoading={isFilling}
-            onClick={onFulfillOrder}
+      <HStack mr={4}>
+        {!isOfferer && (
+          <Tooltip
+            aria-label={
+              offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
+            }
+            bg="black"
+            hasArrow
+            label={
+              offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
+            }
+            placement="top"
           >
-            <BiPurchaseTagAlt />
-          </Button>{' '}
-          <Button
-            ml={1}
-            p={3}
-            size="sm"
-            variant="ghost"
-            backgroundColor="red"
-            color="white"
-            isLoading={isCancelling}
-            onClick={onCancelOrder}
+            <Button
+              isLoading={isFilling}
+              p={2}
+              onClick={onFulfillOrder}
+              size="sm"
+              variant="solid"
+            >
+              <BiPurchaseTagAlt />
+            </Button>
+          </Tooltip>
+        )}
+        {isOfferer && (
+          <Tooltip
+            aria-label="Remove listing"
+            bg="black"
+            hasArrow
+            label="Remove listing"
+            placement="top"
           >
-            <FaTimes />
-          </Button>
-        </Stack>
+            <Button
+              bgColor="red"
+              color="white"
+              isLoading={isCancelling}
+              onClick={onCancelOrder}
+              p={2}
+              size="sm"
+            >
+              <FaTimes />
+            </Button>
+          </Tooltip>
+        )}
       </HStack>
+      <MarketplaceAllowanceModal
+        completeMessage="Allowance was successful! You can now complete the order."
+        isCompleting={isFilling}
+        isOpen={isAllowanceModalOpen}
+        itemName={item.name}
+        onClose={onCloseAllowanceModal}
+        onComplete={onFulfillOrder}
+        orderPrice={
+          consideration.tokenType === TokenType.ERC20
+            ? consideration.amount
+            : offer.amount
+        }
+        orderType={
+          consideration.tokenType === TokenType.ERC20
+            ? OrderType.Buying
+            : OrderType.Selling
+        }
+      />
     </Flex>
   );
 };

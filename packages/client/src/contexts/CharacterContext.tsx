@@ -13,7 +13,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { formatEther, hexToString, zeroHash } from 'viem';
+import { hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
@@ -140,7 +140,7 @@ export const CharacterProvider = ({
         currentHp: characterStats?.currentHp.toString() ?? '0',
         entityClass: characterStats?.class ?? 0,
         experience: characterStats?.experience.toString() ?? '0',
-        goldBalance: formatEther(goldBalance).toString(),
+        goldBalance,
         id: entity,
         inBattle,
         intelligence: characterStats?.intelligence.toString() ?? '0',
