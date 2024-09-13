@@ -22,10 +22,11 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { getComponentValue } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Address, erc20Abi, parseEther } from 'viem';
+import { useAccount } from 'wagmi';
 
 import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
@@ -34,12 +35,17 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
-import { MARKETPLACE_PATH } from '../Routes';
+import {
+  CHARACTER_CREATION_PATH,
+  HOME_PATH,
+  MARKETPLACE_PATH,
+} from '../Routes';
 import { ERC_1155_ABI } from '../utils/constants';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
   ItemType,
+  MarketplaceFilter,
   OrderType,
   type SpellTemplate,
   TokenType,
@@ -51,9 +57,12 @@ export const MarketplaceItem = (): JSX.Element => {
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
   const [searchParams] = useSearchParams();
+  const { isConnected } = useAccount();
 
   const {
     components: { ItemsOwners, UltimateDominionConfig },
+    delegatorAddress,
+    isSynced,
     network: { publicClient },
     systemCalls: { createOrder },
   } = useMUD();
@@ -70,12 +79,23 @@ export const MarketplaceItem = (): JSX.Element => {
     lowestPrices,
     refreshOrders,
   } = useOrders();
-  const { character: userCharacter, refreshCharacter } = useCharacter();
+  const {
+    character: userCharacter,
+    isRefreshing,
+    refreshCharacter,
+  } = useCharacter();
+
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-
   const [orderType, setOrderType] = useState(OrderType.None);
   const [orderPrice, setOrderPrice] = useState('');
+  const [tabIndex, setTabIndex] = useState(0);
+
+  const [allowances, setAllowances] = useState({
+    goldAllowance: 0n,
+    itemAllowance: false,
+  });
 
   const { isOpen, onClose, onOpen } = useDisclosure();
 
@@ -88,6 +108,34 @@ export const MarketplaceItem = (): JSX.Element => {
     UltimateDominionConfig,
     singletonEntity,
   ) ?? { items: null };
+
+  // Redirect to home if synced, but missing other requirements
+  useEffect(() => {
+    if (!isConnected) {
+      navigate(HOME_PATH);
+      window.location.reload();
+      return;
+    }
+
+    if (!isSynced) return;
+
+    if (!delegatorAddress) {
+      navigate(HOME_PATH);
+      return;
+    }
+
+    if (!userCharacter?.locked && !isRefreshing) {
+      navigate(CHARACTER_CREATION_PATH);
+      return;
+    }
+  }, [
+    userCharacter,
+    delegatorAddress,
+    isConnected,
+    isRefreshing,
+    isSynced,
+    navigate,
+  ]);
 
   const selectedItem = useMemo(() => {
     const armor = armorTemplates.find(
@@ -124,7 +172,7 @@ export const MarketplaceItem = (): JSX.Element => {
   }, [ItemsOwners, selectedItem, userCharacter]);
 
   const fetchAllowances = useCallback(async () => {
-    let allowances = { goldAllowance: 0n, itemAllowance: false };
+    let _allowances = { goldAllowance: 0n, itemAllowance: false };
     try {
       const _goldAllowance = await publicClient.readContract({
         address: goldToken as Address,
@@ -139,14 +187,14 @@ export const MarketplaceItem = (): JSX.Element => {
         functionName: 'isApprovedForAll',
         args: [userCharacter?.owner as Address, marketplaceAddress as Address],
       })) as boolean;
-      allowances = {
+      _allowances = {
         goldAllowance: _goldAllowance,
         itemAllowance: _itemAllowance,
       };
-      return allowances;
+      return _allowances;
     } catch (e) {
       renderError((e as Error)?.message ?? 'Could not get allowances', e);
-      return allowances;
+      return _allowances;
     }
   }, [
     goldToken,
@@ -157,13 +205,16 @@ export const MarketplaceItem = (): JSX.Element => {
     userCharacter?.owner,
   ]);
 
+  useEffect(() => {
+    if (userCharacter) {
+      fetchAllowances().then(setAllowances);
+    }
+  }, [fetchAllowances, userCharacter]);
+
   const onCreateOrder = useCallback(
-    async (
-      offerType: TokenType,
-      considerationType: TokenType,
-      amount: string,
-      price: string,
-    ) => {
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+
       try {
         setIsCreatingOrder(true);
 
@@ -173,26 +224,21 @@ export const MarketplaceItem = (): JSX.Element => {
           throw new Error('Token contracts not found.');
         }
 
-        const allowances = await fetchAllowances();
-
         if (
-          offerType === TokenType.ERC20 &&
+          orderType === OrderType.Buying &&
           (!allowances.goldAllowance ||
-            allowances.goldAllowance < BigInt(price))
+            allowances.goldAllowance < BigInt(orderPrice))
         ) {
           onOpen();
           throw new Error('Gold allowance is insufficient.');
         }
 
-        if (offerType === TokenType.ERC1155 && !allowances.itemAllowance) {
+        if (orderType === OrderType.Selling && !allowances.itemAllowance) {
           onOpen();
           throw new Error('Items allowance is off.');
         }
 
-        if (
-          offerType === TokenType.ERC1155 &&
-          Number(amount) > Number(userItemBalance)
-        ) {
+        if (orderType === OrderType.Selling && Number(userItemBalance) < 1) {
           throw new Error(
             `You do not have enough ${selectedItem.name} to sell.`,
           );
@@ -201,30 +247,38 @@ export const MarketplaceItem = (): JSX.Element => {
         const _order = {
           consideration: {
             amount:
-              considerationType === TokenType.ERC20
-                ? parseEther(price)
-                : BigInt(price),
+              orderType === OrderType.Selling
+                ? parseEther(orderPrice)
+                : BigInt('1'),
             identifier:
-              considerationType === TokenType.ERC20
+              orderType === OrderType.Selling
                 ? 0n
                 : BigInt(selectedItem.tokenId),
             recipient: userCharacter.owner as Address,
-            token: (considerationType === TokenType.ERC20
+            token: (orderType === OrderType.Selling
               ? goldToken
               : itemsContract) as Address,
-            tokenType: considerationType,
+            tokenType:
+              orderType === OrderType.Selling
+                ? TokenType.ERC20
+                : TokenType.ERC1155,
           },
           offer: {
             amount:
-              offerType === TokenType.ERC20
-                ? parseEther(amount)
-                : BigInt(amount),
+              orderType === OrderType.Buying
+                ? parseEther(orderPrice)
+                : BigInt('1'),
             identifier:
-              offerType === TokenType.ERC20 ? 0n : BigInt(selectedItem.tokenId),
-            token: (offerType === TokenType.ERC20
+              orderType === OrderType.Buying
+                ? 0n
+                : BigInt(selectedItem.tokenId),
+            token: (orderType === OrderType.Buying
               ? goldToken
               : itemsContract) as Address,
-            tokenType: offerType,
+            tokenType:
+              orderType === OrderType.Buying
+                ? TokenType.ERC20
+                : TokenType.ERC1155,
           },
           offerer: userCharacter.owner as Address,
           signature: '' as Address,
@@ -246,11 +300,13 @@ export const MarketplaceItem = (): JSX.Element => {
       }
     },
     [
+      allowances,
       createOrder,
-      fetchAllowances,
       goldToken,
       itemsContract,
       onOpen,
+      orderPrice,
+      orderType,
       refreshCharacter,
       refreshOrders,
       renderError,
@@ -261,31 +317,39 @@ export const MarketplaceItem = (): JSX.Element => {
     ],
   );
 
+  const onScrollToTabs = useCallback(() => {
+    setTabIndex(orderType === OrderType.Buying ? 0 : 1);
+    tabsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [orderType]);
+
   useEffect(() => {
     if (searchParams.get('orderType') === OrderType.Buying) {
       setOrderType(OrderType.Buying);
+      setTabIndex(0);
     } else if (searchParams.get('orderType') === OrderType.Selling) {
       setOrderType(OrderType.Selling);
+      setTabIndex(1);
     }
   }, [searchParams]);
 
-  if (selectedItem == null) {
-    return (
-      <VStack>
-        <Button
-          alignSelf="start"
-          leftIcon={<IoMdArrowRoundBack />}
-          my={4}
-          onClick={() => navigate(MARKETPLACE_PATH)}
-          size="xs"
-          variant="outline"
-        >
-          Back to Marketplace
-        </Button>
-        <Text>Item not found</Text>
-      </VStack>
+  const forSaleItems = useMemo(() => {
+    if (!selectedItem) return [];
+    return activeOrders.filter(
+      order =>
+        order.offer.tokenType === TokenType.ERC1155 &&
+        order.offer.identifier === selectedItem.tokenId,
     );
-  }
+  }, [activeOrders, selectedItem]);
+
+  const goldOfferItems = useMemo(() => {
+    if (!selectedItem) return [];
+    return activeOrders.filter(
+      order =>
+        order.offer.tokenType === TokenType.ERC20 &&
+        order.consideration.tokenType === TokenType.ERC1155 &&
+        order.consideration.identifier === selectedItem.tokenId,
+    );
+  }, [activeOrders, selectedItem]);
 
   if (isLoadingItemTemplates || isLoadingOrders) {
     return (
@@ -307,18 +371,59 @@ export const MarketplaceItem = (): JSX.Element => {
     );
   }
 
+  if (!userCharacter) {
+    return (
+      <VStack>
+        <Button
+          alignSelf="start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
+          onClick={() => navigate(MARKETPLACE_PATH)}
+          size="xs"
+          variant="outline"
+        >
+          Back to Marketplace
+        </Button>
+        <Text mt={12}>An erro occurred</Text>
+      </VStack>
+    );
+  }
+
+  if (selectedItem == null) {
+    return (
+      <VStack>
+        <Button
+          alignSelf="start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
+          onClick={() => navigate(MARKETPLACE_PATH)}
+          size="xs"
+          variant="outline"
+        >
+          Back to Marketplace
+        </Button>
+        <Text>Item not found</Text>
+      </VStack>
+    );
+  }
+
   return (
     <VStack>
-      <Button
-        alignSelf="start"
-        leftIcon={<IoMdArrowRoundBack />}
-        my={4}
-        onClick={() => navigate(MARKETPLACE_PATH)}
-        size="xs"
-        variant="outline"
-      >
-        Back to Marketplace
-      </Button>
+      <HStack justify="space-between" w="100%">
+        <Button
+          alignSelf="start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
+          onClick={() => navigate(MARKETPLACE_PATH)}
+          size="xs"
+          variant="outline"
+        >
+          Back to Marketplace
+        </Button>
+        <Text size="sm">
+          $GOLD Balance: {etherToFixedNumber(userCharacter.goldBalance)}
+        </Text>
+      </HStack>
       <Heading textAlign="center">{removeEmoji(selectedItem.name)}</Heading>
       <HStack alignItems="start" mt={12} spacing={12} w="100%">
         <Stack w="50%">
@@ -497,45 +602,79 @@ export const MarketplaceItem = (): JSX.Element => {
               Selling
             </Button>
           </HStack>
-          {orderType === OrderType.Buying && (
-            <VStack alignItems="start" as="form">
-              <Text mt={4}>How much $GOLD are you offering?</Text>
-              <InputGroup>
-                <InputLeftAddon>$GOLD</InputLeftAddon>
-                <Input
-                  isDisabled={isCreatingOrder}
-                  min={0}
-                  onChange={e => setOrderPrice(e.target.value)}
-                  placeholder="0.00"
-                  py={0}
-                  type="number"
-                  value={orderPrice}
-                />
-              </InputGroup>
-              <Button
-                isLoading={isCreatingOrder}
-                onClick={() =>
-                  onCreateOrder(
-                    TokenType.ERC20,
-                    TokenType.ERC1155,
-                    orderPrice,
-                    '1',
-                  )
-                }
-                size="sm"
-                w="100%"
-              >
-                Make an Offer for {selectedItem.name}
-              </Button>
-            </VStack>
-          )}
+          {orderType === OrderType.Buying &&
+            (userCharacter.goldBalance === '0' ? (
+              <Text mt={4} size="sm">
+                You don&apos;t have any $GOLD in your inventory.
+              </Text>
+            ) : (
+              <VStack alignItems="start" as="form" onSubmit={onCreateOrder}>
+                {forSaleItems.length > 0 && (
+                  <Text mt={4} size="sm">
+                    Are you sure you want to make an offer for this item? There
+                    are already items for sale, which you can{' '}
+                    <Text
+                      as="span"
+                      color="blue"
+                      cursor="pointer"
+                      onClick={onScrollToTabs}
+                      _hover={{
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      view below
+                    </Text>
+                    .
+                  </Text>
+                )}
+                <Text mt={4}>How much $GOLD are you offering?</Text>
+                <InputGroup>
+                  <InputLeftAddon>$GOLD</InputLeftAddon>
+                  <Input
+                    isDisabled={isCreatingOrder}
+                    min={0}
+                    onChange={e => setOrderPrice(e.target.value)}
+                    placeholder="0.00"
+                    py={0}
+                    type="number"
+                    value={orderPrice}
+                  />
+                </InputGroup>
+                <Button
+                  isLoading={isCreatingOrder}
+                  size="sm"
+                  type="submit"
+                  w="100%"
+                >
+                  Make an Offer for {selectedItem.name}
+                </Button>
+              </VStack>
+            ))}
           {orderType === OrderType.Selling &&
             (userItemBalance === '0' ? (
               <Text mt={4} size="sm">
                 You don&apos;t have any {selectedItem.name} in your inventory.
               </Text>
             ) : (
-              <>
+              <VStack alignItems="start" as="form" onSubmit={onCreateOrder}>
+                {goldOfferItems.length > 0 && (
+                  <Text mt={4} size="sm">
+                    Are you sure you want to put your item up for sale? There
+                    are already offers for this item, which you can{' '}
+                    <Text
+                      as="span"
+                      color="blue"
+                      cursor="pointer"
+                      onClick={onScrollToTabs}
+                      _hover={{
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      view below
+                    </Text>
+                    .
+                  </Text>
+                )}
                 <Text mt={4}>How much $GOLD are you asking for?</Text>
                 <InputGroup>
                   <InputLeftAddon>$GOLD</InputLeftAddon>
@@ -551,69 +690,50 @@ export const MarketplaceItem = (): JSX.Element => {
                 </InputGroup>
                 <Button
                   isLoading={isCreatingOrder}
-                  onClick={() =>
-                    onCreateOrder(
-                      TokenType.ERC1155,
-                      TokenType.ERC20,
-                      '1',
-                      orderPrice,
-                    )
-                  }
                   size="sm"
+                  type="submit"
                   w="100%"
                 >
                   List {selectedItem.name} for sale
                 </Button>
-              </>
+              </VStack>
             ))}
         </Stack>
       </HStack>
 
-      <Tabs mt={12} variant="enclosed">
+      <Tabs index={tabIndex} mt={12} ref={tabsRef} variant="enclosed" w="100%">
         <TabList>
-          <Tab>Item Listings</Tab>
-          <Tab>$GOLD Offers</Tab>
-          <Tab>History</Tab>
+          <Tab onClick={() => setTabIndex(0)}>{MarketplaceFilter.ForSale}</Tab>
+          <Tab onClick={() => setTabIndex(1)}>
+            {MarketplaceFilter.GoldOffers}
+          </Tab>
+          <Tab onClick={() => setTabIndex(2)}>
+            {MarketplaceFilter.MyListings}
+          </Tab>
         </TabList>
         <TabPanels>
           <TabPanel>
             <Stack gap={2}>
-              {activeOrders
-                .filter(
-                  order =>
-                    order.offer.token == itemsContract &&
-                    order.consideration.token == goldToken &&
-                    order.offer.identifier == selectedItemId,
-                )
-                .filter(order => order.orderStatus == '1')
-                .map((order, i) => (
-                  <OrderRow
-                    key={`order-${i}`}
-                    item={selectedItem}
-                    order={order}
-                    refreshOrders={refreshOrders}
-                  />
-                ))}
+              {forSaleItems.map((order, i) => (
+                <OrderRow
+                  key={`order-${i}`}
+                  item={selectedItem}
+                  order={order}
+                  refreshOrders={refreshOrders}
+                />
+              ))}
             </Stack>
           </TabPanel>
           <TabPanel>
             <Stack gap={2}>
-              {activeOrders
-                .filter(
-                  order =>
-                    order.offer.token == goldToken &&
-                    order.consideration.token == itemsContract &&
-                    order.consideration.identifier == selectedItemId,
-                )
-                .filter(order => order.orderStatus == '1')
-                .map((order, i) => (
-                  <OrderRow
-                    key={`order-${i}`}
-                    item={selectedItem}
-                    order={order}
-                    refreshOrders={refreshOrders}
-                  />
-                ))}
+              {goldOfferItems.map((order, i) => (
+                <OrderRow
+                  key={`order-${i}`}
+                  item={selectedItem}
+                  order={order}
+                  refreshOrders={refreshOrders}
+                />
+              ))}
             </Stack>
           </TabPanel>
           <TabPanel>Coming soon...</TabPanel>

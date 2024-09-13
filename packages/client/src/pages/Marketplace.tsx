@@ -27,23 +27,20 @@ import { MarketplaceRow } from '../components/MarketplaceRow';
 import { Pagination } from '../components/Pagination';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
-import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { etherToFixedNumber } from '../utils/helpers';
 import {
   type ArmorTemplate,
   ItemFilterOptions,
   ItemType,
+  MarketplaceFilter,
   OrderType,
   type SpellTemplate,
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
-
-enum MarketplaceFilter {
-  ForSale = 'For Sale',
-  GoldOffers = '$GOLD Offers',
-  MyListings = 'My Listings',
-}
 
 enum SortOptions {
   Level = 'Level',
@@ -58,6 +55,7 @@ export const Marketplace = (): JSX.Element => {
   const navigate = useNavigate();
   const { isConnected } = useAccount();
 
+  const { delegatorAddress, isSynced } = useMUD();
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
@@ -70,7 +68,7 @@ export const Marketplace = (): JSX.Element => {
     isLoading: isLoadingOrders,
     lowestPrices,
   } = useOrders();
-  const { character } = useCharacter();
+  const { character, isRefreshing } = useCharacter();
 
   const {
     isOpen: isCreateListingModalOpen,
@@ -103,12 +101,33 @@ export const Marketplace = (): JSX.Element => {
   const [pageLimit, setPageLimit] = useState(1);
   const [length, setLength] = useState(1);
 
+  // Redirect to home if synced, but missing other requirements
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
       window.location.reload();
+      return;
     }
-  }, [isConnected, navigate]);
+
+    if (!isSynced) return;
+
+    if (!delegatorAddress) {
+      navigate(HOME_PATH);
+      return;
+    }
+
+    if (!character?.locked && !isRefreshing) {
+      navigate(CHARACTER_CREATION_PATH);
+      return;
+    }
+  }, [
+    character,
+    delegatorAddress,
+    isConnected,
+    isRefreshing,
+    isSynced,
+    navigate,
+  ]);
 
   const unfilteredItems = useMemo(
     () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
@@ -254,18 +273,41 @@ export const Marketplace = (): JSX.Element => {
     );
   }
 
+  if (!character) {
+    return (
+      <VStack w="100%">
+        <Button
+          alignSelf="start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
+          onClick={() => navigate(GAME_BOARD_PATH)}
+          size="xs"
+          variant="outline"
+        >
+          Back to Game Board
+        </Button>
+        <Text mt={12}>An erro occurred</Text>
+      </VStack>
+    );
+  }
+
   return (
     <VStack>
-      <Button
-        alignSelf="start"
-        leftIcon={<IoMdArrowRoundBack />}
-        my={4}
-        onClick={() => navigate(GAME_BOARD_PATH)}
-        size="xs"
-        variant="outline"
-      >
-        Back to Game Board
-      </Button>
+      <HStack justify="space-between" w="100%">
+        <Button
+          alignSelf="start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
+          onClick={() => navigate(GAME_BOARD_PATH)}
+          size="xs"
+          variant="outline"
+        >
+          Back to Game Board
+        </Button>
+        <Text size="sm">
+          $GOLD Balance: {etherToFixedNumber(character.goldBalance)}
+        </Text>
+      </HStack>
       <Stack
         direction={{ base: 'column', md: 'row' }}
         mb={8}

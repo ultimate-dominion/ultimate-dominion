@@ -28,6 +28,12 @@ export enum ItemType {
   QuestItem,
 }
 
+export enum MarketplaceFilter {
+  ForSale = 'For Sale',
+  GoldOffers = '$GOLD Offers',
+  MyListings = 'My Listings',
+}
+
 export enum MobType {
   Monster,
   NPC,
