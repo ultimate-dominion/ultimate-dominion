@@ -71,7 +71,8 @@ export const StatsPanel = (): JSX.Element => {
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
   const allItems = useMemo(
-    () => [...equippedArmor, ...equippedSpells, ...equippedWeapons],
+    () =>
+      [...equippedArmor, ...equippedSpells, ...equippedWeapons].filter(Boolean),
     [equippedArmor, equippedSpells, equippedWeapons],
   );
 
