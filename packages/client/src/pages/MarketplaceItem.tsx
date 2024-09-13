@@ -25,11 +25,13 @@ import { useComponentValue } from '@latticexyz/react';
 import { getComponentValue } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FaCheckCircle } from 'react-icons/fa';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Address, parseEther } from 'viem';
 import { useAccount } from 'wagmi';
 
+import { InfoModal } from '../components/InfoModal';
 import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
 import { useAllowance } from '../contexts/AllowanceContext';
@@ -95,7 +97,16 @@ export const MarketplaceItem = (): JSX.Element => {
   const [orderPrice, setOrderPrice] = useState('');
   const [tabIndex, setTabIndex] = useState(0);
 
-  const { isOpen, onClose, onOpen } = useDisclosure();
+  const {
+    isOpen: isAllowanceModalOpen,
+    onClose: onCloseAllowanceModal,
+    onOpen: onOpenAllowanceModal,
+  } = useDisclosure();
+  const {
+    isOpen: isConfirmationModalOpen,
+    onClose: onCloseConfirmationModal,
+    onOpen: onOpenConfirmationModal,
+  } = useDisclosure();
 
   const { goldToken: goldTokenAddress, items: itemsAddress } =
     useComponentValue(UltimateDominionConfig, singletonEntity) ?? {
@@ -174,6 +185,12 @@ export const MarketplaceItem = (): JSX.Element => {
     return !(parseEther(orderPrice) > BigInt('0'));
   }, [orderPrice]);
 
+  const insufficientGold = useMemo(() => {
+    if (!userCharacter) return false;
+    if (orderType === OrderType.Selling) return false;
+    return parseEther(orderPrice) > BigInt(userCharacter.goldBalance);
+  }, [orderPrice, orderType, userCharacter]);
+
   const onCreateOrder = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -192,16 +209,21 @@ export const MarketplaceItem = (): JSX.Element => {
           return;
         }
 
+        if (insufficientGold) {
+          setShowError(true);
+          return;
+        }
+
         if (
           orderType === OrderType.Buying &&
-          goldAllowance < BigInt(orderPrice)
+          goldAllowance < parseEther(orderPrice)
         ) {
-          onOpen();
+          onOpenAllowanceModal();
           return;
         }
 
         if (orderType === OrderType.Selling && !itemsAllowance) {
-          onOpen();
+          onOpenAllowanceModal();
           return;
         }
 
@@ -260,7 +282,8 @@ export const MarketplaceItem = (): JSX.Element => {
         renderSuccess('Order placed successfully!');
         refreshCharacter();
         refreshOrders();
-        onClose();
+        onCloseAllowanceModal();
+        onOpenConfirmationModal();
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to create order.', e);
       } finally {
@@ -271,11 +294,13 @@ export const MarketplaceItem = (): JSX.Element => {
       createOrder,
       goldAllowance,
       goldTokenAddress,
+      insufficientGold,
       invalidOrderPrice,
       itemsAddress,
       itemsAllowance,
-      onClose,
-      onOpen,
+      onCloseAllowanceModal,
+      onOpenAllowanceModal,
+      onOpenConfirmationModal,
       orderPrice,
       orderType,
       refreshCharacter,
@@ -321,6 +346,17 @@ export const MarketplaceItem = (): JSX.Element => {
         order.consideration.identifier === selectedItem.tokenId,
     );
   }, [activeOrders, selectedItem]);
+
+  const myListings = useMemo(() => {
+    if (!selectedItem) return [];
+    return activeOrders.filter(
+      order =>
+        (order.offerer === userCharacter?.owner &&
+          order.offer.identifier === selectedItem.tokenId) ||
+        (order.consideration.recipient === userCharacter?.owner &&
+          order.consideration.identifier === selectedItem.tokenId),
+    );
+  }, [activeOrders, selectedItem, userCharacter]);
 
   if (isLoadingItemTemplates || isLoadingOrders) {
     return (
@@ -574,7 +610,7 @@ export const MarketplaceItem = (): JSX.Element => {
             </Button>
           </HStack>
           {orderType === OrderType.Buying &&
-            (userCharacter.goldBalance === '0' ? (
+            (userCharacter.goldBalance === BigInt(0) ? (
               <Text mt={4} size="sm">
                 You don&apos;t have any $GOLD in your inventory.
               </Text>
@@ -604,7 +640,6 @@ export const MarketplaceItem = (): JSX.Element => {
                     <InputLeftAddon>$GOLD</InputLeftAddon>
                     <Input
                       isDisabled={isCreatingOrder}
-                      min={0}
                       onChange={e => setOrderPrice(e.target.value)}
                       placeholder="0.00"
                       py={0}
@@ -615,6 +650,11 @@ export const MarketplaceItem = (): JSX.Element => {
                   {showError && invalidOrderPrice && (
                     <FormHelperText color="red">
                       Offer price must be greater than 0.
+                    </FormHelperText>
+                  )}
+                  {showError && insufficientGold && (
+                    <FormHelperText color="red">
+                      You don&apos;t have enough $GOLD to make this offer.
                     </FormHelperText>
                   )}
                 </FormControl>
@@ -659,7 +699,6 @@ export const MarketplaceItem = (): JSX.Element => {
                     <InputLeftAddon>$GOLD</InputLeftAddon>
                     <Input
                       isDisabled={isCreatingOrder}
-                      min={0}
                       onChange={e => setOrderPrice(e.target.value)}
                       placeholder="0.00"
                       py={0}
@@ -721,18 +760,64 @@ export const MarketplaceItem = (): JSX.Element => {
               ))}
             </Stack>
           </TabPanel>
-          <TabPanel>Coming soon...</TabPanel>
+          <TabPanel>
+            <Stack gap={2}>
+              {myListings.map((order, i) => (
+                <OrderRow
+                  key={`order-${i}`}
+                  item={selectedItem}
+                  order={order}
+                  refreshOrders={refreshOrders}
+                />
+              ))}
+            </Stack>
+          </TabPanel>
         </TabPanels>
       </Tabs>
       <MarketplaceAllowanceModal
         isCreatingOrder={isCreatingOrder}
-        isOpen={isOpen}
+        isOpen={isAllowanceModalOpen}
         itemName={selectedItem.name}
-        onClose={onClose}
+        onClose={onCloseAllowanceModal}
         onCreateOrder={onCreateOrder}
         orderPrice={orderPrice}
         orderType={orderType}
       />
+      <InfoModal
+        heading="Listing created!"
+        isOpen={isConfirmationModalOpen}
+        onClose={() => {
+          setOrderPrice('');
+          onCloseConfirmationModal();
+        }}
+      >
+        <VStack>
+          <FaCheckCircle color="green" size={60} />
+          <Text my={4}>
+            {orderType === OrderType.Buying
+              ? `Your offer of ${orderPrice} $GOLD for a ${selectedItem.name} has been placed.`
+              : `Your listing of a ${selectedItem.name} for ${orderPrice} $GOLD has been created.`}{' '}
+            You can view your listings on the{' '}
+            <Text
+              as="span"
+              color="blue"
+              onClick={() => {
+                onScrollToTabs();
+                setTabIndex(2);
+                setOrderPrice('');
+                onCloseConfirmationModal();
+              }}
+              _hover={{
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              &quot;My Listings&quot; tab
+            </Text>{' '}
+            below.
+          </Text>
+        </VStack>
+      </InfoModal>
     </VStack>
   );
 };

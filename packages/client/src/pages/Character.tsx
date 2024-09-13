@@ -25,7 +25,7 @@ import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
-import { formatEther, hexToString, zeroHash } from 'viem';
+import { hexToString, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { ClassSymbol } from '../components/ClassSymbol';
@@ -48,6 +48,7 @@ import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
   decodeBaseStats,
   decodeCharacterId,
+  etherToFixedNumber,
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
@@ -139,7 +140,7 @@ export const CharacterPage = (): JSX.Element => {
         currentHp: characterStats.currentHp.toString(),
         entityClass: characterStats.class,
         experience: characterStats.experience.toString(),
-        goldBalance: formatEther(goldBalance as bigint).toString(),
+        goldBalance,
         id: id as Entity,
         inBattle,
         intelligence: characterStats.intelligence.toString(),
@@ -341,10 +342,7 @@ export const CharacterPage = (): JSX.Element => {
                 <HStack alignItems="start">
                   <Box>
                     <Text fontWeight="bold">
-                      {Number(character.goldBalance).toLocaleString('en', {
-                        useGrouping: true,
-                      })}{' '}
-                      $GOLD
+                      {etherToFixedNumber(character.goldBalance)} $GOLD
                     </Text>
                     <Text>
                       <Text

@@ -111,7 +111,7 @@ export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
   baseStats: EntityStats;
-  goldBalance: string;
+  goldBalance: bigint;
   id: Entity;
   inBattle: boolean;
   locked: boolean;

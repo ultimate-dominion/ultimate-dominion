@@ -188,7 +188,8 @@ export const MarketplaceAllowanceModal = ({
   }
 
   if (
-    (goldAllowance >= BigInt(orderPrice) && orderType === OrderType.Buying) ||
+    (goldAllowance >= parseEther(orderPrice) &&
+      orderType === OrderType.Buying) ||
     (itemsAllowance && orderType === OrderType.Selling)
   ) {
     return (
