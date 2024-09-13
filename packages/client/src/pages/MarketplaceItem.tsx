@@ -330,21 +330,32 @@ export const MarketplaceItem = (): JSX.Element => {
 
   const forSaleItems = useMemo(() => {
     if (!selectedItem) return [];
-    return activeOrders.filter(
-      order =>
-        order.offer.tokenType === TokenType.ERC1155 &&
-        order.offer.identifier === selectedItem.tokenId,
-    );
+    return activeOrders
+      .filter(
+        order =>
+          order.offer.tokenType === TokenType.ERC1155 &&
+          order.offer.identifier === selectedItem.tokenId,
+      )
+      .sort((a, b) => {
+        return Number(
+          parseEther(b.consideration.amount) -
+            parseEther(a.consideration.amount),
+        );
+      });
   }, [activeOrders, selectedItem]);
 
   const goldOfferItems = useMemo(() => {
     if (!selectedItem) return [];
-    return activeOrders.filter(
-      order =>
-        order.offer.tokenType === TokenType.ERC20 &&
-        order.consideration.tokenType === TokenType.ERC1155 &&
-        order.consideration.identifier === selectedItem.tokenId,
-    );
+    return activeOrders
+      .filter(
+        order =>
+          order.offer.tokenType === TokenType.ERC20 &&
+          order.consideration.tokenType === TokenType.ERC1155 &&
+          order.consideration.identifier === selectedItem.tokenId,
+      )
+      .sort((a, b) => {
+        return Number(parseEther(b.offer.amount) - parseEther(a.offer.amount));
+      });
   }, [activeOrders, selectedItem]);
 
   const myListings = useMemo(() => {

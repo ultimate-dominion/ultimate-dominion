@@ -129,12 +129,8 @@ export const OrdersProvider = ({
 
     activeOrders.forEach(order => {
       const price = lowestPrices[order.offer.identifier];
-      if (
-        !price ||
-        BigInt(
-          order.consideration.amount && order.consideration.token === goldToken,
-        ) < BigInt(price)
-      ) {
+      if (order.consideration.token !== goldToken) return;
+      if (!price || parseEther(order.consideration.amount) < BigInt(price)) {
         lowestPrices[order.offer.identifier] = parseEther(
           order.consideration.amount,
         );
@@ -149,11 +145,8 @@ export const OrdersProvider = ({
 
     activeOrders.forEach(order => {
       const offer = highestOffers[order.consideration.identifier];
-      if (
-        !offer ||
-        BigInt(order.offer.amount) > BigInt(offer) ||
-        order.offer.tokenType === TokenType.ERC20
-      ) {
+      if (order.offer.token !== goldToken) return;
+      if (!offer || parseEther(order.offer.amount) > BigInt(offer)) {
         highestOffers[order.consideration.identifier] = parseEther(
           order.offer.amount,
         );
@@ -161,7 +154,7 @@ export const OrdersProvider = ({
     });
 
     return highestOffers;
-  }, [activeOrders]);
+  }, [activeOrders, goldToken]);
 
   return (
     <OrdersContext.Provider

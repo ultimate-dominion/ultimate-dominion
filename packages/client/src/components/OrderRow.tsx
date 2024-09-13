@@ -3,17 +3,21 @@ import {
   Button,
   Flex,
   HStack,
-  Stack,
   Text,
+  Tooltip,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useState } from 'react';
+import { useEntityQuery } from '@latticexyz/react';
+import { getComponentValueStrict, Has, HasValue } from '@latticexyz/recs';
+import { useCallback, useMemo, useState } from 'react';
 import { BiPurchaseTagAlt } from 'react-icons/bi';
 import { FaTimes } from 'react-icons/fa';
+import { hexToString } from 'viem';
 
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { getEmoji, removeEmoji } from '../utils/helpers';
+import { getEmoji, removeEmoji, shortenAddress } from '../utils/helpers';
 import {
   type ArmorTemplate,
   type Order,
@@ -34,12 +38,22 @@ export const OrderRow = ({
   refreshOrders,
 }: OrderRowProps): JSX.Element => {
   const {
+    components: { Characters },
     systemCalls: { cancelOrder, fulfillOrder },
   } = useMUD();
   const { renderSuccess, renderError } = useToast();
+  const { character } = useCharacter();
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [isFilling, setIsFilling] = useState(false);
+
+  const ownerCharacterName = useEntityQuery([
+    Has(Characters),
+    HasValue(Characters, { owner: order.offerer }),
+  ]).map(entity => {
+    const { name: nameBytes } = getComponentValueStrict(Characters, entity);
+    return hexToString(nameBytes as `0x${string}`, { size: 32 });
+  })[0];
 
   const onCancelOrder = useCallback(async () => {
     try {
@@ -79,6 +93,11 @@ export const OrderRow = ({
     }
   }, [fulfillOrder, order, refreshOrders, renderError, renderSuccess]);
 
+  const isOfferer = useMemo(
+    () => order.offerer === character?.owner,
+    [character, order.offerer],
+  );
+
   const { consideration, offer } = order;
 
   return (
@@ -101,7 +120,9 @@ export const OrderRow = ({
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
             <Text size={{ base: '2xs', lg: 'sm' }}>
-              From: {consideration.recipient}
+              From: {ownerCharacterName} {'('}
+              {shortenAddress(consideration.recipient)}
+              {')'}
             </Text>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
@@ -116,31 +137,50 @@ export const OrderRow = ({
           </Text>
         </VStack>
       </Flex>
-      <HStack>
-        <Stack display={{ base: 'none', md: 'block' }} w="100px">
-          <Button
-            ml={1}
-            p={3}
-            size="sm"
-            variant="solid"
-            isLoading={isFilling}
-            onClick={onFulfillOrder}
+      <HStack mr={4}>
+        {!isOfferer && (
+          <Tooltip
+            aria-label={
+              offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
+            }
+            bg="black"
+            hasArrow
+            label={
+              offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
+            }
+            placement="top"
           >
-            <BiPurchaseTagAlt />
-          </Button>{' '}
-          <Button
-            ml={1}
-            p={3}
-            size="sm"
-            variant="ghost"
-            backgroundColor="red"
-            color="white"
-            isLoading={isCancelling}
-            onClick={onCancelOrder}
+            <Button
+              isLoading={isFilling}
+              p={2}
+              onClick={onFulfillOrder}
+              size="sm"
+              variant="solid"
+            >
+              <BiPurchaseTagAlt />
+            </Button>
+          </Tooltip>
+        )}
+        {isOfferer && (
+          <Tooltip
+            aria-label="Cancel order"
+            bg="black"
+            hasArrow
+            label="Cancel order"
+            placement="top"
           >
-            <FaTimes />
-          </Button>
-        </Stack>
+            <Button
+              bgColor="red"
+              color="white"
+              isLoading={isCancelling}
+              onClick={onCancelOrder}
+              p={2}
+              size="sm"
+            >
+              <FaTimes />
+            </Button>
+          </Tooltip>
+        )}
       </HStack>
     </Flex>
   );
