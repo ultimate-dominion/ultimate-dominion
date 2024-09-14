@@ -458,8 +458,25 @@ export const MarketplaceItem = (): JSX.Element => {
         </Text>
       </Stack>
       <Heading textAlign="center">{removeEmoji(selectedItem.name)}</Heading>
-      <HStack alignItems="start" mt={12} spacing={12} w="100%">
-        <Stack w="50%">
+      <Avatar
+        backgroundColor="transparent"
+        borderRadius={0}
+        display={{ base: 'flex', lg: 'none' }}
+        h={14}
+        mt={4}
+        name={' '}
+        size="2xl"
+      >
+        {getEmoji(selectedItem.name)}
+      </Avatar>
+      <Stack
+        alignItems="start"
+        direction={{ base: 'column-reverse', lg: 'row' }}
+        mt={{ base: 4, lg: 12 }}
+        spacing={12}
+        w="100%"
+      >
+        <Stack p={{ base: 4, sm: 0 }} w={{ base: '100%', lg: '50%' }}>
           <Text fontWeight="bold" mb={2} textAlign="center">
             Description
           </Text>
@@ -467,16 +484,24 @@ export const MarketplaceItem = (): JSX.Element => {
             <Avatar
               backgroundColor="transparent"
               borderRadius={0}
+              display={{ base: 'none', lg: 'flex' }}
               h={14}
               name={' '}
               size="2xl"
             >
               {getEmoji(selectedItem.name)}
             </Avatar>
-            <Text size="sm">{selectedItem.description}</Text>
+            <Text size="sm" textAlign={{ base: 'center', lg: 'start' }}>
+              {selectedItem.description}
+            </Text>
           </HStack>
-          <HStack alignItems="start" mt={8} spacing={8}>
-            <VStack spacing={1} w="50%">
+          <Stack
+            alignItems="start"
+            direction={{ base: 'column', sm: 'row' }}
+            mt={8}
+            spacing={8}
+          >
+            <VStack spacing={1} w={{ base: '100%', sm: '50%' }}>
               <Text fontWeight="bold" mb={2} textAlign="center">
                 Stats
               </Text>
@@ -557,7 +582,7 @@ export const MarketplaceItem = (): JSX.Element => {
               )}
             </VStack>
 
-            <VStack spacing={1} w="50%">
+            <VStack spacing={1} w={{ base: '100%', sm: '50%' }}>
               <Text fontWeight="bold" mb={2} textAlign="center">
                 Requirements
               </Text>
@@ -582,10 +607,13 @@ export const MarketplaceItem = (): JSX.Element => {
                 <Text>{selectedItem.statRestrictions.minStrength}</Text>
               </HStack>
             </VStack>
-          </HStack>
+          </Stack>
         </Stack>
-        <Divider orientation="vertical" />
-        <Stack w="50%">
+        <Divider
+          display={{ base: 'none', lg: 'block' }}
+          orientation="vertical"
+        />
+        <Stack p={{ base: 4, sm: 0 }} w={{ base: '100%', lg: '50%' }}>
           <Text fontWeight="bold" mb={2} textAlign="center">
             Create a request
           </Text>
@@ -685,6 +713,7 @@ export const MarketplaceItem = (): JSX.Element => {
                   )}
                 </FormControl>
                 <Button
+                  fontSize={{ base: 'xs', sm: 'sm' }}
                   isLoading={isCreatingOrder}
                   size="sm"
                   type="submit"
@@ -739,6 +768,7 @@ export const MarketplaceItem = (): JSX.Element => {
                   )}
                 </FormControl>
                 <Button
+                  fontSize={{ base: 'xs', sm: 'sm' }}
                   isLoading={isCreatingOrder}
                   size="sm"
                   type="submit"
@@ -749,15 +779,26 @@ export const MarketplaceItem = (): JSX.Element => {
               </VStack>
             ))}
         </Stack>
-      </HStack>
+      </Stack>
 
       <Tabs index={tabIndex} mt={12} ref={tabsRef} variant="line" w="100%">
-        <TabList>
-          <Tab onClick={() => setTabIndex(0)}>{MarketplaceFilter.ForSale}</Tab>
-          <Tab onClick={() => setTabIndex(1)}>
+        <TabList justifyContent={{ base: 'center', lg: 'start' }}>
+          <Tab
+            fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
+            onClick={() => setTabIndex(0)}
+          >
+            {MarketplaceFilter.ForSale}
+          </Tab>
+          <Tab
+            fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
+            onClick={() => setTabIndex(1)}
+          >
             {MarketplaceFilter.GoldOffers}
           </Tab>
-          <Tab onClick={() => setTabIndex(2)}>
+          <Tab
+            fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
+            onClick={() => setTabIndex(2)}
+          >
             {MarketplaceFilter.MyListings}
           </Tab>
         </TabList>
@@ -807,7 +848,8 @@ export const MarketplaceItem = (): JSX.Element => {
 
           <HStack
             justify="center"
-            my={5}
+            mt={{ base: 0, lg: 5 }}
+            mb={5}
             visibility={forSaleItems.length > 0 ? 'visible' : 'hidden'}
             w="100%"
           >

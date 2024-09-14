@@ -169,13 +169,18 @@ export const OrderRow = ({
       <Flex>
         <Avatar
           borderRadius={0}
-          size="lg"
+          size={{ base: 'md', sm: 'lg' }}
           name={' '}
-          backgroundColor={'grey300'}
+          backgroundColor="grey300"
         >
           {getEmoji(item.name)}
         </Avatar>
-        <VStack align="start" justify="center" ml={4}>
+        <VStack
+          align="start"
+          justify="center"
+          ml={{ base: 2, sm: 4 }}
+          spacing={{ base: 1, sm: 2 }}
+        >
           <HStack w="100%">
             <Text size={{ base: '2xs', lg: 'sm' }}>
               From: {ownerCharacterName} {'('}
@@ -183,7 +188,7 @@ export const OrderRow = ({
               {')'}
             </Text>
           </HStack>
-          <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
+          <Text fontWeight="bold" size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
             Wants {consideration.amount}{' '}
             {consideration.tokenType === TokenType.ERC20
               ? '$GOLD'
@@ -195,7 +200,7 @@ export const OrderRow = ({
           </Text>
         </VStack>
       </Flex>
-      <HStack mr={4}>
+      <HStack ml={2} mr={{ base: 2, sm: 4 }}>
         {!isOfferer && (
           <Tooltip
             aria-label={
