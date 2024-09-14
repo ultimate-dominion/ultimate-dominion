@@ -438,21 +438,25 @@ export const MarketplaceItem = (): JSX.Element => {
 
   return (
     <VStack>
-      <HStack justify="space-between" w="100%">
+      <Stack
+        direction={{ base: 'column', sm: 'row' }}
+        justify="space-between"
+        my={4}
+        w="100%"
+      >
         <Button
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
-          my={4}
           onClick={() => navigate(MARKETPLACE_PATH)}
           size="xs"
           variant="outline"
         >
           Back to Marketplace
         </Button>
-        <Text size="sm">
+        <Text size={{ base: '2xs', sm: 'sm' }}>
           $GOLD Balance: {etherToFixedNumber(userCharacter.goldBalance)}
         </Text>
-      </HStack>
+      </Stack>
       <Heading textAlign="center">{removeEmoji(selectedItem.name)}</Heading>
       <HStack alignItems="start" mt={12} spacing={12} w="100%">
         <Stack w="50%">

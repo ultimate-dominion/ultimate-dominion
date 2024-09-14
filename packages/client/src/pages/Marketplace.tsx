@@ -293,21 +293,25 @@ export const Marketplace = (): JSX.Element => {
 
   return (
     <VStack>
-      <HStack justify="space-between" w="100%">
+      <Stack
+        direction={{ base: 'column', sm: 'row' }}
+        justify="space-between"
+        my={4}
+        w="100%"
+      >
         <Button
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
-          my={4}
           onClick={() => navigate(GAME_BOARD_PATH)}
           size="xs"
           variant="outline"
         >
           Back to Game Board
         </Button>
-        <Text size="sm">
+        <Text size={{ base: '2xs', sm: 'sm' }}>
           $GOLD Balance: {etherToFixedNumber(character.goldBalance)}
         </Text>
-      </HStack>
+      </Stack>
       <Stack
         direction={{ base: 'column', md: 'row' }}
         mb={8}
