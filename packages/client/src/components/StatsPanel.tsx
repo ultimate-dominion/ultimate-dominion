@@ -24,6 +24,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
+import { etherToFixedNumber } from '../utils/helpers';
 import { Level } from './Level';
 
 const MAX_EQUIPPED_ITEMS = MAX_EQUIPPED_ARMOR + MAX_EQUIPPED_WEAPONS;
@@ -70,7 +71,8 @@ export const StatsPanel = (): JSX.Element => {
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
   const allItems = useMemo(
-    () => [...equippedArmor, ...equippedSpells, ...equippedWeapons],
+    () =>
+      [...equippedArmor, ...equippedSpells, ...equippedWeapons].filter(Boolean),
     [equippedArmor, equippedSpells, equippedWeapons],
   );
 
@@ -154,9 +156,7 @@ export const StatsPanel = (): JSX.Element => {
       <Level currentLevel={character.level} levelPercent={levelPercent} />
 
       <HStack alignItems="start" w="100%">
-        <Text fontWeight="bold">
-          {Number(goldBalance).toLocaleString()} $GOLD
-        </Text>
+        <Text fontWeight="bold">{etherToFixedNumber(goldBalance)} $GOLD</Text>
         <Spacer />
         <Text>
           <Text

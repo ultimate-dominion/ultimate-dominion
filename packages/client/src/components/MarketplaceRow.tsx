@@ -7,6 +7,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useMemo } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,21 +16,32 @@ import { getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
   ItemType,
+  OrderType,
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
 
 export const MarketplaceRow = ({
-  floor,
+  highestOffer,
   itemType,
+  lowestPrice,
   minLevel,
   name,
+  orderType,
   tokenId,
   ...item
 }: (ArmorTemplate | SpellTemplate | WeaponTemplate) & {
-  floor: string;
+  highestOffer: string;
+  lowestPrice: string;
+  orderType: OrderType;
 }): JSX.Element => {
   const navigate = useNavigate();
+
+  const newSearchParams = useMemo(() => {
+    const searchParams = new URLSearchParams();
+    searchParams.set('orderType', orderType);
+    return searchParams;
+  }, [orderType]);
 
   return (
     <Flex
@@ -37,7 +49,7 @@ export const MarketplaceRow = ({
       borderColor="grey400"
       borderRadius={2}
       justify="space-between"
-      onClick={() => navigate(`${ITEM_PATH}${tokenId}`)}
+      onClick={() => navigate(`${ITEM_PATH}${tokenId}?${newSearchParams}`)}
       w="100%"
       _hover={{
         cursor: 'pointer',
@@ -75,8 +87,9 @@ export const MarketplaceRow = ({
         </VStack>
       </Flex>
       <HStack>
-        <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
+        <HStack w={{ base: '0px', sm: '250px', md: '350px', lg: '500px' }}>
           <Text
+            display={{ base: 'none', md: 'block' }}
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -85,13 +98,26 @@ export const MarketplaceRow = ({
             {Number(minLevel).toLocaleString()}
           </Text>
           <Text
-            display={{ base: 'none', lg: 'block' }}
+            display={{ base: 'none', sm: 'block' }}
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
             w="100%"
           >
-            {Number(floor) == 0 ? 'N/A' : Number(floor).toLocaleString()}
+            {Number(lowestPrice) == 0
+              ? 'N/A'
+              : `${Number(lowestPrice).toLocaleString()} $GOLD`}
+          </Text>
+          <Text
+            display={{ base: 'none', sm: 'block' }}
+            fontWeight={500}
+            size={{ base: 'xs', lg: 'md' }}
+            textAlign="center"
+            w="100%"
+          >
+            {Number(highestOffer) == 0
+              ? 'N/A'
+              : `${Number(highestOffer).toLocaleString()} $GOLD`}
           </Text>
         </HStack>
         <Box display={{ base: 'none', md: 'block' }} w="50px">

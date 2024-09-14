@@ -47,7 +47,12 @@ export const Header = ({
         >
           Wallet Details
         </Button>
-        <Tooltip label="Your session wallet balance">
+        <Tooltip
+          aria-label="Your session wallet balance"
+          bg="black"
+          hasArrow
+          label="Your session wallet balance"
+        >
           <Text size="2xs">Balance: {Number(burnerBalance).toFixed(5)}</Text>
         </Tooltip>
       </HStack>

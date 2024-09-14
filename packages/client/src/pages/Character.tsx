@@ -25,7 +25,7 @@ import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
-import { formatEther, hexToString, zeroHash } from 'viem';
+import { hexToString, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { ClassSymbol } from '../components/ClassSymbol';
@@ -48,6 +48,7 @@ import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
   decodeBaseStats,
   decodeCharacterId,
+  etherToFixedNumber,
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
@@ -139,7 +140,7 @@ export const CharacterPage = (): JSX.Element => {
         currentHp: characterStats.currentHp.toString(),
         entityClass: characterStats.class,
         experience: characterStats.experience.toString(),
-        goldBalance: formatEther(goldBalance as bigint).toString(),
+        goldBalance,
         id: id as Entity,
         inBattle,
         intelligence: characterStats.intelligence.toString(),
@@ -341,10 +342,7 @@ export const CharacterPage = (): JSX.Element => {
                 <HStack alignItems="start">
                   <Box>
                     <Text fontWeight="bold">
-                      {Number(character.goldBalance).toLocaleString('en', {
-                        useGrouping: true,
-                      })}{' '}
-                      $GOLD
+                      {etherToFixedNumber(character.goldBalance)} $GOLD
                     </Text>
                     <Text>
                       <Text
@@ -443,17 +441,11 @@ export const CharacterPage = (): JSX.Element => {
 };
 
 const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
-  const { renderError } = useToast();
-
   const {
-    components: { CharacterEquipment, ItemsOwners },
+    components: { CharacterEquipment },
   } = useMUD();
-  const {
-    armorTemplates,
-    isLoading: isLoadingItemTemplates,
-    spellTemplates,
-    weaponTemplates,
-  } = useItems();
+  const { isLoading: isLoadingItemTemplates } = useItems();
+  const { inventoryArmor, inventorySpells, inventoryWeapons } = useCharacter();
 
   const {
     isOpen: isItemModalOpen,
@@ -461,10 +453,6 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     onOpen: onOpenItemModal,
   } = useDisclosure();
 
-  const [armor, setArmor] = useState<Armor[]>([]);
-  const [weapons, setWeapons] = useState<Weapon[]>([]);
-  const [spells, setSpells] = useState<Spell[]>([]);
-  const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [selectedItem, setSelectedItem] = useState<
     Armor | Spell | Weapon | null
   >(null);
@@ -480,101 +468,15 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const maxArmorEquipped = equippedArmor.length === MAX_EQUIPPED_ARMOR;
   const maxWeaponsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
 
-  const fetchCharacterItems = useCallback(
-    (_character: Character) => {
-      try {
-        const _armor = armorTemplates
-          .map(armor => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(armor.tokenId),
-              },
-            );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
-
-            return {
-              ...armor,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
-              itemId: tokenOwnersEntity,
-              owner: _character.owner,
-            } as Armor;
-          })
-          .filter(a => a.balance !== '0');
-
-        const _spells = spellTemplates
-          .map(spell => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(spell.tokenId),
-              },
-            );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
-
-            return {
-              ...spell,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
-              itemId: tokenOwnersEntity,
-              owner: _character.owner,
-            } as Spell;
-          })
-          .filter(s => s.balance !== '0');
-
-        const _weapons = weaponTemplates
-          .map(weapon => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(weapon.tokenId),
-              },
-            );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
-
-            return {
-              ...weapon,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
-              itemId: tokenOwnersEntity,
-              owner: _character.owner,
-            } as Weapon;
-          })
-          .filter(w => w.balance !== '0');
-
-        setArmor(_armor);
-        setSpells(_spells);
-        setWeapons(_weapons);
-      } catch (e) {
-        renderError(
-          (e as Error)?.message ?? 'Failed to fetch character items.',
-          e,
-        );
-      } finally {
-        setIsLoadingItems(false);
-      }
-    },
-    [armorTemplates, ItemsOwners, renderError, spellTemplates, weaponTemplates],
-  );
-
-  useEffect(() => {
-    if (isLoadingItemTemplates) return;
-    fetchCharacterItems(character);
-  }, [character, fetchCharacterItems, isLoadingItemTemplates]);
-
   const spellsAndWeapons = useMemo(() => {
-    return [...spells, ...weapons];
-  }, [spells, weapons]);
+    return [...inventorySpells, ...inventoryWeapons];
+  }, [inventorySpells, inventoryWeapons]);
 
   const equippedSpellsAndWeapons = useMemo(() => {
     return [...equippedSpells, ...equippedWeapons];
   }, [equippedSpells, equippedWeapons]);
 
-  if (isLoadingItems) {
+  if (isLoadingItemTemplates) {
     return (
       <Center h="100%">
         <Spinner size="lg" />
@@ -585,8 +487,8 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   return (
     <Box>
       <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
-        Armor {armor.length} - {equippedArmor.length}/{MAX_EQUIPPED_ARMOR}{' '}
-        equipped{' '}
+        Armor {inventoryArmor.length} - {equippedArmor.length}/
+        {MAX_EQUIPPED_ARMOR} equipped{' '}
       </Text>
       {maxArmorEquipped && <Text fontSize="sm">(Max armor equipped)</Text>}
       <Grid
@@ -599,8 +501,8 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         gap={2}
         mt={4}
       >
-        {armor.length === 0 && <Text>No armor found</Text>}
-        {armor.map(function (ar, i) {
+        {inventoryArmor.length === 0 && <Text>No armor found</Text>}
+        {inventoryArmor.map(function (ar, i) {
           const isEquipped = equippedArmor.includes(BigInt(ar.tokenId));
           return (
             <GridItem key={i}>
