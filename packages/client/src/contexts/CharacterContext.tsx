@@ -280,15 +280,15 @@ export const CharacterProvider = ({
           })
           .filter(w => w.balance !== '0');
 
-        const _equippedArmor = _equippedArmorIds.map(id =>
-          _armor.find(a => a.tokenId === id.toString()),
-        ) as Armor[];
-        const _equippedSpells = _equippedSpellsIds.map(id =>
-          _spells.find(s => s.tokenId === id.toString()),
-        ) as Spell[];
-        const _equippedWeapons = _equippedWeaponsIds.map(id =>
-          _weapons.find(w => w.tokenId === id.toString()),
-        ) as Weapon[];
+        const _equippedArmor = _equippedArmorIds
+          .map(id => _armor.find(a => a.tokenId === id.toString()))
+          .filter(Boolean) as Armor[];
+        const _equippedSpells = _equippedSpellsIds
+          .map(id => _spells.find(s => s.tokenId === id.toString()))
+          .filter(Boolean) as Spell[];
+        const _equippedWeapons = _equippedWeaponsIds
+          .map(id => _weapons.find(w => w.tokenId === id.toString()))
+          .filter(Boolean) as Weapon[];
 
         setInventoryArmor(_armor);
         setInventorySpells(_spells);

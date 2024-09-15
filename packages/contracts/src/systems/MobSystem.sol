@@ -12,8 +12,8 @@ import {
     MobsByLevel,
     Mobs,
     MobsData,
-    MobStatsData,
-    MobStats
+    MobStats,
+    MobStatsData
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment} from "@codegen/common.sol";
 import {MonsterStats, NPCStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
@@ -33,7 +33,7 @@ contract MobSystem is System {
         uint256 mobId = _incrementMobId();
         require(mobId < type(uint32).max, "MOB SYSTEM: Max Monster types reached");
         Mobs.set(mobId, mobType, stats, mobMetadataUri);
-        if (uint8(mobType) == 0) {
+        if (mobType == MobType.Monster) {
             MonsterStats memory newMob = abi.decode(stats, (MonsterStats));
             MobsByLevel.pushMobIds(newMob.level, mobId);
         }
@@ -65,6 +65,8 @@ contract MobSystem is System {
                 experience: monsterStats.experience,
                 level: monsterStats.level
             });
+
+            MobStats.set(entityId, monsterStats.armor, monsterStats.inventory);
             Stats.set(entityId, statsData);
         } else if (stats.mobType == MobType.Shop) {
             ShopsData memory shopStats = abi.decode(stats.mobStats, (ShopsData));
