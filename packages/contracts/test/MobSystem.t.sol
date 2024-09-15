@@ -122,7 +122,7 @@ contract Test_MobSystem is SetUp, GasReporter {
         world.UD__removeEntityFromBoard(bobCharacterId);
 
         vm.prank(deployer);
-        world.UD__adminRemove
+        world.UD__adminRemoveEntity(bobCharacterId);
 
         vm.warp(block.timestamp + 11 minutes);
         vm.prank(alice);
