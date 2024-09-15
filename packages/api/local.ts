@@ -9,12 +9,6 @@ if (process.env.NODE_ENV !== "production") {
   app.use(express.json());
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.use("/api/hello", (req: any, res: any) => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    require("./api/hello").default(req, res);
-  });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.use("/api/uploadFile", (req: any, res: any) => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     require("./api/uploadFile").default(req, res);
@@ -24,6 +18,12 @@ if (process.env.NODE_ENV !== "production") {
   app.use("/api/uploadMetadata", (req: any, res: any) => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     require("./api/uploadMetadata").default(req, res);
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.use("/api/sessionBooting", (req: any, res: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require("./api/sessionBooting").default(req, res);
   });
 
   app.listen(port, () => {
