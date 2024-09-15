@@ -168,8 +168,12 @@ export const ActionsPanel = (): JSX.Element => {
       setTurnTimeLeft(prev => prev - 1);
     }, 1000);
 
+    if (currentBattle?.encounterType === EncounterType.PvE) {
+      return () => clearInterval(interval);
+    }
+
     return () => clearInterval(interval);
-  }, [turnEndTime, turnTimeLeft]);
+  }, [currentBattle, turnEndTime, turnTimeLeft]);
 
   const canAttack = useMemo(() => {
     if (!currentBattle) return false;
