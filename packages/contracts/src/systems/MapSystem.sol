@@ -190,6 +190,7 @@ contract MapSystem is System {
             }
         }
         Position.set(entityId, 0, 0);
+        Spawned.setSpawned(entityId, false);
         require(entityWasAtPosition, "Entity not at position");
     }
 
