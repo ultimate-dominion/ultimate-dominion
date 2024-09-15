@@ -65,8 +65,9 @@ contract MobSystem is System {
                 experience: monsterStats.experience,
                 level: monsterStats.level
             });
-
-            MobStats.set(entityId, monsterStats.armor, monsterStats.inventory);
+            MobStatsData memory newMobStats =
+                MobStatsData({armor: monsterStats.armor, inventory: monsterStats.inventory});
+            MobStats.set(entityId, newMobStats);
             Stats.set(entityId, statsData);
         } else if (stats.mobType == MobType.Shop) {
             ShopsData memory shopStats = abi.decode(stats.mobStats, (ShopsData));
