@@ -14,15 +14,21 @@ import {
   ModalOverlay,
   Text,
   useDisclosure,
-  // useToast,
+  useToast,
   VStack,
 } from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
 import { Entity } from '@latticexyz/recs';
-import { useState } from 'react';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
+import { useCallback, useEffect, useState } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoAdd, IoRemove } from 'react-icons/io5';
+import { Address, erc20Abi, parseEther } from 'viem';
 
+import { ShopAllowanceModal } from '../components/ShopAllowanceModal';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { ERC_1155_ABI } from '../utils/constants';
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -32,6 +38,8 @@ import {
 } from '../utils/types';
 
 export const ShopItemRow = ({
+  balance,
+  price,
   side,
   stock,
   shopId,
@@ -39,6 +47,8 @@ export const ShopItemRow = ({
   characterId,
   item,
 }: {
+  balance: string | null;
+  price: string;
   side: string;
   characterId: Entity;
   stock: string;
@@ -46,16 +56,111 @@ export const ShopItemRow = ({
   item: ArmorTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;
 }): JSX.Element => {
-  // const { renderError, renderSuccess } = useToast();
+  const { renderError, renderSuccess } = useToast();
   const {
+    components: { UltimateDominionConfig },
+    isSynced,
+    network: { publicClient },
     systemCalls: { buyFromShop, sellToShop },
   } = useMUD();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [amount, setAmount] = useState(0);
+  const { shop: shopAddress, goldToken } = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  ) ?? { shop: null, goldToken: null };
 
+  const { items: itemsContract } = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  ) ?? { items: null };
+
+  const { character: userCharacter } = useCharacter();
+
+  const {
+    isOpen: allowanceIsOpen,
+    onOpen: allowanceOnOpen,
+    onClose: allowanceOnClose,
+  } = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const fetchAllowances = useCallback(async () => {
+    let allowances = { goldAllowance: 0n, itemAllowance: false };
+    try {
+      const _goldAllowance = await publicClient.readContract({
+        address: goldToken as Address,
+        abi: erc20Abi,
+        functionName: 'allowance',
+        args: [userCharacter?.owner as Address, shopAddress as Address],
+      });
+
+      const _itemAllowance = (await publicClient.readContract({
+        address: itemsContract as Address,
+        abi: ERC_1155_ABI,
+        functionName: 'isApprovedForAll',
+        args: [userCharacter?.owner as Address, shopAddress as Address],
+      })) as boolean;
+      allowances = {
+        goldAllowance: _goldAllowance,
+        itemAllowance: _itemAllowance,
+      };
+      return allowances;
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Could not get allowances', e);
+      return allowances;
+    }
+  }, [
+    goldToken,
+    itemsContract,
+    shopAddress,
+    publicClient,
+    renderError,
+    userCharacter?.owner,
+  ]);
+
+  const [amount, setAmount] = useState(0);
+  const [allowance, setAllowance] = useState({
+    goldAllowance: BigInt(0),
+    itemAllowance: false,
+  });
   if (item.itemType === ItemType.Spell) {
     return <Text>TODO</Text>;
   }
+
+  // const buy = useCallback(
+  //   async (amount, shopId, index, characterId) => {
+  //     const allowances = await fetchAllowances();
+  //     setAllowance(allowances);
+  //     if (allowances.goldAllowance < parseEther(price) * BigInt(amount)) {
+
+  //     }
+  //   },
+  //   [allowanceIsOpen, fetchAllowances, price],
+  // );
+
+  // const sell = useCallback(
+  //   async (amount, shopId, index, characterId) => {
+  //     const allowances = await fetchAllowances();
+  //     if (!allowances.itemAllowance) {
+  //       allowanceIsOpen();
+  //     }
+  //   },
+  //   [allowanceIsOpen, fetchAllowances],
+  const canBuy = useCallback(() => {
+    if (
+      side == 'buy' &&
+      allowance.goldAllowance <
+        parseEther(amount.toString()) * parseEther(price)
+    )
+      return false;
+    if (side == 'sell' && allowance.itemAllowance == false) return false;
+    return true;
+  }, [allowance.goldAllowance, allowance.itemAllowance, amount, price, side]);
+
+  useEffect(() => {
+    (async () => {
+      if (!isSynced) return;
+      const a = await fetchAllowances();
+      setAllowance(a);
+    })();
+  }, [fetchAllowances, isSynced]);
 
   const { description, minLevel, name, statRestrictions } = item as unknown as
     | ArmorTemplate
@@ -117,9 +222,13 @@ export const ShopItemRow = ({
             textAlign="center"
             w="100%"
           >
-            {0}
+            {price || balance}
           </Text>
         </HStack>
+        <ShopAllowanceModal
+          isOpen={allowanceIsOpen}
+          onClose={allowanceOnClose}
+        />
         <Modal isCentered isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
@@ -197,6 +306,7 @@ export const ShopItemRow = ({
                   <VStack>
                     <Text>AMOUNT (MAX {stock}) </Text>
                     <HStack>
+                      <Button></Button>
                       <Button
                         size="xs"
                         onClick={() =>
@@ -232,7 +342,10 @@ export const ShopItemRow = ({
                         <IoAdd />
                       </Button>
                     </HStack>
-                    {side == 'buy' ? (
+                    {!canBuy() && (
+                      <Button onClick={allowanceOnOpen}>Allow</Button>
+                    )}
+                    {side == 'buy' && canBuy() && (
                       <Button
                         onClick={() =>
                           buyFromShop(
@@ -245,7 +358,8 @@ export const ShopItemRow = ({
                       >
                         Buy
                       </Button>
-                    ) : (
+                    )}
+                    {side == 'sell' && canBuy() && (
                       <Button
                         onClick={() =>
                           sellToShop(

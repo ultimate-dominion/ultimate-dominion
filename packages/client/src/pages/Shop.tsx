@@ -38,7 +38,7 @@ export const Shop = (): JSX.Element => {
     inventorySpells,
     inventoryWeapons,
   } = useCharacter();
-  const { allShops } = useMap();
+  const { allShops, allShopItems } = useMap();
 
   const shop = useMemo(() => {
     if (!mobId || !allShops) return null;
@@ -46,13 +46,20 @@ export const Shop = (): JSX.Element => {
   }, [allShops, mobId]);
 
   const [sellable, setSellable] = useState<
-    Array<ArmorTemplate | WeaponTemplate | SpellTemplate>
+    Array<{
+      item: ArmorTemplate | WeaponTemplate | SpellTemplate;
+      price: string;
+      balance: string;
+    }>
   >([]);
   const [buyable, setBuyable] = useState<
-    Array<ArmorTemplate | WeaponTemplate | SpellTemplate>
+    Array<{
+      item: ArmorTemplate | WeaponTemplate | SpellTemplate;
+      price: string;
+      stock: string;
+    }>
   >([]);
 
-  const [balances, setBalances] = useState<Array<string>>([]);
   const items = useMemo(
     () => [...inventoryArmor, ...inventorySpells, ...inventoryWeapons],
     [inventoryArmor, inventorySpells, inventoryWeapons],
@@ -80,29 +87,47 @@ export const Shop = (): JSX.Element => {
           items
             .map(x => x.tokenId.toString())
             .indexOf(item.tokenId.toString()) > -1,
-      );
-
-    const b = sellableInventory.map(item =>
-      items
-        .filter(i => i.tokenId.toString() == item.tokenId.toString())[0]
-        .balance.toString(),
-    );
-    setBalances(b);
+      )
+      // add back the balances and the price of the item
+      .map(item => {
+        let price =
+          allShopItems.find(prices => prices.itemId == item.tokenId)?.price ||
+          0;
+        price = Number(price) * (Number(shop.priceMarkdown) / 100);
+        const balances =
+          items.find(owned => owned.tokenId == item.tokenId)?.balance || 0;
+        return {
+          item: item,
+          price: price.toString(),
+          balance: balances.toString(),
+        };
+      });
 
     const buyableStock = [
       ...weaponTemplates,
       ...spellTemplates,
       ...armorTemplates,
-    ].filter(
-      item =>
-        shop.buyableItems
-          .map(item => item.toString())
-          .indexOf(item.tokenId.toString()) > -1,
-    );
+    ]
+      .filter(
+        item =>
+          shop.buyableItems
+            .map(item => item.toString())
+            .indexOf(item.tokenId.toString()) > -1,
+      )
+      // add back the stock and the price of the item
+      .map((item, i) => {
+        let price =
+          allShopItems.find(prices => prices.itemId == item.tokenId)?.price ||
+          0;
+        price =
+          Number(price) + Number(price) * (Number(shop.priceMarkup) / 100);
+        return { item: item, stock: shop.stock[i], price: price.toString() };
+      });
 
     setSellable(sellableInventory);
     setBuyable(buyableStock);
   }, [
+    allShopItems,
     armorTemplates,
     isItemsLoading,
     items,
@@ -140,19 +165,17 @@ export const Shop = (): JSX.Element => {
       <HStack border="2px solid" mt={8} p={8} w="100%">
         <Spacer />
         <Stack h="100%" w="100%">
-          {userCharacter &&
-          balances &&
-          mobId &&
-          sellable &&
-          sellable.length > 0 ? (
+          {userCharacter && mobId && sellable && sellable.length > 0 ? (
             <ShopHalf
               characterId={userCharacter.id}
               shopId={mobId}
-              items={sellable}
-              stock={balances}
+              items={sellable.map(x => x.item)}
+              stock={sellable.map(x => x.balance)}
+              prices={sellable.map(x => x.price)}
               name={`Character’s Inventory - ${userCharacter?.goldBalance} $GOLD`}
               itemIndexes={shop.sellableItems}
               side="sell"
+              balances={null}
             />
           ) : (
             <Center>
@@ -165,12 +188,14 @@ export const Shop = (): JSX.Element => {
           {userCharacter && mobId && buyable && buyable.length > 0 ? (
             <ShopHalf
               characterId={userCharacter.id}
-              stock={shop.stock.map(s => s.toString())}
-              items={buyable}
+              stock={buyable.map(x => x.stock)}
+              items={buyable.map(x => x.item)}
+              prices={buyable.map(x => x.price)}
               name={`Shopkeeper’s Inventory - ${formatEther(BigInt(shop.gold)).toString()} $GOLD`}
               shopId={mobId}
               itemIndexes={shop.buyableItems}
               side="buy"
+              balances={null}
             />
           ) : (
             <Text>No Buyable Items</Text>

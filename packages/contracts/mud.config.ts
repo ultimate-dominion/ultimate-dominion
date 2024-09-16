@@ -373,6 +373,7 @@ export default defineWorld({
         pythProvider: "address",
         items: "address",
         marketplace: "address",
+        shop: "address",
       },
     },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////

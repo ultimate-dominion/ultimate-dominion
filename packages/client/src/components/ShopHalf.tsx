@@ -33,17 +33,21 @@ enum SortOptions {
 const PER_PAGE = 5;
 
 export const ShopHalf = ({
+  balances,
   name,
   items,
+  prices,
   stock,
   shopId,
   itemIndexes,
   characterId,
   side,
 }: {
+  balances: Array<string> | null;
   characterId: Entity;
   name: string;
   items: Array<ArmorTemplate | SpellTemplate | WeaponTemplate>;
+  prices: Array<string> | null;
   stock: Array<string> | null;
   shopId: string;
   itemIndexes: Array<string>;
@@ -220,6 +224,8 @@ export const ShopHalf = ({
                 itemIndex={itemIndexes[i]}
                 shopId={shopId}
                 stock={stock ? stock[i] : '0'}
+                price={prices ? prices[i] : null}
+                balance={balances ? balances[i] : null}
                 item={entry}
                 key={`shop-row-${i}`}
                 side={side}

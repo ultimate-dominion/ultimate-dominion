@@ -216,6 +216,8 @@ contract PostDeploy is Script {
         _createMonsters();
         address _marketplaceAddress = world.UD__marketplaceAddress();
         UltimateDominionConfig.setMarketplace(_marketplaceAddress);
+        address _shopSystemAddress = world.UD__shopSystemAddress();
+        UltimateDominionConfig.setMarketplace(_shopSystemAddress);
 
         setLevels();
         vm.stopBroadcast();
