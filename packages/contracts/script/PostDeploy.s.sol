@@ -41,6 +41,7 @@ import {
     WeaponStats,
     WeaponStatsData,
     ShopsData,
+    ShopItems,
     StatRestrictions,
     StatRestrictionsData,
     SpellStatsData,
@@ -63,7 +64,9 @@ import {
     WeaponStatDetails,
     ArmorStatDetails,
     SpellTemplateDetails,
-    ConsumableTemplateDetails
+    ConsumableTemplateDetails,
+    ShopItemsTemplate,
+    ShopItemsData
 } from "@interfaces/Structs.sol";
 
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
@@ -425,6 +428,8 @@ contract PostDeploy is Script {
         world.UD__setStarterItems(Classes.Mage, mageItemIds, mageAmounts);
     }
     function _createShops() internal {
+        string memory json = vm.readFile("shopItems.json");
+        bytes memory data = vm.parseJson(json);
         uint256[] memory sellableItems = new uint256[](10);
         uint256[] memory buyableItems = new uint256[](10);
         uint256[] memory stock = new uint256[](10);
@@ -436,9 +441,15 @@ contract PostDeploy is Script {
             }
         }
 
+
+        ShopItemsTemplate memory itemsData = abi.decode(data, (ShopItemsTemplate));
+        for (uint256 i = 0; i < itemsData.shopItemsData.length; i++) {
+            ShopItems.set(itemsData.shopItemsData[i].itemId, itemsData.shopItemsData[i].price);
+        }
+
         ShopsData memory newShop = ShopsData({
-            gold: 100,
-            maxGold: 100,
+            gold: 100 ether,
+            maxGold: 100 ether,
             priceMarkup: 20,
             priceMarkdown: 50,
             timestamp: 1725962400,

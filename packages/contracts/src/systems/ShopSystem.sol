@@ -2,9 +2,10 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
+import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 
 import {
-    Shops, UltimateDominionConfig
+    Shops, ShopItems, UltimateDominionConfig
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {TokenType, OrderStatus} from "@codegen/common.sol";
@@ -36,26 +37,21 @@ contract ShopSystem is System, ReentrancyGuard {
         // check that the character is the player
         require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "Cannot buy an item for someone else");
         // check that the players position is the same as the shop's position
-        // isAtPosition
         (uint16 characterX, uint16 characterY)= IWorld(_world()).UD__getMobPosition(shopId);
-        (uint16 shopX, uint16 shopY) = IWorld(_world()).UD__getMobPosition(shopId);
-        require(characterX == shopX && characterY == shopY, "Cannot buy from a shop from a distance");
+        require(IWorld(_world()).UD__isAtPosition(shopId, characterX, characterY) == true, "Cannot buy from a shop at a distance");
         // check if the shop has enough stock
-        uint256[] memory buyableItems = Shops.getBuyableItems(shopId);
-        address items = UltimateDominionConfig.getItems();
+        uint256[] memory buyable = Shops.getBuyableItems(shopId);
         uint256[] memory stock = Shops.getStock(shopId);
         require(stock[itemIndex] > amount, "insufficient stock");
-        // increase gold by [amount*price]
         // decrease stock by [amount]
-        stock[itemIndex] = stock[itemIndex - amount];
+        stock[itemIndex] = stock[itemIndex] - amount;
         Shops.setStock(shopId, stock);
-        Shops.setGold(shopId, amount * itemMarkup(shopId/* , itemIndex */));
+        // increase gold by [amount*price]
+        Shops.setGold(shopId, Shops.getGold(shopId) + (amount * itemMarkup(shopId, buyable[itemIndex])));
         // take [amount*price] of the users' gold
-        // IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(_msgSender(), address(this), amount * itemMarkup(shopId, itemIndex));
-        // // give [amount] items
-        AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
-        IERC1155System(items).transferFrom(address(this), _msgSender(), buyableItems[itemIndex], amount);
-        
+        IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(_msgSender(), lootManagerAddress(), amount * itemMarkup(shopId, buyable[itemIndex]));
+        // give [amount] items
+        IWorld(_world()).UD__dropItem(characterId, buyable[itemIndex], amount);
     }
 
     /**
@@ -73,20 +69,20 @@ contract ShopSystem is System, ReentrancyGuard {
         (uint16 shopX, uint16 shopY) = IWorld(_world()).UD__getMobPosition(shopId);
         require(characterX == shopX && characterY == shopY, "Cannot buy from a shop from a distance");
         // check if the shop has enough gold
-        require(Shops.getGold(shopId) >= amount * itemMarkdown(shopId/* , itemIndex */), "Shop does not have enough gold");
+        uint256[] memory stock = Shops.getStock(shopId);
+        uint256[] memory sellable = Shops.getSellableItems(shopId);
+        require(Shops.getGold(shopId) >= amount * itemMarkdown(shopId, sellable[itemIndex]), "Shop does not have enough gold");
         // increase stock by [amount]
         // decrease gold by [amount * price]
-        uint256[] memory stock = Shops.getStock(shopId);
         stock[itemIndex] = stock[itemIndex + amount];
         Shops.setStock(shopId, stock);
-        Shops.setGold(shopId, amount * itemMarkdown(shopId/* , itemIndex */));
+        Shops.setGold(shopId, Shops.getGold(shopId) - (amount * itemMarkdown(shopId, sellable[itemIndex])));
         // // take [amount] of the users' item
-        //uint256[] memory sellableItems = Shops.getSellableItems(shopId);
-
-        AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
-        // IERC1155(UltimateDominionConfig.getItems()).safeTransferFrom(_msgSender(), address(this), sellableItems[itemIndex], amount, "");
+        uint256[] memory sellableItems = Shops.getSellableItems(shopId);
+        IERC1155(UltimateDominionConfig.getItems()).safeTransferFrom(_msgSender(), lootManagerAddress(), sellableItems[itemIndex], amount, "");
         // give [amount*price] gold
-        IERC20(UltimateDominionConfig.getGoldToken()).transfer( _msgSender(), amount * itemMarkdown(shopId/* , itemIndex */));
+        IWorld(_world()).UD__dropGold(characterId, amount * itemMarkdown(shopId, sellable[itemIndex]));
+
     }
 
     /**
@@ -107,24 +103,32 @@ contract ShopSystem is System, ReentrancyGuard {
         uint256 lastRecordedIntervalTimestamp = Shops.getTimestamp(shopId);
         uint256 timeSinceLastInterval = (block.timestamp - lastRecordedIntervalTimestamp) % 12 hours;
         uint256 lastIntervalTimestamp = block.timestamp - timeSinceLastInterval;
-        return lastIntervalTimestamp > 0;
+        return lastIntervalTimestamp >= 12 hours;
     }
-
+    function itemStock(bytes32 shopId, uint256 itemIndex) public view returns(uint256) {
+        return Shops.getStock(shopId)[itemIndex];
+    }
+    function itemBase(uint256 itemId) public view returns (uint256){
+        return ShopItems.getPrice(itemId);
+    }
     /**
      * Gets the markup price of an item
      * @param shopId the shopId
      */
-    function itemMarkup(bytes32 shopId/* , uint256 itemIndex */) public view returns (uint256){
-        return 100 + (100 * Shops.getPriceMarkup(shopId) / 10000);
+    function itemMarkup(bytes32 shopId, uint256 itemId) public view returns (uint256){
+        return itemBase(itemId) + ((itemBase(itemId) * Shops.getPriceMarkup(shopId)) / 10000);
     }
     /**
      * Gets the markdown price of an item
      * @param shopId the shopId
      */
-    function itemMarkdown(bytes32 shopId/*,  uint256 itemIndex */) public view returns (uint256){
-        return 100 * Shops.getPriceMarkdown(shopId)/ 10000;
+    function itemMarkdown(bytes32 shopId, uint256 itemId) public view returns (uint256){
+        return (itemBase(itemId) * Shops.getPriceMarkdown(shopId))/ 10000;
     }
     function shopSystemAddress() external view returns (address){
         return address(this);
+    }
+    function lootManagerAddress() internal view returns (address){
+        return Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
     }
 }

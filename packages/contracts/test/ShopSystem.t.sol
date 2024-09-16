@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
-import {Classes, ItemType, TokenType, OrderStatus} from "@codegen/common.sol";
+import {Classes, ItemType, TokenType, MobType} from "@codegen/common.sol";
 
 import {
     StatsData,
@@ -12,6 +12,7 @@ import {
     ConsiderationsData,
     Offers,
     OffersData,
+    Shops,
     ShopsData,
     UltimateDominionConfig
 } from "@codegen/index.sol";
@@ -49,68 +50,135 @@ import "forge-std/console.sol";
 
 contract Test_ShopSystem is SetUp, GasReporter {
     uint256 MAX_INT = 2 ** 256 - 1;
+    address shopSystemAddress;
+    IERC1155 itemsToken;
 
     function setUp() public virtual override {
         super.setUp();
-        vm.prank(deployer);
+        vm.startPrank(deployer);
+        shopSystemAddress = world.UD__shopSystemAddress();
+        itemsToken = IERC1155(world.UD__getItemsContract());
+        uint256 maxGold =  Shops.getMaxGold(shopId);
         world.UD__setAdmin(address(this), true);
+        address stuffBearer = makeAddr("stuffBearer");
+        bytes32 stuffBearerCharacterID = world.UD__mintCharacter(stuffBearer, bytes32("stuffBearer"), "test_Character_URI");
+        world.UD__dropGold(stuffBearerCharacterID,maxGold);
+        vm.startPrank(stuffBearer);
+        goldToken.transfer(shopSystemAddress, maxGold);
+        vm.startPrank(deployer);
 
-        uint256[] memory sellableItems = new uint256[](3);
-        uint256[] memory buyableItems = new uint256[](6);
-        uint256[] memory stock = new uint256[](buyableItems.length);
-        for(uint i = 0; i < 10; ++i){
-            if(i < 3) sellableItems[i] = i;
-            if(i < 6) buyableItems[i] = i;
-            if(i < buyableItems.length) stock[i] = 5;
-        }
-
-        ShopsData memory newShop = ShopsData({
-            gold: 100,
-            maxGold: 100,
-            priceMarkup: 0,
-            priceMarkdown: 0,
-            timestamp: block.timestamp,
-            sellableItems: sellableItems,
-            buyableItems: sellableItems,
-            restock: stock,
-            stock: stock
-        });
-        // world.grantAccess(_itemsSystemId("UD"), address(this));
     }
 
-    function test_BuyERC1155() public {
+    function test_itemMarkup() public {
+        uint256 item = 1;
+        uint256 price = world.UD__itemBase(item);
+        uint256 markup = world.UD__itemMarkup(shopId, item);
+        assertEq(price, 1 ether, "expecting item 1 to have a price of 1 ether");
+        assertEq(markup, price + 0.002 ether);
+
+    }
+    function test_itemMarkdown() public {
+        uint256 item = 1;
+        uint256 price = world.UD__itemBase(item);
+        uint256 markdown = world.UD__itemMarkdown(shopId, item);
+        assertEq(price, 1 ether, "expecting item 1 to have a price of 1");
+        assertEq(markdown, 0.005 ether);
+    }
+
+    function test_Buy() public {
         startGasReport("purchase an item from the shop");
-        IERC20 gold = IERC20(world.UD__getGoldToken());
-        IERC1155 items = IERC1155(world.UD__getItemsContract());
-        uint256 amount = 9 ether;
+        uint256 balance = 9 ether;
+        uint256 amount = 1;
+        uint256 itemIndex = 1;
+        uint256[] memory buyable = Shops.getBuyableItems(shopId);        
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+
+        // give userA gold
+        world.UD__dropGold(userACharacterID, balance);
+        vm.startPrank(userA);
+        // have userA set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userA set max allowance for their gold
+        goldToken.approve(shopSystemAddress, MAX_INT);
+        // have userA buy from the shop
+        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        world.UD__buy(amount, shopId, itemIndex, userACharacterID);
+        // userA should now have + amount items
+        assertEq(itemsToken.balanceOf(userA, buyable[itemIndex]), amount, "User does not have appropriate items");
+        // userA should now have balance - amount * markup(amount) gold
+        assertEq(goldToken.balanceOf(userA), balance - (amount * world.UD__itemMarkup(shopId, buyable[itemIndex])), "User does not have appropriate gold");
+        // shop stock should now be restock - amount items
+        assertEq(Shops.getStock(shopId)[itemIndex], Shops.getRestock(shopId)[itemIndex] - amount, "Contract does not have appropriate stock");
+        // shop gold should now be + amount * markup(amount) gold
+        assertEq(Shops.getGold(shopId), Shops.getMaxGold(shopId) + (amount * world.UD__itemMarkup(shopId, buyable[itemIndex])), "Contract does not have appropriate gold");
+        endGasReport();
+    }
+
+    function test_Sell() public {
+        startGasReport("sell an item to the shop");
+        uint256 balance = 9 ether;
+        uint256 amount = 1;
+        uint256 itemIndex = 1;
         address shops = world.UD__shopSystemAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
-        // give userA gold
-        world.UD__dropGold(userACharacterID, amount);
-        // have userA set max allowance for their gold
+
+        // give userA an item
+        world.UD__dropItem(userACharacterID, itemIndex, amount);
         vm.startPrank(userA);
-        gold.approve(shops, MAX_INT);
-        // have userA buy from the shop
-
-        // Offer memory oA =
-        //     Offer({tokenType: TokenType.ERC20, token: world.UD__getGoldToken(), identifier: 0, amount: amount});
-        // Consideration memory cA = Consideration({
-        //     tokenType: TokenType.ERC1155,
-        //     token: world.UD__getItemsContract(),
-        //     identifier: 1,
-        //     amount: 1,
-        //     recipient: userA
-        // });
-
-        // bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
+        // have userA set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userA set max allowance for their gold
+        goldToken.approve(shops, MAX_INT);
+        console.log(world.UD__getLootManagerSystem());
+        // have userA sell to the shop
+        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        world.UD__sell(amount, shopId, itemIndex, userACharacterID);
+        // userA should now have - amount items
+        assertEq(itemsToken.balanceOf(userA, Shops.getBuyableItems(shopId)[itemIndex]), amount - amount, "User does not have appropriate items");
+        // userA should now have balance + amount * markdown(amount) gold
+        assertEq(goldToken.balanceOf(userA), balance + (amount * world.UD__itemMarkdown(shopId, itemIndex)), "User does not have appropriate gold");
+        // shop stock should now be restock + amount items
+        assertEq(Shops.getStock(shopId)[itemIndex], Shops.getRestock(shopId)[itemIndex] + amount, "Contract does not have appropriate stock");
+        // shop gold should now be - price * markup(amount) gold
+        assertEq(Shops.getGold(shopId), Shops.getMaxGold(shopId) - (amount * world.UD__itemMarkdown(shopId, itemIndex)), "Contract does not have appropriate gold");
         endGasReport();
-        // assertEq(items.balanceOf(userA, 1), 0);
-        // assertEq(gold.balanceOf(userA), 0);
-        // assertEq(items.balanceOf(auctionHouse, 1), 0);
-        // assertEq(gold.balanceOf(auctionHouse), amount);
     }
 
-    
+    function test_Restock() public{
+        // create userA
+        uint256 item = 1;
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+        uint256[] memory stock = Shops.getStock(shopId);
+        stock[item] = 0;
+
+        Shops.setStock(shopId, stock);
+        assertEq(Shops.getStock(shopId)[item], 0);
+        world.UD__restock(shopId);
+        // the stock should equal 
+        assertEq(Shops.getStock(shopId)[item], Shops.getRestock(shopId)[item]);
+    }
+        function test_RestockTooSoon() public{
+        // create userA
+        uint256 item = 1;
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+        uint256[] memory stock = Shops.getStock(shopId);
+        stock[item] = 0;
+
+        Shops.setStock(shopId, stock);
+        assertEq(Shops.getStock(shopId)[item], 0);
+        console.log(Shops.getTimestamp(shopId));
+        world.UD__restock(shopId);
+        console.log(Shops.getTimestamp(shopId));
+        console.log(block.timestamp);
+        vm.expectRevert(bytes("You must wait 12 hours to restock"));
+
+        world.UD__restock(shopId);
+        // the stock should equal 
+    }
 }

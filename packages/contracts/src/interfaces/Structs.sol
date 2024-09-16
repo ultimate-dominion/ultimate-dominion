@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
-import {ItemType, Classes, Alignment, TokenType} from "@codegen/common.sol";
+import {ItemType, Classes, Alignment, TokenType } from "@codegen/common.sol";
 import {
     StatusEffectStatsData,
     WeaponStatsData,
@@ -82,6 +82,14 @@ struct ConsumableStatDetails {
     int256 maxDamage;
     int256 minDamage;
     uint256 minLevel;
+}
+struct ShopItemsData {
+    uint256 itemId;
+    uint256 price;
+}
+
+struct ShopItemsTemplate {
+    ShopItemsData[] shopItemsData;
 }
 
 struct StarterItems {
