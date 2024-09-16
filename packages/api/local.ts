@@ -1,33 +1,31 @@
+import express from "express";
+import uploadFile from "./api/uploadFile.js";
+import uploadMetadata from "./api/uploadMetadata.js";
+import sessionBooting from "./api/sessionBooting.js";
+import { VercelRequest, VercelResponse } from "@vercel/node";
+import "dotenv/config";
+
+const PORT = 8080;
+
 if (process.env.NODE_ENV !== "production") {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const express = require("express");
   const app = express();
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  // const bodyParser = require("body-parser");
-  const port = 8080;
 
   app.use(express.json());
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.use("/api/uploadFile", (req: any, res: any) => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    require("./api/uploadFile").default(req, res);
+  app.use("/api/uploadFile", (req: unknown, res: unknown) => {
+    uploadFile(req as VercelRequest, res as VercelResponse);
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.use("/api/uploadMetadata", (req: any, res: any) => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    require("./api/uploadMetadata").default(req, res);
+  app.use("/api/uploadMetadata", (req: unknown, res: unknown) => {
+    uploadMetadata(req as VercelRequest, res as VercelResponse);
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.use("/api/sessionBooting", (req: any, res: any) => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    require("./api/sessionBooting").default(req, res);
+  app.use("/api/sessionBooting", (req: unknown, res: unknown) => {
+    sessionBooting(req as VercelRequest, res as VercelResponse);
   });
 
-  app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
   });
 } else {
   throw new Error("local.js should not be used in production");

@@ -2,7 +2,7 @@ import formidable from "formidable";
 import sharp from "sharp";
 import { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { uploadToPinata } from "../lib/fileStorage";
+import { uploadToPinata } from "../lib/fileStorage.js";
 
 type FormFile = {
   _writeStream: {

@@ -1,5 +1,6 @@
 import pinataSDK, { PinataPinOptions } from "@pinata/sdk";
 import { Readable } from "stream";
+import "dotenv/config";
 
 const PINATA_JWT = process.env.PINATA_JWT;
 

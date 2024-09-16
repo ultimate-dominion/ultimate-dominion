@@ -3659,6 +3659,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__removeEntitiesFromBoard",
+    "inputs": [
+      {
+        "name": "entityIds",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__removeEntityFromBoard",
     "inputs": [
       {
