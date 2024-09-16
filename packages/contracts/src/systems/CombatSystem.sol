@@ -211,6 +211,7 @@ contract CombatSystem is System {
 
     function _calculateArmorModifier(int256 armor, int256 armorPenetration, int256 damage)
         internal
+        pure
         returns (int256 _totalArmorModifier)
     {
         if (armor - armorPenetration > 0) {
@@ -227,7 +228,7 @@ contract CombatSystem is System {
         WeaponStatsData memory weapon,
         uint64 randomNumber,
         bool crit
-    ) internal view returns (int256 _damage) {
+    ) internal pure returns (int256 _damage) {
         if (!crit) {
             int256 randomness = Math.toInt(randomNumber ^ 4);
             int256 baseDamage = (
@@ -341,7 +342,7 @@ contract CombatSystem is System {
         int256 attackerIntelligence,
         int256 defenderIntelligence,
         bool crit
-    ) internal view returns (int256 _damage) {
+    ) internal pure returns (int256 _damage) {
         // if (equippedSpell.minDamage > 0 && equippedSpell.maxDamage > 0) {
         int256 baseDamage;
         if (!crit) {

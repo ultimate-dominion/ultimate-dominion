@@ -22,6 +22,7 @@ import { ArmorStats, ArmorStatsData } from "./tables/ArmorStats.sol";
 import { SpellStats, SpellStatsData } from "./tables/SpellStats.sol";
 import { ConsumableStats, ConsumableStatsData } from "./tables/ConsumableStats.sol";
 import { StarterItems, StarterItemsData } from "./tables/StarterItems.sol";
+import { AdventureEscrow } from "./tables/AdventureEscrow.sol";
 import { Effects, EffectsData } from "./tables/Effects.sol";
 import { PhysicalDamageStats, PhysicalDamageStatsData } from "./tables/PhysicalDamageStats.sol";
 import { MagicDamageStats, MagicDamageStatsData } from "./tables/MagicDamageStats.sol";

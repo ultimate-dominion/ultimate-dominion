@@ -22,8 +22,9 @@ uint256 constant CRIT_MODIFIER = 10;
 int256 constant STAT_MODIFIER = 200;
 
 //Gold Drop constants
-uint256 constant BASE_GOLD_DROP = 1e17; //
+uint256 constant BASE_GOLD_DROP = 1e18; //
 
 // LEVELING
 int256 constant BASE_HP_GAIN = 1;
 int256 constant ABILITY_POINTS_PER_LEVEL = 2;
+uint256 constant EXP_MODIFIER = 2;

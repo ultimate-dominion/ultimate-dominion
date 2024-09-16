@@ -270,7 +270,11 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
 
         world.UD__equipItems(alicesCharacterId, starterDat.itemIds);
         AdjustedCombatStats memory equippedStats = world.UD__getCombatStats(alicesCharacterId);
-        assertEq(equippedStats.strength, 8);
+        assertEq(
+            equippedStats.strength,
+            alicesStats.strength + world.UD__getWeaponStats(starterDat.itemIds[0]).strModifier,
+            "incorrect equipped strength"
+        );
         assertTrue(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
         startGasReport("uneqip 1 item");
         world.UD__unequipItem(alicesCharacterId, starterDat.itemIds[0]);
@@ -278,6 +282,6 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         endGasReport();
         AdjustedCombatStats memory unEquippedStats = world.UD__getCombatStats(alicesCharacterId);
         assertFalse(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
-        assertEq(unEquippedStats.strength, 6);
+        assertEq(unEquippedStats.strength, alicesStats.strength);
     }
 }

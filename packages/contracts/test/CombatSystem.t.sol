@@ -35,6 +35,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     bytes32[] public pvpDefenders;
     bytes32 entityId;
     bytes32 entityId2;
+    uint256 spawnedMobId;
 
     function setUp() public override {
         super.setUp();
@@ -43,9 +44,9 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         vm.prank(deployer);
         world.grantAccess(_mobSystemId("UD"), address(this));
-
-        entityId = world.UD__spawnMob(1, 0, 1);
-        entityId2 = world.UD__spawnMob(1, 0, 1);
+        spawnedMobId = 2;
+        entityId = world.UD__spawnMob(spawnedMobId, 0, 1);
+        entityId2 = world.UD__spawnMob(spawnedMobId, 0, 1);
 
         vm.startPrank(alice);
         world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
@@ -142,7 +143,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_createPvEEncounter_Revert_Entities_Wrong_Position() public {
-        entityId2 = world.UD__spawnMob(1, 1, 1);
+        entityId2 = world.UD__spawnMob(spawnedMobId, 1, 1);
         defenders[0] = entityId2;
         vm.prank(bob);
         vm.expectRevert("ENCOUNTER SYSTEM: INVALID PVE");

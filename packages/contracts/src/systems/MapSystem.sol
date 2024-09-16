@@ -177,6 +177,7 @@ contract MapSystem is System {
             }
         }
         Position.set(entityId, 0, 0);
+        // todo end combat for entity
         require(entityWasAtPosition, "Entity not at position");
     }
 
