@@ -74,12 +74,12 @@ contract ShopSystem is System, ReentrancyGuard {
         require(Shops.getGold(shopId) >= amount * itemMarkdown(shopId, sellable[itemIndex]), "Shop does not have enough gold");
         // increase stock by [amount]
         // decrease gold by [amount * price]
-        stock[itemIndex] = stock[itemIndex + amount];
+        stock[itemIndex] = stock[itemIndex] + amount;
         Shops.setStock(shopId, stock);
         Shops.setGold(shopId, Shops.getGold(shopId) - (amount * itemMarkdown(shopId, sellable[itemIndex])));
         // // take [amount] of the users' item
         uint256[] memory sellableItems = Shops.getSellableItems(shopId);
-        IERC1155(UltimateDominionConfig.getItems()).safeTransferFrom(_msgSender(), lootManagerAddress(), sellableItems[itemIndex], amount, "");
+        IERC1155System(UltimateDominionConfig.getItems()).transferFrom(_msgSender(), lootManagerAddress(), sellableItems[itemIndex], amount);
         // give [amount*price] gold
         IWorld(_world()).UD__dropGold(characterId, amount * itemMarkdown(shopId, sellable[itemIndex]));
 
@@ -91,20 +91,19 @@ contract ShopSystem is System, ReentrancyGuard {
      */
     // make this happen when the user clicks the shop button
     function restock(bytes32 shopId) public {
-        require(canRestock(shopId), "You must wait 12 hours to restock");
-        uint256[] memory stock = Shops.getRestock(shopId);
-        uint256 gold = Shops.getMaxGold(shopId);
-        Shops.setStock(shopId, stock);
-        Shops.setGold(shopId, gold);
-        Shops.setTimestamp(shopId, block.timestamp);
+        uint256 lastRecordedIntervalTimestamp = Shops.getTimestamp(shopId);
+        if(block.timestamp - lastRecordedIntervalTimestamp >= 12 hours){
+            uint256[] memory stock = Shops.getRestock(shopId);
+            uint256 gold = Shops.getMaxGold(shopId);
+            Shops.setStock(shopId, stock);
+            Shops.setGold(shopId, gold);
+            uint256 timeSinceLastInterval = (block.timestamp - lastRecordedIntervalTimestamp) % 12 hours;
+            uint256 lastIntervalTimestamp = block.timestamp - timeSinceLastInterval;
+            Shops.setTimestamp(shopId, lastIntervalTimestamp + 12 hours);
+        }
+        
     }
 
-    function canRestock(bytes32 shopId) public view returns(bool) {
-        uint256 lastRecordedIntervalTimestamp = Shops.getTimestamp(shopId);
-        uint256 timeSinceLastInterval = (block.timestamp - lastRecordedIntervalTimestamp) % 12 hours;
-        uint256 lastIntervalTimestamp = block.timestamp - timeSinceLastInterval;
-        return lastIntervalTimestamp >= 12 hours;
-    }
     function itemStock(bytes32 shopId, uint256 itemIndex) public view returns(uint256) {
         return Shops.getStock(shopId)[itemIndex];
     }
@@ -129,6 +128,7 @@ contract ShopSystem is System, ReentrancyGuard {
         return address(this);
     }
     function lootManagerAddress() internal view returns (address){
+        //return address(9);
         return Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
     }
 }
