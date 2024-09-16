@@ -6,6 +6,7 @@ import equipmentSystemAbi from 'contracts/out/EquipmentSystem.sol/EquipmentSyste
 import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import mapSystemAbi from 'contracts/out/MapSystem.sol/MapSystem.abi.json';
 import marketplaceSystemAbi from 'contracts/out/MarketplaceSystem.sol/MarketplaceSystem.abi.json';
+import shopSystemAbi from 'contracts/out/ShopSystem.sol/ShopSystem.abi.json';
 import { useEffect, useMemo } from 'react';
 
 import { useMUD } from '../contexts/MUDContext';
@@ -23,6 +24,7 @@ export function DevTools(): null {
       ...equipmentSystemAbi,
       ...mapSystemAbi,
       ...marketplaceSystemAbi,
+      ...shopSystemAbi,
       ...worldAbi,
     ],
     [network.worldContract.abi],

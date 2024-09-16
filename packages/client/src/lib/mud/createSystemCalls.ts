@@ -193,6 +193,125 @@ export function createSystemCalls(
     }
   };
 
+  const buyFromShop = async (
+    amount: string,
+    shopId: string,
+    itemIndex: string,
+    characterId: string,
+  ): SystemCallReturn => {
+    try {
+      // await publicClient.simulateContract({
+      //   abi: worldContract.abi,
+      //   account: delegatorAddress,
+      //   address: worldContract.address,
+      //   args: [
+      //     BigInt(amount),
+      //     shopId as `0x${string}`,
+      //     BigInt(itemIndex),
+      //     characterId as `0x${string}`,
+      //   ],
+      //   functionName: 'UD__buy',
+      // });
+
+      const tx = await worldContract.write.UD__buy([
+        BigInt(amount),
+        shopId as `0x${string}`,
+        BigInt(itemIndex),
+        characterId as `0x${string}`,
+      ]);
+      const success = await waitForTransaction(tx);
+
+      return {
+        error: success ? undefined : 'Failed to complete purchase.',
+        success: !!success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
+  const sellToShop = async (
+    amount: string,
+    shopId: string,
+    itemIndex: string,
+    characterId: string,
+  ): SystemCallReturn => {
+    try {
+      // await publicClient.simulateContract({
+      //   abi: worldContract.abi,
+      //   account: delegatorAddress,
+      //   address: worldContract.address,
+      //   args: [
+      //     BigInt(amount),
+      //     shopId as `0x${string}`,
+      //     BigInt(itemIndex),
+      //     characterId as `0x${string}`,
+      //   ],
+      //   functionName: 'UD__buy',
+      // });
+      const tx = await worldContract.write.UD__sell([
+        BigInt(amount),
+        shopId as `0x${string}`,
+        BigInt(itemIndex),
+        characterId as `0x${string}`,
+      ]);
+      const success = await waitForTransaction(tx);
+
+      return {
+        error: success ? undefined : 'Failed to complete sale.',
+        success: !!success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
+  const restock = async (shopId: string): SystemCallReturn => {
+    try {
+      // await publicClient.simulateContract({
+      //   abi: worldContract.abi,
+      //   account: delegatorAddress,
+      //   address: worldContract.address,
+      //   args: [
+      //     BigInt(amount),
+      //     shopId as `0x${string}`,
+      //     BigInt(itemIndex),
+      //     characterId as `0x${string}`,
+      //   ],
+      //   functionName: 'UD__buy',
+      // });
+
+      const canRestock = await worldContract.read.UD__canRestock([
+        shopId as `0x${string}`,
+      ]);
+      if (!canRestock) {
+        return {
+          error: undefined,
+          success: true,
+        };
+      }
+      const tx = await worldContract.write.UD__restock([
+        shopId as `0x${string}`,
+      ]);
+      const success = await waitForTransaction(tx);
+
+      return {
+        error: success ? undefined : 'Failed to restock.',
+        success: !!success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
   const createOrder = async (order: NewOrder): SystemCallReturn => {
     try {
       const simulatedTx = await publicClient.simulateContract({
@@ -741,6 +860,7 @@ export function createSystemCalls(
   // };
 
   return {
+    buyFromShop,
     cancelOrder,
     createEncounter,
     createOrder,
@@ -751,7 +871,9 @@ export function createSystemCalls(
     levelCharacter,
     mintCharacter,
     move,
+    restock,
     rollStats,
+    sellToShop,
     spawn,
     unequipItem,
     updateTokenUri,

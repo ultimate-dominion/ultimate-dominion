@@ -13,6 +13,7 @@ import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
 // eslint-disable-next-line import/no-named-as-default
 import Typist from 'react-typist';
+import { formatEther } from 'viem';
 
 import { ShopHalf } from '../components/ShopHalf';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -51,6 +52,7 @@ export const Shop = (): JSX.Element => {
     Array<ArmorTemplate | WeaponTemplate | SpellTemplate>
   >([]);
 
+  const [balances, setBalances] = useState<Array<string>>([]);
   const items = useMemo(
     () => [...inventoryArmor, ...inventorySpells, ...inventoryWeapons],
     [inventoryArmor, inventorySpells, inventoryWeapons],
@@ -60,24 +62,32 @@ export const Shop = (): JSX.Element => {
     if (isItemsLoading) return;
     if (items.length === 0) return;
     if (!shop) return;
-
     const sellableInventory = [
       ...armorTemplates,
       ...spellTemplates,
       ...weaponTemplates,
     ]
+      // filter out the items this shop does not sell
       .filter(
         item =>
           shop.sellableItems
             .map(item => item.toString())
             .indexOf(item.tokenId.toString()) > -1,
       )
+      // filter out the items the user does not have
       .filter(
         item =>
           items
             .map(x => x.tokenId.toString())
             .indexOf(item.tokenId.toString()) > -1,
       );
+
+    const b = sellableInventory.map(item =>
+      items
+        .filter(i => i.tokenId.toString() == item.tokenId.toString())[0]
+        .balance.toString(),
+    );
+    setBalances(b);
 
     const buyableStock = [
       ...weaponTemplates,
@@ -130,10 +140,19 @@ export const Shop = (): JSX.Element => {
       <HStack border="2px solid" mt={8} p={8} w="100%">
         <Spacer />
         <Stack h="100%" w="100%">
-          {sellable && sellable.length > 0 ? (
+          {userCharacter &&
+          balances &&
+          mobId &&
+          sellable &&
+          sellable.length > 0 ? (
             <ShopHalf
+              characterId={userCharacter.id}
+              shopId={mobId}
               items={sellable}
+              stock={balances}
               name={`Character’s Inventory - ${userCharacter?.goldBalance} $GOLD`}
+              itemIndexes={shop.sellableItems}
+              side="sell"
             />
           ) : (
             <Center>
@@ -143,13 +162,18 @@ export const Shop = (): JSX.Element => {
         </Stack>
         <Divider border="1px solid black" mx={8} orientation="vertical" />
         <Stack h="100%" w="100%">
-          {buyable && buyable.length > 0 ? (
+          {userCharacter && mobId && buyable && buyable.length > 0 ? (
             <ShopHalf
+              characterId={userCharacter.id}
+              stock={shop.stock.map(s => s.toString())}
               items={buyable}
-              name="Shopkeeper’s Inventory - 55 $GOLD"
+              name={`Shopkeeper’s Inventory - ${formatEther(BigInt(shop.gold)).toString()} $GOLD`}
+              shopId={mobId}
+              itemIndexes={shop.buyableItems}
+              side="buy"
             />
           ) : (
-            <Text>No buyable items</Text>
+            <Text>No Buyable Items</Text>
           )}
         </Stack>
         <Spacer />

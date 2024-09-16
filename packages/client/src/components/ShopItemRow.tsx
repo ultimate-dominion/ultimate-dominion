@@ -14,11 +14,15 @@ import {
   ModalOverlay,
   Text,
   useDisclosure,
+  // useToast,
   VStack,
 } from '@chakra-ui/react';
+import { Entity } from '@latticexyz/recs';
+import { useState } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoAdd, IoRemove } from 'react-icons/io5';
 
+import { useMUD } from '../contexts/MUDContext';
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -28,23 +32,35 @@ import {
 } from '../utils/types';
 
 export const ShopItemRow = ({
-  ...item
-}: ArmorTemplate | SpellTemplate | WeaponTemplate): JSX.Element => {
+  side,
+  stock,
+  shopId,
+  itemIndex,
+  characterId,
+  item,
+}: {
+  side: string;
+  characterId: Entity;
+  stock: string;
+  shopId: string;
+  item: ArmorTemplate | SpellTemplate | WeaponTemplate;
+  itemIndex: string;
+}): JSX.Element => {
+  // const { renderError, renderSuccess } = useToast();
+  const {
+    systemCalls: { buyFromShop, sellToShop },
+  } = useMUD();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [amount, setAmount] = useState(0);
 
   if (item.itemType === ItemType.Spell) {
     return <Text>TODO</Text>;
   }
 
-  const {
-    description,
-    minLevel,
-    name,
-    statRestrictions,
-    strModifier,
-    agiModifier,
-    intModifier,
-  } = item as ArmorTemplate | WeaponTemplate;
+  const { description, minLevel, name, statRestrictions } = item as unknown as
+    | ArmorTemplate
+    | SpellTemplate
+    | WeaponTemplate;
 
   return (
     <Flex
@@ -92,7 +108,7 @@ export const ShopItemRow = ({
             textAlign="center"
             w="75px"
           >
-            {0}
+            {stock}
           </Text>
           <Text
             display={{ base: 'none', lg: 'block' }}
@@ -136,15 +152,26 @@ export const ShopItemRow = ({
                   <Text fontWeight={700} fontSize={14}>
                     Stats
                   </Text>
-                  <Text fontWeight={400} fontSize={14}>
-                    STR{getStatSymbol(strModifier)}
-                    {strModifier} AGI{getStatSymbol(agiModifier)}
-                    {agiModifier} INT{getStatSymbol(intModifier)}
-                    {intModifier}{' '}
-                    {(item as ArmorTemplate).armorModifier
-                      ? `ARM${getStatSymbol((item as ArmorTemplate).armorModifier)}${(item as ArmorTemplate).armorModifier}`
-                      : ''}
-                  </Text>
+                  {item.itemType == ItemType.Armor ||
+                    (item.itemType == ItemType.Weapon && (
+                      <Text fontWeight={400} fontSize={14}>
+                        STR
+                        {getStatSymbol((item as WeaponTemplate).strModifier)}
+                        {(item as WeaponTemplate).strModifier} AGI
+                        {getStatSymbol((item as WeaponTemplate).agiModifier)}
+                        {(item as WeaponTemplate).agiModifier} INT
+                        {getStatSymbol((item as WeaponTemplate).intModifier)}
+                        {(item as WeaponTemplate).intModifier}{' '}
+                      </Text>
+                    ))}
+                  {item.itemType == ItemType.Armor && (
+                    <Text fontWeight={400} fontSize={14}>
+                      {(item as ArmorTemplate).armorModifier
+                        ? `ARM${getStatSymbol((item as ArmorTemplate).armorModifier)}${(item as ArmorTemplate).armorModifier}`
+                        : ''}
+                    </Text>
+                  )}
+
                   <Text mt={8} fontWeight={700} fontSize={14}>
                     Restrictions
                   </Text>
@@ -168,17 +195,70 @@ export const ShopItemRow = ({
                 </GridItem>
                 <GridItem colSpan={2} textAlign="center">
                   <VStack>
-                    <Text>AMOUNT (MAX 5) </Text>
+                    <Text>AMOUNT (MAX {stock}) </Text>
                     <HStack>
-                      <Button size="xs">
+                      <Button
+                        size="xs"
+                        onClick={() =>
+                          setAmount(
+                            amount > 0 && amount <= Number(stock)
+                              ? amount - 1
+                              : amount,
+                          )
+                        }
+                      >
                         <IoRemove />
                       </Button>
-                      <Input min={1} p={2} size="sm" value={0} w={10} />
-                      <Button size="xs">
+                      <Input
+                        max={stock}
+                        min={1}
+                        step={1}
+                        p={2}
+                        placeholder="0"
+                        size="sm"
+                        w={10}
+                        value={amount}
+                      />
+                      <Button
+                        size="xs"
+                        onClick={() =>
+                          setAmount(
+                            amount > -1 && amount < Number(stock)
+                              ? amount + 1
+                              : amount,
+                          )
+                        }
+                      >
                         <IoAdd />
                       </Button>
                     </HStack>
-                    <Button>Buy</Button>
+                    {side == 'buy' ? (
+                      <Button
+                        onClick={() =>
+                          buyFromShop(
+                            amount.toString(),
+                            shopId,
+                            itemIndex,
+                            characterId,
+                          )
+                        }
+                      >
+                        Buy
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() =>
+                          sellToShop(
+                            amount.toString(),
+                            shopId,
+                            itemIndex,
+                            characterId,
+                          )
+                        }
+                      >
+                        Sell
+                      </Button>
+                    )}
                   </VStack>
                 </GridItem>
               </Grid>

@@ -219,6 +219,8 @@ export type Order = {
 };
 
 export type Shop = {
+  stock: string[];
+  gold: string;
   buyableItems: string[];
   mobId: string;
   position: { x: number; y: number };
@@ -226,6 +228,11 @@ export type Shop = {
   priceMarkup: string;
   sellableItems: string[];
   shopId: string;
+};
+
+export type ShopItem = {
+  itemId: string;
+  price: string;
 };
 
 export type Spell = SpellTemplate & {

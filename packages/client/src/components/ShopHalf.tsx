@@ -11,6 +11,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { Entity } from '@latticexyz/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
@@ -34,9 +35,19 @@ const PER_PAGE = 5;
 export const ShopHalf = ({
   name,
   items,
+  stock,
+  shopId,
+  itemIndexes,
+  characterId,
+  side,
 }: {
+  characterId: Entity;
   name: string;
   items: Array<ArmorTemplate | SpellTemplate | WeaponTemplate>;
+  stock: Array<string> | null;
+  shopId: string;
+  itemIndexes: Array<string>;
+  side: string;
 }): JSX.Element => {
   const [entries, setEntries] = useState<
     Array<ArmorTemplate | SpellTemplate | WeaponTemplate>
@@ -203,7 +214,17 @@ export const ShopHalf = ({
       <VStack gap={3} maxW="100%" overflowX="auto" w="100%">
         {entries.length > 0 ? (
           entries.map((entry, i) => {
-            return <ShopItemRow {...entry} key={`shop-row-${i}`} />;
+            return (
+              <ShopItemRow
+                characterId={characterId}
+                itemIndex={itemIndexes[i]}
+                shopId={shopId}
+                stock={stock ? stock[i] : '0'}
+                item={entry}
+                key={`shop-row-${i}`}
+                side={side}
+              />
+            );
           })
         ) : (
           <Text mt={4}>No Data</Text>

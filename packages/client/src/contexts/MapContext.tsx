@@ -24,7 +24,11 @@ import {
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
-import { type Character, type Monster, Shop } from '../utils/types';
+import {
+  type Character,
+  type Monster,
+  Shop /* , ShopItem */,
+} from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
@@ -73,6 +77,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       GoldBalances,
       Position,
       Shops,
+      // ShopItems,
       Spawned,
       Stats,
     },
@@ -278,22 +283,47 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     },
     [EncounterEntity, monsterTemplates, Position, renderError, Spawned, Stats],
   );
+  // const getShopItemPrices = useCallback(
+  //   (entities: Entity[]): ShopItem[] => {
+  //     try {
+  //       const _shops: ShopItem[] = entities.map(entity => {
+  //         const itemId = entity.toString();
+  //         const shopItem = getComponentValueStrict(ShopItems, entity);
+
+  //         return {
+  //           itemId,
+  //           price: shopItem.price.toString(),
+  //         } as ShopItem;
+  //       });
+
+  //       return _shops;
+  //     } catch (e) {
+  //       renderError((e as Error)?.message ?? 'Failed to fetch shops.', e);
+  //       return [];
+  //     }
+  //   },
+  //   [ShopItems, renderError],
+  // );
 
   const getShops = useCallback(
     (entities: Entity[]): Shop[] => {
       try {
         const _shops: Shop[] = entities.map(entity => {
-          const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
+          const mobId = entity.toString();
           const _position = getComponentValueStrict(Position, entity);
           const shopData = getComponentValueStrict(Shops, entity);
 
           return {
-            buyableItems: shopData.buyableItems.map(item => item.toString()),
             mobId,
             position: { x: _position.x, y: _position.y },
             priceMarkup: shopData.priceMarkup.toString(),
             priceMarkdown: shopData.priceMarkdown.toString(),
             sellableItems: shopData.sellableItems.map(item => item.toString()),
+            buyableItems: shopData.buyableItems.map(item => item.toString()),
+            stock: shopData.stock.map(item => item.toString()),
+            restock: shopData.stock.map(item => item.toString()),
+            gold: shopData.gold.toString(),
+            maxGold: shopData.maxGold.toString(),
             shopId: entity,
           } as Shop;
         });
