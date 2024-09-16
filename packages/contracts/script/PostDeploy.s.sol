@@ -420,14 +420,9 @@ contract PostDeploy is Script {
         amounts[1] = 1;
         amounts[2] = 1;
 
-        uint256[] memory mageAmounts = new uint256[](3);
-        mageAmounts[0] = 1;
-        mageAmounts[1] = 1;
-        mageAmounts[2] = 1;
-
         world.UD__setStarterItems(Classes.Warrior, warriorItemIds, amounts);
         world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);
-        world.UD__setStarterItems(Classes.Mage, mageItemIds, mageAmounts);
+        world.UD__setStarterItems(Classes.Mage, mageItemIds, amounts);
     }
     function _createShops() internal {
         string memory json = vm.readFile("shopItems.json");

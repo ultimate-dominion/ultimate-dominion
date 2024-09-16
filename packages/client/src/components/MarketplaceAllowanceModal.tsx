@@ -1,10 +1,5 @@
 import {
   Button,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  HStack,
-  Input,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -15,255 +10,106 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useEffect, useState } from 'react';
-import { Address, erc20Abi, formatEther, parseEther } from 'viem';
-import { useAccount, useWalletClient } from 'wagmi';
+import { parseEther } from 'viem';
 
-import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
-import { ERC_1155_ABI } from '../utils/constants';
-import { ConnectWalletButton } from './ConnectWalletButton';
+import { useAllowance } from '../contexts/AllowanceContext';
+import { OrderType } from '../utils/types';
 
 export const MarketplaceAllowanceModal = ({
+  completeMessage = 'Allowance was successful!',
+  isCompleting,
   isOpen,
+  itemName,
   onClose,
+  onComplete,
+  orderPrice,
+  orderType,
 }: {
+  completeMessage?: string;
+  isCompleting: boolean;
   isOpen: boolean;
+  itemName: string;
   onClose: () => void;
+  onComplete: (e: React.FormEvent) => void;
+  orderPrice: string;
+  orderType: OrderType;
 }): JSX.Element => {
-  const { renderSuccess, renderError } = useToast();
-  const { data: externalWalletClient } = useWalletClient();
-  const { isConnected, address } = useAccount();
   const {
-    network: { publicClient },
-    components: { UltimateDominionConfig },
-  } = useMUD();
-
-  const { goldToken } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { goldToken: null };
-
-  const { items: itemsContract } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { items: null };
-
-  const [goldAllowance, setGoldAllowance] = useState<string>('0');
-  const [isApprovingGold, setIsApprovingGold] = useState(false);
-  const [goldErrorMessage, setGoldErrorMessage] = useState<string | null>(null);
-
-  const [itemsApproved, setItemsApproved] = useState(false);
-  const [isApprovingItems, setIsApprovingItems] = useState(false);
-
-  const { marketplace: marketplaceAddress } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { marketplace: null };
-
-  // Reset errorMessage state when any of the form fields change
-  useEffect(() => {
-    setGoldErrorMessage(null);
-  }, [goldAllowance]);
-
-  useEffect(() => {
-    if (isOpen) {
-      if (marketplaceAddress && externalWalletClient) {
-        (async () => {
-          const _itemsApproved = !!(await publicClient.readContract({
-            address: itemsContract as Address,
-            abi: ERC_1155_ABI,
-            functionName: 'isApprovedForAll',
-            args: [externalWalletClient.account.address, marketplaceAddress],
-          })) as boolean;
-
-          const _goldAllowance = await publicClient.readContract({
-            address: goldToken as Address,
-            abi: erc20Abi,
-            functionName: 'allowance',
-            args: [
-              externalWalletClient.account.address,
-              marketplaceAddress as Address,
-            ],
-          });
-
-          setItemsApproved(_itemsApproved);
-          setGoldAllowance(formatEther(_goldAllowance));
-        })();
-      }
-    }
-  }, [
-    externalWalletClient,
-    goldToken,
-    isOpen,
-    itemsContract,
-    marketplaceAddress,
-    publicClient,
-  ]);
-
-  const onApproveGoldAllowance = useCallback(async () => {
-    try {
-      setIsApprovingGold(true);
-
-      if (!externalWalletClient) {
-        throw new Error('No external wallet client found.');
-      }
-
-      if (!marketplaceAddress) {
-        throw new Error('No Marketplace address found.');
-      }
-
-      if (!goldAllowance || parseEther(goldAllowance) <= 0) {
-        setGoldErrorMessage('Amount must be greater than 0.');
-        return;
-      }
-
-      const { request } = await publicClient.simulateContract({
-        address: goldToken as Address,
-        abi: erc20Abi,
-        functionName: 'approve',
-        args: [marketplaceAddress as Address, parseEther(goldAllowance)],
-      });
-
-      const txHash = await externalWalletClient.writeContract(request);
-      const { status } = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-      });
-
-      if (status !== 'success') {
-        throw new Error('Transaction failed.');
-      }
-
-      setGoldAllowance(goldAllowance);
-      renderSuccess('Gold allowance successfully set!');
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error setting gold allowance.', e);
-    } finally {
-      setIsApprovingGold(false);
-    }
-  }, [
-    externalWalletClient,
     goldAllowance,
-    goldToken,
-    marketplaceAddress,
-    publicClient,
-    renderError,
-    renderSuccess,
-  ]);
+    isApprovingGold,
+    isApprovingItems,
+    itemsAllowance,
+    onApproveGoldAllowance,
+    onSetApprovalForAllItems,
+  } = useAllowance();
 
-  const onSetApprovalForAllItems = useCallback(async () => {
-    try {
-      setIsApprovingItems(true);
-
-      if (!externalWalletClient) {
-        throw new Error('No external wallet client found.');
-      }
-
-      if (!marketplaceAddress) {
-        throw new Error('No Marketplace address found.');
-      }
-
-      const { request } = await publicClient.simulateContract({
-        address: itemsContract as Address,
-        abi: ERC_1155_ABI,
-        functionName: 'setApprovalForAll',
-        args: [marketplaceAddress, !itemsApproved],
-      });
-
-      const txHash = await externalWalletClient.writeContract(request);
-      const { status } = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-      });
-
-      if (status !== 'success') {
-        throw new Error('Transaction failed.');
-      }
-
-      setItemsApproved(!itemsApproved);
-      renderSuccess(
-        `Item allowance successfully ${itemsApproved ? 'disallowed' : 'allowed'}!`,
-      );
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error setting item allowance.', e);
-    } finally {
-      setIsApprovingItems(false);
-    }
-  }, [
-    externalWalletClient,
-    itemsApproved,
-    itemsContract,
-    marketplaceAddress,
-    publicClient,
-    renderError,
-    renderSuccess,
-  ]);
+  if (
+    (goldAllowance >= parseEther(orderPrice) &&
+      orderType === OrderType.Buying) ||
+    (itemsAllowance && orderType === OrderType.Selling)
+  ) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Marketplace Allowances</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack p={4} spacing={10}>
+              <Text textAlign="center">{completeMessage}</Text>
+              <Button isLoading={isCompleting} onClick={onComplete}>
+                Complete
+              </Button>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose} variant="ghost">
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>
-          {isConnected ? 'Marketplace Allowances' : 'Connect Wallet'}
-        </ModalHeader>
+        <ModalHeader>Marketplace Allowances</ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
-          {address && externalWalletClient && isConnected ? (
-            <VStack p={4} spacing={10}>
-              <VStack alignItems="start" spacing={4}>
-                <HStack>
-                  <FormControl isInvalid={!!goldErrorMessage}>
-                    <FormLabel fontSize="xs">
-                      Set Marketplace gold allowance
-                    </FormLabel>
-                    {!!goldErrorMessage && (
-                      <FormHelperText color="red" fontSize="xs" mb={2}>
-                        {goldErrorMessage}
-                      </FormHelperText>
-                    )}
-                    <Input
-                      isDisabled={isApprovingGold}
-                      onChange={e => setGoldAllowance(e.target.value)}
-                      placeholder="Amount"
-                      type="number"
-                      value={goldAllowance}
-                    />
-                  </FormControl>
-                  <Button
-                    alignSelf="end"
-                    isLoading={isApprovingGold}
-                    onClick={onApproveGoldAllowance}
-                    size="sm"
-                  >
-                    Allow
-                  </Button>
-                </HStack>
-                <HStack>
-                  <FormControl>
-                    <FormLabel fontSize="xs">
-                      Set Marketplace item approval
-                    </FormLabel>
-                    <Button
-                      isLoading={isApprovingItems}
-                      onClick={onSetApprovalForAllItems}
-                      size="sm"
-                    >
-                      {itemsApproved ? 'Disallow' : 'Allow'}
-                    </Button>
-                  </FormControl>
-                </HStack>
-              </VStack>
+        <ModalBody p={4}>
+          {orderType === OrderType.Buying && (
+            <VStack spacing={10}>
+              <Text alignSelf="start">
+                In order to buy {itemName}, you must allow the marketplace to
+                use {orderPrice} of your $GOLD.
+              </Text>
+              <Button
+                isLoading={isApprovingGold}
+                onClick={() => onApproveGoldAllowance(orderPrice)}
+              >
+                Allow
+              </Button>
             </VStack>
-          ) : (
+          )}
+          {orderType === OrderType.Selling && (
             <VStack p={4} spacing={10}>
-              <Text textAlign="center">Connect your wallet to play.</Text>
-              <ConnectWalletButton />
+              <Text>
+                In order to sell {itemName}, you must allow the marketplace to
+                manage your items.
+              </Text>
+              <Button
+                onClick={onSetApprovalForAllItems}
+                isLoading={isApprovingItems}
+              >
+                Allow
+              </Button>
             </VStack>
           )}
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose} size="sm">
+          <Button onClick={onClose} variant="ghost">
             Close
           </Button>
         </ModalFooter>

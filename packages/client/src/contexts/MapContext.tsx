@@ -287,7 +287,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const getShopItems = useCallback(
     (entities: Entity[]): ShopItem[] => {
       try {
-
         const _shops: ShopItem[] = entities.map(entity => {
           const itemId = parseInt(entity);
           const shopItem = getComponentValueStrict(ShopItems, entity);

@@ -13,10 +13,12 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from './App';
 import { DevTools } from './components/DevTools';
+import { AllowanceProvider } from './contexts/AllowanceContext';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { ItemsProvider } from './contexts/ItemsContext';
 import { MonstersProvider } from './contexts/MonstersContext';
 import { MUDProvider } from './contexts/MUDContext';
+import { OrdersProvider } from './contexts/OrdersContext';
 import { Web3Provider } from './contexts/Web3Provider';
 import { setup } from './lib/mud/setup';
 import { globalStyles, theme } from './utils/theme';
@@ -34,9 +36,13 @@ setup().then(async result => {
         <MUDProvider setupResult={result}>
           <ItemsProvider>
             <MonstersProvider>
-              <CharacterProvider>
-                <App />
-              </CharacterProvider>
+              <OrdersProvider>
+                <CharacterProvider>
+                  <AllowanceProvider>
+                    <App />
+                  </AllowanceProvider>
+                </CharacterProvider>
+              </OrdersProvider>
             </MonstersProvider>
           </ItemsProvider>
           {import.meta.env.DEV && <DevTools />}
