@@ -60,6 +60,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     attackOutcomes,
     currentBattle,
     opponent,
+    statusEffectActions,
     userCharacterForBattleRendering,
   } = useBattle();
   const { isRefreshing } = useMovement();
@@ -175,6 +176,30 @@ export const TileDetailsPanel = (): JSX.Element => {
     return position?.x === 0 && position?.y === 0;
   }, [position]);
 
+  const opponentStatusEffect = useMemo(() => {
+    const activeStatusEffects = statusEffectActions.filter(
+      action => action.active,
+    );
+
+    const opponentStatusEffect = activeStatusEffects.find(
+      action => action.victimId === opponent?.id,
+    );
+
+    return opponentStatusEffect?.name ?? '';
+  }, [opponent, statusEffectActions]);
+
+  const userCharacterStatusEffect = useMemo(() => {
+    const activeStatusEffects = statusEffectActions.filter(
+      action => action.active,
+    );
+
+    const userCharacterStatusEffect = activeStatusEffects.find(
+      action => action.victimId === character?.id,
+    );
+
+    return userCharacterStatusEffect?.name ?? '';
+  }, [character, statusEffectActions]);
+
   if (!currentBattle && isRefreshing) {
     return (
       <Flex alignItems="center" h="100%" justifyContent="center">
@@ -270,6 +295,7 @@ export const TileDetailsPanel = (): JSX.Element => {
               maxHp={opponent.maxHp}
               currentHp={opponent.currentHp}
               level={opponent.level}
+              statusEffect={opponentStatusEffect}
               w="90%"
             />
             <VStack alignItems="start" px={4}>
@@ -289,6 +315,7 @@ export const TileDetailsPanel = (): JSX.Element => {
               maxHp={userCharacterForBattleRendering.maxHp}
               currentHp={userCharacterForBattleRendering.currentHp}
               level={userCharacterForBattleRendering.level}
+              statusEffect={userCharacterStatusEffect}
               w="90%"
             />
             <VStack alignItems="start" px={4}>

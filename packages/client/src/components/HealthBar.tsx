@@ -1,14 +1,24 @@
-import { Box, Flex, StackProps, Text, VStack } from '@chakra-ui/react';
+import {
+  Badge,
+  Box,
+  Flex,
+  HStack,
+  StackProps,
+  Text,
+  VStack,
+} from '@chakra-ui/react';
 
 export const HealthBar = ({
   maxHp,
   currentHp,
   level,
+  statusEffect,
   ...stackProps
 }: {
   maxHp: string;
   currentHp: string;
   level?: string;
+  statusEffect?: string;
 } & StackProps): JSX.Element => {
   const currentHpWithFloor = parseInt(currentHp) < 0 ? 0 : parseInt(currentHp);
   const health = (currentHpWithFloor / parseInt(maxHp)) * 100;
@@ -16,7 +26,7 @@ export const HealthBar = ({
   const barColor = health > 50 ? 'green' : health > 15 ? 'yellow' : 'red';
 
   return (
-    <VStack alignItems="end" spacing={0.5} {...stackProps}>
+    <VStack spacing={0.5} {...stackProps}>
       {level && (
         <Text
           alignSelf="start"
@@ -49,9 +59,16 @@ export const HealthBar = ({
           />
         </Box>
       </Flex>
-      <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
-        {currentHpWithFloor} / {maxHp}
-      </Text>
+      <HStack justify={statusEffect ? 'space-between' : 'end'} w="100%">
+        {statusEffect && (
+          <Badge bgColor="red" color="white" fontSize="2xs" size="xs">
+            {statusEffect}
+          </Badge>
+        )}
+        <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
+          {currentHpWithFloor} / {maxHp}
+        </Text>
+      </HStack>
     </VStack>
   );
 };
