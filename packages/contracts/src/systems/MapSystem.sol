@@ -177,7 +177,10 @@ contract MapSystem is System {
             }
         }
         Position.set(entityId, 0, 0);
-        // todo end combat for entity
+        // end combat for entity
+        if (EncounterEntity.getEncounterId(entityId) != bytes32(0)) {
+            EncounterEntity.deleteRecord(entityId);
+        }
         require(entityWasAtPosition, "Entity not at position");
     }
 

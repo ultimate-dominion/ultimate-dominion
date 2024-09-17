@@ -146,7 +146,6 @@ contract LootManagerSystem is System {
         for (uint256 i; i < monsterStats.inventory.length; i++) {
             tempItemId = monsterStats.inventory[i];
             uint256 dropChance = Items.getDropChance(tempItemId);
-            console.log("drop calc", randomNumber % 100_000_000 < dropChance);
             if (randomNumber % 100_000_000 < dropChance) {
                 console.log("ITEM DROPPED", tempItemId);
                 IWorld(_world()).UD__dropItem(characterId, tempItemId, 1);
@@ -247,10 +246,9 @@ contract LootManagerSystem is System {
                         _addEscrowBalance(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
                     }
                     if (_expAmount > uint256(0) && distTemps.livingPlayers > uint256(0)) {
-                        statsTemp.experience += (
-                            (_expAmount / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)
-                                / WAD
-                        );
+                        statsTemp.experience +=
+                            ((_expAmount / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp));
+                        // / WAD
                     }
                 }
                 Stats.set(distTemps.entityIdTemp, statsTemp);

@@ -219,7 +219,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
     function test_EndTurn_EndsPvEEncounter() public {
         StatsData memory startingStats = Stats.get(bobCharacterId);
-        uint256 startingGold = goldToken.balanceOf(bob);
+        uint256 startingGold = world.UD__getEscrowBalance(bobCharacterId);
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
@@ -236,12 +236,12 @@ contract Test_CombatSystem is SetUp, GasReporter {
         }
 
         StatsData memory endingStats = Stats.get(bobCharacterId);
-        uint256 endingGold = goldToken.balanceOf(bob);
+        uint256 endingGold = world.UD__getEscrowBalance(bobCharacterId);
         int256 bobEndingHp = Stats.getCurrentHp(bobCharacterId);
 
         if (bobEndingHp > 0) {
             assertGt(endingStats.experience, startingStats.experience, "incorrect exp");
-            assertGt(endingGold, startingGold, "incorrect gold");
+            assertGt(startingGold, world.UD__getEscrowBalance(bobCharacterId), "incorrect gold");
             assertNotEq(startingStats.currentHp, Stats.get(entityId).currentHp, "incorrect hp");
             bytes32[] memory entities = world.UD__getEntitiesAtPosition(0, 1);
             bool entityIsAtPosition;
