@@ -266,12 +266,6 @@ export const CharacterPage = (): JSX.Element => {
             lg: 'repeat(3, 1fr)',
             xl: 'repeat(3, 1fr)',
           }}
-          templateRows={{
-            base: 'repeat(4, 1fr)',
-            sm: 'repeat(4, 1fr)',
-            lg: 'repeat(2, 1fr)',
-            xl: 'repeat(2, 1fr)',
-          }}
         >
           <GridItem
             border="solid"
@@ -280,7 +274,6 @@ export const CharacterPage = (): JSX.Element => {
             pb={6}
             pt={{ base: 6, md: 12 }}
             px={6}
-            rowStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
             <Box h="100%" position="relative">
               <VStack>
@@ -324,7 +317,6 @@ export const CharacterPage = (): JSX.Element => {
             pb={6}
             pt={{ base: 6, md: 12 }}
             px={6}
-            rowStart={{ base: 2, sm: 2, md: 2, lg: 1, xl: 1 }}
           >
             <LevelingPanel canLevel={canLevel} character={character} />
           </GridItem>
@@ -332,7 +324,6 @@ export const CharacterPage = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
-            rowStart={{ base: 3, sm: 3, md: 3, lg: 1, xl: 1 }}
             pb={6}
             pt={{ base: 6, md: 12 }}
             px={6}
@@ -399,8 +390,6 @@ export const CharacterPage = (): JSX.Element => {
             colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             pb={{ base: 12, lg: 0 }}
-            rowSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            rowStart={{ base: 4, sm: 4, md: 4, lg: 2, xl: 2 }}
           >
             <ItemsPanel character={character} />
           </GridItem>

@@ -190,7 +190,14 @@ contract MapSystem is System {
             }
         }
         Position.set(entityId, 0, 0);
+        Spawned.setSpawned(entityId, false);
         require(entityWasAtPosition, "Entity not at position");
+    }
+
+    function removeEntitiesFromBoard(bytes32[] memory entityIds) public {
+        for (uint256 i; i < entityIds.length; i++) {
+            removeEntityFromBoard(entityIds[i]);
+        }
     }
 
     function _moveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) internal {
