@@ -22,7 +22,7 @@ uint256 constant CRIT_MODIFIER = 10;
 int256 constant STAT_MODIFIER = 200;
 
 //Gold Drop constants
-uint256 constant BASE_GOLD_DROP = 1e18; //
+uint256 constant BASE_GOLD_DROP = 1 ether; //
 
 // LEVELING
 int256 constant BASE_HP_GAIN = 1;

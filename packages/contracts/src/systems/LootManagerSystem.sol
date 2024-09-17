@@ -129,7 +129,7 @@ contract LootManagerSystem is System {
     function _calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) internal view returns (uint256 dropAmount) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         // Calculate level-based drop
-        dropAmount = randomNumber % (BASE_GOLD_DROP * mobLevel) + 0.05 ether;
+        dropAmount = (randomNumber % (BASE_GOLD_DROP * mobLevel)) + 0.05 ether;
     }
 
     function _calculateItemDrop(uint256 randomNumber, bytes32 entityId, bytes32 characterId)
@@ -217,7 +217,6 @@ contract LootManagerSystem is System {
             bool correctLevelSpread = distTemps.defenderLevelTemp > distTemps.cumulativePlayerLevels
                 ? true
                 : (distTemps.cumulativePlayerLevels - distTemps.defenderLevelTemp) <= 5;
-
             if (EncounterEntity.getDied(distTemps.monsterTemp) && correctLevelSpread) {
                 _expAmount += Stats.getExperience(distTemps.monsterTemp);
                 _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
@@ -246,9 +245,9 @@ contract LootManagerSystem is System {
                         _addEscrowBalance(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
                     }
                     if (_expAmount > uint256(0) && distTemps.livingPlayers > uint256(0)) {
-                        statsTemp.experience +=
-                            ((_expAmount / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp));
-                        // / WAD
+                        statsTemp.experience += (
+                            (_expAmount / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)
+                        ) / WAD;
                     }
                 }
                 Stats.set(distTemps.entityIdTemp, statsTemp);
@@ -259,7 +258,7 @@ contract LootManagerSystem is System {
 
     function calculateExpMultiplier(bytes32 characterId) public view returns (uint256 _expMultiplier) {
         uint256 escrowBalance = getEscrowBalance(characterId);
-        _expMultiplier = (Math.sqrt(escrowBalance) * 1e8) / (EXP_MODIFIER) + WAD;
+        _expMultiplier = ((Math.sqrt(escrowBalance) * 1e8) / (EXP_MODIFIER)) + WAD;
     }
 
     function _trimDroppedItemIds(uint256 totalItemsDropped, bytes[] memory itemsDropped)

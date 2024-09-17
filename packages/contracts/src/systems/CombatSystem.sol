@@ -117,8 +117,9 @@ contract CombatSystem is System {
                     if (actionOutcomeData.hit[i]) {
                         int256 currentHp =
                             Stats.getCurrentHp(actionOutcomeData.defenderId) - int256(actionOutcomeData.damagePerHit[i]);
-                        if (currentHp <= 0) actionOutcomeData.defenderDied = true;
+
                         Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
+                        if (currentHp <= 0) actionOutcomeData.defenderDied = true;
                     } else {
                         actionOutcomeData.miss[i] = true;
                     }
