@@ -144,6 +144,16 @@ export const BattleProvider = ({
 
     if (!latestBattle) return null;
 
+    const latestCompletedBattle = allBattles.filter(b => b.end !== '0').pop();
+
+    if (latestCompletedBattle) {
+      const combatOutcome = getComponentValue(
+        CombatOutcome,
+        latestCompletedBattle.encounterId,
+      );
+      if (latestBattle.end !== '0' && !combatOutcome) return null;
+    }
+
     const latestBattleOutcomeSeen = localStorage.getItem(
       BATTLE_OUTCOME_SEEN_KEY,
     );
@@ -151,7 +161,7 @@ export const BattleProvider = ({
     if (latestBattleOutcomeSeen === latestBattle?.encounterId) return null;
 
     return latestBattle;
-  }, [allBattles]);
+  }, [allBattles, CombatOutcome]);
 
   const lastestBattleOutcome = useMemo(() => {
     const latestCompletedBattle = allBattles.filter(b => b.end !== '0').pop();
