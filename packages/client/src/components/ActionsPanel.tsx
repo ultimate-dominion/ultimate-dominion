@@ -32,6 +32,7 @@ export const ActionsPanel = (): JSX.Element => {
     onAttack,
     onContinueToBattleOutcome,
     opponent,
+    statusEffectActions,
   } = useBattle();
   const { isRefreshing } = useMovement();
   const {
@@ -392,6 +393,10 @@ export const ActionsPanel = (): JSX.Element => {
               item => item.tokenId === attack.itemId,
             );
             const itemName = attackItem?.name ?? 'an item';
+            const possibleStatusEffectAttack = statusEffectActions.find(
+              statusEffectAction =>
+                Number(statusEffectAction.turnStart) - 1 === i,
+            );
 
             if (attack.miss[0]) {
               return (
@@ -436,31 +441,62 @@ export const ActionsPanel = (): JSX.Element => {
                 key={`battle-attack-${i}`}
                 stdTypingDelay={10}
               >
-                {attack.attackerId === character?.id ? (
-                  <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                    {critText}You attacked{' '}
-                    <Text as="span" color="green">
-                      {opponent?.name}
-                    </Text>{' '}
-                    with {itemName} for{' '}
-                    <Text as="span" color="red">
-                      {attack.attackerDamageDelt}
-                    </Text>{' '}
-                    damage.
-                  </Text>
-                ) : (
-                  <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                    {critText}
-                    <Text as="span" color="green">
-                      {opponent?.name}
-                    </Text>{' '}
-                    attacked you with {itemName} for{' '}
-                    <Text as="span" color="red">
-                      {attack.attackerDamageDelt}
-                    </Text>{' '}
-                    damage.
-                  </Text>
-                )}
+                {attack.attackerId === character?.id &&
+                  !!possibleStatusEffectAttack && (
+                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                      {critText}You attacked{' '}
+                      <Text as="span" color="green">
+                        {opponent?.name}
+                      </Text>{' '}
+                      with {itemName}. You inflicted{' '}
+                      <Text as="span" color="red">
+                        {possibleStatusEffectAttack.name}
+                      </Text>
+                      !
+                    </Text>
+                  )}
+                {attack.attackerId !== character?.id &&
+                  !!possibleStatusEffectAttack && (
+                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                      {critText}
+                      <Text as="span" color="green">
+                        {opponent?.name}
+                      </Text>{' '}
+                      attacked you with {itemName}. You were inflicted with{' '}
+                      <Text as="span" color="red">
+                        {possibleStatusEffectAttack.name}
+                      </Text>
+                      !
+                    </Text>
+                  )}
+                {attack.attackerId === character?.id &&
+                  !possibleStatusEffectAttack && (
+                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                      {critText}You attacked{' '}
+                      <Text as="span" color="green">
+                        {opponent?.name}
+                      </Text>{' '}
+                      with {itemName} for{' '}
+                      <Text as="span" color="red">
+                        {attack.attackerDamageDelt}
+                      </Text>{' '}
+                      damage.
+                    </Text>
+                  )}
+                {attack.attackerId !== character?.id &&
+                  !possibleStatusEffectAttack && (
+                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                      {critText}
+                      <Text as="span" color="green">
+                        {opponent?.name}
+                      </Text>{' '}
+                      attacked you with {itemName} for{' '}
+                      <Text as="span" color="red">
+                        {attack.attackerDamageDelt}
+                      </Text>{' '}
+                      damage.
+                    </Text>
+                  )}
               </Typist>
             );
           })}

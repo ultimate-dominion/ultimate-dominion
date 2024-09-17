@@ -106,6 +106,19 @@
   },
   {
     "type": "function",
+    "name": "UD__adminRemoveEntity",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__adminSetCombatEncounter",
     "inputs": [
       {
@@ -3701,6 +3714,19 @@
         "name": "y",
         "type": "uint16",
         "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__removeEntitiesFromBoard",
+    "inputs": [
+      {
+        "name": "entityIds",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       }
     ],
     "outputs": [],

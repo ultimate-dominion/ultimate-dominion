@@ -60,6 +60,10 @@ contract AdminSystem is System {
         Stats.set(entityId, desiredStats);
     }
 
+    function adminRemoveEntity(bytes32 entityId) public onlyAdmin {
+        IWorld(_world()).UD__removeEntityFromBoard(entityId);
+    }
+
     function adminMoveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) public onlyAdmin {
         bytes32[] memory entAtPos = IWorld(_world()).UD__getEntitiesAtPosition(currentX, currentY);
         bool entityWasAtPosition;

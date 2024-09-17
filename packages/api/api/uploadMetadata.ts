@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { uploadToPinata } from "../lib/fileStorage";
+import { uploadToPinata } from "../lib/fileStorage.js";
 
 const uploadMetadata = async (req: VercelRequest, res: VercelResponse) => {
   try {

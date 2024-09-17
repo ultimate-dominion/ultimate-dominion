@@ -267,6 +267,15 @@ export type StatRestrictions = {
   minStrength: string;
 };
 
+export type StatusAction = {
+  active: boolean;
+  effectId: Entity;
+  name: string;
+  turnStart: string;
+  validTurns: string;
+  victimId: Entity;
+};
+
 export type Weapon = WeaponTemplate & {
   balance: string;
   itemId: Entity;

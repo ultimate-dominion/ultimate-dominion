@@ -349,7 +349,7 @@
         "strModifier": 0
       },
       "statRestrictions": {
-        "minAgility": 8,
+        "minAgility": 6,
         "minIntelligence": 0,
         "minStrength": 0
       }

@@ -112,4 +112,20 @@ contract Test_MobSystem is SetUp, GasReporter {
         assertLt(ents.length, 7, "incorrect spawned monster lenth");
         assertEq(ents[0], bobCharacterId, "incorrect entity id for bob");
     }
+
+    function test_removeEntity() public {
+        vm.prank(bob);
+        world.UD__spawn(bobCharacterId);
+
+        vm.prank(alice);
+        vm.expectRevert();
+        world.UD__removeEntityFromBoard(bobCharacterId);
+
+        vm.prank(deployer);
+        world.UD__adminRemoveEntity(bobCharacterId);
+
+        vm.warp(block.timestamp + 11 minutes);
+        vm.prank(alice);
+        world.UD__removeEntityFromBoard(bobCharacterId);
+    }
 }

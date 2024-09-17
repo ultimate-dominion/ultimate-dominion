@@ -4,6 +4,8 @@ import {
   getComponentValue,
   getComponentValueStrict,
   Has,
+  HasValue,
+  runQuery,
 } from '@latticexyz/recs';
 import { decodeEntity } from '@latticexyz/store-sync/recs';
 import {
@@ -14,7 +16,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { formatEther } from 'viem';
+import { formatEther, hexToBigInt, sliceHex } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
@@ -28,10 +30,36 @@ import {
   type CombatDetails,
   type CombatOutcomeType,
   type Monster,
+  type StatusAction,
 } from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMap } from './MapContext';
 import { useMUD } from './MUDContext';
+
+const decodeAppliedStatusEffectId = (encodedId: string) => {
+  const effectId = sliceHex(encodedId as `0x${string}`, 0, 8);
+  const timestampHex = sliceHex(encodedId as `0x${string}`, 8, 16);
+  const turnAppliedHex = sliceHex(encodedId as `0x${string}`, 24, 32);
+
+  const timestamp = hexToBigInt(timestampHex);
+  const turnApplied = hexToBigInt(turnAppliedHex);
+
+  return {
+    effectId,
+    timestamp,
+    turnApplied,
+  };
+};
+
+const STATUS_EFFECT_NAME_MAPPING: { [key: string]: string } = {
+  '0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000': 'blind',
+  '0x78ded5c390ab6de3000000000000000000000000000000000000000000000000':
+    'poison',
+  '0x54a7e38986f19669000000000000000000000000000000000000000000000000':
+    'stupify',
+  '0x98562f2b32aeb98f000000000000000000000000000000000000000000000000':
+    'weaken',
+};
 
 type BattleContextType = {
   attackOutcomes: AttackOutcomeType[];
@@ -42,6 +70,7 @@ type BattleContextType = {
   onAttack: (itemId: string, currentTurn: string) => void;
   onContinueToBattleOutcome: (cont: boolean) => void;
   opponent: Character | Monster | null;
+  statusEffectActions: StatusAction[];
   userCharacterForBattleRendering: Character | null;
 };
 
@@ -54,6 +83,7 @@ const BattleContext = createContext<BattleContextType>({
   onAttack: () => {},
   onContinueToBattleOutcome: () => {},
   opponent: null,
+  statusEffectActions: [],
   userCharacterForBattleRendering: null,
 });
 
@@ -66,7 +96,13 @@ export const BattleProvider = ({
 }: BattleProviderProps): JSX.Element => {
   const { renderError } = useToast();
   const {
-    components: { ActionOutcome, CombatEncounter, CombatOutcome },
+    components: {
+      ActionOutcome,
+      CombatEncounter,
+      CombatOutcome,
+      EncounterEntity,
+      StatusEffectValidity,
+    },
     delegatorAddress,
     systemCalls: { endTurn },
   } = useMUD();
@@ -220,6 +256,53 @@ export const BattleProvider = ({
     [allAttackOutcomes, currentBattle],
   );
 
+  const statusEffectActions: StatusAction[] = useMemo(() => {
+    if (!currentBattle) return [];
+
+    const encounterEntities = Array.from(
+      runQuery([
+        Has(EncounterEntity),
+        HasValue(EncounterEntity, { encounterId: currentBattle?.encounterId }),
+      ]),
+    );
+
+    return encounterEntities
+      .map(entity => {
+        const encounter = getComponentValueStrict(EncounterEntity, entity);
+
+        const { appliedStatusEffects } = encounter;
+        const statusEffects = appliedStatusEffects.map(
+          decodeAppliedStatusEffectId,
+        );
+
+        const _statusEffectActions = statusEffects.map(effect => {
+          const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
+          const validity = getComponentValueStrict(
+            StatusEffectValidity,
+            paddedEffectId,
+          );
+
+          const isActive =
+            BigInt(currentBattle.currentTurn) <=
+            effect.turnApplied + validity.validTurns;
+
+          const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+
+          return {
+            active: isActive,
+            effectId: paddedEffectId,
+            name,
+            turnStart: effect.turnApplied.toString(),
+            validTurns: validity.validTurns.toString(),
+            victimId: entity,
+          };
+        });
+
+        return _statusEffectActions;
+      })
+      .flat();
+  }, [currentBattle, EncounterEntity, StatusEffectValidity]);
+
   const onAttack = useCallback(
     async (itemId: string, currentTurn: string) => {
       try {
@@ -285,6 +368,7 @@ export const BattleProvider = ({
         onAttack,
         onContinueToBattleOutcome,
         opponent,
+        statusEffectActions,
         userCharacterForBattleRendering,
       }}
     >
