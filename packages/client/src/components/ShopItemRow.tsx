@@ -20,146 +20,64 @@ import { Entity } from '@latticexyz/recs';
 import { useState } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoAdd, IoRemove } from 'react-icons/io5';
+import { parseEther } from 'viem';
 
-import { ShopAllowanceModal } from '../components/ShopAllowanceModal';
+import { useAllowance } from '../contexts/AllowanceContext';
 import { useMUD } from '../contexts/MUDContext';
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
   ItemType,
+  OrderType,
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
+import { ShopAllowanceModal } from './ShopAllowanceModal';
 
 export const ShopItemRow = ({
   balance,
-  price,
-  side,
-  stock,
-  shopId,
-  itemIndex,
   characterId,
   item,
+  itemIndex,
+  orderType,
+  price,
+  stock,
+  shopId,
 }: {
   balance: string | null;
-  price: string;
-  side: string;
   characterId: Entity;
-  stock: string;
-  shopId: string;
   item: ArmorTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;
+  orderType: OrderType;
+  price: string;
+  shopId: string;
+  stock: string | null;
 }): JSX.Element => {
   // const { renderError /* , renderSuccess */ } = useToast();
   const {
-    // components: { UltimateDominionConfig },
     systemCalls: { buyFromShop, sellToShop },
   } = useMUD();
-  // const { shop: shopAddress, goldToken } = useComponentValue(
-  //   UltimateDominionConfig,
-  //   singletonEntity,
-  // ) ?? { shop: null, goldToken: null };
 
-  // const { items: itemsContract } = useComponentValue(
-  //   UltimateDominionConfig,
-  //   singletonEntity,
-  // ) ?? { items: null };
-
-  // const { character: userCharacter } = useCharacter();
+  const { goldAllowanceShops, itemsAllowanceShops, refreshAllowances } =
+    useAllowance();
 
   const {
-    isOpen: allowanceIsOpen,
-    onOpen: allowanceOnOpen,
-    onClose: allowanceOnClose,
+    isOpen: isAllowanceOpen,
+    onOpen: onAllowanceOpen,
+    onClose: onAllowanceClose,
   } = useDisclosure();
+
   const { isOpen, onOpen, onClose } = useDisclosure();
-  // const fetchAllowances = useCallback(async () => {
-  //   let allowances = { goldAllowance: 0n, itemAllowance: false };
-  //   try {
-  //     const _goldAllowance = await publicClient.readContract({
-  //       address: goldToken as Address,
-  //       abi: erc20Abi,
-  //       functionName: 'allowance',
-  //       args: [userCharacter?.owner as Address, shopAddress as Address],
-  //     });
-
-  //     const _itemAllowance = (await publicClient.readContract({
-  //       address: itemsContract as Address,
-  //       abi: ERC_1155_ABI,
-  //       functionName: 'isApprovedForAll',
-  //       args: [userCharacter?.owner as Address, shopAddress as Address],
-  //     })) as boolean;
-  //     allowances = {
-  //       goldAllowance: _goldAllowance,
-  //       itemAllowance: _itemAllowance,
-  //     };
-  //     return allowances;
-  //   } catch (e) {
-  //     renderError((e as Error)?.message ?? 'Could not get allowances', e);
-  //     return allowances;
-  //   }
-  // }, [
-  //   goldToken,
-  //   itemsContract,
-  //   shopAddress,
-  //   publicClient,
-  //   renderError,
-  //   userCharacter?.owner,
-  // ]);
-
+  const refresh = async () => {
+    refreshAllowances();
+    onAllowanceClose();
+  };
   const [amount, setAmount] = useState(0);
-  // const [allowance, setAllowance] = useState({
-  //   goldAllowance: BigInt(0),
-  //   itemAllowance: false,
-  // });
-  if (item.itemType === ItemType.Spell) {
-    return <Text>TODO</Text>;
-  }
 
-  // const buy = useCallback(
-  //   async (amount, shopId, index, characterId) => {
-  //     const allowances = await fetchAllowances();
-  //     setAllowance(allowances);
-  //     if (allowances.goldAllowance < parseEther(price) * BigInt(amount)) {
-
-  //     }
-  //   },
-  //   [allowanceIsOpen, fetchAllowances, price],
-  // );
-
-  // const sell = useCallback(
-  //   async (amount, shopId, index, characterId) => {
-  //     const allowances = await fetchAllowances();
-  //     if (!allowances.itemAllowance) {
-  //       allowanceIsOpen();
-  //     }
-  //   },
-  //   [allowanceIsOpen, fetchAllowances],
-  // const canBuy = useMemo(() => {
-  //   return true;
-  //   // if (
-  //   //   side == 'buy' &&
-  //   //   allowance.goldAllowance <
-  //   //     parseEther(amount.toString()) * parseEther(price)
-  //   // )
-  //   //   return false;
-  //   // if (side == 'sell' && allowance.itemAllowance == false) return false;
-  //   // return true;
-  // }, []);
-
-  // useEffect(() => {
-  //   (async () => {
-  //     if (!isSynced) return;
-  //     const a = await fetchAllowances();
-  //     setAllowance(a);
-  //   })();
-  // }, [fetchAllowances, isSynced]);
-
-  const { description, minLevel, name, statRestrictions } = item as unknown as
+  const { name, statRestrictions } = item as
     | ArmorTemplate
     | SpellTemplate
     | WeaponTemplate;
-
   return (
     <Flex
       border="2px solid"
@@ -206,7 +124,7 @@ export const ShopItemRow = ({
             textAlign="center"
             w="75px"
           >
-            {stock}
+            {balance || stock}
           </Text>
           <Text
             display={{ base: 'none', lg: 'block' }}
@@ -215,13 +133,18 @@ export const ShopItemRow = ({
             textAlign="center"
             w="100%"
           >
-            {price || balance}
+            {price}
           </Text>
         </HStack>
         <ShopAllowanceModal
-          isOpen={allowanceIsOpen}
-          onClose={allowanceOnClose}
-        />
+          isCompleting={false}
+          isOpen={isAllowanceOpen}
+          itemName={name}
+          onClose={refresh}
+          onComplete={onAllowanceClose}
+          orderPrice={(Number(price) * amount).toString()}
+          orderType={orderType}
+        ></ShopAllowanceModal>
         <Modal isCentered isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
@@ -247,7 +170,7 @@ export const ShopItemRow = ({
                   </Avatar>
 
                   <Text fontWeight={400} fontSize={14} mt={8}>
-                    {description ? description.toString() : ''}
+                    {item?.description || ''}
                   </Text>
                 </GridItem>
                 <GridItem>
@@ -278,7 +201,7 @@ export const ShopItemRow = ({
                     Restrictions
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    - LVL {minLevel ? minLevel.toString() : 0}
+                    - LVL {item?.minLevel || 0}
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
                     -{' '}
@@ -297,9 +220,18 @@ export const ShopItemRow = ({
                 </GridItem>
                 <GridItem colSpan={2} textAlign="center">
                   <VStack>
-                    <Text>AMOUNT (MAX {stock}) </Text>
+                    {orderType == OrderType.Buying ? (
+                      <Text>
+                        Total Cost: {(Number(price) * amount).toFixed(3)} $GOLD
+                      </Text>
+                    ) : (
+                      <Text>
+                        Total Gained: {(Number(price) * amount).toFixed(3)}{' '}
+                        $GOLD
+                      </Text>
+                    )}
+                    <Text>AMOUNT (MAX {stock || balance}) </Text>
                     <HStack>
-                      <Button></Button>
                       <Button
                         size="xs"
                         onClick={() =>
@@ -313,7 +245,7 @@ export const ShopItemRow = ({
                         <IoRemove />
                       </Button>
                       <Input
-                        max={stock}
+                        max={stock || balance || 0}
                         min={1}
                         step={1}
                         p={2}
@@ -326,7 +258,7 @@ export const ShopItemRow = ({
                         size="xs"
                         onClick={() =>
                           setAmount(
-                            amount > -1 && amount < Number(stock)
+                            amount > -1 && amount < Number(stock || balance)
                               ? amount + 1
                               : amount,
                           )
@@ -335,22 +267,31 @@ export const ShopItemRow = ({
                         <IoAdd />
                       </Button>
                     </HStack>
-                    {!true && <Button onClick={allowanceOnOpen}>Allow</Button>}
-                    {side == 'buy' && true && (
-                      <Button
-                        onClick={() =>
-                          buyFromShop(
-                            amount.toString(),
-                            shopId,
-                            itemIndex,
-                            characterId,
-                          )
-                        }
-                      >
-                        Buy
-                      </Button>
+                    {orderType == OrderType.Buying &&
+                      goldAllowanceShops <
+                        parseEther((Number(price) * amount).toString()) && (
+                        <Button onClick={onAllowanceOpen}>Approve</Button>
+                      )}
+                    {orderType == OrderType.Selling && !itemsAllowanceShops && (
+                      <Button onClick={onAllowanceOpen}>Approve</Button>
                     )}
-                    {side == 'sell' && true && (
+                    {orderType == OrderType.Buying &&
+                      goldAllowanceShops >=
+                        parseEther((Number(price) * amount).toString()) && (
+                        <Button
+                          onClick={() =>
+                            buyFromShop(
+                              amount.toString(),
+                              shopId,
+                              itemIndex,
+                              characterId,
+                            )
+                          }
+                        >
+                          Buy
+                        </Button>
+                      )}
+                    {orderType == OrderType.Selling && itemsAllowanceShops && (
                       <Button
                         onClick={() =>
                           sellToShop(
@@ -370,7 +311,7 @@ export const ShopItemRow = ({
             </ModalBody>
           </ModalContent>
         </Modal>
-        <Box display={{ base: 'none', md: 'block' }} w="30px">
+        <Box display={{ base: 'none', md: 'block' }} w="40px">
           <Button onClick={onOpen} p={3} variant="ghost">
             <IoIosArrowForward />
           </Button>

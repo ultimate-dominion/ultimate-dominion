@@ -20,7 +20,12 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { GAME_BOARD_PATH } from '../Routes';
-import { ArmorTemplate, SpellTemplate, WeaponTemplate } from '../utils/types';
+import {
+  ArmorTemplate,
+  OrderType,
+  SpellTemplate,
+  WeaponTemplate,
+} from '../utils/types';
 
 export const Shop = (): JSX.Element => {
   const navigate = useNavigate();
@@ -49,14 +54,16 @@ export const Shop = (): JSX.Element => {
     Array<{
       item: ArmorTemplate | WeaponTemplate | SpellTemplate;
       price: string;
-      balance: string;
+      balance: string | null;
+      stock: string | null;
     }>
   >([]);
   const [buyable, setBuyable] = useState<
     Array<{
       item: ArmorTemplate | WeaponTemplate | SpellTemplate;
       price: string;
-      stock: string;
+      balance: string | null;
+      stock: string | null;
     }>
   >([]);
 
@@ -100,6 +107,7 @@ export const Shop = (): JSX.Element => {
           item: item,
           price: price.toString(),
           balance: balances.toString(),
+          stock: null,
         };
       });
 
@@ -121,7 +129,12 @@ export const Shop = (): JSX.Element => {
           0;
         price =
           Number(price) + Number(price) * (Number(shop.priceMarkup) / 100);
-        return { item: item, stock: shop.stock[i], price: price.toString() };
+        return {
+          item: item,
+          stock: shop.stock[i],
+          price: price.toString(),
+          balance: null,
+        };
       });
 
     setSellable(sellableInventory);
@@ -169,13 +182,10 @@ export const Shop = (): JSX.Element => {
             <ShopHalf
               characterId={userCharacter.id}
               shopId={mobId}
-              items={sellable.map(x => x.item)}
-              stock={sellable.map(x => x.balance)}
-              prices={sellable.map(x => x.price)}
-              name={`Character’s Inventory - ${userCharacter?.goldBalance} $GOLD`}
+              items={sellable}
+              name={`Character’s Inventory - ${formatEther(userCharacter?.goldBalance)} $GOLD`}
               itemIndexes={shop.sellableItems}
-              side="sell"
-              balances={null}
+              orderType={OrderType.Selling}
             />
           ) : (
             <Center>
@@ -188,14 +198,11 @@ export const Shop = (): JSX.Element => {
           {userCharacter && mobId && buyable && buyable.length > 0 ? (
             <ShopHalf
               characterId={userCharacter.id}
-              stock={buyable.map(x => x.stock)}
-              items={buyable.map(x => x.item)}
-              prices={buyable.map(x => x.price)}
+              items={buyable}
               name={`Shopkeeper’s Inventory - ${formatEther(BigInt(shop.gold)).toString()} $GOLD`}
               shopId={mobId}
               itemIndexes={shop.buyableItems}
-              side="buy"
-              balances={null}
+              orderType={OrderType.Buying}
             />
           ) : (
             <Text>No Buyable Items</Text>

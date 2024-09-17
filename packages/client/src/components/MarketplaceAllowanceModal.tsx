@@ -35,18 +35,18 @@ export const MarketplaceAllowanceModal = ({
   orderType: OrderType;
 }): JSX.Element => {
   const {
-    goldAllowance,
-    isApprovingGold,
-    isApprovingItems,
-    itemsAllowance,
+    goldAllowanceMarketplace,
+    isApprovingGoldMarketplace,
+    isApprovingItemsMarketplace,
+    itemsAllowanceMarketplace,
     onApproveGoldAllowance,
     onSetApprovalForAllItems,
   } = useAllowance();
 
   if (
-    (goldAllowance >= parseEther(orderPrice) &&
+    (goldAllowanceMarketplace >= parseEther(orderPrice) &&
       orderType === OrderType.Buying) ||
-    (itemsAllowance && orderType === OrderType.Selling)
+    (itemsAllowanceMarketplace && orderType === OrderType.Selling)
   ) {
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -86,8 +86,8 @@ export const MarketplaceAllowanceModal = ({
                 use {orderPrice} of your $GOLD.
               </Text>
               <Button
-                isLoading={isApprovingGold}
-                onClick={() => onApproveGoldAllowance(orderPrice)}
+                isLoading={isApprovingGoldMarketplace}
+                onClick={() => onApproveGoldAllowance(orderPrice, '0')}
               >
                 Allow
               </Button>
@@ -100,8 +100,8 @@ export const MarketplaceAllowanceModal = ({
                 manage your items.
               </Text>
               <Button
-                onClick={onSetApprovalForAllItems}
-                isLoading={isApprovingItems}
+                isLoading={isApprovingItemsMarketplace}
+                onClick={() => onSetApprovalForAllItems('0')}
               >
                 Allow
               </Button>

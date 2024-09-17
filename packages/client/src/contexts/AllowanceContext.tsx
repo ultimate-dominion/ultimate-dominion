@@ -17,20 +17,31 @@ import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 
 type AllowanceContextType = {
-  goldAllowance: bigint;
-  isApprovingGold: boolean;
-  isApprovingItems: boolean;
-  itemsAllowance: boolean;
-  onApproveGoldAllowance: (allowanceAmount: string) => void;
-  onSetApprovalForAllItems: () => void;
+  goldAllowanceMarketplace: bigint;
+  goldAllowanceShops: bigint;
+  isApprovingGoldMarketplace: boolean;
+  isApprovingGoldShops: boolean;
+  isApprovingItemsMarketplace: boolean;
+  isApprovingItemsShops: boolean;
+  itemsAllowanceMarketplace: boolean;
+  itemsAllowanceShops: boolean;
+  onApproveGoldAllowance: (
+    allowanceAmount: string,
+    allowanceType: string,
+  ) => void;
+  onSetApprovalForAllItems: (allowanceType: string) => void;
   refreshAllowances: () => void;
 };
 
 const AllowanceContext = createContext<AllowanceContextType>({
-  goldAllowance: 0n,
-  isApprovingGold: false,
-  isApprovingItems: false,
-  itemsAllowance: false,
+  goldAllowanceMarketplace: 0n,
+  goldAllowanceShops: 0n,
+  isApprovingGoldMarketplace: false,
+  isApprovingGoldShops: false,
+  isApprovingItemsMarketplace: false,
+  isApprovingItemsShops: false,
+  itemsAllowanceMarketplace: false,
+  itemsAllowanceShops: false,
   onApproveGoldAllowance: () => {},
   onSetApprovalForAllItems: () => {},
   refreshAllowances: () => {},
@@ -50,16 +61,28 @@ export const AllowanceProvider = ({
   } = useMUD();
   const { character, isRefreshing } = useCharacter();
 
-  const [goldAllowance, setGoldAllowance] = useState<bigint>(0n);
-  const [itemsAllowance, setItemsAllowance] = useState<boolean>(false);
-  const [isApprovingGold, setIsApprovingGold] = useState(false);
-  const [isApprovingItems, setIsApprovingItems] = useState(false);
+  const [goldAllowanceMarketplace, setGoldAllowanceMarketplace] =
+    useState<bigint>(0n);
+  const [itemsAllowanceMarketplace, setItemsAllowanceMarketplace] =
+    useState<boolean>(false);
+  const [isApprovingGoldMarketplace, setIsApprovingGoldMarketplace] =
+    useState(false);
+  const [isApprovingItemsMarketplace, setIsApprovingItemsMarketplace] =
+    useState(false);
+
+  const [goldAllowanceShops, setGoldAllowanceShops] = useState<bigint>(0n);
+  const [itemsAllowanceShops, setItemsAllowanceShops] =
+    useState<boolean>(false);
+  const [isApprovingGoldShops, setIsApprovingGoldShops] = useState(false);
+  const [isApprovingItemsShops, setIsApprovingItemsShops] = useState(false);
 
   const {
+    shop: shopAddress,
     marketplace: marketplaceAddress,
     goldToken: goldTokenAddress,
     items: itemsAddress,
   } = useComponentValue(UltimateDominionConfig, singletonEntity) ?? {
+    shop: null,
     marketplace: null,
     goldToken: null,
     items: null,
@@ -69,22 +92,39 @@ export const AllowanceProvider = ({
     if (!character) return;
 
     try {
-      const _goldAllowance = await publicClient.readContract({
+      const _goldAllowanceMarketplace = await publicClient.readContract({
         address: goldTokenAddress as Address,
         abi: erc20Abi,
         functionName: 'allowance',
         args: [character.owner as Address, marketplaceAddress as Address],
       });
 
-      const _itemsAllowance = (await publicClient.readContract({
+      const _itemsAllowanceMarketplace = (await publicClient.readContract({
         address: itemsAddress as Address,
         abi: ERC_1155_ABI,
         functionName: 'isApprovedForAll',
         args: [character.owner as Address, marketplaceAddress as Address],
       })) as boolean;
 
-      setGoldAllowance(_goldAllowance);
-      setItemsAllowance(_itemsAllowance);
+      setGoldAllowanceMarketplace(_goldAllowanceMarketplace);
+      setItemsAllowanceMarketplace(_itemsAllowanceMarketplace);
+
+      const _goldAllowanceShops = await publicClient.readContract({
+        address: goldTokenAddress as Address,
+        abi: erc20Abi,
+        functionName: 'allowance',
+        args: [character.owner as Address, shopAddress as Address],
+      });
+
+      const _itemsAllowanceShops = (await publicClient.readContract({
+        address: itemsAddress as Address,
+        abi: ERC_1155_ABI,
+        functionName: 'isApprovedForAll',
+        args: [character.owner as Address, shopAddress as Address],
+      })) as boolean;
+
+      setGoldAllowanceShops(_goldAllowanceShops);
+      setItemsAllowanceShops(_itemsAllowanceShops);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Could not get allowances', e);
     }
@@ -95,6 +135,7 @@ export const AllowanceProvider = ({
     marketplaceAddress,
     publicClient,
     renderError,
+    shopAddress,
   ]);
 
   useEffect(() => {
@@ -106,36 +147,60 @@ export const AllowanceProvider = ({
   }, [character, fetchAllowances, isRefreshing, isSynced]);
 
   const onApproveGoldAllowance = useCallback(
-    async (allowanceAmount: string) => {
+    async (allowanceAmount: string, allowanceType: string) => {
+      if (!externalWalletClient) {
+        throw new Error('No external wallet client found.');
+      }
+      if (!allowanceAmount || parseEther(allowanceAmount) <= 0) {
+        throw new Error('Amount must be greater than 0.');
+      }
       try {
-        setIsApprovingGold(true);
+        switch (allowanceType) {
+          default:
+            throw new Error('No allowance type');
+          case '0': {
+            setIsApprovingGoldMarketplace(true);
+            const { request: marketplaceRequest } =
+              await publicClient.simulateContract({
+                address: goldTokenAddress as Address,
+                abi: erc20Abi,
+                functionName: 'approve',
+                args: [
+                  marketplaceAddress as Address,
+                  parseEther(allowanceAmount),
+                ],
+              });
+            const txHash =
+              await externalWalletClient.writeContract(marketplaceRequest);
+            const { status } = await publicClient.waitForTransactionReceipt({
+              hash: txHash,
+            });
 
-        if (!externalWalletClient) {
-          throw new Error('No external wallet client found.');
-        }
+            if (status !== 'success') {
+              throw new Error('Transaction failed.');
+            }
 
-        if (!marketplaceAddress) {
-          throw new Error('No Marketplace address found.');
-        }
+            break;
+          }
+          case '1': {
+            setIsApprovingGoldShops(true);
+            const { request: shopRequest } =
+              await publicClient.simulateContract({
+                address: goldTokenAddress as Address,
+                abi: erc20Abi,
+                functionName: 'approve',
+                args: [shopAddress as Address, parseEther(allowanceAmount)],
+              });
+            const txHash =
+              await externalWalletClient.writeContract(shopRequest);
+            const { status } = await publicClient.waitForTransactionReceipt({
+              hash: txHash,
+            });
 
-        if (!allowanceAmount || parseEther(allowanceAmount) <= 0) {
-          throw new Error('Amount must be greater than 0.');
-        }
-
-        const { request } = await publicClient.simulateContract({
-          address: goldTokenAddress as Address,
-          abi: erc20Abi,
-          functionName: 'approve',
-          args: [marketplaceAddress as Address, parseEther(allowanceAmount)],
-        });
-
-        const txHash = await externalWalletClient.writeContract(request);
-        const { status } = await publicClient.waitForTransactionReceipt({
-          hash: txHash,
-        });
-
-        if (status !== 'success') {
-          throw new Error('Transaction failed.');
+            if (status !== 'success') {
+              throw new Error('Transaction failed.');
+            }
+          }
         }
 
         renderSuccess('Gold allowance successfully set!');
@@ -146,7 +211,8 @@ export const AllowanceProvider = ({
           e,
         );
       } finally {
-        setIsApprovingGold(false);
+        setIsApprovingGoldMarketplace(false);
+        setIsApprovingGoldShops(false);
       }
     },
     [
@@ -157,61 +223,110 @@ export const AllowanceProvider = ({
       publicClient,
       renderError,
       renderSuccess,
+      shopAddress,
     ],
   );
 
-  const onSetApprovalForAllItems = useCallback(async () => {
-    try {
-      setIsApprovingItems(true);
+  const onSetApprovalForAllItems = useCallback(
+    /**
+     *
+     * @param allowanceType 0 for marketplace, 1 for shops
+     */
+    async (allowanceType: string) => {
+      try {
+        if (!externalWalletClient) {
+          throw new Error('No external wallet client found.');
+        }
+        switch (allowanceType) {
+          default: {
+            throw new Error('No allowance type');
+          }
+          case '0': {
+            setIsApprovingItemsMarketplace(true);
+            if (!marketplaceAddress) {
+              throw new Error('No Marketplace address found.');
+            }
+            const { request: marketplaceRequest } =
+              await publicClient.simulateContract({
+                address: itemsAddress as Address,
+                abi: ERC_1155_ABI,
+                functionName: 'setApprovalForAll',
+                args: [marketplaceAddress, true],
+              });
+            const txHashMarketplace =
+              await externalWalletClient.writeContract(marketplaceRequest);
+            const { status: marketplaceStatus } =
+              await publicClient.waitForTransactionReceipt({
+                hash: txHashMarketplace,
+              });
 
-      if (!externalWalletClient) {
-        throw new Error('No external wallet client found.');
+            if (marketplaceStatus !== 'success') {
+              throw new Error('Transaction failed.');
+            }
+            break;
+          }
+          case '1': {
+            setIsApprovingItemsShops(true);
+
+            if (!shopAddress) {
+              throw new Error('No Marketplace address found.');
+            }
+
+            const { request: shopRequest } =
+              await publicClient.simulateContract({
+                address: itemsAddress as Address,
+                abi: ERC_1155_ABI,
+                functionName: 'setApprovalForAll',
+                args: [shopAddress, true],
+              });
+
+            const txHashShops =
+              await externalWalletClient.writeContract(shopRequest);
+            const { status: shopStatus } =
+              await publicClient.waitForTransactionReceipt({
+                hash: txHashShops,
+              });
+            if (shopStatus !== 'success') {
+              throw new Error('Transaction failed.');
+            }
+          }
+        }
+
+        renderSuccess('Items allowance successfully set!');
+        fetchAllowances();
+      } catch (e) {
+        renderError(
+          (e as Error)?.message ?? 'Error setting item allowance.',
+          e,
+        );
+      } finally {
+        setIsApprovingItemsMarketplace(false);
+        setIsApprovingItemsShops(false);
       }
-
-      if (!marketplaceAddress) {
-        throw new Error('No Marketplace address found.');
-      }
-
-      const { request } = await publicClient.simulateContract({
-        address: itemsAddress as Address,
-        abi: ERC_1155_ABI,
-        functionName: 'setApprovalForAll',
-        args: [marketplaceAddress, true],
-      });
-
-      const txHash = await externalWalletClient.writeContract(request);
-      const { status } = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-      });
-
-      if (status !== 'success') {
-        throw new Error('Transaction failed.');
-      }
-
-      renderSuccess('Items allowance successfully set!');
-      fetchAllowances();
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error setting item allowance.', e);
-    } finally {
-      setIsApprovingItems(false);
-    }
-  }, [
-    externalWalletClient,
-    fetchAllowances,
-    itemsAddress,
-    marketplaceAddress,
-    publicClient,
-    renderError,
-    renderSuccess,
-  ]);
+    },
+    [
+      externalWalletClient,
+      fetchAllowances,
+      itemsAddress,
+      marketplaceAddress,
+      publicClient,
+      renderError,
+      renderSuccess,
+      shopAddress,
+    ],
+  );
 
   return (
     <AllowanceContext.Provider
       value={{
-        goldAllowance,
-        isApprovingGold,
-        isApprovingItems,
-        itemsAllowance,
+        goldAllowanceMarketplace,
+        goldAllowanceShops,
+        isApprovingGoldMarketplace,
+        isApprovingGoldShops,
+        isApprovingItemsMarketplace,
+        isApprovingItemsShops,
+        itemsAllowanceMarketplace,
+        itemsAllowanceShops,
         onApproveGoldAllowance,
         onSetApprovalForAllItems,
         refreshAllowances: fetchAllowances,
