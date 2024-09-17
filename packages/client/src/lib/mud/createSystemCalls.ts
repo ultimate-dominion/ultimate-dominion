@@ -553,6 +553,40 @@ export function createSystemCalls(
     }
   };
 
+  const removeEntityFromBoard = async (entity: Entity): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [entity.toString() as `0x${string}`],
+        functionName: 'UD__removeEntityFromBoard',
+      });
+
+      const tx = await worldContract.write.UD__removeEntityFromBoard([
+        entity.toString() as `0x${string}`,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const position = getComponentValue(Position, entity);
+      const spawned = getComponentValue(Spawned, entity);
+
+      const success =
+        position?.x === 0 && position?.y === 0 && !spawned?.spawned;
+
+      return {
+        error: success ? undefined : 'Failed to remove entity from board.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const rollStats = async (
     characterEntity: Entity,
     characterClass: StatsClasses,
@@ -751,6 +785,7 @@ export function createSystemCalls(
     levelCharacter,
     mintCharacter,
     move,
+    removeEntityFromBoard,
     rollStats,
     spawn,
     unequipItem,

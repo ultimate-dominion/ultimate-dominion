@@ -10,6 +10,7 @@ import { Name } from "./tables/Name.sol";
 import { NameExists } from "./tables/NameExists.sol";
 import { Characters, CharactersData } from "./tables/Characters.sol";
 import { Stats, StatsData } from "./tables/Stats.sol";
+import { SessionTimer } from "./tables/SessionTimer.sol";
 import { Mobs, MobsData } from "./tables/Mobs.sol";
 import { MobStats, MobStatsData } from "./tables/MobStats.sol";
 import { MobsByLevel } from "./tables/MobsByLevel.sol";

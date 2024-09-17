@@ -2,6 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
+import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {
     Characters,
@@ -12,11 +13,14 @@ import {
     Spawned,
     Stats,
     MobsByLevel,
-    EncounterEntity
+    EncounterEntity,
+    SessionTimer
 } from "../codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
+import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
+import {SESSION_TIMEOUT} from "../../constants.sol";
 import {_requireAccess} from "../utils.sol";
 import "forge-std/console.sol";
 
@@ -60,7 +64,9 @@ contract MapSystem is System {
         // set character position to home point
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
-
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            SessionTimer.set(entityId, block.timestamp);
+        }
         EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
     }
@@ -157,7 +163,14 @@ contract MapSystem is System {
             if (senderIsOwner) {
                 // if sender is owner execute removal
             }
-            else _requireAccess(address(this), _msgSender());
+            else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
+                require(
+                    (SessionTimer.get(entityId) + SESSION_TIMEOUT) < block.timestamp,
+                    "This player's session has not timed out"
+                );
+            } else {
+                _requireAccess(address(this), _msgSender());
+            }
         } else {
             _requireAccess(address(this), _msgSender());
         }
@@ -177,7 +190,14 @@ contract MapSystem is System {
             }
         }
         Position.set(entityId, 0, 0);
+        Spawned.setSpawned(entityId, false);
         require(entityWasAtPosition, "Entity not at position");
+    }
+
+    function removeEntitiesFromBoard(bytes32[] memory entityIds) public {
+        for (uint256 i; i < entityIds.length; i++) {
+            removeEntityFromBoard(entityIds[i]);
+        }
     }
 
     function _moveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) internal {
@@ -196,6 +216,10 @@ contract MapSystem is System {
             }
         }
         require(entityWasAtPosition, "Entity not at position");
+        // if character set session timer
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            SessionTimer.set(entityId, block.timestamp);
+        }
         Position.set(entityId, x, y);
         EntitiesAtPosition.pushEntities(x, y, entityId);
     }

@@ -38,6 +38,18 @@ importers:
 
   packages/api:
     dependencies:
+      '@latticexyz/common':
+        specifier: 2.0.11
+        version: 2.0.11(typescript@5.3.3)(zod@3.23.8)
+      '@latticexyz/recs':
+        specifier: ^2.2.3
+        version: 2.2.3(typescript@5.3.3)(zod@3.23.8)
+      '@latticexyz/store-sync':
+        specifier: 2.0.11
+        version: 2.0.11(@types/react@18.2.22)(react@18.3.1)(typescript@5.3.3)
+      '@latticexyz/world':
+        specifier: 2.0.11
+        version: 2.0.11(typescript@5.3.3)
       '@pinata/sdk':
         specifier: ^2.1.0
         version: 2.1.0
@@ -53,12 +65,18 @@ importers:
       formidable:
         specifier: ^3.5.1
         version: 3.5.1
+      rxjs:
+        specifier: 7.5.5
+        version: 7.5.5
       sharp:
         specifier: ^0.33.4
         version: 0.33.4
       vercel:
         specifier: ^34.2.7
         version: 34.2.7
+      viem:
+        specifier: 2.9.20
+        version: 2.9.20(typescript@5.3.3)(zod@3.23.8)
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
@@ -5044,6 +5062,20 @@ packages:
       - zod
     dev: false
 
+  /@latticexyz/recs@2.2.3(typescript@5.3.3)(zod@3.23.8):
+    resolution: {integrity: sha512-BZOt8yE8J3F2TA7mGbUtNQZ//9pyHyHgN3o8Y/CnXKwSoctSgWKs7rpCrVXoRUJIhfrZC3MUdtZjrSSmwzo2Mg==}
+    dependencies:
+      '@latticexyz/schema-type': 2.2.3(typescript@5.3.3)(zod@3.23.8)
+      '@latticexyz/utils': 2.2.3
+      mobx: 6.12.3
+      rxjs: 7.5.5
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
+    dev: false
+
   /@latticexyz/schema-type@2.0.11(typescript@5.3.3)(zod@3.23.8):
     resolution: {integrity: sha512-H6KO7zHJkYNNT12FLFMQivRE27rfyuoY62UtLfvBrWSQm6tiL6j5NBlylo8cK4cB+oQ9eUMZ78PSvzHEBm6aKg==}
     dependencies:
@@ -5069,6 +5101,18 @@ packages:
 
   /@latticexyz/schema-type@2.1.1(typescript@5.3.3)(zod@3.23.8):
     resolution: {integrity: sha512-7ul0FpA4XrWVH2jBYfdq99IJKN0/uVISebvLqC2pQgLNMFyrQM0GQWKpaQbP8g6W6AWTOgC58r9MBeWanM/ZgQ==}
+    dependencies:
+      abitype: 1.0.5(typescript@5.3.3)(zod@3.23.8)
+      viem: 2.19.8(typescript@5.3.3)(zod@3.23.8)
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
+    dev: false
+
+  /@latticexyz/schema-type@2.2.3(typescript@5.3.3)(zod@3.23.8):
+    resolution: {integrity: sha512-5u5E7QgbGSIqYj34oR12K9zZ2GBY/rActji7Zob+4tI1Or3wgOeMK993JMVOFi0WE9Ul9oHMwoiVOcYHGWxDLQ==}
     dependencies:
       abitype: 1.0.5(typescript@5.3.3)(zod@3.23.8)
       viem: 2.19.8(typescript@5.3.3)(zod@3.23.8)
@@ -5180,6 +5224,14 @@ packages:
       mobx: 6.12.3
       proxy-deep: 3.1.1
       rxjs: 7.5.5
+
+  /@latticexyz/utils@2.2.3:
+    resolution: {integrity: sha512-ybm0bOtGTbUU2knlZ1++djE9LfnKlzi1D+TOjIOUtALJ/2cS2jGFJGGewdrs5mxzQDQNQLB2VIGeuwXasFikAg==}
+    dependencies:
+      mobx: 6.12.3
+      proxy-deep: 3.1.1
+      rxjs: 7.5.5
+    dev: false
 
   /@latticexyz/world-modules@2.0.11(typescript@5.3.3):
     resolution: {integrity: sha512-6fkkyUbCT8pRDJtby2qFgSVlQYSuzJjkU71rIJ50dY/i6iXDo2rXHmYV6uENcsQgBDY+kW7x9GsCA7FE4DFt/g==}
