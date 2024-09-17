@@ -6,6 +6,7 @@ import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {
     Characters,
+    CombatEncounter,
     EntitiesAtPosition,
     CharacterEquipment,
     MapConfig,
@@ -191,10 +192,21 @@ contract MapSystem is System {
         }
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, false);
+
+        bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
         
         // end combat for entity
-        if (EncounterEntity.getEncounterId(entityId) != bytes32(0)) {
-            EncounterEntity.deleteRecord(entityId);
+        if (encounterId != bytes32(0)) {
+            bytes32[] memory attackers = CombatEncounter.getAttackers(encounterId);
+            for (uint256 i; i < attackers.length; i++) {
+                EncounterEntity.setEncounterId(attackers[i], bytes32(0));
+            }
+            bytes32[] memory defenders = CombatEncounter.getDefenders(encounterId);
+            for (uint256 i; i < defenders.length; i++) {
+                EncounterEntity.setEncounterId(defenders[i], bytes32(0));
+            }
+            EncounterEntity.setDied(entityId, true);
+            CombatEncounter.setEnd(encounterId, block.timestamp);
         }
         require(entityWasAtPosition, "Entity not at position");
     }

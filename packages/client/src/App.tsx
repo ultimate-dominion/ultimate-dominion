@@ -6,9 +6,12 @@ import {
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { garnet } from '@latticexyz/common/chains';
+import { createClient as createFaucetClient } from '@latticexyz/faucet';
 import { useEffect } from 'react';
 import { IoChatbubble } from 'react-icons/io5';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
+import { parseEther } from 'viem';
+import { useWalletClient } from 'wagmi';
 
 import { ChatBox } from './components/ChatBox';
 import { Footer } from './components/Footer';
@@ -45,11 +48,13 @@ const CHAT_NOT_ALLOWED_PATHS = [CHARACTER_CREATION_PATH, HOME_PATH];
 const AppInner = (): JSX.Element => {
   const { pathname } = useLocation();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const { data: externalWalletClient } = useWalletClient();
   const {
     burnerBalance,
     burnerBalanceFetched,
     isSynced,
     isWalletDetailsModalOpen,
+    network,
     onCloseWalletDetailsModal,
     onOpenWalletDetailsModal,
   } = useMUD();
@@ -73,6 +78,40 @@ const AppInner = (): JSX.Element => {
     onOpenWalletDetailsModal,
     pathname,
   ]);
+
+  useEffect(() => {
+    if (DEFAULT_CHAIN_ID === garnet.id && externalWalletClient) {
+      const address = externalWalletClient.account?.address;
+
+      if (!address) return;
+
+      // eslint-disable-next-line no-console
+      console.info('[Dev Faucet]: External address -> ', address);
+      const faucetClient = createFaucetClient({
+        url: 'https://ultimate-dominion-faucet.onrender.com/trpc',
+      });
+      const requestDrip = async () => {
+        const balance = await network.publicClient.getBalance({
+          address,
+        });
+        // eslint-disable-next-line no-console
+        console.info(`[Dev Faucet]: External balance -> ${balance}`);
+        const lowBalance = balance < parseEther('0.00001');
+        if (lowBalance) {
+          // eslint-disable-next-line no-console
+          console.info(
+            '[Dev Faucet]: Balance is low, dripping funds to external wallet',
+          );
+          await faucetClient.drip.mutate({
+            address,
+          });
+        }
+      };
+      requestDrip();
+      // Request a drip every 20 seconds
+      setInterval(requestDrip, 20000);
+    }
+  }, [externalWalletClient, network]);
 
   return (
     <Grid

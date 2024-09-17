@@ -196,10 +196,10 @@ contract RngSystem is System, IEntropyConsumer {
             stats.maxHp = int256(10);
         } else if (characterClass == Classes.Rogue) {
             stats.agility += 2;
-            stats.maxHp = int256(6);
+            stats.maxHp = int256(8);
         } else if (characterClass == Classes.Mage) {
             stats.intelligence += 2;
-            stats.maxHp = int256(8);
+            stats.maxHp = int256(9);
         }
 
         Stats.set(characterId, stats);

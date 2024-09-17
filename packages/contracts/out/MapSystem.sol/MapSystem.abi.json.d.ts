@@ -198,25 +198,6 @@ declare const abi: [
   },
   {
     "type": "event",
-    "name": "Store_DeleteRecord",
-    "inputs": [
-      {
-        "name": "tableId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "keyTuple",
-        "type": "bytes32[]",
-        "indexed": false,
-        "internalType": "bytes32[]"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Store_SetRecord",
     "inputs": [
       {
