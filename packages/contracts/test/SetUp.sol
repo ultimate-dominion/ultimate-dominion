@@ -7,6 +7,7 @@ import "forge-std/StdJson.sol";
 import {MudTest} from "@latticexyz/world/test/MudTest.t.sol";
 import {getKeysWithValue} from "@latticexyz/world-modules/src/modules/keyswithvalue/getKeysWithValue.sol";
 import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
+import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {IWorld} from "@codegen/world/IWorld.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";

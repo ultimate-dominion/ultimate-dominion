@@ -220,19 +220,6 @@ contract EncounterSystem is System {
         }
 
         bytes32 entityTemp;
-        for (uint256 i; i < encounterData.defenders.length; i++) {
-            entityTemp = encounterData.defenders[i];
-            if (EncounterEntity.getDied(entityTemp)) {
-                IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
-            }
-        }
-
-        for (uint256 i; i < encounterData.attackers.length; i++) {
-            entityTemp = encounterData.attackers[i];
-            if (EncounterEntity.getDied(entityTemp)) {
-                IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
-            }
-        }
 
         uint256 expAmount;
         uint256 goldAmount;
@@ -258,17 +245,27 @@ contract EncounterSystem is System {
         bytes32[] memory emptyArray = new bytes32[](0);
 
         for (uint256 i; i < encounterData.attackers.length; i++) {
+            entityTemp = encounterData.attackers[i];
             // clear encounterId
-            EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
+            EncounterEntity.setEncounterId(entityTemp, bytes32(0));
             // remove combat status effects
-            EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
+            EncounterEntity.setAppliedStatusEffects(entityTemp, emptyArray);
+            if (EncounterEntity.getDied(entityTemp)) {
+                IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
+                EncounterEntity.setDied(entityTemp, true);
+            }
         }
 
         for (uint256 i; i < encounterData.defenders.length; i++) {
+            entityTemp = encounterData.defenders[i];
             // clear encounter id
-            EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+            EncounterEntity.setEncounterId(entityTemp, bytes32(0));
             // remove combat status effects
-            EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
+            EncounterEntity.setAppliedStatusEffects(entityTemp, emptyArray);
+            if (EncounterEntity.getDied(entityTemp)) {
+                IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
+                EncounterEntity.setDied(entityTemp, true);
+            }
         }
 
         CombatOutcome.set(encounterId, combatOutcome);

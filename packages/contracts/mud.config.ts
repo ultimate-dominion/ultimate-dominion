@@ -225,6 +225,13 @@ export default defineWorld({
         amounts: "uint256[]",
       },
     },
+    AdventureEscrow: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        balance: "uint256",
+      },
+    },
     /////////////////////////////////// ACTIONS ////////////////////////////////////////////////////////////////////////////
     // Effects apply damage and or status effects
     Effects: {

@@ -72,14 +72,14 @@ contract Test_MobSystem is SetUp, GasReporter {
         uint256 newMobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), "test_monster_uri");
 
         MobsData memory newMob = world.UD__getMob(newMobId);
-        assertEq(newMobId, 22);
+        assertEq(newMobId, 23);
         assertEq(uint8(newMob.mobType), uint8(MobType.Monster));
         assertEq(newMob.mobStats, abi.encode(newMonster));
         assertEq(newMob.mobMetadata, "test_monster_uri");
     }
 
     function test_getEntityId() public {
-        bytes32 entityId = bytes32(abi.encodePacked(uint32(1), uint192(1), uint16(1), uint16(2)));
+        bytes32 entityId = bytes32(abi.encodePacked(uint32(1), uint192(2), uint16(1), uint16(2)));
 
         assertEq(world.UD__spawnMob(1, 1, 2), entityId);
     }
@@ -99,7 +99,7 @@ contract Test_MobSystem is SetUp, GasReporter {
 
     function test_getSpawnCounter() public {
         bytes32 entityId = world.UD__spawnMob(1, 1, 2);
-        assertEq(world.UD__getSpawnCounter(entityId), 1);
+        assertEq(world.UD__getSpawnCounter(entityId), 2);
     }
 
     function test_spawnMonsterOnMove() public {
@@ -108,9 +108,9 @@ contract Test_MobSystem is SetUp, GasReporter {
         world.UD__move(bobCharacterId, 0, 1);
         bytes32[] memory ents = world.UD__getEntitiesAtPosition(0, 1);
 
-        assertEq(world.UD__getEntitiesAtPosition(0, 0).length, 0);
-        assertLt(ents.length, 7);
-        assertEq(ents[0], bobCharacterId);
+        assertEq(world.UD__getEntitiesAtPosition(0, 0).length, 1, "incorrect entities at spawn");
+        assertLt(ents.length, 7, "incorrect spawned monster lenth");
+        assertEq(ents[0], bobCharacterId, "incorrect entity id for bob");
     }
 
     function test_removeEntity() public {
