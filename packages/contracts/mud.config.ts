@@ -2,7 +2,9 @@ import { defineWorld } from "@latticexyz/world";
 
 export default defineWorld({
   namespace: "UD",
-  deploy: {},
+  deploy: {
+    upgradeableWorldImplementation: true,
+  },
   userTypes: {
     ResourceId: {
       filePath: "@latticexyz/store/src/ResourceId.sol",
@@ -83,6 +85,14 @@ export default defineWorld({
         locked: "bool",
         originalStats: "bytes",
         baseStats: "bytes",
+      },
+    },
+    CharacterOwner: {
+      key: ["owner"],
+      schema: {
+        owner: "address",
+        characterTokenId: "uint256",
+        characterId: "bytes32",
       },
     },
     Stats: {

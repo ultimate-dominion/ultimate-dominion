@@ -124,6 +124,7 @@ contract PvESystem is System {
             IWorld(_world()).UD__endEncounter(encounterId, randomness, attackersWin);
         } else {
             encounterData.currentTurn++;
+            CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
             // set encounter data
 
             // if not execute defender attack

@@ -269,7 +269,7 @@ contract CombatSystem is System {
             (getStatModifier(attackerStat, attackModifierBonus) * (((attackRoll) % 1000)) * TO_HIT_MODIFIER) / WAD;
 
         uint256 defenseTotal = ((((defenseRoll) % 400) * getStatModifier(defenderStat, 0)) * DEFENSE_MODIFIER) / WAD;
-        attackLands = attackTotal >= defenseTotal;
+        console.logInt() attackLands = attackTotal >= defenseTotal;
 
         if (attackLands) {
             crit = uint256(int256(attackTotal) + critChanceBonus) >= defenseTotal * CRIT_MODIFIER;
