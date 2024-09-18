@@ -10,11 +10,13 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import type { Armor, Spell, Weapon } from '../utils/types';
+import { ITEM_PATH } from '../Routes';
+import { type Armor, OrderType, type Spell, type Weapon } from '../utils/types';
 import { ItemCard } from './ItemCard';
 
 type ItemEquipModalProps = (Armor | Spell | Weapon) & {
@@ -29,6 +31,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   onClose,
   ...item
 }): JSX.Element => {
+  const navigate = useNavigate();
   const { renderError, renderSuccess } = useToast();
   const {
     delegatorAddress,
@@ -117,6 +120,22 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     unequipItem,
   ]);
 
+  const isMissingRequirements = useMemo(() => {
+    if (!character) return false;
+    if (character.level < item.minLevel) return true;
+    if (character.agility < item.statRestrictions.minAgility) return true;
+    if (character.intelligence < item.statRestrictions.minIntelligence)
+      return true;
+    if (character.strength < item.statRestrictions.minStrength) return true;
+    return false;
+  }, [character, item]);
+
+  const buyingSearchParams = useMemo(() => {
+    const searchParams = new URLSearchParams();
+    searchParams.set('orderType', OrderType.Buying);
+    return searchParams;
+  }, []);
+
   if (isEquipped) {
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -139,7 +158,13 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               isLoading={isEquipping}
               loadingText="Unequipping..."
               mr={3}
-              onClick={isOwner ? onUnequipItem : onClose}
+              onClick={() =>
+                isOwner
+                  ? onUnequipItem()
+                  : navigate(
+                      `${ITEM_PATH}${item.tokenId}?${buyingSearchParams}`,
+                    )
+              }
             >
               Yes
             </Button>
@@ -165,13 +190,23 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             <Text mb={6}>Do you want to make an offer for this item?</Text>
           )}
           <ItemCard {...item} />
+          {isMissingRequirements && isOwner && (
+            <Text color="red" fontWeight="bold" mt={4} size="sm">
+              You do not meet the requirements to equip this item.
+            </Text>
+          )}
         </ModalBody>
         <ModalFooter>
           <Button
+            isDisabled={isMissingRequirements}
             isLoading={isEquipping}
             loadingText="Equipping..."
             mr={3}
-            onClick={isOwner ? onEquipItem : onClose}
+            onClick={() =>
+              isOwner
+                ? onEquipItem()
+                : navigate(`${ITEM_PATH}${item.tokenId}?${buyingSearchParams}`)
+            }
           >
             Yes
           </Button>
