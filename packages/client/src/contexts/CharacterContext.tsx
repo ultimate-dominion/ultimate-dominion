@@ -134,6 +134,7 @@ export const CharacterProvider = ({
       if (characterData.baseStats !== '0x') {
         decodedBaseStats = decodeBaseStats(characterData.baseStats);
       }
+
       return {
         agility: characterStats?.agility.toString() ?? '0',
         baseStats: decodedBaseStats,
