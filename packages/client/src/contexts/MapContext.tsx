@@ -20,6 +20,7 @@ import { formatEther, hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
+  decodeBaseStats,
   decodeMobInstanceId,
   fetchMetadataFromUri,
   uriToHttp,
@@ -191,20 +192,36 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
             const _position = getComponentValueStrict(Position, entity);
 
+            let decodedBaseStats = {
+              agility: '0',
+              currentHp: '0',
+              entityClass: 0,
+              experience: '0',
+              intelligence: '0',
+              level: '0',
+              maxHp: '0',
+              strength: '0',
+            };
+
+            if (characterData.baseStats !== '0x') {
+              decodedBaseStats = decodeBaseStats(characterData.baseStats);
+            }
+
             return {
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
-              maxHp: characterStats.maxHp.toString(),
+              baseStats: decodedBaseStats,
               currentHp: characterStats.currentHp.toString(),
               entityClass: characterStats.class,
               experience: characterStats.experience.toString(),
-              goldBalance: formatEther(goldBalance as bigint).toString(),
+              goldBalance: goldBalance,
               id: entity,
               inBattle,
               intelligence: characterStats.intelligence.toString(),
               isSpawned,
               level: characterStats.level.toString(),
               locked: characterData.locked,
+              maxHp: characterStats.maxHp.toString(),
               name: hexToString(characterData.name as `0x${string}`, {
                 size: 32,
               }),
