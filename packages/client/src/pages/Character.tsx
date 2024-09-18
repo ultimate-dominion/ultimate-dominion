@@ -430,11 +430,16 @@ export const CharacterPage = (): JSX.Element => {
 };
 
 const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
+  const { renderError } = useToast();
   const {
-    components: { CharacterEquipment },
+    components: { CharacterEquipment, ItemsOwners },
   } = useMUD();
-  const { isLoading: isLoadingItemTemplates } = useItems();
-  const { inventoryArmor, inventorySpells, inventoryWeapons } = useCharacter();
+  const {
+    armorTemplates,
+    isLoading: isLoadingItemTemplates,
+    spellTemplates,
+    weaponTemplates,
+  } = useItems();
 
   const {
     isOpen: isItemModalOpen,
@@ -445,17 +450,137 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const [selectedItem, setSelectedItem] = useState<
     Armor | Spell | Weapon | null
   >(null);
+  const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
+  const [inventorySpells, setInventorySpells] = useState<Spell[]>([]);
+  const [inventoryWeapons, setInventoryWeapons] = useState<Weapon[]>([]);
+  const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
+  const [equippedSpells, setEquippedSpells] = useState<Spell[]>([]);
+  const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
 
-  const { equippedArmor, equippedSpells, equippedWeapons } =
-    useComponentValue(CharacterEquipment, character.id as Entity | undefined) ??
+  const fetchCharacterItems = useCallback(
+    (
+      _character: Character,
+      _equippedArmorIds: bigint[],
+      _equippedSpellsIds: bigint[],
+      _equippedWeaponsIds: bigint[],
+    ) => {
+      try {
+        const _armor = armorTemplates
+          .map(armor => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(armor.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...armor,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Armor;
+          })
+          .filter(a => a.balance !== '0');
+
+        const _spells = spellTemplates
+          .map(spell => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(spell.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...spell,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Spell;
+          })
+          .filter(s => s.balance !== '0');
+
+        const _weapons = weaponTemplates
+          .map(weapon => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(weapon.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...weapon,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Weapon;
+          })
+          .filter(w => w.balance !== '0');
+
+        const _equippedArmor = _equippedArmorIds
+          .map(id => _armor.find(a => a.tokenId === id.toString()))
+          .filter(Boolean) as Armor[];
+        const _equippedSpells = _equippedSpellsIds
+          .map(id => _spells.find(s => s.tokenId === id.toString()))
+          .filter(Boolean) as Spell[];
+        const _equippedWeapons = _equippedWeaponsIds
+          .map(id => _weapons.find(w => w.tokenId === id.toString()))
+          .filter(Boolean) as Weapon[];
+
+        setInventoryArmor(_armor);
+        setInventorySpells(_spells);
+        setInventoryWeapons(_weapons);
+
+        setEquippedArmor(_equippedArmor);
+        setEquippedSpells(_equippedSpells);
+        setEquippedWeapons(_equippedWeapons);
+      } catch (e) {
+        renderError(
+          (e as Error)?.message ?? 'Failed to fetch character data.',
+          e,
+        );
+      }
+    },
+    [armorTemplates, ItemsOwners, renderError, spellTemplates, weaponTemplates],
+  );
+
+  useEffect(() => {
+    if (isLoadingItemTemplates) return;
+
+    const {
+      equippedArmor: equippedArmorIds,
+      equippedSpells: equippedSpellsIds,
+      equippedWeapons: equippedWeaponsIds,
+    } = getComponentValue(CharacterEquipment, character.id) ??
     ({ equippedArmor: [], equippedSpells: [], equippedWeapons: [] } as {
       equippedArmor: bigint[];
       equippedSpells: bigint[];
       equippedWeapons: bigint[];
     });
 
-  const maxArmorEquipped = equippedArmor.length === MAX_EQUIPPED_ARMOR;
-  const maxWeaponsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
+    fetchCharacterItems(
+      character,
+      equippedArmorIds,
+      equippedSpellsIds,
+      equippedWeaponsIds,
+    );
+  }, [
+    character,
+    CharacterEquipment,
+    fetchCharacterItems,
+    isLoadingItemTemplates,
+  ]);
 
   const spellsAndWeapons = useMemo(() => {
     return [...inventorySpells, ...inventoryWeapons];
@@ -464,6 +589,18 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const equippedSpellsAndWeapons = useMemo(() => {
     return [...equippedSpells, ...equippedWeapons];
   }, [equippedSpells, equippedWeapons]);
+
+  const equippedArmorIds = useMemo(() => {
+    return equippedArmor.map(a => BigInt(a.tokenId));
+  }, [equippedArmor]);
+
+  const equippedSpellsAndWeaponsIds = useMemo(() => {
+    return equippedSpellsAndWeapons.map(sow => BigInt(sow.tokenId));
+  }, [equippedSpellsAndWeapons]);
+
+  const maxArmorEquipped = equippedArmorIds.length === MAX_EQUIPPED_ARMOR;
+  const maxWeaponsEquipped =
+    equippedSpellsAndWeaponsIds.length === MAX_EQUIPPED_WEAPONS;
 
   if (isLoadingItemTemplates) {
     return (
@@ -492,7 +629,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       >
         {inventoryArmor.length === 0 && <Text>No armor found</Text>}
         {inventoryArmor.map(function (ar, i) {
-          const isEquipped = equippedArmor.includes(BigInt(ar.tokenId));
+          const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
           return (
             <GridItem key={i}>
               <ItemCard
@@ -513,7 +650,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       </Grid>
       <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
         Weapons & Spells {spellsAndWeapons.length} -{' '}
-        {equippedSpellsAndWeapons.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
+        {equippedSpellsAndWeaponsIds.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
       </Text>
       {maxWeaponsEquipped && <Text fontSize="sm">(Max weapons equipped)</Text>}
       <Grid
@@ -528,7 +665,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       >
         {spellsAndWeapons.length === 0 && <Text>No weapons found</Text>}
         {spellsAndWeapons.map(function (item, i) {
-          const isEquipped = equippedSpellsAndWeapons.includes(
+          const isEquipped = equippedSpellsAndWeaponsIds.includes(
             BigInt(item.tokenId),
           );
 
@@ -553,8 +690,8 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       {selectedItem && (
         <ItemEquipModal
           isEquipped={
-            equippedArmor.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
-            equippedSpellsAndWeapons.includes(
+            equippedArmorIds.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
+            equippedSpellsAndWeaponsIds.includes(
               BigInt(selectedItem?.tokenId ?? 0),
             )
           }
