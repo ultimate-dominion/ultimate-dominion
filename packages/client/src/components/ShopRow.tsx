@@ -1,15 +1,10 @@
 import { HStack, Text } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 
-import { useMUD } from '../contexts/MUDContext';
-
 const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
-export const ShopRow = ({ mobId }: { mobId: string }): JSX.Element => {
+export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
   const navigate = useNavigate();
-  const {
-    systemCalls: { restock },
-  } = useMUD();
 
   return (
     <HStack
@@ -18,8 +13,7 @@ export const ShopRow = ({ mobId }: { mobId: string }): JSX.Element => {
       h={ROW_HEIGHT}
       justifyContent="space-between"
       onClick={() => {
-        restock(mobId);
-        navigate(`/shops/${mobId}`);
+        navigate(`/shops/${shopId}`);
       }}
       px={{ base: 1, sm: 2, md: 4 }}
       transition="all 0.3s ease"

@@ -193,26 +193,13 @@ export function createSystemCalls(
     }
   };
 
-  const buyFromShop = async (
+  const buy = async (
     amount: string,
     shopId: string,
     itemIndex: string,
     characterId: string,
   ): SystemCallReturn => {
     try {
-      // await publicClient.simulateContract({
-      //   abi: worldContract.abi,
-      //   account: delegatorAddress,
-      //   address: worldContract.address,
-      //   args: [
-      //     BigInt(amount),
-      //     shopId as `0x${string}`,
-      //     BigInt(itemIndex),
-      //     characterId as `0x${string}`,
-      //   ],
-      //   functionName: 'UD__buy',
-      // });
-
       const tx = await worldContract.write.UD__buy([
         BigInt(amount),
         shopId as `0x${string}`,
@@ -233,7 +220,7 @@ export function createSystemCalls(
     }
   };
 
-  const sellToShop = async (
+  const sell = async (
     amount: string,
     shopId: string,
     itemIndex: string,
@@ -860,7 +847,7 @@ export function createSystemCalls(
   // };
 
   return {
-    buyFromShop,
+    buy,
     cancelOrder,
     createEncounter,
     createOrder,
@@ -873,7 +860,7 @@ export function createSystemCalls(
     move,
     restock,
     rollStats,
-    sellToShop,
+    sell,
     spawn,
     unequipItem,
     updateTokenUri,

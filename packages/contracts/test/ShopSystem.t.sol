@@ -172,9 +172,9 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
         Shops.setStock(shopId, stock);
         assertEq(Shops.getStock(shopId)[item], 0);
-        console.log(Shops.getTimestamp(shopId));
+        console.log(Shops.getRestockTimestamp(shopId));
         world.UD__restock(shopId);
-        console.log(Shops.getTimestamp(shopId));
+        console.log(Shops.getRestockTimestamp(shopId));
         console.log(block.timestamp);
         vm.expectRevert(bytes("You must wait 12 hours to restock"));
 

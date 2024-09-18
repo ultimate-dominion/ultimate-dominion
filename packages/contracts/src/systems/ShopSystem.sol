@@ -5,7 +5,7 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 
 import {
-    Shops, ShopItems, UltimateDominionConfig
+    Shops, Items, UltimateDominionConfig
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {TokenType, OrderStatus} from "@codegen/common.sol";
@@ -89,18 +89,17 @@ contract ShopSystem is System, ReentrancyGuard {
      * Resets the shop inventory after 12 hours
      * @param shopId the shop Id
      */
-    // make this happen when the user clicks the shop button
     function restock(bytes32 shopId) public {
         require(canRestock(shopId), "You must wait 12 hours to restock");
         uint256[] memory stock = Shops.getRestock(shopId);
         uint256 gold = Shops.getMaxGold(shopId);
         Shops.setStock(shopId, stock);
         Shops.setGold(shopId, gold);
-        Shops.setTimestamp(shopId, block.timestamp);
+        Shops.setRestockTimestamp(shopId, block.timestamp);
     }
 
     function canRestock(bytes32 shopId) public view returns(bool) {
-        uint256 lastRecordedIntervalTimestamp = Shops.getTimestamp(shopId);
+        uint256 lastRecordedIntervalTimestamp = Shops.getRestockTimestamp(shopId);
         uint256 timeSinceLastInterval = (block.timestamp - lastRecordedIntervalTimestamp) % 12 hours;
         uint256 lastIntervalTimestamp = block.timestamp - timeSinceLastInterval;
         return lastIntervalTimestamp >= 12 hours;
@@ -109,7 +108,7 @@ contract ShopSystem is System, ReentrancyGuard {
         return Shops.getStock(shopId)[itemIndex];
     }
     function itemBase(uint256 itemId) public view returns (uint256){
-        return ShopItems.getPrice(itemId);
+        return Items.getPrice(itemId);
     }
     /**
      * Gets the markup price of an item

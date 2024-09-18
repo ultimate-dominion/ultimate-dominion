@@ -84,7 +84,7 @@ contract SetUp is Test {
             maxGold: 100 ether,
             priceMarkup: 20,
             priceMarkdown: 50,
-            timestamp: 1725962400,
+            restockTimestamp: 1725962400,
             sellableItems: sellableItems,
             buyableItems: buyableItems,
             restock: stock,
@@ -119,7 +119,7 @@ contract SetUp is Test {
         vm.label(world.UD__getCharacterToken(), "character token");
 
         newArmorId = world.UD__createItem(
-            ItemType.Armor, 10 ether, 100000000, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
+            ItemType.Armor, 10 ether, 100000000, 1 ether, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
         );
 
         world.grantAccess(_lootManagerSystemId("UD"), address(this));

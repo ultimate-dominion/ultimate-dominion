@@ -11,6 +11,7 @@ import {
   ModalBody,
   ModalCloseButton,
   ModalContent,
+  ModalHeader,
   ModalOverlay,
   Text,
   useDisclosure,
@@ -24,7 +25,12 @@ import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useMUD } from '../contexts/MUDContext';
-import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
+import {
+  etherToFixedNumber,
+  getEmoji,
+  getStatSymbol,
+  removeEmoji,
+} from '../utils/helpers';
 import {
   type ArmorTemplate,
   ItemType,
@@ -40,7 +46,6 @@ export const ShopItemRow = ({
   item,
   itemIndex,
   orderType,
-  price,
   stock,
   shopId,
 }: {
@@ -49,17 +54,15 @@ export const ShopItemRow = ({
   item: ArmorTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;
   orderType: OrderType;
-  price: string;
   shopId: string;
   stock: string | null;
 }): JSX.Element => {
   // const { renderError /* , renderSuccess */ } = useToast();
   const {
-    systemCalls: { buyFromShop, sellToShop },
+    systemCalls: { buy, sell },
   } = useMUD();
 
-  const { goldAllowanceShops, itemsAllowanceShops, refreshAllowances } =
-    useAllowance();
+  const { goldAllowanceShops, itemsAllowanceShops } = useAllowance();
 
   const {
     isOpen: isAllowanceOpen,
@@ -68,16 +71,11 @@ export const ShopItemRow = ({
   } = useDisclosure();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const refresh = async () => {
-    refreshAllowances();
-    onAllowanceClose();
-  };
-  const [amount, setAmount] = useState(0);
 
-  const { name, statRestrictions } = item as
-    | ArmorTemplate
-    | SpellTemplate
-    | WeaponTemplate;
+  const [amount, setAmount] = useState(1);
+
+  const { name, statRestrictions } = item;
+
   return (
     <Flex
       border="2px solid"
@@ -133,26 +131,28 @@ export const ShopItemRow = ({
             textAlign="center"
             w="100%"
           >
-            {price}
+            {etherToFixedNumber(item.price)}
           </Text>
         </HStack>
         <ShopAllowanceModal
           isCompleting={false}
           isOpen={isAllowanceOpen}
           itemName={name}
-          onClose={refresh}
+          onClose={onAllowanceClose}
           onComplete={onAllowanceClose}
-          orderPrice={(Number(price) * amount).toString()}
+          orderPrice={(Number(item.price) * amount).toString()}
           orderType={orderType}
-        ></ShopAllowanceModal>
+        />
         <Modal isCentered isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
             <ModalCloseButton />
-            <ModalBody>
+            <ModalHeader>
               <Text fontWeight={700} fontSize={24}>
                 Buy {name ? removeEmoji(name.toString()) : ''}
               </Text>
+            </ModalHeader>
+            <ModalBody>
               <Grid
                 gap={10}
                 p={5}
@@ -222,18 +222,18 @@ export const ShopItemRow = ({
                   <VStack>
                     {orderType == OrderType.Buying ? (
                       <Text>
-                        Total Cost: {(Number(price) * amount).toFixed(3)} $GOLD
+                        Total Cost:{' '}
+                        {etherToFixedNumber(item.price * BigInt(amount))} $GOLD
                       </Text>
                     ) : (
                       <Text>
-                        Total Gained: {(Number(price) * amount).toFixed(3)}{' '}
-                        $GOLD
+                        Total to recieve:{' '}
+                        {etherToFixedNumber(item.price * BigInt(amount))} $GOLD
                       </Text>
                     )}
-                    <Text>AMOUNT (MAX {stock || balance}) </Text>
                     <HStack>
                       <Button
-                        size="xs"
+                        disabled={amount <= 1}
                         onClick={() =>
                           setAmount(
                             amount > 0 && amount <= Number(stock)
@@ -241,21 +241,22 @@ export const ShopItemRow = ({
                               : amount,
                           )
                         }
+                        size="xs"
                       >
                         <IoRemove />
                       </Button>
                       <Input
                         max={stock || balance || 0}
                         min={1}
-                        step={1}
+                        onChange={e => setAmount(Number(e.target.value))}
                         p={2}
                         placeholder="0"
                         size="sm"
+                        step={1}
                         w={10}
-                        value={amount}
                       />
                       <Button
-                        size="xs"
+                        disabled={amount <= Number(stock || balance)}
                         onClick={() =>
                           setAmount(
                             amount > -1 && amount < Number(stock || balance)
@@ -263,24 +264,28 @@ export const ShopItemRow = ({
                               : amount,
                           )
                         }
+                        size="xs"
                       >
                         <IoAdd />
                       </Button>
                     </HStack>
+                    <Text mt={3}>AMOUNT (MAX {stock || balance}) </Text>
                     {orderType == OrderType.Buying &&
                       goldAllowanceShops <
-                        parseEther((Number(price) * amount).toString()) && (
-                        <Button onClick={onAllowanceOpen}>Approve</Button>
-                      )}
+                        parseEther(
+                          (Number(item.price) * amount).toString(),
+                        ) && <Button onClick={onAllowanceOpen}>Approve</Button>}
                     {orderType == OrderType.Selling && !itemsAllowanceShops && (
                       <Button onClick={onAllowanceOpen}>Approve</Button>
                     )}
                     {orderType == OrderType.Buying &&
                       goldAllowanceShops >=
-                        parseEther((Number(price) * amount).toString()) && (
+                        parseEther(
+                          (Number(item.price) * amount).toString(),
+                        ) && (
                         <Button
                           onClick={() =>
-                            buyFromShop(
+                            buy(
                               amount.toString(),
                               shopId,
                               itemIndex,
@@ -294,7 +299,7 @@ export const ShopItemRow = ({
                     {orderType == OrderType.Selling && itemsAllowanceShops && (
                       <Button
                         onClick={() =>
-                          sellToShop(
+                          sell(
                             amount.toString(),
                             shopId,
                             itemIndex,

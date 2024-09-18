@@ -54,13 +54,14 @@ contract ItemsSystem is System {
         ItemType itemType,
         uint256 supply,
         uint256 dropChance,
+        uint256 price,
         bytes memory stats,
         string memory itemMetadataURI
     ) public returns (uint256) {
         _requireOwner(address(this), _msgSender());
         uint256 itemId = _incrementItemsCounter();
         // create new item struct
-        ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, stats: stats});
+        ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, price:price, stats: stats});
 
         StatRestrictionsData memory statRestrictions;
         if (itemType == ItemType.Weapon) {
@@ -132,6 +133,7 @@ contract ItemsSystem is System {
         ItemType[] memory itemTypes,
         uint256[] memory supply,
         uint256[] memory dropChances,
+        uint256[] memory prices,
         bytes[] memory stats,
         string[] memory itemMetadataURIs
     ) public {
@@ -142,7 +144,7 @@ contract ItemsSystem is System {
         );
 
         for (uint256 i; i < len; i++) {
-            createItem(itemTypes[i], supply[i], dropChances[i], stats[i], itemMetadataURIs[i]);
+            createItem(itemTypes[i], supply[i], dropChances[i], prices[i], stats[i], itemMetadataURIs[i]);
         }
     }
 

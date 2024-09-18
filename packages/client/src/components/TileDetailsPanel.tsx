@@ -352,7 +352,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         {isHomeTile && (
           <GridItem colSpan={2}>
             {shopsOnTile.map((shop, i) => (
-              <ShopRow key={`tile-shop-${i}`} mobId={shop.mobId} />
+              <ShopRow key={`tile-shop-${i}`} shopId={shop.shopId} />
             ))}
           </GridItem>
         )}

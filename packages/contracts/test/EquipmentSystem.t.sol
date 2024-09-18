@@ -83,7 +83,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
         );
 
         uint256[] memory itemIds = new uint256[](1);
@@ -117,7 +117,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
         );
 
         uint256[] memory itemIds = new uint256[](1);
@@ -151,7 +151,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
         );
 
         uint256[] memory itemIds = new uint256[](1);
@@ -185,7 +185,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
         );
 
         uint256[] memory itemIds = new uint256[](1);

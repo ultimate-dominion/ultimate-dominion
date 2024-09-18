@@ -41,7 +41,6 @@ import {
     WeaponStats,
     WeaponStatsData,
     ShopsData,
-    ShopItems,
     StatRestrictions,
     StatRestrictionsData,
     SpellStatsData,
@@ -325,6 +324,7 @@ contract PostDeploy is Script {
                 ItemType.Armor,
                 armorTemplate.initialSupply,
                 armorTemplate.dropChance,
+                armorTemplate.price,
                 abi.encode(newArmor, armorTemplate.statRestrictions),
                 armorTemplate.metadataUri
             );
@@ -352,6 +352,7 @@ contract PostDeploy is Script {
                 ItemType.Weapon,
                 weaponTemplate.initialSupply,
                 weaponTemplate.dropChance,
+                weaponTemplate.price,
                 abi.encode(newWeapon, weaponTemplate.statRestrictions),
                 weaponTemplate.metadataUri
             );
@@ -381,6 +382,7 @@ contract PostDeploy is Script {
                 ItemType.Spell,
                 spellTemplate.initialSupply,
                 spellTemplate.dropChance,
+                spellTemplate.price,
                 abi.encode(newSpell, spellTemplate.statRestrictions),
                 spellTemplate.metadataUri
             );
@@ -404,6 +406,7 @@ contract PostDeploy is Script {
                 ItemType.Consumable,
                 consumablesTemplate.initialSupply,
                 consumablesTemplate.dropChance,
+                consumablesTemplate.price,
                 abi.encode(newConsumable, consumablesTemplate.statRestrictions),
                 consumablesTemplate.metadataUri
             );
@@ -425,8 +428,6 @@ contract PostDeploy is Script {
         world.UD__setStarterItems(Classes.Mage, mageItemIds, amounts);
     }
     function _createShops() internal {
-        string memory json = vm.readFile("shopItems.json");
-        bytes memory data = vm.parseJson(json);
         uint256[] memory sellableItems = new uint256[](10);
         uint256[] memory buyableItems = new uint256[](10);
         uint256[] memory stock = new uint256[](10);
@@ -438,18 +439,12 @@ contract PostDeploy is Script {
             }
         }
 
-
-        ShopItemsTemplate memory itemsData = abi.decode(data, (ShopItemsTemplate));
-        for (uint256 i = 0; i < itemsData.shopItemsData.length; i++) {
-            ShopItems.set(itemsData.shopItemsData[i].itemId, itemsData.shopItemsData[i].price);
-        }
-
         ShopsData memory newShop = ShopsData({
             gold: 100 ether,
             maxGold: 100 ether,
             priceMarkup: 20,
             priceMarkdown: 50,
-            timestamp: 1725962400,
+            restockTimestamp: 1725962400,
             sellableItems: sellableItems,
             buyableItems: buyableItems,
             restock: stock,

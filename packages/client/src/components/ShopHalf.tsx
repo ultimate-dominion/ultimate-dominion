@@ -46,7 +46,6 @@ export const ShopHalf = ({
   items: Array<{
     balance: string | null;
     item: ArmorTemplate | SpellTemplate | WeaponTemplate;
-    price: string;
     stock: string | null;
   }>;
   shopId: string;
@@ -57,7 +56,6 @@ export const ShopHalf = ({
     Array<{
       balance: string | null;
       item: ArmorTemplate | WeaponTemplate | SpellTemplate;
-      price: string;
       stock: string | null;
     }>
   >([]);
@@ -87,7 +85,6 @@ export const ShopHalf = ({
     let entriesCopy: Array<{
       balance: string | null;
       item: ArmorTemplate | SpellTemplate | WeaponTemplate;
-      price: string;
       stock: string | null;
     }> = [...items];
     const searcher = new FuzzySearch(
@@ -111,8 +108,8 @@ export const ShopHalf = ({
       switch (sort.sorted) {
         case SortOptions.Price:
           return sort.reversed
-            ? Number(entryA.price) - Number(entryB.price)
-            : Number(entryB.price) - Number(entryA.price);
+            ? Number(entryA.item.price) - Number(entryB.item.price)
+            : Number(entryB.item.price) - Number(entryA.item.price);
         case SortOptions.Stock:
           return sort.reversed
             ? Number(entryA.stock ? entryA.stock : entryA.balance) -
@@ -120,7 +117,7 @@ export const ShopHalf = ({
             : Number(entryB.stock ? entryB.stock : entryB.balance) -
                 Number(entryA.stock ? entryA.stock : entryA.balance);
         default:
-          return Number(entryB.price) - Number(entryA.price);
+          return Number(entryB.item.price) - Number(entryA.item.price);
       }
     });
     setLength(entriesCopy.length);
@@ -235,7 +232,7 @@ export const ShopHalf = ({
                 <FaSortAmountDown color="grey" />
               )}
             </Button>
-            <Box display={{ base: 'none', md: 'block' }} w="40px"></Box>
+            <Box display={{ base: 'none', md: 'block' }} w="40px" />
           </HStack>
         </Flex>
       </HStack>
@@ -250,7 +247,6 @@ export const ShopHalf = ({
                 itemIndex={itemIndexes[i]}
                 key={`shop-row-${i}`}
                 orderType={orderType}
-                price={entry.price}
                 shopId={shopId}
                 stock={entry.stock}
               />

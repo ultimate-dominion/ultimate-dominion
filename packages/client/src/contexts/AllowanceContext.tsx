@@ -13,6 +13,7 @@ import { useWalletClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { ERC_1155_ABI } from '../utils/constants';
+import { AllowanceType } from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 
@@ -27,9 +28,9 @@ type AllowanceContextType = {
   itemsAllowanceShops: boolean;
   onApproveGoldAllowance: (
     allowanceAmount: string,
-    allowanceType: string,
+    allowanceType: AllowanceType,
   ) => void;
-  onSetApprovalForAllItems: (allowanceType: string) => void;
+  onSetApprovalForAllItems: (allowanceType: AllowanceType) => void;
   refreshAllowances: () => void;
 };
 
@@ -77,15 +78,15 @@ export const AllowanceProvider = ({
   const [isApprovingItemsShops, setIsApprovingItemsShops] = useState(false);
 
   const {
-    shop: shopAddress,
-    marketplace: marketplaceAddress,
     goldToken: goldTokenAddress,
     items: itemsAddress,
+    marketplace: marketplaceAddress,
+    shop: shopAddress,
   } = useComponentValue(UltimateDominionConfig, singletonEntity) ?? {
-    shop: null,
-    marketplace: null,
     goldToken: null,
     items: null,
+    marketplace: null,
+    shop: null,
   };
 
   const fetchAllowances = useCallback(async () => {
@@ -147,7 +148,7 @@ export const AllowanceProvider = ({
   }, [character, fetchAllowances, isRefreshing, isSynced]);
 
   const onApproveGoldAllowance = useCallback(
-    async (allowanceAmount: string, allowanceType: string) => {
+    async (allowanceAmount: string, allowanceType: AllowanceType) => {
       if (!externalWalletClient) {
         throw new Error('No external wallet client found.');
       }
@@ -158,7 +159,7 @@ export const AllowanceProvider = ({
         switch (allowanceType) {
           default:
             throw new Error('No allowance type');
-          case '0': {
+          case AllowanceType.Marketplace: {
             setIsApprovingGoldMarketplace(true);
             const { request: marketplaceRequest } =
               await publicClient.simulateContract({
@@ -182,7 +183,7 @@ export const AllowanceProvider = ({
 
             break;
           }
-          case '1': {
+          case AllowanceType.Shop: {
             setIsApprovingGoldShops(true);
             const { request: shopRequest } =
               await publicClient.simulateContract({
@@ -232,7 +233,7 @@ export const AllowanceProvider = ({
      *
      * @param allowanceType 0 for marketplace, 1 for shops
      */
-    async (allowanceType: string) => {
+    async (allowanceType: AllowanceType) => {
       try {
         if (!externalWalletClient) {
           throw new Error('No external wallet client found.');
@@ -241,7 +242,7 @@ export const AllowanceProvider = ({
           default: {
             throw new Error('No allowance type');
           }
-          case '0': {
+          case AllowanceType.Marketplace: {
             setIsApprovingItemsMarketplace(true);
             if (!marketplaceAddress) {
               throw new Error('No Marketplace address found.');
@@ -265,7 +266,7 @@ export const AllowanceProvider = ({
             }
             break;
           }
-          case '1': {
+          case AllowanceType.Shop: {
             setIsApprovingItemsShops(true);
 
             if (!shopAddress) {
