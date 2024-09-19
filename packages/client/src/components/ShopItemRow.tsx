@@ -17,13 +17,13 @@ import {
   ModalOverlay,
   Text,
   useDisclosure,
+  useToast,
   VStack,
 } from '@chakra-ui/react';
 import { Entity } from '@latticexyz/recs';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoAdd, IoRemove } from 'react-icons/io5';
-import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -65,8 +65,10 @@ export const ShopItemRow = ({
   const {
     systemCalls: { buy, sell },
   } = useMUD();
+  const { renderSuccess, renderError } = useToast();
 
-  const { goldAllowanceShops, itemsAllowanceShops } = useAllowance();
+  const { goldAllowanceShops, itemsAllowanceShops, refreshAllowances } =
+    useAllowance();
 
   const {
     isOpen: isAllowanceOpen,
@@ -82,7 +84,7 @@ export const ShopItemRow = ({
 
   const { name, statRestrictions } = item;
 
-  const { character: userCharacter } = useCharacter();
+  const { character: userCharacter, refreshCharacter } = useCharacter();
 
   const price = useMemo(() => {
     if (orderType == OrderType.Selling)
@@ -92,11 +94,66 @@ export const ShopItemRow = ({
     );
   }, [amount, item.price, orderType, shop.priceMarkdown, shop.priceMarkup]);
 
+  const priceSingle = useMemo(() => {
+    if (orderType == OrderType.Selling)
+      return (item.price * shop.priceMarkdown) / 100n;
+    return item.price + item.price * (shop.priceMarkup / 100n);
+  }, [item.price, orderType, shop.priceMarkdown, shop.priceMarkup]);
+
   const insufficientGold = useMemo(() => {
     if (!userCharacter) return false;
     if (orderType === OrderType.Selling) return false;
     return price > BigInt(userCharacter.goldBalance);
   }, [orderType, price, userCharacter]);
+  const submit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (insufficientGold) {
+        setShowError(true);
+        return;
+      }
+      try {
+        if (orderType == OrderType.Buying && goldAllowanceShops < price) {
+          onAllowanceOpen();
+          return;
+        }
+        if (orderType == OrderType.Selling && !itemsAllowanceShops) {
+          onAllowanceOpen();
+          return;
+        }
+        if (orderType == OrderType.Buying) {
+          await buy(amount.toString(), shop.shopId, itemIndex, characterId);
+          renderSuccess('Item purchased successfully!');
+        } else {
+          await sell(amount.toString(), shop.shopId, itemIndex, characterId);
+          renderSuccess('Item sold successfully!');
+        }
+      } catch (e) {
+        renderError((e as Error)?.message ?? 'Shop transaction failed', e);
+      } finally {
+        refreshAllowances();
+        refreshCharacter();
+      }
+    },
+    [
+      amount,
+      buy,
+      characterId,
+      goldAllowanceShops,
+      insufficientGold,
+      itemIndex,
+      itemsAllowanceShops,
+      onAllowanceOpen,
+      orderType,
+      price,
+      refreshAllowances,
+      refreshCharacter,
+      renderError,
+      renderSuccess,
+      sell,
+      shop.shopId,
+    ],
+  );
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
@@ -158,7 +215,7 @@ export const ShopItemRow = ({
             textAlign="center"
             w="100%"
           >
-            {etherToFixedNumber(price)}
+            {etherToFixedNumber(priceSingle)}
           </Text>
         </HStack>
         <ShopAllowanceModal
@@ -245,7 +302,12 @@ export const ShopItemRow = ({
                     STR
                   </Text>
                 </GridItem>
-                <GridItem colSpan={2} textAlign="center">
+                <GridItem
+                  colSpan={2}
+                  textAlign="center"
+                  as="form"
+                  onSubmit={submit}
+                >
                   <VStack>
                     {orderType == OrderType.Buying ? (
                       <Text>Total Cost: {etherToFixedNumber(price)} $GOLD</Text>
@@ -259,7 +321,7 @@ export const ShopItemRow = ({
                         disabled={amount <= 1}
                         onClick={() =>
                           setAmount(
-                            amount > 0 && amount <= Number(stock)
+                            amount > 1 && amount <= Number(stock)
                               ? amount - 1
                               : amount,
                           )
@@ -295,49 +357,25 @@ export const ShopItemRow = ({
                     <Text mt={3}>AMOUNT (MAX {stock || balance}) </Text>
                     <FormControl isInvalid={showError && insufficientGold}>
                       {showError && insufficientGold && (
-                        <FormHelperText color="red">
-                          Offer price must be greater than 0.
+                        <FormHelperText color="red" m={3}>
+                          Not enough $GOLD.
                         </FormHelperText>
                       )}
                       {orderType == OrderType.Buying &&
                         goldAllowanceShops < price && (
-                          <Button onClick={onAllowanceOpen}>Approve</Button>
+                          <Button type="submit">Approve</Button>
                         )}
                       {orderType == OrderType.Selling &&
                         !itemsAllowanceShops && (
-                          <Button onClick={onAllowanceOpen}>Approve</Button>
+                          <Button type="submit">Approve</Button>
                         )}
                       {orderType == OrderType.Buying &&
                         goldAllowanceShops >= price && (
-                          <Button
-                            onClick={() =>
-                              buy(
-                                amount.toString(),
-                                shop.shopId,
-                                itemIndex,
-                                characterId,
-                              )
-                            }
-                            type="submit"
-                          >
-                            Buy
-                          </Button>
+                          <Button type="submit">Buy</Button>
                         )}
                       {orderType == OrderType.Selling &&
                         itemsAllowanceShops && (
-                          <Button
-                            onClick={() =>
-                              sell(
-                                amount.toString(),
-                                shop.shopId,
-                                itemIndex,
-                                characterId,
-                              )
-                            }
-                            type="submit"
-                          >
-                            Sell
-                          </Button>
+                          <Button type="submit">Sell</Button>
                         )}
                     </FormControl>
                   </VStack>
