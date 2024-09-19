@@ -162,13 +162,9 @@ contract MapSystem is System {
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             if (senderIsOwner) {
-                bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
-                if (encounterId != bytes32(0)) {
-                    require(
-                        CombatEncounter.getCurrentTurn(encounterId) < 3, "Can only run from combat in the beginning"
-                    );
-                }
-            } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
+                // intentionally left empty
+            }
+            else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
                 require(
                     (SessionTimer.get(entityId) + SESSION_TIMEOUT) < block.timestamp,
                     "This player's session has not timed out"
