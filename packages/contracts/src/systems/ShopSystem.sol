@@ -92,6 +92,7 @@ contract ShopSystem is System, ReentrancyGuard {
     // make this happen when the user clicks the shop button
     function restock(bytes32 shopId) public {
         uint256 lastRecordedIntervalTimestamp = Shops.getTimestamp(shopId);
+        if(lastRecordedIntervalTimestamp > block.timestamp) return 0;
         if(block.timestamp - lastRecordedIntervalTimestamp >= 12 hours){
             uint256[] memory stock = Shops.getRestock(shopId);
             uint256 gold = Shops.getMaxGold(shopId);
