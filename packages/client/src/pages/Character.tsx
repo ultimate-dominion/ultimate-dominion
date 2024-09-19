@@ -12,6 +12,7 @@ import {
   Spacer,
   Spinner,
   Text,
+  Tooltip,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
@@ -23,7 +24,10 @@ import {
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IoMdArrowRoundBack } from 'react-icons/io';
+import {
+  IoMdArrowRoundBack,
+  IoMdInformationCircleOutline,
+} from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
 import { hexToString, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
@@ -331,13 +335,35 @@ export const CharacterPage = (): JSX.Element => {
             <VStack h="100%">
               <Box w="100%">
                 <VStack alignItems="start" spacing={0}>
-                  <Text fontWeight="bold">
-                    {etherToFixedNumber(character.externalGoldBalance)} $GOLD
-                  </Text>
-                  <Text fontSize="xs" fontWeight="bold" textAlign="start">
-                    Adventure Escrow balance:{' '}
-                    {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
-                  </Text>
+                  <HStack>
+                    <Text fontWeight="bold">
+                      {etherToFixedNumber(character.externalGoldBalance)} $GOLD
+                    </Text>
+                    <Tooltip
+                      bg="black"
+                      hasArrow
+                      label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
+                      placement="top"
+                      shouldWrapChildren
+                    >
+                      <IoMdInformationCircleOutline />
+                    </Tooltip>
+                  </HStack>
+                  <HStack>
+                    <Text fontSize="xs" fontWeight="bold" textAlign="start">
+                      Adventure Escrow balance:{' '}
+                      {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
+                    </Text>
+                    <Tooltip
+                      bg="black"
+                      hasArrow
+                      label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+                      placement="top"
+                      shouldWrapChildren
+                    >
+                      <IoMdInformationCircleOutline />
+                    </Tooltip>
+                  </HStack>
                 </VStack>
                 <HStack justify="space-between" mt={4}>
                   <Text fontWeight="bold">Level {character.level}</Text>

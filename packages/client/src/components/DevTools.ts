@@ -4,6 +4,7 @@ import combatSystemAbi from 'contracts/out/CombatSystem.sol/CombatSystem.abi.jso
 import encounterSystemAbi from 'contracts/out/EncounterSystem.sol/EncounterSystem.abi.json';
 import equipmentSystemAbi from 'contracts/out/EquipmentSystem.sol/EquipmentSystem.abi.json';
 import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
+import lootManagerSystemAbi from 'contracts/out/LootManagerSystem.sol/LootManagerSystem.abi.json';
 import mapSystemAbi from 'contracts/out/MapSystem.sol/MapSystem.abi.json';
 import marketplaceSystemAbi from 'contracts/out/MarketplaceSystem.sol/MarketplaceSystem.abi.json';
 import { useEffect, useMemo } from 'react';
@@ -21,6 +22,7 @@ export function DevTools(): null {
       ...combatSystemAbi,
       ...encounterSystemAbi,
       ...equipmentSystemAbi,
+      ...lootManagerSystemAbi,
       ...mapSystemAbi,
       ...marketplaceSystemAbi,
       ...worldAbi,
