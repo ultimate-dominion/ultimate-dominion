@@ -33,4 +33,6 @@ interface IEncounterSystem {
     address account,
     bytes32[] memory participants
   ) external view returns (bool _isParticipant);
+
+  function UD__isInEncounter(bytes32 entityId) external view returns (bool);
 }

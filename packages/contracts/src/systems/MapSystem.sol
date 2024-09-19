@@ -162,9 +162,13 @@ contract MapSystem is System {
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             if (senderIsOwner) {
-                // if sender is owner execute removal
-            }
-            else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
+                bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
+                if (encounterId != bytes32(0)) {
+                    require(
+                        CombatEncounter.getCurrentTurn(encounterId) < 3, "Can only run from combat in the beginning"
+                    );
+                }
+            } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
                 require(
                     (SessionTimer.get(entityId) + SESSION_TIMEOUT) < block.timestamp,
                     "This player's session has not timed out"
@@ -194,16 +198,19 @@ contract MapSystem is System {
         Spawned.setSpawned(entityId, false);
 
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
-        
+        bytes32[] memory emptyArray;
+
         // end combat for entity
         if (encounterId != bytes32(0)) {
             bytes32[] memory attackers = CombatEncounter.getAttackers(encounterId);
             for (uint256 i; i < attackers.length; i++) {
                 EncounterEntity.setEncounterId(attackers[i], bytes32(0));
+                EncounterEntity.setAppliedStatusEffects(attackers[i], emptyArray);
             }
             bytes32[] memory defenders = CombatEncounter.getDefenders(encounterId);
             for (uint256 i; i < defenders.length; i++) {
                 EncounterEntity.setEncounterId(defenders[i], bytes32(0));
+                EncounterEntity.setAppliedStatusEffects(defenders[i], emptyArray);
             }
             EncounterEntity.setDied(entityId, true);
             CombatEncounter.setEnd(encounterId, block.timestamp);
