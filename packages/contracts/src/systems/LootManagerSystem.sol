@@ -38,7 +38,9 @@ import {
     _combatSystemId,
     _lootManagerSystemId
 } from "../utils.sol";
-import {ITEMS_NAMESPACE, WORLD_NAMESPACE, BASE_GOLD_DROP, EXP_MODIFIER} from "../../constants.sol";
+import {
+    ITEMS_NAMESPACE, WORLD_NAMESPACE, BASE_GOLD_DROP, EXP_MODIFIER, PVP_GOLD_DENOMINATOR
+} from "../../constants.sol";
 import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
 import {
     _metadataTableId,
@@ -70,9 +72,16 @@ contract LootManagerSystem is System {
         }
     }
 
-    function dropGold(bytes32 characterId, uint256 amount) public {
+    function dropGoldToEscrow(bytes32 characterId, uint256 amount) public {
         AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
-        _goldToken().mint(IWorld(_world()).UD__getOwner(characterId), amount);
+        uint256 currentBalance = AdventureEscrow.get(characterId);
+        AdventureEscrow.set(characterId, currentBalance + amount);
+        _goldToken().mint(address(this), amount);
+    }
+
+    function dropGoldToPlayer(bytes32 characterId, uint256 amount) public {
+        AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
+        _goldToken().mint(IWorld(_world()).UD__getOwnerAddress(characterId), amount);
     }
 
     function dropItem(bytes32 characterId, uint256 itemId, uint256 amount) public {
@@ -177,7 +186,51 @@ contract LootManagerSystem is System {
         returns (uint256 _expAmount, uint256 _goldAmount, uint256[] memory _itemIdsDropped)
     {
         _requireAccess(address(this), _msgSender());
+
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        RewardDistributionTemps memory distTemps;
+        require(encounterData.end != 0 && encounterData.rewardsDistributed == false, "Invalid Encounter");
         // distribute 100% of gold in losers adventure escrow
+        bool attackersWin;
+        uint256 deadAttackers;
+        uint256 deadDefenders;
+        for (uint256 i; i < encounterData.defenders.length; i++) {
+            if (EncounterEntity.getDied(encounterData.defenders[i])) deadDefenders++;
+        }
+        if (deadDefenders == encounterData.defenders.length) attackersWin = true;
+
+        uint256 distributionPool;
+
+        if (attackersWin) {
+            // distribute defender's escrow gold
+            for (uint256 i; i < encounterData.defenders.length; i++) {
+                uint256 currentBalance = AdventureEscrow.get(encounterData.defenders[i]);
+                uint256 toDistribute = currentBalance / PVP_GOLD_DENOMINATOR;
+                distributionPool += toDistribute;
+                AdventureEscrow.set(encounterData.defenders[i], (currentBalance - toDistribute));
+            }
+            // distribute defender's escrow gold
+            for (uint256 i; i < encounterData.attackers.length; i++) {
+                uint256 currentBalance = AdventureEscrow.get(encounterData.attackers[i]);
+                uint256 toDistribute = distributionPool / encounterData.attackers.length;
+                AdventureEscrow.set(encounterData.attackers[i], (currentBalance + toDistribute));
+            }
+        } else {
+            // distribute attackers gold
+            // distribute defender's escrow gold
+            for (uint256 i; i < encounterData.attackers.length; i++) {
+                uint256 currentBalance = AdventureEscrow.get(encounterData.attackers[i]);
+                uint256 toDistribute = currentBalance / PVP_GOLD_DENOMINATOR;
+                distributionPool += toDistribute;
+                AdventureEscrow.set(encounterData.attackers[i], (currentBalance - toDistribute));
+            }
+            // distribute defender's escrow gold
+            for (uint256 i; i < encounterData.defenders.length; i++) {
+                uint256 currentBalance = AdventureEscrow.get(encounterData.defenders[i]);
+                uint256 toDistribute = distributionPool / encounterData.defenders.length;
+                AdventureEscrow.set(encounterData.defenders[i], (currentBalance + toDistribute));
+            }
+        }
     }
 
     function distributePveRewards(bytes32 encounterId, uint256 randomNumber)
@@ -242,7 +295,7 @@ contract LootManagerSystem is System {
                 statsTemp = Stats.get(distTemps.entityIdTemp);
                 if (statsTemp.currentHp > int256(0)) {
                     if (_goldAmount > uint256(0)) {
-                        _addEscrowBalance(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
+                        dropGoldToEscrow(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
                     }
                     if (_expAmount > uint256(0) && distTemps.livingPlayers > uint256(0)) {
                         statsTemp.experience += (
