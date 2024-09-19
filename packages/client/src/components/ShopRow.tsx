@@ -16,8 +16,7 @@ export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
 
   const restockAndEnter = useCallback(async () => {
     try {
-      const restocked = await restock(shopId);
-      if (restocked) renderSuccess('Shop restocked!');
+      await restock(shopId);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Restock failed', e);
     } finally {
