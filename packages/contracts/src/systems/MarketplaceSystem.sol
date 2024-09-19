@@ -65,10 +65,10 @@ contract MarketplaceSystem is ERC1155Holder, System, ReentrancyGuard {
             "Token not accepted"
         );
         require(order.offer.tokenType != order.consideration.tokenType, "Cannot cross trade");
-        {
-            // create order Hash out of offer and consideration data and the Counter for the offerer
-            uint256 offerCounter = Counters.getCounter(order.offerer, 0) + 1;
-        }
+
+        // create order Hash out of offer and consideration data and the Counter for the offerer
+        uint256 offerCounter = Counters.getCounter(order.offerer, 0) + 1;
+
         Counters.setCounter(order.consideration.recipient, 0, (offerCounter));
         _orderHash = getOrderHash(order);
 

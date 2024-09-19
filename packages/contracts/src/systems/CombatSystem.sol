@@ -269,7 +269,7 @@ contract CombatSystem is System {
             (getStatModifier(attackerStat, attackModifierBonus) * (((attackRoll) % 1000)) * TO_HIT_MODIFIER) / WAD;
 
         uint256 defenseTotal = ((((defenseRoll) % 400) * getStatModifier(defenderStat, 0)) * DEFENSE_MODIFIER) / WAD;
-        console.logInt() attackLands = attackTotal >= defenseTotal;
+        attackLands = attackTotal >= defenseTotal;
 
         if (attackLands) {
             crit = uint256(int256(attackTotal) + critChanceBonus) >= defenseTotal * CRIT_MODIFIER;
@@ -293,6 +293,7 @@ contract CombatSystem is System {
         AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
         //get defender
         AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
+        // get spell data
         SpellStatsData memory spell = IWorld(_world()).UD__getSpellStats(spellId);
 
         require(IWorld(_world()).UD__checkItemEffect(spellId, effectId), "INVALID ACTION");

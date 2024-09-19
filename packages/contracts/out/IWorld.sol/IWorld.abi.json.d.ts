@@ -1728,6 +1728,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getCharacterIdFromOwnerAddress",
+    "inputs": [
+      {
+        "name": "ownerAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getCharacterToken",
     "inputs": [],
     "outputs": [

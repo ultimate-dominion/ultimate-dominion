@@ -21,6 +21,8 @@ interface ICharacterSystem {
 
   function UD__getCharacterTokenId(bytes32 characterId) external pure returns (uint256);
 
+  function UD__getCharacterIdFromOwnerAddress(address ownerAddress) external view returns (bytes32 _characterId);
+
   function UD__getOwnerAddress(bytes32 characterId) external pure returns (address);
 
   function UD__isValidCharacterId(bytes32 characterId) external view returns (bool);

@@ -81,7 +81,7 @@ contract CharacterSystem is System {
     }
 
     function getCharacterIdFromOwnerAddress(address ownerAddress) public view returns (bytes32 _characterId) {
-        _characterToken().balanceOf(owner);
+        return CharacterOwner.getCharacterId(ownerAddress);
     }
 
     /**

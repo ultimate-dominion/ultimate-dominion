@@ -163,4 +163,19 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         vm.expectRevert();
         world.UD__dropItems(characterIds, itemIds, amounts);
     }
+
+    function test_transferEquippedItem_Revert() public {
+        StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Mage);
+        assertEq(erc1155System.balanceOf(address(bob), starterDat.itemIds[0]), starterDat.amounts[0]);
+        //equip items
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](1);
+        itemsToEquip[0] = starterDat.itemIds[0];
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+        assertTrue(world.UD__isEquipped(bobCharacterId, starterDat.itemIds[0]), "item not equipped");
+        assertEq(erc1155System.balanceOf(bob, starterDat.itemIds[0]), 1);
+        erc1155System.setApprovalForAll(alice, true);
+        vm.expectRevert("Transfer: Must Unequip item to transfer.");
+        erc1155System.transferFrom(bob, alice, starterDat.itemIds[0], 1);
+    }
 }
