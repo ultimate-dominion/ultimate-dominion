@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  Button,
   Flex,
   Grid,
   GridItem,
@@ -8,13 +9,14 @@ import {
   Spinner,
   Stack,
   Text,
+  Tooltip,
   useBreakpointValue,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { GiCrossedSwords } from 'react-icons/gi';
-import { IoIosWarning } from 'react-icons/io';
+import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -26,8 +28,9 @@ import {
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
-import { getEmoji, removeEmoji } from '../utils/helpers';
+import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { type Character, EncounterType, type Monster } from '../utils/types';
+import { AdventureEscrowModal } from './AdventureEscrowModal';
 import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
 import { ShopRow } from './ShopRow';
@@ -41,6 +44,11 @@ export const TileDetailsPanel = (): JSX.Element => {
     isOpen: isSafetyZoneInfoModalOpen,
     onClose: onCloseSafetyZoneInfoModal,
     onOpen: onOpenSafetyZoneInfoModal,
+  } = useDisclosure();
+  const {
+    isOpen: isAdventureEscrowModalOpen,
+    onClose: onCloseAdventureEscrowModal,
+    onOpen: onOpenAdventureEscrowModal,
   } = useDisclosure();
 
   const {
@@ -200,6 +208,14 @@ export const TileDetailsPanel = (): JSX.Element => {
     return userCharacterStatusEffect?.name ?? '';
   }, [character, statusEffectActions]);
 
+  if (!character) {
+    return (
+      <Flex alignItems="center" h="100%" justifyContent="center">
+        <Text>An error occurred.</Text>
+      </Flex>
+    );
+  }
+
   if (!currentBattle && isRefreshing) {
     return (
       <Flex alignItems="center" h="100%" justifyContent="center">
@@ -350,7 +366,33 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   return (
     <Box>
-      <Grid gap={5} templateColumns="repeat(4, 1fr)">
+      <VStack align="start">
+        <HStack>
+          <Text fontSize="xs" fontWeight="bold" textAlign="start">
+            Adventure Escrow balance:{' '}
+            {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
+          </Text>
+          <Tooltip
+            bg="black"
+            hasArrow
+            label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+            placement="top"
+            shouldWrapChildren
+          >
+            <IoMdInformationCircleOutline />
+          </Tooltip>
+        </HStack>
+        {isHomeTile && (
+          <Button
+            onClick={onOpenAdventureEscrowModal}
+            size="xs"
+            variant="outline"
+          >
+            Deposit or Withdraw $GOLD
+          </Button>
+        )}
+      </VStack>
+      <Grid gap={5} mt={4} templateColumns="repeat(4, 1fr)">
         {shopsOnTile.length > 0 && (
           <GridItem colSpan={2}>
             <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
@@ -426,6 +468,12 @@ export const TileDetailsPanel = (): JSX.Element => {
           )}
         </GridItem>
       </Grid>
+
+      <AdventureEscrowModal
+        isOpen={isAdventureEscrowModalOpen}
+        onClose={onCloseAdventureEscrowModal}
+      />
+
       <InfoModal
         heading="Cannot Battle in the Safety Zone"
         isOpen={isSafetyZoneInfoModalOpen}

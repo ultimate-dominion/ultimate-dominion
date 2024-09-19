@@ -291,7 +291,7 @@ export const WalletDetailsModal = ({
           )}
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose} size="sm">
+          <Button onClick={onClose} size="sm" variant="ghost">
             Close
           </Button>
         </ModalFooter>

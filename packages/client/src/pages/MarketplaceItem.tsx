@@ -194,7 +194,7 @@ export const MarketplaceItem = (): JSX.Element => {
   const insufficientGold = useMemo(() => {
     if (!userCharacter) return false;
     if (orderType === OrderType.Selling) return false;
-    return parseEther(orderPrice) > BigInt(userCharacter.goldBalance);
+    return parseEther(orderPrice) > BigInt(userCharacter.externalGoldBalance);
   }, [orderPrice, orderType, userCharacter]);
 
   const onCreateOrder = useCallback(
@@ -454,7 +454,7 @@ export const MarketplaceItem = (): JSX.Element => {
           Back to Marketplace
         </Button>
         <Text size={{ base: '2xs', sm: 'sm' }}>
-          $GOLD Balance: {etherToFixedNumber(userCharacter.goldBalance)}
+          $GOLD Balance: {etherToFixedNumber(userCharacter.externalGoldBalance)}
         </Text>
       </Stack>
       <Heading textAlign="center">{removeEmoji(selectedItem.name)}</Heading>
@@ -664,7 +664,7 @@ export const MarketplaceItem = (): JSX.Element => {
             </Button>
           </HStack>
           {orderType === OrderType.Buying &&
-            (userCharacter.goldBalance === BigInt(0) ? (
+            (userCharacter.externalGoldBalance === BigInt(0) ? (
               <Text mt={4} size="sm">
                 You don&apos;t have any $GOLD in your inventory.
               </Text>

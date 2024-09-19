@@ -14,17 +14,18 @@ import { GiAxeSword, GiRogue } from 'react-icons/gi';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
+import { etherToFixedNumber } from '../utils/helpers';
 import { type Character, StatsClasses } from '../utils/types';
 
 export const LeaderboardRow = ({
   agility,
-  maxHp,
   entityClass,
+  externalGoldBalance,
   id,
   image,
   intelligence,
-  goldBalance,
   level,
+  maxHp,
   name,
   strength,
 }: Character): JSX.Element => {
@@ -97,7 +98,7 @@ export const LeaderboardRow = ({
             textAlign="center"
             w="100%"
           >
-            {Number(goldBalance).toLocaleString()}
+            {etherToFixedNumber(externalGoldBalance)}
           </Text>
         </HStack>
         <Box display={{ base: 'none', md: 'block' }} w="50px">

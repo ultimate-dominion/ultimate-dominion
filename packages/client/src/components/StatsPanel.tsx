@@ -17,7 +17,10 @@ import { useComponentValue } from '@latticexyz/react';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
 import { BsBackpack4Fill } from 'react-icons/bs';
-import { IoIosArrowForward } from 'react-icons/io';
+import {
+  IoIosArrowForward,
+  IoMdInformationCircleOutline,
+} from 'react-icons/io';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -88,7 +91,7 @@ export const StatsPanel = (): JSX.Element => {
     maxHp,
     currentHp,
     experience,
-    goldBalance,
+    externalGoldBalance,
     image,
     intelligence,
     name,
@@ -155,7 +158,20 @@ export const StatsPanel = (): JSX.Element => {
       <Level currentLevel={character.level} levelPercent={levelPercent} />
 
       <HStack alignItems="start" w="100%">
-        <Text fontWeight="bold">{etherToFixedNumber(goldBalance)} $GOLD</Text>
+        <HStack>
+          <Text fontWeight="bold">
+            {etherToFixedNumber(externalGoldBalance)} $GOLD
+          </Text>
+          <Tooltip
+            bg="black"
+            hasArrow
+            label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
+            placement="top"
+            shouldWrapChildren
+          >
+            <IoMdInformationCircleOutline />
+          </Tooltip>
+        </HStack>
         <Spacer />
         <Text>
           <Text

@@ -152,7 +152,7 @@ export const Shop = (): JSX.Element => {
           {sellable && sellable.length > 0 ? (
             <ShopHalf
               items={sellable}
-              name={`Character’s Inventory - ${etherToFixedNumber(userCharacter.goldBalance)} $GOLD`}
+              name={`Character’s Inventory - ${etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD`}
             />
           ) : (
             <Center>

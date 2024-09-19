@@ -97,7 +97,8 @@ export const OrderRow = ({
     if (!character) return false;
     if (order.offer.tokenType === TokenType.ERC20) return false;
     return (
-      parseEther(order.consideration.amount) > BigInt(character.goldBalance)
+      parseEther(order.consideration.amount) >
+      BigInt(character.externalGoldBalance)
     );
   }, [character, order]);
 
