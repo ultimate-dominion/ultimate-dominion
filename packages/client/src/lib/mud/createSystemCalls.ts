@@ -261,19 +261,6 @@ export function createSystemCalls(
 
   const restock = async (shopId: string): SystemCallReturn => {
     try {
-      // await publicClient.simulateContract({
-      //   abi: worldContract.abi,
-      //   account: delegatorAddress,
-      //   address: worldContract.address,
-      //   args: [
-      //     BigInt(amount),
-      //     shopId as `0x${string}`,
-      //     BigInt(itemIndex),
-      //     characterId as `0x${string}`,
-      //   ],
-      //   functionName: 'UD__buy',
-      // });
-
       const canRestock = await worldContract.read.UD__canRestock([
         shopId as `0x${string}`,
       ]);

@@ -3815,7 +3815,13 @@ declare const abi: [
         "internalType": "bytes32"
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {

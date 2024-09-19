@@ -94,28 +94,31 @@ contract ShopSystem is System, ReentrancyGuard {
         IWorld(_world()).UD__dropGold(characterId, amount * itemMarkdown(shopId, sellable[itemIndex]));
     }
 
+
+
+    function canRestock(bytes32 shopId) public view returns(bool) {
+        uint256 lastRecordedIntervalTimestamp = Shops.getRestockTimestamp(shopId);
+        if(lastRecordedIntervalTimestamp > block.timestamp) return false;
+        if(block.timestamp - lastRecordedIntervalTimestamp >= 12 hours){
+            return true;
+        }
+    }
+
     /**
      * Resets the shop inventory after 12 hours
      * @param shopId the shop Id
      */
-    function restock(bytes32 shopId) public {
-        require(canRestock(shopId), "You must wait 12 hours to restock");
-
-        uint256[] memory stock = Shops.getRestock(shopId);
-        uint256 gold = Shops.getMaxGold(shopId);
-
-        Shops.setStock(shopId, stock);
-        Shops.setGold(shopId, gold);
-        Shops.setRestockTimestamp(shopId, block.timestamp);
+    function restock(bytes32 shopId) public returns(bool) {
+        if(canRestock(shopId)){
+            uint256 lastRecordedIntervalTimestamp = Shops.getRestockTimestamp(shopId);
+            uint256 timeSinceLastInterval = (block.timestamp - lastRecordedIntervalTimestamp) % 12 hours;
+            uint256 lastIntervalTimestamp = block.timestamp - timeSinceLastInterval;
+            Shops.setRestockTimestamp(shopId, lastIntervalTimestamp + 12 hours);
+            return true;
+        }
+        return false;
     }
-
-    function canRestock(bytes32 shopId) public view returns(bool) {
-        uint256 lastRecordedIntervalTimestamp = Shops.getRestockTimestamp(shopId);
-        uint256 timeSinceLastInterval = (block.timestamp - lastRecordedIntervalTimestamp) % 12 hours;
-        uint256 lastIntervalTimestamp = block.timestamp - timeSinceLastInterval;
-        return lastIntervalTimestamp >= 12 hours;
-    }
-
+    
     function itemStock(bytes32 shopId, uint256 itemIndex) public view returns(uint256) {
         return Shops.getStock(shopId)[itemIndex];
     }

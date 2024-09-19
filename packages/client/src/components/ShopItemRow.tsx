@@ -17,7 +17,6 @@ import {
   ModalOverlay,
   Text,
   useDisclosure,
-  useToast,
   VStack,
 } from '@chakra-ui/react';
 import { Entity } from '@latticexyz/recs';
@@ -28,6 +27,7 @@ import { IoAdd, IoRemove } from 'react-icons/io5';
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 import {
   etherToFixedNumber,
   getEmoji,
