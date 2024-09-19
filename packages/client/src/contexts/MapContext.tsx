@@ -16,7 +16,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { formatEther, hexToString, zeroHash } from 'viem';
+import { hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {

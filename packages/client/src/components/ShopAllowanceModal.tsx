@@ -10,7 +10,6 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { etherToFixedNumber } from '../utils/helpers';
@@ -32,7 +31,7 @@ export const ShopAllowanceModal = ({
   itemName: string;
   onClose: () => void;
   onComplete: (e: React.FormEvent) => void;
-  orderPrice: string;
+  orderPrice: bigint;
   orderType: OrderType;
 }): JSX.Element => {
   const {
@@ -45,8 +44,7 @@ export const ShopAllowanceModal = ({
   } = useAllowance();
 
   if (
-    (goldAllowanceShops >= parseEther(orderPrice) &&
-      orderType === OrderType.Buying) ||
+    (goldAllowanceShops >= orderPrice && orderType === OrderType.Buying) ||
     (itemsAllowanceShops && orderType === OrderType.Selling)
   ) {
     return (

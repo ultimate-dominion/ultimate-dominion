@@ -20,6 +20,7 @@ import {
   type ArmorTemplate,
   ItemFilterOptions,
   OrderType,
+  Shop,
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
@@ -36,7 +37,7 @@ const PER_PAGE = 5;
 export const ShopHalf = ({
   name,
   items,
-  shopId,
+  shop,
   itemIndexes,
   characterId,
   orderType,
@@ -48,7 +49,7 @@ export const ShopHalf = ({
     item: ArmorTemplate | SpellTemplate | WeaponTemplate;
     stock: string | null;
   }>;
-  shopId: string;
+  shop: Shop;
   itemIndexes: Array<string>;
   orderType: OrderType;
 }): JSX.Element => {
@@ -247,7 +248,7 @@ export const ShopHalf = ({
                 itemIndex={itemIndexes[i]}
                 key={`shop-row-${i}`}
                 orderType={orderType}
-                shopId={shopId}
+                shop={shop}
                 stock={entry.stock}
               />
             );

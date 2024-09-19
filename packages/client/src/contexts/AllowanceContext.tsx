@@ -8,7 +8,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { Address, erc20Abi, parseEther } from 'viem';
+import { Address, erc20Abi } from 'viem';
 import { useWalletClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
@@ -27,7 +27,7 @@ type AllowanceContextType = {
   itemsAllowanceMarketplace: boolean;
   itemsAllowanceShops: boolean;
   onApproveGoldAllowance: (
-    allowanceAmount: string,
+    allowanceAmount: bigint,
     allowanceType: AllowanceType,
   ) => void;
   onSetApprovalForAllItems: (allowanceType: AllowanceType) => void;
@@ -148,11 +148,11 @@ export const AllowanceProvider = ({
   }, [character, fetchAllowances, isRefreshing, isSynced]);
 
   const onApproveGoldAllowance = useCallback(
-    async (allowanceAmount: string, allowanceType: AllowanceType) => {
+    async (allowanceAmount: bigint, allowanceType: AllowanceType) => {
       if (!externalWalletClient) {
         throw new Error('No external wallet client found.');
       }
-      if (!allowanceAmount || parseEther(allowanceAmount) <= 0) {
+      if (!allowanceAmount || allowanceAmount <= 0) {
         throw new Error('Amount must be greater than 0.');
       }
       try {
@@ -166,10 +166,7 @@ export const AllowanceProvider = ({
                 address: goldTokenAddress as Address,
                 abi: erc20Abi,
                 functionName: 'approve',
-                args: [
-                  marketplaceAddress as Address,
-                  parseEther(allowanceAmount),
-                ],
+                args: [marketplaceAddress as Address, allowanceAmount],
               });
             const txHash =
               await externalWalletClient.writeContract(marketplaceRequest);
@@ -190,7 +187,7 @@ export const AllowanceProvider = ({
                 address: goldTokenAddress as Address,
                 abi: erc20Abi,
                 functionName: 'approve',
-                args: [shopAddress as Address, parseEther(allowanceAmount)],
+                args: [shopAddress as Address, allowanceAmount],
               });
             const txHash =
               await externalWalletClient.writeContract(shopRequest);

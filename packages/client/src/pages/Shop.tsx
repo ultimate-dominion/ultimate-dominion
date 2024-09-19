@@ -43,7 +43,7 @@ export const Shop = (): JSX.Element => {
     inventorySpells,
     inventoryWeapons,
   } = useCharacter();
-  const { allShops, allShopItems } = useMap();
+  const { allShops } = useMap();
 
   const shop = useMemo(() => {
     if (!shopId || !allShops) return null;
@@ -127,7 +127,6 @@ export const Shop = (): JSX.Element => {
     setSellable(sellableInventory);
     setBuyable(buyableStock);
   }, [
-    allShopItems,
     armorTemplates,
     isItemsLoading,
     items,
@@ -168,7 +167,7 @@ export const Shop = (): JSX.Element => {
           {userCharacter && shopId && sellable && sellable.length > 0 ? (
             <ShopHalf
               characterId={userCharacter.id}
-              shopId={shopId}
+              shop={shop}
               items={sellable}
               name={`Character’s Inventory - ${etherToFixedNumber(userCharacter?.goldBalance)} $GOLD`}
               itemIndexes={shop.sellableItems}
@@ -187,7 +186,7 @@ export const Shop = (): JSX.Element => {
               characterId={userCharacter.id}
               items={buyable}
               name={`Shopkeeper’s Inventory - ${etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD`}
-              shopId={shopId}
+              shop={shop}
               itemIndexes={shop.buyableItems}
               orderType={OrderType.Buying}
             />

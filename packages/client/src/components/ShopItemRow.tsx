@@ -3,6 +3,8 @@ import {
   Box,
   Button,
   Flex,
+  FormControl,
+  FormHelperText,
   Grid,
   GridItem,
   HStack,
@@ -18,12 +20,13 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { Entity } from '@latticexyz/recs';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoAdd, IoRemove } from 'react-icons/io5';
 import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import {
   etherToFixedNumber,
@@ -35,6 +38,7 @@ import {
   type ArmorTemplate,
   ItemType,
   OrderType,
+  Shop,
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
@@ -47,14 +51,14 @@ export const ShopItemRow = ({
   itemIndex,
   orderType,
   stock,
-  shopId,
+  shop,
 }: {
   balance: string | null;
   characterId: Entity;
   item: ArmorTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;
   orderType: OrderType;
-  shopId: string;
+  shop: Shop;
   stock: string | null;
 }): JSX.Element => {
   // const { renderError /* , renderSuccess */ } = useToast();
@@ -70,11 +74,34 @@ export const ShopItemRow = ({
     onClose: onAllowanceClose,
   } = useDisclosure();
 
+  const [showError, setShowError] = useState(false);
+
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [amount, setAmount] = useState(1);
 
   const { name, statRestrictions } = item;
+
+  const { character: userCharacter } = useCharacter();
+
+  const price = useMemo(() => {
+    if (orderType == OrderType.Selling)
+      return BigInt(amount) * ((item.price * shop.priceMarkdown) / 100n);
+    return (
+      BigInt(amount) * (item.price + item.price * (shop.priceMarkup / 100n))
+    );
+  }, [amount, item.price, orderType, shop.priceMarkdown, shop.priceMarkup]);
+
+  const insufficientGold = useMemo(() => {
+    if (!userCharacter) return false;
+    if (orderType === OrderType.Selling) return false;
+    return price > BigInt(userCharacter.goldBalance);
+  }, [orderType, price, userCharacter]);
+
+  // Reset showError state when any of the form fields change
+  useEffect(() => {
+    setShowError(false);
+  }, [price]);
 
   return (
     <Flex
@@ -131,7 +158,7 @@ export const ShopItemRow = ({
             textAlign="center"
             w="100%"
           >
-            {etherToFixedNumber(item.price)}
+            {etherToFixedNumber(price)}
           </Text>
         </HStack>
         <ShopAllowanceModal
@@ -140,7 +167,7 @@ export const ShopItemRow = ({
           itemName={name}
           onClose={onAllowanceClose}
           onComplete={onAllowanceClose}
-          orderPrice={(Number(item.price) * amount).toString()}
+          orderPrice={price}
           orderType={orderType}
         />
         <Modal isCentered isOpen={isOpen} onClose={onClose}>
@@ -221,14 +248,10 @@ export const ShopItemRow = ({
                 <GridItem colSpan={2} textAlign="center">
                   <VStack>
                     {orderType == OrderType.Buying ? (
-                      <Text>
-                        Total Cost:{' '}
-                        {etherToFixedNumber(item.price * BigInt(amount))} $GOLD
-                      </Text>
+                      <Text>Total Cost: {etherToFixedNumber(price)} $GOLD</Text>
                     ) : (
                       <Text>
-                        Total to recieve:{' '}
-                        {etherToFixedNumber(item.price * BigInt(amount))} $GOLD
+                        Total to recieve: {etherToFixedNumber(price)} $GOLD
                       </Text>
                     )}
                     <HStack>
@@ -250,7 +273,7 @@ export const ShopItemRow = ({
                         min={1}
                         onChange={e => setAmount(Number(e.target.value))}
                         p={2}
-                        placeholder="0"
+                        placeholder={amount.toString()}
                         size="sm"
                         step={1}
                         w={10}
@@ -270,46 +293,53 @@ export const ShopItemRow = ({
                       </Button>
                     </HStack>
                     <Text mt={3}>AMOUNT (MAX {stock || balance}) </Text>
-                    {orderType == OrderType.Buying &&
-                      goldAllowanceShops <
-                        parseEther(
-                          (Number(item.price) * amount).toString(),
-                        ) && <Button onClick={onAllowanceOpen}>Approve</Button>}
-                    {orderType == OrderType.Selling && !itemsAllowanceShops && (
-                      <Button onClick={onAllowanceOpen}>Approve</Button>
-                    )}
-                    {orderType == OrderType.Buying &&
-                      goldAllowanceShops >=
-                        parseEther(
-                          (Number(item.price) * amount).toString(),
-                        ) && (
-                        <Button
-                          onClick={() =>
-                            buy(
-                              amount.toString(),
-                              shopId,
-                              itemIndex,
-                              characterId,
-                            )
-                          }
-                        >
-                          Buy
-                        </Button>
+                    <FormControl isInvalid={showError && insufficientGold}>
+                      {showError && insufficientGold && (
+                        <FormHelperText color="red">
+                          Offer price must be greater than 0.
+                        </FormHelperText>
                       )}
-                    {orderType == OrderType.Selling && itemsAllowanceShops && (
-                      <Button
-                        onClick={() =>
-                          sell(
-                            amount.toString(),
-                            shopId,
-                            itemIndex,
-                            characterId,
-                          )
-                        }
-                      >
-                        Sell
-                      </Button>
-                    )}
+                      {orderType == OrderType.Buying &&
+                        goldAllowanceShops < price && (
+                          <Button onClick={onAllowanceOpen}>Approve</Button>
+                        )}
+                      {orderType == OrderType.Selling &&
+                        !itemsAllowanceShops && (
+                          <Button onClick={onAllowanceOpen}>Approve</Button>
+                        )}
+                      {orderType == OrderType.Buying &&
+                        goldAllowanceShops >= price && (
+                          <Button
+                            onClick={() =>
+                              buy(
+                                amount.toString(),
+                                shop.shopId,
+                                itemIndex,
+                                characterId,
+                              )
+                            }
+                            type="submit"
+                          >
+                            Buy
+                          </Button>
+                        )}
+                      {orderType == OrderType.Selling &&
+                        itemsAllowanceShops && (
+                          <Button
+                            onClick={() =>
+                              sell(
+                                amount.toString(),
+                                shop.shopId,
+                                itemIndex,
+                                characterId,
+                              )
+                            }
+                            type="submit"
+                          >
+                            Sell
+                          </Button>
+                        )}
+                    </FormControl>
                   </VStack>
                 </GridItem>
               </Grid>

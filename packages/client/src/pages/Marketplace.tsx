@@ -286,7 +286,7 @@ export const Marketplace = (): JSX.Element => {
         >
           Back to Game Board
         </Button>
-        <Text mt={12}>An erro occurred</Text>
+        <Text mt={12}>An error occurred</Text>
       </VStack>
     );
   }
