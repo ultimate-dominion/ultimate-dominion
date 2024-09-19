@@ -177,5 +177,11 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         erc1155System.setApprovalForAll(alice, true);
         vm.expectRevert("Transfer: Must Unequip item to transfer.");
         erc1155System.transferFrom(bob, alice, starterDat.itemIds[0], 1);
+        // unequip
+        world.UD__unequipItem(bobCharacterId, starterDat.itemIds[0]);
+        // successful transfer
+        erc1155System.transferFrom(bob, alice, starterDat.itemIds[0], 1);
+
+        assertEq(erc1155System.balanceOf(alice, starterDat.itemIds[0]), 1);
     }
 }
