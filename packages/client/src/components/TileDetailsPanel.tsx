@@ -26,7 +26,7 @@ import {
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
-import { getEmoji, removeEmoji } from '../utils/helpers';
+import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { type Character, EncounterType, type Monster } from '../utils/types';
 import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
@@ -200,6 +200,14 @@ export const TileDetailsPanel = (): JSX.Element => {
     return userCharacterStatusEffect?.name ?? '';
   }, [character, statusEffectActions]);
 
+  if (!character) {
+    return (
+      <Flex alignItems="center" h="100%" justifyContent="center">
+        <Text>An error occurred.</Text>
+      </Flex>
+    );
+  }
+
   if (!currentBattle && isRefreshing) {
     return (
       <Flex alignItems="center" h="100%" justifyContent="center">
@@ -350,7 +358,11 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   return (
     <Box>
-      <Grid gap={5} templateColumns="repeat(4, 1fr)">
+      <Text fontSize="xs" fontWeight="bold" textAlign="start">
+        Adventure Escrow balance:{' '}
+        {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
+      </Text>
+      <Grid gap={5} mt={4} templateColumns="repeat(4, 1fr)">
         {shopsOnTile.length > 0 && (
           <GridItem colSpan={2}>
             <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>

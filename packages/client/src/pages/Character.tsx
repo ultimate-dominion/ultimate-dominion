@@ -67,6 +67,7 @@ export const CharacterPage = (): JSX.Element => {
 
   const {
     components: {
+      AdventureEscrow,
       Characters,
       CharactersTokenURI,
       EncounterEntity,
@@ -114,8 +115,11 @@ export const CharacterPage = (): JSX.Element => {
         { tokenId: characterData.tokenId },
       );
 
-      const goldBalance =
+      const externalGoldBalance =
         getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
+      const escrowGoldBalance =
+        getComponentValue(AdventureEscrow, id as Entity)?.balance ?? BigInt(0);
+
       const metadataURI = getComponentValueStrict(
         CharactersTokenURI,
         tokenIdEntity,
@@ -139,8 +143,9 @@ export const CharacterPage = (): JSX.Element => {
         baseStats: decodedBaseStats,
         currentHp: characterStats.currentHp.toString(),
         entityClass: characterStats.class,
+        escrowGoldBalance,
         experience: characterStats.experience.toString(),
-        goldBalance,
+        externalGoldBalance,
         id: id as Entity,
         inBattle,
         intelligence: characterStats.intelligence.toString(),
@@ -167,6 +172,7 @@ export const CharacterPage = (): JSX.Element => {
       setIsLoadingCharacter(false);
     }
   }, [
+    AdventureEscrow,
     Characters,
     CharactersTokenURI,
     EncounterEntity,
@@ -271,9 +277,7 @@ export const CharacterPage = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            pb={6}
-            pt={{ base: 6, md: 12 }}
-            px={6}
+            p={6}
           >
             <Box h="100%" position="relative">
               <VStack>
@@ -314,9 +318,7 @@ export const CharacterPage = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
-            pb={6}
-            pt={{ base: 6, md: 12 }}
-            px={6}
+            p={6}
           >
             <LevelingPanel canLevel={canLevel} character={character} />
           </GridItem>
@@ -324,38 +326,39 @@ export const CharacterPage = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
-            pb={6}
-            pt={{ base: 6, md: 12 }}
-            px={6}
+            p={6}
           >
             <VStack h="100%">
               <Box w="100%">
-                <HStack alignItems="start">
-                  <Box>
-                    <Text fontWeight="bold">
-                      {etherToFixedNumber(character.goldBalance)} $GOLD
-                    </Text>
-                    <Text>
-                      <Text
-                        as="span"
-                        color={
-                          BigInt(character.experience) >= nextLevelXpRequirement
-                            ? 'green'
-                            : 'black'
-                        }
-                        fontWeight={
-                          BigInt(character.experience) >= nextLevelXpRequirement
-                            ? 'bold'
-                            : 'normal'
-                        }
-                      >
-                        {character.experience}
-                      </Text>
-                      /{nextLevelXpRequirement.toString()} XP
-                    </Text>
-                  </Box>
-                  <Spacer />
+                <VStack alignItems="start" spacing={0}>
+                  <Text fontWeight="bold">
+                    {etherToFixedNumber(character.externalGoldBalance)} $GOLD
+                  </Text>
+                  <Text fontSize="xs" fontWeight="bold" textAlign="start">
+                    Adventure Escrow balance:{' '}
+                    {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
+                  </Text>
+                </VStack>
+                <HStack justify="space-between" mt={4}>
                   <Text fontWeight="bold">Level {character.level}</Text>
+                  <Text>
+                    <Text
+                      as="span"
+                      color={
+                        BigInt(character.experience) >= nextLevelXpRequirement
+                          ? 'green'
+                          : 'black'
+                      }
+                      fontWeight={
+                        BigInt(character.experience) >= nextLevelXpRequirement
+                          ? 'bold'
+                          : 'normal'
+                      }
+                    >
+                      {character.experience}
+                    </Text>
+                    /{nextLevelXpRequirement.toString()} XP
+                  </Text>
                 </HStack>
                 <Level
                   currentLevel={character.level}

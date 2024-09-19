@@ -88,7 +88,7 @@ export const StatsPanel = (): JSX.Element => {
     maxHp,
     currentHp,
     experience,
-    goldBalance,
+    externalGoldBalance,
     image,
     intelligence,
     name,
@@ -155,7 +155,9 @@ export const StatsPanel = (): JSX.Element => {
       <Level currentLevel={character.level} levelPercent={levelPercent} />
 
       <HStack alignItems="start" w="100%">
-        <Text fontWeight="bold">{etherToFixedNumber(goldBalance)} $GOLD</Text>
+        <Text fontWeight="bold">
+          {etherToFixedNumber(externalGoldBalance)} $GOLD
+        </Text>
         <Spacer />
         <Text>
           <Text
