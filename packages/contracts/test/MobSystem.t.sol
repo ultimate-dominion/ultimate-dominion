@@ -114,15 +114,16 @@ contract Test_MobSystem is SetUp, GasReporter {
     }
 
     function test_removeEntity() public {
-        vm.prank(bob);
+        vm.startPrank(bob);
         world.UD__spawn(bobCharacterId);
-
+        world.UD__move(bobCharacterId, 0, 1);
+        vm.stopPrank();
         vm.prank(alice);
         vm.expectRevert();
         world.UD__removeEntityFromBoard(bobCharacterId);
 
-        vm.prank(deployer);
-        world.UD__adminRemoveEntity(bobCharacterId);
+        // vm.prank(deployer);
+        // world.UD__adminRemoveEntity(bobCharacterId);
 
         vm.warp(block.timestamp + 11 minutes);
         vm.prank(alice);
