@@ -212,9 +212,6 @@ contract PostDeploy is Script {
         _createMonsters();
         address _marketplaceAddress = world.UD__marketplaceAddress();
         UltimateDominionConfig.setMarketplace(_marketplaceAddress);
-        
-        address lootManagerAddress = Systems.getSystem(resourceIds.lootManagerSystemId);
-        UltimateDominionConfig.setLootManager(lootManagerAddress);
 
         setLevels();
         vm.stopBroadcast();
