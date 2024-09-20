@@ -5,6 +5,8 @@ import {
   FormLabel,
   HStack,
   Input,
+  InputGroup,
+  InputRightElement,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -15,7 +17,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
-import { parseEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -226,13 +228,30 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
                   {depositErrorMessage}
                 </FormHelperText>
               )}
-              <Input
-                isDisabled={isDepositing}
-                onChange={e => setDepositAmount(e.target.value)}
-                placeholder="Amount"
-                type="number"
-                value={depositAmount}
-              />
+              <InputGroup>
+                <Input
+                  isDisabled={isDepositing}
+                  onChange={e => setDepositAmount(e.target.value)}
+                  placeholder="Amount"
+                  type="number"
+                  value={depositAmount}
+                />
+                <InputRightElement>
+                  <Button
+                    h="100%"
+                    mt={1}
+                    onClick={() => {
+                      setDepositAmount(
+                        formatEther(character.externalGoldBalance),
+                      );
+                    }}
+                    size="xs"
+                    variant="ghost"
+                  >
+                    MAX
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
             </FormControl>
             <Button
               alignSelf="end"
@@ -256,13 +275,30 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
                   {withdrawErrorMessage}
                 </FormHelperText>
               )}
-              <Input
-                isDisabled={isWithdrawing}
-                onChange={e => setWithdrawAmount(e.target.value)}
-                placeholder="Amount"
-                type="number"
-                value={withdrawAmount}
-              />
+              <InputGroup>
+                <Input
+                  isDisabled={isWithdrawing}
+                  onChange={e => setWithdrawAmount(e.target.value)}
+                  placeholder="Amount"
+                  type="number"
+                  value={withdrawAmount}
+                />
+                <InputRightElement>
+                  <Button
+                    h="100%"
+                    mt={1}
+                    onClick={() => {
+                      setWithdrawAmount(
+                        formatEther(character.escrowGoldBalance),
+                      );
+                    }}
+                    size="xs"
+                    variant="ghost"
+                  >
+                    MAX
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
             </FormControl>
             <Button
               alignSelf="end"
