@@ -90,7 +90,8 @@ export const MarketplaceItem = (): JSX.Element => {
     isRefreshing,
     refreshCharacter,
   } = useCharacter();
-  const { goldAllowance, itemsAllowance } = useAllowance();
+  const { goldMarketplaceAllowance, itemsMarketplaceAllowance } =
+    useAllowance();
 
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -222,13 +223,13 @@ export const MarketplaceItem = (): JSX.Element => {
 
         if (
           orderType === OrderType.Buying &&
-          goldAllowance < parseEther(orderPrice)
+          goldMarketplaceAllowance < parseEther(orderPrice)
         ) {
           onOpenAllowanceModal();
           return;
         }
 
-        if (orderType === OrderType.Selling && !itemsAllowance) {
+        if (orderType === OrderType.Selling && !itemsMarketplaceAllowance) {
           onOpenAllowanceModal();
           return;
         }
@@ -298,12 +299,12 @@ export const MarketplaceItem = (): JSX.Element => {
     },
     [
       createOrder,
-      goldAllowance,
+      goldMarketplaceAllowance,
       goldTokenAddress,
       insufficientGold,
       invalidOrderPrice,
       itemsAddress,
-      itemsAllowance,
+      itemsMarketplaceAllowance,
       onCloseAllowanceModal,
       onOpenAllowanceModal,
       onOpenConfirmationModal,

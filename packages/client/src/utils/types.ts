@@ -58,6 +58,11 @@ export enum StatsClasses {
   Mage,
 }
 
+export enum SystemToAllow {
+  LootManager = 'LootManager',
+  Marketplace = 'Marketplace',
+}
+
 export enum TokenType {
   NATIVE,
   ERC20,

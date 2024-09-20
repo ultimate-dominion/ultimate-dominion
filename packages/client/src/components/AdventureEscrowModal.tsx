@@ -15,14 +15,17 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 import { formatEther, parseEther } from 'viem';
 
+import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { etherToFixedNumber } from '../utils/helpers';
+import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
 
 type AdventureEscrowModalProps = {
   isOpen: boolean;
@@ -39,6 +42,13 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
     systemCalls: { depositToEscrow, withdrawFromEscrow },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
+  const { goldLootManagerAllowance } = useAllowance();
+
+  const {
+    isOpen: isAllowanceModalOpen,
+    onOpen: onOpenAllowanceModal,
+    onClose: onCloseAllowanceModal,
+  } = useDisclosure();
 
   const [depositAmount, setDepositAmount] = useState<string>('');
   const [isDepositing, setIsDepositing] = useState(false);
@@ -89,6 +99,11 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
         return;
       }
 
+      if (parseEther(depositAmount) > goldLootManagerAllowance) {
+        onOpenAllowanceModal();
+        return;
+      }
+
       const { error, success } = await depositToEscrow(
         character.id,
         character.escrowGoldBalance,
@@ -112,7 +127,9 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
     delegatorAddress,
     depositAmount,
     depositToEscrow,
+    goldLootManagerAllowance,
     onClose,
+    onOpenAllowanceModal,
     refreshCharacter,
     renderError,
     renderSuccess,
@@ -316,6 +333,14 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
           </Button>
         </ModalFooter>
       </ModalContent>
+      <LootManagerAllowanceModal
+        amount={depositAmount}
+        heading="Allow Adventure Escrow"
+        isOpen={isAllowanceModalOpen}
+        message="In order to deposit $GOLD to your Adventure Escrow, you must allow it to access your $GOLD."
+        onClose={onCloseAllowanceModal}
+        successMessage="You can now deposit $GOLD to your Adventure Escrow."
+      />
     </Modal>
   );
 };
