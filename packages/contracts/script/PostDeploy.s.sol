@@ -47,7 +47,6 @@ import {
     SpellStats,
     ConsumableStats,
     ConsumableStatsData
-
 } from "@codegen/index.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
@@ -63,9 +62,7 @@ import {
     WeaponStatDetails,
     ArmorStatDetails,
     SpellTemplateDetails,
-    ConsumableTemplateDetails,
-    ShopItemsTemplate,
-    ShopItemsData
+    ConsumableTemplateDetails
 } from "@interfaces/Structs.sol";
 
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
@@ -427,6 +424,7 @@ contract PostDeploy is Script {
         world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);
         world.UD__setStarterItems(Classes.Mage, mageItemIds, amounts);
     }
+
     function _createShops() internal {
         uint256[] memory sellableItems = new uint256[](10);
         uint256[] memory buyableItems = new uint256[](10);
@@ -449,9 +447,11 @@ contract PostDeploy is Script {
             stock: stock
         });
 
-        uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
+        uint256 shopMobId =
+            world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
         world.UD__spawnMob(shopMobId, 0, 0);
     }
+
     function _createMonsters() internal {
         string memory json = vm.readFile("monsters.json");
         bytes memory monsterStatsData = vm.parseJson(json, ".monsters");
@@ -474,7 +474,7 @@ contract PostDeploy is Script {
                 strength: monsterTemplate.stats.strength
             });
 
-            world.UD__createMob(MobType.Monster, abi.encode(newMonster), monsterTemplate.metadataUri);
+            uint256 mobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), monsterTemplate.metadataUri);
         }
     }
 

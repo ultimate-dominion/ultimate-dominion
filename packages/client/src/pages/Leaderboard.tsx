@@ -44,7 +44,13 @@ export const Leaderboard = (): JSX.Element => {
   const { isConnected } = useAccount();
 
   const {
-    components: { Characters, CharactersTokenURI, GoldBalances, Stats },
+    components: {
+      AdventureEscrow,
+      Characters,
+      CharactersTokenURI,
+      GoldBalances,
+      Stats,
+    },
     delegatorAddress,
     network: { publicClient, worldContract },
   } = useMUD();
@@ -99,8 +105,12 @@ export const Leaderboard = (): JSX.Element => {
               { tokenId: BigInt(tokenId) },
             );
 
-            const goldBalance =
+            const externalGoldBalance =
               getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
+            const escrowGoldBalance =
+              getComponentValue(AdventureEscrow, ownerEntity)?.balance ??
+              BigInt(0);
+
             const metadataURI = getComponentValueStrict(
               CharactersTokenURI,
               tokenIdEntity,
@@ -115,8 +125,9 @@ export const Leaderboard = (): JSX.Element => {
               agility: characterStats.agility.toString(),
               maxHp: characterStats.maxHp.toString(),
               entityClass: characterStats.class,
+              escrowGoldBalance,
               experience: characterStats.experience.toString(),
-              goldBalance: formatEther(goldBalance as bigint).toString(),
+              externalGoldBalance,
               id: entity,
               intelligence: characterStats.intelligence.toString(),
               level: characterStats.level.toString(),
@@ -142,6 +153,7 @@ export const Leaderboard = (): JSX.Element => {
       }
     },
     [
+      AdventureEscrow,
       Characters,
       CharactersTokenURI,
       delegatorAddress,
@@ -170,8 +182,16 @@ export const Leaderboard = (): JSX.Element => {
       switch (sort.sorted) {
         case 'byGold':
           return sort.reversed
-            ? Number(entryA.goldBalance) - Number(entryB.goldBalance)
-            : Number(entryB.goldBalance) - Number(entryA.goldBalance);
+            ? Number(
+                formatEther(
+                  entryA.externalGoldBalance - entryB.externalGoldBalance,
+                ),
+              )
+            : Number(
+                formatEther(
+                  entryB.externalGoldBalance - entryA.externalGoldBalance,
+                ),
+              );
         case 'byLevel':
           return sort.reversed
             ? Number(entryA.level) - Number(entryB.level)
@@ -181,7 +201,11 @@ export const Leaderboard = (): JSX.Element => {
             ? Number(entryA.experience) - Number(entryB.experience)
             : Number(entryB.experience) - Number(entryA.experience);
         default:
-          return Number(entryB.goldBalance) - Number(entryA.goldBalance);
+          return Number(
+            formatEther(
+              entryB.externalGoldBalance - entryA.externalGoldBalance,
+            ),
+          );
       }
     });
     entriesCopy = [...entriesCopy].filter(entry => {

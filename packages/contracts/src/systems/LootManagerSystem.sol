@@ -7,6 +7,7 @@ import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20Syste
 import {IWorld} from "@world/IWorld.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {IERC1155Receiver} from "@erc1155/IERC1155Receiver.sol";
+import {Math, WAD, RAD} from "@libraries/Math.sol";
 import {
     UltimateDominionConfig,
     Items,
@@ -23,7 +24,8 @@ import {
     CombatEncounter,
     CombatEncounterData,
     Mobs,
-    EncounterEntity
+    EncounterEntity,
+    AdventureEscrow
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
@@ -36,7 +38,7 @@ import {
     _combatSystemId,
     _lootManagerSystemId
 } from "../utils.sol";
-import {ITEMS_NAMESPACE, WORLD_NAMESPACE, BASE_GOLD_DROP} from "../../constants.sol";
+import {ITEMS_NAMESPACE, WORLD_NAMESPACE, BASE_GOLD_DROP, EXP_MODIFIER} from "../../constants.sol";
 import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
 import {
     _metadataTableId,
@@ -85,10 +87,49 @@ contract LootManagerSystem is System {
         }
     }
 
+    function depositToEscrow(bytes32 characterId, uint256 amount) public returns (uint256 _balance) {
+        if (IWorld(_world()).UD__isValidOwner(characterId, _msgSender())) {
+            require(IWorld(_world()).UD__isAtPosition(characterId, 0, 0), "can only deposit at spawn");
+        } else {
+            _requireAccess(address(this), _msgSender());
+        }
+        // transfer gold to loot manager
+        _goldToken().transferFrom(IWorld(_world()).UD__getOwner(characterId), address(this), amount);
+        _addEscrowBalance(characterId, amount);
+    }
+
+    function _addEscrowBalance(bytes32 characterId, uint256 amount) internal {
+        uint256 currentBalance = getEscrowBalance(characterId);
+        uint256 balance = currentBalance + amount;
+        AdventureEscrow.set(characterId, (balance));
+    }
+
+    function withdrawFromEscrow(bytes32 characterId, uint256 amount) public returns (uint256 _balance) {
+        if (IWorld(_world()).UD__isValidOwner(characterId, _msgSender())) {
+            require(IWorld(_world()).UD__isAtPosition(characterId, 0, 0), "can only withdraw at spawn");
+        } else {
+            _requireAccess(address(this), _msgSender());
+        }
+        _withdrawEscrowBalance(characterId, amount);
+        // transfer gold to loot manager
+        _goldToken().transfer(IWorld(_world()).UD__getOwner(characterId), amount);
+    }
+
+    function _withdrawEscrowBalance(bytes32 characterId, uint256 amount) internal {
+        uint256 currentBalance = getEscrowBalance(characterId);
+        require(currentBalance >= amount, "not enough gold in escrow");
+        uint256 balance = currentBalance - amount;
+        AdventureEscrow.set(characterId, (balance));
+    }
+
+    function getEscrowBalance(bytes32 characterId) public view returns (uint256 _balance) {
+        return AdventureEscrow.get(characterId);
+    }
+
     function _calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) internal view returns (uint256 dropAmount) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         // Calculate level-based drop
-        dropAmount = randomNumber % (BASE_GOLD_DROP * mobLevel);
+        dropAmount = (randomNumber % (BASE_GOLD_DROP * mobLevel)) + 0.05 ether;
     }
 
     function _calculateItemDrop(uint256 randomNumber, bytes32 entityId, bytes32 characterId)
@@ -105,7 +146,6 @@ contract LootManagerSystem is System {
         for (uint256 i; i < monsterStats.inventory.length; i++) {
             tempItemId = monsterStats.inventory[i];
             uint256 dropChance = Items.getDropChance(tempItemId);
-            console.log("drop calc", randomNumber % 100_000_000 < dropChance);
             if (randomNumber % 100_000_000 < dropChance) {
                 console.log("ITEM DROPPED", tempItemId);
                 IWorld(_world()).UD__dropItem(characterId, tempItemId, 1);
@@ -137,6 +177,7 @@ contract LootManagerSystem is System {
         returns (uint256 _expAmount, uint256 _goldAmount, uint256[] memory _itemIdsDropped)
     {
         _requireAccess(address(this), _msgSender());
+        // distribute 100% of gold in losers adventure escrow
     }
 
     function distributePveRewards(bytes32 encounterId, uint256 randomNumber)
@@ -176,7 +217,6 @@ contract LootManagerSystem is System {
             bool correctLevelSpread = distTemps.defenderLevelTemp > distTemps.cumulativePlayerLevels
                 ? true
                 : (distTemps.cumulativePlayerLevels - distTemps.defenderLevelTemp) <= 5;
-
             if (EncounterEntity.getDied(distTemps.monsterTemp) && correctLevelSpread) {
                 _expAmount += Stats.getExperience(distTemps.monsterTemp);
                 _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
@@ -192,7 +232,7 @@ contract LootManagerSystem is System {
             }
         }
 
-        // drop gold reward calculated from the level of mob to player journey wallet (can mint tokens when he returns to 0,0).
+        // drop gold reward calculated from the level of mob to player journey escrow (can mint tokens when he returns to 0,0).
         // if dead player, drop transfer 50% of un-banked gold to world contract note this isn't happening here
         // distribute loot
 
@@ -202,16 +242,23 @@ contract LootManagerSystem is System {
                 statsTemp = Stats.get(distTemps.entityIdTemp);
                 if (statsTemp.currentHp > int256(0)) {
                     if (_goldAmount > uint256(0)) {
-                        IWorld(_world()).UD__dropGold(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
+                        _addEscrowBalance(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
                     }
                     if (_expAmount > uint256(0) && distTemps.livingPlayers > uint256(0)) {
-                        statsTemp.experience += _expAmount / distTemps.livingPlayers;
+                        statsTemp.experience += (
+                            (_expAmount / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)
+                        ) / WAD;
                     }
                 }
                 Stats.set(distTemps.entityIdTemp, statsTemp);
             }
         }
         CombatEncounter.setRewardsDistributed(encounterId, true);
+    }
+
+    function calculateExpMultiplier(bytes32 characterId) public view returns (uint256 _expMultiplier) {
+        uint256 escrowBalance = getEscrowBalance(characterId);
+        _expMultiplier = ((Math.sqrt(escrowBalance) * 1e8) / (EXP_MODIFIER)) + WAD;
     }
 
     function _trimDroppedItemIds(uint256 totalItemsDropped, bytes[] memory itemsDropped)

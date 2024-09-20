@@ -35,6 +35,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     bytes32[] public pvpDefenders;
     bytes32 entityId;
     bytes32 entityId2;
+    uint256 spawnedMobId;
 
     function setUp() public override {
         super.setUp();
@@ -43,9 +44,9 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         vm.prank(deployer);
         world.grantAccess(_mobSystemId("UD"), address(this));
-
-        entityId = world.UD__spawnMob(1, 0, 1);
-        entityId2 = world.UD__spawnMob(1, 0, 1);
+        spawnedMobId = 2;
+        entityId = world.UD__spawnMob(spawnedMobId, 0, 1);
+        entityId2 = world.UD__spawnMob(spawnedMobId, 0, 1);
 
         vm.startPrank(alice);
         world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
@@ -142,7 +143,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_createPvEEncounter_Revert_Entities_Wrong_Position() public {
-        entityId2 = world.UD__spawnMob(1, 1, 1);
+        entityId2 = world.UD__spawnMob(spawnedMobId, 1, 1);
         defenders[0] = entityId2;
         vm.prank(bob);
         vm.expectRevert("ENCOUNTER SYSTEM: INVALID PVE");
@@ -217,9 +218,18 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_EndTurn_EndsPvEEncounter() public {
+        // buff bob
+        StatsData memory bobStats = world.UD__getStats(bobCharacterId);
+        bobStats.agility = 100;
+        bobStats.strength = 100;
+        bobStats.currentHp = 100;
+        world.UD__adminSetStats(bobCharacterId, bobStats);
+
         StatsData memory startingStats = Stats.get(bobCharacterId);
-        uint256 startingGold = goldToken.balanceOf(bob);
+        assertEq(startingStats.agility, 100, "incorrect starting stats");
+        uint256 startingGold = world.UD__getEscrowBalance(bobCharacterId);
         vm.prank(bob);
+
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
 
@@ -235,12 +245,12 @@ contract Test_CombatSystem is SetUp, GasReporter {
         }
 
         StatsData memory endingStats = Stats.get(bobCharacterId);
-        uint256 endingGold = goldToken.balanceOf(bob);
+        uint256 endingGold = world.UD__getEscrowBalance(bobCharacterId);
         int256 bobEndingHp = Stats.getCurrentHp(bobCharacterId);
 
         if (bobEndingHp > 0) {
             assertGt(endingStats.experience, startingStats.experience, "incorrect exp");
-            assertGt(endingGold, startingGold, "incorrect gold");
+            assertGt(world.UD__getEscrowBalance(bobCharacterId), startingGold, "incorrect gold");
             assertNotEq(startingStats.currentHp, Stats.get(entityId).currentHp, "incorrect hp");
             bytes32[] memory entities = world.UD__getEntitiesAtPosition(0, 1);
             bool entityIsAtPosition;

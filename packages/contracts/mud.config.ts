@@ -99,6 +99,13 @@ export default defineWorld({
         level: "uint256",
       },
     },
+    SessionTimer: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        lastAction: "uint256",
+      },
+    },
     Mobs: {
       key: ["mobId"],
       schema: {
@@ -217,6 +224,13 @@ export default defineWorld({
         class: "Classes",
         itemIds: "uint256[]",
         amounts: "uint256[]",
+      },
+    },
+    AdventureEscrow: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        balance: "uint256",
       },
     },
     /////////////////////////////////// ACTIONS ////////////////////////////////////////////////////////////////////////////
@@ -363,6 +377,7 @@ export default defineWorld({
      * - entropy address of pyth entropy contract
      * - pythProvider address of pyth provider.
      * - marketplace address of Marketplace contract.
+     * - lootManager address of LootManager contract.
      */
     UltimateDominionConfig: {
       key: [],

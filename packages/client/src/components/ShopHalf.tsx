@@ -89,12 +89,14 @@ export const ShopHalf = ({
       stock: string | null;
       index: string;
     }> = [...items];
+
     const searcher = new FuzzySearch(
       [...entriesCopy],
       ['name', 'characterId', 'description'],
       { caseSensitive: false },
     );
     entriesCopy = searcher.search(query);
+
     entriesCopy = [...entriesCopy].filter(entry => {
       switch (filter) {
         case ItemFilterOptions.Weapon:
@@ -106,12 +108,13 @@ export const ShopHalf = ({
           return true;
       }
     });
+
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
       switch (sort.sorted) {
         case SortOptions.Price:
           return sort.reversed
-            ? Number(entryA.item.price) - Number(entryB.item.price)
-            : Number(entryB.item.price) - Number(entryA.item.price);
+            ? Number(BigInt(entryA.item.price) - BigInt(entryB.item.price))
+            : Number(BigInt(entryB.item.price) - BigInt(entryA.item.price));
         case SortOptions.Stock:
           return sort.reversed
             ? Number(entryA.stock ? entryA.stock : entryA.balance) -
@@ -119,7 +122,7 @@ export const ShopHalf = ({
             : Number(entryB.stock ? entryB.stock : entryB.balance) -
                 Number(entryA.stock ? entryA.stock : entryA.balance);
         default:
-          return Number(entryB.item.price) - Number(entryA.item.price);
+          return Number(BigInt(entryB.item.price) - BigInt(entryA.item.price));
       }
     });
     setLength(entriesCopy.length);

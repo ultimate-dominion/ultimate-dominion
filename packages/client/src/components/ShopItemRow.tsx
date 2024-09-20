@@ -68,6 +68,7 @@ export const ShopItemRow = ({
 
   const { goldAllowanceShops, itemsAllowanceShops, refreshAllowances } =
     useAllowance();
+  const { character: userCharacter, refreshCharacter } = useCharacter();
 
   const {
     isOpen: isAllowanceOpen,
@@ -75,15 +76,12 @@ export const ShopItemRow = ({
     onClose: onAllowanceClose,
   } = useDisclosure();
 
+  const [amount, setAmount] = useState(1);
   const [showError, setShowError] = useState(false);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const [amount, setAmount] = useState(1);
-
   const { name, statRestrictions } = item;
-
-  const { character: userCharacter, refreshCharacter } = useCharacter();
 
   const price = useMemo(() => {
     if (orderType == OrderType.Selling)
@@ -102,9 +100,10 @@ export const ShopItemRow = ({
   const insufficientGold = useMemo(() => {
     if (!userCharacter) return false;
     if (orderType === OrderType.Selling) return false;
-    return price > BigInt(userCharacter.goldBalance);
+    return price > BigInt(userCharacter.externalGoldBalance);
   }, [orderType, price, userCharacter]);
-  const submit = useCallback(
+
+  const onBuyOrSell = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (insufficientGold) {
@@ -198,7 +197,7 @@ export const ShopItemRow = ({
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
             w="75px"
-          ></Text>
+          />
           <Text
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
@@ -305,78 +304,101 @@ export const ShopItemRow = ({
                   colSpan={2}
                   textAlign="center"
                   as="form"
-                  onSubmit={submit}
+                  onSubmit={onBuyOrSell}
                 >
-                  <VStack>
-                    {orderType == OrderType.Buying ? (
-                      <Text>Total Cost: {etherToFixedNumber(price)} $GOLD</Text>
-                    ) : (
-                      <Text>
-                        Total to recieve: {etherToFixedNumber(price)} $GOLD
-                      </Text>
-                    )}
-                    <HStack>
-                      <Button
-                        disabled={amount <= 1}
-                        onClick={() =>
-                          setAmount(
-                            amount > 1 && amount <= Number(stock)
-                              ? amount - 1
-                              : amount,
-                          )
-                        }
-                        size="xs"
-                      >
-                        <IoRemove />
-                      </Button>
-                      <Input
-                        max={stock || balance || 0}
-                        min={1}
-                        onChange={e => setAmount(Number(e.target.value))}
-                        p={2}
-                        placeholder={amount.toString()}
-                        size="sm"
-                        step={1}
-                        w={10}
-                      />
-                      <Button
-                        disabled={amount <= Number(stock || balance)}
-                        onClick={() =>
-                          setAmount(
-                            amount > -1 && amount < Number(stock || balance)
-                              ? amount + 1
-                              : amount,
-                          )
-                        }
-                        size="xs"
-                      >
-                        <IoAdd />
-                      </Button>
-                    </HStack>
-                    <Text mt={3}>AMOUNT (MAX {stock || balance}) </Text>
-                    <FormControl isInvalid={showError && insufficientGold}>
-                      {showError && insufficientGold && (
-                        <FormHelperText color="red" m={3}>
-                          Not enough $GOLD.
-                        </FormHelperText>
+                  <VStack spacing={4}>
+                    <VStack>
+                      <Text>AMOUNT (MAX {stock || balance})</Text>
+                      <HStack>
+                        <Button
+                          isDisabled={amount <= 1}
+                          onClick={() =>
+                            setAmount(
+                              amount > 1 && amount <= Number(stock)
+                                ? amount - 1
+                                : amount,
+                            )
+                          }
+                          size="xs"
+                        >
+                          <IoRemove />
+                        </Button>
+                        <Input
+                          max={stock || balance || 0}
+                          min={1}
+                          onChange={e => {
+                            const value = e.target.value;
+                            if (value === '') {
+                              setAmount(0);
+                              return;
+                            }
+                            if (isNaN(Number(value))) {
+                              return;
+                            }
+                            if (Number(value) < 1) {
+                              return;
+                            }
+                            if (Number(value) > Number(stock || balance)) {
+                              setAmount(Number(stock || balance));
+                              return;
+                            }
+                            setAmount(Number(value));
+                          }}
+                          p={2}
+                          size="sm"
+                          step={1}
+                          value={amount === 0 ? '' : amount}
+                          w={10}
+                        />
+                        <Button
+                          isDisabled={amount === Number(stock || balance)}
+                          onClick={() =>
+                            setAmount(
+                              amount > -1 && amount < Number(stock || balance)
+                                ? amount + 1
+                                : amount,
+                            )
+                          }
+                          size="xs"
+                        >
+                          <IoAdd />
+                        </Button>
+                      </HStack>
+                    </VStack>
+                    <VStack>
+                      {orderType == OrderType.Buying ? (
+                        <Text>
+                          Total Cost: {etherToFixedNumber(price)} $GOLD
+                        </Text>
+                      ) : (
+                        <Text>
+                          Total to recieve: {etherToFixedNumber(price)} $GOLD
+                        </Text>
                       )}
-                      {orderType == OrderType.Buying &&
-                        goldAllowanceShops < price && (
-                          <Button type="submit">Approve</Button>
+                      <FormControl isInvalid={showError && insufficientGold}>
+                        {showError && insufficientGold && (
+                          <FormHelperText color="red" m={3}>
+                            You don&apos;t have enough $GOLD to buy this.
+                          </FormHelperText>
                         )}
-                      {orderType == OrderType.Selling &&
-                        !itemsAllowanceShops && (
-                          <Button type="submit">Approve</Button>
-                        )}
-                      {orderType == OrderType.Buying &&
-                        goldAllowanceShops >= price && (
-                          <Button type="submit">Buy</Button>
-                        )}
-                      {orderType == OrderType.Selling &&
-                        itemsAllowanceShops && (
-                          <Button type="submit">Sell</Button>
-                        )}
-                    </FormControl>
+                        {orderType == OrderType.Buying &&
+                          goldAllowanceShops < price && (
+                            <Button type="submit">Approve</Button>
+                          )}
+                        {orderType == OrderType.Selling &&
+                          !itemsAllowanceShops && (
+                            <Button type="submit">Approve</Button>
+                          )}
+                        {orderType == OrderType.Buying &&
+                          goldAllowanceShops >= price && (
+                            <Button type="submit">Buy</Button>
+                          )}
+                        {orderType == OrderType.Selling &&
+                          itemsAllowanceShops && (
+                            <Button type="submit">Sell</Button>
+                          )}
+                      </FormControl>
+                    </VStack>
                   </VStack>
                 </GridItem>
               </Grid>

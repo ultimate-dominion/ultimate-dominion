@@ -87,14 +87,6 @@ struct ConsumableStatDetails {
     int256 minDamage;
     uint256 minLevel;
 }
-struct ShopItemsData {
-    uint256 itemId;
-    uint256 price;
-}
-
-struct ShopItemsTemplate {
-    ShopItemsData[] shopItemsData;
-}
 
 struct StarterItems {
     ArmorTemplateDetails[] armor;

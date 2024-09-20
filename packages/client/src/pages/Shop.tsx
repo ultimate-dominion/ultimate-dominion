@@ -21,10 +21,10 @@ import { useMap } from '../contexts/MapContext';
 import { GAME_BOARD_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
 import {
-  ArmorTemplate,
+  type ArmorTemplate,
   OrderType,
-  SpellTemplate,
-  WeaponTemplate,
+  type SpellTemplate,
+  type WeaponTemplate,
 } from '../utils/types';
 
 export const Shop = (): JSX.Element => {
@@ -46,8 +46,8 @@ export const Shop = (): JSX.Element => {
   const { allShops } = useMap();
 
   const shop = useMemo(() => {
-    if (!shopId || !allShops) return null;
-    return allShops.find(shop => shop.shopId === shopId);
+    if (!(shopId && allShops)) return null;
+    return allShops.find(shop => shop.shopId === shopId) ?? null;
   }, [allShops, shopId]);
 
   const [sellable, setSellable] = useState<
@@ -76,34 +76,16 @@ export const Shop = (): JSX.Element => {
     if (isItemsLoading) return;
     if (items.length === 0) return;
     if (!shop) return;
-    const sellableInventory = [
-      ...armorTemplates,
-      ...spellTemplates,
-      ...weaponTemplates,
-    ]
+
+    const sellableInventory = items
       // filter out the items this shop does not sell
-      .filter(
-        item =>
-          shop.sellableItems
-            .map(item => item.toString())
-            .indexOf(item.tokenId.toString()) > -1,
-      )
-      // filter out the items the user does not have
-      .filter(
-        item =>
-          items
-            .map(x => x.tokenId.toString())
-            .indexOf(item.tokenId.toString()) > -1,
-      )
+      .filter(item => shop.sellableItems.includes(item.tokenId))
       // add back the balances of the item and itemIndexes
       .map(item => {
-        const balances =
-          items.find(owned => owned.tokenId == item.tokenId)?.balance || 0;
-        const index = shop?.sellableItems.indexOf(item.tokenId).toString()
         return {
           index: index,
           item: item,
-          balance: balances.toString(),
+          balance: item.balance,
           stock: null,
         };
       });
@@ -113,12 +95,7 @@ export const Shop = (): JSX.Element => {
       ...spellTemplates,
       ...armorTemplates,
     ]
-      .filter(
-        item =>
-          shop.buyableItems
-            .map(item => item.toString())
-            .indexOf(item.tokenId.toString()) > -1,
-      )
+      .filter(item => shop.buyableItems.includes(item.tokenId))
       // add back the stock and index of the item
       .map((item, i) => {
         const index = shop?.buyableItems.indexOf(item.tokenId).toString()
@@ -159,6 +136,24 @@ export const Shop = (): JSX.Element => {
     );
   }
 
+  if (!userCharacter) {
+    return (
+      <VStack>
+        <Button
+          alignSelf="flex-start"
+          leftIcon={<IoMdArrowRoundBack />}
+          my={4}
+          onClick={() => navigate(GAME_BOARD_PATH)}
+          size="xs"
+          variant="outline"
+        >
+          Back to Game Board
+        </Button>
+        <Text>Character not found</Text>
+      </VStack>
+    );
+  }
+
   return (
     <VStack mt={16}>
       <Typist avgTypingDelay={10} cursor={{ show: false }} stdTypingDelay={10}>
@@ -175,7 +170,7 @@ export const Shop = (): JSX.Element => {
               characterId={userCharacter.id}
               shop={shop}
               items={sellable}
-              name={`Character’s Inventory - ${etherToFixedNumber(userCharacter?.goldBalance)} $GOLD`}
+              name={`Character’s Inventory - ${etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD`}
               orderType={OrderType.Selling}
             />
           ) : (

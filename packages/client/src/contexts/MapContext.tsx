@@ -68,6 +68,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
   const {
     components: {
+      AdventureEscrow,
       Characters,
       CharactersTokenURI,
       EncounterEntity,
@@ -166,9 +167,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               { tokenId: BigInt(tokenId) },
             );
 
-            const goldBalance =
+            const externalGoldBalance =
               getComponentValueStrict(GoldBalances, ownerEntity)?.value ??
               BigInt(0);
+            const escrowGoldBalance =
+              getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0);
+
             const metadataURI = getComponentValueStrict(
               CharactersTokenURI,
               tokenIdEntity,
@@ -208,8 +212,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               baseStats: decodedBaseStats,
               currentHp: characterStats.currentHp.toString(),
               entityClass: characterStats.class,
+              escrowGoldBalance,
               experience: characterStats.experience.toString(),
-              goldBalance: goldBalance,
+              externalGoldBalance,
               id: entity,
               inBattle,
               intelligence: characterStats.intelligence.toString(),
@@ -241,6 +246,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       }
     },
     [
+      AdventureEscrow,
       Characters,
       CharactersTokenURI,
       delegatorAddress,

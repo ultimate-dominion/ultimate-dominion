@@ -162,7 +162,7 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "currentAvailibleLevel",
+        "name": "currentAvailableLevel",
         "type": "uint256",
         "internalType": "uint256"
       }
