@@ -179,6 +179,15 @@ export const Leaderboard = (): JSX.Element => {
     }
     let entriesCopy: Character[] = characters;
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
+      const totalStatsA =
+        Number(entryA.agility) +
+        Number(entryA.strength) +
+        Number(entryA.intelligence);
+      const totalStatsB =
+        Number(entryB.agility) +
+        Number(entryB.strength) +
+        Number(entryB.intelligence);
+
       switch (sort.sorted) {
         case 'byGold':
           return sort.reversed
@@ -198,8 +207,8 @@ export const Leaderboard = (): JSX.Element => {
             : Number(entryB.level) - Number(entryA.level);
         case 'byStats':
           return sort.reversed
-            ? Number(entryA.experience) - Number(entryB.experience)
-            : Number(entryB.experience) - Number(entryA.experience);
+            ? Number(totalStatsA) - Number(totalStatsB)
+            : Number(totalStatsB) - Number(totalStatsA);
         default:
           return Number(
             formatEther(
@@ -320,7 +329,7 @@ export const Leaderboard = (): JSX.Element => {
         </HStack>
       </Stack>
       <Flex justify="space-between" w="100%">
-        <Text>Players {entries.length}</Text>
+        <Text>Players {characters.length}</Text>
         <HStack>
           <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
             <Button
