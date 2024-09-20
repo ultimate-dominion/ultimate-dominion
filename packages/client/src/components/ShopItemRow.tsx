@@ -87,7 +87,7 @@ export const ShopItemRow = ({
     if (orderType == OrderType.Selling)
       return BigInt(amount) * ((item.price * shop.priceMarkdown) / 100n);
     return (
-      BigInt(amount) * (item.price + item.price * (shop.priceMarkup / 100n))
+      BigInt(amount) * (item.price + (item.price * shop.priceMarkup) / 100n)
     );
   }, [amount, item.price, orderType, shop.priceMarkdown, shop.priceMarkup]);
 
@@ -221,7 +221,7 @@ export const ShopItemRow = ({
           isOpen={isAllowanceOpen}
           itemName={name}
           onClose={onAllowanceClose}
-          onComplete={onAllowanceClose}
+          onComplete={onBuyOrSell}
           orderPrice={price}
           orderType={orderType}
         />
