@@ -306,6 +306,10 @@ contract EncounterSystem is System {
         }
     }
 
+    function isInEncounter(bytes32 entityId) public view returns (bool) {
+        return EncounterEntity.getEncounterId(entityId) != bytes32(0);
+    }
+
     function _queueActions(bytes32 encounterId, Action[] memory attacks) internal {
         SessionTimer.set(attacks[0].attackerEntityId, block.timestamp);
         SystemSwitch.call(

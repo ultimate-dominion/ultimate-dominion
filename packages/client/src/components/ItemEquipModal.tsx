@@ -12,6 +12,7 @@ import {
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -38,6 +39,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     systemCalls: { equipItems, unequipItem },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
+  const { currentBattle } = useBattle();
 
   const [isEquipping, setIsEquipping] = useState(false);
 
@@ -156,9 +158,16 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               <Text mb={6}>Do you want to make an offer for this item?</Text>
             )}
             <ItemCard {...item} />
+
+            {!!currentBattle && isOwner && (
+              <Text color="red" fontWeight="bold" mt={4} size="sm">
+                You cannot unequip items during a battle.
+              </Text>
+            )}
           </ModalBody>
           <ModalFooter>
             <Button
+              isDisabled={!!currentBattle && isOwner}
               isLoading={isEquipping}
               loadingText="Unequipping..."
               mr={3}
@@ -199,10 +208,15 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               You do not meet the requirements to equip this item.
             </Text>
           )}
+          {!!currentBattle && isOwner && (
+            <Text color="red" fontWeight="bold" mt={4} size="sm">
+              You cannot equip items during a battle.
+            </Text>
+          )}
         </ModalBody>
         <ModalFooter>
           <Button
-            isDisabled={isMissingRequirements}
+            isDisabled={isOwner && (isMissingRequirements || !!currentBattle)}
             isLoading={isEquipping}
             loadingText="Equipping..."
             mr={3}

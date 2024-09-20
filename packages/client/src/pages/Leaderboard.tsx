@@ -32,7 +32,7 @@ import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Pagination } from '../components/Pagination';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { HOME_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import { Character, StatsClasses } from '../utils/types';
 
@@ -179,6 +179,15 @@ export const Leaderboard = (): JSX.Element => {
     }
     let entriesCopy: Character[] = characters;
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
+      const totalStatsA =
+        Number(entryA.agility) +
+        Number(entryA.strength) +
+        Number(entryA.intelligence);
+      const totalStatsB =
+        Number(entryB.agility) +
+        Number(entryB.strength) +
+        Number(entryB.intelligence);
+
       switch (sort.sorted) {
         case 'byGold':
           return sort.reversed
@@ -198,8 +207,8 @@ export const Leaderboard = (): JSX.Element => {
             : Number(entryB.level) - Number(entryA.level);
         case 'byStats':
           return sort.reversed
-            ? Number(entryA.experience) - Number(entryB.experience)
-            : Number(entryB.experience) - Number(entryA.experience);
+            ? Number(totalStatsA) - Number(totalStatsB)
+            : Number(totalStatsB) - Number(totalStatsA);
         default:
           return Number(
             formatEther(
@@ -262,11 +271,11 @@ export const Leaderboard = (): JSX.Element => {
         alignSelf="start"
         leftIcon={<IoMdArrowRoundBack />}
         my={4}
-        onClick={() => navigate(GAME_BOARD_PATH)}
+        onClick={() => navigate(-1)}
         size="xs"
         variant="outline"
       >
-        Back to Game Board
+        Back
       </Button>
       <Stack
         direction={{ base: 'column', md: 'row' }}
@@ -320,7 +329,7 @@ export const Leaderboard = (): JSX.Element => {
         </HStack>
       </Stack>
       <Flex justify="space-between" w="100%">
-        <Text>Players {entries.length}</Text>
+        <Text>Players {characters.length}</Text>
         <HStack>
           <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
             <Button
