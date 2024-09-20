@@ -29,7 +29,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
-import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -280,11 +280,11 @@ export const Marketplace = (): JSX.Element => {
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(GAME_BOARD_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Game Board
+          Back
         </Button>
         <Text mt={12}>An erro occurred</Text>
       </VStack>
@@ -302,11 +302,11 @@ export const Marketplace = (): JSX.Element => {
         <Button
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
-          onClick={() => navigate(GAME_BOARD_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Game Board
+          Back
         </Button>
         <Text size={{ base: '2xs', sm: 'sm' }}>
           $GOLD Balance: {etherToFixedNumber(character.externalGoldBalance)}

@@ -32,7 +32,7 @@ import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Pagination } from '../components/Pagination';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { HOME_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import { Character, StatsClasses } from '../utils/types';
 
@@ -271,11 +271,11 @@ export const Leaderboard = (): JSX.Element => {
         alignSelf="start"
         leftIcon={<IoMdArrowRoundBack />}
         my={4}
-        onClick={() => navigate(GAME_BOARD_PATH)}
+        onClick={() => navigate(-1)}
         size="xs"
         variant="outline"
       >
-        Back to Game Board
+        Back
       </Button>
       <Stack
         direction={{ base: 'column', md: 'row' }}
