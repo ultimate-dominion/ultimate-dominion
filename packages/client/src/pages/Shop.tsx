@@ -82,6 +82,8 @@ export const Shop = (): JSX.Element => {
       .filter(item => shop.sellableItems.includes(item.tokenId))
       // add back the balances of the item and itemIndexes
       .map(item => {
+        const index = shop?.sellableItems.indexOf(item.tokenId).toString();
+
         return {
           index: index,
           item: item,
@@ -97,11 +99,11 @@ export const Shop = (): JSX.Element => {
     ]
       .filter(item => shop.buyableItems.includes(item.tokenId))
       // add back the stock and index of the item
-      .map((item, i) => {
-        const index = shop?.buyableItems.indexOf(item.tokenId).toString()
+      .map(item => {
+        const index = shop?.buyableItems.indexOf(item.tokenId).toString();
         return {
           item: item,
-          stock: shop.stock[index],
+          stock: shop.stock[Number(index)],
           balance: null,
           index: index,
         };
