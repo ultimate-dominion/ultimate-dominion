@@ -88,7 +88,7 @@ contract ShopSystem is System, ReentrancyGuard {
 
         // // take [amount] of the users' item
         uint256[] memory sellableItems = Shops.getSellableItems(shopId);
-        IERC1155(UltimateDominionConfig.getItems()).safeTransferFrom(_msgSender(), lootManagerAddress(), sellableItems[itemIndex], amount, "");
+        IERC1155System(UltimateDominionConfig.getItems()).transferFrom(_msgSender(), lootManagerAddress(), sellableItems[itemIndex], amount);
 
         // give [amount*price] gold
         IWorld(_world()).UD__dropGold(characterId, amount * itemMarkdown(shopId, sellable[itemIndex]));
@@ -131,7 +131,7 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param shopId the shopId
      */
     function itemMarkup(bytes32 shopId, uint256 itemId) public view returns (uint256){
-        return itemBase(itemId) + ((itemBase(itemId) * Shops.getPriceMarkup(shopId)) / 10000);
+        return itemBase(itemId) + ((itemBase(itemId) * Shops.getPriceMarkup(shopId)) / 10_000);
     }
 
     /**
@@ -139,7 +139,7 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param shopId the shopId
      */
     function itemMarkdown(bytes32 shopId, uint256 itemId) public view returns (uint256){
-        return (itemBase(itemId) * Shops.getPriceMarkdown(shopId))/ 10000;
+        return (itemBase(itemId) * Shops.getPriceMarkdown(shopId))/ 10_000;
     }
 
     function shopSystemAddress() external view returns (address){

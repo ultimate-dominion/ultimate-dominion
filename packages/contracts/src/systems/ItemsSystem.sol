@@ -61,7 +61,7 @@ contract ItemsSystem is System {
         _requireOwner(address(this), _msgSender());
         uint256 itemId = _incrementItemsCounter();
         // create new item struct
-        ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, price:price, stats: stats});
+        ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, price: price, stats: stats});
 
         StatRestrictionsData memory statRestrictions;
         if (itemType == ItemType.Weapon) {
@@ -204,5 +204,27 @@ contract ItemsSystem is System {
         address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
         //will require approval
         _items().safeTransferFrom(playerAddr, lootManager, itemId, 1, "");
+    }
+
+    function getWeaponStats(uint256 itemId) public view returns (WeaponStatsData memory _weaponStats) {
+        ItemType itemType = Items.getItemType(itemId);
+        require(itemType == ItemType.Weapon, "ITEMS: Not a  weapon");
+        _weaponStats = WeaponStats.get(itemId);
+    }
+
+    function getArmorStats(uint256 itemId) public view returns (ArmorStatsData memory _ArmorStats) {
+        ItemType itemType = Items.getItemType(itemId);
+        require(itemType == ItemType.Armor, "ITEMS: Not a  Armor");
+        _ArmorStats = ArmorStats.get(itemId);
+    }
+
+    function getSpellStats(uint256 itemId) public view returns (SpellStatsData memory _spellStats) {
+        _spellStats = SpellStats.get(itemId);
+    }
+
+    function getConsumableStats(uint256 itemId) public view returns (ConsumableStatsData memory _consumableStats) {
+        ItemType itemType = Items.getItemType(itemId);
+        require(itemType == ItemType.Consumable, "ITEMS: Not Consumable");
+        _consumableStats = ConsumableStats.get(itemId);
     }
 }

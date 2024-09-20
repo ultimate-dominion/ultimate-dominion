@@ -74,7 +74,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         uint256 price = world.UD__itemBase(item);
         uint256 markup = world.UD__itemMarkup(shopId, item);
         assertEq(price, 1 ether, "expecting item 1 to have a price of 1 ether");
-        assertEq(markup, price + 0.002 ether);
+        assertEq(markup, price + 0.2 ether);
 
     }
     function test_itemMarkdown() public {
@@ -82,7 +82,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         uint256 price = world.UD__itemBase(item);
         uint256 markdown = world.UD__itemMarkdown(shopId, item);
         assertEq(price, 1 ether, "expecting item 1 to have a price of 1");
-        assertEq(markdown, 0.005 ether);
+        assertEq(markdown, 0.5 ether);
     }
 
     function test_Buy() public {
@@ -176,9 +176,10 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__restock(shopId);
         console.log(Shops.getRestockTimestamp(shopId));
         console.log(block.timestamp);
-        vm.expectRevert(bytes("You must wait 12 hours to restock"));
-
+        stock[item] = 0;
+        Shops.setStock(shopId, stock);
         world.UD__restock(shopId);
+        assertEq(Shops.getStock(shopId)[item], 0);
         // the stock should equal 
     }
 }

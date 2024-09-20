@@ -85,16 +85,16 @@ export const ShopItemRow = ({
 
   const price = useMemo(() => {
     if (orderType == OrderType.Selling)
-      return BigInt(amount) * ((item.price * shop.priceMarkdown) / 100n);
+      return BigInt(amount) * ((item.price * shop.priceMarkdown) / 10_000n);
     return (
-      BigInt(amount) * (item.price + (item.price * shop.priceMarkup) / 100n)
+      BigInt(amount) * (item.price + (item.price * shop.priceMarkup) / 10_000n)
     );
   }, [amount, item.price, orderType, shop.priceMarkdown, shop.priceMarkup]);
 
   const priceSingle = useMemo(() => {
     if (orderType == OrderType.Selling)
-      return (item.price * shop.priceMarkdown) / 100n;
-    return item.price + (item.price * shop.priceMarkup) / 100n;
+      return (item.price * shop.priceMarkdown) / 10_000n;
+    return item.price + (item.price * shop.priceMarkup) / 10_000n;
   }, [item.price, orderType, shop.priceMarkdown, shop.priceMarkup]);
 
   const insufficientGold = useMemo(() => {
@@ -122,12 +122,15 @@ export const ShopItemRow = ({
         if (orderType == OrderType.Buying) {
           await buy(amount.toString(), shop.shopId, itemIndex, characterId);
           renderSuccess('Item purchased successfully!');
+          onAllowanceClose();
         } else {
           await sell(amount.toString(), shop.shopId, itemIndex, characterId);
           renderSuccess('Item sold successfully!');
+          onAllowanceClose();
         }
       } catch (e) {
         renderError((e as Error)?.message ?? 'Shop transaction failed', e);
+        onAllowanceClose();
       } finally {
         refreshAllowances();
         refreshCharacter();
@@ -141,6 +144,7 @@ export const ShopItemRow = ({
       insufficientGold,
       itemIndex,
       itemsAllowanceShops,
+      onAllowanceClose,
       onAllowanceOpen,
       orderType,
       price,
