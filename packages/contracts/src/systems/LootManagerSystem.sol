@@ -199,20 +199,18 @@ contract LootManagerSystem is System {
         }
         if (deadDefenders == encounterData.defenders.length) attackersWin = true;
 
-        uint256 distributionPool;
-
         if (attackersWin) {
             // distribute defender's escrow gold
             for (uint256 i; i < encounterData.defenders.length; i++) {
                 uint256 currentBalance = AdventureEscrow.get(encounterData.defenders[i]);
                 uint256 toDistribute = currentBalance / PVP_GOLD_DENOMINATOR;
-                distributionPool += toDistribute;
+                _goldAmount += toDistribute;
                 AdventureEscrow.set(encounterData.defenders[i], (currentBalance - toDistribute));
             }
             // distribute defender's escrow gold
             for (uint256 i; i < encounterData.attackers.length; i++) {
                 uint256 currentBalance = AdventureEscrow.get(encounterData.attackers[i]);
-                uint256 toDistribute = distributionPool / encounterData.attackers.length;
+                uint256 toDistribute = _goldAmount / encounterData.attackers.length;
                 AdventureEscrow.set(encounterData.attackers[i], (currentBalance + toDistribute));
             }
         } else {
@@ -221,13 +219,13 @@ contract LootManagerSystem is System {
             for (uint256 i; i < encounterData.attackers.length; i++) {
                 uint256 currentBalance = AdventureEscrow.get(encounterData.attackers[i]);
                 uint256 toDistribute = currentBalance / PVP_GOLD_DENOMINATOR;
-                distributionPool += toDistribute;
+                _goldAmount += toDistribute;
                 AdventureEscrow.set(encounterData.attackers[i], (currentBalance - toDistribute));
             }
             // distribute defender's escrow gold
             for (uint256 i; i < encounterData.defenders.length; i++) {
                 uint256 currentBalance = AdventureEscrow.get(encounterData.defenders[i]);
-                uint256 toDistribute = distributionPool / encounterData.defenders.length;
+                uint256 toDistribute = _goldAmount / encounterData.defenders.length;
                 AdventureEscrow.set(encounterData.defenders[i], (currentBalance + toDistribute));
             }
         }
