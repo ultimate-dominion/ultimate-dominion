@@ -318,6 +318,47 @@ export function createSystemCalls(
     }
   };
 
+  const depositToEscrow = async (
+    characterEntity: Entity,
+    previousAmount: bigint,
+    amount: bigint,
+  ): SystemCallReturn => {
+    try {
+      const characterId = characterEntity.toString() as `0x${string}`;
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId, BigInt(amount)],
+        functionName: 'UD__depositToEscrow',
+      });
+
+      const tx = await worldContract.write.UD__depositToEscrow([
+        characterId,
+        BigInt(amount),
+      ]);
+
+      await waitForTransaction(tx);
+
+      const newBalance = await worldContract.read.UD__getEscrowBalance([
+        characterId,
+      ]);
+
+      const success = newBalance === previousAmount + amount;
+
+      return {
+        error: success ? undefined : 'Failed to deposit to escrow.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const endTurn = async (
     encounterId: Entity,
     playerId: Entity,
@@ -646,6 +687,40 @@ export function createSystemCalls(
     }
   };
 
+  const removeEntityFromBoard = async (entity: Entity): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [entity.toString() as `0x${string}`],
+        functionName: 'UD__removeEntityFromBoard',
+      });
+
+      const tx = await worldContract.write.UD__removeEntityFromBoard([
+        entity.toString() as `0x${string}`,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const position = getComponentValue(Position, entity);
+      const spawned = getComponentValue(Spawned, entity);
+
+      const success =
+        position?.x === 0 && position?.y === 0 && !spawned?.spawned;
+
+      return {
+        error: success ? undefined : 'Failed to remove entity from board.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const rollStats = async (
     characterEntity: Entity,
     characterClass: StatsClasses,
@@ -814,6 +889,47 @@ export function createSystemCalls(
     }
   };
 
+  const withdrawFromEscrow = async (
+    characterEntity: Entity,
+    previousAmount: bigint,
+    amount: bigint,
+  ): SystemCallReturn => {
+    try {
+      const characterId = characterEntity.toString() as `0x${string}`;
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId, amount],
+        functionName: 'UD__withdrawFromEscrow',
+      });
+
+      const tx = await worldContract.write.UD__withdrawFromEscrow([
+        characterId,
+        amount,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const newBalance = await worldContract.read.UD__getEscrowBalance([
+        characterId,
+      ]);
+
+      const success = newBalance === previousAmount - amount;
+
+      return {
+        error: success ? undefined : 'Failed to withdraw from escrow.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   // const getFee = async () => {
   //   const entropyAddress = await worldContract.read.UD__getEntropy();
   //   const providerAddress = await worldContract.read.UD__getPythProvider();
@@ -838,6 +954,7 @@ export function createSystemCalls(
     cancelOrder,
     createEncounter,
     createOrder,
+    depositToEscrow,
     endTurn,
     enterGame,
     equipItems,
@@ -845,11 +962,13 @@ export function createSystemCalls(
     levelCharacter,
     mintCharacter,
     move,
+    removeEntityFromBoard,
     restock,
     rollStats,
     sell,
     spawn,
     unequipItem,
     updateTokenUri,
+    withdrawFromEscrow,
   };
 }

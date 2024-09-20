@@ -40,136 +40,204 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "getEntitiesAtPosition",
+    "name": "calculateExpMultiplier",
     "inputs": [
       {
-        "name": "x",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "y",
-        "type": "uint16",
-        "internalType": "uint16"
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
       {
-        "name": "entitiesAtPosition",
+        "name": "_expMultiplier",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "depositToEscrow",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_balance",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "distributePveRewards",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_expAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_goldAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_itemIdsDropped",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "distributePvpRewards",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_expAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_goldAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_itemIdsDropped",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "dropGold",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "dropItem",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "dropItems",
+    "inputs": [
+      {
+        "name": "characterIds",
         "type": "bytes32[]",
         "internalType": "bytes32[]"
+      },
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "amounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
       }
     ],
-    "stateMutability": "view"
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "getEntityPosition",
+    "name": "getEscrowBalance",
     "inputs": [
       {
-        "name": "entityId",
+        "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
     ],
     "outputs": [
       {
-        "name": "x",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "y",
-        "type": "uint16",
-        "internalType": "uint16"
+        "name": "_balance",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "isAtPosition",
+    "name": "issueStarterItems",
     "inputs": [
       {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "x",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "y",
-        "type": "uint16",
-        "internalType": "uint16"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_isAtPosition",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "move",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "x",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "y",
-        "type": "uint16",
-        "internalType": "uint16"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "removeEntitiesFromBoard",
-    "inputs": [
-      {
-        "name": "entityIds",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "removeEntityFromBoard",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "spawn",
-    "inputs": [
-      {
-        "name": "entityId",
+        "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -195,6 +263,30 @@ declare const abi: [
       }
     ],
     "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "withdrawFromEscrow",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_balance",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "event",
@@ -235,55 +327,6 @@ declare const abi: [
   },
   {
     "type": "event",
-    "name": "Store_SpliceDynamicData",
-    "inputs": [
-      {
-        "name": "tableId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "keyTuple",
-        "type": "bytes32[]",
-        "indexed": false,
-        "internalType": "bytes32[]"
-      },
-      {
-        "name": "dynamicFieldIndex",
-        "type": "uint8",
-        "indexed": false,
-        "internalType": "uint8"
-      },
-      {
-        "name": "start",
-        "type": "uint48",
-        "indexed": false,
-        "internalType": "uint48"
-      },
-      {
-        "name": "deleteCount",
-        "type": "uint40",
-        "indexed": false,
-        "internalType": "uint40"
-      },
-      {
-        "name": "encodedLengths",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "EncodedLengths"
-      },
-      {
-        "name": "data",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Store_SpliceStaticData",
     "inputs": [
       {
@@ -315,17 +358,6 @@ declare const abi: [
   },
   {
     "type": "error",
-    "name": "EncodedLengths_InvalidLength",
-    "inputs": [
-      {
-        "name": "length",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
     "name": "Slice_OutOfBounds",
     "inputs": [
       {
@@ -347,64 +379,6 @@ declare const abi: [
   },
   {
     "type": "error",
-    "name": "Store_IndexOutOfBounds",
-    "inputs": [
-      {
-        "name": "length",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "accessedIndex",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "Store_InvalidResourceType",
-    "inputs": [
-      {
-        "name": "expected",
-        "type": "bytes2",
-        "internalType": "bytes2"
-      },
-      {
-        "name": "resourceId",
-        "type": "bytes32",
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "resourceIdString",
-        "type": "string",
-        "internalType": "string"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "Store_InvalidSplice",
-    "inputs": [
-      {
-        "name": "startWithinField",
-        "type": "uint40",
-        "internalType": "uint40"
-      },
-      {
-        "name": "deleteCount",
-        "type": "uint40",
-        "internalType": "uint40"
-      },
-      {
-        "name": "fieldLength",
-        "type": "uint40",
-        "internalType": "uint40"
-      }
-    ]
-  },
-  {
-    "type": "error",
     "name": "World_AccessDenied",
     "inputs": [
       {
@@ -416,33 +390,6 @@ declare const abi: [
         "name": "caller",
         "type": "address",
         "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "World_FunctionSelectorNotFound",
-    "inputs": [
-      {
-        "name": "functionSelector",
-        "type": "bytes4",
-        "internalType": "bytes4"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "World_ResourceNotFound",
-    "inputs": [
-      {
-        "name": "resourceId",
-        "type": "bytes32",
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "resourceIdString",
-        "type": "string",
-        "internalType": "string"
       }
     ]
   }

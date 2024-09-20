@@ -117,7 +117,8 @@ export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
   baseStats: EntityStats;
-  goldBalance: bigint;
+  escrowGoldBalance: bigint;
+  externalGoldBalance: bigint;
   id: Entity;
   inBattle: boolean;
   locked: boolean;
@@ -274,6 +275,15 @@ export type StatRestrictions = {
   minAgility: string;
   minIntelligence: string;
   minStrength: string;
+};
+
+export type StatusAction = {
+  active: boolean;
+  effectId: Entity;
+  name: string;
+  turnStart: string;
+  validTurns: string;
+  victimId: Entity;
 };
 
 export type Weapon = WeaponTemplate & {

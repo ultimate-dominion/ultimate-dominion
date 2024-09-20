@@ -65,6 +65,7 @@ export const CharacterProvider = ({
 }: CharacterProviderProps): JSX.Element => {
   const {
     components: {
+      AdventureEscrow,
       CharacterEquipment,
       Characters,
       CharactersTokenURI,
@@ -111,8 +112,10 @@ export const CharacterProvider = ({
         { address: 'address' },
         { address: characterData.owner as `0x${string}` },
       );
-      const goldBalance =
+      const externalGoldBalance =
         getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
+      const escrowGoldBalance =
+        getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0);
 
       const encounterId = getComponentValue(
         EncounterEntity,
@@ -140,8 +143,9 @@ export const CharacterProvider = ({
         baseStats: decodedBaseStats,
         currentHp: characterStats?.currentHp.toString() ?? '0',
         entityClass: characterStats?.class ?? 0,
+        escrowGoldBalance,
         experience: characterStats?.experience.toString() ?? '0',
-        goldBalance,
+        externalGoldBalance,
         id: entity,
         inBattle,
         intelligence: characterStats?.intelligence.toString() ?? '0',
@@ -177,6 +181,7 @@ export const CharacterProvider = ({
       ...fetachedMetadata,
     });
   }, [
+    AdventureEscrow,
     Characters,
     CharactersTokenURI,
     delegatorAddress,

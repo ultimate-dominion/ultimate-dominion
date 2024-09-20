@@ -185,19 +185,21 @@ contract EffectsSystem is System {
         }
     }
 
-    function isValidEffect(bytes32 entityId, bytes32 appliedEffectId) public returns (bool) {
+    function isValidEffect(bytes32 entityId, bytes32 appliedEffectId) public view returns (bool) {
         return isNotExpired(expireIfInvalid(entityId, appliedEffectId));
     }
 
-    function isNotExpired(bytes32 appliedEffectId) public view returns (bool) {
+    function isNotExpired(bytes32 appliedEffectId) public pure returns (bool) {
         return getEffectExpired(appliedEffectId) == 0;
     }
 
-    function expireIfInvalid(bytes32 entityId, bytes32 appliedEffectId) public returns (bytes32) {
+    function expireIfInvalid(bytes32 entityId, bytes32 appliedEffectId) public view returns (bytes32) {
+        this;
         if (isNotExpired(appliedEffectId)) {
             (bytes32 effectStatId, uint256 timestampApplied, uint256 expiredTime, uint256 turnApplied) =
                 getAppliedEffectInfo(appliedEffectId);
 
+            // since the applied effect has extra data in it if we strip that data, the resulting ID should not be the same as the original id
             require(bytes32(bytes8(appliedEffectId)) != appliedEffectId, "effect not applied");
 
             StatusEffectValidityData memory validityData = StatusEffectValidity.get(getEffectStatId(appliedEffectId));

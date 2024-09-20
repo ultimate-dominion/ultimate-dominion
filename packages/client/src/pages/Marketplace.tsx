@@ -309,7 +309,7 @@ export const Marketplace = (): JSX.Element => {
           Back to Game Board
         </Button>
         <Text size={{ base: '2xs', sm: 'sm' }}>
-          $GOLD Balance: {etherToFixedNumber(character.goldBalance)}
+          $GOLD Balance: {etherToFixedNumber(character.externalGoldBalance)}
         </Text>
       </Stack>
       <Stack

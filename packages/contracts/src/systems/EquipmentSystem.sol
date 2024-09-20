@@ -62,6 +62,7 @@ contract EquipmentSystem is System {
     function equipItems(bytes32 characterId, uint256[] memory itemIds) public inGame(characterId) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         require(characterOwner == _msgSender(), "EQUIPMENT: Not Character Owner");
+        require(!IWorld(_world()).UD__isInEncounter(characterId), "Cannot equip items in combat");
         uint256 itemId;
         for (uint256 i; i < itemIds.length; i++) {
             itemId = itemIds[i];
@@ -226,6 +227,7 @@ contract EquipmentSystem is System {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         require(characterOwner == _msgSender(), "EQUIPMENT: Not Character Owner");
         require(isEquipped(characterId, itemId), "EQUIPMENT: NOT EQUIPPED");
+        require(!IWorld(_world()).UD__isInEncounter(characterId), "Cannot un-equip items in combat");
         ItemType itemType = IWorld(_world()).UD__getItemType(itemId);
 
         if (itemType == ItemType.Weapon) {

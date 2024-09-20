@@ -100,7 +100,7 @@ export const ShopItemRow = ({
   const insufficientGold = useMemo(() => {
     if (!userCharacter) return false;
     if (orderType === OrderType.Selling) return false;
-    return price > BigInt(userCharacter.goldBalance);
+    return price > BigInt(userCharacter.externalGoldBalance);
   }, [orderType, price, userCharacter]);
 
   const onBuyOrSell = useCallback(

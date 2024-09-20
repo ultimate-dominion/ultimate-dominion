@@ -18,13 +18,16 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 import { formatEther, parseEther } from 'viem';
-import { useAccount, useBalance, useWalletClient } from 'wagmi';
+import { useAccount, useBalance, useDisconnect, useWalletClient } from 'wagmi';
 
+import { useCharacter } from '../contexts/CharacterContext';
+import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { shortenAddress } from '../utils/helpers';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { CopyText } from './CopyText';
+
 export const WalletDetailsModal = ({
   isOpen,
   onClose,
@@ -34,15 +37,21 @@ export const WalletDetailsModal = ({
 }): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
   const { data: externalWalletClient } = useWalletClient();
+  const { disconnect } = useDisconnect();
   const { isConnected, address } = useAccount();
   const {
     burnerAddress,
     burnerBalance,
     network: { walletClient },
+    systemCalls: { removeEntityFromBoard },
   } = useMUD();
   const { data: externalWalletBalance, refetch } = useBalance({
     address: externalWalletClient?.account.address,
   });
+  const { character } = useCharacter();
+  const { isSpawned } = useMap();
+
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const [depositAmount, setDepositAmount] = useState<string>('0');
   const [isDepositing, setIsDepositing] = useState(false);
@@ -70,6 +79,32 @@ export const WalletDetailsModal = ({
       refetch();
     }
   }, [isOpen, refetch]);
+
+  const onLogout = useCallback(async () => {
+    try {
+      setIsLoggingOut(true);
+      if (character?.locked && isSpawned) {
+        const { error, success } = await removeEntityFromBoard(character.id);
+
+        if (error && !success) {
+          throw new Error(error);
+        }
+      }
+      disconnect();
+      renderSuccess('Wallet disconnected successfully!');
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Error disconnecting wallet.', e);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }, [
+    character,
+    disconnect,
+    isSpawned,
+    removeEntityFromBoard,
+    renderError,
+    renderSuccess,
+  ]);
 
   const onDeposit = useCallback(async () => {
     try {
@@ -178,6 +213,9 @@ export const WalletDetailsModal = ({
                     ? formatEther(externalWalletBalance.value)
                     : '0'}
                 </Text>
+                <Button isLoading={isLoggingOut} onClick={onLogout} size="sm">
+                  Logout
+                </Button>
                 <Divider />
                 <Text>Session Account:</Text>
                 <CopyText text={burnerAddress}>
@@ -253,7 +291,7 @@ export const WalletDetailsModal = ({
           )}
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose} size="sm">
+          <Button onClick={onClose} size="sm" variant="ghost">
             Close
           </Button>
         </ModalFooter>
