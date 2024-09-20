@@ -22,6 +22,7 @@ import { formatEther, parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { etherToFixedNumber } from '../utils/helpers';
@@ -43,6 +44,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
   const { goldLootManagerAllowance } = useAllowance();
+  const { onSetIsMovementDisabled } = useMovement();
 
   const {
     isOpen: isAllowanceModalOpen,
@@ -74,8 +76,11 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
       setWithdrawAmount('');
 
       refreshCharacter();
+      onSetIsMovementDisabled(true);
     }
-  }, [isOpen, refreshCharacter]);
+
+    return () => onSetIsMovementDisabled(false);
+  }, [isOpen, onSetIsMovementDisabled, refreshCharacter]);
 
   const onDeposit = useCallback(async () => {
     try {
