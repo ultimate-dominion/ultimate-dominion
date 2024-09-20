@@ -9,7 +9,7 @@ const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
 
 export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
   const navigate = useNavigate();
-  const { renderSuccess, renderError } = useToast();
+  const { renderError } = useToast();
   const {
     systemCalls: { restock },
   } = useMUD();
@@ -22,7 +22,7 @@ export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
     } finally {
       navigate(`/shops/${shopId}`);
     }
-  }, [navigate, renderError, renderSuccess, restock, shopId]);
+  }, [navigate, renderError, restock, shopId]);
   return (
     <HStack
       as="button"

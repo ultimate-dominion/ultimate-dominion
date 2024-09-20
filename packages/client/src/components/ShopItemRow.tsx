@@ -61,7 +61,6 @@ export const ShopItemRow = ({
   shop: Shop;
   stock: string | null;
 }): JSX.Element => {
-  // const { renderError /* , renderSuccess */ } = useToast();
   const {
     systemCalls: { buy, sell },
   } = useMUD();

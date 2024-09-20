@@ -248,11 +248,6 @@ export type Shop = {
   sellableItems: string[];
 };
 
-export type ShopItem = {
-  itemId: string;
-  price: bigint;
-};
-
 export type Spell = SpellTemplate & {
   balance: string;
   itemId: Entity;

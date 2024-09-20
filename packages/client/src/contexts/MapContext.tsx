@@ -25,7 +25,7 @@ import {
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
-import { type Character, type Monster, Shop, ShopItem } from '../utils/types';
+import { type Character, type Monster, Shop } from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
@@ -34,7 +34,6 @@ type MapContextType = {
   allCharacters: Character[];
   allMonsters: Monster[];
   allShops: Shop[];
-  allShopItems: ShopItem[];
   inSafetyZone: boolean;
   isFetchingEntities: boolean;
   isSpawned: boolean;
@@ -50,7 +49,6 @@ const MapContext = createContext<MapContextType>({
   allCharacters: [],
   allMonsters: [],
   allShops: [],
-  allShopItems: [],
   inSafetyZone: false,
   isFetchingEntities: false,
   isSpawned: false,
@@ -76,7 +74,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       GoldBalances,
       Position,
       Shops,
-      ShopItems,
       Spawned,
       Stats,
     },
@@ -99,7 +96,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [monstersOnTile, setMonstersOnTile] = useState<Monster[]>([]);
 
   const [allShops, setAllShops] = useState<Shop[]>([]);
-  const [allShopItems, setAllShopItems] = useState<ShopItem[]>([]);
 
   const [shopsOnTile, setShopsOnTile] = useState<Shop[]>([]);
   const position = useComponentValue(
@@ -129,7 +125,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     Has(Shops),
   ]);
 
-  const allShopItemEntities = useEntityQuery([Has(ShopItems)]);
   const allMonsterEntities = useEntityQuery([
     Has(Spawned),
     Has(Stats),
@@ -301,26 +296,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     },
     [EncounterEntity, monsterTemplates, Position, renderError, Spawned, Stats],
   );
-  const getShopItems = useCallback(
-    (entities: Entity[]): ShopItem[] => {
-      try {
-        const _shops: ShopItem[] = entities.map(entity => {
-          const itemId = parseInt(entity);
-          const shopItem = getComponentValueStrict(ShopItems, entity);
-          return {
-            itemId: itemId.toString(),
-            price: shopItem.price,
-          } as ShopItem;
-        });
-
-        return _shops;
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to fetch shops.', e);
-        return [];
-      }
-    },
-    [ShopItems, renderError],
-  );
 
   const getShops = useCallback(
     (entities: Entity[]): Shop[] => {
@@ -361,20 +336,16 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
       const _monsters = getMonsters(allMonsterEntities);
       const _shops = getShops(allShopEntities);
-      const _shopItems = getShopItems(allShopItemEntities);
 
       setAllMonsters(_monsters);
       setAllShops(_shops);
-      setAllShopItems(_shopItems);
     })();
   }, [
     allCharacterEntities,
     allMonsterEntities,
     allShopEntities,
-    allShopItemEntities,
     getAllCharacters,
     getMonsters,
-    getShopItems,
     getShops,
     isSynced,
   ]);
@@ -487,7 +458,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         allCharacters,
         allMonsters,
         allShops,
-        allShopItems,
         inSafetyZone,
         isFetchingEntities,
         isSpawned,

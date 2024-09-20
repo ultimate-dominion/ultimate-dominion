@@ -434,9 +434,7 @@ contract PostDeploy is Script {
         for(uint i = 0; i < 10; ++i){
             sellableItems[i] = i;
             buyableItems[i] = i;
-            if(i < buyableItems.length){
-                stock[i] = 10;
-            }
+            stock[i] = 10;
         }
 
         ShopsData memory newShop = ShopsData({

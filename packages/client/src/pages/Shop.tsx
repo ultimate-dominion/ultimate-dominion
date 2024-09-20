@@ -55,13 +55,16 @@ export const Shop = (): JSX.Element => {
       item: ArmorTemplate | WeaponTemplate | SpellTemplate;
       balance: string | null;
       stock: string | null;
+      index: string;
     }>
   >([]);
+
   const [buyable, setBuyable] = useState<
     Array<{
       item: ArmorTemplate | WeaponTemplate | SpellTemplate;
       balance: string | null;
       stock: string | null;
+      index: string;
     }>
   >([]);
 
@@ -69,7 +72,6 @@ export const Shop = (): JSX.Element => {
     () => [...inventoryArmor, ...inventorySpells, ...inventoryWeapons],
     [inventoryArmor, inventorySpells, inventoryWeapons],
   );
-
   useEffect(() => {
     if (isItemsLoading) return;
     if (items.length === 0) return;
@@ -93,7 +95,7 @@ export const Shop = (): JSX.Element => {
             .map(x => x.tokenId.toString())
             .indexOf(item.tokenId.toString()) > -1,
       )
-      // add back the balances of the item
+      // add back the balances of the item and itemIndexes
       .map(item => {
         const balances =
           items.find(owned => owned.tokenId == item.tokenId)?.balance || 0;
@@ -101,6 +103,7 @@ export const Shop = (): JSX.Element => {
           item: item,
           balance: balances.toString(),
           stock: null,
+          index: shop?.sellableItems.indexOf(item.tokenId).toString(),
         };
       });
 
@@ -115,12 +118,13 @@ export const Shop = (): JSX.Element => {
             .map(item => item.toString())
             .indexOf(item.tokenId.toString()) > -1,
       )
-      // add back the stock of the item
+      // add back the stock and index of the item
       .map((item, i) => {
         return {
           item: item,
           stock: shop.stock[i],
           balance: null,
+          index: shop?.buyableItems.indexOf(item.tokenId).toString(),
         };
       });
 
@@ -164,13 +168,12 @@ export const Shop = (): JSX.Element => {
       <HStack border="2px solid" mt={8} p={8} w="100%">
         <Spacer />
         <Stack h="100%" w="100%">
-          {userCharacter && shopId && sellable && sellable.length > 0 ? (
+          {userCharacter && shopId && sellable && sellable.length ? (
             <ShopHalf
               characterId={userCharacter.id}
               shop={shop}
               items={sellable}
               name={`Character’s Inventory - ${etherToFixedNumber(userCharacter?.goldBalance)} $GOLD`}
-              itemIndexes={shop.sellableItems}
               orderType={OrderType.Selling}
             />
           ) : (
@@ -181,13 +184,12 @@ export const Shop = (): JSX.Element => {
         </Stack>
         <Divider border="1px solid black" mx={8} orientation="vertical" />
         <Stack h="100%" w="100%">
-          {userCharacter && shopId && buyable && buyable.length > 0 ? (
+          {userCharacter && shopId && buyable && buyable.length ? (
             <ShopHalf
               characterId={userCharacter.id}
               items={buyable}
               name={`Shopkeeper’s Inventory - ${etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD`}
               shop={shop}
-              itemIndexes={shop.buyableItems}
               orderType={OrderType.Buying}
             />
           ) : (

@@ -38,7 +38,6 @@ export const ShopHalf = ({
   name,
   items,
   shop,
-  itemIndexes,
   characterId,
   orderType,
 }: {
@@ -48,9 +47,9 @@ export const ShopHalf = ({
     balance: string | null;
     item: ArmorTemplate | SpellTemplate | WeaponTemplate;
     stock: string | null;
+    index: string;
   }>;
   shop: Shop;
-  itemIndexes: Array<string>;
   orderType: OrderType;
 }): JSX.Element => {
   const [entries, setEntries] = useState<
@@ -58,6 +57,7 @@ export const ShopHalf = ({
       balance: string | null;
       item: ArmorTemplate | WeaponTemplate | SpellTemplate;
       stock: string | null;
+      index: string;
     }>
   >([]);
   const [page, setPage] = useState(1);
@@ -87,6 +87,7 @@ export const ShopHalf = ({
       balance: string | null;
       item: ArmorTemplate | SpellTemplate | WeaponTemplate;
       stock: string | null;
+      index: string;
     }> = [...items];
     const searcher = new FuzzySearch(
       [...entriesCopy],
@@ -245,7 +246,7 @@ export const ShopHalf = ({
                 balance={entry.balance}
                 characterId={characterId}
                 item={entry.item}
-                itemIndex={itemIndexes[i]}
+                itemIndex={entry.index}
                 key={`shop-row-${i}`}
                 orderType={orderType}
                 shop={shop}
