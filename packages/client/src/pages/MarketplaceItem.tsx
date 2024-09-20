@@ -41,11 +41,7 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
-import {
-  CHARACTER_CREATION_PATH,
-  HOME_PATH,
-  MARKETPLACE_PATH,
-} from '../Routes';
+import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -90,7 +86,8 @@ export const MarketplaceItem = (): JSX.Element => {
     isRefreshing,
     refreshCharacter,
   } = useCharacter();
-  const { goldAllowance, itemsAllowance } = useAllowance();
+  const { goldMarketplaceAllowance, itemsMarketplaceAllowance } =
+    useAllowance();
 
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -222,13 +219,13 @@ export const MarketplaceItem = (): JSX.Element => {
 
         if (
           orderType === OrderType.Buying &&
-          goldAllowance < parseEther(orderPrice)
+          goldMarketplaceAllowance < parseEther(orderPrice)
         ) {
           onOpenAllowanceModal();
           return;
         }
 
-        if (orderType === OrderType.Selling && !itemsAllowance) {
+        if (orderType === OrderType.Selling && !itemsMarketplaceAllowance) {
           onOpenAllowanceModal();
           return;
         }
@@ -298,12 +295,12 @@ export const MarketplaceItem = (): JSX.Element => {
     },
     [
       createOrder,
-      goldAllowance,
+      goldMarketplaceAllowance,
       goldTokenAddress,
       insufficientGold,
       invalidOrderPrice,
       itemsAddress,
-      itemsAllowance,
+      itemsMarketplaceAllowance,
       onCloseAllowanceModal,
       onOpenAllowanceModal,
       onOpenConfirmationModal,
@@ -387,11 +384,11 @@ export const MarketplaceItem = (): JSX.Element => {
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(MARKETPLACE_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Marketplace
+          Back
         </Button>
         <HStack h="100%" justifyContent="center" w="100%">
           <Spinner size="xl" />
@@ -407,11 +404,11 @@ export const MarketplaceItem = (): JSX.Element => {
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(MARKETPLACE_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Marketplace
+          Back
         </Button>
         <Text mt={12}>An erro occurred</Text>
       </VStack>
@@ -425,11 +422,11 @@ export const MarketplaceItem = (): JSX.Element => {
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(MARKETPLACE_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Marketplace
+          Back
         </Button>
         <Text>Item not found</Text>
       </VStack>
@@ -447,11 +444,11 @@ export const MarketplaceItem = (): JSX.Element => {
         <Button
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
-          onClick={() => navigate(MARKETPLACE_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Marketplace
+          Back
         </Button>
         <Text size={{ base: '2xs', sm: 'sm' }}>
           $GOLD Balance: {etherToFixedNumber(userCharacter.externalGoldBalance)}

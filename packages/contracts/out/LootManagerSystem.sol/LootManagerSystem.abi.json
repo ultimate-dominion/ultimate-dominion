@@ -151,7 +151,25 @@
   },
   {
     "type": "function",
-    "name": "dropGold",
+    "name": "dropGoldToEscrow",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "dropGoldToPlayer",
     "inputs": [
       {
         "name": "characterId",

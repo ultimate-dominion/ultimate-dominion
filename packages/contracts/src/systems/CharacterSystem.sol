@@ -141,7 +141,7 @@ contract CharacterSystem is System {
         tempStats.level = 1;
         tempStats.currentHp = int256(tempStats.maxHp);
         Stats.set(characterId, tempStats);
-        IWorld(_world()).UD__dropGold(characterId, 5 ether);
+        IWorld(_world()).UD__dropGoldToPlayer(characterId, 5 ether);
         // issue starter gear
         IWorld(_world()).UD__issueStarterItems(characterId);
         CharactersData memory charData = Characters.get(characterId);

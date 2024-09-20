@@ -48,7 +48,7 @@ contract AdminSystem is System {
     }
 
     function adminDropGold(bytes32 characterId, uint256 goldAmount) public onlyAdmin {
-        IWorld(_world()).UD__dropGold(characterId, goldAmount);
+        IWorld(_world()).UD__dropGoldToPlayer(characterId, goldAmount);
     }
 
     function adminDropItem(bytes32 characterId, uint256 itemId, uint256 amount) public onlyAdmin {

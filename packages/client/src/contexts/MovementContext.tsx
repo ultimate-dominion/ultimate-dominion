@@ -19,11 +19,13 @@ import { useMUD } from './MUDContext';
 type MovementContextType = {
   isRefreshing: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
+  onSetIsMovementDisabled: (isDisabled: boolean) => void;
 };
 
 const MovementContext = createContext<MovementContextType>({
   isRefreshing: false,
   onMove: () => {},
+  onSetIsMovementDisabled: () => {},
 });
 
 export type MovementProviderProps = {
@@ -46,10 +48,16 @@ export const MovementProvider = ({
   const { isMessageInputFocused } = useChat();
 
   const [isMoving, setIsMoving] = useState(false);
+  const [isMovementDisabled, setIsMovementDisabled] = useState(false);
+
+  const onSetIsMovementDisabled = useCallback((isDisabled: boolean) => {
+    setIsMovementDisabled(isDisabled);
+  }, []);
 
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
       try {
+        if (isMovementDisabled) return;
         if (isMoving) return;
         if (!isSpawned) return;
         if (currentBattle) return;
@@ -116,6 +124,7 @@ export const MovementProvider = ({
       currentBattle,
       delegatorAddress,
       isMessageInputFocused,
+      isMovementDisabled,
       isMoving,
       isSpawned,
       move,
@@ -168,6 +177,7 @@ export const MovementProvider = ({
       value={{
         isRefreshing: isFetchingEntities || isMoving,
         onMove,
+        onSetIsMovementDisabled,
       }}
     >
       {children}
