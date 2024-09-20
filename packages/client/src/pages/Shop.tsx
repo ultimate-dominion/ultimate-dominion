@@ -82,8 +82,6 @@ export const Shop = (): JSX.Element => {
       .filter(item => shop.sellableItems.includes(item.tokenId))
       // add back the balances of the item and itemIndexes
       .map(item => {
-        const balances =
-          items.find(owned => owned.tokenId == item.tokenId)?.balance || 0;
         const index = shop?.sellableItems.indexOf(item.tokenId).toString();
         return {
           index: index,
