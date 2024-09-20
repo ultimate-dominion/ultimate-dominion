@@ -14,7 +14,7 @@ export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
     systemCalls: { restock },
   } = useMUD();
 
-  const restockAndEnter = useCallback(async () => {
+  const onRestockAndEnter = useCallback(async () => {
     try {
       await restock(shopId);
     } catch (e) {
@@ -23,13 +23,14 @@ export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
       navigate(`/shops/${shopId}`);
     }
   }, [navigate, renderError, restock, shopId]);
+
   return (
     <HStack
       as="button"
       border="1px solid transparent"
       h={ROW_HEIGHT}
       justifyContent="space-between"
-      onClick={restockAndEnter}
+      onClick={onRestockAndEnter}
       px={{ base: 1, sm: 2, md: 4 }}
       transition="all 0.3s ease"
       w="100%"

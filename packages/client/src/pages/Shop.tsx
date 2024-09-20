@@ -46,8 +46,8 @@ export const Shop = (): JSX.Element => {
   const { allShops } = useMap();
 
   const shop = useMemo(() => {
-    if (!shopId || !allShops) return null;
-    return allShops.find(shop => shop.shopId === shopId);
+    if (!(shopId && allShops)) return null;
+    return allShops.find(shop => shop.shopId === shopId) ?? null;
   }, [allShops, shopId]);
 
   const [sellable, setSellable] = useState<
@@ -76,32 +76,15 @@ export const Shop = (): JSX.Element => {
     if (isItemsLoading) return;
     if (items.length === 0) return;
     if (!shop) return;
-    const sellableInventory = [
-      ...armorTemplates,
-      ...spellTemplates,
-      ...weaponTemplates,
-    ]
+
+    const sellableInventory = items
       // filter out the items this shop does not sell
-      .filter(
-        item =>
-          shop.sellableItems
-            .map(item => item.toString())
-            .indexOf(item.tokenId.toString()) > -1,
-      )
-      // filter out the items the user does not have
-      .filter(
-        item =>
-          items
-            .map(x => x.tokenId.toString())
-            .indexOf(item.tokenId.toString()) > -1,
-      )
+      .filter(item => shop.sellableItems.includes(item.tokenId))
       // add back the balances of the item and itemIndexes
       .map(item => {
-        const balances =
-          items.find(owned => owned.tokenId == item.tokenId)?.balance || 0;
         return {
           item: item,
-          balance: balances.toString(),
+          balance: item.balance,
           stock: null,
           index: shop?.sellableItems.indexOf(item.tokenId).toString(),
         };
@@ -112,12 +95,7 @@ export const Shop = (): JSX.Element => {
       ...spellTemplates,
       ...armorTemplates,
     ]
-      .filter(
-        item =>
-          shop.buyableItems
-            .map(item => item.toString())
-            .indexOf(item.tokenId.toString()) > -1,
-      )
+      .filter(item => shop.buyableItems.includes(item.tokenId))
       // add back the stock and index of the item
       .map((item, i) => {
         return {

@@ -63,9 +63,7 @@ import {
     WeaponStatDetails,
     ArmorStatDetails,
     SpellTemplateDetails,
-    ConsumableTemplateDetails,
-    ShopItemsTemplate,
-    ShopItemsData
+    ConsumableTemplateDetails
 } from "@interfaces/Structs.sol";
 
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
