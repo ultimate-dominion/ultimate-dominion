@@ -96,7 +96,7 @@ export const ShopItemRow = ({
   const priceSingle = useMemo(() => {
     if (orderType == OrderType.Selling)
       return (item.price * shop.priceMarkdown) / 100n;
-    return item.price + item.price * (shop.priceMarkup / 100n);
+    return item.price + (item.price * shop.priceMarkup) / 100n;
   }, [item.price, orderType, shop.priceMarkdown, shop.priceMarkup]);
 
   const insufficientGold = useMemo(() => {

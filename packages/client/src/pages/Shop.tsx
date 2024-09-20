@@ -99,11 +99,12 @@ export const Shop = (): JSX.Element => {
       .map(item => {
         const balances =
           items.find(owned => owned.tokenId == item.tokenId)?.balance || 0;
+        const index = shop?.sellableItems.indexOf(item.tokenId).toString()
         return {
+          index: index,
           item: item,
           balance: balances.toString(),
           stock: null,
-          index: shop?.sellableItems.indexOf(item.tokenId).toString(),
         };
       });
 
@@ -120,11 +121,12 @@ export const Shop = (): JSX.Element => {
       )
       // add back the stock and index of the item
       .map((item, i) => {
+        const index = shop?.buyableItems.indexOf(item.tokenId).toString()
         return {
           item: item,
-          stock: shop.stock[i],
+          stock: shop.stock[index],
           balance: null,
-          index: shop?.buyableItems.indexOf(item.tokenId).toString(),
+          index: index,
         };
       });
 
