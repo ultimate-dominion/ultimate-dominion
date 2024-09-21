@@ -58,15 +58,15 @@ contract Test_ShopSystem is SetUp, GasReporter {
         vm.startPrank(deployer);
         shopSystemAddress = world.UD__shopSystemAddress();
         itemsToken = IERC1155(world.UD__getItemsContract());
-        uint256 maxGold =  Shops.getMaxGold(shopId);
+        uint256 maxGold = Shops.getMaxGold(shopId);
         world.UD__setAdmin(address(this), true);
         address stuffBearer = makeAddr("stuffBearer");
-        bytes32 stuffBearerCharacterID = world.UD__mintCharacter(stuffBearer, bytes32("stuffBearer"), "test_Character_URI");
-        world.UD__dropGold(stuffBearerCharacterID,maxGold);
+        bytes32 stuffBearerCharacterID =
+            world.UD__mintCharacter(stuffBearer, bytes32("stuffBearer"), "test_Character_URI");
+        world.UD__dropGold(stuffBearerCharacterID, maxGold);
         vm.startPrank(stuffBearer);
         goldToken.transfer(shopSystemAddress, maxGold);
         vm.startPrank(deployer);
-
     }
 
     function test_itemMarkup() public {
@@ -75,8 +75,8 @@ contract Test_ShopSystem is SetUp, GasReporter {
         uint256 markup = world.UD__itemMarkup(shopId, item);
         assertEq(price, 1 ether, "expecting item 1 to have a price of 1 ether");
         assertEq(markup, price + 0.2 ether);
-
     }
+
     function test_itemMarkdown() public {
         uint256 item = 1;
         uint256 price = world.UD__itemBase(item);
@@ -87,19 +87,14 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
     function test_Buy() public {
         startGasReport("purchase an item from the shop");
-        uint256 balance = 9 ether;
+        uint256 balance = goldToken.balanceOf(bob);
         uint256 amount = 1;
         uint256 itemIndex = 1;
-        uint256[] memory buyable = Shops.getBuyableItems(shopId);        
+        uint256[] memory buyable = Shops.getBuyableItems(shopId);
         // create userA
-        address userA = makeAddr("userA");
-        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
-        
-        // give userA gold
-        world.UD__dropGold(userACharacterID, balance);
-        vm.startPrank(userA);
-        // spawn and move to 0,0
-        world.UD__spawn(userACharacterID);
+        vm.startPrank(bob);
+        // spawn
+        world.UD__spawn(bobCharacterId);
 
         // have userA set an allowance for their items
         itemsToken.setApprovalForAll(shopSystemAddress, true);
@@ -107,15 +102,27 @@ contract Test_ShopSystem is SetUp, GasReporter {
         goldToken.approve(shopSystemAddress, MAX_INT);
         // have userA buy from the shop
         // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
-        world.UD__buy(amount, shopId, itemIndex, userACharacterID);
+        world.UD__buy(amount, shopId, itemIndex, bobCharacterId);
         // userA should now have + amount items
-        assertEq(itemsToken.balanceOf(userA, buyable[itemIndex]), amount, "User does not have appropriate items");
+        assertEq(itemsToken.balanceOf(bob, buyable[itemIndex]), amount, "User does not have appropriate items");
         // userA should now have balance - amount * markup(amount) gold
-        assertEq(goldToken.balanceOf(userA), balance - (amount * world.UD__itemMarkup(shopId, buyable[itemIndex])), "User does not have appropriate gold");
+        assertEq(
+            goldToken.balanceOf(bob),
+            balance - (amount * world.UD__itemMarkup(shopId, buyable[itemIndex])),
+            "User does not have appropriate gold"
+        );
         // shop stock should now be restock - amount items
-        assertEq(Shops.getStock(shopId)[itemIndex], Shops.getRestock(shopId)[itemIndex] - amount, "Contract does not have appropriate stock");
+        assertEq(
+            Shops.getStock(shopId)[itemIndex],
+            Shops.getRestock(shopId)[itemIndex] - amount,
+            "Contract does not have appropriate stock"
+        );
         // shop gold should now be + amount * markup(amount) gold
-        assertEq(Shops.getGold(shopId), Shops.getMaxGold(shopId) + (amount * world.UD__itemMarkup(shopId, buyable[itemIndex])), "Contract does not have appropriate gold");
+        assertEq(
+            Shops.getGold(shopId),
+            Shops.getMaxGold(shopId) + (amount * world.UD__itemMarkup(shopId, buyable[itemIndex])),
+            "Contract does not have appropriate gold"
+        );
         endGasReport();
     }
 
@@ -124,11 +131,11 @@ contract Test_ShopSystem is SetUp, GasReporter {
         uint256 balance = 9 ether;
         uint256 amount = 1;
         uint256 itemIndex = 1;
-        uint256[] memory buyable = Shops.getBuyableItems(shopId);        
+        uint256[] memory buyable = Shops.getBuyableItems(shopId);
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
-        
+
         // create userB
         address userB = makeAddr("userB");
         bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("NotAlan"), "test_Character_URI");
@@ -140,7 +147,6 @@ contract Test_ShopSystem is SetUp, GasReporter {
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
 
-
         // have userA set an allowance for their items
         itemsToken.setApprovalForAll(shopSystemAddress, true);
         // have userA set max allowance for their gold
@@ -150,7 +156,6 @@ contract Test_ShopSystem is SetUp, GasReporter {
         vm.startPrank(userB);
         // spawn and move to 0,0
         world.UD__spawn(userBCharacterID);
-
 
         // have userB set an allowance for their items
         itemsToken.setApprovalForAll(shopSystemAddress, true);
@@ -170,7 +175,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         uint256 balance = 9 ether;
         uint256 amount = 1;
         uint256 itemIndex = 1;
-        uint256[] memory buyable = Shops.getBuyableItems(shopId);        
+        uint256[] memory buyable = Shops.getBuyableItems(shopId);
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
@@ -194,7 +199,6 @@ contract Test_ShopSystem is SetUp, GasReporter {
         vm.expectRevert(bytes("insufficient stock"));
         world.UD__buy(amount, shopId, itemIndex, userACharacterID);
         endGasReport();
-
     }
 
     function test_BuyWrongPosition() public {
@@ -202,11 +206,11 @@ contract Test_ShopSystem is SetUp, GasReporter {
         uint256 balance = 9 ether;
         uint256 amount = 1;
         uint256 itemIndex = 1;
-        uint256[] memory buyable = Shops.getBuyableItems(shopId);        
+        uint256[] memory buyable = Shops.getBuyableItems(shopId);
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
-        
+
         // give userA gold
         world.UD__dropGold(userACharacterID, balance);
         vm.startPrank(userA);
@@ -221,9 +225,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         vm.expectRevert(bytes("Cannot buy from a shop at a distance"));
         world.UD__buy(amount, shopId, itemIndex, userACharacterID);
         endGasReport();
-
     }
-
 
     function test_Sell() public {
         startGasReport("sell an item to the shop");
@@ -250,13 +252,29 @@ contract Test_ShopSystem is SetUp, GasReporter {
         // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
         world.UD__sell(amount, shopId, itemIndex, userACharacterID);
         // userA should now have - amount items
-        assertEq(itemsToken.balanceOf(userA, Shops.getBuyableItems(shopId)[itemIndex]), amount - amount, "User does not have appropriate items");
+        assertEq(
+            itemsToken.balanceOf(userA, Shops.getBuyableItems(shopId)[itemIndex]),
+            amount - amount,
+            "User does not have appropriate items"
+        );
         // userA should now have balance + amount * markdown(amount) gold
-        assertEq(goldToken.balanceOf(userA), balance + (amount * world.UD__itemMarkdown(shopId, itemIndex)), "User does not have appropriate gold");
+        assertEq(
+            goldToken.balanceOf(userA),
+            balance + (amount * world.UD__itemMarkdown(shopId, itemIndex)),
+            "User does not have appropriate gold"
+        );
         // shop stock should now be restock + amount items
-        assertEq(Shops.getStock(shopId)[itemIndex], Shops.getRestock(shopId)[itemIndex] + amount, "Contract does not have appropriate stock");
+        assertEq(
+            Shops.getStock(shopId)[itemIndex],
+            Shops.getRestock(shopId)[itemIndex] + amount,
+            "Contract does not have appropriate stock"
+        );
         // shop gold should now be - price * markup(amount) gold
-        assertEq(Shops.getGold(shopId), Shops.getMaxGold(shopId) - (amount * world.UD__itemMarkdown(shopId, itemIndex)), "Contract does not have appropriate gold");
+        assertEq(
+            Shops.getGold(shopId),
+            Shops.getMaxGold(shopId) - (amount * world.UD__itemMarkdown(shopId, itemIndex)),
+            "Contract does not have appropriate gold"
+        );
         endGasReport();
     }
 
@@ -265,11 +283,11 @@ contract Test_ShopSystem is SetUp, GasReporter {
         uint256 balance = 9 ether;
         uint256 amount = 1;
         uint256 itemIndex = 1;
-        uint256[] memory sellable = Shops.getSellableItems(shopId);        
+        uint256[] memory sellable = Shops.getSellableItems(shopId);
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
-        
+
         // create userB
         address userB = makeAddr("userB");
         bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("NotAlan"), "test_Character_URI");
@@ -304,7 +322,6 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__sell(amount, shopId, itemIndex, userACharacterID);
 
         endGasReport();
-
     }
 
     function test_SellNotEnough() public {
@@ -312,7 +329,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         uint256 balance = 9 ether;
         uint256 amount = 1;
         uint256 itemIndex = 1;
-        uint256[] memory sellable = Shops.getSellableItems(shopId);        
+        uint256[] memory sellable = Shops.getSellableItems(shopId);
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
@@ -365,10 +382,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         endGasReport();
     }
 
-
-
-
-    function test_Restock() public{
+    function test_Restock() public {
         // create userA
         uint256 item = 1;
         address userA = makeAddr("userA");
@@ -379,10 +393,11 @@ contract Test_ShopSystem is SetUp, GasReporter {
         Shops.setStock(shopId, stock);
         assertEq(Shops.getStock(shopId)[item], 0);
         world.UD__restock(shopId);
-        // the stock should equal 
+        // the stock should equal
         assertEq(Shops.getStock(shopId)[item], Shops.getRestock(shopId)[item]);
     }
-        function test_RestockTooSoon() public{
+
+    function test_RestockTooSoon() public {
         // create userA
         uint256 item = 1;
         address userA = makeAddr("userA");
@@ -400,6 +415,6 @@ contract Test_ShopSystem is SetUp, GasReporter {
         Shops.setStock(shopId, stock);
         world.UD__restock(shopId);
         assertEq(Shops.getStock(shopId)[item], 0);
-        // the stock should equal 
+        // the stock should equal
     }
 }

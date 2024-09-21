@@ -81,16 +81,6 @@ declare const abi: [
         "internalType": "bytes32"
       },
       {
-        "name": "currentX",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "currentY",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
         "name": "x",
         "type": "uint16",
         "internalType": "uint16"
@@ -2518,7 +2508,7 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getMobPosition",
+    "name": "UD__getMobPositionFromId",
     "inputs": [
       {
         "name": "entityId",

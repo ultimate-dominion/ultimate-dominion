@@ -227,7 +227,6 @@ export function createSystemCalls(
     characterId: string,
   ): SystemCallReturn => {
     try {
-
       const tx = await worldContract.write.UD__sell([
         BigInt(amount),
         shopId as `0x${string}`,

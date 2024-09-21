@@ -17,7 +17,8 @@
     "lint:sol-tests": "solhint -c .solhint.tests.json 'test/**/*.sol'",
     "prettier": "prettier --write 'src/**/*.sol'",
     "solhint": "solhint --config ./.solhint.json 'src/**/*.sol' --fix",
-    "test": "mud build && forge t -vvv --rpc-url http://127.0.0.1:8545"
+    "test": "mud build && forge t -vvv --rpc-url http://127.0.0.1:8545",
+    "match-test": "forge t -vvv --rpc-url http://127.0.0.1:8545 --match-test"
   },
   "dependencies": {
     "@latticexyz/cli": "2.0.11",

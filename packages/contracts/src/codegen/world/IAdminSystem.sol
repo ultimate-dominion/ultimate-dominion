@@ -26,7 +26,7 @@ interface IAdminSystem {
 
   function UD__adminRemoveEntity(bytes32 entityId) external;
 
-  function UD__adminMoveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) external;
+  function UD__adminMoveEntity(bytes32 entityId, uint16 x, uint16 y) external;
 
   function UD__getSystemAddress(ResourceId systemId) external view returns (address);
 
