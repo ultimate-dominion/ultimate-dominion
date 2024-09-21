@@ -227,18 +227,7 @@ export function createSystemCalls(
     characterId: string,
   ): SystemCallReturn => {
     try {
-      // await publicClient.simulateContract({
-      //   abi: worldContract.abi,
-      //   account: delegatorAddress,
-      //   address: worldContract.address,
-      //   args: [
-      //     BigInt(amount),
-      //     shopId as `0x${string}`,
-      //     BigInt(itemIndex),
-      //     characterId as `0x${string}`,
-      //   ],
-      //   functionName: 'UD__buy',
-      // });
+
       const tx = await worldContract.write.UD__sell([
         BigInt(amount),
         shopId as `0x${string}`,

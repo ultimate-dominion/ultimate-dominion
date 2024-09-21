@@ -66,8 +66,13 @@ export const ShopItemRow = ({
   } = useMUD();
   const { renderSuccess, renderError } = useToast();
 
-  const { goldAllowanceShops, itemsAllowanceShops, refreshAllowances } =
-    useAllowance();
+  const {
+    goldAllowanceShops,
+    itemsAllowanceShops,
+    refreshAllowances,
+    isApprovingGoldShops,
+    isApprovingItemsShops,
+  } = useAllowance();
   const { character: userCharacter, refreshCharacter } = useCharacter();
 
   const {
@@ -78,6 +83,7 @@ export const ShopItemRow = ({
 
   const [amount, setAmount] = useState(1);
   const [showError, setShowError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -111,20 +117,40 @@ export const ShopItemRow = ({
         return;
       }
       try {
+        setIsLoading(true);
         if (orderType == OrderType.Buying && goldAllowanceShops < price) {
           onAllowanceOpen();
+          setIsLoading(false);
           return;
         }
         if (orderType == OrderType.Selling && !itemsAllowanceShops) {
           onAllowanceOpen();
+          setIsLoading(false);
           return;
         }
         if (orderType == OrderType.Buying) {
-          await buy(amount.toString(), shop.shopId, itemIndex, characterId);
+          const { error, success } = await buy(
+            amount.toString(),
+            shop.shopId,
+            itemIndex,
+            characterId,
+          );
+          if (error && !success) {
+            throw new Error(error);
+          }
+
           renderSuccess('Item purchased successfully!');
           onAllowanceClose();
         } else {
-          await sell(amount.toString(), shop.shopId, itemIndex, characterId);
+          const { error, success } = sell(
+            amount.toString(),
+            shop.shopId,
+            itemIndex,
+            characterId,
+          );
+          if (error && !success) {
+            throw new Error(error);
+          }
           renderSuccess('Item sold successfully!');
           onAllowanceClose();
         }
@@ -134,6 +160,7 @@ export const ShopItemRow = ({
       } finally {
         refreshAllowances();
         refreshCharacter();
+        setIsLoading(false);
       }
     },
     [
@@ -221,7 +248,7 @@ export const ShopItemRow = ({
           </Text>
         </HStack>
         <ShopAllowanceModal
-          isCompleting={false}
+          isCompleting={isLoading}
           isOpen={isAllowanceOpen}
           itemName={name}
           onClose={onAllowanceClose}
@@ -387,19 +414,55 @@ export const ShopItemRow = ({
                         )}
                         {orderType == OrderType.Buying &&
                           goldAllowanceShops < price && (
-                            <Button type="submit">Approve</Button>
+                            <Button
+                              type="submit"
+                              isLoading={
+                                isApprovingGoldShops ||
+                                isApprovingItemsShops ||
+                                isLoading
+                              }
+                            >
+                              Approve
+                            </Button>
                           )}
                         {orderType == OrderType.Selling &&
                           !itemsAllowanceShops && (
-                            <Button type="submit">Approve</Button>
+                            <Button
+                              type="submit"
+                              isLoading={
+                                isApprovingGoldShops ||
+                                isApprovingItemsShops ||
+                                isLoading
+                              }
+                            >
+                              Approve
+                            </Button>
                           )}
                         {orderType == OrderType.Buying &&
                           goldAllowanceShops >= price && (
-                            <Button type="submit">Buy</Button>
+                            <Button
+                              type="submit"
+                              isLoading={
+                                isApprovingGoldShops ||
+                                isApprovingItemsShops ||
+                                isLoading
+                              }
+                            >
+                              Buy
+                            </Button>
                           )}
                         {orderType == OrderType.Selling &&
                           itemsAllowanceShops && (
-                            <Button type="submit">Sell</Button>
+                            <Button
+                              type="submit"
+                              isLoading={
+                                isApprovingGoldShops ||
+                                isApprovingItemsShops ||
+                                isLoading
+                              }
+                            >
+                              Sell
+                            </Button>
                           )}
                       </FormControl>
                     </VStack>
