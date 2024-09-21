@@ -81,7 +81,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         uint256 item = 1;
         uint256 price = world.UD__itemBase(item);
         uint256 markdown = world.UD__itemMarkdown(shopId, item);
-        assertEq(price, 1 ether, "expecting item 1 to have a price of 1");
+        assertEq(price, 1 ether, "expecting item 1 to have a price of 1 ether");
         assertEq(markdown, 0.5 ether);
     }
 
@@ -94,10 +94,13 @@ contract Test_ShopSystem is SetUp, GasReporter {
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
-
+        
         // give userA gold
         world.UD__dropGold(userACharacterID, balance);
         vm.startPrank(userA);
+        // spawn and move to 0,0
+        world.UD__spawn(userACharacterID);
+
         // have userA set an allowance for their items
         itemsToken.setApprovalForAll(shopSystemAddress, true);
         // have userA set max allowance for their gold
@@ -116,6 +119,112 @@ contract Test_ShopSystem is SetUp, GasReporter {
         endGasReport();
     }
 
+    function test_BuyWrongPerson() public {
+        startGasReport("purchase an item from the shop for another person");
+        uint256 balance = 9 ether;
+        uint256 amount = 1;
+        uint256 itemIndex = 1;
+        uint256[] memory buyable = Shops.getBuyableItems(shopId);        
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+        
+        // create userB
+        address userB = makeAddr("userB");
+        bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("NotAlan"), "test_Character_URI");
+
+        // give userA gold
+        world.UD__dropGold(userACharacterID, balance);
+        world.UD__dropGold(userBCharacterID, balance);
+        vm.startPrank(userA);
+        // spawn and move to 0,0
+        world.UD__spawn(userACharacterID);
+
+
+        // have userA set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userA set max allowance for their gold
+        goldToken.approve(shopSystemAddress, MAX_INT);
+
+        // give userB gold
+        vm.startPrank(userB);
+        // spawn and move to 0,0
+        world.UD__spawn(userBCharacterID);
+
+
+        // have userB set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userB set max allowance for their gold
+        goldToken.approve(shopSystemAddress, MAX_INT);
+
+        // have userA buy from the shop for user B
+        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        vm.expectRevert(bytes("Cannot buy an item for someone else"));
+        world.UD__buy(amount, shopId, itemIndex, userACharacterID);
+
+        endGasReport();
+    }
+
+    function test_BuyNotEnough() public {
+        startGasReport("purchase an item from the shop without enough stock");
+        uint256 balance = 9 ether;
+        uint256 amount = 1;
+        uint256 itemIndex = 1;
+        uint256[] memory buyable = Shops.getBuyableItems(shopId);        
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+
+        // give userA gold
+        world.UD__dropGold(userACharacterID, balance);
+        uint256[] memory stock = Shops.getStock(shopId);
+        stock[itemIndex] = 0;
+        Shops.setStock(shopId, stock);
+        vm.startPrank(userA);
+        // spawn and move to 0,0
+        world.UD__spawn(userACharacterID);
+
+        // have userA set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userA set max allowance for their gold
+        goldToken.approve(shopSystemAddress, MAX_INT);
+        // set the stock to 0
+        // have userA buy from the shop
+        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        vm.expectRevert(bytes("insufficient stock"));
+        world.UD__buy(amount, shopId, itemIndex, userACharacterID);
+        endGasReport();
+
+    }
+
+    function test_BuyWrongPosition() public {
+        startGasReport("purchase an item from the shop from the wrong position");
+        uint256 balance = 9 ether;
+        uint256 amount = 1;
+        uint256 itemIndex = 1;
+        uint256[] memory buyable = Shops.getBuyableItems(shopId);        
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+        
+        // give userA gold
+        world.UD__dropGold(userACharacterID, balance);
+        vm.startPrank(userA);
+        world.UD__spawn(userACharacterID);
+        world.UD__move(userACharacterID, 0, 1);
+        // have userA set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userA set max allowance for their gold
+        goldToken.approve(shopSystemAddress, MAX_INT);
+        // have userA buy from the shop
+        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        vm.expectRevert(bytes("Cannot buy from a shop at a distance"));
+        world.UD__buy(amount, shopId, itemIndex, userACharacterID);
+        endGasReport();
+
+    }
+
+
     function test_Sell() public {
         startGasReport("sell an item to the shop");
         uint256 balance = 9 ether;
@@ -128,12 +237,15 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
         // give userA an item
         world.UD__dropItem(userACharacterID, itemIndex, amount);
+        world.UD__dropGold(userACharacterID, balance);
         vm.startPrank(userA);
+        // spawn and move to 0,0
+        world.UD__spawn(userACharacterID);
+
         // have userA set an allowance for their items
         itemsToken.setApprovalForAll(shopSystemAddress, true);
         // have userA set max allowance for their gold
         goldToken.approve(shops, MAX_INT);
-        console.log(world.UD__getLootManagerSystem());
         // have userA sell to the shop
         // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
         world.UD__sell(amount, shopId, itemIndex, userACharacterID);
@@ -147,6 +259,114 @@ contract Test_ShopSystem is SetUp, GasReporter {
         assertEq(Shops.getGold(shopId), Shops.getMaxGold(shopId) - (amount * world.UD__itemMarkdown(shopId, itemIndex)), "Contract does not have appropriate gold");
         endGasReport();
     }
+
+    function test_SellWrongPerson() public {
+        startGasReport("sell an item from the shop for another person");
+        uint256 balance = 9 ether;
+        uint256 amount = 1;
+        uint256 itemIndex = 1;
+        uint256[] memory sellable = Shops.getSellableItems(shopId);        
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+        
+        // create userB
+        address userB = makeAddr("userB");
+        bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("NotAlan"), "test_Character_URI");
+
+        // give userA gold and items
+        world.UD__dropGold(userACharacterID, balance);
+        world.UD__dropItem(userACharacterID, itemIndex, amount);
+        // give userB gold and items
+        world.UD__dropGold(userBCharacterID, balance);
+        world.UD__dropItem(userBCharacterID, itemIndex, amount);
+        vm.startPrank(userA);
+        // spawn and move to 0,0
+        world.UD__spawn(userACharacterID);
+
+        // have userA set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userA set max allowance for their gold
+        goldToken.approve(shopSystemAddress, MAX_INT);
+
+        vm.startPrank(userB);
+        // spawn and move to 0,0
+        world.UD__spawn(userBCharacterID);
+
+        // have userB set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userB set max allowance for their gold
+        goldToken.approve(shopSystemAddress, MAX_INT);
+
+        // have userA buy from the shop for user B
+        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        vm.expectRevert(bytes("Cannot sell an item for someone else"));
+        world.UD__sell(amount, shopId, itemIndex, userACharacterID);
+
+        endGasReport();
+
+    }
+
+    function test_SellNotEnough() public {
+        startGasReport("sell an item to a shop without enough gold");
+        uint256 balance = 9 ether;
+        uint256 amount = 1;
+        uint256 itemIndex = 1;
+        uint256[] memory sellable = Shops.getSellableItems(shopId);        
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+
+        // give userA gold
+        world.UD__dropGold(userACharacterID, balance);
+        Shops.setGold(shopId, 0);
+        vm.startPrank(userA);
+        // spawn and move to 0,0
+        world.UD__spawn(userACharacterID);
+
+        // have userA set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userA set max allowance for their gold
+        goldToken.approve(shopSystemAddress, MAX_INT);
+        // set the stock to 0
+        // have userA buy from the shop
+        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        vm.expectRevert(bytes("Shop does not have enough gold"));
+        world.UD__sell(amount, shopId, itemIndex, userACharacterID);
+        endGasReport();
+    }
+
+    function test_SellWrongPosition() public {
+        startGasReport("sell an item to the shop from a distance");
+        uint256 balance = 9 ether;
+        uint256 amount = 1;
+        uint256 itemIndex = 1;
+        address shops = world.UD__shopSystemAddress();
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+
+        // give userA an item
+        world.UD__dropItem(userACharacterID, itemIndex, amount);
+        world.UD__dropGold(userACharacterID, balance);
+        vm.startPrank(userA);
+        // move away from 0,0
+        world.UD__spawn(userACharacterID);
+        world.UD__move(userACharacterID, 0, 1);
+
+        // have userA set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userA set max allowance for their gold
+        goldToken.approve(shops, MAX_INT);
+        // have userA sell to the shop
+        vm.expectRevert(bytes("Cannot sell to a shop at a distance"));
+        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        world.UD__sell(amount, shopId, itemIndex, userACharacterID);
+        endGasReport();
+    }
+
+
+
 
     function test_Restock() public{
         // create userA

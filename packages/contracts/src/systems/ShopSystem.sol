@@ -32,18 +32,26 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param itemIndex the index of the item in the buyableItems array
      * @param characterId the id of the character buying
      */
-    function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public nonReentrant {
+    function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public {
         // check that the character is the player
         require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "Cannot buy an item for someone else");
 
         // check that the players position is the same as the shop's position
-        (uint16 characterX, uint16 characterY)= IWorld(_world()).UD__getMobPosition(shopId);
+        // Tried "isAtPosition", did not pass tests
+        (uint16 characterX, uint16 characterY)= IWorld(_world()).UD__getMobPosition(characterId);
         require(IWorld(_world()).UD__isAtPosition(shopId, characterX, characterY) == true, "Cannot buy from a shop at a distance");
+
+
+        // check that the players position is the same as the shop's position
+        // (uint16 characterX, uint16 characterY)= IWorld(_world()).UD__getMobPosition(characterId);
+        // (uint16 shopX, uint16 shopY) = IWorld(_world()).UD__getMobPosition(shopId);
+        // require(characterX == shopX && characterY == shopY, "Cannot buy from a shop from a distance");
+
 
         // check if the shop has enough stock
         uint256[] memory buyable = Shops.getBuyableItems(shopId);
         uint256[] memory stock = Shops.getStock(shopId);
-        require(stock[itemIndex] > amount, "insufficient stock");
+        require(stock[itemIndex] >= amount, "insufficient stock");
 
         // decrease stock by [amount]
         stock[itemIndex] = stock[itemIndex] - amount;
@@ -66,14 +74,17 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param itemIndex the index of the item in the sellableItems array
      * @param characterId the characterId of the character selling
      */
-    function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public nonReentrant {
+    function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public {
         // check that the character is the player
-        require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "Cannot buy an item for someone else");
+        require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "Cannot sell an item for someone else");
+        
+        (uint16 characterX, uint16 characterY)= IWorld(_world()).UD__getMobPosition(characterId);
+        require(IWorld(_world()).UD__isAtPosition(shopId, characterX, characterY) == true, "Cannot sell to a shop at a distance");
 
         // check that the players position is the same as the shop's position
-        (uint16 characterX, uint16 characterY)= IWorld(_world()).UD__getMobPosition(shopId);
-        (uint16 shopX, uint16 shopY) = IWorld(_world()).UD__getMobPosition(shopId);
-        require(characterX == shopX && characterY == shopY, "Cannot buy from a shop from a distance");
+        // (uint16 characterX, uint16 characterY)= IWorld(_world()).UD__getMobPosition(characterId);
+        // (uint16 shopX, uint16 shopY) = IWorld(_world()).UD__getMobPosition(shopId);
+        // require(characterX == shopX && characterY == shopY, "Cannot sell to a shop from a distance");
 
         // check if the shop has enough gold
         uint256[] memory stock = Shops.getStock(shopId);
@@ -82,11 +93,11 @@ contract ShopSystem is System, ReentrancyGuard {
 
         // increase stock by [amount]
         // decrease gold by [amount * price]
-        stock[itemIndex] = stock[itemIndex + amount];
+        stock[itemIndex] = stock[itemIndex] + amount;
         Shops.setStock(shopId, stock);
         Shops.setGold(shopId, Shops.getGold(shopId) - (amount * itemMarkdown(shopId, sellable[itemIndex])));
 
-        // // take [amount] of the users' item
+        // take [amount] of the users' item
         uint256[] memory sellableItems = Shops.getSellableItems(shopId);
         IERC1155System(UltimateDominionConfig.getItems()).transferFrom(_msgSender(), lootManagerAddress(), sellableItems[itemIndex], amount);
 
@@ -119,7 +130,7 @@ contract ShopSystem is System, ReentrancyGuard {
         return false;
     }
     
-    function itemStock(bytes32 shopId, uint256 itemIndex) public view returns(uint256) {
+    function itemStock(bytes32 shopId, uint256 itemIndex) external view returns(uint256) {
         return Shops.getStock(shopId)[itemIndex];
     }
 
