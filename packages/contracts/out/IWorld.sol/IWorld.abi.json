@@ -1093,7 +1093,25 @@
   },
   {
     "type": "function",
-    "name": "UD__dropGold",
+    "name": "UD__dropGoldToEscrow",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__dropGoldToPlayer",
     "inputs": [
       {
         "name": "characterId",
@@ -1965,7 +1983,7 @@
     ],
     "outputs": [
       {
-        "name": "currentAvailibleLevel",
+        "name": "currentAvailableLevel",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -3344,6 +3362,25 @@
     "outputs": [
       {
         "name": "_isEquipped",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isInEncounter",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
         "type": "bool",
         "internalType": "bool"
       }

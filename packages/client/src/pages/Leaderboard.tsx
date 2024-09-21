@@ -32,7 +32,7 @@ import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Pagination } from '../components/Pagination';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { HOME_PATH } from '../Routes';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import { Character, StatsClasses } from '../utils/types';
 
@@ -44,7 +44,13 @@ export const Leaderboard = (): JSX.Element => {
   const { isConnected } = useAccount();
 
   const {
-    components: { Characters, CharactersTokenURI, GoldBalances, Stats },
+    components: {
+      AdventureEscrow,
+      Characters,
+      CharactersTokenURI,
+      GoldBalances,
+      Stats,
+    },
     delegatorAddress,
     network: { publicClient, worldContract },
   } = useMUD();
@@ -99,8 +105,12 @@ export const Leaderboard = (): JSX.Element => {
               { tokenId: BigInt(tokenId) },
             );
 
-            const goldBalance =
+            const externalGoldBalance =
               getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
+            const escrowGoldBalance =
+              getComponentValue(AdventureEscrow, ownerEntity)?.balance ??
+              BigInt(0);
+
             const metadataURI = getComponentValueStrict(
               CharactersTokenURI,
               tokenIdEntity,
@@ -115,8 +125,9 @@ export const Leaderboard = (): JSX.Element => {
               agility: characterStats.agility.toString(),
               maxHp: characterStats.maxHp.toString(),
               entityClass: characterStats.class,
+              escrowGoldBalance,
               experience: characterStats.experience.toString(),
-              goldBalance: formatEther(goldBalance as bigint).toString(),
+              externalGoldBalance,
               id: entity,
               intelligence: characterStats.intelligence.toString(),
               level: characterStats.level.toString(),
@@ -142,6 +153,7 @@ export const Leaderboard = (): JSX.Element => {
       }
     },
     [
+      AdventureEscrow,
       Characters,
       CharactersTokenURI,
       delegatorAddress,
@@ -167,21 +179,42 @@ export const Leaderboard = (): JSX.Element => {
     }
     let entriesCopy: Character[] = characters;
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
+      const totalStatsA =
+        Number(entryA.agility) +
+        Number(entryA.strength) +
+        Number(entryA.intelligence);
+      const totalStatsB =
+        Number(entryB.agility) +
+        Number(entryB.strength) +
+        Number(entryB.intelligence);
+
       switch (sort.sorted) {
         case 'byGold':
           return sort.reversed
-            ? Number(entryA.goldBalance) - Number(entryB.goldBalance)
-            : Number(entryB.goldBalance) - Number(entryA.goldBalance);
+            ? Number(
+                formatEther(
+                  entryA.externalGoldBalance - entryB.externalGoldBalance,
+                ),
+              )
+            : Number(
+                formatEther(
+                  entryB.externalGoldBalance - entryA.externalGoldBalance,
+                ),
+              );
         case 'byLevel':
           return sort.reversed
             ? Number(entryA.level) - Number(entryB.level)
             : Number(entryB.level) - Number(entryA.level);
         case 'byStats':
           return sort.reversed
-            ? Number(entryA.experience) - Number(entryB.experience)
-            : Number(entryB.experience) - Number(entryA.experience);
+            ? Number(totalStatsA) - Number(totalStatsB)
+            : Number(totalStatsB) - Number(totalStatsA);
         default:
-          return Number(entryB.goldBalance) - Number(entryA.goldBalance);
+          return Number(
+            formatEther(
+              entryB.externalGoldBalance - entryA.externalGoldBalance,
+            ),
+          );
       }
     });
     entriesCopy = [...entriesCopy].filter(entry => {
@@ -238,11 +271,11 @@ export const Leaderboard = (): JSX.Element => {
         alignSelf="start"
         leftIcon={<IoMdArrowRoundBack />}
         my={4}
-        onClick={() => navigate(GAME_BOARD_PATH)}
+        onClick={() => navigate(-1)}
         size="xs"
         variant="outline"
       >
-        Back to Game Board
+        Back
       </Button>
       <Stack
         direction={{ base: 'column', md: 'row' }}
@@ -296,7 +329,7 @@ export const Leaderboard = (): JSX.Element => {
         </HStack>
       </Stack>
       <Flex justify="space-between" w="100%">
-        <Text>Players {entries.length}</Text>
+        <Text>Players {characters.length}</Text>
         <HStack>
           <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
             <Button

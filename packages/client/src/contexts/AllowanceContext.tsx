@@ -13,24 +13,30 @@ import { useWalletClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { ERC_1155_ABI } from '../utils/constants';
+import { SystemToAllow } from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 
 type AllowanceContextType = {
-  goldAllowance: bigint;
+  goldLootManagerAllowance: bigint;
+  goldMarketplaceAllowance: bigint;
   isApprovingGold: boolean;
   isApprovingItems: boolean;
-  itemsAllowance: boolean;
-  onApproveGoldAllowance: (allowanceAmount: string) => void;
+  itemsMarketplaceAllowance: boolean;
+  onApproveGoldAllowance: (
+    systemToAllow: SystemToAllow,
+    allowanceAmount: string,
+  ) => void;
   onSetApprovalForAllItems: () => void;
   refreshAllowances: () => void;
 };
 
 const AllowanceContext = createContext<AllowanceContextType>({
-  goldAllowance: 0n,
+  goldLootManagerAllowance: 0n,
+  goldMarketplaceAllowance: 0n,
   isApprovingGold: false,
   isApprovingItems: false,
-  itemsAllowance: false,
+  itemsMarketplaceAllowance: false,
   onApproveGoldAllowance: () => {},
   onSetApprovalForAllItems: () => {},
   refreshAllowances: () => {},
@@ -50,41 +56,55 @@ export const AllowanceProvider = ({
   } = useMUD();
   const { character, isRefreshing } = useCharacter();
 
-  const [goldAllowance, setGoldAllowance] = useState<bigint>(0n);
-  const [itemsAllowance, setItemsAllowance] = useState<boolean>(false);
+  const [goldMarketplaceAllowance, setGoldMarketplaceAllowance] =
+    useState<bigint>(0n);
+  const [itemsMarketplaceAllowance, setItemsMarketplaceAllowance] =
+    useState<boolean>(false);
+  const [goldLootManagerAllowance, setGoldLootManagerAllowance] =
+    useState<bigint>(0n);
   const [isApprovingGold, setIsApprovingGold] = useState(false);
   const [isApprovingItems, setIsApprovingItems] = useState(false);
 
   const {
-    marketplace: marketplaceAddress,
     goldToken: goldTokenAddress,
     items: itemsAddress,
+    lootManager: lootManagerAddress,
+    marketplace: marketplaceAddress,
   } = useComponentValue(UltimateDominionConfig, singletonEntity) ?? {
-    marketplace: null,
     goldToken: null,
     items: null,
+    lootManager: null,
+    marketplace: null,
   };
 
   const fetchAllowances = useCallback(async () => {
     if (!character) return;
 
     try {
-      const _goldAllowance = await publicClient.readContract({
+      const _goldMarketplaceAllowance = await publicClient.readContract({
         address: goldTokenAddress as Address,
         abi: erc20Abi,
         functionName: 'allowance',
         args: [character.owner as Address, marketplaceAddress as Address],
       });
 
-      const _itemsAllowance = (await publicClient.readContract({
+      const _itemsMarketplaceAllowance = (await publicClient.readContract({
         address: itemsAddress as Address,
         abi: ERC_1155_ABI,
         functionName: 'isApprovedForAll',
         args: [character.owner as Address, marketplaceAddress as Address],
       })) as boolean;
 
-      setGoldAllowance(_goldAllowance);
-      setItemsAllowance(_itemsAllowance);
+      const _goldLootManagerAllowance = await publicClient.readContract({
+        address: goldTokenAddress as Address,
+        abi: erc20Abi,
+        functionName: 'allowance',
+        args: [character.owner as Address, lootManagerAddress as Address],
+      });
+
+      setGoldMarketplaceAllowance(_goldMarketplaceAllowance);
+      setItemsMarketplaceAllowance(_itemsMarketplaceAllowance);
+      setGoldLootManagerAllowance(_goldLootManagerAllowance);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Could not get allowances', e);
     }
@@ -92,6 +112,7 @@ export const AllowanceProvider = ({
     character,
     goldTokenAddress,
     itemsAddress,
+    lootManagerAddress,
     marketplaceAddress,
     publicClient,
     renderError,
@@ -105,8 +126,22 @@ export const AllowanceProvider = ({
     fetchAllowances();
   }, [character, fetchAllowances, isRefreshing, isSynced]);
 
+  const getSystemAddress = useCallback(
+    (systemToAllow: SystemToAllow) => {
+      switch (systemToAllow) {
+        case SystemToAllow.LootManager:
+          return lootManagerAddress;
+        case SystemToAllow.Marketplace:
+          return marketplaceAddress;
+        default:
+          return null;
+      }
+    },
+    [lootManagerAddress, marketplaceAddress],
+  );
+
   const onApproveGoldAllowance = useCallback(
-    async (allowanceAmount: string) => {
+    async (systemToAllow: SystemToAllow, allowanceAmount: string) => {
       try {
         setIsApprovingGold(true);
 
@@ -114,8 +149,10 @@ export const AllowanceProvider = ({
           throw new Error('No external wallet client found.');
         }
 
-        if (!marketplaceAddress) {
-          throw new Error('No Marketplace address found.');
+        const systemAddress = getSystemAddress(systemToAllow);
+
+        if (!systemAddress) {
+          throw new Error('No system address found.');
         }
 
         if (!allowanceAmount || parseEther(allowanceAmount) <= 0) {
@@ -126,7 +163,7 @@ export const AllowanceProvider = ({
           address: goldTokenAddress as Address,
           abi: erc20Abi,
           functionName: 'approve',
-          args: [marketplaceAddress as Address, parseEther(allowanceAmount)],
+          args: [systemAddress as Address, parseEther(allowanceAmount)],
         });
 
         const txHash = await externalWalletClient.writeContract(request);
@@ -152,8 +189,8 @@ export const AllowanceProvider = ({
     [
       externalWalletClient,
       fetchAllowances,
+      getSystemAddress,
       goldTokenAddress,
-      marketplaceAddress,
       publicClient,
       renderError,
       renderSuccess,
@@ -208,10 +245,11 @@ export const AllowanceProvider = ({
   return (
     <AllowanceContext.Provider
       value={{
-        goldAllowance,
+        goldLootManagerAllowance,
+        goldMarketplaceAllowance,
         isApprovingGold,
         isApprovingItems,
-        itemsAllowance,
+        itemsMarketplaceAllowance,
         onApproveGoldAllowance,
         onSetApprovalForAllItems,
         refreshAllowances: fetchAllowances,

@@ -1,4 +1,9 @@
-import { decodeAbiParameters, formatEther, hexToBigInt } from 'viem';
+import {
+  decodeAbiParameters,
+  formatEther,
+  hexToBigInt,
+  parseEther,
+} from 'viem';
 
 import {
   type EntityStats,
@@ -10,7 +15,18 @@ export const etherToFixedNumber = (
   value: bigint | string,
   decimals = 2,
 ): string => {
-  const formattedValue = formatEther(BigInt(value));
+  const bigIntValue = BigInt(value);
+  const smallestDisplayAmount = parseEther('0.01');
+
+  if (bigIntValue === 0n) {
+    return '0';
+  }
+
+  if (bigIntValue < smallestDisplayAmount) {
+    return '< 0.01';
+  }
+
+  const formattedValue = formatEther(bigIntValue);
   return Number(formattedValue).toFixed(decimals);
 };
 

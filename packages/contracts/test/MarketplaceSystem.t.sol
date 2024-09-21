@@ -66,7 +66,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
         // give userA gold
-        world.UD__dropGold(userACharacterID, amount);
+        world.UD__dropGoldToPlayer(userACharacterID, amount);
         // have userA set max allowance for their gold
         vm.startPrank(userA);
         gold.approve(marketplace, MAX_INT);
@@ -135,7 +135,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
         // give userA gold
-        world.UD__dropGold(userACharacterID, amount);
+        world.UD__dropGoldToPlayer(userACharacterID, amount);
         // have userA set max allowance for their gold
         vm.startPrank(userA);
         gold.approve(marketplace, MAX_INT);
@@ -210,7 +210,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
         // give userA gold
-        world.UD__dropGold(userACharacterID, amount);
+        world.UD__dropGoldToPlayer(userACharacterID, amount);
         // have userA set max allowance for their gold
         vm.startPrank(userA);
         gold.approve(marketplace, MAX_INT);
@@ -309,7 +309,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         // create user B
         address userB = makeAddr("userB");
         bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("UserB"), "test_Character_URI");
-        world.UD__dropGold(userBCharacterID, amount);
+        world.UD__dropGoldToPlayer(userBCharacterID, amount);
         vm.startPrank(userB);
         // give userB an item
         gold.approve(marketplace, MAX_INT);
@@ -330,7 +330,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
         // give userA gold
-        world.UD__dropGold(userACharacterID, amount);
+        world.UD__dropGoldToPlayer(userACharacterID, amount);
         // have userA set max allowance for their gold
         vm.startPrank(userA);
         gold.approve(marketplace, MAX_INT);
@@ -378,7 +378,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
         // give userA gold
-        world.UD__dropGold(userACharacterID, amount);
+        world.UD__dropGoldToPlayer(userACharacterID, amount);
         // have userA set max allowance for their gold
         vm.startPrank(userA);
         gold.approve(marketplace, MAX_INT);
@@ -446,7 +446,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         // create user B
         address userB = makeAddr("userB");
         bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("UserB"), "test_Character_URI");
-        world.UD__dropGold(userBCharacterID, amount);
+        world.UD__dropGoldToPlayer(userBCharacterID, amount);
         vm.startPrank(userB);
         // give userB an item
         gold.approve(marketplace, MAX_INT);

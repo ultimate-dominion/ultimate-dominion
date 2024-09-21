@@ -58,6 +58,11 @@ export enum StatsClasses {
   Mage,
 }
 
+export enum SystemToAllow {
+  LootManager = 'LootManager',
+  Marketplace = 'Marketplace',
+}
+
 export enum TokenType {
   NATIVE,
   ERC20,
@@ -111,7 +116,8 @@ export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
   baseStats: EntityStats;
-  goldBalance: bigint;
+  escrowGoldBalance: bigint;
+  externalGoldBalance: bigint;
   id: Entity;
   inBattle: boolean;
   locked: boolean;

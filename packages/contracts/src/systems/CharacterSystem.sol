@@ -149,7 +149,7 @@ contract CharacterSystem is System {
         tempStats.level = 1;
         tempStats.currentHp = int256(tempStats.maxHp);
         Stats.set(characterId, tempStats);
-        IWorld(_world()).UD__dropGold(characterId, 5 ether);
+        IWorld(_world()).UD__dropGoldToPlayer(characterId, 5 ether);
         // issue starter gear
         IWorld(_world()).UD__issueStarterItems(characterId);
         CharactersData memory charData = Characters.get(characterId);
@@ -160,13 +160,13 @@ contract CharacterSystem is System {
         Characters.set(characterId, charData);
     }
 
-    function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentAvailibleLevel) {
+    function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentAvailableLevel) {
         if (experience >= Levels.get(19)) {
-            currentAvailibleLevel = 20;
+            currentAvailableLevel = 20;
         } else {
             for (uint256 i; i < 20;) {
                 if (Levels.get(i) <= experience && Levels.get(i + 1) > experience) {
-                    currentAvailibleLevel = i + 1;
+                    currentAvailableLevel = i + 1;
                     break;
                 }
                 {
@@ -177,6 +177,7 @@ contract CharacterSystem is System {
     }
 
     function levelCharacter(bytes32 characterId, StatsData memory desiredStats) public onlyOwner(characterId) {
+        require(!IWorld(_world()).UD__isInEncounter(characterId), "cannot level in combat");
         StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
         stats.currentHp = Stats.getCurrentHp(characterId);
         uint256 availableLevel = getCurrentAvailableLevel(stats.experience);

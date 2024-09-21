@@ -220,6 +220,9 @@ contract PostDeploy is Script {
         address _marketplaceAddress = world.UD__marketplaceAddress();
         UltimateDominionConfig.setMarketplace(_marketplaceAddress);
 
+        address _lootManagerAddress = Systems.getSystem(resourceIds.lootManagerSystemId);
+        UltimateDominionConfig.setLootManager(_lootManagerAddress);
+
         setLevels();
         vm.stopBroadcast();
     }

@@ -225,6 +225,47 @@ export function createSystemCalls(
     }
   };
 
+  const depositToEscrow = async (
+    characterEntity: Entity,
+    previousAmount: bigint,
+    amount: bigint,
+  ): SystemCallReturn => {
+    try {
+      const characterId = characterEntity.toString() as `0x${string}`;
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId, BigInt(amount)],
+        functionName: 'UD__depositToEscrow',
+      });
+
+      const tx = await worldContract.write.UD__depositToEscrow([
+        characterId,
+        BigInt(amount),
+      ]);
+
+      await waitForTransaction(tx);
+
+      const newBalance = await worldContract.read.UD__getEscrowBalance([
+        characterId,
+      ]);
+
+      const success = newBalance === previousAmount + amount;
+
+      return {
+        error: success ? undefined : 'Failed to deposit to escrow.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const endTurn = async (
     encounterId: Entity,
     playerId: Entity,
@@ -755,6 +796,47 @@ export function createSystemCalls(
     }
   };
 
+  const withdrawFromEscrow = async (
+    characterEntity: Entity,
+    previousAmount: bigint,
+    amount: bigint,
+  ): SystemCallReturn => {
+    try {
+      const characterId = characterEntity.toString() as `0x${string}`;
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId, amount],
+        functionName: 'UD__withdrawFromEscrow',
+      });
+
+      const tx = await worldContract.write.UD__withdrawFromEscrow([
+        characterId,
+        amount,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const newBalance = await worldContract.read.UD__getEscrowBalance([
+        characterId,
+      ]);
+
+      const success = newBalance === previousAmount - amount;
+
+      return {
+        error: success ? undefined : 'Failed to withdraw from escrow.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   // const getFee = async () => {
   //   const entropyAddress = await worldContract.read.UD__getEntropy();
   //   const providerAddress = await worldContract.read.UD__getPythProvider();
@@ -778,6 +860,7 @@ export function createSystemCalls(
     cancelOrder,
     createEncounter,
     createOrder,
+    depositToEscrow,
     endTurn,
     enterGame,
     equipItems,
@@ -790,5 +873,6 @@ export function createSystemCalls(
     spawn,
     unequipItem,
     updateTokenUri,
+    withdrawFromEscrow,
   };
 }

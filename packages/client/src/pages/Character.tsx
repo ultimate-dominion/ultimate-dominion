@@ -12,6 +12,7 @@ import {
   Spacer,
   Spinner,
   Text,
+  Tooltip,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
@@ -23,7 +24,10 @@ import {
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IoMdArrowRoundBack } from 'react-icons/io';
+import {
+  IoMdArrowRoundBack,
+  IoMdInformationCircleOutline,
+} from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
 import { hexToString, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
@@ -38,12 +42,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import {
-  GAME_BOARD_PATH,
-  HOME_PATH,
-  LEADERBOARD_PATH,
-  MARKETPLACE_PATH,
-} from '../Routes';
+import { HOME_PATH, LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
   decodeBaseStats,
@@ -67,6 +66,7 @@ export const CharacterPage = (): JSX.Element => {
 
   const {
     components: {
+      AdventureEscrow,
       Characters,
       CharactersTokenURI,
       EncounterEntity,
@@ -114,8 +114,11 @@ export const CharacterPage = (): JSX.Element => {
         { tokenId: characterData.tokenId },
       );
 
-      const goldBalance =
+      const externalGoldBalance =
         getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
+      const escrowGoldBalance =
+        getComponentValue(AdventureEscrow, id as Entity)?.balance ?? BigInt(0);
+
       const metadataURI = getComponentValueStrict(
         CharactersTokenURI,
         tokenIdEntity,
@@ -139,8 +142,9 @@ export const CharacterPage = (): JSX.Element => {
         baseStats: decodedBaseStats,
         currentHp: characterStats.currentHp.toString(),
         entityClass: characterStats.class,
+        escrowGoldBalance,
         experience: characterStats.experience.toString(),
-        goldBalance,
+        externalGoldBalance,
         id: id as Entity,
         inBattle,
         intelligence: characterStats.intelligence.toString(),
@@ -167,6 +171,7 @@ export const CharacterPage = (): JSX.Element => {
       setIsLoadingCharacter(false);
     }
   }, [
+    AdventureEscrow,
     Characters,
     CharactersTokenURI,
     EncounterEntity,
@@ -247,11 +252,11 @@ export const CharacterPage = (): JSX.Element => {
       <Button
         leftIcon={<IoMdArrowRoundBack />}
         my={4}
-        onClick={() => navigate(GAME_BOARD_PATH)}
+        onClick={() => navigate(-1)}
         size="xs"
         variant="outline"
       >
-        Back to Game Board
+        Back
       </Button>
       {character ? (
         <Grid
@@ -271,9 +276,7 @@ export const CharacterPage = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            pb={6}
-            pt={{ base: 6, md: 12 }}
-            px={6}
+            p={6}
           >
             <Box h="100%" position="relative">
               <VStack>
@@ -314,9 +317,7 @@ export const CharacterPage = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
-            pb={6}
-            pt={{ base: 6, md: 12 }}
-            px={6}
+            p={6}
           >
             <LevelingPanel canLevel={canLevel} character={character} />
           </GridItem>
@@ -324,38 +325,61 @@ export const CharacterPage = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
-            pb={6}
-            pt={{ base: 6, md: 12 }}
-            px={6}
+            p={6}
           >
             <VStack h="100%">
               <Box w="100%">
-                <HStack alignItems="start">
-                  <Box>
+                <VStack alignItems="start" spacing={0}>
+                  <HStack>
                     <Text fontWeight="bold">
-                      {etherToFixedNumber(character.goldBalance)} $GOLD
+                      {etherToFixedNumber(character.externalGoldBalance)} $GOLD
                     </Text>
-                    <Text>
-                      <Text
-                        as="span"
-                        color={
-                          BigInt(character.experience) >= nextLevelXpRequirement
-                            ? 'green'
-                            : 'black'
-                        }
-                        fontWeight={
-                          BigInt(character.experience) >= nextLevelXpRequirement
-                            ? 'bold'
-                            : 'normal'
-                        }
-                      >
-                        {character.experience}
-                      </Text>
-                      /{nextLevelXpRequirement.toString()} XP
+                    <Tooltip
+                      bg="black"
+                      hasArrow
+                      label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
+                      placement="top"
+                      shouldWrapChildren
+                    >
+                      <IoMdInformationCircleOutline />
+                    </Tooltip>
+                  </HStack>
+                  <HStack>
+                    <Text fontSize="xs" fontWeight="bold" textAlign="start">
+                      Adventure Escrow balance:{' '}
+                      {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
                     </Text>
-                  </Box>
-                  <Spacer />
+                    <Tooltip
+                      bg="black"
+                      hasArrow
+                      label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+                      placement="top"
+                      shouldWrapChildren
+                    >
+                      <IoMdInformationCircleOutline />
+                    </Tooltip>
+                  </HStack>
+                </VStack>
+                <HStack justify="space-between" mt={4}>
                   <Text fontWeight="bold">Level {character.level}</Text>
+                  <Text>
+                    <Text
+                      as="span"
+                      color={
+                        BigInt(character.experience) >= nextLevelXpRequirement
+                          ? 'green'
+                          : 'black'
+                      }
+                      fontWeight={
+                        BigInt(character.experience) >= nextLevelXpRequirement
+                          ? 'bold'
+                          : 'normal'
+                      }
+                    >
+                      {character.experience}
+                    </Text>
+                    /{nextLevelXpRequirement.toString()} XP
+                  </Text>
                 </HStack>
                 <Level
                   currentLevel={character.level}
@@ -430,11 +454,16 @@ export const CharacterPage = (): JSX.Element => {
 };
 
 const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
+  const { renderError } = useToast();
   const {
-    components: { CharacterEquipment },
+    components: { CharacterEquipment, ItemsOwners },
   } = useMUD();
-  const { isLoading: isLoadingItemTemplates } = useItems();
-  const { inventoryArmor, inventorySpells, inventoryWeapons } = useCharacter();
+  const {
+    armorTemplates,
+    isLoading: isLoadingItemTemplates,
+    spellTemplates,
+    weaponTemplates,
+  } = useItems();
 
   const {
     isOpen: isItemModalOpen,
@@ -445,17 +474,137 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const [selectedItem, setSelectedItem] = useState<
     Armor | Spell | Weapon | null
   >(null);
+  const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
+  const [inventorySpells, setInventorySpells] = useState<Spell[]>([]);
+  const [inventoryWeapons, setInventoryWeapons] = useState<Weapon[]>([]);
+  const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
+  const [equippedSpells, setEquippedSpells] = useState<Spell[]>([]);
+  const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
 
-  const { equippedArmor, equippedSpells, equippedWeapons } =
-    useComponentValue(CharacterEquipment, character.id as Entity | undefined) ??
+  const fetchCharacterItems = useCallback(
+    (
+      _character: Character,
+      _equippedArmorIds: bigint[],
+      _equippedSpellsIds: bigint[],
+      _equippedWeaponsIds: bigint[],
+    ) => {
+      try {
+        const _armor = armorTemplates
+          .map(armor => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(armor.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...armor,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Armor;
+          })
+          .filter(a => a.balance !== '0');
+
+        const _spells = spellTemplates
+          .map(spell => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(spell.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...spell,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Spell;
+          })
+          .filter(s => s.balance !== '0');
+
+        const _weapons = weaponTemplates
+          .map(weapon => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(weapon.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...weapon,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Weapon;
+          })
+          .filter(w => w.balance !== '0');
+
+        const _equippedArmor = _equippedArmorIds
+          .map(id => _armor.find(a => a.tokenId === id.toString()))
+          .filter(Boolean) as Armor[];
+        const _equippedSpells = _equippedSpellsIds
+          .map(id => _spells.find(s => s.tokenId === id.toString()))
+          .filter(Boolean) as Spell[];
+        const _equippedWeapons = _equippedWeaponsIds
+          .map(id => _weapons.find(w => w.tokenId === id.toString()))
+          .filter(Boolean) as Weapon[];
+
+        setInventoryArmor(_armor);
+        setInventorySpells(_spells);
+        setInventoryWeapons(_weapons);
+
+        setEquippedArmor(_equippedArmor);
+        setEquippedSpells(_equippedSpells);
+        setEquippedWeapons(_equippedWeapons);
+      } catch (e) {
+        renderError(
+          (e as Error)?.message ?? 'Failed to fetch character data.',
+          e,
+        );
+      }
+    },
+    [armorTemplates, ItemsOwners, renderError, spellTemplates, weaponTemplates],
+  );
+
+  useEffect(() => {
+    if (isLoadingItemTemplates) return;
+
+    const {
+      equippedArmor: equippedArmorIds,
+      equippedSpells: equippedSpellsIds,
+      equippedWeapons: equippedWeaponsIds,
+    } = getComponentValue(CharacterEquipment, character.id) ??
     ({ equippedArmor: [], equippedSpells: [], equippedWeapons: [] } as {
       equippedArmor: bigint[];
       equippedSpells: bigint[];
       equippedWeapons: bigint[];
     });
 
-  const maxArmorEquipped = equippedArmor.length === MAX_EQUIPPED_ARMOR;
-  const maxWeaponsEquipped = equippedWeapons.length === MAX_EQUIPPED_WEAPONS;
+    fetchCharacterItems(
+      character,
+      equippedArmorIds,
+      equippedSpellsIds,
+      equippedWeaponsIds,
+    );
+  }, [
+    character,
+    CharacterEquipment,
+    fetchCharacterItems,
+    isLoadingItemTemplates,
+  ]);
 
   const spellsAndWeapons = useMemo(() => {
     return [...inventorySpells, ...inventoryWeapons];
@@ -464,6 +613,18 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const equippedSpellsAndWeapons = useMemo(() => {
     return [...equippedSpells, ...equippedWeapons];
   }, [equippedSpells, equippedWeapons]);
+
+  const equippedArmorIds = useMemo(() => {
+    return equippedArmor.map(a => BigInt(a.tokenId));
+  }, [equippedArmor]);
+
+  const equippedSpellsAndWeaponsIds = useMemo(() => {
+    return equippedSpellsAndWeapons.map(sow => BigInt(sow.tokenId));
+  }, [equippedSpellsAndWeapons]);
+
+  const maxArmorEquipped = equippedArmorIds.length === MAX_EQUIPPED_ARMOR;
+  const maxWeaponsEquipped =
+    equippedSpellsAndWeaponsIds.length === MAX_EQUIPPED_WEAPONS;
 
   if (isLoadingItemTemplates) {
     return (
@@ -492,7 +653,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       >
         {inventoryArmor.length === 0 && <Text>No armor found</Text>}
         {inventoryArmor.map(function (ar, i) {
-          const isEquipped = equippedArmor.includes(BigInt(ar.tokenId));
+          const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
           return (
             <GridItem key={i}>
               <ItemCard
@@ -513,7 +674,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       </Grid>
       <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
         Weapons & Spells {spellsAndWeapons.length} -{' '}
-        {equippedSpellsAndWeapons.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
+        {equippedSpellsAndWeaponsIds.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
       </Text>
       {maxWeaponsEquipped && <Text fontSize="sm">(Max weapons equipped)</Text>}
       <Grid
@@ -528,7 +689,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       >
         {spellsAndWeapons.length === 0 && <Text>No weapons found</Text>}
         {spellsAndWeapons.map(function (item, i) {
-          const isEquipped = equippedSpellsAndWeapons.includes(
+          const isEquipped = equippedSpellsAndWeaponsIds.includes(
             BigInt(item.tokenId),
           );
 
@@ -553,8 +714,8 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       {selectedItem && (
         <ItemEquipModal
           isEquipped={
-            equippedArmor.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
-            equippedSpellsAndWeapons.includes(
+            equippedArmorIds.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
+            equippedSpellsAndWeaponsIds.includes(
               BigInt(selectedItem?.tokenId ?? 0),
             )
           }

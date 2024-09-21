@@ -386,6 +386,7 @@ export default defineWorld({
      * - entropy address of pyth entropy contract
      * - pythProvider address of pyth provider.
      * - marketplace address of Marketplace contract.
+     * - lootManager address of LootManager contract.
      */
     UltimateDominionConfig: {
       key: [],
@@ -397,6 +398,7 @@ export default defineWorld({
         pythProvider: "address",
         items: "address",
         marketplace: "address",
+        lootManager: "address",
       },
     },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////

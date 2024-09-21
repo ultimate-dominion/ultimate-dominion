@@ -228,9 +228,8 @@ contract EncounterSystem is System {
         if (encounterData.encounterType == EncounterType.PvE) {
             (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePveRewards(encounterId, randomNumber);
         } else if (encounterData.encounterType == EncounterType.PvP) {
-            // distribute pvp rewards
-        }
-        else {
+            (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePvpRewards(encounterId, randomNumber);
+        } else {
             revert("unrecognized enocounter type");
         }
 
@@ -305,6 +304,10 @@ contract EncounterSystem is System {
                 i++;
             }
         }
+    }
+
+    function isInEncounter(bytes32 entityId) public view returns (bool) {
+        return EncounterEntity.getEncounterId(entityId) != bytes32(0);
     }
 
     function _queueActions(bytes32 encounterId, Action[] memory attacks) internal {

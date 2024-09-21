@@ -18,7 +18,6 @@ import { ShopHalf } from '../components/ShopHalf';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
-import { GAME_BOARD_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
 import { ArmorTemplate, SpellTemplate, WeaponTemplate } from '../utils/types';
 
@@ -109,11 +108,11 @@ export const Shop = (): JSX.Element => {
           alignSelf="flex-start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(GAME_BOARD_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Game Board
+          Back
         </Button>
         <Text>Shop not found</Text>
       </VStack>
@@ -127,11 +126,11 @@ export const Shop = (): JSX.Element => {
           alignSelf="flex-start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(GAME_BOARD_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Game Board
+          Back
         </Button>
         <Text>Character not found</Text>
       </VStack>
@@ -152,7 +151,7 @@ export const Shop = (): JSX.Element => {
           {sellable && sellable.length > 0 ? (
             <ShopHalf
               items={sellable}
-              name={`Character’s Inventory - ${etherToFixedNumber(userCharacter.goldBalance)} $GOLD`}
+              name={`Character’s Inventory - ${etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD`}
             />
           ) : (
             <Center>

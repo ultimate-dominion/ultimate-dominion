@@ -39,7 +39,7 @@ interface ICharacterSystem {
 
   function UD__enterGame(bytes32 characterId) external;
 
-  function UD__getCurrentAvailableLevel(uint256 experience) external view returns (uint256 currentAvailibleLevel);
+  function UD__getCurrentAvailableLevel(uint256 experience) external view returns (uint256 currentAvailableLevel);
 
   function UD__levelCharacter(bytes32 characterId, StatsData memory desiredStats) external;
 

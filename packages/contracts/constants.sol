@@ -30,3 +30,4 @@ int256 constant ABILITY_POINTS_PER_LEVEL = 2;
 uint256 constant EXP_MODIFIER = 2;
 
 uint256 constant SESSION_TIMEOUT = 10 minutes;
+uint256 constant PVP_GOLD_DENOMINATOR = 2;
