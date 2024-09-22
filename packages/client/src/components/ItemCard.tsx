@@ -11,9 +11,15 @@ import {
 import { useMemo } from 'react';
 
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
-import { type Armor, ItemType, type Spell, type Weapon } from '../utils/types';
+import {
+  type Armor,
+  type Consumable,
+  ItemType,
+  type Spell,
+  type Weapon,
+} from '../utils/types';
 
-type ItemCardProps = (Armor | Spell | Weapon) & {
+type ItemCardProps = (Armor | Consumable | Spell | Weapon) & {
   isEquipped?: boolean;
   onClick?: () => void;
   showBalance?: boolean;
@@ -28,6 +34,16 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const { balance, name } = item;
 
   const itemStats = useMemo(() => {
+    if (item.itemType === ItemType.Consumable) {
+      const { hpRestoreAmount } = item as Consumable;
+
+      return (
+        <Text size={{ base: '2xs', sm: 'xs' }}>
+          Restores {hpRestoreAmount} HP
+        </Text>
+      );
+    }
+
     if (item.itemType === ItemType.Spell) {
       const { minDamage, minLevel, maxDamage, statRestrictions } =
         item as Spell;

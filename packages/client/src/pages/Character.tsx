@@ -54,6 +54,7 @@ import {
 import {
   type Armor,
   type Character,
+  type Consumable,
   type Spell,
   type Weapon,
 } from '../utils/types';
@@ -457,9 +458,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const { renderError } = useToast();
   const {
     components: { CharacterEquipment, ItemsOwners },
+    delegatorAddress,
+    systemCalls: { useWorldConsumableItem },
   } = useMUD();
   const {
     armorTemplates,
+    consumableTemplates,
     isLoading: isLoadingItemTemplates,
     spellTemplates,
     weaponTemplates,
@@ -475,6 +479,9 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     Armor | Spell | Weapon | null
   >(null);
   const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
+  const [inventoryConsumables, setInventoryConsumables] = useState<
+    Consumable[]
+  >([]);
   const [inventorySpells, setInventorySpells] = useState<Spell[]>([]);
   const [inventoryWeapons, setInventoryWeapons] = useState<Weapon[]>([]);
   const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
@@ -509,6 +516,27 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
             } as Armor;
           })
           .filter(a => a.balance !== '0');
+
+        const _consumables = consumableTemplates
+          .map(consumable => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(consumable.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...consumable,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Consumable;
+          })
+          .filter(c => c.balance !== '0');
 
         const _spells = spellTemplates
           .map(spell => {
@@ -563,6 +591,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           .filter(Boolean) as Weapon[];
 
         setInventoryArmor(_armor);
+        setInventoryConsumables(_consumables);
         setInventorySpells(_spells);
         setInventoryWeapons(_weapons);
 
@@ -576,7 +605,14 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         );
       }
     },
-    [armorTemplates, ItemsOwners, renderError, spellTemplates, weaponTemplates],
+    [
+      armorTemplates,
+      consumableTemplates,
+      ItemsOwners,
+      renderError,
+      spellTemplates,
+      weaponTemplates,
+    ],
   );
 
   useEffect(() => {
@@ -605,6 +641,44 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     fetchCharacterItems,
     isLoadingItemTemplates,
   ]);
+
+  const onUseConsumable = useCallback(
+    async (tokenId: string) => {
+      try {
+        if (!delegatorAddress) {
+          throw new Error('Delegator address not found.');
+        }
+
+        const consumableItem = inventoryConsumables.find(
+          c => c.tokenId === tokenId,
+        );
+
+        if (!consumableItem) {
+          throw new Error('Consumable item not found.');
+        }
+
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const { error, success } = await useWorldConsumableItem(
+          character.id,
+          tokenId,
+          BigInt(character.currentHp) + BigInt(consumableItem.hpRestoreAmount),
+        );
+
+        if (error && !success) {
+          throw new Error(error);
+        }
+      } catch (e) {
+        renderError((e as Error)?.message ?? 'Failed to use consumable.', e);
+      }
+    },
+    [
+      character,
+      delegatorAddress,
+      inventoryConsumables,
+      renderError,
+      useWorldConsumableItem,
+    ],
+  );
 
   const spellsAndWeapons = useMemo(() => {
     return [...inventorySpells, ...inventoryWeapons];
@@ -652,7 +726,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         mt={4}
       >
         {inventoryArmor.length === 0 && <Text>No armor found</Text>}
-        {inventoryArmor.map(function (ar, i) {
+        {inventoryArmor.map((ar, i) => {
           const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
           return (
             <GridItem key={i}>
@@ -688,7 +762,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         mt={4}
       >
         {spellsAndWeapons.length === 0 && <Text>No weapons found</Text>}
-        {spellsAndWeapons.map(function (item, i) {
+        {spellsAndWeapons.map((item, i) => {
           const isEquipped = equippedSpellsAndWeaponsIds.includes(
             BigInt(item.tokenId),
           );
@@ -706,6 +780,33 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
                       }
                 }
                 {...item}
+              />
+            </GridItem>
+          );
+        })}
+      </Grid>
+      <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
+        Consumables {inventoryConsumables.length}
+      </Text>
+      <Grid
+        templateColumns={{
+          base: 'repeat(1, 1fr)',
+          sm: 'repeat(1, 1fr)',
+          md: 'repeat(2, 1fr)',
+          xl: 'repeat(3, 1fr)',
+        }}
+        gap={2}
+        mt={4}
+      >
+        {inventoryConsumables.length === 0 && <Text>No consumables found</Text>}
+        {inventoryConsumables.map((consumable, i) => {
+          return (
+            <GridItem key={i}>
+              <ItemCard
+                onClick={() => {
+                  onUseConsumable(consumable.tokenId);
+                }}
+                {...consumable}
               />
             </GridItem>
           );

@@ -17,6 +17,7 @@ import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   ItemType,
   type SpellTemplate,
   type WeaponTemplate,
@@ -25,6 +26,7 @@ import { useMUD } from './MUDContext';
 
 type ItemsContextType = {
   armorTemplates: ArmorTemplate[];
+  consumableTemplates: ConsumableTemplate[];
   isLoading: boolean;
   spellTemplates: SpellTemplate[];
   weaponTemplates: WeaponTemplate[];
@@ -32,6 +34,7 @@ type ItemsContextType = {
 
 const ItemsContext = createContext<ItemsContextType>({
   armorTemplates: [],
+  consumableTemplates: [],
   isLoading: false,
   spellTemplates: [],
   weaponTemplates: [],
@@ -46,6 +49,7 @@ export const ItemsProvider = ({
   const {
     components: {
       ArmorStats,
+      ConsumableStats,
       Items,
       ItemsBaseURI,
       ItemsTokenURI,
@@ -57,6 +61,9 @@ export const ItemsProvider = ({
   } = useMUD();
 
   const [armorTemplates, setArmorTemplates] = useState<ArmorTemplate[]>([]);
+  const [consumableTemplates, setConsumableTemplates] = useState<
+    ConsumableTemplate[]
+  >([]);
   const [spellTemplates, setSpellTemplates] = useState<SpellTemplate[]>([]);
   const [weaponTemplates, setWeaponTemplates] = useState<WeaponTemplate[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -113,6 +120,51 @@ export const ItemsProvider = ({
       return allArmorTemplates;
     },
     [ArmorStats, Items, ItemsBaseURI, ItemsTokenURI, StatRestrictions],
+  );
+
+  const fetchAllConsumables = useCallback(
+    async (allConsumableIds: bigint[]) => {
+      const allConsumableTemplates = await Promise.all(
+        allConsumableIds.map(async consumableId => {
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: consumableId },
+          );
+
+          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+          const consumableStats = getComponentValueStrict(
+            ConsumableStats,
+            tokenIdEntity,
+          );
+
+          const hpRestoreAmount = BigInt(consumableStats.maxDamage) * -1n;
+
+          const baseURI = getComponentValueStrict(
+            ItemsBaseURI,
+            singletonEntity,
+          ).uri;
+
+          const tokenURI = getComponentValueStrict(
+            ItemsTokenURI,
+            tokenIdEntity,
+          ).uri;
+
+          const metadata = await fetchMetadataFromUri(
+            uriToHttp(`${baseURI}${tokenURI}`)[0],
+          );
+
+          return {
+            ...metadata,
+            hpRestoreAmount: hpRestoreAmount.toString(),
+            itemType: itemTemplate.itemType,
+            tokenId: consumableId.toString(),
+          } as ConsumableTemplate;
+        }),
+      );
+
+      return allConsumableTemplates;
+    },
+    [ConsumableStats, Items, ItemsBaseURI, ItemsTokenURI],
   );
 
   const fetchAllSpells = useCallback(
@@ -249,6 +301,13 @@ export const ItemsProvider = ({
           const _armor = await fetchAllArmor(allArmorIds);
           setArmorTemplates(_armor);
 
+          const allConsumableIds = allItemIds
+            .filter(({ itemType }) => itemType === ItemType.Consumable)
+            .map(({ tokenId }) => tokenId);
+
+          const _consumables = await fetchAllConsumables(allConsumableIds);
+          setConsumableTemplates(_consumables);
+
           const allSpellIds = allItemIds
             .filter(({ itemType }) => itemType === ItemType.Spell)
             .map(({ tokenId }) => tokenId);
@@ -274,6 +333,7 @@ export const ItemsProvider = ({
     })();
   }, [
     fetchAllArmor,
+    fetchAllConsumables,
     fetchAllSpells,
     fetchAllWeapons,
     isSynced,
@@ -285,6 +345,7 @@ export const ItemsProvider = ({
     <ItemsContext.Provider
       value={{
         armorTemplates,
+        consumableTemplates,
         isLoading,
         spellTemplates,
         weaponTemplates,

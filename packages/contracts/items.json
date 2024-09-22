@@ -104,10 +104,10 @@
       "name": "minor healing potion",
       "stats": {
         "effects": [
-          "0xd9d7d852ae6ef09c000000000000000000000000000000000000000000000000"
+          "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
         ],
-        "maxDamage": -5,
-        "minDamage": -1,
+        "maxDamage": -4,
+        "minDamage": -4,
         "minLevel": 0
       },
       "statRestrictions": {

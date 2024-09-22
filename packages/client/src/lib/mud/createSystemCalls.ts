@@ -796,6 +796,46 @@ export function createSystemCalls(
     }
   };
 
+  const useWorldConsumableItem = async (
+    entity: Entity,
+    tokenId: string,
+    newHp: bigint,
+  ): SystemCallReturn => {
+    try {
+      const characterId = entity.toString() as `0x${string}`;
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId, characterId, BigInt(tokenId)],
+        functionName: 'UD__useWorldConsumableItem',
+      });
+
+      const tx = await worldContract.write.UD__useWorldConsumableItem([
+        characterId,
+        characterId,
+        BigInt(tokenId),
+      ]);
+
+      await waitForTransaction(tx);
+
+      const characterStats = getComponentValue(Stats, entity);
+
+      const success = characterStats?.currentHp === newHp;
+
+      return {
+        error: success ? undefined : 'Failed to use consumable item.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const withdrawFromEscrow = async (
     characterEntity: Entity,
     previousAmount: bigint,
@@ -873,6 +913,7 @@ export function createSystemCalls(
     spawn,
     unequipItem,
     updateTokenUri,
+    useWorldConsumableItem,
     withdrawFromEscrow,
   };
 }

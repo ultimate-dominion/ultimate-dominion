@@ -92,6 +92,23 @@ export type ArmorTemplate = ArmorStats &
     tokenId: string;
   };
 
+export type Consumable = ConsumableTemplate & {
+  balance: string;
+  itemId: Entity;
+  owner: string;
+};
+
+export type ConsumableStats = {
+  hpRestoreAmount: string;
+};
+
+export type ConsumableTemplate = ConsumableStats &
+  Metadata & {
+    itemType: ItemType;
+    statRestrictions: StatRestrictions;
+    tokenId: string;
+  };
+
 export type AttackOutcomeType = {
   attackerDamageDelt: string;
   attackerDied: boolean;
