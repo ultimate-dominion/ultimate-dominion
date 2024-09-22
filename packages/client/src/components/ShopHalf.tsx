@@ -89,10 +89,9 @@ export const ShopHalf = ({
       stock: string | null;
       index: string;
     }> = [...items];
-
     const searcher = new FuzzySearch(
       [...entriesCopy],
-      ['name', 'characterId', 'description'],
+      ['item.name', 'item.characterId', 'item.description'],
       { caseSensitive: false },
     );
     entriesCopy = searcher.search(query);

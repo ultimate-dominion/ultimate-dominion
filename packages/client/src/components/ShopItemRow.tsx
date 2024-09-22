@@ -472,7 +472,7 @@ export const ShopItemRow = ({
             </ModalBody>
           </ModalContent>
         </Modal>
-        <Box display={{ base: 'none', md: 'block' }} w="40px">
+        <Box display={{ base: 'none', md: 'block' }} w="30px">
           <Button onClick={onOpen} p={3} variant="ghost">
             <IoIosArrowForward />
           </Button>
