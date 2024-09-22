@@ -392,7 +392,10 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
         Shops.setStock(shopId, stock);
         assertEq(Shops.getStock(shopId)[item], 0);
-        world.UD__restock(shopId);
+        console.log(Shops.getRestockTimestamp(shopId));
+        bool result = world.UD__restock(shopId);
+
+        assertEq(result, true);
         // the stock should equal
         assertEq(Shops.getStock(shopId)[item], Shops.getRestock(shopId)[item]);
     }

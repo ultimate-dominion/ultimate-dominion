@@ -133,6 +133,10 @@ contract ShopSystem is System, ReentrancyGuard {
             uint256 timeSinceLastInterval = (block.timestamp - lastRecordedIntervalTimestamp) % 12 hours;
             uint256 lastIntervalTimestamp = block.timestamp - timeSinceLastInterval;
             Shops.setRestockTimestamp(shopId, lastIntervalTimestamp + 12 hours);
+            uint256[] memory stock = Shops.getRestock(shopId);
+            uint256 gold = Shops.getMaxGold(shopId);
+            Shops.setStock(shopId, stock);
+            Shops.setGold(shopId, gold);
             return true;
         }
         return false;
