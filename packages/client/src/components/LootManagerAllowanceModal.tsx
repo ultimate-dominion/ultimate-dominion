@@ -72,7 +72,10 @@ export const LootManagerAllowanceModal = ({
             <Button
               isLoading={isApprovingGold}
               onClick={() =>
-                onApproveGoldAllowance(SystemToAllow.LootManager, amount)
+                onApproveGoldAllowance(
+                  SystemToAllow.LootManager,
+                  parseEther(amount),
+                )
               }
             >
               Allow

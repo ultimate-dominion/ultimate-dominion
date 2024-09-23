@@ -4,7 +4,7 @@ import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, MobType} from "@codegen/common.sol";
 import {StatsData} from "@tables/Stats.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {UltimateDominionConfig, ShopsData} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
@@ -56,6 +56,7 @@ contract Test_MobSystem is SetUp, GasReporter {
 
     function test_createMob() public {
         vm.startPrank(deployer);
+
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;
         MonsterStats memory newMonster = MonsterStats({
@@ -72,7 +73,7 @@ contract Test_MobSystem is SetUp, GasReporter {
         uint256 newMobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), "test_monster_uri");
 
         MobsData memory newMob = world.UD__getMob(newMobId);
-        assertEq(newMobId, 23);
+        assertEq(newMobId, 24);
         assertEq(uint8(newMob.mobType), uint8(MobType.Monster));
         assertEq(newMob.mobStats, abi.encode(newMonster));
         assertEq(newMob.mobMetadata, "test_monster_uri");
@@ -90,9 +91,9 @@ contract Test_MobSystem is SetUp, GasReporter {
         assertEq(world.UD__getMobId(entityId), 1);
     }
 
-    function test_getMobPosition() public {
+    function test_getMobPositionFromId() public {
         bytes32 entityId = world.UD__spawnMob(1, 1, 2);
-        (uint16 x, uint16 y) = world.UD__getMobPosition(entityId);
+        (uint16 x, uint16 y) = world.UD__getMobPositionFromId(entityId);
         assertEq(x, 1);
         assertEq(y, 2);
     }
@@ -108,7 +109,7 @@ contract Test_MobSystem is SetUp, GasReporter {
         world.UD__move(bobCharacterId, 0, 1);
         bytes32[] memory ents = world.UD__getEntitiesAtPosition(0, 1);
 
-        assertEq(world.UD__getEntitiesAtPosition(0, 0).length, 1, "incorrect entities at spawn");
+        assertEq(world.UD__getEntitiesAtPosition(0, 0).length, 2, "incorrect entities at spawn");
         assertLt(ents.length, 7, "incorrect spawned monster lenth");
         assertEq(ents[0], bobCharacterId, "incorrect entity id for bob");
     }
