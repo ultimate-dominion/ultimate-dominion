@@ -13,7 +13,7 @@ import {
 import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
-import { OrderType } from '../utils/types';
+import { AllowanceType, OrderType } from '../utils/types';
 
 export const MarketplaceAllowanceModal = ({
   completeMessage = 'Allowance was successful!',
@@ -87,7 +87,12 @@ export const MarketplaceAllowanceModal = ({
               </Text>
               <Button
                 isLoading={isApprovingGoldMarketplace}
-                onClick={() => onApproveGoldAllowance(orderPrice, '0')}
+                onClick={() =>
+                  onApproveGoldAllowance(
+                    parseEther(orderPrice),
+                    AllowanceType.Marketplace,
+                  )
+                }
               >
                 Allow
               </Button>
@@ -101,7 +106,9 @@ export const MarketplaceAllowanceModal = ({
               </Text>
               <Button
                 isLoading={isApprovingItemsMarketplace}
-                onClick={() => onSetApprovalForAllItems('0')}
+                onClick={() =>
+                  onSetApprovalForAllItems(AllowanceType.Marketplace)
+                }
               >
                 Allow
               </Button>
