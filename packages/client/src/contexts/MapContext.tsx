@@ -311,16 +311,16 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           const shopData = getComponentValueStrict(Shops, entity);
 
           return {
-            shopId: entity,
-            position: { x: _position.x, y: _position.y },
-            priceMarkup: shopData.priceMarkup,
-            priceMarkdown: shopData.priceMarkdown,
-            sellableItems: shopData.sellableItems.map(item => item.toString()),
             buyableItems: shopData.buyableItems.map(item => item.toString()),
-            stock: shopData.stock.map(item => item.toString()),
-            restock: shopData.stock.map(item => item.toString()),
             gold: shopData.gold,
             maxGold: shopData.maxGold,
+            position: { x: _position.x, y: _position.y },
+            priceMarkdown: shopData.priceMarkdown,
+            priceMarkup: shopData.priceMarkup,
+            restock: shopData.stock.map(item => item.toString()),
+            sellableItems: shopData.sellableItems.map(item => item.toString()),
+            shopId: entity,
+            stock: shopData.stock.map(item => item.toString()),
           } as Shop;
         });
 

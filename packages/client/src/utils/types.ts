@@ -1,6 +1,11 @@
 import { Entity } from '@latticexyz/recs';
 import { Address, Hash } from 'viem';
 
+export enum AllowanceType {
+  Marketplace,
+  Shop,
+}
+
 export enum AttackType {
   Temporary,
   PhysicalDamage,
@@ -63,11 +68,6 @@ export enum TokenType {
   ERC20,
   ERC721,
   ERC1155,
-}
-
-export enum AllowanceType {
-  Marketplace,
-  Shop,
 }
 
 export type Armor = ArmorTemplate & {
@@ -238,15 +238,15 @@ export type Order = {
 };
 
 export type Shop = {
-  stock: string[];
-  gold: bigint;
   buyableItems: string[];
-  shopId: string;
+  gold: bigint;
   maxGold: bigint;
   position: { x: number; y: number };
   priceMarkdown: bigint;
   priceMarkup: bigint;
   sellableItems: string[];
+  shopId: string;
+  stock: string[];
 };
 
 export type Spell = SpellTemplate & {
@@ -266,9 +266,9 @@ export type SpellStats = {
 export type SpellTemplate = SpellStats &
   Metadata & {
     itemType: ItemType;
+    price: bigint;
     statRestrictions: StatRestrictions;
     tokenId: string;
-    price: bigint;
   };
 
 export type StatRestrictions = {
@@ -306,7 +306,7 @@ export type WeaponStats = {
 export type WeaponTemplate = WeaponStats &
   Metadata & {
     itemType: ItemType;
+    price: bigint;
     statRestrictions: StatRestrictions;
     tokenId: string;
-    price: bigint;
   };

@@ -69,7 +69,6 @@ export const ShopItemRow = ({
   const {
     goldAllowanceShops,
     itemsAllowanceShops,
-    refreshAllowances,
     isApprovingGoldShops,
     isApprovingItemsShops,
   } = useAllowance();
@@ -83,7 +82,7 @@ export const ShopItemRow = ({
 
   const [amount, setAmount] = useState(1);
   const [showError, setShowError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isTxPending, setIsTxPending] = useState(false);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -116,18 +115,20 @@ export const ShopItemRow = ({
         setShowError(true);
         return;
       }
+
       try {
-        setIsLoading(true);
+        setIsTxPending(true);
         if (orderType == OrderType.Buying && goldAllowanceShops < price) {
           onAllowanceOpen();
-          setIsLoading(false);
+          setIsTxPending(false);
           return;
         }
         if (orderType == OrderType.Selling && !itemsAllowanceShops) {
           onAllowanceOpen();
-          setIsLoading(false);
+          setIsTxPending(false);
           return;
         }
+
         if (orderType == OrderType.Buying) {
           const { error, success } = await buy(
             amount.toString(),
@@ -140,9 +141,8 @@ export const ShopItemRow = ({
           }
 
           renderSuccess('Item purchased successfully!');
-          onAllowanceClose();
         } else {
-          const { error, success } = sell(
+          const { error, success } = await sell(
             amount.toString(),
             shop.shopId,
             itemIndex,
@@ -152,15 +152,15 @@ export const ShopItemRow = ({
             throw new Error(error);
           }
           renderSuccess('Item sold successfully!');
-          onAllowanceClose();
         }
+
+        onAllowanceClose();
+        onClose();
+        refreshCharacter();
       } catch (e) {
         renderError((e as Error)?.message ?? 'Shop transaction failed', e);
-        onAllowanceClose();
       } finally {
-        refreshAllowances();
-        refreshCharacter();
-        setIsLoading(false);
+        setIsTxPending(false);
       }
     },
     [
@@ -173,9 +173,9 @@ export const ShopItemRow = ({
       itemsAllowanceShops,
       onAllowanceClose,
       onAllowanceOpen,
+      onClose,
       orderType,
       price,
-      refreshAllowances,
       refreshCharacter,
       renderError,
       renderSuccess,
@@ -247,8 +247,14 @@ export const ShopItemRow = ({
             {etherToFixedNumber(priceSingle)}
           </Text>
         </HStack>
+
         <ShopAllowanceModal
-          isCompleting={isLoading}
+          completeMessage={
+            orderType === OrderType.Buying
+              ? `Allowance was successful! You can now buy ${name}`
+              : `Allowance was successful! You can now sell ${name}`
+          }
+          isCompleting={isTxPending}
           isOpen={isAllowanceOpen}
           itemName={name}
           onClose={onAllowanceClose}
@@ -256,6 +262,7 @@ export const ShopItemRow = ({
           orderPrice={price}
           orderType={orderType}
         />
+
         <Modal isCentered isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
@@ -406,6 +413,12 @@ export const ShopItemRow = ({
                           Total to recieve: {etherToFixedNumber(price)} $GOLD
                         </Text>
                       )}
+                      <Text size="xs">
+                        Your $GOLD Balance:{' '}
+                        {etherToFixedNumber(
+                          userCharacter?.externalGoldBalance ?? '0',
+                        )}
+                      </Text>
                       <FormControl isInvalid={showError && insufficientGold}>
                         {showError && insufficientGold && (
                           <FormHelperText color="red" m={3}>
@@ -419,7 +432,7 @@ export const ShopItemRow = ({
                               isLoading={
                                 isApprovingGoldShops ||
                                 isApprovingItemsShops ||
-                                isLoading
+                                isTxPending
                               }
                             >
                               Approve
@@ -432,7 +445,7 @@ export const ShopItemRow = ({
                               isLoading={
                                 isApprovingGoldShops ||
                                 isApprovingItemsShops ||
-                                isLoading
+                                isTxPending
                               }
                             >
                               Approve
@@ -445,7 +458,7 @@ export const ShopItemRow = ({
                               isLoading={
                                 isApprovingGoldShops ||
                                 isApprovingItemsShops ||
-                                isLoading
+                                isTxPending
                               }
                             >
                               Buy
@@ -458,7 +471,7 @@ export const ShopItemRow = ({
                               isLoading={
                                 isApprovingGoldShops ||
                                 isApprovingItemsShops ||
-                                isLoading
+                                isTxPending
                               }
                             >
                               Sell
