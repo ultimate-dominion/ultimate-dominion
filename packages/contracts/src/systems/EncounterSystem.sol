@@ -228,9 +228,8 @@ contract EncounterSystem is System {
         if (encounterData.encounterType == EncounterType.PvE) {
             (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePveRewards(encounterId, randomNumber);
         } else if (encounterData.encounterType == EncounterType.PvP) {
-            // distribute pvp rewards
-        }
-        else {
+            (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePvpRewards(encounterId, randomNumber);
+        } else {
             revert("unrecognized enocounter type");
         }
 

@@ -101,7 +101,7 @@ contract ShopSystem is System, ReentrancyGuard {
         );
 
         // give [amount*price] gold
-        IWorld(_world()).UD__dropGold(characterId, amount * itemMarkdown(shopId, sellable[itemIndex]));
+        IWorld(_world()).UD__dropGoldToPlayer(characterId, amount * itemMarkdown(shopId, sellable[itemIndex]));
     }
 
     function canRestock(bytes32 shopId) public view returns (bool) {

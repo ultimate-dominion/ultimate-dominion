@@ -13,7 +13,7 @@ import {
 import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
-import { AllowanceType, OrderType } from '../utils/types';
+import { OrderType, SystemToAllow } from '../utils/types';
 
 export const MarketplaceAllowanceModal = ({
   completeMessage = 'Allowance was successful!',
@@ -35,18 +35,18 @@ export const MarketplaceAllowanceModal = ({
   orderType: OrderType;
 }): JSX.Element => {
   const {
-    goldAllowanceMarketplace,
-    isApprovingGoldMarketplace,
-    isApprovingItemsMarketplace,
-    itemsAllowanceMarketplace,
+    goldMarketplaceAllowance,
+    isApprovingGold,
+    isApprovingItems,
+    itemsMarketplaceAllowance,
     onApproveGoldAllowance,
     onSetApprovalForAllItems,
   } = useAllowance();
 
   if (
-    (goldAllowanceMarketplace >= parseEther(orderPrice) &&
+    (goldMarketplaceAllowance >= parseEther(orderPrice) &&
       orderType === OrderType.Buying) ||
-    (itemsAllowanceMarketplace && orderType === OrderType.Selling)
+    (itemsMarketplaceAllowance && orderType === OrderType.Selling)
   ) {
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -86,11 +86,11 @@ export const MarketplaceAllowanceModal = ({
                 use {orderPrice} of your $GOLD.
               </Text>
               <Button
-                isLoading={isApprovingGoldMarketplace}
+                isLoading={isApprovingGold}
                 onClick={() =>
                   onApproveGoldAllowance(
+                    SystemToAllow.Marketplace,
                     parseEther(orderPrice),
-                    AllowanceType.Marketplace,
                   )
                 }
               >
@@ -105,10 +105,10 @@ export const MarketplaceAllowanceModal = ({
                 manage your items.
               </Text>
               <Button
-                isLoading={isApprovingItemsMarketplace}
                 onClick={() =>
-                  onSetApprovalForAllItems(AllowanceType.Marketplace)
+                  onSetApprovalForAllItems(SystemToAllow.Marketplace)
                 }
+                isLoading={isApprovingItems}
               >
                 Allow
               </Button>

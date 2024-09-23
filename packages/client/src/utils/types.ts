@@ -1,11 +1,6 @@
 import { Entity } from '@latticexyz/recs';
 import { Address, Hash } from 'viem';
 
-export enum AllowanceType {
-  Marketplace,
-  Shop,
-}
-
 export enum AttackType {
   Temporary,
   PhysicalDamage,
@@ -61,6 +56,12 @@ export enum StatsClasses {
   Warrior,
   Rogue,
   Mage,
+}
+
+export enum SystemToAllow {
+  LootManager = 'LootManager',
+  Marketplace = 'Marketplace',
+  Shop = 'Shop',
 }
 
 export enum TokenType {

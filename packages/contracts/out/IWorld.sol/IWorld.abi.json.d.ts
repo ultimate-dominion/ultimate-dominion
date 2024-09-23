@@ -1140,7 +1140,25 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__dropGold",
+    "name": "UD__dropGoldToEscrow",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__dropGoldToPlayer",
     "inputs": [
       {
         "name": "characterId",

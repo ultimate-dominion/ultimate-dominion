@@ -63,7 +63,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         address stuffBearer = makeAddr("stuffBearer");
         bytes32 stuffBearerCharacterID =
             world.UD__mintCharacter(stuffBearer, bytes32("stuffBearer"), "test_Character_URI");
-        world.UD__dropGold(stuffBearerCharacterID, maxGold);
+        world.UD__dropGoldToPlayer(stuffBearerCharacterID, maxGold);
         vm.startPrank(stuffBearer);
         goldToken.transfer(shopSystemAddress, maxGold);
         vm.startPrank(deployer);
@@ -141,8 +141,8 @@ contract Test_ShopSystem is SetUp, GasReporter {
         bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("NotAlan"), "test_Character_URI");
 
         // give userA gold
-        world.UD__dropGold(userACharacterID, balance);
-        world.UD__dropGold(userBCharacterID, balance);
+        world.UD__dropGoldToPlayer(userACharacterID, balance);
+        world.UD__dropGoldToPlayer(userBCharacterID, balance);
         vm.startPrank(userA);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
@@ -181,7 +181,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
 
         // give userA gold
-        world.UD__dropGold(userACharacterID, balance);
+        world.UD__dropGoldToPlayer(userACharacterID, balance);
         uint256[] memory stock = Shops.getStock(shopId);
         stock[itemIndex] = 0;
         Shops.setStock(shopId, stock);
@@ -212,7 +212,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
 
         // give userA gold
-        world.UD__dropGold(userACharacterID, balance);
+        world.UD__dropGoldToPlayer(userACharacterID, balance);
         vm.startPrank(userA);
         world.UD__spawn(userACharacterID);
         world.UD__move(userACharacterID, 0, 1);
@@ -239,7 +239,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
         // give userA an item
         world.UD__dropItem(userACharacterID, itemIndex, amount);
-        world.UD__dropGold(userACharacterID, balance);
+        world.UD__dropGoldToPlayer(userACharacterID, balance);
         vm.startPrank(userA);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
@@ -293,10 +293,10 @@ contract Test_ShopSystem is SetUp, GasReporter {
         bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("NotAlan"), "test_Character_URI");
 
         // give userA gold and items
-        world.UD__dropGold(userACharacterID, balance);
+        world.UD__dropGoldToPlayer(userACharacterID, balance);
         world.UD__dropItem(userACharacterID, itemIndex, amount);
         // give userB gold and items
-        world.UD__dropGold(userBCharacterID, balance);
+        world.UD__dropGoldToPlayer(userBCharacterID, balance);
         world.UD__dropItem(userBCharacterID, itemIndex, amount);
         vm.startPrank(userA);
         // spawn and move to 0,0
@@ -335,7 +335,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
 
         // give userA gold
-        world.UD__dropGold(userACharacterID, balance);
+        world.UD__dropGoldToPlayer(userACharacterID, balance);
         Shops.setGold(shopId, 0);
         vm.startPrank(userA);
         // spawn and move to 0,0
@@ -365,7 +365,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
         // give userA an item
         world.UD__dropItem(userACharacterID, itemIndex, amount);
-        world.UD__dropGold(userACharacterID, balance);
+        world.UD__dropGoldToPlayer(userACharacterID, balance);
         vm.startPrank(userA);
         // move away from 0,0
         world.UD__spawn(userACharacterID);

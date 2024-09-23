@@ -42,12 +42,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import {
-  GAME_BOARD_PATH,
-  HOME_PATH,
-  LEADERBOARD_PATH,
-  MARKETPLACE_PATH,
-} from '../Routes';
+import { HOME_PATH, LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
   decodeBaseStats,
@@ -257,11 +252,11 @@ export const CharacterPage = (): JSX.Element => {
       <Button
         leftIcon={<IoMdArrowRoundBack />}
         my={4}
-        onClick={() => navigate(GAME_BOARD_PATH)}
+        onClick={() => navigate(-1)}
         size="xs"
         variant="outline"
       >
-        Back to Game Board
+        Back
       </Button>
       {character ? (
         <Grid

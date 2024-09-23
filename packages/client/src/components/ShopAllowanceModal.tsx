@@ -13,7 +13,7 @@ import {
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { etherToFixedNumber } from '../utils/helpers';
-import { AllowanceType, OrderType } from '../utils/types';
+import { OrderType, SystemToAllow } from '../utils/types';
 
 export const ShopAllowanceModal = ({
   completeMessage = 'Allowance was successful!',
@@ -35,17 +35,17 @@ export const ShopAllowanceModal = ({
   orderType: OrderType;
 }): JSX.Element => {
   const {
-    goldAllowanceShops,
-    isApprovingGoldShops,
-    isApprovingItemsShops,
-    itemsAllowanceShops,
+    goldShopAllowance,
+    isApprovingGold,
+    isApprovingItems,
+    itemsShopAllowance,
     onApproveGoldAllowance,
     onSetApprovalForAllItems,
   } = useAllowance();
 
   if (
-    (goldAllowanceShops >= orderPrice && orderType === OrderType.Buying) ||
-    (itemsAllowanceShops && orderType === OrderType.Selling)
+    (goldShopAllowance >= orderPrice && orderType === OrderType.Buying) ||
+    (itemsShopAllowance && orderType === OrderType.Selling)
   ) {
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -85,9 +85,9 @@ export const ShopAllowanceModal = ({
                 {etherToFixedNumber(orderPrice)} of your $GOLD.
               </Text>
               <Button
-                isLoading={isApprovingGoldShops}
+                isLoading={isApprovingGold}
                 onClick={() =>
-                  onApproveGoldAllowance(orderPrice, AllowanceType.Shop)
+                  onApproveGoldAllowance(SystemToAllow.Shop, orderPrice)
                 }
               >
                 Allow
@@ -101,8 +101,8 @@ export const ShopAllowanceModal = ({
                 your items.
               </Text>
               <Button
-                onClick={() => onSetApprovalForAllItems(AllowanceType.Shop)}
-                isLoading={isApprovingItemsShops}
+                onClick={() => onSetApprovalForAllItems(SystemToAllow.Shop)}
+                isLoading={isApprovingItems}
               >
                 Allow
               </Button>

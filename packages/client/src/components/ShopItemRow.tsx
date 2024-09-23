@@ -67,10 +67,10 @@ export const ShopItemRow = ({
   const { renderSuccess, renderError } = useToast();
 
   const {
-    goldAllowanceShops,
-    itemsAllowanceShops,
-    isApprovingGoldShops,
-    isApprovingItemsShops,
+    goldShopAllowance,
+    itemsShopAllowance,
+    isApprovingGold,
+    isApprovingItems,
   } = useAllowance();
   const { character: userCharacter, refreshCharacter } = useCharacter();
 
@@ -118,12 +118,12 @@ export const ShopItemRow = ({
 
       try {
         setIsTxPending(true);
-        if (orderType == OrderType.Buying && goldAllowanceShops < price) {
+        if (orderType == OrderType.Buying && goldShopAllowance < price) {
           onAllowanceOpen();
           setIsTxPending(false);
           return;
         }
-        if (orderType == OrderType.Selling && !itemsAllowanceShops) {
+        if (orderType == OrderType.Selling && !itemsShopAllowance) {
           onAllowanceOpen();
           setIsTxPending(false);
           return;
@@ -167,10 +167,10 @@ export const ShopItemRow = ({
       amount,
       buy,
       characterId,
-      goldAllowanceShops,
+      goldShopAllowance,
       insufficientGold,
       itemIndex,
-      itemsAllowanceShops,
+      itemsShopAllowance,
       onAllowanceClose,
       onAllowanceOpen,
       onClose,
@@ -426,12 +426,12 @@ export const ShopItemRow = ({
                           </FormHelperText>
                         )}
                         {orderType == OrderType.Buying &&
-                          goldAllowanceShops < price && (
+                          goldShopAllowance < price && (
                             <Button
                               type="submit"
                               isLoading={
-                                isApprovingGoldShops ||
-                                isApprovingItemsShops ||
+                                isApprovingGold ||
+                                isApprovingItems ||
                                 isTxPending
                               }
                             >
@@ -439,12 +439,12 @@ export const ShopItemRow = ({
                             </Button>
                           )}
                         {orderType == OrderType.Selling &&
-                          !itemsAllowanceShops && (
+                          !itemsShopAllowance && (
                             <Button
                               type="submit"
                               isLoading={
-                                isApprovingGoldShops ||
-                                isApprovingItemsShops ||
+                                isApprovingGold ||
+                                isApprovingItems ||
                                 isTxPending
                               }
                             >
@@ -452,12 +452,12 @@ export const ShopItemRow = ({
                             </Button>
                           )}
                         {orderType == OrderType.Buying &&
-                          goldAllowanceShops >= price && (
+                          goldShopAllowance >= price && (
                             <Button
                               type="submit"
                               isLoading={
-                                isApprovingGoldShops ||
-                                isApprovingItemsShops ||
+                                isApprovingGold ||
+                                isApprovingItems ||
                                 isTxPending
                               }
                             >
@@ -465,12 +465,12 @@ export const ShopItemRow = ({
                             </Button>
                           )}
                         {orderType == OrderType.Selling &&
-                          itemsAllowanceShops && (
+                          itemsShopAllowance && (
                             <Button
                               type="submit"
                               isLoading={
-                                isApprovingGoldShops ||
-                                isApprovingItemsShops ||
+                                isApprovingGold ||
+                                isApprovingItems ||
                                 isTxPending
                               }
                             >

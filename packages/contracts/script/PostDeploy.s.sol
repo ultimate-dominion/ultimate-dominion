@@ -215,6 +215,9 @@ contract PostDeploy is Script {
         address _shopSystemAddress = world.UD__shopSystemAddress();
         UltimateDominionConfig.setShop(_shopSystemAddress);
 
+        address _lootManagerAddress = Systems.getSystem(resourceIds.lootManagerSystemId);
+        UltimateDominionConfig.setLootManager(_lootManagerAddress);
+
         setLevels();
         vm.stopBroadcast();
     }
