@@ -218,6 +218,7 @@ contract CombatSystem is System {
         if (armor - armorPenetration > 0) {
             _totalArmorModifier = (armor - armorPenetration) * int256(DEFENSE_MODIFIER);
         }
+        // if total armor is greater than damage then overall damage should be 0
         if (damage - (int256(armor) - armorPenetration) < 0) {
             _totalArmorModifier = damage;
         }

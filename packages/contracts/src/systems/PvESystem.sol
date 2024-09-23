@@ -101,7 +101,11 @@ contract PvESystem is System {
 
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-
+        // if this isn't the first turn increment turn
+        if (encounterData.currentTurn != 1) {
+            encounterData.currentTurn++;
+            CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
+        }
         uint256 numberOfExecutedActions;
         if (encounterData.attackersAreMobs) {
             // execute mob attacks
@@ -136,13 +140,11 @@ contract PvESystem is System {
                 _executeMobAction(encounterId, encounterData, randomness, numberOfExecutedActions);
             }
 
-            CombatEncounter.set(encounterId, encounterData);
-            // apply dot damage to defenders
             for (uint256 i; i < encounterData.attackers.length; i++) {
                 // apply damage over time to attackers
                 IWorld(_world()).UD__applyDamageOverTime(encounterId, encounterData.attackers[i]);
             }
-
+            CombatEncounter.set(encounterId, encounterData);
             (encounterEnded, attackersWin) = IWorld(_world()).UD__checkForEncounterEnd(encounterData);
 
             if (encounterEnded) {
