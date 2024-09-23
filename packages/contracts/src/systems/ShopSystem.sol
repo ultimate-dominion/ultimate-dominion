@@ -43,11 +43,6 @@ contract ShopSystem is System, ReentrancyGuard {
             "Cannot buy from a shop at a distance"
         );
 
-        // check that the players position is the same as the shop's position
-        // (uint16 characterX, uint16 characterY)= IWorld(_world()).UD__getMobPositionFromId(characterId);
-        // (uint16 shopX, uint16 shopY) = IWorld(_world()).UD__getMobPositionFromId(shopId);
-        // require(characterX == shopX && characterY == shopY, "Cannot buy from a shop from a distance");
-
         // check if the shop has enough stock
         uint256[] memory buyable = Shops.getBuyableItems(shopId);
         uint256[] memory stock = Shops.getStock(shopId);
@@ -79,17 +74,11 @@ contract ShopSystem is System, ReentrancyGuard {
     function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public {
         // check that the character is the player
         require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "Cannot sell an item for someone else");
-
         (uint16 characterX, uint16 characterY) = IWorld(_world()).UD__getEntityPosition(characterId);
         require(
             IWorld(_world()).UD__isAtPosition(shopId, characterX, characterY) == true,
             "Cannot sell to a shop at a distance"
         );
-
-        // check that the players position is the same as the shop's position
-        // (uint16 characterX, uint16 characterY)= IWorld(_world()).UD__getMobPositionFromId(characterId);
-        // (uint16 shopX, uint16 shopY) = IWorld(_world()).UD__getMobPositionFromId(shopId);
-        // require(characterX == shopX && characterY == shopY, "Cannot sell to a shop from a distance");
 
         // check if the shop has enough gold
         uint256[] memory stock = Shops.getStock(shopId);

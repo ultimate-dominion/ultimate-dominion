@@ -440,13 +440,6 @@ export default defineWorld({
       },
     },
 
-    ShopItems: {
-      key: ["itemId"],
-      schema: {
-        itemId: "uint256",
-        price: "uint256",
-      }
-    },
     ////////////////////////////////////////// OFFCHAIN TABLES////////////////////////////////////////
     RngLogs: {
       key: ["requestId"],

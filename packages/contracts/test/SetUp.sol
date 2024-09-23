@@ -91,9 +91,6 @@ contract SetUp is Test {
             restock: stock,
             stock: stock
         });
-        // world.grantAccess(resourceIds.erc20NamespaceId, address(this));
-        // //grant character system access to loot manager
-        // world.grantAccess(resourceIds.lootManagerSystemId, address(this));
 
         uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
         shopId = world.UD__spawnMob(shopMobId, 0, 0);
