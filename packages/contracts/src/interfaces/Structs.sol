@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
-import {ItemType, Classes, Alignment, TokenType} from "@codegen/common.sol";
+import {ItemType, Classes, Alignment, TokenType } from "@codegen/common.sol";
 import {
     StatusEffectStatsData,
     WeaponStatsData,
@@ -19,6 +19,7 @@ struct WeaponTemplateDetails {
     uint256 initialSupply;
     string metadataUri;
     string name;
+    uint256 price;
     StatRestrictionsData statRestrictions;
     WeaponStatDetails stats;
 }
@@ -28,6 +29,7 @@ struct ArmorTemplateDetails {
     uint256 initialSupply;
     string metadataUri;
     string name;
+    uint256 price;
     StatRestrictionsData statRestrictions;
     ArmorStatDetails stats;
 }
@@ -64,6 +66,7 @@ struct SpellTemplateDetails {
     uint256 initialSupply;
     string metadataUri;
     string name;
+    uint256 price;
     StatRestrictionsData statRestrictions;
     SpellStatDetails stats;
 }
@@ -73,6 +76,7 @@ struct ConsumableTemplateDetails {
     uint256 initialSupply;
     string metadataUri;
     string name;
+    uint256 price;
     StatRestrictionsData statRestrictions;
     ConsumableStatDetails stats;
 }

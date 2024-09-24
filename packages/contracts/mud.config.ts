@@ -168,6 +168,7 @@ export default defineWorld({
         itemId: "uint256",
         itemType: "ItemType",
         dropChance: "uint256",
+        price: "uint256",
         stats: "bytes",
       },
       key: ["itemId"],
@@ -399,6 +400,7 @@ export default defineWorld({
         items: "address",
         marketplace: "address",
         lootManager: "address",
+        shop: "address",
       },
     },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////
@@ -437,12 +439,18 @@ export default defineWorld({
       key: ["entityId"],
       schema: {
         entityId: "bytes32",
-        priceMarkdown: "uint256",
+        gold: "uint256",
+        maxGold: "uint256",
         priceMarkup: "uint256",
-        buyableItems: "uint256[]",
+        priceMarkdown: "uint256",
+        restockTimestamp: "uint256",
         sellableItems: "uint256[]",
+        buyableItems: "uint256[]",
+        restock: "uint256[]",
+        stock: "uint256[]",
       },
     },
+
     ////////////////////////////////////////// OFFCHAIN TABLES////////////////////////////////////////
     RngLogs: {
       key: ["requestId"],

@@ -1,4 +1,4 @@
-[
+declare const abi: [
   {
     "type": "function",
     "name": "_msgSender",
@@ -40,116 +40,27 @@
   },
   {
     "type": "function",
-    "name": "calculateEquipmentBonuses",
+    "name": "buy",
     "inputs": [
       {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct AdjustedCombatStats",
-        "components": [
-          {
-            "name": "strength",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "agility",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "intelligence",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "armor",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "maxHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "currentHp",
-            "type": "int256",
-            "internalType": "int256"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "checkItemEffect",
-    "inputs": [
-      {
-        "name": "itemId",
+        "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "effectId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "hasAction",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "checkRequirements",
-    "inputs": [
-      {
-        "name": "characterId",
+        "name": "shopId",
         "type": "bytes32",
         "internalType": "bytes32"
       },
       {
-        "name": "itemId",
+        "name": "itemIndex",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "canUse",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "equipItems",
-    "inputs": [
+      },
       {
         "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
-      },
-      {
-        "name": "itemIds",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
       }
     ],
     "outputs": [],
@@ -157,58 +68,26 @@
   },
   {
     "type": "function",
-    "name": "getCombatStats",
+    "name": "canRestock",
     "inputs": [
       {
-        "name": "entityId",
+        "name": "shopId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
     ],
     "outputs": [
       {
-        "name": "modifiedStats",
-        "type": "tuple",
-        "internalType": "struct AdjustedCombatStats",
-        "components": [
-          {
-            "name": "strength",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "agility",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "intelligence",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "armor",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "maxHp",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "currentHp",
-            "type": "int256",
-            "internalType": "int256"
-          }
-        ]
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "getItemEffects",
+    "name": "itemBase",
     "inputs": [
       {
         "name": "itemId",
@@ -218,19 +97,19 @@
     ],
     "outputs": [
       {
-        "name": "effects",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "isEquipped",
+    "name": "itemMarkdown",
     "inputs": [
       {
-        "name": "characterId",
+        "name": "shopId",
         "type": "bytes32",
         "internalType": "bytes32"
       },
@@ -242,9 +121,117 @@
     ],
     "outputs": [
       {
-        "name": "_isEquipped",
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "itemMarkup",
+    "inputs": [
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "itemStock",
+    "inputs": [
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "restock",
+    "inputs": [
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "sell",
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "shopSystemAddress",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -267,67 +254,6 @@
       }
     ],
     "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "unequipItem",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "itemId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "success",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "event",
-    "name": "Store_SetRecord",
-    "inputs": [
-      {
-        "name": "tableId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "keyTuple",
-        "type": "bytes32[]",
-        "indexed": false,
-        "internalType": "bytes32[]"
-      },
-      {
-        "name": "staticData",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      },
-      {
-        "name": "encodedLengths",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "EncodedLengths"
-      },
-      {
-        "name": "dynamicData",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      }
-    ],
-    "anonymous": false
   },
   {
     "type": "event",
@@ -379,6 +305,37 @@
     "anonymous": false
   },
   {
+    "type": "event",
+    "name": "Store_SpliceStaticData",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "start",
+        "type": "uint48",
+        "indexed": false,
+        "internalType": "uint48"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
     "type": "error",
     "name": "EncodedLengths_InvalidLength",
     "inputs": [
@@ -388,6 +345,11 @@
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
   },
   {
     "type": "error",
@@ -468,4 +430,4 @@
       }
     ]
   }
-]
+]; export default abi;

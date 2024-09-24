@@ -100,6 +100,36 @@ export function createSystemCalls(
     Stats,
   }: ClientComponents,
 ) {
+  const buy = async (
+    amount: string,
+    shopId: string,
+    itemIndex: string,
+    characterId: string,
+  ): SystemCallReturn => {
+    try {
+      const tx = await worldContract.write.UD__buy([
+        BigInt(amount),
+        shopId as `0x${string}`,
+        BigInt(itemIndex),
+        characterId as `0x${string}`,
+      ]);
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      const success = status === 'success';
+
+      return {
+        error: success ? undefined : 'Failed to complete purchase.',
+        success: !!success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const cancelOrder = async (orderHash: string): SystemCallReturn => {
     try {
       await publicClient.simulateContract({
@@ -271,7 +301,6 @@ export function createSystemCalls(
     playerId: Entity,
     defenderId: Entity,
     itemId: string,
-    previousTurn: string,
   ): SystemCallReturn => {
     try {
       const actions = [
@@ -305,18 +334,11 @@ export function createSystemCalls(
         },
       );
 
-      await waitForTransaction(tx);
+      const txResult = await waitForTransaction(tx);
 
-      const { currentTurn, end } = getComponentValueStrict(
-        CombatEncounter,
-        encounterId,
-      );
+      const { status } = txResult;
 
-      let success = currentTurn === BigInt(previousTurn) + BigInt(1);
-
-      if (!success) {
-        success = end !== BigInt(0);
-      }
+      const success = status === 'success';
 
       return {
         error: success ? undefined : 'Failed to end turn.',
@@ -628,6 +650,37 @@ export function createSystemCalls(
     }
   };
 
+  const restock = async (shopId: string): SystemCallReturn => {
+    try {
+      const canRestock = await worldContract.read.UD__canRestock([
+        shopId as `0x${string}`,
+      ]);
+      if (!canRestock) {
+        return {
+          error: undefined,
+          success: true,
+        };
+      }
+      const tx = await worldContract.write.UD__restock([
+        shopId as `0x${string}`,
+      ]);
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      const success = status === 'success';
+
+      return {
+        error: success ? undefined : 'Failed to restock.',
+        success: !!success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const rollStats = async (
     characterEntity: Entity,
     characterClass: StatsClasses,
@@ -668,6 +721,36 @@ export function createSystemCalls(
       return {
         error: success ? undefined : 'Failed to roll stats.',
         success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
+  const sell = async (
+    amount: string,
+    shopId: string,
+    itemIndex: string,
+    characterId: string,
+  ): SystemCallReturn => {
+    try {
+      const tx = await worldContract.write.UD__sell([
+        BigInt(amount),
+        shopId as `0x${string}`,
+        BigInt(itemIndex),
+        characterId as `0x${string}`,
+      ]);
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      const success = status === 'success';
+
+      return {
+        error: success ? undefined : 'Failed to complete sale.',
+        success: !!success,
       };
     } catch (e) {
       return {
@@ -837,26 +920,8 @@ export function createSystemCalls(
     }
   };
 
-  // const getFee = async () => {
-  //   const entropyAddress = await worldContract.read.UD__getEntropy();
-  //   const providerAddress = await worldContract.read.UD__getPythProvider();
-
-  //   const entropyContract = getContract({
-  //     address: entropyAddress,
-  //     abi: [
-  //       parseAbiItem(
-  //         'function getFee(address provider) view returns (uint256)',
-  //       ),
-  //     ],
-  //     client: publicClient,
-  //   });
-
-  //   const fee = await entropyContract.read.getFee([providerAddress]);
-
-  //   return fee;
-  // };
-
   return {
+    buy,
     cancelOrder,
     createEncounter,
     createOrder,
@@ -869,7 +934,9 @@ export function createSystemCalls(
     mintCharacter,
     move,
     removeEntityFromBoard,
+    restock,
     rollStats,
+    sell,
     spawn,
     unequipItem,
     updateTokenUri,

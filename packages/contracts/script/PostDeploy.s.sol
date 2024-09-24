@@ -219,6 +219,8 @@ contract PostDeploy is Script {
         _createMonsters();
         address _marketplaceAddress = world.UD__marketplaceAddress();
         UltimateDominionConfig.setMarketplace(_marketplaceAddress);
+        address _shopSystemAddress = world.UD__shopSystemAddress();
+        UltimateDominionConfig.setShop(_shopSystemAddress);
 
         address _lootManagerAddress = Systems.getSystem(resourceIds.lootManagerSystemId);
         UltimateDominionConfig.setLootManager(_lootManagerAddress);
@@ -329,6 +331,7 @@ contract PostDeploy is Script {
                 ItemType.Armor,
                 armorTemplate.initialSupply,
                 armorTemplate.dropChance,
+                armorTemplate.price,
                 abi.encode(newArmor, armorTemplate.statRestrictions),
                 armorTemplate.metadataUri
             );
@@ -356,6 +359,7 @@ contract PostDeploy is Script {
                 ItemType.Weapon,
                 weaponTemplate.initialSupply,
                 weaponTemplate.dropChance,
+                weaponTemplate.price,
                 abi.encode(newWeapon, weaponTemplate.statRestrictions),
                 weaponTemplate.metadataUri
             );
@@ -385,6 +389,7 @@ contract PostDeploy is Script {
                 ItemType.Spell,
                 spellTemplate.initialSupply,
                 spellTemplate.dropChance,
+                spellTemplate.price,
                 abi.encode(newSpell, spellTemplate.statRestrictions),
                 spellTemplate.metadataUri
             );
@@ -408,6 +413,7 @@ contract PostDeploy is Script {
                 ItemType.Consumable,
                 consumablesTemplate.initialSupply,
                 consumablesTemplate.dropChance,
+                consumablesTemplate.price,
                 abi.encode(newConsumable, consumablesTemplate.statRestrictions),
                 consumablesTemplate.metadataUri
             );
@@ -430,23 +436,26 @@ contract PostDeploy is Script {
     }
 
     function _createShops() internal {
-        uint256[] memory sellableItems = new uint256[](4);
-        sellableItems[0] = uint256(4);
-        sellableItems[1] = uint256(5);
-        sellableItems[2] = uint256(6);
-        sellableItems[3] = uint256(7);
-        uint256[] memory buyableItems = new uint256[](8);
-        buyableItems[0] = uint256(0);
-        buyableItems[1] = uint256(1);
-        buyableItems[2] = uint256(2);
-        buyableItems[3] = uint256(3);
-        buyableItems[4] = uint256(4);
-        buyableItems[5] = uint256(5);
-        buyableItems[6] = uint256(6);
-        buyableItems[7] = uint256(7);
+        uint256[] memory sellableItems = new uint256[](10);
+        uint256[] memory buyableItems = new uint256[](10);
+        uint256[] memory stock = new uint256[](10);
+        for(uint i = 0; i < 10; ++i){
+            sellableItems[i] = i;
+            buyableItems[i] = i;
+            stock[i] = 10;
+        }
 
-        ShopsData memory newShop =
-            ShopsData({priceMarkup: 0, priceMarkdown: 0, buyableItems: sellableItems, sellableItems: sellableItems});
+        ShopsData memory newShop = ShopsData({
+            gold: 100 ether,
+            maxGold: 100 ether,
+            priceMarkup: 2000, // 20%
+            priceMarkdown: 5000, // 50%
+            restockTimestamp: 1725962400,
+            sellableItems: sellableItems,
+            buyableItems: buyableItems,
+            restock: stock,
+            stock: stock
+        });
 
         uint256 shopMobId =
             world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");

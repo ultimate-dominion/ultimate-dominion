@@ -81,16 +81,6 @@ declare const abi: [
         "internalType": "bytes32"
       },
       {
-        "name": "currentX",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
-        "name": "currentY",
-        "type": "uint16",
-        "internalType": "uint16"
-      },
-      {
         "name": "x",
         "type": "uint16",
         "internalType": "uint16"
@@ -323,6 +313,34 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__buy",
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__calculateAllStatusEffects",
     "inputs": [
       {
@@ -526,6 +544,25 @@ declare const abi: [
         "name": "_expMultiplier",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__canRestock",
+    "inputs": [
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -782,6 +819,11 @@ declare const abi: [
         "internalType": "uint256"
       },
       {
+        "name": "price",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "stats",
         "type": "bytes",
         "internalType": "bytes"
@@ -817,6 +859,11 @@ declare const abi: [
       },
       {
         "name": "dropChances",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "prices",
         "type": "uint256[]",
         "internalType": "uint256[]"
       },
@@ -2498,7 +2545,7 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getMobPosition",
+    "name": "UD__getMobPositionFromId",
     "inputs": [
       {
         "name": "entityId",
@@ -3652,6 +3699,97 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__itemBase",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__itemMarkdown",
+    "inputs": [
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__itemMarkup",
+    "inputs": [
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__itemStock",
+    "inputs": [
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__levelCharacter",
     "inputs": [
       {
@@ -3803,6 +3941,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__restock",
+    "inputs": [
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__resupplyLootManager",
     "inputs": [
       {
@@ -3841,6 +3998,34 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "UD__sell",
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -3950,6 +4135,19 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__shopSystemAddress",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",

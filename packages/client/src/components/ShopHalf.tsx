@@ -11,6 +11,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { Entity } from '@latticexyz/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
@@ -18,6 +19,8 @@ import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import {
   type ArmorTemplate,
   ItemFilterOptions,
+  OrderType,
+  Shop,
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
@@ -34,12 +37,28 @@ const PER_PAGE = 5;
 export const ShopHalf = ({
   name,
   items,
+  shop,
+  characterId,
+  orderType,
 }: {
+  characterId: Entity;
   name: string;
-  items: Array<ArmorTemplate | SpellTemplate | WeaponTemplate>;
+  items: Array<{
+    balance: string | null;
+    item: ArmorTemplate | SpellTemplate | WeaponTemplate;
+    stock: string | null;
+    index: string;
+  }>;
+  shop: Shop;
+  orderType: OrderType;
 }): JSX.Element => {
   const [entries, setEntries] = useState<
-    Array<ArmorTemplate | SpellTemplate | WeaponTemplate>
+    Array<{
+      balance: string | null;
+      item: ArmorTemplate | WeaponTemplate | SpellTemplate;
+      stock: string | null;
+      index: string;
+    }>
   >([]);
   const [page, setPage] = useState(1);
   const [pageLimit, setPageLimit] = useState(1);
@@ -64,24 +83,45 @@ export const ShopHalf = ({
     if (pageNumber < 1) {
       return;
     }
-    let entriesCopy: Array<ArmorTemplate | SpellTemplate | WeaponTemplate> = [
-      ...items,
-    ];
+    let entriesCopy: Array<{
+      balance: string | null;
+      item: ArmorTemplate | SpellTemplate | WeaponTemplate;
+      stock: string | null;
+      index: string;
+    }> = [...items];
     const searcher = new FuzzySearch(
       [...entriesCopy],
-      ['name', 'characterId', 'description'],
+      ['item.name', 'item.characterId', 'item.description'],
       { caseSensitive: false },
     );
     entriesCopy = searcher.search(query);
+
     entriesCopy = [...entriesCopy].filter(entry => {
       switch (filter) {
         case ItemFilterOptions.Weapon:
-          return entry.itemType == 0 ? 1 : 0;
+          return entry.item.itemType == 0 ? 1 : 0;
         case ItemFilterOptions.Armor:
-          return entry.itemType == 1 ? 1 : 0;
+          return entry.item.itemType == 1 ? 1 : 0;
 
         default:
           return true;
+      }
+    });
+
+    entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
+      switch (sort.sorted) {
+        case SortOptions.Price:
+          return sort.reversed
+            ? Number(BigInt(entryA.item.price) - BigInt(entryB.item.price))
+            : Number(BigInt(entryB.item.price) - BigInt(entryA.item.price));
+        case SortOptions.Stock:
+          return sort.reversed
+            ? Number(entryA.stock ? entryA.stock : entryA.balance) -
+                Number(entryB.stock ? entryB.stock : entryB.balance)
+            : Number(entryB.stock ? entryB.stock : entryB.balance) -
+                Number(entryA.stock ? entryA.stock : entryA.balance);
+        default:
+          return Number(BigInt(entryB.item.price) - BigInt(entryA.item.price));
       }
     });
     setLength(entriesCopy.length);
@@ -91,7 +131,7 @@ export const ShopHalf = ({
     if (pageNumber > pageLimit) {
       setPage(pageLimit);
     }
-  }, [filter, items, pageLimit, pageNumber, query]);
+  }, [filter, items, pageLimit, pageNumber, query, sort.reversed, sort.sorted]);
 
   return (
     <VStack>
@@ -196,14 +236,25 @@ export const ShopHalf = ({
                 <FaSortAmountDown color="grey" />
               )}
             </Button>
-            <Box display={{ base: 'none', md: 'block' }} w="30px"></Box>
+            <Box display={{ base: 'none', md: 'block' }} w="40px" />
           </HStack>
         </Flex>
       </HStack>
       <VStack gap={3} maxW="100%" overflowX="auto" w="100%">
         {entries.length > 0 ? (
           entries.map((entry, i) => {
-            return <ShopItemRow {...entry} key={`shop-row-${i}`} />;
+            return (
+              <ShopItemRow
+                balance={entry.balance}
+                characterId={characterId}
+                item={entry.item}
+                itemIndex={entry.index}
+                key={`shop-row-${i}`}
+                orderType={orderType}
+                shop={shop}
+                stock={entry.stock}
+              />
+            );
           })
         ) : (
           <Text mt={4}>No Data</Text>
