@@ -184,9 +184,10 @@ contract PostDeploy is Script {
 
         //register mint function selector on world
         IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
-
         // transfer erc20 contract ownership to the loot manager system
         world.transferOwnership(resourceIds.erc20NamespaceId, Systems.getSystem(resourceIds.lootManagerSystemId));
+        // set gold approval for marketplace
+        world.UD__setGoldApproval(world.UD__marketplaceAddress(), type(uint256).max);
 
         // System systemContract = new ERC721System();
 
@@ -210,6 +211,9 @@ contract PostDeploy is Script {
         _createEffects();
         _createShops();
         _createMonsters();
+        // approve marketplace to spend loot manager items
+        world.UD__setItemsApproval(world.UD__marketplaceAddress(), true);
+
         address _marketplaceAddress = world.UD__marketplaceAddress();
         UltimateDominionConfig.setMarketplace(_marketplaceAddress);
         address _shopSystemAddress = world.UD__shopSystemAddress();
@@ -410,7 +414,7 @@ contract PostDeploy is Script {
                 abi.encode(newConsumable, consumablesTemplate.statRestrictions),
                 consumablesTemplate.metadataUri
             );
-
+            console.log("CONSUMABLE ID: ", starterConsumableId);
             if (i == 0) {
                 warriorItemIds[2] = starterConsumableId;
                 rogueItemIds[2] = starterConsumableId;
@@ -432,7 +436,7 @@ contract PostDeploy is Script {
         uint256[] memory sellableItems = new uint256[](10);
         uint256[] memory buyableItems = new uint256[](10);
         uint256[] memory stock = new uint256[](10);
-        for(uint i = 0; i < 10; ++i){
+        for (uint256 i = 0; i < 10; ++i) {
             sellableItems[i] = i;
             buyableItems[i] = i;
             stock[i] = 10;

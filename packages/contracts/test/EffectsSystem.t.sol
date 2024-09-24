@@ -1,6 +1,7 @@
 pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
+import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {Classes, ItemType, EncounterType} from "@codegen/common.sol";
 import {StatsData, Stats} from "@tables/Stats.sol";
 import {EncounterEntity} from "@tables/EncounterEntity.sol";
@@ -24,7 +25,7 @@ import {
     StatusEffectStatsData,
     StatusEffectValidityData
 } from "@codegen/index.sol";
-import {_mobSystemId} from "../src/utils.sol";
+import {_mobSystemId, _lootManagerSystemId} from "../src/utils.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
 
 contract Test_EffectsSystem is SetUp, GasReporter {
@@ -87,5 +88,11 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         );
         AdjustedCombatStats memory endingStats = world.UD__calculateAllStatusEffects(bobCharacterId);
         assertEq(endingStats.agility, startingStats.agility - int256(8));
+    }
+
+    function test_Consumable_Heals() public {
+        vm.startPrank(bob);
+        erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, 21);
     }
 }

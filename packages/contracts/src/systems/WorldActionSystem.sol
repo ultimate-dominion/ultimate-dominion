@@ -37,13 +37,14 @@ import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {DEFAULT_MAX_TURNS} from "../../constants.sol";
+import "forge-std/console.sol";
 
 contract WorldActionSystem is System {
     function useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId) public {
         require(IWorld(_world()).UD__isValidOwner(givingEntity, _msgSender()), "Cannot consume another's item");
         require(IWorld(_world()).UD__isItemOwner(itemId, _msgSender()), "you do not own this item");
         require(EncounterEntity.getEncounterId(givingEntity) == bytes32(0), "cannot use in an encounter");
-        require(IWorld(_world()).UD__isEquipped(givingEntity, itemId), "item is not equipped");
+        // require(IWorld(_world()).UD__isEquipped(givingEntity, itemId), "item is not equipped");
         ConsumableStatsData memory consumableStats = IWorld(_world()).UD__getConsumableStats(itemId);
         Action[] memory actions = new Action[](consumableStats.effects.length);
         Action memory tempAction;

@@ -7,6 +7,7 @@ import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20Syste
 import {IWorld} from "@world/IWorld.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {IERC1155Receiver} from "@erc1155/IERC1155Receiver.sol";
+import {WorldContextConsumer} from "@latticexyz/world/src/WorldContext.sol";
 import {Math, WAD, RAD} from "@libraries/Math.sol";
 import {
     UltimateDominionConfig,
@@ -30,6 +31,7 @@ import {
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
+import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {
     _erc1155SystemId,
     _characterSystemId,
@@ -51,7 +53,16 @@ import {
 } from "@erc1155/utils.sol";
 import "forge-std/console.sol";
 
-contract LootManagerSystem is System {
+contract LootManagerSystem is ERC1155Holder, System {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        pure
+        virtual
+        override(ERC1155Holder, WorldContextConsumer)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
     // all items and gold will be managed by this system.  ownership of both contracts will be on this system and permissions
     // distribute will be managed here.
 
@@ -73,19 +84,24 @@ contract LootManagerSystem is System {
     }
 
     function dropGoldToEscrow(bytes32 characterId, uint256 amount) public {
-        AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
+        _requireAccess(address(this), _msgSender());
         uint256 currentBalance = AdventureEscrow.get(characterId);
         AdventureEscrow.set(characterId, currentBalance + amount);
         _goldToken().mint(address(this), amount);
     }
 
     function dropGoldToPlayer(bytes32 characterId, uint256 amount) public {
-        AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
+        _requireAccess(address(this), _msgSender());
         _goldToken().mint(IWorld(_world()).UD__getOwnerAddress(characterId), amount);
     }
 
+    function transferGold(address player, uint256 amount) public {
+        _requireAccess(address(this), _msgSender());
+        _goldToken().transfer(player, amount);
+    }
+
     function dropItem(bytes32 characterId, uint256 itemId, uint256 amount) public {
-        AccessControlLib.requireAccess(_lootManagerSystemId(WORLD_NAMESPACE), _msgSender());
+        _requireAccess(address(this), _msgSender());
         address to = IWorld(_world()).UD__getOwner(characterId);
         IERC1155System(UltimateDominionConfig.getItems()).transferFrom(address(this), to, itemId, amount);
     }
@@ -333,5 +349,27 @@ contract LootManagerSystem is System {
                 i++;
             }
         }
+    }
+
+    function setGoldApproval(address spender, uint256 value) public {
+        _requireAccess(address(this), _msgSender());
+        _goldToken().approve(spender, value);
+    }
+
+    function setItemsApproval(address spender, bool approval) public {
+        _requireAccess(address(this), _msgSender());
+        IERC1155System(UltimateDominionConfig.getItems()).setApprovalForAll(spender, approval);
+    }
+
+    function consumeItem(bytes32 characterId, uint256 itemId) public {
+        address playerAddr = IWorld(_world()).UD__getOwnerAddress(characterId);
+        if (_msgSender() == playerAddr) {
+            // consoom
+        }
+        else _requireAccess(address(this), _msgSender());
+
+        // address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
+        //will require approval
+        IERC1155System(UltimateDominionConfig.getItems()).safeTransferFrom(playerAddr, address(this), itemId, 1, "");
     }
 }
