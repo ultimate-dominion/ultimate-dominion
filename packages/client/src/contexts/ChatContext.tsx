@@ -20,6 +20,7 @@ import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { useChains } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
+import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
 
 const USER_WALLET_KEY = 'ud-push-poc-user-wallet-key';
 const GROUP_CHAT_ID =
@@ -244,6 +245,16 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     };
   }, [isMessageInputFocused, isOpen, onSendMessage]);
 
+  const onCloseAndClear = useCallback(() => {
+    onClose();
+    localStorage.removeItem(IS_CHAT_BOX_OPEN_KEY);
+  }, [onClose]);
+
+  const onOpenAndSet = useCallback(() => {
+    onOpen();
+    localStorage.setItem(IS_CHAT_BOX_OPEN_KEY, 'true');
+  }, [onOpen]);
+
   return (
     <ChatContext.Provider
       value={{
@@ -256,9 +267,9 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         isSending,
         messages,
         newMessage,
-        onClose,
+        onClose: onCloseAndClear,
         onJoinGroupChat,
-        onOpen,
+        onOpen: onOpenAndSet,
         onSendMessage,
         onSetNewMessage,
         onSetMessageInputFocus,

@@ -24,6 +24,7 @@ import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
 import { DEFAULT_CHAIN_ID } from './lib/web3';
 import AppRoutes, { CHARACTER_CREATION_PATH, HOME_PATH } from './Routes';
+import { IS_CHAT_BOX_OPEN_KEY } from './utils/constants';
 
 export const App = (): JSX.Element => {
   return (
@@ -112,6 +113,16 @@ const AppInner = (): JSX.Element => {
       setInterval(requestDrip, 20000);
     }
   }, [externalWalletClient, network]);
+
+  useEffect(() => {
+    const isChatBoxOpen = localStorage.getItem(IS_CHAT_BOX_OPEN_KEY);
+    if (
+      !CHAT_NOT_ALLOWED_PATHS.includes(pathname) &&
+      isChatBoxOpen === 'true'
+    ) {
+      onOpenChatBox();
+    }
+  }, [pathname, onOpenChatBox]);
 
   return (
     <Grid
