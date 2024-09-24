@@ -27,6 +27,7 @@ const GROUP_CHAT_ID =
   '7699bfa8e5309b876a7b60e75074ecdf41d029575f3655a33f2b449e7730dfa4';
 
 type Message = {
+  delivered: boolean;
   from: string;
   message: string;
   timestamp: number;
@@ -133,6 +134,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         const chatHistory = await _user.chat.history(GROUP_CHAT_ID);
 
         const _userMessages = chatHistory.map(message => ({
+          delivered: true,
           from: message.fromDID.split(':')[1],
           message: message.messageContent,
           timestamp: Number(message.timestamp),
@@ -149,14 +151,34 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
         stream.on(CONSTANTS.STREAM.CHAT, (message: MessageEvent) => {
           if (message.event.split('.')[1] === MessageEventType.Message) {
-            setMessages(prevMessages => [
-              ...prevMessages,
-              {
-                from: message.from.split(':')[1],
-                message: message.message.content,
-                timestamp: Number(message.timestamp),
-              },
-            ]);
+            // Update delivered status of the last message sent by the user
+            const from = message.from.split(':')[1];
+            if (from === _user.account) {
+              setMessages(prevMessages => {
+                const lastMessage = prevMessages[prevMessages.length - 1];
+                if (
+                  lastMessage &&
+                  lastMessage.from === _user.account &&
+                  !lastMessage.delivered
+                ) {
+                  return prevMessages.slice(0, -1).concat({
+                    ...lastMessage,
+                    delivered: true,
+                  });
+                }
+                return prevMessages;
+              });
+            } else {
+              setMessages(prevMessages => [
+                ...prevMessages,
+                {
+                  delivered: true,
+                  from,
+                  message: message.message.content,
+                  timestamp: Number(message.timestamp),
+                },
+              ]);
+            }
           }
         });
 
@@ -187,6 +209,17 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       if (!newMessage) {
         throw new Error('Message input is empty');
       }
+
+      // Optimistically add the message to the chat
+      setMessages(prevMessages => [
+        ...prevMessages,
+        {
+          delivered: false,
+          from: user.account,
+          message: newMessage,
+          timestamp: Date.now(),
+        },
+      ]);
 
       await user.chat.send(GROUP_CHAT_ID, {
         content: newMessage,
@@ -247,7 +280,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
   const onCloseAndClear = useCallback(() => {
     onClose();
-    localStorage.removeItem(IS_CHAT_BOX_OPEN_KEY);
+    localStorage.setItem(IS_CHAT_BOX_OPEN_KEY, 'false');
   }, [onClose]);
 
   const onOpenAndSet = useCallback(() => {

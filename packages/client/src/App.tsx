@@ -116,10 +116,11 @@ const AppInner = (): JSX.Element => {
 
   useEffect(() => {
     const isChatBoxOpen = localStorage.getItem(IS_CHAT_BOX_OPEN_KEY);
-    if (
-      !CHAT_NOT_ALLOWED_PATHS.includes(pathname) &&
-      isChatBoxOpen === 'true'
-    ) {
+
+    if (CHAT_NOT_ALLOWED_PATHS.includes(pathname)) return;
+
+    if (!isChatBoxOpen || isChatBoxOpen === 'true') {
+      localStorage.setItem(IS_CHAT_BOX_OPEN_KEY, 'true');
       onOpenChatBox();
     }
   }, [pathname, onOpenChatBox]);
