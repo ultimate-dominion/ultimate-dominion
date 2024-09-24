@@ -301,7 +301,6 @@ export function createSystemCalls(
     playerId: Entity,
     defenderId: Entity,
     itemId: string,
-    previousTurn: string,
   ): SystemCallReturn => {
     try {
       const actions = [
@@ -335,18 +334,11 @@ export function createSystemCalls(
         },
       );
 
-      await waitForTransaction(tx);
+      const txResult = await waitForTransaction(tx);
 
-      const { currentTurn, end } = getComponentValueStrict(
-        CombatEncounter,
-        encounterId,
-      );
+      const { status } = txResult;
 
-      let success = currentTurn === BigInt(previousTurn) + BigInt(1);
-
-      if (!success) {
-        success = end !== BigInt(0);
-      }
+      const success = status === 'success';
 
       return {
         error: success ? undefined : 'Failed to end turn.',
