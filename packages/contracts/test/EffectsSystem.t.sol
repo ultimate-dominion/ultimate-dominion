@@ -91,8 +91,13 @@ contract Test_EffectsSystem is SetUp, GasReporter {
     }
 
     function test_Consumable_Heals() public {
+        // health potion
+        uint256 healthPotionId = 21;
+        assertEq(erc1155System.balanceOf(bob, healthPotionId), 1);
         vm.startPrank(bob);
         erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
-        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, 21);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, healthPotionId);
+
+        assertEq(erc1155System.balanceOf(bob, healthPotionId), 0);
     }
 }
