@@ -93,8 +93,8 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
     function test_createEncounterPvP() public {
         // move entities to pvp zone
-        world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
-        world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
+        world.UD__adminMoveEntity(bobCharacterId, 5, 5);
+        world.UD__adminMoveEntity(alicesCharacterId, 5, 5);
 
         // if alice creates the encounter and has lower agi, she should still be the defender
         vm.prank(alice);
@@ -107,8 +107,8 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
     function test_PvPTimer() public {
         // move entities to pvp zone
-        world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
-        world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
+        world.UD__adminMoveEntity(bobCharacterId, 5, 5);
+        world.UD__adminMoveEntity(alicesCharacterId, 5, 5);
 
         // if alice creates the encounter and has lower agi, she should still be the defender
         vm.prank(alice);
@@ -282,8 +282,8 @@ contract Test_CombatSystem is SetUp, GasReporter {
         uint256 startingGold = goldToken.balanceOf(bob);
 
         // move entities to pvp zone
-        world.UD__adminMoveEntity(bobCharacterId, 0, 1, 5, 5);
-        world.UD__adminMoveEntity(alicesCharacterId, 0, 1, 5, 5);
+        world.UD__adminMoveEntity(bobCharacterId, 5, 5);
+        world.UD__adminMoveEntity(alicesCharacterId, 5, 5);
 
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, attackers, pvpDefenders);

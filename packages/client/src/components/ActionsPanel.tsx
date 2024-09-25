@@ -294,17 +294,7 @@ export const ActionsPanel = (): JSX.Element => {
                   isLoading={attackingItemId === item.tokenId}
                   key={`equipped-item-${index}`}
                   loadingText="Attacking..."
-                  onClick={() =>
-                    onAttack(
-                      item.tokenId,
-                      userTurn ||
-                        currentBattle.encounterType === EncounterType.PvE
-                        ? currentBattle.currentTurn
-                        : (
-                            BigInt(currentBattle.currentTurn) + BigInt(1)
-                          ).toString(),
-                    )
-                  }
+                  onClick={() => onAttack(item.tokenId)}
                   ref={getButtonRef(index)}
                   variant="outline"
                   w="100%"

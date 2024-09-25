@@ -11,6 +11,8 @@ import {
     MobStats,
     CharacterEquipment,
     StatsData,
+    CharacterOwner,
+    CharacterOwnerData,
     Characters,
     CharactersData,
     Effects
@@ -77,6 +79,10 @@ contract CharacterSystem is System {
         return (uint256(uint96(uint256(characterId))));
     }
 
+    function getCharacterIdFromOwnerAddress(address ownerAddress) public view returns (bytes32 _characterId) {
+        return CharacterOwner.getCharacterId(ownerAddress);
+    }
+
     /**
      *  @dev extracts the character nft owner address from the character Id
      */
@@ -116,6 +122,8 @@ contract CharacterSystem is System {
         characterId = getPlayerEntityId(characterTokenId);
         Characters.setOwner(characterId, account);
         Characters.setTokenId(characterId, characterTokenId);
+        CharacterOwner.setCharacterTokenId(_msgSender(), characterTokenId);
+        CharacterOwner.setCharacterId(_msgSender(), characterId);
         require(!NameExists.getValue(name), "Name already exists");
         NameExists.setValue(name, true);
         Characters.setName(characterId, name);

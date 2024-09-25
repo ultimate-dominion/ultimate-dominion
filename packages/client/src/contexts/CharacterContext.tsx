@@ -11,6 +11,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import { hexToString, zeroHash } from 'viem';
@@ -40,6 +41,7 @@ type CharacterContextType = {
   inventoryArmor: Armor[];
   inventorySpells: Spell[];
   inventoryWeapons: Weapon[];
+  isMoveEquipped: boolean;
   isRefreshing: boolean;
   refreshCharacter: () => Promise<void>;
 };
@@ -52,6 +54,7 @@ const CharacterContext = createContext<CharacterContextType>({
   inventoryArmor: [],
   inventorySpells: [],
   inventoryWeapons: [],
+  isMoveEquipped: false,
   isRefreshing: false,
   refreshCharacter: async () => {},
 });
@@ -137,6 +140,7 @@ export const CharacterProvider = ({
       if (characterData.baseStats !== '0x') {
         decodedBaseStats = decodeBaseStats(characterData.baseStats);
       }
+
       return {
         agility: characterStats?.agility.toString() ?? '0',
         baseStats: decodedBaseStats,
@@ -337,6 +341,10 @@ export const CharacterProvider = ({
     userCharacter,
   ]);
 
+  const isMoveEquipped = useMemo(() => {
+    return equippedSpells.length + equippedWeapons.length > 0;
+  }, [equippedSpells, equippedWeapons]);
+
   return (
     <CharacterContext.Provider
       value={{
@@ -347,6 +355,7 @@ export const CharacterProvider = ({
         inventoryArmor,
         inventorySpells,
         inventoryWeapons,
+        isMoveEquipped,
         isRefreshing,
         refreshCharacter,
       }}

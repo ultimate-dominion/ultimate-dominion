@@ -50,6 +50,7 @@ import {
 } from "@codegen/index.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
+import {NoTransferLastEquippedItemHook} from "../src/NoTransferLastEquippedItemHook.sol";
 import {Classes, ItemType, MobType, EffectType} from "@codegen/common.sol";
 import {
     MonsterStats,
@@ -165,7 +166,8 @@ contract PostDeploy is Script {
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "Characters", name: "ERC721System"});
             resourceIds.combatSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CombatSystem"});
-            resourceIds.erc1155SystemId = _erc1155SystemId(ITEMS_NAMESPACE);
+            resourceIds.erc1155SystemId =
+                WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "Items", name: "ERC1155System"}); //_erc1155SystemId(ITEMS_NAMESPACE);
             resourceIds.erc1155NamespaceId = WorldResourceIdLib.encodeNamespace(ITEMS_NAMESPACE);
             resourceIds.itemsSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "ItemsSystem"});
@@ -173,7 +175,7 @@ contract PostDeploy is Script {
         }
 
         address characterSystemAddress = Systems.getSystem(resourceIds.characterSystemId);
-
+        address lootManagerSystemAddress = Systems.getSystem(resourceIds.lootManagerSystemId);
         System goldSystemContract = new ERC20System();
 
         world.registerSystem(resourceIds.erc20SystemId, goldSystemContract, true);
@@ -195,7 +197,7 @@ contract PostDeploy is Script {
         // world.registerSystem(resourceIds.erc721SystemId, systemContract, true);
 
         NoTransferHook characterHook = new NoTransferHook();
-
+        NoTransferLastEquippedItemHook equippedItemTransferHook = new NoTransferLastEquippedItemHook(address(world));
         world.registerSystemHook(resourceIds.erc721SystemId, characterHook, BEFORE_CALL_SYSTEM);
 
         // Transfer characters namespace to World
@@ -204,6 +206,11 @@ contract PostDeploy is Script {
         world.transferOwnership(resourceIds.erc721NamespaceId, characterSystemAddress);
 
         address items = _deployErc1155(world, ITEMS_NAMESPACE);
+        address itemsSystemAddress = Systems.getSystem(resourceIds.itemsSystemId);
+
+        world.registerSystemHook(resourceIds.erc1155SystemId, equippedItemTransferHook, BEFORE_CALL_SYSTEM);
+        world.grantAccess(resourceIds.erc1155SystemId, worldAddress);
+        world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
 
         UltimateDominionConfig.setItems(address(items));
         //allow entropy system to call callback on Combat system
@@ -214,6 +221,8 @@ contract PostDeploy is Script {
         _createMonsters();
         address _marketplaceAddress = world.UD__marketplaceAddress();
         UltimateDominionConfig.setMarketplace(_marketplaceAddress);
+        address _shopSystemAddress = world.UD__shopSystemAddress();
+        UltimateDominionConfig.setShop(_shopSystemAddress);
 
         address _lootManagerAddress = Systems.getSystem(resourceIds.lootManagerSystemId);
         UltimateDominionConfig.setLootManager(_lootManagerAddress);
@@ -267,11 +276,11 @@ contract PostDeploy is Script {
         IERC1155 _items = registerERC1155(_world, itemsNamespace, metadataUriPrefix);
 
         // ERC1155System erc1155System = new ERC1155System();
-        address itemsSystemAddress = Systems.getSystem(resourceIds.itemsSystemId);
+        // address itemsSystemAddress = Systems.getSystem(resourceIds.itemsSystemId);
 
         // _world.registerSystem(resourceIds.erc1155SystemId, erc1155System, false);
-        _world.grantAccess(resourceIds.erc1155SystemId, worldAddress);
-        world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
+        // _world.grantAccess(resourceIds.erc1155SystemId, worldAddress);
+        // world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
         return address(_items);
     }
 
@@ -324,6 +333,7 @@ contract PostDeploy is Script {
                 ItemType.Armor,
                 armorTemplate.initialSupply,
                 armorTemplate.dropChance,
+                armorTemplate.price,
                 abi.encode(newArmor, armorTemplate.statRestrictions),
                 armorTemplate.metadataUri
             );
@@ -351,6 +361,7 @@ contract PostDeploy is Script {
                 ItemType.Weapon,
                 weaponTemplate.initialSupply,
                 weaponTemplate.dropChance,
+                weaponTemplate.price,
                 abi.encode(newWeapon, weaponTemplate.statRestrictions),
                 weaponTemplate.metadataUri
             );
@@ -380,6 +391,7 @@ contract PostDeploy is Script {
                 ItemType.Spell,
                 spellTemplate.initialSupply,
                 spellTemplate.dropChance,
+                spellTemplate.price,
                 abi.encode(newSpell, spellTemplate.statRestrictions),
                 spellTemplate.metadataUri
             );
@@ -403,6 +415,7 @@ contract PostDeploy is Script {
                 ItemType.Consumable,
                 consumablesTemplate.initialSupply,
                 consumablesTemplate.dropChance,
+                consumablesTemplate.price,
                 abi.encode(newConsumable, consumablesTemplate.statRestrictions),
                 consumablesTemplate.metadataUri
             );
@@ -425,23 +438,26 @@ contract PostDeploy is Script {
     }
 
     function _createShops() internal {
-        uint256[] memory sellableItems = new uint256[](4);
-        sellableItems[0] = uint256(4);
-        sellableItems[1] = uint256(5);
-        sellableItems[2] = uint256(6);
-        sellableItems[3] = uint256(7);
-        uint256[] memory buyableItems = new uint256[](8);
-        buyableItems[0] = uint256(0);
-        buyableItems[1] = uint256(1);
-        buyableItems[2] = uint256(2);
-        buyableItems[3] = uint256(3);
-        buyableItems[4] = uint256(4);
-        buyableItems[5] = uint256(5);
-        buyableItems[6] = uint256(6);
-        buyableItems[7] = uint256(7);
+        uint256[] memory sellableItems = new uint256[](10);
+        uint256[] memory buyableItems = new uint256[](10);
+        uint256[] memory stock = new uint256[](10);
+        for(uint i = 0; i < 10; ++i){
+            sellableItems[i] = i;
+            buyableItems[i] = i;
+            stock[i] = 10;
+        }
 
-        ShopsData memory newShop =
-            ShopsData({priceMarkup: 0, priceMarkdown: 0, buyableItems: sellableItems, sellableItems: sellableItems});
+        ShopsData memory newShop = ShopsData({
+            gold: 100 ether,
+            maxGold: 100 ether,
+            priceMarkup: 2000, // 20%
+            priceMarkdown: 5000, // 50%
+            restockTimestamp: 1725962400,
+            sellableItems: sellableItems,
+            buyableItems: buyableItems,
+            restock: stock,
+            stock: stock
+        });
 
         uint256 shopMobId =
             world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");

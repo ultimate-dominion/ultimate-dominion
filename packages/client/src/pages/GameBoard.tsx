@@ -52,7 +52,7 @@ export const GameBoard = (): JSX.Element => {
     isSynced,
     network: { worldContract },
   } = useMUD();
-  const { character, equippedWeapons, isRefreshing } = useCharacter();
+  const { character, isMoveEquipped, isRefreshing } = useCharacter();
   const { inSafetyZone, position } = useMap();
   const { continueToBattleOutcome, lastestBattleOutcome } = useBattle();
 
@@ -86,17 +86,17 @@ export const GameBoard = (): JSX.Element => {
 
   // Open equip info modal if character has no experience and no equipped items
   useEffect(() => {
-    if (!(character && equippedWeapons)) return;
+    if (!character) return;
 
     const equipInfoSeenKey = `equip-info-seen-${worldContract.address}-${character.id}`;
 
     const hasSeenEquipInfo = localStorage.getItem(equipInfoSeenKey);
     if (hasSeenEquipInfo) return;
 
-    if (character.experience === '0' && equippedWeapons.length === 0) {
+    if (character.experience === '0' && !isMoveEquipped) {
       onOpenEquipInfoModal();
     }
-  }, [character, equippedWeapons, onOpenEquipInfoModal, worldContract]);
+  }, [character, isMoveEquipped, onOpenEquipInfoModal, worldContract]);
 
   const onAcknowledgeEquipInfo = useCallback(() => {
     if (!character) return;
@@ -219,14 +219,15 @@ export const GameBoard = (): JSX.Element => {
           </PopoverContent>
         </Popover>
       </Box>
+
       <InfoModal
         heading="Welcome to the game board!"
         isOpen={isEquipInfoModalOpen}
         onClose={onAcknowledgeEquipInfo}
       >
         <Text>
-          In order to start battling, you must have at least 1 weapon equipped.
-          Go to your{' '}
+          In order to start battling, you must have at least 1 weapon or spell
+          equipped. Go to your{' '}
           <Text
             as={Link}
             color="blue"
@@ -238,7 +239,7 @@ export const GameBoard = (): JSX.Element => {
           >
             character page
           </Text>{' '}
-          to equip a weapon.
+          to equip a move.
         </Text>
       </InfoModal>
       <InfoModal
@@ -246,7 +247,7 @@ export const GameBoard = (): JSX.Element => {
         isOpen={isOuterRealmsInfoModalOpen}
         onClose={onAcknowledgeOuterRealmsWarning}
       >
-        <VStack>
+        <VStack p={4} spacing={4}>
           <IoIosWarning color="orange" size={40} />
           <Text mt={4}>
             The{' '}
@@ -262,6 +263,7 @@ export const GameBoard = (): JSX.Element => {
           </Text>
         </VStack>
       </InfoModal>
+
       {lastestBattleOutcome && (
         <BattleOutcomeModal
           battleOutcome={lastestBattleOutcome}

@@ -105,7 +105,7 @@ contract MobSystem is System {
         return uint256(uint256(entityId) >> 224);
     }
 
-    function getMobPosition(bytes32 entityId) public pure returns (uint16 x, uint16 y) {
+    function getMobPositionFromId(bytes32 entityId) public pure returns (uint16 x, uint16 y) {
         y = uint16(uint256(entityId));
         x = uint16(uint256(entityId) >> 16);
     }

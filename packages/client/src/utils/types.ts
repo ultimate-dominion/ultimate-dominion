@@ -61,6 +61,7 @@ export enum StatsClasses {
 export enum SystemToAllow {
   LootManager = 'LootManager',
   Marketplace = 'Marketplace',
+  Shop = 'Shop',
 }
 
 export enum TokenType {
@@ -88,6 +89,7 @@ export type ArmorStats = {
 export type ArmorTemplate = ArmorStats &
   Metadata & {
     itemType: ItemType;
+    price: bigint;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
@@ -238,12 +240,14 @@ export type Order = {
 
 export type Shop = {
   buyableItems: string[];
-  mobId: string;
+  gold: bigint;
+  maxGold: bigint;
   position: { x: number; y: number };
-  priceMarkdown: string;
-  priceMarkup: string;
+  priceMarkdown: bigint;
+  priceMarkup: bigint;
   sellableItems: string[];
   shopId: string;
+  stock: string[];
 };
 
 export type Spell = SpellTemplate & {
@@ -263,6 +267,7 @@ export type SpellStats = {
 export type SpellTemplate = SpellStats &
   Metadata & {
     itemType: ItemType;
+    price: bigint;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
@@ -302,6 +307,7 @@ export type WeaponStats = {
 export type WeaponTemplate = WeaponStats &
   Metadata & {
     itemType: ItemType;
+    price: bigint;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };

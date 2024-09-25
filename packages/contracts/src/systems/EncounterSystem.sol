@@ -42,7 +42,6 @@ import "forge-std/console.sol";
 contract EncounterSystem is System {
     using Math for uint256;
     using Math for int256;
-    // in pve the attackers are always players and the defenders are always mobs since there is no aggro system
 
     function createEncounter(EncounterType encounterType, bytes32[] memory group1, bytes32[] memory group2)
         public
@@ -184,7 +183,6 @@ contract EncounterSystem is System {
                 } else {
                     require(isParticipant(playerAddress, encounterData.defenders), "Cannot end defenders turn");
                 }
-                // is pve
             } else {
                 // should be attacker turn unless defender has timed out
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
