@@ -34,7 +34,7 @@ export const InfoModal: React.FC<InfoModalProps> = ({
         <ModalCloseButton />
         <ModalBody p={4}>{children}</ModalBody>
         <ModalFooter>
-          <Button onClick={onClose} variant="ghost">
+          <Button onClick={onClose} size="sm" variant="ghost">
             Close
           </Button>
         </ModalFooter>

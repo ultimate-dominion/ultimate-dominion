@@ -103,7 +103,7 @@ contract LootManagerSystem is ERC1155Holder, System {
     function dropItem(bytes32 characterId, uint256 itemId, uint256 amount) public {
         _requireAccess(address(this), _msgSender());
         address to = IWorld(_world()).UD__getOwner(characterId);
-        IERC1155System(UltimateDominionConfig.getItems()).transferFrom(address(this), to, itemId, amount);
+        IERC1155System(UltimateDominionConfig.getItems()).safeTransferFrom(address(this), to, itemId, amount, "");
     }
 
     function dropItems(bytes32[] memory characterIds, uint256[] memory itemIds, uint256[] memory amounts) public {

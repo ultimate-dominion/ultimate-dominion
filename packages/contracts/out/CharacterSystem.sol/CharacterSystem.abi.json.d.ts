@@ -114,6 +114,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "getCharacterIdFromOwnerAddress",
+    "inputs": [
+      {
+        "name": "ownerAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getCharacterTokenId",
     "inputs": [
       {

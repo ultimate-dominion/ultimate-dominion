@@ -11,6 +11,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef } from 'react';
+import { CiCircleCheck } from 'react-icons/ci';
 import { IoIosSend, IoMdInformationCircleOutline } from 'react-icons/io';
 
 import { useChat } from '../contexts/ChatContext';
@@ -140,25 +141,32 @@ export const ChatBox: React.FC = () => {
                         {!isUser && (
                           <Text size="2xs">{shortenAddress(message.from)}</Text>
                         )}
-                        <Tooltip
-                          bg="black"
-                          hasArrow
-                          label={`Sent: ${new Date(message.timestamp).toLocaleString()}`}
-                          placement={isUser ? 'left' : 'right'}
-                          shouldWrapChildren
-                          fontSize="xs"
-                        >
-                          <Box
-                            bg={isUser ? 'blue' : 'white'}
-                            borderRadius="md"
-                            color={isUser ? 'white' : 'black'}
-                            cursor="pointer"
-                            p={2}
-                            shadow="sm"
+                        <HStack spacing={1}>
+                          {message.delivered && isUser && (
+                            <Box>
+                              <CiCircleCheck color="blue" size={14} />
+                            </Box>
+                          )}
+                          <Tooltip
+                            bg="black"
+                            hasArrow
+                            label={`Sent: ${new Date(message.timestamp).toLocaleString()}`}
+                            placement={isUser ? 'left' : 'right'}
+                            shouldWrapChildren
+                            fontSize="xs"
                           >
-                            <Text size="xs">{message.message}</Text>
-                          </Box>
-                        </Tooltip>
+                            <Box
+                              bg={isUser ? 'blue' : 'white'}
+                              borderRadius="md"
+                              color={isUser ? 'white' : 'black'}
+                              cursor="pointer"
+                              p={2}
+                              shadow="sm"
+                            >
+                              <Text size="xs">{message.message}</Text>
+                            </Box>
+                          </Tooltip>
+                        </HStack>
                       </VStack>
                     </HStack>
                   </VStack>
