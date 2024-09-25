@@ -35,6 +35,7 @@ import { useAccount } from 'wagmi';
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
 import { ItemCard } from '../components/ItemCard';
+import { ItemConsumeModal } from '../components/ItemConsumeModal';
 import { ItemEquipModal } from '../components/ItemEquipModal';
 import { Level } from '../components/Level';
 import { LevelingPanel } from '../components/LevelingPanel';
@@ -458,8 +459,6 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const { renderError } = useToast();
   const {
     components: { CharacterEquipment, ItemsOwners },
-    delegatorAddress,
-    systemCalls: { useWorldConsumableItem },
   } = useMUD();
   const {
     armorTemplates,
@@ -474,10 +473,17 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     onClose: onCloseItemModal,
     onOpen: onOpenItemModal,
   } = useDisclosure();
+  const {
+    isOpen: isConsumableModalOpen,
+    onClose: onCloseConsumableModal,
+    onOpen: onOpenConsumableModal,
+  } = useDisclosure();
 
   const [selectedItem, setSelectedItem] = useState<
     Armor | Spell | Weapon | null
   >(null);
+  const [selectedConsumable, setSelectedConsumable] =
+    useState<Consumable | null>(null);
   const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
   const [inventoryConsumables, setInventoryConsumables] = useState<
     Consumable[]
@@ -642,44 +648,6 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     isLoadingItemTemplates,
   ]);
 
-  const onUseConsumable = useCallback(
-    async (tokenId: string) => {
-      try {
-        if (!delegatorAddress) {
-          throw new Error('Delegator address not found.');
-        }
-
-        const consumableItem = inventoryConsumables.find(
-          c => c.tokenId === tokenId,
-        );
-
-        if (!consumableItem) {
-          throw new Error('Consumable item not found.');
-        }
-
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const { error, success } = await useWorldConsumableItem(
-          character.id,
-          tokenId,
-          BigInt(character.currentHp) + BigInt(consumableItem.hpRestoreAmount),
-        );
-
-        if (error && !success) {
-          throw new Error(error);
-        }
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to use consumable.', e);
-      }
-    },
-    [
-      character,
-      delegatorAddress,
-      inventoryConsumables,
-      renderError,
-      useWorldConsumableItem,
-    ],
-  );
-
   const spellsAndWeapons = useMemo(() => {
     return [...inventorySpells, ...inventoryWeapons];
   }, [inventorySpells, inventoryWeapons]);
@@ -804,7 +772,8 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
             <GridItem key={i}>
               <ItemCard
                 onClick={() => {
-                  onUseConsumable(consumable.tokenId);
+                  setSelectedConsumable(consumable);
+                  onOpenConsumableModal();
                 }}
                 {...consumable}
               />
@@ -826,6 +795,16 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
             setSelectedItem(null);
           }}
           {...selectedItem}
+        />
+      )}
+      {selectedConsumable && (
+        <ItemConsumeModal
+          isOpen={isConsumableModalOpen}
+          onClose={() => {
+            onCloseConsumableModal();
+            setSelectedConsumable(null);
+          }}
+          {...selectedConsumable}
         />
       )}
     </Box>

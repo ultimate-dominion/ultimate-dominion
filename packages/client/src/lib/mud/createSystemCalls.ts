@@ -890,7 +890,6 @@ export function createSystemCalls(
   const useWorldConsumableItem = async (
     entity: Entity,
     tokenId: string,
-    newHp: bigint,
   ): SystemCallReturn => {
     try {
       const characterId = entity.toString() as `0x${string}`;
@@ -909,11 +908,10 @@ export function createSystemCalls(
         BigInt(tokenId),
       ]);
 
-      await waitForTransaction(tx);
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
 
-      const characterStats = getComponentValue(Stats, entity);
-
-      const success = characterStats?.currentHp === newHp;
+      const success = status === 'success';
 
       return {
         error: success ? undefined : 'Failed to use consumable item.',
