@@ -91,6 +91,9 @@ contract Test_EffectsSystem is SetUp, GasReporter {
     }
 
     function test_Consumable_Heals() public {
+        StatsData memory newStats = world.UD__getStats(bobCharacterId);
+        newStats.currentHp = 1;
+        world.UD__adminSetStats(bobCharacterId, newStats);
         // health potion
         uint256 healthPotionId = 21;
         assertEq(erc1155System.balanceOf(bob, healthPotionId), 1);
@@ -99,5 +102,6 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, healthPotionId);
 
         assertEq(erc1155System.balanceOf(bob, healthPotionId), 0);
+        assertGt(world.UD__getStats(bobCharacterId).currentHp, 1);
     }
 }
