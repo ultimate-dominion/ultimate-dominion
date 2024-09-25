@@ -33,7 +33,6 @@ import {IWorld} from "@world/IWorld.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Math, WAD} from "@libraries/Math.sol";
-import "forge-std/console.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
@@ -153,10 +152,10 @@ contract CharacterSystem is System {
     }
 
     function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentAvailableLevel) {
-        if (experience >= Levels.get(19)) {
-            currentAvailableLevel = 20;
+        if (experience >= Levels.get(UltimateDominionConfig.getMaxLevel() - 1)) {
+            currentAvailableLevel = UltimateDominionConfig.getMaxLevel();
         } else {
-            for (uint256 i; i < 20;) {
+            for (uint256 i; i < UltimateDominionConfig.getMaxLevel();) {
                 if (Levels.get(i) <= experience && Levels.get(i + 1) > experience) {
                     currentAvailableLevel = i + 1;
                     break;
@@ -173,31 +172,47 @@ contract CharacterSystem is System {
         StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
         stats.currentHp = Stats.getCurrentHp(characterId);
         uint256 availableLevel = getCurrentAvailableLevel(stats.experience);
-        if (availableLevel > stats.level) {
-            stats.level++;
-        }
-        int256 strChange = desiredStats.strength - stats.strength;
-        int256 agiChange = desiredStats.agility - stats.agility;
-        int256 intChange = desiredStats.intelligence - stats.intelligence;
-        // int256 hpChange = desiredStats.maxHp - stats.maxHp;
+        if (availableLevel > stats.level) {        
+            int256 strChange = desiredStats.strength - stats.strength;
+            int256 agiChange = desiredStats.agility - stats.agility;
+            int256 intChange = desiredStats.intelligence - stats.intelligence;
+            // int256 hpChange = desiredStats.maxHp - stats.maxHp;
 
-        require(
-            (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
-        );
-        if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
+            require(
+                (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
+            );
+            if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
+                stats.maxHp += 1;
+            }
             stats.maxHp += 1;
+            stats.strength = desiredStats.strength;
+            stats.agility = desiredStats.agility;
+            stats.intelligence = desiredStats.intelligence;
+            stats.level += 1;
+
+            // add an extra point for class stat
+            Classes characterClass = getClass(characterId);
+            if(characterClass == Classes.Warrior){
+                ++stats.strength;
+            }
+            else if(characterClass == Classes.Rogue){
+                ++stats.agility;
+            }
+            else if(characterClass == Classes.Mage){
+                ++stats.intelligence;
+            }
+
+            if(stats.level > availableLevel) return;
+
+            // set base stats
+            Characters.setBaseStats(characterId, abi.encode(stats));
+
+            // apply equipment bonuses and set them to stat table
+            _setStats(characterId, IWorld(_world()).UD__calculateEquipmentBonuses(characterId), stats.level);
+        }    
+        else{
+            revert("no available levels");
         }
-        stats.maxHp += 1;
-        stats.strength = desiredStats.strength;
-        stats.agility = desiredStats.agility;
-        stats.intelligence = desiredStats.intelligence;
-        stats.level += 1;
-
-        // set base stats
-        Characters.setBaseStats(characterId, abi.encode(stats));
-
-        // apply equipment bonuses and set them to stat table
-        _setStats(characterId, IWorld(_world()).UD__calculateEquipmentBonuses(characterId), stats.level);
     }
 
     function setStats(bytes32 entityId, AdjustedCombatStats memory stats) public {

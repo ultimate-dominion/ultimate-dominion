@@ -50,7 +50,6 @@ import {
     _ownersTableId
 } from "@erc1155/utils.sol";
 import {AdjustedCombatStats, MonsterStats} from "@interfaces/Structs.sol";
-import "forge-std/console.sol";
 
 contract EquipmentSystem is System {
     modifier inGame(bytes32 characterId) {
@@ -169,9 +168,14 @@ contract EquipmentSystem is System {
 
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
+        // if(CharacterEquipment.lengthEquippedArmor(characterId) > 0 && uint8(itemType) == uint8(1)) {
+        //     revert("Already wearing armor");
+        // }
+        // if(itemType == ItemType.Armor){
+        //     require(CharacterEquipment.lengthEquippedArmor(characterId) == 0, "Already wearing armor");
+        // }
         uint256 totalLength;
         totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);
-        totalLength += CharacterEquipment.lengthEquippedArmor(characterId);
         totalLength += CharacterEquipment.lengthEquippedSpells(characterId);
         totalLength += CharacterEquipment.lengthEquippedConsumables(characterId);
         require(totalLength < 4, "too many items equipped");

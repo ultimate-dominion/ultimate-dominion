@@ -389,6 +389,8 @@ export default defineWorld({
         items: "address",
         marketplace: "address",
         lootManager: "address",
+        maxLevel: "uint256",
+        maxMonsters: "uint256",
       },
     },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////

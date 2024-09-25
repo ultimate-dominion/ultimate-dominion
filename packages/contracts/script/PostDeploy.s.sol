@@ -107,6 +107,8 @@ contract PostDeploy is Script {
 
         // Start broadcasting transeffects from the deployer account
         vm.startBroadcast(deployerPrivateKey);
+        UltimateDominionConfig.setMaxLevel(10);
+        UltimateDominionConfig.setMaxMonsters(20);
         if (block.chainid == 31337) {
             // Set entropy contracts
             address mockEntropy = address(new MockEntropy());

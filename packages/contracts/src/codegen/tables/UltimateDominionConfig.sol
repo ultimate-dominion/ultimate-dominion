@@ -25,6 +25,8 @@ struct UltimateDominionConfigData {
   address items;
   address marketplace;
   address lootManager;
+  uint256 maxLevel;
+  uint256 maxMonsters;
 }
 
 library UltimateDominionConfig {
@@ -32,12 +34,12 @@ library UltimateDominionConfig {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000556c74696d617465446f6d696e696f6e);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x008d080001141414141414140000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x00cd0a0001141414141414142020000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (bool, address, address, address, address, address, address, address)
-  Schema constant _valueSchema = Schema.wrap(0x008d080060616161616161610000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bool, address, address, address, address, address, address, address, uint256, uint256)
+  Schema constant _valueSchema = Schema.wrap(0x00cd0a0060616161616161611f1f000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -52,7 +54,7 @@ library UltimateDominionConfig {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](8);
+    fieldNames = new string[](10);
     fieldNames[0] = "locked";
     fieldNames[1] = "goldToken";
     fieldNames[2] = "characterToken";
@@ -61,6 +63,8 @@ library UltimateDominionConfig {
     fieldNames[5] = "items";
     fieldNames[6] = "marketplace";
     fieldNames[7] = "lootManager";
+    fieldNames[8] = "maxLevel";
+    fieldNames[9] = "maxMonsters";
   }
 
   /**
@@ -382,6 +386,82 @@ library UltimateDominionConfig {
   }
 
   /**
+   * @notice Get maxLevel.
+   */
+  function getMaxLevel() internal view returns (uint256 maxLevel) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 8, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get maxLevel.
+   */
+  function _getMaxLevel() internal view returns (uint256 maxLevel) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 8, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set maxLevel.
+   */
+  function setMaxLevel(uint256 maxLevel) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 8, abi.encodePacked((maxLevel)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set maxLevel.
+   */
+  function _setMaxLevel(uint256 maxLevel) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 8, abi.encodePacked((maxLevel)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get maxMonsters.
+   */
+  function getMaxMonsters() internal view returns (uint256 maxMonsters) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 9, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get maxMonsters.
+   */
+  function _getMaxMonsters() internal view returns (uint256 maxMonsters) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 9, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set maxMonsters.
+   */
+  function setMaxMonsters(uint256 maxMonsters) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 9, abi.encodePacked((maxMonsters)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set maxMonsters.
+   */
+  function _setMaxMonsters(uint256 maxMonsters) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 9, abi.encodePacked((maxMonsters)), _fieldLayout);
+  }
+
+  /**
    * @notice Get the full data.
    */
   function get() internal view returns (UltimateDominionConfigData memory _table) {
@@ -420,7 +500,9 @@ library UltimateDominionConfig {
     address pythProvider,
     address items,
     address marketplace,
-    address lootManager
+    address lootManager,
+    uint256 maxLevel,
+    uint256 maxMonsters
   ) internal {
     bytes memory _staticData = encodeStatic(
       locked,
@@ -430,7 +512,9 @@ library UltimateDominionConfig {
       pythProvider,
       items,
       marketplace,
-      lootManager
+      lootManager,
+      maxLevel,
+      maxMonsters
     );
 
     EncodedLengths _encodedLengths;
@@ -452,7 +536,9 @@ library UltimateDominionConfig {
     address pythProvider,
     address items,
     address marketplace,
-    address lootManager
+    address lootManager,
+    uint256 maxLevel,
+    uint256 maxMonsters
   ) internal {
     bytes memory _staticData = encodeStatic(
       locked,
@@ -462,7 +548,9 @@ library UltimateDominionConfig {
       pythProvider,
       items,
       marketplace,
-      lootManager
+      lootManager,
+      maxLevel,
+      maxMonsters
     );
 
     EncodedLengths _encodedLengths;
@@ -485,7 +573,9 @@ library UltimateDominionConfig {
       _table.pythProvider,
       _table.items,
       _table.marketplace,
-      _table.lootManager
+      _table.lootManager,
+      _table.maxLevel,
+      _table.maxMonsters
     );
 
     EncodedLengths _encodedLengths;
@@ -508,7 +598,9 @@ library UltimateDominionConfig {
       _table.pythProvider,
       _table.items,
       _table.marketplace,
-      _table.lootManager
+      _table.lootManager,
+      _table.maxLevel,
+      _table.maxMonsters
     );
 
     EncodedLengths _encodedLengths;
@@ -535,7 +627,9 @@ library UltimateDominionConfig {
       address pythProvider,
       address items,
       address marketplace,
-      address lootManager
+      address lootManager,
+      uint256 maxLevel,
+      uint256 maxMonsters
     )
   {
     locked = (_toBool(uint8(Bytes.getBytes1(_blob, 0))));
@@ -553,6 +647,10 @@ library UltimateDominionConfig {
     marketplace = (address(Bytes.getBytes20(_blob, 101)));
 
     lootManager = (address(Bytes.getBytes20(_blob, 121)));
+
+    maxLevel = (uint256(Bytes.getBytes32(_blob, 141)));
+
+    maxMonsters = (uint256(Bytes.getBytes32(_blob, 173)));
   }
 
   /**
@@ -574,7 +672,9 @@ library UltimateDominionConfig {
       _table.pythProvider,
       _table.items,
       _table.marketplace,
-      _table.lootManager
+      _table.lootManager,
+      _table.maxLevel,
+      _table.maxMonsters
     ) = decodeStatic(_staticData);
   }
 
@@ -608,9 +708,23 @@ library UltimateDominionConfig {
     address pythProvider,
     address items,
     address marketplace,
-    address lootManager
+    address lootManager,
+    uint256 maxLevel,
+    uint256 maxMonsters
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(locked, goldToken, characterToken, entropy, pythProvider, items, marketplace, lootManager);
+    return
+      abi.encodePacked(
+        locked,
+        goldToken,
+        characterToken,
+        entropy,
+        pythProvider,
+        items,
+        marketplace,
+        lootManager,
+        maxLevel,
+        maxMonsters
+      );
   }
 
   /**
@@ -627,7 +741,9 @@ library UltimateDominionConfig {
     address pythProvider,
     address items,
     address marketplace,
-    address lootManager
+    address lootManager,
+    uint256 maxLevel,
+    uint256 maxMonsters
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(
       locked,
@@ -637,7 +753,9 @@ library UltimateDominionConfig {
       pythProvider,
       items,
       marketplace,
-      lootManager
+      lootManager,
+      maxLevel,
+      maxMonsters
     );
 
     EncodedLengths _encodedLengths;
