@@ -20,6 +20,7 @@ import { hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
+  decodeBaseStats,
   decodeMobInstanceId,
   fetchMetadataFromUri,
   uriToHttp,
@@ -96,6 +97,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [monstersOnTile, setMonstersOnTile] = useState<Monster[]>([]);
 
   const [allShops, setAllShops] = useState<Shop[]>([]);
+
   const [shopsOnTile, setShopsOnTile] = useState<Shop[]>([]);
   const position = useComponentValue(
     Position,
@@ -189,10 +191,25 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
             const _position = getComponentValueStrict(Position, entity);
 
+            let decodedBaseStats = {
+              agility: '0',
+              currentHp: '0',
+              entityClass: 0,
+              experience: '0',
+              intelligence: '0',
+              level: '0',
+              maxHp: '0',
+              strength: '0',
+            };
+
+            if (characterData.baseStats !== '0x') {
+              decodedBaseStats = decodeBaseStats(characterData.baseStats);
+            }
+
             return {
               ...fetachedMetadata,
               agility: characterStats.agility.toString(),
-              maxHp: characterStats.maxHp.toString(),
+              baseStats: decodedBaseStats,
               currentHp: characterStats.currentHp.toString(),
               entityClass: characterStats.class,
               escrowGoldBalance,
@@ -204,6 +221,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               isSpawned,
               level: characterStats.level.toString(),
               locked: characterData.locked,
+              maxHp: characterStats.maxHp.toString(),
               name: hexToString(characterData.name as `0x${string}`, {
                 size: 32,
               }),
@@ -289,18 +307,20 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     (entities: Entity[]): Shop[] => {
       try {
         const _shops: Shop[] = entities.map(entity => {
-          const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
           const _position = getComponentValueStrict(Position, entity);
           const shopData = getComponentValueStrict(Shops, entity);
 
           return {
             buyableItems: shopData.buyableItems.map(item => item.toString()),
-            mobId,
+            gold: shopData.gold,
+            maxGold: shopData.maxGold,
             position: { x: _position.x, y: _position.y },
-            priceMarkup: shopData.priceMarkup.toString(),
-            priceMarkdown: shopData.priceMarkdown.toString(),
+            priceMarkdown: shopData.priceMarkdown,
+            priceMarkup: shopData.priceMarkup,
+            restock: shopData.stock.map(item => item.toString()),
             sellableItems: shopData.sellableItems.map(item => item.toString()),
             shopId: entity,
+            stock: shopData.stock.map(item => item.toString()),
           } as Shop;
         });
 
@@ -322,6 +342,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
       const _monsters = getMonsters(allMonsterEntities);
       const _shops = getShops(allShopEntities);
+
       setAllMonsters(_monsters);
       setAllShops(_shops);
     })();

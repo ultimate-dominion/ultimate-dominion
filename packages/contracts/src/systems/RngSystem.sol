@@ -213,4 +213,16 @@ contract RngSystem is System, IEntropyConsumer {
         _counter = Counters.get(address(this), counterNumber) + 1;
         Counters.set(address(this), counterNumber, _counter);
     }
+
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory)
+        public
+        virtual
+        returns (bytes4)
+    {
+        return this.onERC1155BatchReceived.selector;
+    }
 }

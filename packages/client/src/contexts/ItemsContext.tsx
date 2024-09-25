@@ -106,6 +106,7 @@ export const ItemsProvider = ({
             intModifier: armorStats.intModifier.toString(),
             itemType: itemTemplate.itemType,
             minLevel: armorStats.minLevel.toString(),
+            price: itemTemplate.price,
             statRestrictions: {
               minAgility: statRestrictions.minAgility.toString(),
               minIntelligence: statRestrictions.minIntelligence.toString(),
@@ -200,10 +201,11 @@ export const ItemsProvider = ({
 
           return {
             ...metadata,
+            effects: spellStats.effects,
             minDamage: spellStats.minDamage.toString(),
             maxDamage: spellStats.maxDamage.toString(),
             minLevel: spellStats.minLevel.toString(),
-            effects: spellStats.effects,
+            price: itemTemplate.price,
             tokenId: spellId.toString(),
             itemType: itemTemplate.itemType,
             statRestrictions: {
@@ -263,6 +265,7 @@ export const ItemsProvider = ({
             maxDamage: weaponStats.maxDamage.toString(),
             minDamage: weaponStats.minDamage.toString(),
             minLevel: weaponStats.minLevel.toString(),
+            price: itemTemplate.price,
             statRestrictions: {
               minAgility: statRestrictions.minAgility.toString(),
               minIntelligence: statRestrictions.minIntelligence.toString(),

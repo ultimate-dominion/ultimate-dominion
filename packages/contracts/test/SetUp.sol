@@ -19,10 +19,11 @@ import {
     UltimateDominionConfig,
     ArmorStatsData,
     WeaponStatsData,
-    StatRestrictionsData
+    StatRestrictionsData,
+    ShopsData
 } from "@codegen/index.sol";
 import {Classes, MobType, ItemType, EffectType} from "@codegen/common.sol";
-import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
+import {_itemsSystemId, _lootManagerSystemId, _mobSystemId} from "../src/utils.sol";
 import {MonsterStats} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_NAMESPACE} from "@latticexyz/world/src/worldResourceTypes.sol";
@@ -42,7 +43,8 @@ contract SetUp is Test {
     IERC20Mintable public goldToken;
     IERC721Mintable public characterToken;
     IERC1155System public erc1155System;
-
+    
+    bytes32 shopId;
     bytes32 alicesCharacterId;
     bytes32 bobCharacterId;
     bytes32 public alicesRandomness = bytes32(keccak256(abi.encode("alicesRestaurant")));
@@ -68,6 +70,31 @@ contract SetUp is Test {
         basicMagicDamageStatsId = bytes32(bytes8(keccak256(abi.encode("basic magic attack"))));
         basicActionIdStatsId = bytes32(bytes8(keccak256(abi.encode("basic weapon attack"))));
 
+        world.grantAccess(_mobSystemId("UD"), address(this));
+        uint256[] memory sellableItems = new uint256[](10);
+        uint256[] memory buyableItems = new uint256[](10);
+        uint256[] memory stock = new uint256[](10);
+        for(uint i = 0; i < 10; ++i){
+            sellableItems[i] = i;
+            buyableItems[i] = i;
+            stock[i] = 5;
+        }
+
+        ShopsData memory newShop = ShopsData({
+            gold: 100 ether,
+            maxGold: 100 ether,
+            priceMarkup: 2000, // 20%
+            priceMarkdown: 5000, // 50%
+            restockTimestamp: 1725962400,
+            sellableItems: sellableItems,
+            buyableItems: buyableItems,
+            restock: stock,
+            stock: stock
+        });
+
+        uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
+        shopId = world.UD__spawnMob(shopMobId, 0, 0);
+
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;
         // create a starter armor
@@ -90,7 +117,7 @@ contract SetUp is Test {
         vm.label(world.UD__getCharacterToken(), "character token");
 
         newArmorId = world.UD__createItem(
-            ItemType.Armor, 10 ether, 100000000, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
+            ItemType.Armor, 10 ether, 100000000, 1 ether, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
         );
 
         world.grantAccess(_lootManagerSystemId("UD"), address(this));
