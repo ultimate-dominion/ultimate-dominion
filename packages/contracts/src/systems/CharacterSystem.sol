@@ -180,7 +180,7 @@ contract CharacterSystem is System {
         StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
         stats.currentHp = Stats.getCurrentHp(characterId);
         uint256 availableLevel = getCurrentAvailableLevel(stats.experience);
-        if (availableLevel > stats.level) {        
+        if (availableLevel > stats.level) { 
             int256 strChange = desiredStats.strength - stats.strength;
             int256 agiChange = desiredStats.agility - stats.agility;
             int256 intChange = desiredStats.intelligence - stats.intelligence;
@@ -209,8 +209,6 @@ contract CharacterSystem is System {
             else if(characterClass == Classes.Mage){
                 ++stats.intelligence;
             }
-
-            if(stats.level > availableLevel) return;
 
             // set base stats
             Characters.setBaseStats(characterId, abi.encode(stats));

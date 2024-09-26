@@ -164,12 +164,9 @@ contract EquipmentSystem is System {
 
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
-        // if(CharacterEquipment.lengthEquippedArmor(characterId) > 0 && uint8(itemType) == uint8(1)) {
-        //     revert("Already wearing armor");
-        // }
-        // if(itemType == ItemType.Armor){
-        //     require(CharacterEquipment.lengthEquippedArmor(characterId) == 0, "Already wearing armor");
-        // }
+        if(CharacterEquipment.lengthEquippedArmor(characterId) > 0 && uint8(itemType) == uint8(1)) {
+            revert("Already wearing armor");
+        }
         uint256 totalLength;
         totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);
         totalLength += CharacterEquipment.lengthEquippedSpells(characterId);
