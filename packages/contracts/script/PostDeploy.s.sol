@@ -50,6 +50,7 @@ import {
 } from "@codegen/index.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
+import {NoTransferLastEquippedItemHook} from "../src/NoTransferLastEquippedItemHook.sol";
 import {Classes, ItemType, MobType, EffectType} from "@codegen/common.sol";
 import {
     MonsterStats,
@@ -163,7 +164,8 @@ contract PostDeploy is Script {
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "Characters", name: "ERC721System"});
             resourceIds.combatSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CombatSystem"});
-            resourceIds.erc1155SystemId = _erc1155SystemId(ITEMS_NAMESPACE);
+            resourceIds.erc1155SystemId =
+                WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "Items", name: "ERC1155System"}); //_erc1155SystemId(ITEMS_NAMESPACE);
             resourceIds.erc1155NamespaceId = WorldResourceIdLib.encodeNamespace(ITEMS_NAMESPACE);
             resourceIds.itemsSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "ItemsSystem"});
@@ -171,7 +173,7 @@ contract PostDeploy is Script {
         }
 
         address characterSystemAddress = Systems.getSystem(resourceIds.characterSystemId);
-
+        address lootManagerSystemAddress = Systems.getSystem(resourceIds.lootManagerSystemId);
         System goldSystemContract = new ERC20System();
 
         world.registerSystem(resourceIds.erc20SystemId, goldSystemContract, true);
@@ -194,7 +196,7 @@ contract PostDeploy is Script {
         // world.registerSystem(resourceIds.erc721SystemId, systemContract, true);
 
         NoTransferHook characterHook = new NoTransferHook();
-
+        NoTransferLastEquippedItemHook equippedItemTransferHook = new NoTransferLastEquippedItemHook(address(world));
         world.registerSystemHook(resourceIds.erc721SystemId, characterHook, BEFORE_CALL_SYSTEM);
 
         // Transfer characters namespace to World
@@ -203,6 +205,11 @@ contract PostDeploy is Script {
         world.transferOwnership(resourceIds.erc721NamespaceId, characterSystemAddress);
 
         address items = _deployErc1155(world, ITEMS_NAMESPACE);
+        address itemsSystemAddress = Systems.getSystem(resourceIds.itemsSystemId);
+
+        world.registerSystemHook(resourceIds.erc1155SystemId, equippedItemTransferHook, BEFORE_CALL_SYSTEM);
+        world.grantAccess(resourceIds.erc1155SystemId, worldAddress);
+        world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
 
         UltimateDominionConfig.setItems(address(items));
         //allow entropy system to call callback on Combat system
@@ -271,11 +278,11 @@ contract PostDeploy is Script {
         IERC1155 _items = registerERC1155(_world, itemsNamespace, metadataUriPrefix);
 
         // ERC1155System erc1155System = new ERC1155System();
-        address itemsSystemAddress = Systems.getSystem(resourceIds.itemsSystemId);
+        // address itemsSystemAddress = Systems.getSystem(resourceIds.itemsSystemId);
 
         // _world.registerSystem(resourceIds.erc1155SystemId, erc1155System, false);
-        _world.grantAccess(resourceIds.erc1155SystemId, worldAddress);
-        world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
+        // _world.grantAccess(resourceIds.erc1155SystemId, worldAddress);
+        // world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
         return address(_items);
     }
 

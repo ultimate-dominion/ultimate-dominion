@@ -67,7 +67,7 @@ type BattleContextType = {
   continueToBattleOutcome: boolean;
   currentBattle: CombatDetails | null;
   lastestBattleOutcome: CombatOutcomeType | null;
-  onAttack: (itemId: string, currentTurn: string) => void;
+  onAttack: (itemId: string) => void;
   onContinueToBattleOutcome: (cont: boolean) => void;
   opponent: Character | Monster | null;
   statusEffectActions: StatusAction[];
@@ -314,7 +314,7 @@ export const BattleProvider = ({
   }, [currentBattle, EncounterEntity, StatusEffectValidity]);
 
   const onAttack = useCallback(
-    async (itemId: string, currentTurn: string) => {
+    async (itemId: string) => {
       try {
         setAttackingItemId(itemId);
 
@@ -339,7 +339,6 @@ export const BattleProvider = ({
           character.id,
           opponent.id,
           itemId,
-          currentTurn,
         );
 
         if (error && !success) {

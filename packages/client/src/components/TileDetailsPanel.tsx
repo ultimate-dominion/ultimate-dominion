@@ -17,6 +17,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
+import { Link } from 'react-router-dom';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -50,12 +51,17 @@ export const TileDetailsPanel = (): JSX.Element => {
     onClose: onCloseAdventureEscrowModal,
     onOpen: onOpenAdventureEscrowModal,
   } = useDisclosure();
+  const {
+    isOpen: isNoMoveEquippedModalOpen,
+    onClose: onCloseNoMoveEquippedModal,
+    onOpen: onOpenNoMoveEquippedModal,
+  } = useDisclosure();
 
   const {
     delegatorAddress,
     systemCalls: { createEncounter },
   } = useMUD();
-  const { character } = useCharacter();
+  const { character, isMoveEquipped } = useCharacter();
   const {
     inSafetyZone,
     isSpawned,
@@ -433,9 +439,11 @@ export const TileDetailsPanel = (): JSX.Element => {
                 <OpponentRow
                   encounterType={EncounterType.PvE}
                   key={`tile-monster-${i}-${monster.name}`}
-                  onClick={() => {
-                    onInitiateCombat(monster, EncounterType.PvE);
-                  }}
+                  onClick={() =>
+                    isMoveEquipped
+                      ? onInitiateCombat(monster, EncounterType.PvE)
+                      : onOpenNoMoveEquippedModal()
+                  }
                   opponent={monster}
                 />
               ))}
@@ -473,6 +481,31 @@ export const TileDetailsPanel = (): JSX.Element => {
         isOpen={isAdventureEscrowModalOpen}
         onClose={onCloseAdventureEscrowModal}
       />
+
+      <InfoModal
+        heading="No moves equipped!"
+        isOpen={isNoMoveEquippedModalOpen}
+        onClose={onCloseNoMoveEquippedModal}
+      >
+        <VStack p={4} spacing={4}>
+          <IoIosWarning color="orange" size={40} />
+          <Text>
+            In order to initiate a battle, you must have at least 1 weapon or
+            spell equipped. Go to your{' '}
+            <Text
+              as={Link}
+              color="blue"
+              to={`/characters/${character?.id}`}
+              _hover={{
+                textDecoration: 'underline',
+              }}
+            >
+              character page
+            </Text>{' '}
+            to equip a move.
+          </Text>
+        </VStack>
+      </InfoModal>
 
       <InfoModal
         heading="Cannot Battle in the Safety Zone"

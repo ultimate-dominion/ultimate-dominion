@@ -58,6 +58,7 @@ contract MarketplaceSystem is System, ReentrancyGuard {
 
         // create order Hash out of offer and consideration data and the Counter for the offerer
         uint256 offerCounter = Counters.getCounter(order.offerer, 0) + 1;
+
         Counters.setCounter(order.consideration.recipient, 0, (offerCounter));
         _orderHash = getOrderHash(order);
 
@@ -77,7 +78,6 @@ contract MarketplaceSystem is System, ReentrancyGuard {
     function fulfillOrder(bytes32 orderHash) public nonReentrant returns (bool fulfilled) {
         OffersData memory o = Offers.get(orderHash);
         ConsiderationsData memory c = Considerations.get(orderHash);
-
         // check that order is active
         require(Orders.getOrderStatus(orderHash) == OrderStatus.Active, "Order is not active");
 
