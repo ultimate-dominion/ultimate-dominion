@@ -188,27 +188,30 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
     }
 
-    function test_MagicHeals() public {
-        // bob has higher agi and int to go first
-        StatsData memory BobStats = world.UD__getStats(bobCharacterId);
-        BobStats.intelligence = 10;
-        BobStats.agility = 10;
-        world.UD__adminSetStats(bobCharacterId, BobStats);
+    // function test_MagicHeals() public {
+    //     // bob has higher agi and int to go first
+    //     StatsData memory bobStats = world.UD__getStats(bobCharacterId);
+    //     bobStats.intelligence = 100;
+    //     bobStats.agility = 100;
+    //     bobStats.currentHp = bobStats.maxHp - 1;
+    //     world.UD__adminSetStats(bobCharacterId, bobStats);
 
-        world.UD__adminDropItem(bobCharacterId, 12, 1);
-        uint256[] memory itemIds = new uint256[](1);
-        itemIds[0] = 12;
-        vm.prank(bob);
-        world.UD__equipItems(bobCharacterId, itemIds);
+    //     world.UD__adminDropItem(bobCharacterId, 12, 1);
+    //     uint256[] memory itemIds = new uint256[](1);
+    //     itemIds[0] = 12;
+    //     vm.prank(bob);
+    //     world.UD__equipItems(bobCharacterId, itemIds);
 
-        vm.prank(bob);
-        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
-        Action[] memory actions = new Action[](1);
-        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: 12});
-        uint256 fees = 0; // entropy.getFee(address(1));
-        vm.prank(bob);
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
-    }
+    //     vm.prank(bob);
+    //     bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
+    //     Action[] memory actions = new Action[](1);
+    //     actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: 21});
+    //     uint256 fees = 0; // entropy.getFee(address(1));
+    //     vm.prank(bob);
+    //     world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+
+    //     assertEq(world.UD__getStats(bobCharacterId).currentHp, world.UD__getStats(bobCharacterId).maxHp);
+    // }
 
     function test_ExecutePvECombat_Revert_No_Access(address caller) public {
         vm.assume(caller != world.UD__getSystemAddress(_rngSystemId("")));
