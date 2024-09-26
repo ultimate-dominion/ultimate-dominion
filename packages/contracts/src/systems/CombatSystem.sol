@@ -313,6 +313,13 @@ contract CombatSystem is System {
                 damage = _calculateMagicDamage(
                     attackStats, spell, rnChunks[2], attacker.intelligence, defender.intelligence, crit
                 );
+                if (damage < 0) {
+                    int256 maxHp = Stats.getMaxHp(defenderId);
+
+                    if (defender.currentHp + damage > maxHp) {
+                        damage = maxHp - defender.currentHp;
+                    }
+                }
                 if (!crit) {
                     console.log("magic damage: ");
                     console.logInt(damage);
@@ -320,6 +327,14 @@ contract CombatSystem is System {
 
                 if (crit) {
                     damage = damage * int256(CRIT_MULTIPLIER);
+
+                    if (damage < 0) {
+                        int256 maxHp = Stats.getMaxHp(defenderId);
+
+                        if (defender.currentHp + damage > maxHp) {
+                            damage = maxHp - defender.currentHp;
+                        }
+                    }
                     console.log("magic CRIT!");
                     console.logInt(damage);
                     crit = true;
