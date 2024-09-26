@@ -314,10 +314,12 @@ contract CombatSystem is System {
                     attackStats, spell, rnChunks[2], attacker.intelligence, defender.intelligence, crit
                 );
                 if (damage < 0) {
+                    int256 currentHp = Stats.getCurrentHp(defenderId);
                     int256 maxHp = Stats.getMaxHp(defenderId);
 
-                    if (defender.currentHp + damage > maxHp) {
-                        damage = maxHp - defender.currentHp;
+                    if (currentHp - damage > int256(maxHp)) {
+                        damage = -(maxHp - currentHp);
+                        console.logInt(damage);
                     }
                 }
                 if (!crit) {
@@ -330,9 +332,10 @@ contract CombatSystem is System {
 
                     if (damage < 0) {
                         int256 maxHp = Stats.getMaxHp(defenderId);
+                        int256 currentHp = Stats.getCurrentHp(defenderId);
 
-                        if (defender.currentHp + damage > maxHp) {
-                            damage = maxHp - defender.currentHp;
+                        if (currentHp - damage > int256(maxHp)) {
+                            damage = -(maxHp - currentHp);
                         }
                     }
                     console.log("magic CRIT!");
