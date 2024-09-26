@@ -9,7 +9,12 @@ import {
     CombatEncounter,
     EntitiesAtPosition,
     CharacterEquipment,
+    CombatEncounterData,
+    CombatEncounter,
+    CombatOutcomeData,
+    CombatOutcome,
     MapConfig,
+    AdventureEscrow,
     Position,
     Spawned,
     Stats,
@@ -17,6 +22,7 @@ import {
     EncounterEntity,
     SessionTimer
 } from "../codegen/index.sol";
+import {EncounterType} from "@codegen/common.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {IMobSystem} from "@world/IWorld.sol";
@@ -159,12 +165,55 @@ contract MapSystem is System {
     }
 
     function removeEntityFromBoard(bytes32 entityId) public {
+        bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             if (senderIsOwner) {
-                // intentionally left empty
-            }
-            else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
+                if (encounterId != bytes32(0)) {
+                    bool attackersWin;
+                    uint256 amountToDrop;
+                    CombatEncounterData memory encounterData = IWorld(_world()).UD__getEncounter(encounterId);
+                    // if pve only allow player to flee in first roung
+                    if (encounterData.encounterType == EncounterType.PvE) {
+                        revert("cannot run from PvE");
+                        // give up 25% of escrow wallet
+                    } else if (encounterData.encounterType == EncounterType.PvP) {
+                        // take 25% of escrow gold
+                        uint256 escrowBalance = AdventureEscrow.get(entityId);
+                        if (escrowBalance > 4) {
+                            amountToDrop = escrowBalance - (escrowBalance / 4);
+                            AdventureEscrow.set(entityId, (escrowBalance - amountToDrop));
+                            // if quitter is attacker
+                            if (IWorld(_world()).UD__isAttacker(encounterId, entityId)) {
+                                // split the money up amongst the defenders
+                                for (uint256 i; i < encounterData.defenders.length; i++) {
+                                    IWorld(_world()).UD__increaseEscrowBalance(
+                                        encounterData.defenders[i], amountToDrop / encounterData.defenders.length
+                                    );
+                                }
+                                // if quitter is defender
+                            } else if (IWorld(_world()).UD__isDefender(encounterId, entityId)) {
+                                attackersWin = true;
+                                // split the money up amongst the attackers
+                                for (uint256 i; i < encounterData.attackers.length; i++) {
+                                    IWorld(_world()).UD__increaseEscrowBalance(
+                                        encounterData.attackers[i], amountToDrop / encounterData.attackers.length
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    CombatOutcomeData memory combatOutcome = CombatOutcomeData({
+                        endTime: block.timestamp,
+                        attackersWin: attackersWin,
+                        expDropped: 0,
+                        goldDropped: amountToDrop,
+                        itemsDropped: new uint256[](0)
+                    });
+                    CombatOutcome.set(encounterId, combatOutcome);
+                    CombatEncounter.setEnd(encounterId, block.timestamp);
+                }
+            } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
                 require(
                     (SessionTimer.get(entityId) + SESSION_TIMEOUT) < block.timestamp,
                     "This player's session has not timed out"
@@ -175,12 +224,12 @@ contract MapSystem is System {
         } else {
             _requireAccess(address(this), _msgSender());
         }
+
         (uint16 currentX, uint16 currentY) = getEntityPosition(entityId);
         bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
-        bool entityWasAtPosition;
+
         for (uint256 i; i < entAtPos.length;) {
             if (entAtPos[i] == entityId) {
-                entityWasAtPosition = true;
                 bytes32 lastEnt = entAtPos[entAtPos.length - 1];
                 EntitiesAtPosition.updateEntities(currentX, currentY, i, lastEnt);
                 EntitiesAtPosition.popEntities(currentX, currentY);
@@ -192,26 +241,22 @@ contract MapSystem is System {
         }
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, false);
-
-        bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
         bytes32[] memory emptyArray;
 
         // end combat for entity
         if (encounterId != bytes32(0)) {
-            bytes32[] memory attackers = CombatEncounter.getAttackers(encounterId);
-            for (uint256 i; i < attackers.length; i++) {
-                EncounterEntity.setEncounterId(attackers[i], bytes32(0));
-                EncounterEntity.setAppliedStatusEffects(attackers[i], emptyArray);
+            CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+            for (uint256 i; i < encounterData.attackers.length; i++) {
+                EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
+                EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
             }
-            bytes32[] memory defenders = CombatEncounter.getDefenders(encounterId);
-            for (uint256 i; i < defenders.length; i++) {
-                EncounterEntity.setEncounterId(defenders[i], bytes32(0));
-                EncounterEntity.setAppliedStatusEffects(defenders[i], emptyArray);
+            for (uint256 i; i < encounterData.defenders.length; i++) {
+                EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+                EncounterEntity.setAppliedStatusEffects(encounterData.defenders[i], emptyArray);
             }
             EncounterEntity.setDied(entityId, true);
             CombatEncounter.setEnd(encounterId, block.timestamp);
         }
-        require(entityWasAtPosition, "Entity not at position");
     }
 
     function removeEntitiesFromBoard(bytes32[] memory entityIds) public {
