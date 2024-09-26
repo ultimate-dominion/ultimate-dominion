@@ -1,3 +1,4 @@
+import { Text, useDisclosure, VStack } from '@chakra-ui/react';
 import {
   createContext,
   ReactNode,
@@ -6,8 +7,10 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { useLocation } from 'react-router-dom';
+import { IoIosWarning } from 'react-icons/io';
+import { Link, useLocation } from 'react-router-dom';
 
+import { InfoModal } from '../components/InfoModal';
 import { useToast } from '../hooks/useToast';
 import { GAME_BOARD_PATH } from '../Routes';
 import { useBattle } from './BattleContext';
@@ -42,7 +45,13 @@ export const MovementProvider = ({
     systemCalls: { move },
   } = useMUD();
 
-  const { character } = useCharacter();
+  const {
+    isOpen: isNoMoveEquippedModalOpen,
+    onClose: onCloseNoMoveEquippedModal,
+    onOpen: onOpenNoMoveEquippedModal,
+  } = useDisclosure();
+
+  const { character, isMoveEquipped } = useCharacter();
   const { isFetchingEntities, isSpawned, position } = useMap();
   const { currentBattle } = useBattle();
   const { isMessageInputFocused } = useChat();
@@ -88,6 +97,16 @@ export const MovementProvider = ({
           return;
         }
 
+        if (!isMoveEquipped) {
+          if (
+            (direction === 'up' && position.y === 4) ||
+            (direction === 'right' && position.x === 4)
+          ) {
+            onOpenNoMoveEquippedModal();
+            return;
+          }
+        }
+
         let newX = x;
         let newY = y;
 
@@ -124,10 +143,12 @@ export const MovementProvider = ({
       currentBattle,
       delegatorAddress,
       isMessageInputFocused,
+      isMoveEquipped,
       isMovementDisabled,
       isMoving,
       isSpawned,
       move,
+      onOpenNoMoveEquippedModal,
       position,
       renderError,
     ],
@@ -181,6 +202,33 @@ export const MovementProvider = ({
       }}
     >
       {children}
+      <InfoModal
+        heading="No moves equipped!"
+        isOpen={isNoMoveEquippedModalOpen}
+        onClose={onCloseNoMoveEquippedModal}
+      >
+        <VStack p={4} spacing={4}>
+          <IoIosWarning color="orange" size={40} />
+          <Text>
+            You cannot enter the{' '}
+            <Text as="span" fontWeight={700}>
+              Outer Realms
+            </Text>{' '}
+            without at least 1 weapon or spell equipped. Go to your{' '}
+            <Text
+              as={Link}
+              color="blue"
+              to={`/characters/${character?.id}`}
+              _hover={{
+                textDecoration: 'underline',
+              }}
+            >
+              character page
+            </Text>{' '}
+            to equip a move.
+          </Text>
+        </VStack>
+      </InfoModal>
     </MovementContext.Provider>
   );
 };

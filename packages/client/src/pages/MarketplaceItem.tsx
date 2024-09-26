@@ -56,7 +56,7 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 export const MarketplaceItem = (): JSX.Element => {
-  const { renderSuccess, renderError } = useToast();
+  const { renderError, renderSuccess, renderWarning } = useToast();
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
   const [searchParams] = useSearchParams();
@@ -83,6 +83,9 @@ export const MarketplaceItem = (): JSX.Element => {
   } = useOrders();
   const {
     character: userCharacter,
+    equippedArmor,
+    equippedSpells,
+    equippedWeapons,
     isRefreshing,
     refreshCharacter,
   } = useCharacter();
@@ -217,6 +220,27 @@ export const MarketplaceItem = (): JSX.Element => {
           return;
         }
 
+        const equippedItemTokenIds = [
+          ...equippedArmor,
+          ...equippedSpells,
+          ...equippedWeapons,
+        ].map(equippedItem => equippedItem.tokenId);
+
+        const isItemEquipped = equippedItemTokenIds.includes(
+          selectedItem.tokenId,
+        );
+
+        if (
+          userItemBalance === '1' &&
+          isItemEquipped &&
+          orderType === OrderType.Selling
+        ) {
+          renderWarning(
+            `You cannot sell an item that is currently equipped. Please unequip the ${selectedItem.name} first.`,
+          );
+          return;
+        }
+
         if (
           orderType === OrderType.Buying &&
           goldMarketplaceAllowance < parseEther(orderPrice)
@@ -295,6 +319,9 @@ export const MarketplaceItem = (): JSX.Element => {
     },
     [
       createOrder,
+      equippedArmor,
+      equippedSpells,
+      equippedWeapons,
       goldMarketplaceAllowance,
       goldTokenAddress,
       insufficientGold,
@@ -310,6 +337,7 @@ export const MarketplaceItem = (): JSX.Element => {
       refreshOrders,
       renderError,
       renderSuccess,
+      renderWarning,
       selectedItem,
       userCharacter,
       userItemBalance,
@@ -410,7 +438,7 @@ export const MarketplaceItem = (): JSX.Element => {
         >
           Back
         </Button>
-        <Text mt={12}>An erro occurred</Text>
+        <Text mt={12}>An error occurred.</Text>
       </VStack>
     );
   }

@@ -218,6 +218,7 @@ contract CombatSystem is System {
         if (armor - armorPenetration > 0) {
             _totalArmorModifier = (armor - armorPenetration) * int256(DEFENSE_MODIFIER);
         }
+        // if total armor is greater than damage then overall damage should be 0
         if (damage - (int256(armor) - armorPenetration) < 0) {
             _totalArmorModifier = damage;
         }
@@ -293,6 +294,7 @@ contract CombatSystem is System {
         AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
         //get defender
         AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
+        // get spell data
         SpellStatsData memory spell = IWorld(_world()).UD__getSpellStats(spellId);
 
         require(IWorld(_world()).UD__checkItemEffect(spellId, effectId), "INVALID ACTION");

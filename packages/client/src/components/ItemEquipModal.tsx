@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { ITEM_PATH } from '../Routes';
@@ -38,7 +39,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     delegatorAddress,
     systemCalls: { equipItems, unequipItem },
   } = useMUD();
-  const { character, refreshCharacter } = useCharacter();
+  const { character, equippedSpells, equippedWeapons, refreshCharacter } =
+    useCharacter();
+  const { inSafetyZone } = useMap();
   const { currentBattle } = useBattle();
 
   const [isEquipping, setIsEquipping] = useState(false);
@@ -136,6 +139,11 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     return false;
   }, [character, item]);
 
+  const isOneMoveEquipped = useMemo(() => {
+    if (inSafetyZone) return false;
+    return equippedWeapons.length + equippedSpells.length === 1;
+  }, [equippedSpells.length, equippedWeapons.length, inSafetyZone]);
+
   const buyingSearchParams = useMemo(() => {
     const searchParams = new URLSearchParams();
     searchParams.set('orderType', OrderType.Buying);
@@ -164,10 +172,16 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
                 You cannot unequip items during a battle.
               </Text>
             )}
+            {isOneMoveEquipped && isOwner && (
+              <Text color="red" fontWeight="bold" mt={4} size="sm">
+                You must have at least 1 weapon or spell equipped in the Outer
+                Realms.
+              </Text>
+            )}
           </ModalBody>
           <ModalFooter>
             <Button
-              isDisabled={!!currentBattle && isOwner}
+              isDisabled={(!!currentBattle || isOneMoveEquipped) && isOwner}
               isLoading={isEquipping}
               loadingText="Unequipping..."
               mr={3}
