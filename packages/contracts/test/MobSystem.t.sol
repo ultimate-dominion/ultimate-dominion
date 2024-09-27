@@ -130,4 +130,27 @@ contract Test_MobSystem is SetUp, GasReporter {
         vm.prank(alice);
         world.UD__removeEntityFromBoard(bobCharacterId);
     }
+
+        function test_spawnMonstersCap() public {
+        vm.startPrank(deployer);
+        for(uint256 i; i < 25; ++i ){
+            uint256[] memory _inventory = new uint256[](1);
+            MonsterStats memory newMonster = MonsterStats({
+                agility: 1,
+                armor: 1,
+                class: Classes.Warrior,
+                experience: 10,
+                hitPoints: 10,
+                intelligence: 1,
+                inventory: _inventory,
+                level: 1,
+                strength: 1
+            });
+            uint256 newMobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), "test_monster_uri");
+            world.UD__spawnMob(newMobId, 1, 1);
+        }
+        assertEq(world.UD__getEntitiesAtPosition(1, 1).length, 20);
+    }
+    
+
 }

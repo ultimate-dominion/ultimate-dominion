@@ -46,7 +46,8 @@ import {
     WORLD_NAMESPACE,
     ITEMS_NAMESPACE,
     BASE_HP_GAIN,
-    ABILITY_POINTS_PER_LEVEL
+    ABILITY_POINTS_PER_LEVEL,
+    MAX_LEVEL
 } from "../../constants.sol";
 
 contract CharacterSystem is System {
@@ -161,10 +162,10 @@ contract CharacterSystem is System {
     }
 
     function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentAvailableLevel) {
-        if (experience >= Levels.get(19)) {
-            currentAvailableLevel = 20;
+        if (experience >= Levels.get(MAX_LEVEL - 1)) {
+            currentAvailableLevel = MAX_LEVEL;
         } else {
-            for (uint256 i; i < 20;) {
+            for (uint256 i; i < MAX_LEVEL;) {
                 if (Levels.get(i) <= experience && Levels.get(i + 1) > experience) {
                     currentAvailableLevel = i + 1;
                     break;
@@ -181,17 +182,30 @@ contract CharacterSystem is System {
         StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
         stats.currentHp = Stats.getCurrentHp(characterId);
         uint256 availableLevel = getCurrentAvailableLevel(stats.experience);
-        if (availableLevel > stats.level) {
-            stats.level++;
+        if (stats.level == MAX_LEVEL) {
+            return;
         }
         int256 strChange = desiredStats.strength - stats.strength;
         int256 agiChange = desiredStats.agility - stats.agility;
         int256 intChange = desiredStats.intelligence - stats.intelligence;
         // int256 hpChange = desiredStats.maxHp - stats.maxHp;
 
+
+
         require(
             (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
         );
+        // add an extra point for class stat
+        Classes characterClass = getClass(characterId);
+        if(characterClass == Classes.Warrior){
+            ++desiredStats.strength;
+        }
+        else if(characterClass == Classes.Rogue){
+            ++desiredStats.agility;
+        }
+        else if(characterClass == Classes.Mage){
+            ++desiredStats.intelligence;
+        }
         if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
             stats.maxHp += 1;
         }

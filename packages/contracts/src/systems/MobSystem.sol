@@ -19,7 +19,7 @@ import {RngRequestType, MobType, Alignment} from "@codegen/common.sol";
 import {MonsterStats, NPCStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig, Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
-
+import { MAX_MONSTERS } from "../../constants.sol";
 contract MobSystem is System {
     /**
      *  @dev this creates a mob template that can be spawned into the world at any tile location
@@ -54,6 +54,26 @@ contract MobSystem is System {
         entityId = bytes32(abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), x, y));
         MobsData memory stats = Mobs.get(mobId);
         if (stats.mobType == MobType.Monster) {
+            // worst case scenario assuming shops are always first:
+            // loops through all the shops and 20 monsters (but reverts)
+            // normal scenario
+            // loops through all the shops
+            uint256 nonMonsters = 0;
+            bytes32[] memory entities = EntitiesAtPosition.getEntities(x, y);
+            // loop through all the entities
+            for(uint256 i = 0; i < entities.length; ++i){
+                // if there are less than max monsters we can certainly add another
+                if(entities.length < MAX_MONSTERS) break;
+                // if there are more than max monsters start looking for non-monsters
+                else if(Mobs.get(getMobId(entities[i])).mobType != MobType.Monster){
+                    ++nonMonsters;
+                    // if there are non monsters, check if we are now under 20
+                    if(entities.length - nonMonsters < MAX_MONSTERS - 1) break;
+                    // if all 20 are monsters do something here
+                    return entities[i];
+                }
+                return entities[i];
+            }
             MonsterStats memory monsterStats = abi.decode(stats.mobStats, (MonsterStats));
             StatsData memory statsData = StatsData({
                 strength: monsterStats.strength,
@@ -160,4 +180,5 @@ contract MobSystem is System {
         Counters.setCounter(address(this), mobId, mobCounter);
         return mobCounter;
     }
+    
 }

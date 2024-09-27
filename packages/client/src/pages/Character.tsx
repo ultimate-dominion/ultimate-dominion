@@ -622,7 +622,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     return equippedSpellsAndWeapons.map(sow => BigInt(sow.tokenId));
   }, [equippedSpellsAndWeapons]);
 
-  const maxArmorEquipped = equippedArmorIds.length === MAX_EQUIPPED_ARMOR;
+  const maxArmorEquipped = equippedArmorIds.length === 5;
   const maxWeaponsEquipped =
     equippedSpellsAndWeaponsIds.length === MAX_EQUIPPED_WEAPONS;
 

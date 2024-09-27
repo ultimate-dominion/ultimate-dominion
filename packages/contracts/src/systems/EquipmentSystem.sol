@@ -165,23 +165,25 @@ contract EquipmentSystem is System {
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
         uint256 totalLength;
+        if(CharacterEquipment.lengthEquippedArmor(characterId) > 0 && uint8(itemType) == uint8(1)) {
+            revert("Already wearing armor");
+        }
         totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);
-        totalLength += CharacterEquipment.lengthEquippedArmor(characterId);
         totalLength += CharacterEquipment.lengthEquippedSpells(characterId);
         totalLength += CharacterEquipment.lengthEquippedConsumables(characterId);
         require(totalLength < 4, "too many items equipped");
 
-        if (uint8(itemType) == 0) {
+        if (itemType == ItemType.Weapon) {
             CharacterEquipment.pushEquippedWeapons(characterId, itemId);
         }
-        if (uint8(itemType) == 1) {
+        if (itemType == ItemType.Armor) {
             CharacterEquipment.pushEquippedArmor(characterId, itemId);
         }
 
-        if (uint8(itemType) == 2) {
+        if (itemType == ItemType.Spell) {
             CharacterEquipment.pushEquippedSpells(characterId, itemId);
         }
-        if (uint8(itemType) == 4) {
+        if (itemType == ItemType.Consumable) {
             CharacterEquipment.pushEquippedConsumables(characterId, itemId);
         }
     }
