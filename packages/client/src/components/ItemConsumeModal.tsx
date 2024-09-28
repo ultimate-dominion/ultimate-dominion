@@ -20,6 +20,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { ITEM_PATH } from '../Routes';
 import { type Consumable, OrderType } from '../utils/types';
+import { HealthBar } from './HealthBar';
 import { ItemCard } from './ItemCard';
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
 
@@ -49,7 +50,9 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     onClose: onCloseAllowanceModal,
   } = useDisclosure();
 
+  const [itemBalance, setItemBalance] = useState(item.balance);
   const [isConsuming, setIsConsuming] = useState(false);
+  const [isConsumed, setIsConsumed] = useState(false);
 
   const isOwner = useMemo(
     () => character?.owner === item.owner,
@@ -88,7 +91,8 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
       }
       await refreshCharacter();
       renderSuccess(`${item.name} was consumed!`);
-      onClose();
+      setItemBalance((Number(itemBalance) - 1).toString());
+      setIsConsumed(true);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to consume item.', e);
     } finally {
@@ -98,14 +102,21 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     character,
     delegatorAddress,
     item,
+    itemBalance,
     itemsLootManagerAllowance,
-    onClose,
     onOpenAllowanceModal,
     refreshCharacter,
     renderError,
     renderSuccess,
     useWorldConsumableItem,
   ]);
+
+  const isHealthFull = useMemo(() => {
+    if (!character) {
+      return false;
+    }
+    return character.currentHp === character.maxHp;
+  }, [character]);
 
   const buyingSearchParams = useMemo(() => {
     const searchParams = new URLSearchParams();
@@ -120,39 +131,71 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
         <ModalHeader>{isOwner ? 'Consume Item' : 'Make an offer'}</ModalHeader>
         <ModalCloseButton />
         <ModalBody p={4}>
-          {isOwner ? (
-            <Text mb={6}>
-              Do you want to consume this item? It will restore{' '}
-              {item.hpRestoreAmount} HP.
-            </Text>
+          {isOwner && character ? (
+            <>
+              {isConsumed ? (
+                <Text mb={6}>{item.name} was consumed!</Text>
+              ) : (
+                <Text mb={6}>
+                  Do you want to consume this item? It will restore{' '}
+                  {item.hpRestoreAmount} HP.
+                </Text>
+              )}
+              <HealthBar
+                currentHp={character.currentHp}
+                maxHp={character.maxHp}
+                mb={4}
+                level={character.level}
+              />
+            </>
           ) : (
             <Text mb={6}>Do you want to make an offer for this item?</Text>
           )}
-          <ItemCard {...item} />
+          <ItemCard {...item} balance={itemBalance} />
           {!!currentBattle && isOwner && (
             <Text color="red" fontWeight="bold" mt={4} size="sm">
               You cannot consume this during battle.
             </Text>
           )}
+          {isHealthFull && isOwner && !isConsumed && (
+            <Text color="orange" fontWeight="bold" mt={4} size="sm">
+              Your health is full.
+            </Text>
+          )}
         </ModalBody>
-        <ModalFooter>
-          <Button
-            isDisabled={isOwner && !!currentBattle}
-            isLoading={isConsuming}
-            loadingText="Consuming..."
-            mr={3}
-            onClick={() =>
-              isOwner
-                ? onUseConsumable()
-                : navigate(`${ITEM_PATH}${item.tokenId}?${buyingSearchParams}`)
-            }
-          >
-            Yes
-          </Button>
-          <Button isDisabled={isConsuming} onClick={onClose} variant="ghost">
-            No
-          </Button>
-        </ModalFooter>
+        {isConsumed ? (
+          <ModalFooter>
+            <Button
+              isDisabled={isConsuming}
+              onClick={onClose}
+              size="sm"
+              variant="ghost"
+            >
+              Close
+            </Button>
+          </ModalFooter>
+        ) : (
+          <ModalFooter>
+            <Button
+              isDisabled={isOwner && (!!currentBattle || isHealthFull)}
+              isLoading={isConsuming}
+              loadingText="Consuming..."
+              mr={3}
+              onClick={() =>
+                isOwner
+                  ? onUseConsumable()
+                  : navigate(
+                      `${ITEM_PATH}${item.tokenId}?${buyingSearchParams}`,
+                    )
+              }
+            >
+              Yes
+            </Button>
+            <Button isDisabled={isConsuming} onClick={onClose} variant="ghost">
+              No
+            </Button>
+          </ModalFooter>
+        )}
       </ModalContent>
 
       <LootManagerAllowanceModal
