@@ -190,6 +190,7 @@ contract MapSystem is System {
                 i++;
             }
         }
+        console.log("ENTITY REMOVED");
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, false);
 

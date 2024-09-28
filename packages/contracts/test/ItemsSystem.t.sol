@@ -52,18 +52,28 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+            ItemType.Weapon,
+            10 ether,
+            100000000,
+            1 ether,
+            abi.encode(weaponStats, statRestrictions),
+            "test_Weapon_uri1/"
         );
         uint256 newItemId = world.UD__createItem(
-            ItemType.Weapon, 100 ether, 100000000, 1 ether, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri/"
+            ItemType.Weapon,
+            100 ether,
+            100000000,
+            1 ether,
+            abi.encode(weaponStats, statRestrictions),
+            "test_Weapon_uri/"
         );
-
-        assertEq(newItemId, 24);
+        assertEq(firstItemId, totalItems + 2);
+        assertEq(newItemId, totalItems + 3);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
             keccak256(abi.encode(erc1155System.uri(newItemId))),
-            keccak256(abi.encode("ipfs://QmYHtG9fCneWpeW1htV1j4NUD8LKhYR2tztvRCLviqhiKB/test_Weapon_uri/"))
+            keccak256(abi.encode("ipfs://QmSFx93jqHovYW9FW4SA67ohUELYsVDEEdKn4bwmJzaHsU/test_Weapon_uri/"))
         );
 
         endGasReport();
@@ -86,7 +96,9 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         });
         vm.startPrank(alice);
         vm.expectRevert();
-        world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, 1 ether, abi.encode(weaponStats), "test_Weapon_uri1/");
+        world.UD__createItem(
+            ItemType.Weapon, 100 ether, 100000000, 1 ether, abi.encode(weaponStats), "test_Weapon_uri1/"
+        );
     }
 
     function test_getItemBalance() public {
@@ -126,8 +138,9 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             effects: effectIds
         });
         vm.startPrank(deployer);
-        uint256 id =
-            world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, 1 ether, abi.encode(weaponStats), "test_Weapon_uri/");
+        uint256 id = world.UD__createItem(
+            ItemType.Weapon, 100 ether, 100000000, 1 ether, abi.encode(weaponStats), "test_Weapon_uri/"
+        );
         assertEq(world.UD__getTotalSupply(id), 100 ether);
     }
 

@@ -105,7 +105,7 @@
     {
       "dropChance": 0,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "21_health_poition.json",
+      "metadataUri": "21_health_potion.json",
       "name": "healing potion",
       "price": 2000000000000000000,
       "stats": {

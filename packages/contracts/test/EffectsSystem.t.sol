@@ -97,7 +97,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         newStats.currentHp = int256(newStats.maxHp) - 1;
         world.UD__adminSetStats(bobCharacterId, newStats);
         // health potion
-        uint256 healthPotionId = 21;
+        uint256 healthPotionId = startingConsumableId;
         assertEq(erc1155System.balanceOf(bob, healthPotionId), 1);
         vm.startPrank(bob);
         erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
@@ -112,7 +112,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         newStats.currentHp = 1;
         world.UD__adminSetStats(bobCharacterId, newStats);
         // health potion
-        uint256 healthPotionId = 21;
+        uint256 healthPotionId = startingConsumableId;
         assertEq(erc1155System.balanceOf(bob, healthPotionId), 1);
         vm.startPrank(bob);
         erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
@@ -122,5 +122,19 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         assertGt(world.UD__getStats(bobCharacterId).currentHp, 1);
         vm.expectRevert();
         world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, healthPotionId);
+    }
+
+    function test_consumable_strBuff() public {
+        StatsData memory beginningStats = world.UD__getStats(bobCharacterId);
+        uint256 strBuffId = startingConsumableId + 1;
+        world.UD__adminDropItem(bobCharacterId, strBuffId, 1);
+
+        assertEq(erc1155System.balanceOf(bob, strBuffId), 1);
+        vm.startPrank(bob);
+        erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, strBuffId);
+
+        StatsData memory endingStats = world.UD__getStats(bobCharacterId);
+        assertEq(endingStats.strength, beginningStats.strength + 5);
     }
 }

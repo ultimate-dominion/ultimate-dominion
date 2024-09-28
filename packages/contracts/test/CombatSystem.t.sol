@@ -236,7 +236,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
 
-        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: 6});
+        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingSpellId});
         uint256 fees = 0; // entropy.getFee(address(1));
         vm.prank(bob);
         world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
@@ -245,6 +245,12 @@ contract Test_CombatSystem is SetUp, GasReporter {
             console.log("bob's move");
             vm.prank(bob);
             world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+            int256 bobHp = Stats.getCurrentHp(bobCharacterId);
+            int256 entityHp = Stats.getCurrentHp(entityId);
+            console.log("BOB HP");
+            console.logInt(bobHp);
+            console.log("Entity Hp");
+            console.logInt(entityHp);
         }
 
         StatsData memory endingStats = Stats.get(bobCharacterId);
@@ -262,8 +268,8 @@ contract Test_CombatSystem is SetUp, GasReporter {
             }
             assertFalse(entityIsAtPosition, "entity still at position");
             (uint16 entityX, uint16 entityY) = world.UD__getEntityPosition(entityId);
-            assertEq(entityX, 0, "incorrect x");
-            assertEq(entityY, 0, "incorrect y");
+            assertEq(entityX, 0, "entity pos: incorrect x");
+            assertEq(entityY, 0, "entity pos: incorrect y");
         } else {
             assertNotEq(startingStats.currentHp, Stats.get(bobCharacterId).currentHp);
             assertFalse(EncounterEntity.getDied(entityId), "incorrect died");
