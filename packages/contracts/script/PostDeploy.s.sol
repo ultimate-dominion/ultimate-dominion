@@ -422,7 +422,7 @@ contract PostDeploy is Script {
                 consumablesTemplate.metadataUri
             );
             console.log("CONSUMABLE ID: ", starterConsumableId);
-            if (i == 0) {
+            if (i == 1) {
                 warriorItemIds[2] = starterConsumableId;
                 rogueItemIds[2] = starterConsumableId;
                 mageItemIds[2] = starterConsumableId;

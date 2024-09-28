@@ -103,10 +103,10 @@
   ],
   "consumables": [
     {
-      "dropChance": 20000000,
+      "dropChance": 0,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "4_apprentice_robe.json",
-      "name": "minor healing potion",
+      "metadataUri": "21_health_poition.json",
+      "name": "healing potion",
       "price": 2000000000000000000,
       "stats": {
         "effects": [
@@ -121,9 +121,29 @@
         "minIntelligence": 0,
         "minStrength": 0
       }
+    },
+    {
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "22_fortifying_stew.json",
+      "name": "fortifying stew",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [
+          "0x5b73694f86a16512000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
     }
   ],
-  "metadataUriPrefix": "ipfs://QmYHtG9fCneWpeW1htV1j4NUD8LKhYR2tztvRCLviqhiKB/",
+  "metadataUriPrefix": "ipfs://QmSFx93jqHovYW9FW4SA67ohUELYsVDEEdKn4bwmJzaHsU/",
   "spells": [
     {
       "dropChance": 20000000,

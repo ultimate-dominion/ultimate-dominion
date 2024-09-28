@@ -52,6 +52,25 @@
       }
     },
     {
+      "effectId": "0x5b73694f86a16512000000000000000000000000000000000000000000000000",
+      "name": "strength gain",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 5
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 600,
+        "validTurns": 0
+      }
+    },
+    {
       "effectId": "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000",
       "name": "poison",
       "stats": {

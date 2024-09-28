@@ -111,12 +111,13 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     useWorldConsumableItem,
   ]);
 
-  const isHealthFull = useMemo(() => {
-    if (!character) {
-      return false;
-    }
-    return character.currentHp === character.maxHp;
-  }, [character]);
+  // TODO: Bring back when all consumables are added
+  // const isHealthFull = useMemo(() => {
+  //   if (!character) {
+  //     return false;
+  //   }
+  //   return character.currentHp === character.maxHp;
+  // }, [character]);
 
   const buyingSearchParams = useMemo(() => {
     const searchParams = new URLSearchParams();
@@ -157,11 +158,11 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
               You cannot consume this during battle.
             </Text>
           )}
-          {isHealthFull && isOwner && !isConsumed && (
+          {/* {isHealthFull && isOwner && !isConsumed && (
             <Text color="orange" fontWeight="bold" mt={4} size="sm">
               Your health is full.
             </Text>
-          )}
+          )} */}
         </ModalBody>
         {isConsumed ? (
           <ModalFooter>
@@ -177,7 +178,8 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
         ) : (
           <ModalFooter>
             <Button
-              isDisabled={isOwner && (!!currentBattle || isHealthFull)}
+              // isDisabled={isOwner && (!!currentBattle || isHealthFull)}
+              isDisabled={isOwner && !!currentBattle}
               isLoading={isConsuming}
               loadingText="Consuming..."
               mr={3}
