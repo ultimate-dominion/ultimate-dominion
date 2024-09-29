@@ -73,7 +73,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
             keccak256(abi.encode(erc1155System.uri(newItemId))),
-            keccak256(abi.encode("ipfs://QmSFx93jqHovYW9FW4SA67ohUELYsVDEEdKn4bwmJzaHsU/test_Weapon_uri/"))
+            keccak256(abi.encode("ipfs://Qmf5xsBThvwSLcdGXHgnSKg6bGDsD953qm5F4H4tj6WiVR/test_Weapon_uri/"))
         );
 
         endGasReport();

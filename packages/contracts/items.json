@@ -141,9 +141,91 @@
         "minIntelligence": 0,
         "minStrength": 0
       }
+    },
+    {
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "23_quickening_berries.json",
+      "name": "quickening berries",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [
+          "0x940c7cad73f61cb6000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "24_focusing_tea.json",
+      "name": "focusing tea",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [
+          "0x54d076d5607dc751000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "25_beer.json",
+      "name": "beer",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [
+          "0x5b73694f86a16512000000000000000000000000000000000000000000000000",
+          "0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000",
+          "0x54a7e38986f19669000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "26_strong_health_potion.json",
+      "name": "strong health potion",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [
+          "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": -4,
+        "minDamage": -4,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
     }
   ],
-  "metadataUriPrefix": "ipfs://QmSFx93jqHovYW9FW4SA67ohUELYsVDEEdKn4bwmJzaHsU/",
+  "metadataUriPrefix": "ipfs://Qmf5xsBThvwSLcdGXHgnSKg6bGDsD953qm5F4H4tj6WiVR/",
   "spells": [
     {
       "dropChance": 20000000,
