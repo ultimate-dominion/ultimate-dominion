@@ -137,4 +137,37 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         StatsData memory endingStats = world.UD__getStats(bobCharacterId);
         assertEq(endingStats.strength, beginningStats.strength + 5);
     }
+
+    function test_consumable_strBuff_expired() public {
+        StatsData memory beginningStats = world.UD__getStats(bobCharacterId);
+        uint256 strBuffId = startingConsumableId + 1;
+        world.UD__adminDropItem(bobCharacterId, strBuffId, 1);
+
+        assertEq(erc1155System.balanceOf(bob, strBuffId), 1);
+
+        vm.prank(deployer);
+        bytes32 entityId = world.UD__spawnMob(2, 0, 1);
+
+        vm.startPrank(bob);
+        erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, strBuffId);
+
+        vm.warp(block.timestamp + 1000);
+        (uint16 x, uint16 y) = world.UD__getEntityPosition(bobCharacterId);
+        console.log(x, y);
+
+        bytes32[] memory defenders = new bytes32[](1);
+        bytes32[] memory attackers = new bytes32[](1);
+
+        attackers[0] = bobCharacterId;
+        defenders[0] = entityId;
+
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingSpellId});
+
+        world.UD__endTurn(encounterId, bobCharacterId, actions);
+        StatsData memory endingStats = world.UD__getStats(bobCharacterId);
+        assertEq(endingStats.strength, beginningStats.strength);
+    }
 }
