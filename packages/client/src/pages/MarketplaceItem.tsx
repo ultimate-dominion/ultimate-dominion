@@ -70,6 +70,7 @@ export const MarketplaceItem = (): JSX.Element => {
   } = useMUD();
   const {
     armorTemplates,
+    consumableTemplates,
     isLoading: isLoadingItemTemplates,
     spellTemplates,
     weaponTemplates,
@@ -159,6 +160,11 @@ export const MarketplaceItem = (): JSX.Element => {
     );
     if (armor) return armor;
 
+    const consumable = consumableTemplates.find(
+      consumable => consumable.tokenId === selectedItemId,
+    );
+    if (consumable) return consumable;
+
     const spell = spellTemplates.find(
       spell => spell.tokenId === selectedItemId,
     );
@@ -170,7 +176,13 @@ export const MarketplaceItem = (): JSX.Element => {
     if (weapon) return weapon;
 
     return null;
-  }, [armorTemplates, selectedItemId, spellTemplates, weaponTemplates]);
+  }, [
+    armorTemplates,
+    consumableTemplates,
+    selectedItemId,
+    spellTemplates,
+    weaponTemplates,
+  ]);
 
   const userItemBalance = useMemo(() => {
     if (!(userCharacter && selectedItem)) return '0';
@@ -581,30 +593,31 @@ export const MarketplaceItem = (): JSX.Element => {
                   <Text>{(selectedItem as ArmorTemplate).armorModifier}</Text>
                 </HStack>
               )}
-              {selectedItem.itemType !== ItemType.Armor && (
-                <>
-                  <HStack w="100%">
-                    <Text size="sm">Min Damage</Text>
-                    <Spacer />
-                    <Text>
-                      {
-                        (selectedItem as SpellTemplate | WeaponTemplate)
-                          .minDamage
-                      }
-                    </Text>
-                  </HStack>
-                  <HStack w="100%">
-                    <Text size="sm">Max Damage</Text>
-                    <Spacer />
-                    <Text>
-                      {
-                        (selectedItem as SpellTemplate | WeaponTemplate)
-                          .maxDamage
-                      }
-                    </Text>
-                  </HStack>
-                </>
-              )}
+              {selectedItem.itemType !== ItemType.Armor &&
+                selectedItem.itemType !== ItemType.Consumable && (
+                  <>
+                    <HStack w="100%">
+                      <Text size="sm">Min Damage</Text>
+                      <Spacer />
+                      <Text>
+                        {
+                          (selectedItem as SpellTemplate | WeaponTemplate)
+                            .minDamage
+                        }
+                      </Text>
+                    </HStack>
+                    <HStack w="100%">
+                      <Text size="sm">Max Damage</Text>
+                      <Spacer />
+                      <Text>
+                        {
+                          (selectedItem as SpellTemplate | WeaponTemplate)
+                            .maxDamage
+                        }
+                      </Text>
+                    </HStack>
+                  </>
+                )}
             </VStack>
 
             <VStack spacing={1} w={{ base: '100%', sm: '50%' }}>
