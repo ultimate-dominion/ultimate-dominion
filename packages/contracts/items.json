@@ -448,13 +448,14 @@
       "stats": {
         "agiModifier": 0,
         "effects": [
-          "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000"
+          "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000",
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
         "hpModifier": 0,
         "intModifier": 0,
-        "maxDamage": 0,
-        "minDamage": 0,
-        "minLevel": 3,
+        "maxDamage": 1,
+        "minDamage": 5,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {

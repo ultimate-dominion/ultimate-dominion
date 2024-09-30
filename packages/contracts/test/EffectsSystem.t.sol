@@ -138,6 +138,22 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         assertEq(endingStats.strength, beginningStats.strength + 5);
     }
 
+    function test_consumable_strBuff_consume2() public {
+        StatsData memory beginningStats = world.UD__getStats(bobCharacterId);
+        uint256 strBuffId = startingConsumableId + 1;
+        world.UD__adminDropItem(bobCharacterId, strBuffId, 2);
+
+        assertEq(erc1155System.balanceOf(bob, strBuffId), 2);
+        vm.startPrank(bob);
+        erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, strBuffId);
+
+        StatsData memory endingStats = world.UD__getStats(bobCharacterId);
+        assertEq(endingStats.strength, beginningStats.strength + 5);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, strBuffId);
+        assertEq(endingStats.strength, beginningStats.strength + 5);
+    }
+
     function test_consumable_strBuff_expired() public {
         StatsData memory beginningStats = world.UD__getStats(bobCharacterId);
         uint256 strBuffId = startingConsumableId + 1;
@@ -153,8 +169,6 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, strBuffId);
 
         vm.warp(block.timestamp + 1000);
-        (uint16 x, uint16 y) = world.UD__getEntityPosition(bobCharacterId);
-        console.log(x, y);
 
         bytes32[] memory defenders = new bytes32[](1);
         bytes32[] memory attackers = new bytes32[](1);
@@ -169,5 +183,36 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         world.UD__endTurn(encounterId, bobCharacterId, actions);
         StatsData memory endingStats = world.UD__getStats(bobCharacterId);
         assertEq(endingStats.strength, beginningStats.strength);
+    }
+
+    function test_Poison() public {
+        StatsData memory newStats = world.UD__getStats(bobCharacterId);
+        newStats.agility = 20;
+        newStats.strength = 20;
+        newStats.currentHp = 100;
+        world.UD__adminSetStats(bobCharacterId, newStats);
+
+        uint256 poisonDartId = startingWeaponId + 7;
+
+        vm.prank(deployer);
+        bytes32 entityId = world.UD__spawnMob(2, 0, 1);
+        StatsData memory mobStats = world.UD__getStats(entityId);
+
+        bytes32[] memory defenders = new bytes32[](1);
+        bytes32[] memory attackers = new bytes32[](1);
+
+        attackers[0] = bobCharacterId;
+        defenders[0] = entityId;
+
+        vm.startPrank(bob);
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: poisonDartId});
+
+        world.UD__endTurn(encounterId, bobCharacterId, actions);
+
+        StatsData memory endingStats = world.UD__getStats(entityId);
+
+        assertLt(endingStats.currentHp, mobStats.currentHp);
     }
 }

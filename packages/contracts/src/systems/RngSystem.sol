@@ -91,7 +91,7 @@ contract RngSystem is System, IEntropyConsumer {
             rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled + 1234567890) ** 8)));
             timesCalled++;
         } else {
-            rng = uint256(keccak256(abi.encode(block.prevrandao, userRandomNumber)));
+            rng = uint256(keccak256(abi.encode(block.prevrandao, userRandomNumber, _msgSender())));
         }
 
         RandomNumbers.set(sequenceNumber, randomNumberData);
