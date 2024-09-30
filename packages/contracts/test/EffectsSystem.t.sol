@@ -151,6 +151,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         StatsData memory endingStats = world.UD__getStats(bobCharacterId);
         assertEq(endingStats.strength, beginningStats.strength + 5);
         world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, strBuffId);
+        endingStats = world.UD__getStats(bobCharacterId);
         assertEq(endingStats.strength, beginningStats.strength + 5);
     }
 
