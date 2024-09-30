@@ -190,19 +190,18 @@ contract EffectsSystem is System {
 
     function currentStacks(bytes32 entityId, bytes32 effectId) public returns (uint256 _appliedStack) {
         StatusEffectValidityData memory effectValidity = StatusEffectValidity.get(effectId);
-        if (effectValidity.validTurns != 0 && encounterId != bytes32(0)) {
+        if (effectValidity.validTurns != 0 && effectValidity.validTime == 0) {
             bytes32[] memory appliedEffects = EncounterEntity.getAppliedStatusEffects(entityId);
             for (uint256 i; i < appliedEffects.length; i++) {
                 if (effectId == getEffectStatId(appliedEffects[i])) _appliedStack++;
             }
-        } else if (effectValidity.validTime != 0 && encounterId == bytes32(0)) {
-            WorldStatusEffects.pushAppliedStatusEffects(entityId, appliedEffectId);
+        } else if (effectValidity.validTime != 0 && effectValidity.validTurns == 0) {
             bytes32[] memory appliedEffects = WorldStatusEffects.getAppliedStatusEffects(entityId);
             for (uint256 i; i < appliedEffects.length; i++) {
                 if (effectId == getEffectStatId(appliedEffects[i])) _appliedStack++;
             }
         } else {
-            revert("invalid effect application");
+            revert("invalid effect type");
         }
     }
 

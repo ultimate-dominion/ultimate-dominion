@@ -53,6 +53,7 @@ contract WorldActionSystem is System {
             tempAction.itemId = itemId;
             actions[i] = tempAction;
         }
+        // if min / max damage are negative and equal consume item and apply health potion bypassing the combat system.
 
         if (consumableStats.maxDamage > 0) {
             _requestWorldRng(givingEntity, actions);
