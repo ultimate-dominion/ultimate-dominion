@@ -22,6 +22,7 @@ import { useToast } from '../hooks/useToast';
 import { getEmoji, removeEmoji, shortenAddress } from '../utils/helpers';
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   type Order,
   OrderType,
   type SpellTemplate,
@@ -31,7 +32,7 @@ import {
 import { MarketplaceAllowanceModal } from './MarketplaceAllowanceModal';
 
 type OrderRowProps = {
-  item: ArmorTemplate | WeaponTemplate | SpellTemplate;
+  item: ArmorTemplate | ConsumableTemplate | WeaponTemplate | SpellTemplate;
   order: Order;
   refreshOrders: () => void;
 };
@@ -47,7 +48,8 @@ export const OrderRow = ({
     systemCalls: { cancelOrder, fulfillOrder },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
-  const { goldAllowance, itemsAllowance } = useAllowance();
+  const { goldMarketplaceAllowance, itemsMarketplaceAllowance } =
+    useAllowance();
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [isFilling, setIsFilling] = useState(false);
@@ -112,13 +114,16 @@ export const OrderRow = ({
 
       if (
         order.consideration.tokenType === TokenType.ERC20 &&
-        goldAllowance < parseEther(order.consideration.amount)
+        goldMarketplaceAllowance < parseEther(order.consideration.amount)
       ) {
         onOpenAllowanceModal();
         return;
       }
 
-      if (order.offer.tokenType === TokenType.ERC20 && !itemsAllowance) {
+      if (
+        order.offer.tokenType === TokenType.ERC20 &&
+        !itemsMarketplaceAllowance
+      ) {
         onOpenAllowanceModal();
         return;
       }
@@ -140,9 +145,9 @@ export const OrderRow = ({
     }
   }, [
     fulfillOrder,
-    goldAllowance,
+    goldMarketplaceAllowance,
     insufficientGold,
-    itemsAllowance,
+    itemsMarketplaceAllowance,
     onCloseAllowanceModal,
     onOpenAllowanceModal,
     order,

@@ -1,4 +1,9 @@
-import { getComponentValueStrict, Has, runQuery } from '@latticexyz/recs';
+import {
+  getComponentValue,
+  getComponentValueStrict,
+  Has,
+  runQuery,
+} from '@latticexyz/recs';
 import {
   decodeEntity,
   encodeEntity,
@@ -55,6 +60,7 @@ export const ItemsProvider = ({
       ItemsTokenURI,
       SpellStats,
       StatRestrictions,
+      StatusEffectStats,
       WeaponStats,
     },
     isSynced,
@@ -132,11 +138,29 @@ export const ItemsProvider = ({
             { tokenId: consumableId },
           );
 
+          const statRestrictions = getComponentValueStrict(
+            StatRestrictions,
+            tokenIdEntity,
+          );
           const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
           const consumableStats = getComponentValueStrict(
             ConsumableStats,
             tokenIdEntity,
           );
+          const statusEffectStats = consumableStats.effects
+            .map(effect => {
+              const effectEntity = encodeEntity(
+                { effectId: 'bytes32' },
+                { effectId: effect as `0x${string}` },
+              );
+              return getComponentValue(StatusEffectStats, effectEntity);
+            })
+            .filter(Boolean) as {
+            agiModifier: bigint;
+            hpModifier: bigint;
+            intModifier: bigint;
+            strModifier: bigint;
+          }[];
 
           const hpRestoreAmount = BigInt(consumableStats.maxDamage) * -1n;
 
@@ -156,16 +180,41 @@ export const ItemsProvider = ({
 
           return {
             ...metadata,
+            agiModifier: statusEffectStats
+              .reduce((acc, curr) => acc + BigInt(curr.agiModifier), 0n)
+              .toString(),
+            hpModifier: statusEffectStats
+              .reduce((acc, curr) => acc + BigInt(curr.hpModifier), 0n)
+              .toString(),
             hpRestoreAmount: hpRestoreAmount.toString(),
+            intModifier: statusEffectStats
+              .reduce((acc, curr) => acc + BigInt(curr.intModifier), 0n)
+              .toString(),
             itemType: itemTemplate.itemType,
+            minLevel: consumableStats.minLevel.toString(),
             tokenId: consumableId.toString(),
+            statRestrictions: {
+              minAgility: statRestrictions.minAgility.toString(),
+              minIntelligence: statRestrictions.minIntelligence.toString(),
+              minStrength: statRestrictions.minStrength.toString(),
+            },
+            strModifier: statusEffectStats
+              .reduce((acc, curr) => acc + BigInt(curr.strModifier), 0n)
+              .toString(),
           } as ConsumableTemplate;
         }),
       );
 
       return allConsumableTemplates;
     },
-    [ConsumableStats, Items, ItemsBaseURI, ItemsTokenURI],
+    [
+      ConsumableStats,
+      Items,
+      ItemsBaseURI,
+      ItemsTokenURI,
+      StatRestrictions,
+      StatusEffectStats,
+    ],
   );
 
   const fetchAllSpells = useCallback(
@@ -202,12 +251,12 @@ export const ItemsProvider = ({
           return {
             ...metadata,
             effects: spellStats.effects,
+            itemType: itemTemplate.itemType,
             minDamage: spellStats.minDamage.toString(),
             maxDamage: spellStats.maxDamage.toString(),
             minLevel: spellStats.minLevel.toString(),
             price: itemTemplate.price,
             tokenId: spellId.toString(),
-            itemType: itemTemplate.itemType,
             statRestrictions: {
               minAgility: statRestrictions.minAgility.toString(),
               minIntelligence: statRestrictions.minIntelligence.toString(),

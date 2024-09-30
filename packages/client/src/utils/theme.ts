@@ -171,6 +171,18 @@ const Progress = {
   },
 };
 
+const Select = {
+  variants: {
+    outline: {
+      field: {
+        border: '2px solid',
+        borderColor: 'grey',
+        borderRadius: '5px',
+      },
+    },
+  },
+};
+
 const Text = {
   sizes: {
     '4xs': {
@@ -245,6 +257,7 @@ export const theme = extendTheme({
     Input,
     Modal,
     Progress,
+    Select,
     Text,
     Textarea,
     Tooltip,
