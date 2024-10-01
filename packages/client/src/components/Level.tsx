@@ -2,17 +2,35 @@ import { Box, HStack, Progress, Spacer, Text } from '@chakra-ui/react';
 export const Level = ({
   currentLevel,
   levelPercent,
-  maxLevelXpRequirement,
-  maxxed,
+  maxed,
 }: {
   currentLevel: string;
   levelPercent: number;
-  maxLevelXpRequirement: bigint;
-  maxxed: boolean;
+  maxed: boolean;
 }): JSX.Element => {
   return (
     <Box fontSize="10px" mt={8} position="relative" w="100%">
-      {!maxxed ? (
+      {maxed ? (
+        <Box>
+          <Text
+            color="purple"
+            fontWeight="bold"
+            position="absolute"
+            right="-2%"
+            top="-15px"
+          >
+            MAX
+          </Text>
+          <Text display="none" position="absolute" right="0%" top="-15px">
+            100%
+          </Text>
+          <Progress h={2} value={100} variant="maxed" />
+          <HStack mt={1}>
+            <Spacer />
+            <Text>Level {Number(currentLevel)}</Text>
+          </HStack>
+        </Box>
+      ) : (
         <Box>
           <Text
             color={levelPercent === 100 ? 'green' : 'black'}
@@ -40,26 +58,6 @@ export const Level = ({
             <Text>Level {currentLevel}</Text>
             <Spacer />
             <Text>Level {Number(currentLevel) + 1}</Text>
-          </HStack>
-        </Box>
-      ) : (
-        <Box>
-          <Text
-            color="purple"
-            fontWeight="bold"
-            position="absolute"
-            right="-2%"
-            top="-15px"
-          >
-            MAX
-          </Text>
-          <Text display="none" position="absolute" right="0%" top="-15px">
-            100%
-          </Text>
-          <Progress h={2} value={100} variant="maxxed" />
-          <HStack mt={1}>
-            <Spacer />
-            <Text>Level {maxLevelXpRequirement.toString()}</Text>
           </HStack>
         </Box>
       )}

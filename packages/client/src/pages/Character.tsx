@@ -243,17 +243,17 @@ export const CharacterPage = (): JSX.Element => {
     [Levels],
   );
 
-  const maxxed = useMemo(() => {
+  const maxed = useMemo(() => {
     if (!character) return false;
     return maxLevelXpRequirement <= BigInt(character.level);
   }, [character, maxLevelXpRequirement]);
 
   const canLevel = useMemo(() => {
     if (!character) return false;
-    if (maxxed) return false;
+    if (maxed) return false;
     if (nextLevelXpRequirement === BigInt(0)) return false;
     return BigInt(character.experience) >= nextLevelXpRequirement;
-  }, [character, maxxed, nextLevelXpRequirement]);
+  }, [character, maxed, nextLevelXpRequirement]);
 
   if (isLoadingCharacter) {
     return (
@@ -400,8 +400,7 @@ export const CharacterPage = (): JSX.Element => {
                 <Level
                   currentLevel={character.level}
                   levelPercent={levelPercent}
-                  maxLevelXpRequirement={maxLevelXpRequirement}
-                  maxxed={maxxed}
+                  maxed={maxed}
                 />
               </Box>
 

@@ -51,7 +51,7 @@ export const StatsPanel = (): JSX.Element => {
     [Levels],
   );
 
-  const maxxed = useMemo(() => {
+  const maxed = useMemo(() => {
     if (!character) return false;
     return maxLevelXpRequirement <= BigInt(character.level);
   }, [character, maxLevelXpRequirement]);
@@ -173,8 +173,7 @@ export const StatsPanel = (): JSX.Element => {
       <Level
         currentLevel={character.level}
         levelPercent={levelPercent}
-        maxLevelXpRequirement={maxLevelXpRequirement}
-        maxxed={maxxed}
+        maxed={maxed}
       />
 
       <HStack alignItems="start" w="100%">
@@ -209,7 +208,7 @@ export const StatsPanel = (): JSX.Element => {
         </Text>
       </HStack>
 
-      {BigInt(experience) >= nextLevelXpRequirement && !maxxed && (
+      {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
         <Button
           alignSelf="center"
           onClick={() => navigate(`/characters/${character.id}`)}
