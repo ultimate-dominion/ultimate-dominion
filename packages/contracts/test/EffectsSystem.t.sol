@@ -126,7 +126,6 @@ contract Test_EffectsSystem is SetUp, GasReporter {
     function test_consumable_strBuff() public {
         StatsData memory beginningStats = world.UD__getStats(bobCharacterId);
         uint256 strBuffId = startingConsumableId + 1;
-        console.log("STR BUFF: ", strBuffId);
         world.UD__adminDropItem(bobCharacterId, strBuffId, 1);
 
         assertEq(erc1155System.balanceOf(bob, strBuffId), 1);

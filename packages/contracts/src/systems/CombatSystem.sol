@@ -133,7 +133,6 @@ contract CombatSystem is System {
                         actionOutcomeData.itemId,
                         randomNumber
                     );
-                    console.log("HIT?", actionOutcomeData.hit[i]);
                     // if combat consumable, consume the item
                     // IWorld(_world()).UD__consumeItem(actionOutcomeData.attackerId, actionOutcomeData.itemId);
                 } else {
@@ -275,7 +274,6 @@ contract CombatSystem is System {
         if (attackLands) {
             crit = uint256(int256(attackTotal) + critChanceBonus) >= defenseTotal * CRIT_MODIFIER;
         }
-        console.log("attackLands", attackLands);
     }
 
     function getStatModifier(int256 stat, int256 modifierBonus) internal view returns (uint256 multiplier) {
@@ -439,7 +437,6 @@ contract CombatSystem is System {
             }
 
             if (hit) {
-                console.log("Applying Status Effect");
                 IWorld(_world()).UD__applyStatusEffect(defenderId, effectId);
             }
         }

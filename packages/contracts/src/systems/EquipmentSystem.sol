@@ -266,6 +266,7 @@ contract EquipmentSystem is System {
         _setEquipmentBonuses(characterId);
 
         IWorld(_world()).UD__setStats(characterId, calculateEquipmentBonuses(characterId));
+        IWorld(_world()).UD__applyWorldEffects(characterId);
     }
 
     function getCombatStats(bytes32 entityId) public view returns (AdjustedCombatStats memory modifiedStats) {
