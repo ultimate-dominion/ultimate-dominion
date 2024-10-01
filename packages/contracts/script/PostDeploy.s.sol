@@ -440,12 +440,12 @@ contract PostDeploy is Script {
     }
 
     function _createShops() internal {
-        uint256[] memory sellableItems = new uint256[](10);
-        uint256[] memory buyableItems = new uint256[](10);
-        uint256[] memory stock = new uint256[](10);
-        for (uint256 i = 0; i < 10; ++i) {
-            sellableItems[i] = i;
-            buyableItems[i] = i;
+        uint256[] memory sellableItems = new uint256[](26);
+        uint256[] memory buyableItems = new uint256[](26);
+        uint256[] memory stock = new uint256[](26);
+        for (uint256 i = 0; i < 26; ++i) {
+            sellableItems[i] = i + 1;
+            buyableItems[i] = i + 1;
             stock[i] = 10;
         }
 

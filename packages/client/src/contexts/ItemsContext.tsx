@@ -192,6 +192,7 @@ export const ItemsProvider = ({
               .toString(),
             itemType: itemTemplate.itemType,
             minLevel: consumableStats.minLevel.toString(),
+            price: itemTemplate.price,
             tokenId: consumableId.toString(),
             statRestrictions: {
               minAgility: statRestrictions.minAgility.toString(),

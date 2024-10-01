@@ -36,6 +36,7 @@ import {
 } from '../utils/helpers';
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   ItemType,
   OrderType,
   Shop,
@@ -55,7 +56,7 @@ export const ShopItemRow = ({
 }: {
   balance: string | null;
   characterId: Entity;
-  item: ArmorTemplate | SpellTemplate | WeaponTemplate;
+  item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;
   orderType: OrderType;
   shop: Shop;

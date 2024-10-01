@@ -21,6 +21,7 @@ import { useMap } from '../contexts/MapContext';
 import { etherToFixedNumber } from '../utils/helpers';
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   OrderType,
   type SpellTemplate,
   type WeaponTemplate,
@@ -32,13 +33,15 @@ export const Shop = (): JSX.Element => {
 
   const {
     armorTemplates,
-    weaponTemplates,
-    spellTemplates,
+    consumableTemplates,
     isLoading: isItemsLoading,
+    spellTemplates,
+    weaponTemplates,
   } = useItems();
   const {
     character: userCharacter,
     inventoryArmor,
+    inventoryConsumables,
     inventorySpells,
     inventoryWeapons,
   } = useCharacter();
@@ -51,7 +54,7 @@ export const Shop = (): JSX.Element => {
 
   const [sellable, setSellable] = useState<
     Array<{
-      item: ArmorTemplate | WeaponTemplate | SpellTemplate;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       balance: string | null;
       stock: string | null;
       index: string;
@@ -60,7 +63,7 @@ export const Shop = (): JSX.Element => {
 
   const [buyable, setBuyable] = useState<
     Array<{
-      item: ArmorTemplate | WeaponTemplate | SpellTemplate;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       balance: string | null;
       stock: string | null;
       index: string;
@@ -68,8 +71,13 @@ export const Shop = (): JSX.Element => {
   >([]);
 
   const items = useMemo(
-    () => [...inventoryArmor, ...inventorySpells, ...inventoryWeapons],
-    [inventoryArmor, inventorySpells, inventoryWeapons],
+    () => [
+      ...inventoryArmor,
+      ...inventoryConsumables,
+      ...inventorySpells,
+      ...inventoryWeapons,
+    ],
+    [inventoryArmor, inventoryConsumables, inventorySpells, inventoryWeapons],
   );
   useEffect(() => {
     if (isItemsLoading) return;
@@ -91,9 +99,10 @@ export const Shop = (): JSX.Element => {
       });
 
     const buyableStock = [
-      ...weaponTemplates,
-      ...spellTemplates,
       ...armorTemplates,
+      ...consumableTemplates,
+      ...spellTemplates,
+      ...weaponTemplates,
     ]
       .filter(item => shop.buyableItems.includes(item.tokenId))
       // add back the stock and index of the item
@@ -111,6 +120,7 @@ export const Shop = (): JSX.Element => {
     setBuyable(buyableStock);
   }, [
     armorTemplates,
+    consumableTemplates,
     isItemsLoading,
     items,
     shop,
