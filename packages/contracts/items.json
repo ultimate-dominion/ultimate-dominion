@@ -112,8 +112,8 @@
         "effects": [
           "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
         ],
-        "maxDamage": -4,
-        "minDamage": -4,
+        "maxDamage": -5,
+        "minDamage": -5,
         "minLevel": 0
       },
       "statRestrictions": {
@@ -212,8 +212,8 @@
         "effects": [
           "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
         ],
-        "maxDamage": -4,
-        "minDamage": -4,
+        "maxDamage": -15,
+        "minDamage": -15,
         "minLevel": 0
       },
       "statRestrictions": {
