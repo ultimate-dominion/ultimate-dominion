@@ -35,7 +35,24 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
   const itemStats = useMemo(() => {
     if (item.itemType === ItemType.Consumable) {
-      const { hpRestoreAmount } = item as Consumable;
+      const { agiModifier, hpRestoreAmount, intModifier, strModifier } =
+        item as Consumable;
+
+      if (hpRestoreAmount === '0') {
+        return (
+          <HStack alignItems="start">
+            <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
+              Mods:
+            </Text>
+            <Text size={{ base: '2xs', sm: 'xs' }}>
+              STR {getStatSymbol(strModifier)}
+              {strModifier} AGI {getStatSymbol(agiModifier)}
+              {agiModifier} INT {getStatSymbol(intModifier)}
+              {intModifier}
+            </Text>
+          </HStack>
+        );
+      }
 
       return (
         <Text size={{ base: '2xs', sm: 'xs' }}>

@@ -128,14 +128,18 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   const isMissingRequirements = useMemo(() => {
     if (!character) return false;
     if (BigInt(character.level) < BigInt(item.minLevel)) return true;
-    if (BigInt(character.agility) < BigInt(item.statRestrictions.minAgility))
+    if (
+      BigInt(character.baseStats.agility) <
+      BigInt(item.statRestrictions.minAgility)
+    )
       return true;
     if (
-      BigInt(character.intelligence) <
+      BigInt(character.baseStats.intelligence) <
       BigInt(item.statRestrictions.minIntelligence)
     )
       return true;
-    if (character.strength < item.statRestrictions.minStrength) return true;
+    if (character.baseStats.strength < item.statRestrictions.minStrength)
+      return true;
     return false;
   }, [character, item]);
 
