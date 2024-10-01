@@ -315,9 +315,9 @@ contract PostDeploy is Script {
 
         StarterItems memory itemsData = abi.decode(data, (StarterItems));
 
-        uint256[] memory warriorItemIds = new uint256[](3);
-        uint256[] memory rogueItemIds = new uint256[](3);
-        uint256[] memory mageItemIds = new uint256[](3);
+        uint256[] memory warriorItemIds = new uint256[](2);
+        uint256[] memory rogueItemIds = new uint256[](2);
+        uint256[] memory mageItemIds = new uint256[](2);
 
         for (uint256 i = 0; i < itemsData.armor.length; i++) {
             ArmorTemplateDetails memory armorTemplate = itemsData.armor[i];
@@ -421,18 +421,11 @@ contract PostDeploy is Script {
                 abi.encode(newConsumable, consumablesTemplate.statRestrictions),
                 consumablesTemplate.metadataUri
             );
-            console.log("CONSUMABLE ID: ", starterConsumableId);
-            if (i == 0) {
-                warriorItemIds[2] = starterConsumableId;
-                rogueItemIds[2] = starterConsumableId;
-                mageItemIds[2] = starterConsumableId;
-            }
         }
 
-        uint256[] memory amounts = new uint256[](3);
+        uint256[] memory amounts = new uint256[](2);
         amounts[0] = 1;
         amounts[1] = 1;
-        amounts[2] = 1;
 
         world.UD__setStarterItems(Classes.Warrior, warriorItemIds, amounts);
         world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);
