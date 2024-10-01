@@ -21,6 +21,8 @@ import {
   Entity,
   getComponentValue,
   getComponentValueStrict,
+  Has,
+  runQuery,
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -29,7 +31,7 @@ import {
   IoMdInformationCircleOutline,
 } from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
-import { hexToString, zeroHash } from 'viem';
+import { hexToBigInt, hexToString, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { ClassSymbol } from '../components/ClassSymbol';
@@ -233,11 +235,25 @@ export const CharacterPage = (): JSX.Element => {
     return percent > 100 ? 100 : percent;
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
+  const maxLevelXpRequirement = useMemo(
+    () =>
+      hexToBigInt(
+        Array.from(runQuery([Has(Levels)])).slice(-1)[0] as `0x${string}`,
+      ),
+    [Levels],
+  );
+
+  const maxxed = useMemo(() => {
+    if (!character) return false;
+    return maxLevelXpRequirement > BigInt(character.level);
+  }, [character, maxLevelXpRequirement]);
+
   const canLevel = useMemo(() => {
     if (!character) return false;
+    if (maxxed) return false;
     if (nextLevelXpRequirement === BigInt(0)) return false;
     return BigInt(character.experience) >= nextLevelXpRequirement;
-  }, [character, nextLevelXpRequirement]);
+  }, [character, maxxed, nextLevelXpRequirement]);
 
   if (isLoadingCharacter) {
     return (
@@ -384,6 +400,8 @@ export const CharacterPage = (): JSX.Element => {
                 <Level
                   currentLevel={character.level}
                   levelPercent={levelPercent}
+                  maxLevelXpRequirement={maxLevelXpRequirement}
+                  maxxed={maxxed}
                 />
               </Box>
 
@@ -622,7 +640,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     return equippedSpellsAndWeapons.map(sow => BigInt(sow.tokenId));
   }, [equippedSpellsAndWeapons]);
 
-  const maxArmorEquipped = equippedArmorIds.length === 5;
+  const maxArmorEquipped = equippedArmorIds.length === MAX_EQUIPPED_ARMOR;
   const maxWeaponsEquipped =
     equippedSpellsAndWeaponsIds.length === MAX_EQUIPPED_WEAPONS;
 

@@ -226,24 +226,7 @@ contract PostDeploy is Script {
         address _lootManagerAddress = Systems.getSystem(resourceIds.lootManagerSystemId);
         UltimateDominionConfig.setLootManager(_lootManagerAddress);
 
-            /**
-             * First 10 Levels: 
-             * 1. 300
-             * 2. 500
-             * 3. 800
-             * 4. 1300
-             * 5. 2100
-             * 6. 3400 
-             * 7. 5500 
-             * 8. 8900 
-             * 9. 14400
-             * 10. 23300
-             */        
-        for(uint256 i = 1; i <= MAX_LEVEL; i++){
-            console.log((fib(i+3) * 100));
-            Levels.setExperience(i, (fib(i+3) * 100));
-
-        }
+        setLevels();
         vm.stopBroadcast();
     }
 
@@ -506,22 +489,26 @@ contract PostDeploy is Script {
         }
     }
 
-    function fib(uint256 _n) internal pure returns (uint256) {
-        if (_n == 0) {
-            return 0;
-        } else if (_n == 1 || _n == 2) {
-            return 1;
-        } else {
-            uint256 fi_1 = 1;
-            uint256 fi_2 = 1;
-
-            for (uint256 i = 2; i < _n; i++) {
-                uint256 fi = fi_2 + fi_1;
-                fi_2 = fi_1;
-                fi_1 = fi;
-            }
-
-            return fi_1;
-        }
+    function setLevels() internal {
+        Levels.setExperience(1, 300);
+        Levels.setExperience(2, 900);
+        Levels.setExperience(3, 2700);
+        Levels.setExperience(4, 6500);
+        Levels.setExperience(5, 14000);
+        Levels.setExperience(6, 23000);
+        Levels.setExperience(7, 34000);
+        Levels.setExperience(8, 48000);
+        Levels.setExperience(9, 64000);
+        Levels.setExperience(10, 85000);
+        Levels.setExperience(11, 100000);
+        Levels.setExperience(12, 120000);
+        Levels.setExperience(13, 140000);
+        Levels.setExperience(14, 165000);
+        Levels.setExperience(15, 195000);
+        Levels.setExperience(16, 225000);
+        Levels.setExperience(17, 265000);
+        Levels.setExperience(18, 305000);
+        Levels.setExperience(19, 355000);
     }
+     
 }

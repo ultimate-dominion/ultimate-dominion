@@ -55,7 +55,7 @@ contract MobSystem is System {
         MobsData memory stats = Mobs.get(mobId);
         if (stats.mobType == MobType.Monster) {
             // worst case scenario assuming shops are always first:
-            // loops through all the shops and 20 monsters (but reverts)
+            // loops through all the shops and MAX_MONSTERS monsters
             // normal scenario
             // loops through all the shops
             uint256 nonMonsters = 0;
@@ -63,13 +63,13 @@ contract MobSystem is System {
             // loop through all the entities
             for(uint256 i = 0; i < entities.length; ++i){
                 // if there are less than max monsters we can certainly add another
-                if(entities.length < MAX_MONSTERS) break;
+                if(entities.length < (MAX_MONSTERS + 1)) break;
                 // if there are more than max monsters start looking for non-monsters
                 else if(Mobs.get(getMobId(entities[i])).mobType != MobType.Monster){
                     ++nonMonsters;
-                    // if there are non monsters, check if we are now under 20
-                    if(entities.length - nonMonsters < MAX_MONSTERS - 1) break;
-                    // if all 20 are monsters do something here
+                    // if there are non monsters, check if we are now under MAX_MONSTERS
+                    if(entities.length - nonMonsters < (MAX_MONSTERS + 1) - 1) break;
+                    // if all MAX_MONSTERS are monsters do something here
                     return entities[i];
                 }
                 return entities[i];
@@ -180,5 +180,4 @@ contract MobSystem is System {
         Counters.setCounter(address(this), mobId, mobCounter);
         return mobCounter;
     }
-    
 }

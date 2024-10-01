@@ -14,6 +14,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
+import { Has, runQuery } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
 import { BsBackpack4Fill } from 'react-icons/bs';
@@ -22,6 +23,7 @@ import {
   IoMdInformationCircleOutline,
 } from 'react-icons/io';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { hexToBigInt } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -40,6 +42,19 @@ export const StatsPanel = (): JSX.Element => {
   } = useMUD();
   const { character, equippedArmor, equippedSpells, equippedWeapons } =
     useCharacter();
+
+  const maxLevelXpRequirement = useMemo(
+    () =>
+      hexToBigInt(
+        Array.from(runQuery([Has(Levels)])).slice(-1)[0] as `0x${string}`,
+      ),
+    [Levels],
+  );
+
+  const maxxed = useMemo(() => {
+    if (!character) return false;
+    return maxLevelXpRequirement > BigInt(character.level);
+  }, [character, maxLevelXpRequirement]);
 
   const currentLevelXpRequirement =
     useComponentValue(
@@ -155,7 +170,12 @@ export const StatsPanel = (): JSX.Element => {
         </GridItem>
       </Grid>
 
-      <Level currentLevel={character.level} levelPercent={levelPercent} />
+      <Level
+        currentLevel={character.level}
+        levelPercent={levelPercent}
+        maxLevelXpRequirement={maxLevelXpRequirement}
+        maxxed={maxxed}
+      />
 
       <HStack alignItems="start" w="100%">
         <HStack>
@@ -189,7 +209,7 @@ export const StatsPanel = (): JSX.Element => {
         </Text>
       </HStack>
 
-      {BigInt(experience) >= nextLevelXpRequirement && (
+      {BigInt(experience) >= nextLevelXpRequirement && !maxxed && (
         <Button
           alignSelf="center"
           onClick={() => navigate(`/characters/${character.id}`)}

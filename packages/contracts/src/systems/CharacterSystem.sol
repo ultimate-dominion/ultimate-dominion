@@ -190,8 +190,6 @@ contract CharacterSystem is System {
         int256 intChange = desiredStats.intelligence - stats.intelligence;
         // int256 hpChange = desiredStats.maxHp - stats.maxHp;
 
-
-
         require(
             (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
         );

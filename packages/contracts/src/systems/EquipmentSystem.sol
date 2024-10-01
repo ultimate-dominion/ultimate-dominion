@@ -165,7 +165,7 @@ contract EquipmentSystem is System {
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
         uint256 totalLength;
-        if(CharacterEquipment.lengthEquippedArmor(characterId) > 0 && uint8(itemType) == uint8(1)) {
+        if(CharacterEquipment.lengthEquippedArmor(characterId) > 0 && itemType == ItemType.Armor) {
             revert("Already wearing armor");
         }
         totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);

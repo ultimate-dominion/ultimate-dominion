@@ -160,6 +160,11 @@ const Progress = {
         bg: 'green',
       },
     },
+    maxxed: {
+      filledTrack: {
+        bg: 'purple',
+      },
+    },
     timer: {
       filledTrack: {
         bg: 'blue',
