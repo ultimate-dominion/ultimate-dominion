@@ -440,7 +440,7 @@ contract PostDeploy is Script {
         uint256[] memory sellableItems = new uint256[](10);
         uint256[] memory buyableItems = new uint256[](10);
         uint256[] memory stock = new uint256[](10);
-        for(uint i = 0; i < 10; ++i){
+        for (uint256 i = 0; i < 10; ++i) {
             sellableItems[i] = i;
             buyableItems[i] = i;
             stock[i] = 10;
@@ -500,15 +500,14 @@ contract PostDeploy is Script {
         Levels.setExperience(8, 48000);
         Levels.setExperience(9, 64000);
         Levels.setExperience(10, 85000);
-        Levels.setExperience(11, 100000);
-        Levels.setExperience(12, 120000);
-        Levels.setExperience(13, 140000);
-        Levels.setExperience(14, 165000);
-        Levels.setExperience(15, 195000);
-        Levels.setExperience(16, 225000);
-        Levels.setExperience(17, 265000);
-        Levels.setExperience(18, 305000);
-        Levels.setExperience(19, 355000);
+        // Levels.setExperience(11, 100000);
+        // Levels.setExperience(12, 120000);
+        // Levels.setExperience(13, 140000);
+        // Levels.setExperience(14, 165000);
+        // Levels.setExperience(15, 195000);
+        // Levels.setExperience(16, 225000);
+        // Levels.setExperience(17, 265000);
+        // Levels.setExperience(18, 305000);
+        // Levels.setExperience(19, 355000);
     }
-     
 }

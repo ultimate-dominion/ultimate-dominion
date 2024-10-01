@@ -19,7 +19,8 @@ import {RngRequestType, MobType, Alignment} from "@codegen/common.sol";
 import {MonsterStats, NPCStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
 import {UltimateDominionConfig, Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
-import { MAX_MONSTERS } from "../../constants.sol";
+import {MAX_MONSTERS} from "../../constants.sol";
+
 contract MobSystem is System {
     /**
      *  @dev this creates a mob template that can be spawned into the world at any tile location
@@ -61,14 +62,16 @@ contract MobSystem is System {
             uint256 nonMonsters = 0;
             bytes32[] memory entities = EntitiesAtPosition.getEntities(x, y);
             // loop through all the entities
-            for(uint256 i = 0; i < entities.length; ++i){
+            for (uint256 i = 0; i < entities.length; ++i) {
                 // if there are less than max monsters we can certainly add another
-                if(entities.length < (MAX_MONSTERS + 1)) break;
+                if (entities.length < (MAX_MONSTERS + 1)) {
+                    break;
+                }
                 // if there are more than max monsters start looking for non-monsters
-                else if(Mobs.get(getMobId(entities[i])).mobType != MobType.Monster){
+                else if (Mobs.get(getMobId(entities[i])).mobType != MobType.Monster) {
                     ++nonMonsters;
                     // if there are non monsters, check if we are now under MAX_MONSTERS
-                    if(entities.length - nonMonsters < (MAX_MONSTERS + 1) - 1) break;
+                    if (entities.length - nonMonsters < (MAX_MONSTERS + 1) - 1) break;
                     // if all MAX_MONSTERS are monsters do something here
                     return entities[i];
                 }

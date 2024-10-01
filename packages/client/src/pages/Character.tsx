@@ -245,7 +245,7 @@ export const CharacterPage = (): JSX.Element => {
 
   const maxxed = useMemo(() => {
     if (!character) return false;
-    return maxLevelXpRequirement > BigInt(character.level);
+    return maxLevelXpRequirement <= BigInt(character.level);
   }, [character, maxLevelXpRequirement]);
 
   const canLevel = useMemo(() => {

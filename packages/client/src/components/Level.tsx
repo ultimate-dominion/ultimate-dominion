@@ -33,8 +33,8 @@ export const Level = ({
           </Text>
           <Progress
             h={2}
-            variant={levelPercent === 100 ? 'filled' : 'filling'}
             value={levelPercent}
+            variant={levelPercent === 100 ? 'filled' : 'filling'}
           />
           <HStack mt={1}>
             <Text>Level {currentLevel}</Text>
@@ -56,7 +56,7 @@ export const Level = ({
           <Text display="none" position="absolute" right="0%" top="-15px">
             100%
           </Text>
-          <Progress h={2} variant="maxxed" value={100} />
+          <Progress h={2} value={100} variant="maxxed" />
           <HStack mt={1}>
             <Spacer />
             <Text>Level {maxLevelXpRequirement.toString()}</Text>

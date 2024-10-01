@@ -45,7 +45,7 @@ contract SetUp is Test {
     IERC20Mintable public goldToken;
     IERC721Mintable public characterToken;
     IERC1155System public erc1155System;
-    
+
     bytes32 shopId;
     bytes32 alicesCharacterId;
     bytes32 bobCharacterId;
@@ -83,7 +83,7 @@ contract SetUp is Test {
         uint256[] memory sellableItems = new uint256[](10);
         uint256[] memory buyableItems = new uint256[](10);
         uint256[] memory stock = new uint256[](10);
-        for(uint i = 0; i < 10; ++i){
+        for (uint256 i = 0; i < 10; ++i) {
             sellableItems[i] = i;
             buyableItems[i] = i;
             stock[i] = 5;
@@ -101,7 +101,8 @@ contract SetUp is Test {
             stock: stock
         });
 
-        uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
+        uint256 shopMobId =
+            world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
         shopId = world.UD__spawnMob(shopMobId, 0, 0);
 
         uint256[] memory _inventory = new uint256[](1);
@@ -131,18 +132,10 @@ contract SetUp is Test {
             effects: new bytes32[](0)
         });
 
-        ConsumableStatsData memory newConsumable = ConsumableStatsData({
-            minDamage: 0,
-            maxDamage: 0,
-            minLevel: 0,
-            effects: new bytes32[](0)
-        });
-        SpellStatsData memory newSpell = SpellStatsData({
-            minDamage: 0,
-            maxDamage: 0,
-            minLevel: 0,
-            effects: new bytes32[](0)
-        });
+        ConsumableStatsData memory newConsumable =
+            ConsumableStatsData({minDamage: 0, maxDamage: 0, minLevel: 0, effects: new bytes32[](0)});
+        SpellStatsData memory newSpell =
+            SpellStatsData({minDamage: 0, maxDamage: 0, minLevel: 0, effects: new bytes32[](0)});
         vm.label(alice, "alice");
         vm.label(bob, "bob");
         vm.label(worldAddress, "world");
@@ -161,7 +154,12 @@ contract SetUp is Test {
             ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(newWeapon, statRestrictions), "setup_armor_uri"
         );
         newConsumableId = world.UD__createItem(
-            ItemType.Consumable, 10 ether, 100000000, 1 ether, abi.encode(newConsumable, statRestrictions), "setup_armor_uri"
+            ItemType.Consumable,
+            10 ether,
+            100000000,
+            1 ether,
+            abi.encode(newConsumable, statRestrictions),
+            "setup_armor_uri"
         );
         newSpellId = world.UD__createItem(
             ItemType.Spell, 10 ether, 100000000, 1 ether, abi.encode(newSpell, statRestrictions), "setup_armor_uri"

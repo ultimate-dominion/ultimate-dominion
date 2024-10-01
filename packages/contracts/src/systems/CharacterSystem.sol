@@ -195,13 +195,11 @@ contract CharacterSystem is System {
         );
         // add an extra point for class stat
         Classes characterClass = getClass(characterId);
-        if(characterClass == Classes.Warrior){
+        if (characterClass == Classes.Warrior) {
             ++desiredStats.strength;
-        }
-        else if(characterClass == Classes.Rogue){
+        } else if (characterClass == Classes.Rogue) {
             ++desiredStats.agility;
-        }
-        else if(characterClass == Classes.Mage){
+        } else if (characterClass == Classes.Mage) {
             ++desiredStats.intelligence;
         }
         if (uint8(stats.class) == 0 && stats.level % 3 == 0) {

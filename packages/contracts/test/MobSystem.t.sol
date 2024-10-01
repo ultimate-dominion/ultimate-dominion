@@ -131,9 +131,9 @@ contract Test_MobSystem is SetUp, GasReporter {
         world.UD__removeEntityFromBoard(bobCharacterId);
     }
 
-        function test_spawnMonstersCap() public {
+    function test_spawnMonstersCap() public {
         vm.startPrank(deployer);
-        for(uint256 i; i < 25; ++i ){
+        for (uint256 i; i < 25; ++i) {
             uint256[] memory _inventory = new uint256[](1);
             MonsterStats memory newMonster = MonsterStats({
                 agility: 1,
@@ -151,6 +151,4 @@ contract Test_MobSystem is SetUp, GasReporter {
         }
         assertEq(world.UD__getEntitiesAtPosition(1, 1).length, 20);
     }
-    
-
 }

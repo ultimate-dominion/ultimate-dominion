@@ -92,13 +92,14 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         world.UD__levelCharacter(bobCharacterId, bobStats);
         assertEq(world.UD__getBaseStats(bobCharacterId).strength, int256(startingStr + 2));
     }
-       function test_LevelCap() public {
+
+    function test_LevelCap() public {
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
         vm.prank(userA);
         world.UD__enterGame(userACharacterID);
-        for(uint256 i = 0; i < 10; ++i){
+        for (uint256 i = 0; i < 10; ++i) {
             // get the stats for userA
             StatsData memory userAStats = world.UD__getBaseStats(userACharacterID);
             // spend 2 points to userA's strenth
@@ -111,6 +112,7 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         }
         assertEq(world.UD__getBaseStats(userACharacterID).level, 10);
     }
+
     function test_classLevelBonus() public {
         // create userA
         uint256 fees = entropy.getFee(address(1));
