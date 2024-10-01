@@ -275,11 +275,12 @@ contract CombatSystem is System {
         if (attackLands) {
             crit = uint256(int256(attackTotal) + critChanceBonus) >= defenseTotal * CRIT_MODIFIER;
         }
+        console.log("attackLands", attackLands);
     }
 
-    function getStatModifier(int256 stat, int256 modifierBonus) internal pure returns (uint256 multiplier) {
-        multiplier = ((stat + modifierBonus * int256(WAD)) / int256(STAT_MODIFIER)) > 0
-            ? uint256((stat + modifierBonus * int256(WAD)) / int256(STAT_MODIFIER))
+    function getStatModifier(int256 stat, int256 modifierBonus) internal view returns (uint256 multiplier) {
+        multiplier = (((stat + modifierBonus) * int256(WAD)) / int256(STAT_MODIFIER)) > 0
+            ? uint256(((stat + modifierBonus) * int256(WAD)) / int256(STAT_MODIFIER))
             : WAD;
     }
 

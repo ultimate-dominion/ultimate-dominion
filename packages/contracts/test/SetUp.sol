@@ -91,12 +91,12 @@ contract SetUp is Test {
         }
         // load consumables
         for (uint256 i; i < _starterItems.consumables.length; i++) {
-            starterItems.armor.push(_starterItems.armor[i]);
+            starterItems.consumables.push(_starterItems.consumables[i]);
         }
 
         startingWeaponId = starterItems.armor.length;
-        startingSpellId = starterItems.armor.length + starterItems.weapons.length - 1;
-        startingConsumableId = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length - 1;
+        startingSpellId = starterItems.armor.length + starterItems.weapons.length;
+        startingConsumableId = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length + 1;
         totalItems = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length;
         world = IWorld(worldAddress);
         entropy = IEntropy(world.UD__getEntropy());

@@ -92,12 +92,11 @@ contract Test_EffectsSystem is SetUp, GasReporter {
 
     function test_Consumable_Heals() public {
         StatsData memory newStats = world.UD__getStats(bobCharacterId);
-        console.log("TEST STATS");
-        console.logInt(newStats.maxHp);
         newStats.currentHp = int256(newStats.maxHp) - 1;
         world.UD__adminSetStats(bobCharacterId, newStats);
         // health potion
         uint256 healthPotionId = startingConsumableId;
+        // world.UD__adminDropItem(bobCharacterId, startingConsumableId, 1);
         assertEq(erc1155System.balanceOf(bob, healthPotionId), 1);
         vm.startPrank(bob);
         erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
@@ -127,6 +126,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
     function test_consumable_strBuff() public {
         StatsData memory beginningStats = world.UD__getStats(bobCharacterId);
         uint256 strBuffId = startingConsumableId + 1;
+        console.log("STR BUFF: ", strBuffId);
         world.UD__adminDropItem(bobCharacterId, strBuffId, 1);
 
         assertEq(erc1155System.balanceOf(bob, strBuffId), 1);
