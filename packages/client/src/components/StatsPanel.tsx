@@ -28,6 +28,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
+import { HealthBar } from './HealthBar';
 import { Level } from './Level';
 
 const MAX_EQUIPPED_ITEMS = MAX_EQUIPPED_ARMOR + MAX_EQUIPPED_WEAPONS;
@@ -119,15 +120,8 @@ export const StatsPanel = (): JSX.Element => {
         templateColumns="repeat(2, 1fr)"
         w="75%"
       >
-        <GridItem>
-          <Text fontWeight="bold" size="lg">
-            HP
-          </Text>
-        </GridItem>
-        <GridItem>
-          <Text>
-            {currentHpWithFloor}/{maxHp}
-          </Text>
+        <GridItem colSpan={2}>
+          <HealthBar currentHp={currentHpWithFloor.toString()} maxHp={maxHp} />
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">

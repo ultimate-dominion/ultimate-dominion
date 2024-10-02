@@ -1,6 +1,7 @@
 import {
   Badge,
   Box,
+  Center,
   Flex,
   HStack,
   StackProps,
@@ -26,7 +27,7 @@ export const HealthBar = ({
   const barColor = health > 50 ? 'green' : health > 15 ? 'yellow' : 'red';
 
   return (
-    <VStack spacing={0.5} {...stackProps}>
+    <VStack position="relative" spacing={0.5} {...stackProps}>
       {level && (
         <Text
           alignSelf="start"
@@ -65,9 +66,11 @@ export const HealthBar = ({
             {statusEffect}
           </Badge>
         )}
-        <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
-          {currentHpWithFloor} / {maxHp}
-        </Text>
+        <Center position="absolute" bottom={0.5} right={1}>
+          <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
+            {currentHpWithFloor} / {maxHp}
+          </Text>
+        </Center>
       </HStack>
     </VStack>
   );

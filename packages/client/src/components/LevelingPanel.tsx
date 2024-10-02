@@ -5,6 +5,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { type Character } from '../utils/types';
+import { HealthBar } from './HealthBar';
 
 export const LevelingPanel = ({
   canLevel,
@@ -220,13 +221,11 @@ export const LevelingPanel = ({
         Base
       </Text>
       <VStack w="100%">
-        <HStack justify="space-between" w="100%">
-          <Text>HP - Hit Points</Text>
-          <Text>
-            {currentHpWithFloor}/{character.maxHp}
-          </Text>
-        </HStack>
-
+        <HealthBar
+          currentHp={currentHpWithFloor.toString()}
+          maxHp={character.maxHp}
+          w="100%"
+        />
         <HStack justify="space-between" w="100%">
           <Text>STR - Strength</Text>
           <HStack>
