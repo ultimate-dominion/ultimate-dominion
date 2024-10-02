@@ -102,8 +102,8 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
         world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, healthPotionId);
 
-        assertEq(erc1155System.balanceOf(bob, healthPotionId), 0);
-        assertEq(world.UD__getStats(bobCharacterId).currentHp, newStats.maxHp);
+        assertEq(erc1155System.balanceOf(bob, healthPotionId), 0, "incorrect balance");
+        assertEq(world.UD__getStats(bobCharacterId).currentHp, newStats.maxHp, "incorrect hp");
     }
 
     function test_Consumable_Heals_Revert_NoItem() public {
