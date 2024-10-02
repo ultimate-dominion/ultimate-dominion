@@ -29,8 +29,7 @@ int256 constant BASE_HP_GAIN = 1;
 int256 constant ABILITY_POINTS_PER_LEVEL = 2;
 uint256 constant EXP_MODIFIER = 2;
 uint256 constant MAX_LEVEL = 10;
-
+uint256 constant BONUS_POINT_LEVEL = 1;
 uint256 constant SESSION_TIMEOUT = 10 minutes;
 uint256 constant PVP_GOLD_DENOMINATOR = 2;
 uint256 constant MAX_MONSTERS = 20;
-

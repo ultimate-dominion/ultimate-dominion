@@ -47,7 +47,8 @@ import {
     ITEMS_NAMESPACE,
     BASE_HP_GAIN,
     ABILITY_POINTS_PER_LEVEL,
-    MAX_LEVEL
+    MAX_LEVEL,
+    BONUS_POINT_LEVEL
 } from "../../constants.sol";
 
 contract CharacterSystem is System {
@@ -194,13 +195,15 @@ contract CharacterSystem is System {
             (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
         );
         // add an extra point for class stat
-        Classes characterClass = getClass(characterId);
-        if (characterClass == Classes.Warrior) {
-            ++desiredStats.strength;
-        } else if (characterClass == Classes.Rogue) {
-            ++desiredStats.agility;
-        } else if (characterClass == Classes.Mage) {
-            ++desiredStats.intelligence;
+        if (availableLevel % BONUS_POINT_LEVEL == 0) {
+            Classes characterClass = getClass(characterId);
+            if (characterClass == Classes.Warrior) {
+                ++desiredStats.strength;
+            } else if (characterClass == Classes.Rogue) {
+                ++desiredStats.agility;
+            } else if (characterClass == Classes.Mage) {
+                ++desiredStats.intelligence;
+            }
         }
         if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
             stats.maxHp += 1;
