@@ -111,12 +111,16 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     useWorldConsumableItem,
   ]);
 
+  const isHealthRestore = useMemo(
+    () => item.hpRestoreAmount !== '0',
+    [item.hpRestoreAmount],
+  );
+
   const isHealthFull = useMemo(() => {
-    if (!character) {
-      return false;
-    }
+    if (!character) return false;
+    if (!isHealthRestore) return false;
     return character.currentHp === character.maxHp;
-  }, [character]);
+  }, [character, isHealthRestore]);
 
   const buyingSearchParams = useMemo(() => {
     const searchParams = new URLSearchParams();
@@ -136,17 +140,16 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
               {isConsumed ? (
                 <Text mb={6}>{item.name} was consumed!</Text>
               ) : (
-                <Text mb={6}>
-                  Do you want to consume this item? It will restore{' '}
-                  {item.hpRestoreAmount} HP.
-                </Text>
+                <Text mb={6}>Do you want to consume this item?</Text>
               )}
-              <HealthBar
-                currentHp={character.currentHp}
-                maxHp={character.maxHp}
-                mb={4}
-                level={character.level}
-              />
+              {isHealthRestore && (
+                <HealthBar
+                  currentHp={character.currentHp}
+                  maxHp={character.maxHp}
+                  mb={4}
+                  level={character.level}
+                />
+              )}
             </>
           ) : (
             <Text mb={6}>Do you want to make an offer for this item?</Text>

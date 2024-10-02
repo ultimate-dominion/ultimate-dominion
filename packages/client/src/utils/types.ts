@@ -114,6 +114,7 @@ export type ConsumableStats = {
 export type ConsumableTemplate = ConsumableStats &
   Metadata & {
     itemType: ItemType;
+    price: bigint;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };

@@ -677,7 +677,7 @@ export const CharacterCreation = (): JSX.Element => {
               <Button
                 isDisabled={isDisabled}
                 isLoading={isEnteringGame}
-                loadingText="Waking..."
+                loadingText="Entering..."
                 onClick={onEnterGame}
                 type="button"
                 width="100%"
@@ -706,7 +706,7 @@ export const CharacterCreation = (): JSX.Element => {
             <Button
               isDisabled={isDisabled}
               isLoading={isEnteringGame}
-              loadingText="Waking..."
+              loadingText="Entering..."
               onClick={onEnterGame}
               mt={2}
               type="button"
