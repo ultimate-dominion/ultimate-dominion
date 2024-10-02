@@ -173,8 +173,6 @@ contract EffectsSystem is System {
                 EncounterEntity.pushAppliedStatusEffects(entityId, appliedEffectId);
                 checkWorldStatusEffects(entityId);
             } else if (effectValidity.validTime != 0 && encounterId == bytes32(0)) {
-                WorldStatusEffects.pushAppliedStatusEffects(entityId, appliedEffectId);
-
                 _adjustedStats.agility += effectStats.agiModifier;
                 _adjustedStats.strength += effectStats.strModifier;
                 _adjustedStats.intelligence += effectStats.intModifier;
@@ -182,10 +180,28 @@ contract EffectsSystem is System {
                 _adjustedStats.maxHp += effectStats.hpModifier;
                 checkWorldStatusEffects(entityId);
                 IWorld(_world()).UD__setStats(entityId, _adjustedStats);
+                WorldStatusEffects.pushAppliedStatusEffects(entityId, appliedEffectId);
             } else {
                 revert("invalid effect application");
             }
         }
+    }
+
+    function applyWorldEffects(bytes32 entityId) public returns (AdjustedCombatStats memory _adjustedStats) {
+        _requireAccess(address(this), _msgSender());
+        bytes32[] memory worldEffects = WorldStatusEffects.get(entityId);
+        _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
+        StatusEffectStatsData memory effectStats;
+        checkWorldStatusEffects(entityId);
+        for (uint256 i; i < worldEffects.length; i++) {
+            effectStats = getStatusEffectStats(worldEffects[i]);
+            _adjustedStats.agility += effectStats.agiModifier;
+            _adjustedStats.strength += effectStats.strModifier;
+            _adjustedStats.intelligence += effectStats.intModifier;
+            _adjustedStats.armor += effectStats.armorModifier;
+            _adjustedStats.maxHp += effectStats.hpModifier;
+        }
+        IWorld(_world()).UD__setStats(entityId, _adjustedStats);
     }
 
     function currentStacks(bytes32 entityId, bytes32 effectId) public returns (uint256 _appliedStack) {
@@ -257,7 +273,6 @@ contract EffectsSystem is System {
 
         if (appliedStatusEffects.length > 0) {
             for (uint256 i; i < appliedStatusEffects.length; i++) {
-                console.logBytes32(appliedStatusEffects[i]);
                 int256 damageToApply = StatusEffectStats.getDamagePerTick(getEffectStatId(appliedStatusEffects[i]));
                 damages[i] = damageToApply;
                 totalDamage += damageToApply;

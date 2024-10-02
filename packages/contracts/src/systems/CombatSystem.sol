@@ -133,7 +133,6 @@ contract CombatSystem is System {
                         actionOutcomeData.itemId,
                         randomNumber
                     );
-                    console.log("HIT?", actionOutcomeData.hit[i]);
                     // if combat consumable, consume the item
                     // IWorld(_world()).UD__consumeItem(actionOutcomeData.attackerId, actionOutcomeData.itemId);
                 } else {
@@ -277,9 +276,9 @@ contract CombatSystem is System {
         }
     }
 
-    function getStatModifier(int256 stat, int256 modifierBonus) internal pure returns (uint256 multiplier) {
-        multiplier = ((stat + modifierBonus * int256(WAD)) / int256(STAT_MODIFIER)) > 0
-            ? uint256((stat + modifierBonus * int256(WAD)) / int256(STAT_MODIFIER))
+    function getStatModifier(int256 stat, int256 modifierBonus) internal view returns (uint256 multiplier) {
+        multiplier = (((stat + modifierBonus) * int256(WAD)) / int256(STAT_MODIFIER)) > 0
+            ? uint256(((stat + modifierBonus) * int256(WAD)) / int256(STAT_MODIFIER))
             : WAD;
     }
 
@@ -438,7 +437,6 @@ contract CombatSystem is System {
             }
 
             if (hit) {
-                console.log("Applying Status Effect");
                 IWorld(_world()).UD__applyStatusEffect(defenderId, effectId);
             }
         }
