@@ -6,6 +6,7 @@ import {
   FormLabel,
   HStack,
   Input,
+  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -281,6 +282,16 @@ export const WalletDetailsModal = ({
                     Withdraw
                   </Button>
                 </HStack>
+                {localStorage.getItem('mud:burnerWallet') ? (
+                  <Link
+                    download
+                    href={`data:text/plain;charset=utf-8,${encodeURIComponent(localStorage.getItem('mud:burnerWallet')!)}`}
+                  >
+                    Export Session
+                  </Link>
+                ) : (
+                  ''
+                )}
               </VStack>
             </VStack>
           ) : (
