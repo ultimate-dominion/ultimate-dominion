@@ -208,6 +208,54 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "isAttacker",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isAttacker",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "isDefender",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isDefender",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "isInEncounter",
     "inputs": [
       {
