@@ -1,4 +1,9 @@
-import { getComponentValueStrict, Has, runQuery } from '@latticexyz/recs';
+import {
+  getComponentValue,
+  getComponentValueStrict,
+  Has,
+  runQuery,
+} from '@latticexyz/recs';
 import {
   decodeEntity,
   encodeEntity,
@@ -17,6 +22,7 @@ import { useToast } from '../hooks/useToast';
 import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   ItemType,
   type SpellTemplate,
   type WeaponTemplate,
@@ -25,6 +31,7 @@ import { useMUD } from './MUDContext';
 
 type ItemsContextType = {
   armorTemplates: ArmorTemplate[];
+  consumableTemplates: ConsumableTemplate[];
   isLoading: boolean;
   spellTemplates: SpellTemplate[];
   weaponTemplates: WeaponTemplate[];
@@ -32,6 +39,7 @@ type ItemsContextType = {
 
 const ItemsContext = createContext<ItemsContextType>({
   armorTemplates: [],
+  consumableTemplates: [],
   isLoading: false,
   spellTemplates: [],
   weaponTemplates: [],
@@ -46,17 +54,22 @@ export const ItemsProvider = ({
   const {
     components: {
       ArmorStats,
+      ConsumableStats,
       Items,
       ItemsBaseURI,
       ItemsTokenURI,
       SpellStats,
       StatRestrictions,
+      StatusEffectStats,
       WeaponStats,
     },
     isSynced,
   } = useMUD();
 
   const [armorTemplates, setArmorTemplates] = useState<ArmorTemplate[]>([]);
+  const [consumableTemplates, setConsumableTemplates] = useState<
+    ConsumableTemplate[]
+  >([]);
   const [spellTemplates, setSpellTemplates] = useState<SpellTemplate[]>([]);
   const [weaponTemplates, setWeaponTemplates] = useState<WeaponTemplate[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -116,6 +129,95 @@ export const ItemsProvider = ({
     [ArmorStats, Items, ItemsBaseURI, ItemsTokenURI, StatRestrictions],
   );
 
+  const fetchAllConsumables = useCallback(
+    async (allConsumableIds: bigint[]) => {
+      const allConsumableTemplates = await Promise.all(
+        allConsumableIds.map(async consumableId => {
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: consumableId },
+          );
+
+          const statRestrictions = getComponentValueStrict(
+            StatRestrictions,
+            tokenIdEntity,
+          );
+          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+          const consumableStats = getComponentValueStrict(
+            ConsumableStats,
+            tokenIdEntity,
+          );
+          const statusEffectStats = consumableStats.effects
+            .map(effect => {
+              const effectEntity = encodeEntity(
+                { effectId: 'bytes32' },
+                { effectId: effect as `0x${string}` },
+              );
+              return getComponentValue(StatusEffectStats, effectEntity);
+            })
+            .filter(Boolean) as {
+            agiModifier: bigint;
+            hpModifier: bigint;
+            intModifier: bigint;
+            strModifier: bigint;
+          }[];
+
+          const hpRestoreAmount = BigInt(consumableStats.maxDamage) * -1n;
+
+          const baseURI = getComponentValueStrict(
+            ItemsBaseURI,
+            singletonEntity,
+          ).uri;
+
+          const tokenURI = getComponentValueStrict(
+            ItemsTokenURI,
+            tokenIdEntity,
+          ).uri;
+
+          const metadata = await fetchMetadataFromUri(
+            uriToHttp(`${baseURI}${tokenURI}`)[0],
+          );
+
+          return {
+            ...metadata,
+            agiModifier: statusEffectStats
+              .reduce((acc, curr) => acc + BigInt(curr.agiModifier), 0n)
+              .toString(),
+            hpModifier: statusEffectStats
+              .reduce((acc, curr) => acc + BigInt(curr.hpModifier), 0n)
+              .toString(),
+            hpRestoreAmount: hpRestoreAmount.toString(),
+            intModifier: statusEffectStats
+              .reduce((acc, curr) => acc + BigInt(curr.intModifier), 0n)
+              .toString(),
+            itemType: itemTemplate.itemType,
+            minLevel: consumableStats.minLevel.toString(),
+            price: itemTemplate.price,
+            tokenId: consumableId.toString(),
+            statRestrictions: {
+              minAgility: statRestrictions.minAgility.toString(),
+              minIntelligence: statRestrictions.minIntelligence.toString(),
+              minStrength: statRestrictions.minStrength.toString(),
+            },
+            strModifier: statusEffectStats
+              .reduce((acc, curr) => acc + BigInt(curr.strModifier), 0n)
+              .toString(),
+          } as ConsumableTemplate;
+        }),
+      );
+
+      return allConsumableTemplates;
+    },
+    [
+      ConsumableStats,
+      Items,
+      ItemsBaseURI,
+      ItemsTokenURI,
+      StatRestrictions,
+      StatusEffectStats,
+    ],
+  );
+
   const fetchAllSpells = useCallback(
     async (allSpellIds: bigint[]) => {
       const allSpellTemplates = await Promise.all(
@@ -150,12 +252,12 @@ export const ItemsProvider = ({
           return {
             ...metadata,
             effects: spellStats.effects,
+            itemType: itemTemplate.itemType,
             minDamage: spellStats.minDamage.toString(),
             maxDamage: spellStats.maxDamage.toString(),
             minLevel: spellStats.minLevel.toString(),
             price: itemTemplate.price,
             tokenId: spellId.toString(),
-            itemType: itemTemplate.itemType,
             statRestrictions: {
               minAgility: statRestrictions.minAgility.toString(),
               minIntelligence: statRestrictions.minIntelligence.toString(),
@@ -252,6 +354,13 @@ export const ItemsProvider = ({
           const _armor = await fetchAllArmor(allArmorIds);
           setArmorTemplates(_armor);
 
+          const allConsumableIds = allItemIds
+            .filter(({ itemType }) => itemType === ItemType.Consumable)
+            .map(({ tokenId }) => tokenId);
+
+          const _consumables = await fetchAllConsumables(allConsumableIds);
+          setConsumableTemplates(_consumables);
+
           const allSpellIds = allItemIds
             .filter(({ itemType }) => itemType === ItemType.Spell)
             .map(({ tokenId }) => tokenId);
@@ -277,6 +386,7 @@ export const ItemsProvider = ({
     })();
   }, [
     fetchAllArmor,
+    fetchAllConsumables,
     fetchAllSpells,
     fetchAllWeapons,
     isSynced,
@@ -288,6 +398,7 @@ export const ItemsProvider = ({
     <ItemsContext.Provider
       value={{
         armorTemplates,
+        consumableTemplates,
         isLoading,
         spellTemplates,
         weaponTemplates,

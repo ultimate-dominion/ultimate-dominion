@@ -91,7 +91,7 @@ contract RngSystem is System, IEntropyConsumer {
             rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled + 1234567890) ** 8)));
             timesCalled++;
         } else {
-            rng = uint256(keccak256(abi.encode(block.prevrandao, userRandomNumber)));
+            rng = uint256(keccak256(abi.encode(block.prevrandao, userRandomNumber, _msgSender())));
         }
 
         RandomNumbers.set(sequenceNumber, randomNumberData);
@@ -212,5 +212,17 @@ contract RngSystem is System, IEntropyConsumer {
     function _incrementCounter(uint256 counterNumber) internal returns (uint256 _counter) {
         _counter = Counters.get(address(this), counterNumber) + 1;
         Counters.set(address(this), counterNumber, _counter);
+    }
+
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory)
+        public
+        virtual
+        returns (bytes4)
+    {
+        return this.onERC1155BatchReceived.selector;
     }
 }

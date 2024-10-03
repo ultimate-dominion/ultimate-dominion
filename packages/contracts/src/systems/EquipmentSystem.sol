@@ -26,7 +26,8 @@ import {
     StatRestrictions,
     StatRestrictionsData,
     ConsumableStats,
-    ConsumableStatsData
+    ConsumableStatsData,
+    WorldStatusEffects
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
@@ -67,7 +68,10 @@ contract EquipmentSystem is System {
             _equipItem(characterId, itemId, itemData.itemType);
         }
         _setEquipmentBonuses(characterId);
+
         IWorld(_world()).UD__setStats(characterId, calculateEquipmentBonuses(characterId));
+
+        IWorld(_world()).UD__applyWorldEffects(characterId);
     }
 
     function isEquipped(bytes32 characterId, uint256 itemId) public view returns (bool _isEquipped) {
@@ -264,6 +268,7 @@ contract EquipmentSystem is System {
         _setEquipmentBonuses(characterId);
 
         IWorld(_world()).UD__setStats(characterId, calculateEquipmentBonuses(characterId));
+        IWorld(_world()).UD__applyWorldEffects(characterId);
     }
 
     function getCombatStats(bytes32 entityId) public view returns (AdjustedCombatStats memory modifiedStats) {

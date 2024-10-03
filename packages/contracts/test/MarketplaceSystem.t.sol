@@ -3,7 +3,7 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, TokenType, OrderStatus} from "@codegen/common.sol";
-
+import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {
     StatsData,
     StarterItemsData,
@@ -31,7 +31,7 @@ import {_erc1155SystemId} from "@erc1155/utils.sol";
 import {Order, Offer, Consideration} from "@interfaces/Structs.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
-import {_itemsSystemId} from "../src/utils.sol";
+import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
 import {
     GOLD_NAMESPACE,
     CHARACTERS_NAMESPACE,
@@ -48,11 +48,15 @@ import "forge-std/console.sol";
 
 contract Test_MarketplaceSystem is SetUp, GasReporter {
     uint256 MAX_INT = 2 ** 256 - 1;
+    address lootManager;
+    address marketplace;
 
     function setUp() public virtual override {
         super.setUp();
         vm.prank(deployer);
         world.UD__setAdmin(address(this), true);
+        lootManager = Systems.getSystem(_lootManagerSystemId("UD"));
+        marketplace = world.UD__marketplaceAddress();
         // world.grantAccess(_itemsSystemId("UD"), address(this));
     }
 
@@ -61,7 +65,6 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 9 ether;
-        address marketplace = world.UD__marketplaceAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
@@ -69,7 +72,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         world.UD__dropGoldToPlayer(userACharacterID, amount);
         // have userA set max allowance for their gold
         vm.startPrank(userA);
-        gold.approve(marketplace, MAX_INT);
+        gold.approve(world.UD__marketplaceAddress(), MAX_INT);
         // have userA create an order
 
         Offer memory oA =
@@ -84,10 +87,10 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
 
         bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
         endGasReport();
-        assertEq(items.balanceOf(userA, 1), 0);
-        assertEq(gold.balanceOf(userA), 0);
-        assertEq(items.balanceOf(marketplace, 1), 0);
-        assertEq(gold.balanceOf(marketplace), amount);
+        assertEq(items.balanceOf(userA, 1), 0, "user a incorrect items balance");
+        assertEq(gold.balanceOf(userA), 0, "user A incorrect gold balance");
+        assertEq(items.balanceOf(lootManager, 1), 10000000000000000000, "incorrect loot manager item balance");
+        assertEq(gold.balanceOf(lootManager), amount, "incorrect loot manager gold balance");
     }
 
     function test_CreateOrderForERC20() public {
@@ -95,17 +98,17 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 1;
-        address marketplace = world.UD__marketplaceAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
         // give userA an item
         world.UD__adminDropItem(userACharacterID, 1, 1);
-        console.log(items.balanceOf(userA, 1));
+        assertEq(items.balanceOf(userA, 1), 1);
+        assertEq(items.balanceOf(lootManager, 1), 10000000000000000000 - 1);
         // have userA set max allowance for their item
         vm.startPrank(userA);
-
-        items.setApprovalForAll(marketplace, true);
+        gold.approve(world.UD__marketplaceAddress(), MAX_INT);
+        items.setApprovalForAll(world.UD__marketplaceAddress(), true);
         // have userA create an order
         Offer memory oA =
             Offer({tokenType: TokenType.ERC1155, token: world.UD__getItemsContract(), identifier: 1, amount: amount});
@@ -117,12 +120,11 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
             recipient: userA
         });
         bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
-        console.log(marketplace);
         endGasReport();
         assertEq(items.balanceOf(userA, 1), 0);
         assertEq(gold.balanceOf(userA), 0);
-        assertEq(items.balanceOf(marketplace, 1), 1);
-        assertEq(gold.balanceOf(marketplace), 0);
+        assertEq(items.balanceOf(lootManager, 1), 10000000000000000000);
+        assertEq(gold.balanceOf(lootManager), 0);
     }
 
     function test_cancelOrderForERC1155Twice() public {
@@ -130,7 +132,6 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 9 ether;
-        address marketplace = world.UD__marketplaceAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
@@ -155,10 +156,10 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         world.UD__cancelOrder(userAOrder);
         endGasReport();
 
-        assertEq(items.balanceOf(userA, 1), 0);
-        assertEq(gold.balanceOf(userA), amount);
-        assertEq(items.balanceOf(marketplace, 1), 0);
-        assertEq(gold.balanceOf(marketplace), 0);
+        assertEq(items.balanceOf(userA, 1), 0, "user a incorrect items balance");
+        assertEq(gold.balanceOf(userA), amount, "user A incorrect gold balance");
+        assertEq(items.balanceOf(lootManager, 1), 10 ether, "incorrect loot manager item balance");
+        assertEq(gold.balanceOf(lootManager), 0, "incorrect loot manager gold balance");
     }
 
     function test_cancelOrderForERC20Twice() public {
@@ -166,16 +167,13 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 1;
-        address marketplace = world.UD__marketplaceAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
         // give userA an item
         world.UD__adminDropItem(userACharacterID, 1, 1);
-        console.log(items.balanceOf(userA, 1));
         // have userA set max allowance for their item
         vm.startPrank(userA);
-
         items.setApprovalForAll(marketplace, true);
         // have userA create an order
         Offer memory oA =
@@ -188,16 +186,15 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
             recipient: userA
         });
         bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
-        console.log(marketplace);
         world.UD__cancelOrder(userAOrder);
         vm.expectRevert(bytes("Order is not active"));
         world.UD__cancelOrder(userAOrder);
 
         endGasReport();
-        assertEq(items.balanceOf(userA, 1), 1);
-        assertEq(gold.balanceOf(userA), 0);
-        assertEq(items.balanceOf(marketplace, 1), 0);
-        assertEq(gold.balanceOf(marketplace), 0);
+        assertEq(items.balanceOf(userA, 1), 1, "user a incorrect items balance");
+        assertEq(gold.balanceOf(userA), 0, "user A incorrect gold balance");
+        assertEq(items.balanceOf(lootManager, 1), 10 ether - 1, "incorrect loot manager item balance");
+        assertEq(gold.balanceOf(lootManager), 0, "incorrect loot manager gold balance");
     }
 
     function test_cancelOrderForERC1155() public {
@@ -205,7 +202,6 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 9 ether;
-        address marketplace = world.UD__marketplaceAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
@@ -234,10 +230,10 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
 
         endGasReport();
 
-        assertEq(items.balanceOf(userA, 1), 0);
-        assertEq(gold.balanceOf(userA), amount);
-        assertEq(items.balanceOf(marketplace, 1), 0);
-        assertEq(gold.balanceOf(marketplace), 0);
+        assertEq(items.balanceOf(userA, 1), 0, "user a incorrect items balance");
+        assertEq(gold.balanceOf(userA), amount, "user A incorrect gold balance");
+        assertEq(items.balanceOf(lootManager, 1), 10 ether, "incorrect loot manager item balance");
+        assertEq(gold.balanceOf(lootManager), 0, "incorrect loot manager gold balance");
     }
 
     function test_cancelOrderForERC20() public {
@@ -245,13 +241,12 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 1;
-        address marketplace = world.UD__marketplaceAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
         // give userA an item
         world.UD__adminDropItem(userACharacterID, 1, 1);
-        console.log(items.balanceOf(userA, 1));
+        assertEq(items.balanceOf(userA, 1), 1);
         // have userA set max allowance for their item
         vm.startPrank(userA);
 
@@ -268,14 +263,13 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         });
 
         bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
-        console.log(marketplace);
+        console.log(lootManager);
         world.UD__cancelOrder(userAOrder);
         endGasReport();
-
-        assertEq(items.balanceOf(userA, 1), 1);
-        assertEq(gold.balanceOf(userA), 0);
-        assertEq(items.balanceOf(marketplace, 1), 0);
-        assertEq(gold.balanceOf(marketplace), 0);
+        assertEq(items.balanceOf(userA, 1), 1, "user a incorrect items balance");
+        assertEq(gold.balanceOf(userA), 0, "user A incorrect gold balance");
+        assertEq(items.balanceOf(lootManager, 1), 10 ether - 1, "incorrect loot manager item balance");
+        assertEq(gold.balanceOf(lootManager), 0, "incorrect loot manager gold balance");
     }
 
     function test_fulfillOrderForERC20Twice() public {
@@ -283,7 +277,6 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 9 ether;
-        address marketplace = world.UD__marketplaceAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
@@ -325,7 +318,6 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 9 ether;
-        address marketplace = world.UD__marketplaceAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
@@ -364,8 +356,8 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         assertEq(gold.balanceOf(userA), 0);
         assertEq(items.balanceOf(userB, 1), 0);
         assertEq(gold.balanceOf(userB), amount);
-        assertEq(items.balanceOf(marketplace, 1), 0);
-        assertEq(gold.balanceOf(marketplace), 0);
+        assertEq(items.balanceOf(lootManager, 1), 10 ether - 1);
+        assertEq(gold.balanceOf(lootManager), 0);
     }
 
     function test_fulfillOrderForERC1155() public {
@@ -373,7 +365,6 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 9 ether;
-        address marketplace = world.UD__marketplaceAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
@@ -411,8 +402,8 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         assertEq(gold.balanceOf(userA), 0);
         assertEq(items.balanceOf(userB, 1), 0);
         assertEq(gold.balanceOf(userB), amount);
-        assertEq(items.balanceOf(marketplace, 1), 0);
-        assertEq(gold.balanceOf(marketplace), 0);
+        assertEq(items.balanceOf(lootManager, 1), 10 ether - 1);
+        assertEq(gold.balanceOf(lootManager), 0);
     }
 
     function test_fulfillOrderForERC20() public {
@@ -420,7 +411,6 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         IERC20 gold = IERC20(world.UD__getGoldToken());
         IERC1155 items = IERC1155(world.UD__getItemsContract());
         uint256 amount = 9 ether;
-        address marketplace = world.UD__marketplaceAddress();
         // create userA
         address userA = makeAddr("userA");
         bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
@@ -458,7 +448,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         assertEq(gold.balanceOf(userA), amount);
         assertEq(items.balanceOf(userB, 1), 1);
         assertEq(gold.balanceOf(userB), 0);
-        assertEq(items.balanceOf(marketplace, 1), 0);
-        assertEq(gold.balanceOf(marketplace), 0);
+        assertEq(items.balanceOf(lootManager, 1), 10 ether - 1);
+        assertEq(gold.balanceOf(lootManager), 0);
     }
 }

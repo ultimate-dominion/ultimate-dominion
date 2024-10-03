@@ -67,13 +67,13 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             abi.encode(weaponStats, statRestrictions),
             "test_Weapon_uri/"
         );
-
-        assertEq(newItemId, 24);
+        assertEq(firstItemId, totalItems + 8);
+        assertEq(newItemId, totalItems + 9);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
             keccak256(abi.encode(erc1155System.uri(newItemId))),
-            keccak256(abi.encode("ipfs://QmYHtG9fCneWpeW1htV1j4NUD8LKhYR2tztvRCLviqhiKB/test_Weapon_uri/"))
+            keccak256(abi.encode("ipfs://Qmf5xsBThvwSLcdGXHgnSKg6bGDsD953qm5F4H4tj6WiVR/test_Weapon_uri/"))
         );
 
         endGasReport();

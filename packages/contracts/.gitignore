@@ -8,6 +8,7 @@ out/*
 !out/MapSystem.sol
 !out/ShopSystem.sol
 !out/IWorld.sol
+!out/WorldActionSystem.sol
 cache/
 node_modules/
 codegen/

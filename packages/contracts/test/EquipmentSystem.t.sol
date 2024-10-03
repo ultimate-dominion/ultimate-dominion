@@ -1,6 +1,7 @@
 pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
+import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {Classes, ItemType} from "@codegen/common.sol";
 import {StatsData} from "@codegen/index.sol";
 import "forge-std/console.sol";
@@ -24,7 +25,7 @@ import {
 } from "@codegen/index.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
-import {_itemsSystemId} from "../src/utils.sol";
+import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
 import {
     GOLD_NAMESPACE,
     CHARACTERS_NAMESPACE,
@@ -223,30 +224,27 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_calculateEquipmentBonuses() public {
-        uint256[] memory itemIds = new uint256[](1);
-        uint256[] memory amounts = new uint256[](1);
-        bytes32[] memory characterIds = new bytes32[](1);
-        itemIds[0] = newArmorId;
-        amounts[0] = 1;
-        characterIds[0] = bobCharacterId;
-        world.UD__dropItems(characterIds, itemIds, amounts);
+        world.UD__dropItem(bobCharacterId, newArmorId, 1);
 
+        world.UD__dropItem(bobCharacterId, startingConsumableId + 1, 1);
+
+        AdjustedCombatStats memory baseStats = world.UD__getCombatStats(bobCharacterId);
         vm.startPrank(bob);
         uint256[] memory itemsToEquip = new uint256[](1);
         itemsToEquip[0] = newArmorId;
+        erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, startingConsumableId + 1);
 
         ArmorStatsData memory itemStats = world.UD__getArmorStats(newArmorId);
-        AdjustedCombatStats memory baseStats = world.UD__getCombatStats(bobCharacterId);
 
         world.UD__equipItems(bobCharacterId, itemsToEquip);
 
         startGasReport("apply stat bonuses");
-        AdjustedCombatStats memory modifiedStats = world.UD__calculateEquipmentBonuses(bobCharacterId);
+        AdjustedCombatStats memory modifiedStats = world.UD__getCombatStats(bobCharacterId);
         endGasReport();
         ArmorStatsData memory armorStats = world.UD__getArmorStats(newArmorId);
         assertTrue(world.UD__isEquipped(bobCharacterId, newArmorId));
-
-        assertEq(modifiedStats.strength, int256(baseStats.strength) + armorStats.strModifier);
+        assertEq(modifiedStats.strength, int256(baseStats.strength) + armorStats.strModifier + 5);
         assertEq(modifiedStats.agility, int256(baseStats.agility) + armorStats.agiModifier);
         assertEq(modifiedStats.intelligence, int256(baseStats.intelligence) + armorStats.intModifier);
         assertEq(modifiedStats.maxHp, int256(baseStats.maxHp) + armorStats.hpModifier);

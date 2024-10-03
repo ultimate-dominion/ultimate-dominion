@@ -103,17 +103,117 @@
   ],
   "consumables": [
     {
-      "dropChance": 20000000,
+      "dropChance": 0,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "4_apprentice_robe.json",
-      "name": "minor healing potion",
+      "metadataUri": "21_health_potion.json",
+      "name": "healing potion",
       "price": 2000000000000000000,
       "stats": {
         "effects": [
-          "0xd9d7d852ae6ef09c000000000000000000000000000000000000000000000000"
+          "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
         ],
         "maxDamage": -5,
-        "minDamage": -1,
+        "minDamage": -5,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "22_fortifying_stew.json",
+      "name": "fortifying stew",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [
+          "0x5b73694f86a16512000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "23_quickening_berries.json",
+      "name": "quickening berries",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [
+          "0x940c7cad73f61cb6000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "24_focusing_tea.json",
+      "name": "focusing tea",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [
+          "0x54d076d5607dc751000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "25_beer.json",
+      "name": "beer",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [
+          "0xe4d5d6c80f689bee000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "26_strong_health_potion.json",
+      "name": "strong health potion",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [
+          "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": -15,
+        "minDamage": -15,
         "minLevel": 0
       },
       "statRestrictions": {
@@ -123,7 +223,7 @@
       }
     }
   ],
-  "metadataUriPrefix": "ipfs://QmYHtG9fCneWpeW1htV1j4NUD8LKhYR2tztvRCLviqhiKB/",
+  "metadataUriPrefix": "ipfs://Qmf5xsBThvwSLcdGXHgnSKg6bGDsD953qm5F4H4tj6WiVR/",
   "spells": [
     {
       "dropChance": 20000000,
@@ -428,13 +528,14 @@
       "stats": {
         "agiModifier": 0,
         "effects": [
-          "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000"
+          "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000",
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
         "hpModifier": 0,
         "intModifier": 0,
-        "maxDamage": 0,
-        "minDamage": 0,
-        "minLevel": 3,
+        "maxDamage": 1,
+        "minDamage": 5,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {

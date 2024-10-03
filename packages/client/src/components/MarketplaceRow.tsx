@@ -15,6 +15,7 @@ import { ITEM_PATH } from '../Routes';
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   ItemType,
   OrderType,
   type SpellTemplate,
@@ -30,7 +31,7 @@ export const MarketplaceRow = ({
   orderType,
   tokenId,
   ...item
-}: (ArmorTemplate | SpellTemplate | WeaponTemplate) & {
+}: (ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate) & {
   highestOffer: string;
   lowestPrice: string;
   orderType: OrderType;
