@@ -24,7 +24,7 @@ import {
 } from "@codegen/index.sol";
 import {Classes, MobType, ItemType, EffectType} from "@codegen/common.sol";
 import {_itemsSystemId, _lootManagerSystemId, _mobSystemId} from "../src/utils.sol";
-import {MonsterStats} from "@interfaces/Structs.sol";
+import {MonsterStats, StarterItems} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_NAMESPACE} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {System} from "@latticexyz/world/src/System.sol";
@@ -43,7 +43,7 @@ contract SetUp is Test {
     IERC20Mintable public goldToken;
     IERC721Mintable public characterToken;
     IERC1155System public erc1155System;
-    
+
     bytes32 shopId;
     bytes32 alicesCharacterId;
     bytes32 bobCharacterId;
@@ -51,6 +51,13 @@ contract SetUp is Test {
     bytes32 basicActionIdStatsId;
     uint256 newArmorId;
     bytes32 basicMagicDamageStatsId;
+    StarterItems public starterItems;
+    uint256 public startingArmorId;
+    uint256 public endingArmorId;
+    uint256 public startingWeaponId;
+    uint256 public startingSpellId;
+    uint256 public startingConsumableId;
+    uint256 public totalItems;
 
     function setUp() public virtual {
         vm.startPrank(deployer);
@@ -59,6 +66,38 @@ contract SetUp is Test {
         vm.label(address(worldAddress), "World");
         StoreSwitch.setStoreAddress(worldAddress);
 
+        string memory starterItemsJson = vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/items.json")));
+        bytes memory parsedJson = vm.parseJson(starterItemsJson);
+        StarterItems memory _starterItems = abi.decode(parsedJson, (StarterItems));
+
+        // this is to keep the correct item ids in tests without having to update manually
+        // order the items are created in:
+        // 1. armor
+        // 2. weapons
+        // 3. spells
+        // 4. consumables
+
+        //load armor
+        for (uint256 i; i < _starterItems.armor.length; i++) {
+            starterItems.armor.push(_starterItems.armor[i]);
+        }
+        // load weapons
+        for (uint256 i; i < _starterItems.weapons.length; i++) {
+            starterItems.weapons.push(_starterItems.weapons[i]);
+        }
+        // load spells
+        for (uint256 i; i < _starterItems.spells.length; i++) {
+            starterItems.spells.push(_starterItems.spells[i]);
+        }
+        // load consumables
+        for (uint256 i; i < _starterItems.consumables.length; i++) {
+            starterItems.consumables.push(_starterItems.consumables[i]);
+        }
+
+        startingWeaponId = starterItems.armor.length;
+        startingSpellId = starterItems.armor.length + starterItems.weapons.length;
+        startingConsumableId = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length + 1;
+        totalItems = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length;
         world = IWorld(worldAddress);
         entropy = IEntropy(world.UD__getEntropy());
         alice = getUser();
@@ -74,7 +113,7 @@ contract SetUp is Test {
         uint256[] memory sellableItems = new uint256[](10);
         uint256[] memory buyableItems = new uint256[](10);
         uint256[] memory stock = new uint256[](10);
-        for(uint i = 0; i < 10; ++i){
+        for (uint256 i = 0; i < 10; ++i) {
             sellableItems[i] = i;
             buyableItems[i] = i;
             stock[i] = 5;
@@ -92,7 +131,8 @@ contract SetUp is Test {
             stock: stock
         });
 
-        uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
+        uint256 shopMobId =
+            world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
         shopId = world.UD__spawnMob(shopMobId, 0, 0);
 
         uint256[] memory _inventory = new uint256[](1);

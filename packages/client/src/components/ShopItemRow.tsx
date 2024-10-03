@@ -36,6 +36,7 @@ import {
 } from '../utils/helpers';
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   ItemType,
   OrderType,
   Shop,
@@ -55,7 +56,7 @@ export const ShopItemRow = ({
 }: {
   balance: string | null;
   characterId: Entity;
-  item: ArmorTemplate | SpellTemplate | WeaponTemplate;
+  item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;
   orderType: OrderType;
   shop: Shop;
@@ -297,18 +298,27 @@ export const ShopItemRow = ({
                   <Text fontWeight={700} fontSize={14}>
                     Stats
                   </Text>
-                  {item.itemType == ItemType.Armor ||
-                    (item.itemType == ItemType.Weapon && (
+                  {(item.itemType == ItemType.Armor ||
+                    (item.itemType == ItemType.Consumable &&
+                      (item as ConsumableTemplate).hpRestoreAmount === '0') ||
+                    item.itemType == ItemType.Weapon) && (
+                    <Text fontWeight={400} fontSize={14}>
+                      STR
+                      {getStatSymbol((item as WeaponTemplate).strModifier)}
+                      {(item as WeaponTemplate).strModifier} AGI
+                      {getStatSymbol((item as WeaponTemplate).agiModifier)}
+                      {(item as WeaponTemplate).agiModifier} INT
+                      {getStatSymbol((item as WeaponTemplate).intModifier)}
+                      {(item as WeaponTemplate).intModifier}{' '}
+                    </Text>
+                  )}
+                  {item.itemType == ItemType.Consumable &&
+                    (item as ConsumableTemplate).hpRestoreAmount !== '0' && (
                       <Text fontWeight={400} fontSize={14}>
-                        STR
-                        {getStatSymbol((item as WeaponTemplate).strModifier)}
-                        {(item as WeaponTemplate).strModifier} AGI
-                        {getStatSymbol((item as WeaponTemplate).agiModifier)}
-                        {(item as WeaponTemplate).agiModifier} INT
-                        {getStatSymbol((item as WeaponTemplate).intModifier)}
-                        {(item as WeaponTemplate).intModifier}{' '}
+                        Restores {(item as ConsumableTemplate).hpRestoreAmount}{' '}
+                        HP
                       </Text>
-                    ))}
+                    )}
                   {item.itemType == ItemType.Armor && (
                     <Text fontWeight={400} fontSize={14}>
                       {(item as ArmorTemplate).armorModifier

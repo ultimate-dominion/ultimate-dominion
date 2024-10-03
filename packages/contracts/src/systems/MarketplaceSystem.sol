@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-
+import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {
     Orders, Considerations, ConsiderationsData, Offers, OffersData, UltimateDominionConfig
 } from "@codegen/index.sol";
@@ -22,17 +22,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {WorldContextConsumer} from "@latticexyz/world/src/WorldContext.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract MarketplaceSystem is ERC1155Holder, System, ReentrancyGuard {
-    function supportsInterface(bytes4 interfaceId)
-        public
-        pure
-        virtual
-        override(ERC1155Holder, WorldContextConsumer)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
-    }
-
+contract MarketplaceSystem is System, ReentrancyGuard {
     /**
      * Create a new order for a desired NFT or Gold
      * @param order An order
@@ -78,8 +68,8 @@ contract MarketplaceSystem is ERC1155Holder, System, ReentrancyGuard {
         // store consideration in considerations table
         Considerations.set(_orderHash, newConsideration);
 
-        // transfer offer items to world contract
-        _transfer(_orderHash, true, address(this), order.offerer);
+        // transfer offer items to loot manager contract
+        _transfer(_orderHash, true, _lootManager(), order.offerer);
 
         // store order in order table
         Orders.set(_orderHash, order.offerer, 0, OrderStatus.Active);
@@ -98,7 +88,7 @@ contract MarketplaceSystem is ERC1155Holder, System, ReentrancyGuard {
         _transfer(orderHash, false, c.recipient, _msgSender());
 
         // transfer offer item to _msgSender()
-        _transfer(orderHash, true, _msgSender(), address(this));
+        _transfer(orderHash, true, _msgSender(), _lootManager());
 
         // set order status to fulfilled
         Orders.set(orderHash, _msgSender(), 0, OrderStatus.Fulfilled);
@@ -118,7 +108,7 @@ contract MarketplaceSystem is ERC1155Holder, System, ReentrancyGuard {
         Orders.setOrderStatus(_orderHash, OrderStatus.Canceled);
 
         // send the order item back to the user
-        _transfer(_orderHash, true, c.recipient, address(this));
+        _transfer(_orderHash, true, c.recipient, _lootManager());
     }
 
     // increments the order counter for the calling address
@@ -185,5 +175,9 @@ contract MarketplaceSystem is ERC1155Holder, System, ReentrancyGuard {
         } else if (tokenType == TokenType.ERC1155) {
             return IERC1155(token).balanceOf(owner, identifier);
         }
+    }
+
+    function _lootManager() internal view returns (address) {
+        return Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
     }
 }
