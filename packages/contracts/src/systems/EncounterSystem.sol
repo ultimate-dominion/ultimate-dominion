@@ -174,7 +174,6 @@ contract EncounterSystem is System {
                 // if timestamp is less than timeout
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
                     require(isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER");
-
                     // if player is attacker add +1 to current turn
                     if (isParticipant(playerAddress, encounterData.attackers)) {
                         encounterData.currentTurn += 1;

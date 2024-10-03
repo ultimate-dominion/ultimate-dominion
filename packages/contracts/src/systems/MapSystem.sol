@@ -129,12 +129,8 @@ contract MapSystem is System {
         require(availableMonsters.length > 0, "No monsters available for this distance");
 
         uint32[] memory rng;
-        // TODO for testing, remove for deployment
-        if (block.chainid == 31337) {
-            rng = LibChunks.get8Chunks(block.timestamp ** 8);
-        } else {
-            rng = LibChunks.get8Chunks(block.prevrandao);
-        }
+
+        rng = LibChunks.get8Chunks(block.prevrandao);
 
         for (uint256 i; i < (rng[0] % 6); i++) {
             SystemSwitch.call(
@@ -181,7 +177,7 @@ contract MapSystem is System {
                         // take 25% of escrow gold
                         uint256 escrowBalance = AdventureEscrow.get(entityId);
                         if (escrowBalance > 4) {
-                            amountToDrop = escrowBalance - (escrowBalance / 4);
+                            amountToDrop = escrowBalance / 4;
                             AdventureEscrow.set(entityId, (escrowBalance - amountToDrop));
                             // if quitter is attacker
                             if (IWorld(_world()).UD__isAttacker(encounterId, entityId)) {
@@ -200,6 +196,8 @@ contract MapSystem is System {
                                         encounterData.attackers[i], amountToDrop / encounterData.attackers.length
                                     );
                                 }
+                                // set pvp timer
+                                EncounterEntity.setPvpTimer(entityId, block.timestamp);
                             }
                         }
                     }

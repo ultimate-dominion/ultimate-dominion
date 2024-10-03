@@ -41,7 +41,8 @@ import {
     DEFENSE_MODIFIER,
     ATTACK_MODIFIER,
     CRIT_MODIFIER,
-    BASE_GOLD_DROP
+    BASE_GOLD_DROP,
+    PVP_TIMER
 } from "../../constants.sol";
 import "forge-std/console.sol";
 
@@ -71,6 +72,10 @@ contract PvPSystem is System {
                 _isValidPvP = false;
                 break;
             }
+            if (EncounterEntity.getPvpTimer(attackers[i]) > block.timestamp - PVP_TIMER) {
+                _isValidPvP = false;
+                break;
+            }
             {
                 i++;
             }
@@ -86,10 +91,11 @@ contract PvPSystem is System {
                     _isValidPvP = false;
                     break;
                 }
-                if (entityX >= 5 || entityY >= 5) {
-                    // intentionally left empty
+                if (entityX < 5 || entityY < 5) {
+                    _isValidPvP = false;
+                    break;
                 }
-                else {
+                if (EncounterEntity.getPvpTimer(defenders[i]) > block.timestamp - PVP_TIMER) {
                     _isValidPvP = false;
                     break;
                 }

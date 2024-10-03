@@ -31,3 +31,5 @@ uint256 constant EXP_MODIFIER = 2;
 
 uint256 constant SESSION_TIMEOUT = 10 minutes;
 uint256 constant PVP_GOLD_DENOMINATOR = 2;
+
+uint256 constant PVP_TIMER = 30 seconds;
