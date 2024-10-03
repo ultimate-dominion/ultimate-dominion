@@ -163,8 +163,7 @@ contract MapSystem is System {
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             if (senderIsOwner) {
                 // intentionally left empty
-            }
-            else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
+            } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
                 require(
                     (SessionTimer.get(entityId) + SESSION_TIMEOUT) < block.timestamp,
                     "This player's session has not timed out"
