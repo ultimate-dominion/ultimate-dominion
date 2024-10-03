@@ -6,6 +6,10 @@ import {
   Grid,
   GridItem,
   HStack,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   Spinner,
   Stack,
   Text,
@@ -15,6 +19,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { BsThreeDotsVertical } from 'react-icons/bs';
 import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
 import { Link } from 'react-router-dom';
@@ -553,13 +558,8 @@ const OpponentRow = ({
 
   return (
     <HStack
-      as="button"
       border="1px solid transparent"
       h={ROW_HEIGHT}
-      justifyContent="space-between"
-      onClick={inBattle ? undefined : onClick}
-      px={{ base: 1, sm: 2, md: 4 }}
-      transition="all 0.3s ease"
       w="100%"
       _active={{
         bg: inBattle ? 'transparent' : 'grey300',
@@ -571,31 +571,57 @@ const OpponentRow = ({
         cursor: inBattle ? 'not-allowed' : 'pointer',
       }}
     >
-      <HStack justifyContent="start" spacing={4}>
-        <Text
-          color={OPPONENT_COLORS[opponent.entityClass]}
-          filter={inBattle ? 'grayscale(100%)' : 'none'}
-          size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
-        >
-          {name}
-        </Text>
-        {encounterType === EncounterType.PvP && (
-          <Avatar size="xs" src={opponent.image} />
+      {encounterType === EncounterType.PvP && (
+        <Menu>
+          <MenuButton
+            as={Button}
+            borderRadius={0}
+            h="100%"
+            rightIcon={<BsThreeDotsVertical />}
+            size="xxs"
+            variant="ghost"
+          />
+          <MenuList>
+            <MenuItem as="a" href={'/characters/' + (opponent as Character).id}>
+              Character Page
+            </MenuItem>
+          </MenuList>
+        </Menu>
+      )}
+      <HStack
+        as="button"
+        h={ROW_HEIGHT}
+        justifyContent="space-between"
+        onClick={inBattle ? undefined : onClick}
+        px={{ base: 1, sm: 2 }}
+        transition="all 0.3s ease"
+      >
+        <HStack justifyContent="start" spacing={0}>
+          <Text
+            color={OPPONENT_COLORS[opponent.entityClass]}
+            filter={inBattle ? 'grayscale(100%)' : 'none'}
+            size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+          >
+            {name}
+          </Text>
+          {encounterType === EncounterType.PvP && (
+            <Avatar size="xs" src={opponent.image} />
+          )}
+        </HStack>
+        {!inBattle && (
+          <Text
+            fontWeight="bold"
+            size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+          >
+            Level {level}
+          </Text>
+        )}
+        {inBattle && (
+          <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
+            (In battle...)
+          </Text>
         )}
       </HStack>
-      {!inBattle && (
-        <Text
-          fontWeight="bold"
-          size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
-        >
-          Level {level}
-        </Text>
-      )}
-      {inBattle && (
-        <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
-          (In battle...)
-        </Text>
-      )}
     </HStack>
   );
 };
