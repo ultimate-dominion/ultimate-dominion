@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { ITEM_PATH } from '../Routes';
@@ -41,6 +42,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     systemCalls: { useWorldConsumableItem },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
+  const { isSpawned } = useMap();
   const { currentBattle } = useBattle();
   const { itemsLootManagerAllowance } = useAllowance();
 
@@ -128,6 +130,15 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     return searchParams;
   }, []);
 
+  const isDisabled = useMemo(() => {
+    if (!isOwner) return false;
+    if (currentBattle) return true;
+    if (isHealthFull) return true;
+    if (!isSpawned) return true;
+
+    return false;
+  }, [currentBattle, isHealthFull, isOwner, isSpawned]);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -160,6 +171,11 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
               You cannot consume this during battle.
             </Text>
           )}
+          {isOwner && !isSpawned && (
+            <Text color="orange" fontWeight="bold" mt={4} size="sm">
+              You must be spawned to consume items.
+            </Text>
+          )}
           {isHealthFull && isOwner && !isConsumed && (
             <Text color="orange" fontWeight="bold" mt={4} size="sm">
               Your health is full.
@@ -180,7 +196,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
         ) : (
           <ModalFooter>
             <Button
-              isDisabled={isOwner && (!!currentBattle || isHealthFull)}
+              isDisabled={isDisabled}
               isLoading={isConsuming}
               loadingText="Consuming..."
               mr={3}
