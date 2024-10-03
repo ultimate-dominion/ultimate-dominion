@@ -18,83 +18,109 @@ import { ShopHalf } from '../components/ShopHalf';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
-import { GAME_BOARD_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
-import { ArmorTemplate, SpellTemplate, WeaponTemplate } from '../utils/types';
+import {
+  type ArmorTemplate,
+  type ConsumableTemplate,
+  OrderType,
+  type SpellTemplate,
+  type WeaponTemplate,
+} from '../utils/types';
 
 export const Shop = (): JSX.Element => {
   const navigate = useNavigate();
-  const { mobId } = useParams();
+  const { shopId } = useParams();
 
   const {
     armorTemplates,
-    weaponTemplates,
-    spellTemplates,
+    consumableTemplates,
     isLoading: isItemsLoading,
+    spellTemplates,
+    weaponTemplates,
   } = useItems();
   const {
     character: userCharacter,
     inventoryArmor,
+    inventoryConsumables,
     inventorySpells,
     inventoryWeapons,
   } = useCharacter();
   const { allShops } = useMap();
 
   const shop = useMemo(() => {
-    if (!mobId || !allShops) return null;
-    return allShops.find(shop => shop.mobId === mobId);
-  }, [allShops, mobId]);
+    if (!(shopId && allShops)) return null;
+    return allShops.find(shop => shop.shopId === shopId) ?? null;
+  }, [allShops, shopId]);
 
   const [sellable, setSellable] = useState<
-    Array<ArmorTemplate | WeaponTemplate | SpellTemplate>
+    Array<{
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      balance: string | null;
+      stock: string | null;
+      index: string;
+    }>
   >([]);
+
   const [buyable, setBuyable] = useState<
-    Array<ArmorTemplate | WeaponTemplate | SpellTemplate>
+    Array<{
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      balance: string | null;
+      stock: string | null;
+      index: string;
+    }>
   >([]);
 
   const items = useMemo(
-    () => [...inventoryArmor, ...inventorySpells, ...inventoryWeapons],
-    [inventoryArmor, inventorySpells, inventoryWeapons],
+    () => [
+      ...inventoryArmor,
+      ...inventoryConsumables,
+      ...inventorySpells,
+      ...inventoryWeapons,
+    ],
+    [inventoryArmor, inventoryConsumables, inventorySpells, inventoryWeapons],
   );
-
   useEffect(() => {
     if (isItemsLoading) return;
     if (items.length === 0) return;
     if (!shop) return;
 
-    const sellableInventory = [
+    const sellableInventory = items
+      // filter out the items this shop does not sell
+      .filter(item => shop.sellableItems.includes(item.tokenId))
+      // add back the balances of the item and itemIndexes
+      .map(item => {
+        const index = shop?.sellableItems.indexOf(item.tokenId).toString();
+        return {
+          index: index,
+          item: item,
+          balance: item.balance,
+          stock: null,
+        };
+      });
+
+    const buyableStock = [
       ...armorTemplates,
+      ...consumableTemplates,
       ...spellTemplates,
       ...weaponTemplates,
     ]
-      .filter(
-        item =>
-          shop.sellableItems
-            .map(item => item.toString())
-            .indexOf(item.tokenId.toString()) > -1,
-      )
-      .filter(
-        item =>
-          items
-            .map(x => x.tokenId.toString())
-            .indexOf(item.tokenId.toString()) > -1,
-      );
-
-    const buyableStock = [
-      ...weaponTemplates,
-      ...spellTemplates,
-      ...armorTemplates,
-    ].filter(
-      item =>
-        shop.buyableItems
-          .map(item => item.toString())
-          .indexOf(item.tokenId.toString()) > -1,
-    );
+      .filter(item => shop.buyableItems.includes(item.tokenId))
+      // add back the stock and index of the item
+      .map(item => {
+        const index = shop?.buyableItems.indexOf(item.tokenId).toString();
+        return {
+          item: item,
+          stock: shop.stock[Number(index)],
+          balance: null,
+          index: index,
+        };
+      });
 
     setSellable(sellableInventory);
     setBuyable(buyableStock);
   }, [
     armorTemplates,
+    consumableTemplates,
     isItemsLoading,
     items,
     shop,
@@ -109,11 +135,11 @@ export const Shop = (): JSX.Element => {
           alignSelf="flex-start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(GAME_BOARD_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Game Board
+          Back
         </Button>
         <Text>Shop not found</Text>
       </VStack>
@@ -127,11 +153,11 @@ export const Shop = (): JSX.Element => {
           alignSelf="flex-start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(GAME_BOARD_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Game Board
+          Back
         </Button>
         <Text>Character not found</Text>
       </VStack>
@@ -149,10 +175,13 @@ export const Shop = (): JSX.Element => {
       <HStack border="2px solid" mt={8} p={8} w="100%">
         <Spacer />
         <Stack h="100%" w="100%">
-          {sellable && sellable.length > 0 ? (
+          {userCharacter && shopId && sellable && sellable.length ? (
             <ShopHalf
+              characterId={userCharacter.id}
+              shop={shop}
               items={sellable}
               name={`Character’s Inventory - ${etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD`}
+              orderType={OrderType.Selling}
             />
           ) : (
             <Center>
@@ -162,13 +191,16 @@ export const Shop = (): JSX.Element => {
         </Stack>
         <Divider border="1px solid black" mx={8} orientation="vertical" />
         <Stack h="100%" w="100%">
-          {buyable && buyable.length > 0 ? (
+          {userCharacter && shopId && buyable && buyable.length ? (
             <ShopHalf
+              characterId={userCharacter.id}
               items={buyable}
-              name="Shopkeeper’s Inventory - 55 $GOLD"
+              name={`Shopkeeper’s Inventory - ${etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD`}
+              shop={shop}
+              orderType={OrderType.Buying}
             />
           ) : (
-            <Text>No buyable items</Text>
+            <Text>No Buyable Items</Text>
           )}
         </Stack>
         <Spacer />

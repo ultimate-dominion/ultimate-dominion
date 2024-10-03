@@ -33,7 +33,8 @@ import {
     ERC721_NAME,
     ERC721_SYMBOL,
     ITEMS_NAMESPACE,
-    TOKEN_URI
+    TOKEN_URI,
+    MAX_LEVEL
 } from "../constants.sol";
 import {
     ArmorStats,
@@ -50,6 +51,7 @@ import {
 } from "@codegen/index.sol";
 import {_lootManagerSystemId} from "../src/utils.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
+import {NoTransferLastEquippedItemHook} from "../src/NoTransferLastEquippedItemHook.sol";
 import {Classes, ItemType, MobType, EffectType} from "@codegen/common.sol";
 import {
     MonsterStats,
@@ -163,7 +165,8 @@ contract PostDeploy is Script {
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "Characters", name: "ERC721System"});
             resourceIds.combatSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CombatSystem"});
-            resourceIds.erc1155SystemId = _erc1155SystemId(ITEMS_NAMESPACE);
+            resourceIds.erc1155SystemId =
+                WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "Items", name: "ERC1155System"}); //_erc1155SystemId(ITEMS_NAMESPACE);
             resourceIds.erc1155NamespaceId = WorldResourceIdLib.encodeNamespace(ITEMS_NAMESPACE);
             resourceIds.itemsSystemId =
                 WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "ItemsSystem"});
@@ -171,7 +174,7 @@ contract PostDeploy is Script {
         }
 
         address characterSystemAddress = Systems.getSystem(resourceIds.characterSystemId);
-
+        address lootManagerSystemAddress = Systems.getSystem(resourceIds.lootManagerSystemId);
         System goldSystemContract = new ERC20System();
 
         world.registerSystem(resourceIds.erc20SystemId, goldSystemContract, true);
@@ -184,16 +187,17 @@ contract PostDeploy is Script {
 
         //register mint function selector on world
         IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
-
         // transfer erc20 contract ownership to the loot manager system
         world.transferOwnership(resourceIds.erc20NamespaceId, Systems.getSystem(resourceIds.lootManagerSystemId));
+        // set gold approval for marketplace
+        world.UD__setGoldApproval(world.UD__marketplaceAddress(), type(uint256).max);
 
         // System systemContract = new ERC721System();
 
         // world.registerSystem(resourceIds.erc721SystemId, systemContract, true);
 
         NoTransferHook characterHook = new NoTransferHook();
-
+        NoTransferLastEquippedItemHook equippedItemTransferHook = new NoTransferLastEquippedItemHook(address(world));
         world.registerSystemHook(resourceIds.erc721SystemId, characterHook, BEFORE_CALL_SYSTEM);
 
         // Transfer characters namespace to World
@@ -202,6 +206,11 @@ contract PostDeploy is Script {
         world.transferOwnership(resourceIds.erc721NamespaceId, characterSystemAddress);
 
         address items = _deployErc1155(world, ITEMS_NAMESPACE);
+        address itemsSystemAddress = Systems.getSystem(resourceIds.itemsSystemId);
+
+        world.registerSystemHook(resourceIds.erc1155SystemId, equippedItemTransferHook, BEFORE_CALL_SYSTEM);
+        world.grantAccess(resourceIds.erc1155SystemId, worldAddress);
+        world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
 
         UltimateDominionConfig.setItems(address(items));
         //allow entropy system to call callback on Combat system
@@ -210,8 +219,16 @@ contract PostDeploy is Script {
         _createEffects();
         _createShops();
         _createMonsters();
+        // approve marketplace to spend loot manager items
+        world.UD__setItemsApproval(world.UD__marketplaceAddress(), true);
+
         address _marketplaceAddress = world.UD__marketplaceAddress();
         UltimateDominionConfig.setMarketplace(_marketplaceAddress);
+        address _shopSystemAddress = world.UD__shopSystemAddress();
+        UltimateDominionConfig.setShop(_shopSystemAddress);
+
+        address _lootManagerAddress = Systems.getSystem(resourceIds.lootManagerSystemId);
+        UltimateDominionConfig.setLootManager(_lootManagerAddress);
 
         setLevels();
         vm.stopBroadcast();
@@ -262,11 +279,11 @@ contract PostDeploy is Script {
         IERC1155 _items = registerERC1155(_world, itemsNamespace, metadataUriPrefix);
 
         // ERC1155System erc1155System = new ERC1155System();
-        address itemsSystemAddress = Systems.getSystem(resourceIds.itemsSystemId);
+        // address itemsSystemAddress = Systems.getSystem(resourceIds.itemsSystemId);
 
         // _world.registerSystem(resourceIds.erc1155SystemId, erc1155System, false);
-        _world.grantAccess(resourceIds.erc1155SystemId, worldAddress);
-        world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
+        // _world.grantAccess(resourceIds.erc1155SystemId, worldAddress);
+        // world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
         return address(_items);
     }
 
@@ -299,9 +316,9 @@ contract PostDeploy is Script {
 
         StarterItems memory itemsData = abi.decode(data, (StarterItems));
 
-        uint256[] memory warriorItemIds = new uint256[](3);
-        uint256[] memory rogueItemIds = new uint256[](3);
-        uint256[] memory mageItemIds = new uint256[](3);
+        uint256[] memory warriorItemIds = new uint256[](2);
+        uint256[] memory rogueItemIds = new uint256[](2);
+        uint256[] memory mageItemIds = new uint256[](2);
 
         for (uint256 i = 0; i < itemsData.armor.length; i++) {
             ArmorTemplateDetails memory armorTemplate = itemsData.armor[i];
@@ -319,6 +336,7 @@ contract PostDeploy is Script {
                 ItemType.Armor,
                 armorTemplate.initialSupply,
                 armorTemplate.dropChance,
+                armorTemplate.price,
                 abi.encode(newArmor, armorTemplate.statRestrictions),
                 armorTemplate.metadataUri
             );
@@ -346,6 +364,7 @@ contract PostDeploy is Script {
                 ItemType.Weapon,
                 weaponTemplate.initialSupply,
                 weaponTemplate.dropChance,
+                weaponTemplate.price,
                 abi.encode(newWeapon, weaponTemplate.statRestrictions),
                 weaponTemplate.metadataUri
             );
@@ -375,6 +394,7 @@ contract PostDeploy is Script {
                 ItemType.Spell,
                 spellTemplate.initialSupply,
                 spellTemplate.dropChance,
+                spellTemplate.price,
                 abi.encode(newSpell, spellTemplate.statRestrictions),
                 spellTemplate.metadataUri
             );
@@ -398,21 +418,15 @@ contract PostDeploy is Script {
                 ItemType.Consumable,
                 consumablesTemplate.initialSupply,
                 consumablesTemplate.dropChance,
+                consumablesTemplate.price,
                 abi.encode(newConsumable, consumablesTemplate.statRestrictions),
                 consumablesTemplate.metadataUri
             );
-
-            if (i == 0) {
-                warriorItemIds[2] = starterConsumableId;
-                rogueItemIds[2] = starterConsumableId;
-                mageItemIds[2] = starterConsumableId;
-            }
         }
 
-        uint256[] memory amounts = new uint256[](3);
+        uint256[] memory amounts = new uint256[](2);
         amounts[0] = 1;
         amounts[1] = 1;
-        amounts[2] = 1;
 
         world.UD__setStarterItems(Classes.Warrior, warriorItemIds, amounts);
         world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);
@@ -420,23 +434,26 @@ contract PostDeploy is Script {
     }
 
     function _createShops() internal {
-        uint256[] memory sellableItems = new uint256[](4);
-        sellableItems[0] = uint256(4);
-        sellableItems[1] = uint256(5);
-        sellableItems[2] = uint256(6);
-        sellableItems[3] = uint256(7);
-        uint256[] memory buyableItems = new uint256[](8);
-        buyableItems[0] = uint256(0);
-        buyableItems[1] = uint256(1);
-        buyableItems[2] = uint256(2);
-        buyableItems[3] = uint256(3);
-        buyableItems[4] = uint256(4);
-        buyableItems[5] = uint256(5);
-        buyableItems[6] = uint256(6);
-        buyableItems[7] = uint256(7);
+        uint256[] memory sellableItems = new uint256[](26);
+        uint256[] memory buyableItems = new uint256[](26);
+        uint256[] memory stock = new uint256[](26);
+        for (uint256 i = 0; i < 26; ++i) {
+            sellableItems[i] = i + 1;
+            buyableItems[i] = i + 1;
+            stock[i] = 10;
+        }
 
-        ShopsData memory newShop =
-            ShopsData({priceMarkup: 0, priceMarkdown: 0, buyableItems: sellableItems, sellableItems: sellableItems});
+        ShopsData memory newShop = ShopsData({
+            gold: 100 ether,
+            maxGold: 100 ether,
+            priceMarkup: 2000, // 20%
+            priceMarkdown: 5000, // 50%
+            restockTimestamp: 1725962400,
+            sellableItems: sellableItems,
+            buyableItems: buyableItems,
+            restock: stock,
+            stock: stock
+        });
 
         uint256 shopMobId =
             world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
@@ -480,14 +497,14 @@ contract PostDeploy is Script {
         Levels.setExperience(8, 48000);
         Levels.setExperience(9, 64000);
         Levels.setExperience(10, 85000);
-        Levels.setExperience(11, 100000);
-        Levels.setExperience(12, 120000);
-        Levels.setExperience(13, 140000);
-        Levels.setExperience(14, 165000);
-        Levels.setExperience(15, 195000);
-        Levels.setExperience(16, 225000);
-        Levels.setExperience(17, 265000);
-        Levels.setExperience(18, 305000);
-        Levels.setExperience(19, 355000);
+        // Levels.setExperience(11, 100000);
+        // Levels.setExperience(12, 120000);
+        // Levels.setExperience(13, 140000);
+        // Levels.setExperience(14, 165000);
+        // Levels.setExperience(15, 195000);
+        // Levels.setExperience(16, 225000);
+        // Levels.setExperience(17, 265000);
+        // Levels.setExperience(18, 305000);
+        // Levels.setExperience(19, 355000);
     }
 }

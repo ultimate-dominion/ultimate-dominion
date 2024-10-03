@@ -14,6 +14,7 @@ bytes16 constant ERC1155_SYSTEM_NAME = "ERC1155System";
 bytes16 constant CHARACTER_SYSTEM_NAME = "CharacterSystem";
 bytes16 constant RNG_SYSTEM_NAME = "RngSystem";
 bytes16 constant ITEMS_SYSTEM_NAME = "ItemsSystem";
+bytes16 constant SHOP_SYSTEM_NAME = "ShopSystem";
 bytes16 constant MOB_SYSTEM_NAME = "MobSystem";
 bytes16 constant MAP_SYSTEM_NAME = "MapSystem";
 bytes16 constant LOOTMANAGER_SYSTEM_NAME = "LootManagerSyste";
@@ -37,6 +38,10 @@ function _erc1155SystemId(bytes14 namespace) pure returns (ResourceId) {
 
 function _itemsSystemId(bytes14 namespace) pure returns (ResourceId) {
     return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: ITEMS_SYSTEM_NAME});
+}
+
+function _shopSystemId(bytes14 namespace) pure returns (ResourceId) {
+    return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: SHOP_SYSTEM_NAME});
 }
 
 function _mobSystemId(bytes14 namespace) pure returns (ResourceId) {

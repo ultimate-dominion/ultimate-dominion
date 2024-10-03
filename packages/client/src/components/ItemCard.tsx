@@ -11,9 +11,15 @@ import {
 import { useMemo } from 'react';
 
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
-import { type Armor, ItemType, type Spell, type Weapon } from '../utils/types';
+import {
+  type Armor,
+  type Consumable,
+  ItemType,
+  type Spell,
+  type Weapon,
+} from '../utils/types';
 
-type ItemCardProps = (Armor | Spell | Weapon) & {
+type ItemCardProps = (Armor | Consumable | Spell | Weapon) & {
   isEquipped?: boolean;
   onClick?: () => void;
   showBalance?: boolean;
@@ -28,6 +34,33 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const { balance, name } = item;
 
   const itemStats = useMemo(() => {
+    if (item.itemType === ItemType.Consumable) {
+      const { agiModifier, hpRestoreAmount, intModifier, strModifier } =
+        item as Consumable;
+
+      if (hpRestoreAmount === '0') {
+        return (
+          <HStack alignItems="start">
+            <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
+              Mods:
+            </Text>
+            <Text size={{ base: '2xs', sm: 'xs' }}>
+              STR {getStatSymbol(strModifier)}
+              {strModifier} AGI {getStatSymbol(agiModifier)}
+              {agiModifier} INT {getStatSymbol(intModifier)}
+              {intModifier}
+            </Text>
+          </HStack>
+        );
+      }
+
+      return (
+        <Text size={{ base: '2xs', sm: 'xs' }}>
+          Restores {hpRestoreAmount} HP
+        </Text>
+      );
+    }
+
     if (item.itemType === ItemType.Spell) {
       const { minDamage, minLevel, maxDamage, statRestrictions } =
         item as Spell;

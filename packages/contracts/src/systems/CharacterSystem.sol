@@ -11,6 +11,8 @@ import {
     MobStats,
     CharacterEquipment,
     StatsData,
+    CharacterOwner,
+    CharacterOwnerData,
     Characters,
     CharactersData,
     Effects
@@ -44,7 +46,9 @@ import {
     WORLD_NAMESPACE,
     ITEMS_NAMESPACE,
     BASE_HP_GAIN,
-    ABILITY_POINTS_PER_LEVEL
+    ABILITY_POINTS_PER_LEVEL,
+    MAX_LEVEL,
+    BONUS_POINT_LEVEL
 } from "../../constants.sol";
 
 contract CharacterSystem is System {
@@ -76,6 +80,10 @@ contract CharacterSystem is System {
 
     function getCharacterTokenId(bytes32 characterId) public pure returns (uint256) {
         return (uint256(uint96(uint256(characterId))));
+    }
+
+    function getCharacterIdFromOwnerAddress(address ownerAddress) public view returns (bytes32 _characterId) {
+        return CharacterOwner.getCharacterId(ownerAddress);
     }
 
     /**
@@ -117,6 +125,8 @@ contract CharacterSystem is System {
         characterId = getPlayerEntityId(characterTokenId);
         Characters.setOwner(characterId, account);
         Characters.setTokenId(characterId, characterTokenId);
+        CharacterOwner.setCharacterTokenId(_msgSender(), characterTokenId);
+        CharacterOwner.setCharacterId(_msgSender(), characterId);
         require(!NameExists.getValue(name), "Name already exists");
         NameExists.setValue(name, true);
         Characters.setName(characterId, name);
@@ -141,7 +151,7 @@ contract CharacterSystem is System {
         tempStats.level = 1;
         tempStats.currentHp = int256(tempStats.maxHp);
         Stats.set(characterId, tempStats);
-        IWorld(_world()).UD__dropGold(characterId, 5 ether);
+        IWorld(_world()).UD__dropGoldToPlayer(characterId, 5 ether);
         // issue starter gear
         IWorld(_world()).UD__issueStarterItems(characterId);
         CharactersData memory charData = Characters.get(characterId);
@@ -152,13 +162,13 @@ contract CharacterSystem is System {
         Characters.set(characterId, charData);
     }
 
-    function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentAvailibleLevel) {
-        if (experience >= Levels.get(19)) {
-            currentAvailibleLevel = 20;
+    function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentAvailableLevel) {
+        if (experience >= Levels.get(MAX_LEVEL - 1)) {
+            currentAvailableLevel = MAX_LEVEL;
         } else {
-            for (uint256 i; i < 20;) {
+            for (uint256 i; i < MAX_LEVEL;) {
                 if (Levels.get(i) <= experience && Levels.get(i + 1) > experience) {
-                    currentAvailibleLevel = i + 1;
+                    currentAvailableLevel = i + 1;
                     break;
                 }
                 {
@@ -169,11 +179,12 @@ contract CharacterSystem is System {
     }
 
     function levelCharacter(bytes32 characterId, StatsData memory desiredStats) public onlyOwner(characterId) {
+        require(!IWorld(_world()).UD__isInEncounter(characterId), "cannot level in combat");
         StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
         stats.currentHp = Stats.getCurrentHp(characterId);
         uint256 availableLevel = getCurrentAvailableLevel(stats.experience);
-        if (availableLevel > stats.level) {
-            stats.level++;
+        if (stats.level == MAX_LEVEL) {
+            return;
         }
         int256 strChange = desiredStats.strength - stats.strength;
         int256 agiChange = desiredStats.agility - stats.agility;
@@ -183,6 +194,17 @@ contract CharacterSystem is System {
         require(
             (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
         );
+        // add an extra point for class stat
+        if (availableLevel % BONUS_POINT_LEVEL == 0) {
+            Classes characterClass = getClass(characterId);
+            if (characterClass == Classes.Warrior) {
+                ++desiredStats.strength;
+            } else if (characterClass == Classes.Rogue) {
+                ++desiredStats.agility;
+            } else if (characterClass == Classes.Mage) {
+                ++desiredStats.intelligence;
+            }
+        }
         if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
             stats.maxHp += 1;
         }

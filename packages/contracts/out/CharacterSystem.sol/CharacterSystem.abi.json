@@ -114,6 +114,25 @@
   },
   {
     "type": "function",
+    "name": "getCharacterIdFromOwnerAddress",
+    "inputs": [
+      {
+        "name": "ownerAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getCharacterTokenId",
     "inputs": [
       {
@@ -162,7 +181,7 @@
     ],
     "outputs": [
       {
-        "name": "currentAvailibleLevel",
+        "name": "currentAvailableLevel",
         "type": "uint256",
         "internalType": "uint256"
       }

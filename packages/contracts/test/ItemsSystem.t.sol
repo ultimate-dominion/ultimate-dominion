@@ -52,18 +52,28 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+            ItemType.Weapon,
+            10 ether,
+            100000000,
+            1 ether,
+            abi.encode(weaponStats, statRestrictions),
+            "test_Weapon_uri1/"
         );
         uint256 newItemId = world.UD__createItem(
-            ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri/"
+            ItemType.Weapon,
+            100 ether,
+            100000000,
+            1 ether,
+            abi.encode(weaponStats, statRestrictions),
+            "test_Weapon_uri/"
         );
-
-        assertEq(newItemId, 24);
+        assertEq(firstItemId, totalItems + 8);
+        assertEq(newItemId, totalItems + 9);
         assertEq(world.UD__getTotalSupply(newItemId), 100 ether);
         assertEq(world.UD__getTotalSupply(firstItemId), 10 ether);
         assertEq(
             keccak256(abi.encode(erc1155System.uri(newItemId))),
-            keccak256(abi.encode("ipfs://QmYHtG9fCneWpeW1htV1j4NUD8LKhYR2tztvRCLviqhiKB/test_Weapon_uri/"))
+            keccak256(abi.encode("ipfs://Qmf5xsBThvwSLcdGXHgnSKg6bGDsD953qm5F4H4tj6WiVR/test_Weapon_uri/"))
         );
 
         endGasReport();
@@ -86,7 +96,9 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         });
         vm.startPrank(alice);
         vm.expectRevert();
-        world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri1/");
+        world.UD__createItem(
+            ItemType.Weapon, 100 ether, 100000000, 1 ether, abi.encode(weaponStats), "test_Weapon_uri1/"
+        );
     }
 
     function test_getItemBalance() public {
@@ -126,8 +138,9 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             effects: effectIds
         });
         vm.startPrank(deployer);
-        uint256 id =
-            world.UD__createItem(ItemType.Weapon, 100 ether, 100000000, abi.encode(weaponStats), "test_Weapon_uri/");
+        uint256 id = world.UD__createItem(
+            ItemType.Weapon, 100 ether, 100000000, 1 ether, abi.encode(weaponStats), "test_Weapon_uri/"
+        );
         assertEq(world.UD__getTotalSupply(id), 100 ether);
     }
 
@@ -162,5 +175,68 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         vm.prank(bob);
         vm.expectRevert();
         world.UD__dropItems(characterIds, itemIds, amounts);
+    }
+
+    function test_transferEquippedItem_Revert() public {
+        StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Mage);
+        assertEq(erc1155System.balanceOf(address(bob), starterDat.itemIds[0]), starterDat.amounts[0]);
+        //equip items
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](1);
+        itemsToEquip[0] = starterDat.itemIds[0];
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+        assertTrue(world.UD__isEquipped(bobCharacterId, starterDat.itemIds[0]), "item not equipped");
+        assertEq(erc1155System.balanceOf(bob, starterDat.itemIds[0]), 1);
+        erc1155System.setApprovalForAll(alice, true);
+        vm.expectRevert("Transfer: Must Unequip item to transfer.");
+        erc1155System.transferFrom(bob, alice, starterDat.itemIds[0], 1);
+        // unequip
+        world.UD__unequipItem(bobCharacterId, starterDat.itemIds[0]);
+        // successful transfer
+        erc1155System.transferFrom(bob, alice, starterDat.itemIds[0], 1);
+
+        assertEq(erc1155System.balanceOf(alice, starterDat.itemIds[0]), 1);
+    }
+
+    function test_safeTransferEquippedItem_Revert() public {
+        StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Mage);
+        assertEq(erc1155System.balanceOf(address(bob), starterDat.itemIds[0]), starterDat.amounts[0]);
+        //equip items
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](1);
+        itemsToEquip[0] = starterDat.itemIds[0];
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+        assertTrue(world.UD__isEquipped(bobCharacterId, starterDat.itemIds[0]), "item not equipped");
+        assertEq(erc1155System.balanceOf(bob, starterDat.itemIds[0]), 1);
+        erc1155System.setApprovalForAll(alice, true);
+        vm.expectRevert("Transfer Bytes: Must Unequip item to transfer.");
+        erc1155System.safeTransferFrom(bob, alice, starterDat.itemIds[0], 1, "");
+        // unequip
+        world.UD__unequipItem(bobCharacterId, starterDat.itemIds[0]);
+        // successful transfer
+        erc1155System.safeTransferFrom(bob, alice, starterDat.itemIds[0], 1, "");
+
+        assertEq(erc1155System.balanceOf(alice, starterDat.itemIds[0]), 1);
+    }
+
+    function test_batchTransferEquippedItem_Revert() public {
+        StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Mage);
+        assertEq(erc1155System.balanceOf(address(bob), starterDat.itemIds[0]), starterDat.amounts[0]);
+        //equip items
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](1);
+        itemsToEquip[0] = starterDat.itemIds[0];
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+        assertTrue(world.UD__isEquipped(bobCharacterId, starterDat.itemIds[0]), "item not equipped");
+        assertEq(erc1155System.balanceOf(bob, starterDat.itemIds[0]), 1);
+        erc1155System.setApprovalForAll(alice, true);
+        vm.expectRevert("Batch: Must Unequip item to transfer.");
+        erc1155System.safeBatchTransferFrom(bob, alice, starterDat.itemIds, starterDat.amounts, "");
+        // unequip
+        world.UD__unequipItem(bobCharacterId, starterDat.itemIds[0]);
+        // successful transfer
+        erc1155System.safeBatchTransferFrom(bob, alice, starterDat.itemIds, starterDat.amounts, "");
+
+        assertEq(erc1155System.balanceOf(alice, starterDat.itemIds[0]), starterDat.amounts[0]);
     }
 }

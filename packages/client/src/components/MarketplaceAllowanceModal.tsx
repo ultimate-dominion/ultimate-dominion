@@ -13,7 +13,7 @@ import {
 import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
-import { OrderType } from '../utils/types';
+import { OrderType, SystemToAllow } from '../utils/types';
 
 export const MarketplaceAllowanceModal = ({
   completeMessage = 'Allowance was successful!',
@@ -35,18 +35,18 @@ export const MarketplaceAllowanceModal = ({
   orderType: OrderType;
 }): JSX.Element => {
   const {
-    goldAllowance,
+    goldMarketplaceAllowance,
     isApprovingGold,
     isApprovingItems,
-    itemsAllowance,
+    itemsMarketplaceAllowance,
     onApproveGoldAllowance,
     onSetApprovalForAllItems,
   } = useAllowance();
 
   if (
-    (goldAllowance >= parseEther(orderPrice) &&
+    (goldMarketplaceAllowance >= parseEther(orderPrice) &&
       orderType === OrderType.Buying) ||
-    (itemsAllowance && orderType === OrderType.Selling)
+    (itemsMarketplaceAllowance && orderType === OrderType.Selling)
   ) {
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -87,7 +87,12 @@ export const MarketplaceAllowanceModal = ({
               </Text>
               <Button
                 isLoading={isApprovingGold}
-                onClick={() => onApproveGoldAllowance(orderPrice)}
+                onClick={() =>
+                  onApproveGoldAllowance(
+                    SystemToAllow.Marketplace,
+                    parseEther(orderPrice),
+                  )
+                }
               >
                 Allow
               </Button>
@@ -100,7 +105,9 @@ export const MarketplaceAllowanceModal = ({
                 manage your items.
               </Text>
               <Button
-                onClick={onSetApprovalForAllItems}
+                onClick={() =>
+                  onSetApprovalForAllItems(SystemToAllow.Marketplace)
+                }
                 isLoading={isApprovingItems}
               >
                 Allow

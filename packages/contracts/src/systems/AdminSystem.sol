@@ -48,7 +48,7 @@ contract AdminSystem is System {
     }
 
     function adminDropGold(bytes32 characterId, uint256 goldAmount) public onlyAdmin {
-        IWorld(_world()).UD__dropGold(characterId, goldAmount);
+        IWorld(_world()).UD__dropGoldToPlayer(characterId, goldAmount);
     }
 
     function adminDropItem(bytes32 characterId, uint256 itemId, uint256 amount) public onlyAdmin {
@@ -64,7 +64,8 @@ contract AdminSystem is System {
         IWorld(_world()).UD__removeEntityFromBoard(entityId);
     }
 
-    function adminMoveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) public onlyAdmin {
+    function adminMoveEntity(bytes32 entityId, uint16 x, uint16 y) public onlyAdmin {
+        (uint16 currentX, uint16 currentY) = IWorld(_world()).UD__getEntityPosition(entityId);
         bytes32[] memory entAtPos = IWorld(_world()).UD__getEntitiesAtPosition(currentX, currentY);
         bool entityWasAtPosition;
         for (uint256 i; i < entAtPos.length;) {

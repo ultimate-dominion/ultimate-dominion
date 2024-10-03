@@ -6,18 +6,24 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
+  Select,
   Spacer,
   Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { Entity } from '@latticexyz/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   ItemFilterOptions,
+  ItemType,
+  OrderType,
+  Shop,
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
@@ -34,12 +40,28 @@ const PER_PAGE = 5;
 export const ShopHalf = ({
   name,
   items,
+  shop,
+  characterId,
+  orderType,
 }: {
+  characterId: Entity;
   name: string;
-  items: Array<ArmorTemplate | SpellTemplate | WeaponTemplate>;
+  items: Array<{
+    balance: string | null;
+    item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+    stock: string | null;
+    index: string;
+  }>;
+  shop: Shop;
+  orderType: OrderType;
 }): JSX.Element => {
   const [entries, setEntries] = useState<
-    Array<ArmorTemplate | SpellTemplate | WeaponTemplate>
+    Array<{
+      balance: string | null;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      stock: string | null;
+      index: string;
+    }>
   >([]);
   const [page, setPage] = useState(1);
   const [pageLimit, setPageLimit] = useState(1);
@@ -49,7 +71,7 @@ export const ShopHalf = ({
     sorted: SortOptions.Price,
     reversed: false,
   });
-  const [filter, setFilter] = useState<ItemFilterOptions>(
+  const [itemTypeFilter, setItemTypeFilter] = useState<ItemFilterOptions>(
     ItemFilterOptions.All,
   );
 
@@ -64,24 +86,49 @@ export const ShopHalf = ({
     if (pageNumber < 1) {
       return;
     }
-    let entriesCopy: Array<ArmorTemplate | SpellTemplate | WeaponTemplate> = [
-      ...items,
-    ];
+    let entriesCopy: Array<{
+      balance: string | null;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      stock: string | null;
+      index: string;
+    }> = [...items];
     const searcher = new FuzzySearch(
       [...entriesCopy],
-      ['name', 'characterId', 'description'],
+      ['item.name', 'item.characterId', 'item.description'],
       { caseSensitive: false },
     );
     entriesCopy = searcher.search(query);
+
     entriesCopy = [...entriesCopy].filter(entry => {
-      switch (filter) {
-        case ItemFilterOptions.Weapon:
-          return entry.itemType == 0 ? 1 : 0;
+      switch (itemTypeFilter) {
         case ItemFilterOptions.Armor:
-          return entry.itemType == 1 ? 1 : 0;
+          return entry.item.itemType == ItemType.Armor;
+        case ItemFilterOptions.Consumable:
+          return entry.item.itemType == ItemType.Consumable;
+        case ItemFilterOptions.Spell:
+          return entry.item.itemType == ItemType.Spell;
+        case ItemFilterOptions.Weapon:
+          return entry.item.itemType == ItemType.Weapon;
 
         default:
           return true;
+      }
+    });
+
+    entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
+      switch (sort.sorted) {
+        case SortOptions.Price:
+          return sort.reversed
+            ? Number(BigInt(entryA.item.price) - BigInt(entryB.item.price))
+            : Number(BigInt(entryB.item.price) - BigInt(entryA.item.price));
+        case SortOptions.Stock:
+          return sort.reversed
+            ? Number(entryA.stock ? entryA.stock : entryA.balance) -
+                Number(entryB.stock ? entryB.stock : entryB.balance)
+            : Number(entryB.stock ? entryB.stock : entryB.balance) -
+                Number(entryA.stock ? entryA.stock : entryA.balance);
+        default:
+          return Number(BigInt(entryB.item.price) - BigInt(entryA.item.price));
       }
     });
     setLength(entriesCopy.length);
@@ -91,7 +138,15 @@ export const ShopHalf = ({
     if (pageNumber > pageLimit) {
       setPage(pageLimit);
     }
-  }, [filter, items, pageLimit, pageNumber, query]);
+  }, [
+    items,
+    itemTypeFilter,
+    pageLimit,
+    pageNumber,
+    query,
+    sort.reversed,
+    sort.sorted,
+  ]);
 
   return (
     <VStack>
@@ -99,12 +154,13 @@ export const ShopHalf = ({
         {name}
       </Text>
       <Stack
+        alignItems="center"
         direction={{ base: 'column', md: 'row' }}
         mb={8}
         spacing={{ base: 4, md: 8 }}
         w="100%"
       >
-        <InputGroup w="100%">
+        <InputGroup w="50%">
           <InputLeftElement pointerEvents="none">
             <FaSearch />
           </InputLeftElement>
@@ -114,29 +170,20 @@ export const ShopHalf = ({
             value={query}
           />
         </InputGroup>
-        <HStack>
-          <Button
-            onClick={() => setFilter(ItemFilterOptions.All)}
-            size="sm"
-            variant={filter === ItemFilterOptions.All ? 'solid' : 'outline'}
-          >
-            All
-          </Button>
-          <Button
-            onClick={() => setFilter(ItemFilterOptions.Armor)}
-            size="sm"
-            variant={filter === ItemFilterOptions.Armor ? 'solid' : 'outline'}
-          >
-            Armor
-          </Button>
-          <Button
-            onClick={() => setFilter(ItemFilterOptions.Weapon)}
-            size="sm"
-            variant={filter === ItemFilterOptions.Weapon ? 'solid' : 'outline'}
-          >
-            Weapon
-          </Button>
-        </HStack>
+        <Select
+          onChange={e => setItemTypeFilter(e.target.value as ItemFilterOptions)}
+          size="md"
+          value={itemTypeFilter}
+          w="50%"
+        >
+          {Object.keys(ItemFilterOptions).map(k => {
+            return (
+              <option key={`item-type-filter-${k}`} value={k}>
+                {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
+              </option>
+            );
+          })}
+        </Select>
       </Stack>
       <HStack w="100%">
         <Flex justify="space-between" w="100%">
@@ -196,14 +243,25 @@ export const ShopHalf = ({
                 <FaSortAmountDown color="grey" />
               )}
             </Button>
-            <Box display={{ base: 'none', md: 'block' }} w="30px"></Box>
+            <Box display={{ base: 'none', md: 'block' }} w="40px" />
           </HStack>
         </Flex>
       </HStack>
       <VStack gap={3} maxW="100%" overflowX="auto" w="100%">
         {entries.length > 0 ? (
           entries.map((entry, i) => {
-            return <ShopItemRow {...entry} key={`shop-row-${i}`} />;
+            return (
+              <ShopItemRow
+                balance={entry.balance}
+                characterId={characterId}
+                item={entry.item}
+                itemIndex={entry.index}
+                key={`shop-row-${i}`}
+                orderType={orderType}
+                shop={shop}
+                stock={entry.stock}
+              />
+            );
           })
         ) : (
           <Text mt={4}>No Data</Text>

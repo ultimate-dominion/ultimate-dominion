@@ -7,6 +7,7 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
+  Select,
   Spinner,
   Stack,
   Text,
@@ -29,10 +30,11 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
-import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   ItemFilterOptions,
   ItemType,
   MarketplaceFilter,
@@ -58,6 +60,7 @@ export const Marketplace = (): JSX.Element => {
   const { delegatorAddress, isSynced } = useMUD();
   const {
     armorTemplates,
+    consumableTemplates,
     isLoading: isLoadingItemTemplates,
     spellTemplates,
     weaponTemplates,
@@ -82,7 +85,7 @@ export const Marketplace = (): JSX.Element => {
   } = useDisclosure();
 
   const [items, setItems] = useState<
-    (ArmorTemplate | SpellTemplate | WeaponTemplate)[]
+    (ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate)[]
   >([]);
 
   const [sort, setSort] = useState({
@@ -130,8 +133,13 @@ export const Marketplace = (): JSX.Element => {
   ]);
 
   const unfilteredItems = useMemo(
-    () => [...armorTemplates, ...spellTemplates, ...weaponTemplates],
-    [armorTemplates, spellTemplates, weaponTemplates],
+    () => [
+      ...armorTemplates,
+      ...consumableTemplates,
+      ...spellTemplates,
+      ...weaponTemplates,
+    ],
+    [armorTemplates, consumableTemplates, spellTemplates, weaponTemplates],
   );
 
   const pageNumber = useMemo(() => {
@@ -280,13 +288,13 @@ export const Marketplace = (): JSX.Element => {
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(GAME_BOARD_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Game Board
+          Back
         </Button>
-        <Text mt={12}>An erro occurred</Text>
+        <Text mt={12}>An error occurred</Text>
       </VStack>
     );
   }
@@ -302,11 +310,11 @@ export const Marketplace = (): JSX.Element => {
         <Button
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
-          onClick={() => navigate(GAME_BOARD_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Game Board
+          Back
         </Button>
         <Text size={{ base: '2xs', sm: 'sm' }}>
           $GOLD Balance: {etherToFixedNumber(character.externalGoldBalance)}
@@ -360,36 +368,31 @@ export const Marketplace = (): JSX.Element => {
         mb={8}
         w="100%"
       >
-        <Stack
+        <HStack
           alignItems="center"
-          direction={{ base: 'column', md: 'row' }}
+          justifyContent="space-between"
           spacing={{ base: 4, md: 8 }}
+          w={{ base: '100%', md: '375px' }}
         >
-          <Text>Filter by:</Text>
-          <HStack>
+          <Text size={{ base: 'sm', sm: 'md' }} w={{ base: '50%', sm: '40%' }}>
+            Filter by:
+          </Text>
+          <Select
+            onChange={e =>
+              setItemTypeFilter(e.target.value as ItemFilterOptions)
+            }
+            size="sm"
+            value={itemTypeFilter}
+          >
             {Object.keys(ItemFilterOptions).map(k => {
               return (
-                <Button
-                  key={`item-type-filter-${k}`}
-                  onClick={() =>
-                    setItemTypeFilter(
-                      ItemFilterOptions[k as keyof typeof ItemFilterOptions],
-                    )
-                  }
-                  size={{ base: 'xs', sm: 'sm' }}
-                  variant={
-                    itemTypeFilter ===
-                    ItemFilterOptions[k as keyof typeof ItemFilterOptions]
-                      ? 'solid'
-                      : 'outline'
-                  }
-                >
+                <option key={`item-type-filter-${k}`} value={k}>
                   {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
-                </Button>
+                </option>
               );
             })}
-          </HStack>
-        </Stack>
+          </Select>
+        </HStack>
         <Button bg="blue" onClick={onOpenCreateListingModal} size="sm">
           Create Listing
         </Button>

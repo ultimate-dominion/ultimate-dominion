@@ -21,6 +21,8 @@ interface ICharacterSystem {
 
   function UD__getCharacterTokenId(bytes32 characterId) external pure returns (uint256);
 
+  function UD__getCharacterIdFromOwnerAddress(address ownerAddress) external view returns (bytes32 _characterId);
+
   function UD__getOwnerAddress(bytes32 characterId) external pure returns (address);
 
   function UD__isValidCharacterId(bytes32 characterId) external view returns (bool);
@@ -37,7 +39,7 @@ interface ICharacterSystem {
 
   function UD__enterGame(bytes32 characterId) external;
 
-  function UD__getCurrentAvailableLevel(uint256 experience) external view returns (uint256 currentAvailibleLevel);
+  function UD__getCurrentAvailableLevel(uint256 experience) external view returns (uint256 currentAvailableLevel);
 
   function UD__levelCharacter(bytes32 characterId, StatsData memory desiredStats) external;
 

@@ -41,11 +41,7 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
-import {
-  CHARACTER_CREATION_PATH,
-  HOME_PATH,
-  MARKETPLACE_PATH,
-} from '../Routes';
+import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -60,7 +56,7 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 export const MarketplaceItem = (): JSX.Element => {
-  const { renderSuccess, renderError } = useToast();
+  const { renderError, renderSuccess, renderWarning } = useToast();
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
   const [searchParams] = useSearchParams();
@@ -74,6 +70,7 @@ export const MarketplaceItem = (): JSX.Element => {
   } = useMUD();
   const {
     armorTemplates,
+    consumableTemplates,
     isLoading: isLoadingItemTemplates,
     spellTemplates,
     weaponTemplates,
@@ -87,10 +84,14 @@ export const MarketplaceItem = (): JSX.Element => {
   } = useOrders();
   const {
     character: userCharacter,
+    equippedArmor,
+    equippedSpells,
+    equippedWeapons,
     isRefreshing,
     refreshCharacter,
   } = useCharacter();
-  const { goldAllowance, itemsAllowance } = useAllowance();
+  const { goldMarketplaceAllowance, itemsMarketplaceAllowance } =
+    useAllowance();
 
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -159,6 +160,11 @@ export const MarketplaceItem = (): JSX.Element => {
     );
     if (armor) return armor;
 
+    const consumable = consumableTemplates.find(
+      consumable => consumable.tokenId === selectedItemId,
+    );
+    if (consumable) return consumable;
+
     const spell = spellTemplates.find(
       spell => spell.tokenId === selectedItemId,
     );
@@ -170,7 +176,13 @@ export const MarketplaceItem = (): JSX.Element => {
     if (weapon) return weapon;
 
     return null;
-  }, [armorTemplates, selectedItemId, spellTemplates, weaponTemplates]);
+  }, [
+    armorTemplates,
+    consumableTemplates,
+    selectedItemId,
+    spellTemplates,
+    weaponTemplates,
+  ]);
 
   const userItemBalance = useMemo(() => {
     if (!(userCharacter && selectedItem)) return '0';
@@ -220,15 +232,36 @@ export const MarketplaceItem = (): JSX.Element => {
           return;
         }
 
+        const equippedItemTokenIds = [
+          ...equippedArmor,
+          ...equippedSpells,
+          ...equippedWeapons,
+        ].map(equippedItem => equippedItem.tokenId);
+
+        const isItemEquipped = equippedItemTokenIds.includes(
+          selectedItem.tokenId,
+        );
+
+        if (
+          userItemBalance === '1' &&
+          isItemEquipped &&
+          orderType === OrderType.Selling
+        ) {
+          renderWarning(
+            `You cannot sell an item that is currently equipped. Please unequip the ${selectedItem.name} first.`,
+          );
+          return;
+        }
+
         if (
           orderType === OrderType.Buying &&
-          goldAllowance < parseEther(orderPrice)
+          goldMarketplaceAllowance < parseEther(orderPrice)
         ) {
           onOpenAllowanceModal();
           return;
         }
 
-        if (orderType === OrderType.Selling && !itemsAllowance) {
+        if (orderType === OrderType.Selling && !itemsMarketplaceAllowance) {
           onOpenAllowanceModal();
           return;
         }
@@ -298,12 +331,15 @@ export const MarketplaceItem = (): JSX.Element => {
     },
     [
       createOrder,
-      goldAllowance,
+      equippedArmor,
+      equippedSpells,
+      equippedWeapons,
+      goldMarketplaceAllowance,
       goldTokenAddress,
       insufficientGold,
       invalidOrderPrice,
       itemsAddress,
-      itemsAllowance,
+      itemsMarketplaceAllowance,
       onCloseAllowanceModal,
       onOpenAllowanceModal,
       onOpenConfirmationModal,
@@ -313,6 +349,7 @@ export const MarketplaceItem = (): JSX.Element => {
       refreshOrders,
       renderError,
       renderSuccess,
+      renderWarning,
       selectedItem,
       userCharacter,
       userItemBalance,
@@ -387,11 +424,11 @@ export const MarketplaceItem = (): JSX.Element => {
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(MARKETPLACE_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Marketplace
+          Back
         </Button>
         <HStack h="100%" justifyContent="center" w="100%">
           <Spinner size="xl" />
@@ -407,13 +444,13 @@ export const MarketplaceItem = (): JSX.Element => {
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(MARKETPLACE_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Marketplace
+          Back
         </Button>
-        <Text mt={12}>An erro occurred</Text>
+        <Text mt={12}>An error occurred.</Text>
       </VStack>
     );
   }
@@ -425,11 +462,11 @@ export const MarketplaceItem = (): JSX.Element => {
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(MARKETPLACE_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Marketplace
+          Back
         </Button>
         <Text>Item not found</Text>
       </VStack>
@@ -447,11 +484,11 @@ export const MarketplaceItem = (): JSX.Element => {
         <Button
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
-          onClick={() => navigate(MARKETPLACE_PATH)}
+          onClick={() => navigate(-1)}
           size="xs"
           variant="outline"
         >
-          Back to Marketplace
+          Back
         </Button>
         <Text size={{ base: '2xs', sm: 'sm' }}>
           $GOLD Balance: {etherToFixedNumber(userCharacter.externalGoldBalance)}
@@ -556,30 +593,31 @@ export const MarketplaceItem = (): JSX.Element => {
                   <Text>{(selectedItem as ArmorTemplate).armorModifier}</Text>
                 </HStack>
               )}
-              {selectedItem.itemType !== ItemType.Armor && (
-                <>
-                  <HStack w="100%">
-                    <Text size="sm">Min Damage</Text>
-                    <Spacer />
-                    <Text>
-                      {
-                        (selectedItem as SpellTemplate | WeaponTemplate)
-                          .minDamage
-                      }
-                    </Text>
-                  </HStack>
-                  <HStack w="100%">
-                    <Text size="sm">Max Damage</Text>
-                    <Spacer />
-                    <Text>
-                      {
-                        (selectedItem as SpellTemplate | WeaponTemplate)
-                          .maxDamage
-                      }
-                    </Text>
-                  </HStack>
-                </>
-              )}
+              {selectedItem.itemType !== ItemType.Armor &&
+                selectedItem.itemType !== ItemType.Consumable && (
+                  <>
+                    <HStack w="100%">
+                      <Text size="sm">Min Damage</Text>
+                      <Spacer />
+                      <Text>
+                        {
+                          (selectedItem as SpellTemplate | WeaponTemplate)
+                            .minDamage
+                        }
+                      </Text>
+                    </HStack>
+                    <HStack w="100%">
+                      <Text size="sm">Max Damage</Text>
+                      <Spacer />
+                      <Text>
+                        {
+                          (selectedItem as SpellTemplate | WeaponTemplate)
+                            .maxDamage
+                        }
+                      </Text>
+                    </HStack>
+                  </>
+                )}
             </VStack>
 
             <VStack spacing={1} w={{ base: '100%', sm: '50%' }}>

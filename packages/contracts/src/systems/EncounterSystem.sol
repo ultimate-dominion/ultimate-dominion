@@ -42,7 +42,6 @@ import "forge-std/console.sol";
 contract EncounterSystem is System {
     using Math for uint256;
     using Math for int256;
-    // in pve the attackers are always players and the defenders are always mobs since there is no aggro system
 
     function createEncounter(EncounterType encounterType, bytes32[] memory group1, bytes32[] memory group2)
         public
@@ -184,7 +183,6 @@ contract EncounterSystem is System {
                 } else {
                     require(isParticipant(playerAddress, encounterData.defenders), "Cannot end defenders turn");
                 }
-                // is pve
             } else {
                 // should be attacker turn unless defender has timed out
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
@@ -228,9 +226,8 @@ contract EncounterSystem is System {
         if (encounterData.encounterType == EncounterType.PvE) {
             (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePveRewards(encounterId, randomNumber);
         } else if (encounterData.encounterType == EncounterType.PvP) {
-            // distribute pvp rewards
-        }
-        else {
+            (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePvpRewards(encounterId, randomNumber);
+        } else {
             revert("unrecognized enocounter type");
         }
 
@@ -305,6 +302,10 @@ contract EncounterSystem is System {
                 i++;
             }
         }
+    }
+
+    function isInEncounter(bytes32 entityId) public view returns (bool) {
+        return EncounterEntity.getEncounterId(entityId) != bytes32(0);
     }
 
     function _queueActions(bytes32 encounterId, Action[] memory attacks) internal {

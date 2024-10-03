@@ -16,6 +16,7 @@ export enum EncounterType {
 export enum ItemFilterOptions {
   All = 'All',
   Armor = 'Armor',
+  Consumable = 'Consumable',
   Spell = 'Spell',
   Weapon = 'Weapon',
 }
@@ -58,6 +59,12 @@ export enum StatsClasses {
   Mage,
 }
 
+export enum SystemToAllow {
+  LootManager = 'LootManager',
+  Marketplace = 'Marketplace',
+  Shop = 'Shop',
+}
+
 export enum TokenType {
   NATIVE,
   ERC20,
@@ -83,6 +90,31 @@ export type ArmorStats = {
 export type ArmorTemplate = ArmorStats &
   Metadata & {
     itemType: ItemType;
+    price: bigint;
+    statRestrictions: StatRestrictions;
+    tokenId: string;
+  };
+
+export type Consumable = ConsumableTemplate & {
+  balance: string;
+  itemId: Entity;
+  owner: string;
+};
+
+export type ConsumableStats = {
+  agiModifier: string;
+  effects: string[];
+  hpModifier: string;
+  hpRestoreAmount: string;
+  intModifier: string;
+  minLevel: string;
+  strModifier: string;
+};
+
+export type ConsumableTemplate = ConsumableStats &
+  Metadata & {
+    itemType: ItemType;
+    price: bigint;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
@@ -233,12 +265,14 @@ export type Order = {
 
 export type Shop = {
   buyableItems: string[];
-  mobId: string;
+  gold: bigint;
+  maxGold: bigint;
   position: { x: number; y: number };
-  priceMarkdown: string;
-  priceMarkup: string;
+  priceMarkdown: bigint;
+  priceMarkup: bigint;
   sellableItems: string[];
   shopId: string;
+  stock: string[];
 };
 
 export type Spell = SpellTemplate & {
@@ -258,6 +292,7 @@ export type SpellStats = {
 export type SpellTemplate = SpellStats &
   Metadata & {
     itemType: ItemType;
+    price: bigint;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
@@ -297,6 +332,7 @@ export type WeaponStats = {
 export type WeaponTemplate = WeaponStats &
   Metadata & {
     itemType: ItemType;
+    price: bigint;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };

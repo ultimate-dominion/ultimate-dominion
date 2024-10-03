@@ -1,41 +1,66 @@
 import { Box, HStack, Progress, Spacer, Text } from '@chakra-ui/react';
-
 export const Level = ({
   currentLevel,
   levelPercent,
+  maxed,
 }: {
   currentLevel: string;
   levelPercent: number;
+  maxed: boolean;
 }): JSX.Element => {
   return (
     <Box fontSize="10px" mt={8} position="relative" w="100%">
-      <Text
-        color={levelPercent === 100 ? 'green' : 'black'}
-        fontWeight={levelPercent === 100 ? 'bold' : 'normal'}
-        position="absolute"
-        right={100 - levelPercent - 2 + '%'}
-        top="-15px"
-      >
-        {levelPercent.toFixed(2)}%
-      </Text>
-      <Text
-        display={levelPercent > 90 ? 'none' : 'block'}
-        position="absolute"
-        right="0%"
-        top="-15px"
-      >
-        100%
-      </Text>
-      <Progress
-        h={2}
-        variant={levelPercent === 100 ? 'filled' : 'filling'}
-        value={levelPercent}
-      />
-      <HStack mt={1}>
-        <Text>Level {currentLevel}</Text>
-        <Spacer />
-        <Text>Level {Number(currentLevel) + 1}</Text>
-      </HStack>
+      {maxed ? (
+        <Box>
+          <Text
+            color="purple"
+            fontWeight="bold"
+            position="absolute"
+            right="-2%"
+            top="-15px"
+          >
+            MAX
+          </Text>
+          <Text display="none" position="absolute" right="0%" top="-15px">
+            100%
+          </Text>
+          <Progress h={2} value={100} variant="maxed" />
+          <HStack mt={1}>
+            <Spacer />
+            <Text>Level {Number(currentLevel)}</Text>
+          </HStack>
+        </Box>
+      ) : (
+        <Box>
+          <Text
+            color={levelPercent === 100 ? 'green' : 'black'}
+            fontWeight={levelPercent === 100 ? 'bold' : 'normal'}
+            position="absolute"
+            right={100 - levelPercent - 2 + '%'}
+            top="-15px"
+          >
+            {levelPercent.toFixed(2)}%
+          </Text>
+          <Text
+            display={levelPercent > 90 ? 'none' : 'block'}
+            position="absolute"
+            right="0%"
+            top="-15px"
+          >
+            100%
+          </Text>
+          <Progress
+            h={2}
+            value={levelPercent}
+            variant={levelPercent === 100 ? 'filled' : 'filling'}
+          />
+          <HStack mt={1}>
+            <Text>Level {currentLevel}</Text>
+            <Spacer />
+            <Text>Level {Number(currentLevel) + 1}</Text>
+          </HStack>
+        </Box>
+      )}
     </Box>
   );
 };

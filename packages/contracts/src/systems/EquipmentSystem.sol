@@ -7,15 +7,11 @@ import {IWorld} from "@world/IWorld.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {IERC1155Receiver} from "@erc1155/IERC1155Receiver.sol";
 import {
-    UltimateDominionConfig,
     Items,
     ItemsData,
-    Counters,
     StarterItems,
-    StarterItemsData,
     Characters,
     CharactersData,
-    Mobs,
     Stats,
     StatsData,
     CharacterEquipment,
@@ -30,7 +26,8 @@ import {
     StatRestrictions,
     StatRestrictionsData,
     ConsumableStats,
-    ConsumableStatsData
+    ConsumableStatsData,
+    WorldStatusEffects
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
@@ -50,7 +47,6 @@ import {
     _ownersTableId
 } from "@erc1155/utils.sol";
 import {AdjustedCombatStats, MonsterStats} from "@interfaces/Structs.sol";
-import "forge-std/console.sol";
 
 contract EquipmentSystem is System {
     modifier inGame(bytes32 characterId) {
@@ -62,6 +58,7 @@ contract EquipmentSystem is System {
     function equipItems(bytes32 characterId, uint256[] memory itemIds) public inGame(characterId) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         require(characterOwner == _msgSender(), "EQUIPMENT: Not Character Owner");
+        require(!IWorld(_world()).UD__isInEncounter(characterId), "Cannot equip items in combat");
         uint256 itemId;
         for (uint256 i; i < itemIds.length; i++) {
             itemId = itemIds[i];
@@ -71,7 +68,10 @@ contract EquipmentSystem is System {
             _equipItem(characterId, itemId, itemData.itemType);
         }
         _setEquipmentBonuses(characterId);
+
         IWorld(_world()).UD__setStats(characterId, calculateEquipmentBonuses(characterId));
+
+        IWorld(_world()).UD__applyWorldEffects(characterId);
     }
 
     function isEquipped(bytes32 characterId, uint256 itemId) public view returns (bool _isEquipped) {
@@ -169,23 +169,25 @@ contract EquipmentSystem is System {
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
         uint256 totalLength;
+        if (CharacterEquipment.lengthEquippedArmor(characterId) > 0 && itemType == ItemType.Armor) {
+            revert("Already wearing armor");
+        }
         totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);
-        totalLength += CharacterEquipment.lengthEquippedArmor(characterId);
         totalLength += CharacterEquipment.lengthEquippedSpells(characterId);
         totalLength += CharacterEquipment.lengthEquippedConsumables(characterId);
         require(totalLength < 4, "too many items equipped");
 
-        if (uint8(itemType) == 0) {
+        if (itemType == ItemType.Weapon) {
             CharacterEquipment.pushEquippedWeapons(characterId, itemId);
         }
-        if (uint8(itemType) == 1) {
+        if (itemType == ItemType.Armor) {
             CharacterEquipment.pushEquippedArmor(characterId, itemId);
         }
 
-        if (uint8(itemType) == 2) {
+        if (itemType == ItemType.Spell) {
             CharacterEquipment.pushEquippedSpells(characterId, itemId);
         }
-        if (uint8(itemType) == 4) {
+        if (itemType == ItemType.Consumable) {
             CharacterEquipment.pushEquippedConsumables(characterId, itemId);
         }
     }
@@ -196,7 +198,7 @@ contract EquipmentSystem is System {
         WeaponStatsData memory weaponStats;
         if (equipmentData.equippedArmor.length > 0) {
             for (uint256 i; i < equipmentData.equippedArmor.length; i++) {
-                armorStats = getArmorStats(equipmentData.equippedArmor[i]);
+                armorStats = IWorld(_world()).UD__getArmorStats(equipmentData.equippedArmor[i]);
                 _charEquip.armor += armorStats.armorModifier;
                 _charEquip.strBonus += armorStats.strModifier;
                 _charEquip.agiBonus += armorStats.agiModifier;
@@ -206,7 +208,7 @@ contract EquipmentSystem is System {
         }
         if (equipmentData.equippedWeapons.length > 0) {
             for (uint256 i; i < equipmentData.equippedWeapons.length; i++) {
-                weaponStats = getWeaponStats(equipmentData.equippedWeapons[i]);
+                weaponStats = IWorld(_world()).UD__getWeaponStats(equipmentData.equippedWeapons[i]);
                 _charEquip.strBonus += weaponStats.strModifier;
                 _charEquip.agiBonus += weaponStats.agiModifier;
                 _charEquip.intBonus += weaponStats.intModifier;
@@ -226,6 +228,7 @@ contract EquipmentSystem is System {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         require(characterOwner == _msgSender(), "EQUIPMENT: Not Character Owner");
         require(isEquipped(characterId, itemId), "EQUIPMENT: NOT EQUIPPED");
+        require(!IWorld(_world()).UD__isInEncounter(characterId), "Cannot un-equip items in combat");
         ItemType itemType = IWorld(_world()).UD__getItemType(itemId);
 
         if (itemType == ItemType.Weapon) {
@@ -265,6 +268,7 @@ contract EquipmentSystem is System {
         _setEquipmentBonuses(characterId);
 
         IWorld(_world()).UD__setStats(characterId, calculateEquipmentBonuses(characterId));
+        IWorld(_world()).UD__applyWorldEffects(characterId);
     }
 
     function getCombatStats(bytes32 entityId) public view returns (AdjustedCombatStats memory modifiedStats) {
@@ -393,27 +397,5 @@ contract EquipmentSystem is System {
         } else if (itemType == ItemType.Consumable) {
             effects = ConsumableStats.getEffects(itemId);
         }
-    }
-
-    function getWeaponStats(uint256 itemId) public view returns (WeaponStatsData memory _weaponStats) {
-        ItemType itemType = Items.getItemType(itemId);
-        require(itemType == ItemType.Weapon, "ITEMS: Not a  weapon");
-        _weaponStats = WeaponStats.get(itemId);
-    }
-
-    function getArmorStats(uint256 itemId) public view returns (ArmorStatsData memory _ArmorStats) {
-        ItemType itemType = Items.getItemType(itemId);
-        require(itemType == ItemType.Armor, "ITEMS: Not a  Armor");
-        _ArmorStats = ArmorStats.get(itemId);
-    }
-
-    function getSpellStats(uint256 itemId) public view returns (SpellStatsData memory _spellStats) {
-        _spellStats = SpellStats.get(itemId);
-    }
-
-    function getConsumableStats(uint256 itemId) public view returns (ConsumableStatsData memory _consumableStats) {
-        ItemType itemType = Items.getItemType(itemId);
-        require(itemType == ItemType.Consumable, "ITEMS: Not Consumable");
-        _consumableStats = ConsumableStats.get(itemId);
     }
 }
