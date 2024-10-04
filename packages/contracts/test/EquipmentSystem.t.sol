@@ -1,6 +1,7 @@
 pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
+import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {Classes, ItemType} from "@codegen/common.sol";
 import {StatsData} from "@codegen/index.sol";
 import "forge-std/console.sol";
@@ -24,7 +25,7 @@ import {
 } from "@codegen/index.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
-import {_itemsSystemId} from "../src/utils.sol";
+import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
 import {
     GOLD_NAMESPACE,
     CHARACTERS_NAMESPACE,
@@ -83,7 +84,12 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+            ItemType.Weapon,
+            10 ether,
+            100000000,
+            1 ether,
+            abi.encode(weaponStats, statRestrictions),
+            "test_Weapon_uri1/"
         );
 
         uint256[] memory itemIds = new uint256[](1);
@@ -117,7 +123,12 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+            ItemType.Weapon,
+            10 ether,
+            100000000,
+            1 ether,
+            abi.encode(weaponStats, statRestrictions),
+            "test_Weapon_uri1/"
         );
 
         uint256[] memory itemIds = new uint256[](1);
@@ -151,7 +162,12 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+            ItemType.Weapon,
+            10 ether,
+            100000000,
+            1 ether,
+            abi.encode(weaponStats, statRestrictions),
+            "test_Weapon_uri1/"
         );
 
         uint256[] memory itemIds = new uint256[](1);
@@ -185,7 +201,12 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 firstItemId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(weaponStats, statRestrictions), "test_Weapon_uri1/"
+            ItemType.Weapon,
+            10 ether,
+            100000000,
+            1 ether,
+            abi.encode(weaponStats, statRestrictions),
+            "test_Weapon_uri1/"
         );
 
         uint256[] memory itemIds = new uint256[](1);
@@ -203,30 +224,27 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_calculateEquipmentBonuses() public {
-        uint256[] memory itemIds = new uint256[](1);
-        uint256[] memory amounts = new uint256[](1);
-        bytes32[] memory characterIds = new bytes32[](1);
-        itemIds[0] = newArmorId;
-        amounts[0] = 1;
-        characterIds[0] = bobCharacterId;
-        world.UD__dropItems(characterIds, itemIds, amounts);
+        world.UD__dropItem(bobCharacterId, newArmorId, 1);
 
+        world.UD__dropItem(bobCharacterId, startingConsumableId + 1, 1);
+
+        AdjustedCombatStats memory baseStats = world.UD__getCombatStats(bobCharacterId);
         vm.startPrank(bob);
         uint256[] memory itemsToEquip = new uint256[](1);
         itemsToEquip[0] = newArmorId;
+        erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, startingConsumableId + 1);
 
         ArmorStatsData memory itemStats = world.UD__getArmorStats(newArmorId);
-        AdjustedCombatStats memory baseStats = world.UD__getCombatStats(bobCharacterId);
 
         world.UD__equipItems(bobCharacterId, itemsToEquip);
 
         startGasReport("apply stat bonuses");
-        AdjustedCombatStats memory modifiedStats = world.UD__calculateEquipmentBonuses(bobCharacterId);
+        AdjustedCombatStats memory modifiedStats = world.UD__getCombatStats(bobCharacterId);
         endGasReport();
         ArmorStatsData memory armorStats = world.UD__getArmorStats(newArmorId);
         assertTrue(world.UD__isEquipped(bobCharacterId, newArmorId));
-
-        assertEq(modifiedStats.strength, int256(baseStats.strength) + armorStats.strModifier);
+        assertEq(modifiedStats.strength, int256(baseStats.strength) + armorStats.strModifier + 5);
         assertEq(modifiedStats.agility, int256(baseStats.agility) + armorStats.agiModifier);
         assertEq(modifiedStats.intelligence, int256(baseStats.intelligence) + armorStats.intModifier);
         assertEq(modifiedStats.maxHp, int256(baseStats.maxHp) + armorStats.hpModifier);
@@ -283,5 +301,61 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         AdjustedCombatStats memory unEquippedStats = world.UD__getCombatStats(alicesCharacterId);
         assertFalse(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
         assertEq(unEquippedStats.strength, alicesStats.strength);
+    }
+
+    function test_equipTooManyWeapons() public {
+        AdjustedCombatStats memory startingStats = world.UD__getCombatStats(bobCharacterId);
+        uint256[] memory itemIds = new uint256[](5);
+        uint256[] memory amounts = new uint256[](5);
+        bytes32[] memory characterIds = new bytes32[](5);
+        itemIds[0] = newWeaponId;
+        itemIds[1] = alsoNewWeaponId;
+        itemIds[2] = newConsumableId;
+        itemIds[3] = newSpellId;
+        itemIds[4] = alsoNewSpellId;
+        amounts[0] = 1;
+        amounts[1] = 1;
+        amounts[2] = 1;
+        amounts[3] = 1;
+        amounts[4] = 1;
+        characterIds[0] = bobCharacterId;
+        characterIds[1] = bobCharacterId;
+        characterIds[2] = bobCharacterId;
+        characterIds[3] = bobCharacterId;
+        characterIds[4] = bobCharacterId;
+        world.UD__dropItems(characterIds, itemIds, amounts);
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](4);
+        itemsToEquip[0] = itemIds[0];
+        itemsToEquip[1] = itemIds[1];
+        itemsToEquip[2] = itemIds[2];
+        itemsToEquip[3] = itemIds[3];
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+        uint256[] memory moreItemsToEquip = new uint256[](1);
+        moreItemsToEquip[0] = itemIds[4];
+        vm.expectRevert(bytes("too many items equipped"));
+        world.UD__equipItems(bobCharacterId, moreItemsToEquip);
+    }
+
+    function test_equipTooManyArmor() public {
+        AdjustedCombatStats memory startingStats = world.UD__getCombatStats(bobCharacterId);
+        uint256[] memory itemIds = new uint256[](2);
+        uint256[] memory amounts = new uint256[](2);
+        bytes32[] memory characterIds = new bytes32[](2);
+        itemIds[0] = newArmorId;
+        itemIds[1] = alsoNewArmorId;
+        amounts[0] = 1;
+        amounts[1] = 1;
+        characterIds[0] = bobCharacterId;
+        characterIds[1] = bobCharacterId;
+        world.UD__dropItems(characterIds, itemIds, amounts);
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](1);
+        itemsToEquip[0] = itemIds[0];
+        uint256[] memory moreItemsToEquip = new uint256[](1);
+        moreItemsToEquip[0] = itemIds[1];
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+        vm.expectRevert(bytes("Already wearing armor"));
+        world.UD__equipItems(bobCharacterId, moreItemsToEquip);
     }
 }

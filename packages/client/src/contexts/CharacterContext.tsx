@@ -26,6 +26,7 @@ import type {
   Armor,
   Character,
   CharacterData,
+  Consumable,
   EntityStats,
   Spell,
   Weapon,
@@ -39,6 +40,7 @@ type CharacterContextType = {
   equippedSpells: Spell[];
   equippedWeapons: Weapon[];
   inventoryArmor: Armor[];
+  inventoryConsumables: Consumable[];
   inventorySpells: Spell[];
   inventoryWeapons: Weapon[];
   isMoveEquipped: boolean;
@@ -52,6 +54,7 @@ const CharacterContext = createContext<CharacterContextType>({
   equippedSpells: [],
   equippedWeapons: [],
   inventoryArmor: [],
+  inventoryConsumables: [],
   inventorySpells: [],
   inventoryWeapons: [],
   isMoveEquipped: false,
@@ -84,6 +87,7 @@ export const CharacterProvider = ({
   const { renderError } = useToast();
   const {
     armorTemplates,
+    consumableTemplates,
     isLoading: isLoadingItemTemplates,
     spellTemplates,
     weaponTemplates,
@@ -92,6 +96,9 @@ export const CharacterProvider = ({
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(true);
   const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
+  const [inventoryConsumables, setInventoryConsumables] = useState<
+    Consumable[]
+  >([]);
   const [inventorySpells, setInventorySpells] = useState<Spell[]>([]);
   const [inventoryWeapons, setInventoryWeapons] = useState<Weapon[]>([]);
   const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
@@ -247,6 +254,27 @@ export const CharacterProvider = ({
           })
           .filter(a => a.balance !== '0');
 
+        const _consumables = consumableTemplates
+          .map(consumable => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(consumable.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...consumable,
+              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Consumable;
+          })
+          .filter(c => c.balance !== '0');
+
         const _spells = spellTemplates
           .map(spell => {
             const tokenOwnersEntity = encodeEntity(
@@ -300,6 +328,7 @@ export const CharacterProvider = ({
           .filter(Boolean) as Weapon[];
 
         setInventoryArmor(_armor);
+        setInventoryConsumables(_consumables);
         setInventorySpells(_spells);
         setInventoryWeapons(_weapons);
 
@@ -313,7 +342,14 @@ export const CharacterProvider = ({
         );
       }
     },
-    [armorTemplates, ItemsOwners, renderError, spellTemplates, weaponTemplates],
+    [
+      armorTemplates,
+      consumableTemplates,
+      ItemsOwners,
+      renderError,
+      spellTemplates,
+      weaponTemplates,
+    ],
   );
 
   useEffect(() => {
@@ -353,6 +389,7 @@ export const CharacterProvider = ({
         equippedSpells,
         equippedWeapons,
         inventoryArmor,
+        inventoryConsumables,
         inventorySpells,
         inventoryWeapons,
         isMoveEquipped,

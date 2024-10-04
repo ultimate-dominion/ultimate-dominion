@@ -23,6 +23,7 @@ type AllowanceContextType = {
   goldShopAllowance: bigint;
   isApprovingGold: boolean;
   isApprovingItems: boolean;
+  itemsLootManagerAllowance: boolean;
   itemsMarketplaceAllowance: boolean;
   itemsShopAllowance: boolean;
   onApproveGoldAllowance: (
@@ -39,6 +40,7 @@ const AllowanceContext = createContext<AllowanceContextType>({
   goldShopAllowance: 0n,
   isApprovingGold: false,
   isApprovingItems: false,
+  itemsLootManagerAllowance: false,
   itemsMarketplaceAllowance: false,
   itemsShopAllowance: false,
   onApproveGoldAllowance: () => {},
@@ -66,6 +68,8 @@ export const AllowanceProvider = ({
     useState<boolean>(false);
   const [goldLootManagerAllowance, setGoldLootManagerAllowance] =
     useState<bigint>(0n);
+  const [itemsLootManagerAllowance, setItemsLootManagerAllowance] =
+    useState<boolean>(false);
   const [goldShopAllowance, setGoldShopAllowance] = useState<bigint>(0n);
   const [itemsShopAllowance, setItemsShopAllowance] = useState<boolean>(false);
 
@@ -110,6 +114,12 @@ export const AllowanceProvider = ({
         functionName: 'allowance',
         args: [character.owner as Address, lootManagerAddress as Address],
       });
+      const _itemsLootManagerAllowance = (await publicClient.readContract({
+        address: itemsAddress as Address,
+        abi: ERC_1155_ABI,
+        functionName: 'isApprovedForAll',
+        args: [character.owner as Address, lootManagerAddress as Address],
+      })) as boolean;
 
       const _goldShopAllowance = await publicClient.readContract({
         address: goldTokenAddress as Address,
@@ -127,6 +137,7 @@ export const AllowanceProvider = ({
       setGoldMarketplaceAllowance(_goldMarketplaceAllowance);
       setItemsMarketplaceAllowance(_itemsMarketplaceAllowance);
       setGoldLootManagerAllowance(_goldLootManagerAllowance);
+      setItemsLootManagerAllowance(_itemsLootManagerAllowance);
       setGoldShopAllowance(_goldShopAllowance);
       setItemsShopAllowance(_itemsShopAllowance);
     } catch (e) {
@@ -285,6 +296,7 @@ export const AllowanceProvider = ({
         goldShopAllowance,
         isApprovingGold,
         isApprovingItems,
+        itemsLootManagerAllowance,
         itemsMarketplaceAllowance,
         itemsShopAllowance,
         onApproveGoldAllowance,

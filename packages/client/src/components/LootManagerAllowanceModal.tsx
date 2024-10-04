@@ -21,19 +21,29 @@ export const LootManagerAllowanceModal = ({
   isOpen,
   message,
   onClose,
-  successMessage = 'You can use your $GOLD with the Loot Manager.',
+  successMessage = 'You can use your token with the Loot Manager.',
 }: {
-  amount: string;
+  // If you set an amount, it is assumed that you are approving $GOLD. Otherwise, it will be assumed that you are approving items.
+  amount?: string;
   heading?: string;
   isOpen: boolean;
   message?: string;
   onClose: () => void;
   successMessage?: string;
 }): JSX.Element => {
-  const { goldLootManagerAllowance, isApprovingGold, onApproveGoldAllowance } =
-    useAllowance();
+  const {
+    goldLootManagerAllowance,
+    isApprovingGold,
+    isApprovingItems,
+    itemsLootManagerAllowance,
+    onApproveGoldAllowance,
+    onSetApprovalForAllItems,
+  } = useAllowance();
 
-  if (goldLootManagerAllowance >= parseEther(amount)) {
+  if (
+    (amount && goldLootManagerAllowance >= parseEther(amount)) ||
+    (!amount && itemsLootManagerAllowance)
+  ) {
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -48,7 +58,45 @@ export const LootManagerAllowanceModal = ({
             </VStack>
           </ModalBody>
           <ModalFooter>
-            <Button onClick={onClose} variant="ghost">
+            <Button onClick={onClose} size="sm" variant="ghost">
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  }
+
+  if (amount && goldLootManagerAllowance < parseEther(amount)) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>{heading}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody p={4}>
+            <VStack spacing={10} textAlign="center">
+              {!message && (
+                <Text>
+                  Allow {amount} $GOLD to be used by the Loot Manager?
+                </Text>
+              )}
+              {message && <Text>{message}</Text>}
+              <Button
+                isLoading={isApprovingGold}
+                onClick={() =>
+                  onApproveGoldAllowance(
+                    SystemToAllow.LootManager,
+                    parseEther(amount),
+                  )
+                }
+              >
+                Allow
+              </Button>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose} size="sm" variant="ghost">
               Close
             </Button>
           </ModalFooter>
@@ -66,16 +114,13 @@ export const LootManagerAllowanceModal = ({
         <ModalBody p={4}>
           <VStack spacing={10} textAlign="center">
             {!message && (
-              <Text>Allow {amount} $GOLD to be used by the Loot Manager?</Text>
+              <Text>Allow all items to be used by the Loot Manager?</Text>
             )}
             {message && <Text>{message}</Text>}
             <Button
-              isLoading={isApprovingGold}
+              isLoading={isApprovingItems}
               onClick={() =>
-                onApproveGoldAllowance(
-                  SystemToAllow.LootManager,
-                  parseEther(amount),
-                )
+                onSetApprovalForAllItems(SystemToAllow.LootManager)
               }
             >
               Allow
@@ -83,7 +128,7 @@ export const LootManagerAllowanceModal = ({
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose} variant="ghost">
+          <Button onClick={onClose} size="sm" variant="ghost">
             Close
           </Button>
         </ModalFooter>

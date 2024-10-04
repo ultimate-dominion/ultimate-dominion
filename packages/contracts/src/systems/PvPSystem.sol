@@ -66,8 +66,7 @@ contract PvPSystem is System {
             }
             if (entityX >= 5 || entityY >= 5) {
                 // intentionally left empty
-            }
-            else {
+            } else {
                 _isValidPvP = false;
                 break;
             }
@@ -88,8 +87,7 @@ contract PvPSystem is System {
                 }
                 if (entityX >= 5 || entityY >= 5) {
                     // intentionally left empty
-                }
-                else {
+                } else {
                     _isValidPvP = false;
                     break;
                 }

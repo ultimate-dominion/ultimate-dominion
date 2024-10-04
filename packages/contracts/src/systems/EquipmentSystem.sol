@@ -26,7 +26,8 @@ import {
     StatRestrictions,
     StatRestrictionsData,
     ConsumableStats,
-    ConsumableStatsData
+    ConsumableStatsData,
+    WorldStatusEffects
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
 import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
@@ -67,7 +68,10 @@ contract EquipmentSystem is System {
             _equipItem(characterId, itemId, itemData.itemType);
         }
         _setEquipmentBonuses(characterId);
+
         IWorld(_world()).UD__setStats(characterId, calculateEquipmentBonuses(characterId));
+
+        IWorld(_world()).UD__applyWorldEffects(characterId);
     }
 
     function isEquipped(bytes32 characterId, uint256 itemId) public view returns (bool _isEquipped) {
@@ -165,23 +169,25 @@ contract EquipmentSystem is System {
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
         uint256 totalLength;
+        if (CharacterEquipment.lengthEquippedArmor(characterId) > 0 && itemType == ItemType.Armor) {
+            revert("Already wearing armor");
+        }
         totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);
-        totalLength += CharacterEquipment.lengthEquippedArmor(characterId);
         totalLength += CharacterEquipment.lengthEquippedSpells(characterId);
         totalLength += CharacterEquipment.lengthEquippedConsumables(characterId);
         require(totalLength < 4, "too many items equipped");
 
-        if (uint8(itemType) == 0) {
+        if (itemType == ItemType.Weapon) {
             CharacterEquipment.pushEquippedWeapons(characterId, itemId);
         }
-        if (uint8(itemType) == 1) {
+        if (itemType == ItemType.Armor) {
             CharacterEquipment.pushEquippedArmor(characterId, itemId);
         }
 
-        if (uint8(itemType) == 2) {
+        if (itemType == ItemType.Spell) {
             CharacterEquipment.pushEquippedSpells(characterId, itemId);
         }
-        if (uint8(itemType) == 4) {
+        if (itemType == ItemType.Consumable) {
             CharacterEquipment.pushEquippedConsumables(characterId, itemId);
         }
     }
@@ -262,6 +268,7 @@ contract EquipmentSystem is System {
         _setEquipmentBonuses(characterId);
 
         IWorld(_world()).UD__setStats(characterId, calculateEquipmentBonuses(characterId));
+        IWorld(_world()).UD__applyWorldEffects(characterId);
     }
 
     function getCombatStats(bytes32 entityId) public view returns (AdjustedCombatStats memory modifiedStats) {
