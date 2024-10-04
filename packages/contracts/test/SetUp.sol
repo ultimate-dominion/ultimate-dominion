@@ -19,6 +19,8 @@ import {
     UltimateDominionConfig,
     ArmorStatsData,
     WeaponStatsData,
+    ConsumableStatsData,
+    SpellStatsData,
     StatRestrictionsData,
     ShopsData
 } from "@codegen/index.sol";
@@ -51,6 +53,13 @@ contract SetUp is Test {
     bytes32 public alicesRandomness = bytes32(keccak256(abi.encode("alicesRestaurant")));
     bytes32 basicActionIdStatsId;
     uint256 newArmorId;
+    uint256 alsoNewArmorId;
+    uint256 newWeaponId;
+    uint256 alsoNewWeaponId;
+    uint256 newSpellId;
+    uint256 alsoNewSpellId;
+    uint256 newConsumableId;
+
     bytes32 basicMagicDamageStatsId;
     StarterItems public starterItems;
     uint256 public startingArmorId;
@@ -152,6 +161,21 @@ contract SetUp is Test {
             hpModifier: 4
         });
 
+        WeaponStatsData memory newWeapon = WeaponStatsData({
+            agiModifier: 2,
+            intModifier: 3,
+            hpModifier: 4,
+            maxDamage: 0,
+            minDamage: 0,
+            minLevel: 0,
+            strModifier: 1,
+            effects: new bytes32[](0)
+        });
+
+        ConsumableStatsData memory newConsumable =
+            ConsumableStatsData({minDamage: 0, maxDamage: 0, minLevel: 0, effects: new bytes32[](0)});
+        SpellStatsData memory newSpell =
+            SpellStatsData({minDamage: 0, maxDamage: 0, minLevel: 0, effects: new bytes32[](0)});
         vm.label(alice, "alice");
         vm.label(bob, "bob");
         vm.label(worldAddress, "world");
@@ -160,7 +184,29 @@ contract SetUp is Test {
         newArmorId = world.UD__createItem(
             ItemType.Armor, 10 ether, 100000000, 1 ether, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
         );
-
+        alsoNewArmorId = world.UD__createItem(
+            ItemType.Armor, 10 ether, 100000000, 1 ether, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
+        );
+        newWeaponId = world.UD__createItem(
+            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(newWeapon, statRestrictions), "setup_armor_uri"
+        );
+        alsoNewWeaponId = world.UD__createItem(
+            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(newWeapon, statRestrictions), "setup_armor_uri"
+        );
+        newConsumableId = world.UD__createItem(
+            ItemType.Consumable,
+            10 ether,
+            100000000,
+            1 ether,
+            abi.encode(newConsumable, statRestrictions),
+            "setup_armor_uri"
+        );
+        newSpellId = world.UD__createItem(
+            ItemType.Spell, 10 ether, 100000000, 1 ether, abi.encode(newSpell, statRestrictions), "setup_armor_uri"
+        );
+        alsoNewSpellId = world.UD__createItem(
+            ItemType.Spell, 10 ether, 100000000, 1 ether, abi.encode(newSpell, statRestrictions), "setup_armor_uri"
+        );
         world.grantAccess(_lootManagerSystemId("UD"), address(this));
         vm.stopPrank();
 

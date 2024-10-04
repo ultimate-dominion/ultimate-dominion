@@ -8,11 +8,11 @@
         "armor": 0,
         "class": 0,
         "experience": 35,
-        "hitPoints": 5,
+        "hitPoints": 10,
         "intelligence": 4,
         "inventory": [6],
         "level": 1,
-        "strength": 4
+        "strength": 10
       }
     },
     {
