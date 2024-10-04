@@ -122,21 +122,21 @@ export const Leaderboard = (): JSX.Element => {
 
             return {
               ...fetachedMetadata,
-              agility: characterStats.agility.toString(),
-              maxHp: characterStats.maxHp.toString(),
+              agility: characterStats.agility,
+              maxHp: characterStats.maxHp,
               entityClass: characterStats.class,
               escrowGoldBalance,
-              experience: characterStats.experience.toString(),
+              experience: characterStats.experience,
               externalGoldBalance,
               id: entity,
-              intelligence: characterStats.intelligence.toString(),
-              level: characterStats.level.toString(),
+              intelligence: characterStats.intelligence,
+              level: characterStats.level,
               locked: characterData.locked,
               name: hexToString(characterData.name as `0x${string}`, {
                 size: 32,
               }),
               owner: characterData.owner,
-              strength: characterStats.strength.toString(),
+              strength: characterStats.strength,
               tokenId: tokenId.toString(),
             } as Character;
           }),

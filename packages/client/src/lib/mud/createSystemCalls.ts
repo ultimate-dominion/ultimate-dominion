@@ -101,14 +101,14 @@ export function createSystemCalls(
   }: ClientComponents,
 ) {
   const buy = async (
-    amount: string,
+    amount: bigint,
     shopId: string,
     itemIndex: string,
     characterId: string,
   ): SystemCallReturn => {
     try {
       const tx = await worldContract.write.UD__buy([
-        BigInt(amount),
+        amount,
         shopId as `0x${string}`,
         BigInt(itemIndex),
         characterId as `0x${string}`,
@@ -731,14 +731,14 @@ export function createSystemCalls(
   };
 
   const sell = async (
-    amount: string,
+    amount: bigint,
     shopId: string,
     itemIndex: string,
     characterId: string,
   ): SystemCallReturn => {
     try {
       const tx = await worldContract.write.UD__sell([
-        BigInt(amount),
+        amount,
         shopId as `0x${string}`,
         BigInt(itemIndex),
         characterId as `0x${string}`,

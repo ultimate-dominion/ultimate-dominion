@@ -55,8 +55,8 @@ export const Shop = (): JSX.Element => {
   const [sellable, setSellable] = useState<
     Array<{
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
-      balance: string | null;
-      stock: string | null;
+      balance: bigint | null;
+      stock: bigint | null;
       index: string;
     }>
   >([]);
@@ -64,8 +64,8 @@ export const Shop = (): JSX.Element => {
   const [buyable, setBuyable] = useState<
     Array<{
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
-      balance: string | null;
-      stock: string | null;
+      balance: bigint | null;
+      stock: bigint | null;
       index: string;
     }>
   >([]);

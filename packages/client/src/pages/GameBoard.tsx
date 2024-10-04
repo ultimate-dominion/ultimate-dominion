@@ -93,7 +93,7 @@ export const GameBoard = (): JSX.Element => {
     const hasSeenEquipInfo = localStorage.getItem(equipInfoSeenKey);
     if (hasSeenEquipInfo) return;
 
-    if (character.experience === '0' && !isMoveEquipped) {
+    if (character.experience === BigInt(0) && !isMoveEquipped) {
       onOpenEquipInfoModal();
     }
   }, [character, isMoveEquipped, onOpenEquipInfoModal, worldContract]);
@@ -115,7 +115,7 @@ export const GameBoard = (): JSX.Element => {
     const hasSeenWarning = localStorage.getItem(outerRealmsSeenKey);
     if (hasSeenWarning) return;
 
-    if (character.level === '1' && !inSafetyZone) {
+    if (character.level === BigInt(1) && !inSafetyZone) {
       onOpenOuterRealmsInfoModal();
     }
   }, [

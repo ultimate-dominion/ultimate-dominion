@@ -385,10 +385,7 @@ export const MarketplaceItem = (): JSX.Element => {
           order.offer.identifier === selectedItem.tokenId,
       )
       .sort((a, b) => {
-        return Number(
-          parseEther(a.consideration.amount) -
-            parseEther(b.consideration.amount),
-        );
+        return Number(a.consideration.amount - b.consideration.amount);
       });
   }, [activeOrders, selectedItem]);
 
@@ -402,7 +399,7 @@ export const MarketplaceItem = (): JSX.Element => {
           order.consideration.identifier === selectedItem.tokenId,
       )
       .sort((a, b) => {
-        return Number(parseEther(b.offer.amount) - parseEther(a.offer.amount));
+        return Number(b.offer.amount - a.offer.amount);
       });
   }, [activeOrders, selectedItem]);
 
@@ -548,40 +545,36 @@ export const MarketplaceItem = (): JSX.Element => {
                     <Text size="sm">Agility Modifier</Text>
                     <Spacer />
                     <Text>
-                      {
-                        (selectedItem as ArmorTemplate | WeaponTemplate)
-                          .agiModifier
-                      }
+                      {(
+                        selectedItem as ArmorTemplate | WeaponTemplate
+                      ).agiModifier.toString()}
                     </Text>
                   </HStack>
                   <HStack w="100%">
                     <Text size="sm">Intelligence Modifier</Text>
                     <Spacer />
                     <Text>
-                      {
-                        (selectedItem as ArmorTemplate | WeaponTemplate)
-                          .intModifier
-                      }
+                      {(
+                        selectedItem as ArmorTemplate | WeaponTemplate
+                      ).intModifier.toString()}
                     </Text>
                   </HStack>
                   <HStack w="100%">
                     <Text size="sm">Strength Modifier</Text>
                     <Spacer />
                     <Text>
-                      {
-                        (selectedItem as ArmorTemplate | WeaponTemplate)
-                          .strModifier
-                      }
+                      {(
+                        selectedItem as ArmorTemplate | WeaponTemplate
+                      ).strModifier.toString()}
                     </Text>
                   </HStack>
                   <HStack w="100%">
                     <Text size="sm">HP Modifier</Text>
                     <Spacer />
                     <Text>
-                      {
-                        (selectedItem as ArmorTemplate | WeaponTemplate)
-                          .hpModifier
-                      }
+                      {(
+                        selectedItem as ArmorTemplate | WeaponTemplate
+                      ).hpModifier.toString()}
                     </Text>
                   </HStack>
                 </>
@@ -590,7 +583,9 @@ export const MarketplaceItem = (): JSX.Element => {
                 <HStack w="100%">
                   <Text size="sm">Armor Modifier</Text>
                   <Spacer />
-                  <Text>{(selectedItem as ArmorTemplate).armorModifier}</Text>
+                  <Text>
+                    {(selectedItem as ArmorTemplate).armorModifier.toString()}
+                  </Text>
                 </HStack>
               )}
               {selectedItem.itemType !== ItemType.Armor &&
@@ -600,20 +595,18 @@ export const MarketplaceItem = (): JSX.Element => {
                       <Text size="sm">Min Damage</Text>
                       <Spacer />
                       <Text>
-                        {
-                          (selectedItem as SpellTemplate | WeaponTemplate)
-                            .minDamage
-                        }
+                        {(
+                          selectedItem as SpellTemplate | WeaponTemplate
+                        ).minDamage.toString()}
                       </Text>
                     </HStack>
                     <HStack w="100%">
                       <Text size="sm">Max Damage</Text>
                       <Spacer />
                       <Text>
-                        {
-                          (selectedItem as SpellTemplate | WeaponTemplate)
-                            .maxDamage
-                        }
+                        {(
+                          selectedItem as SpellTemplate | WeaponTemplate
+                        ).maxDamage.toString()}
                       </Text>
                     </HStack>
                   </>
@@ -627,22 +620,28 @@ export const MarketplaceItem = (): JSX.Element => {
               <HStack w="100%">
                 <Text size="sm">Min Level</Text>
                 <Spacer />
-                <Text>{selectedItem.minLevel}</Text>
+                <Text>{selectedItem.minLevel.toString()}</Text>
               </HStack>
               <HStack w="100%">
                 <Text size="sm">Min Agility</Text>
                 <Spacer />
-                <Text>{selectedItem.statRestrictions.minAgility}</Text>
+                <Text>
+                  {selectedItem.statRestrictions.minAgility.toString()}
+                </Text>
               </HStack>
               <HStack w="100%">
                 <Text size="sm">Min Intelligence</Text>
                 <Spacer />
-                <Text>{selectedItem.statRestrictions.minIntelligence}</Text>
+                <Text>
+                  {selectedItem.statRestrictions.minIntelligence.toString()}
+                </Text>
               </HStack>
               <HStack w="100%">
                 <Text size="sm">Min Strength</Text>
                 <Spacer />
-                <Text>{selectedItem.statRestrictions.minStrength}</Text>
+                <Text>
+                  {selectedItem.statRestrictions.minStrength.toString()}
+                </Text>
               </HStack>
             </VStack>
           </Stack>
@@ -659,8 +658,8 @@ export const MarketplaceItem = (): JSX.Element => {
             <Text size="sm">Lowest Item Price</Text>
             <Spacer />
             <Text>
-              {lowestPrices[selectedItem.tokenId]
-                ? `${etherToFixedNumber(lowestPrices[selectedItem.tokenId])} $GOLD`
+              {lowestPrices[selectedItem.tokenId.toString()]
+                ? `${etherToFixedNumber(lowestPrices[selectedItem.tokenId.toString()])} $GOLD`
                 : 'N/A'}
             </Text>
           </HStack>
@@ -668,8 +667,8 @@ export const MarketplaceItem = (): JSX.Element => {
             <Text size="sm">Highest $GOLD Offer</Text>
             <Spacer />
             <Text>
-              {highestOffers[selectedItem.tokenId]
-                ? `${etherToFixedNumber(highestOffers[selectedItem.tokenId])} $GOLD`
+              {highestOffers[selectedItem.tokenId.toString()]
+                ? `${etherToFixedNumber(highestOffers[selectedItem.tokenId.toString()])} $GOLD`
                 : 'N/A'}
             </Text>
           </HStack>

@@ -4,7 +4,7 @@ export const Level = ({
   currentLevel,
   levelPercent,
 }: {
-  currentLevel: string;
+  currentLevel: bigint;
   levelPercent: number;
 }): JSX.Element => {
   return (
@@ -32,7 +32,7 @@ export const Level = ({
         value={levelPercent}
       />
       <HStack mt={1}>
-        <Text>Level {currentLevel}</Text>
+        <Text>Level {currentLevel.toString()}</Text>
         <Spacer />
         <Text>Level {Number(currentLevel) + 1}</Text>
       </HStack>
