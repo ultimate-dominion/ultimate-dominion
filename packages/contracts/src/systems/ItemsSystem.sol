@@ -197,15 +197,6 @@ contract ItemsSystem is System {
         items = IERC1155System(UltimateDominionConfig.getItems());
     }
 
-    function consumeItem(bytes32 characterId, uint256 itemId) public {
-        _requireAccess(address(this), _msgSender());
-
-        address playerAddr = IWorld(_world()).UD__getOwnerAddress(characterId);
-        address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
-        //will require approval
-        _items().safeTransferFrom(playerAddr, lootManager, itemId, 1, "");
-    }
-
     function getWeaponStats(uint256 itemId) public view returns (WeaponStatsData memory _weaponStats) {
         ItemType itemType = Items.getItemType(itemId);
         require(itemType == ItemType.Weapon, "ITEMS: Not a  weapon");

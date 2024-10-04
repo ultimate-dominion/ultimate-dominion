@@ -10,37 +10,19 @@ import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
     Effects,
     EffectsData,
-    RandomNumbers,
     EncounterEntity,
-    EncounterEntityData,
     Stats,
     StatsData,
     Effects,
-    MobStats,
     EffectsData,
-    Items,
-    CharacterEquipment,
-    CharacterEquipmentData,
     CombatEncounter,
     CombatEncounterData,
-    CombatOutcome,
-    CombatOutcomeData,
-    Position,
-    Mobs,
-    Spawned,
-    MobsData,
-    Counters,
     ActionOutcome,
     ActionOutcomeData,
-    ArmorStats,
-    ArmorStatsData,
     WeaponStats,
     WeaponStatsData,
-    StatRestrictions,
-    StatRestrictionsData,
     SpellStatsData,
     SpellStats,
-    ConsumableStats,
     PhysicalDamageStats,
     PhysicalDamageStatsData,
     MagicDamageStats,
@@ -72,12 +54,15 @@ contract CombatSystem is System {
         returns (ActionOutcomeData memory)
     {
         _requireAccess(address(this), _msgSender());
+
         // if the defender is alive and attacker is alive, execute the action
         if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
             // executeEffects
             for (uint256 i; i < actionOutcomeData.effectIds.length; i++) {
-                EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
+                // hash the random number with the attack number and the effectId to allow different attack outcomes in the same block
+                randomNumber = uint256(keccak256(abi.encode(randomNumber, i, actionOutcomeData.effectIds[i])));
 
+                EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
                 require(effectData.effectExists, "action does not exist");
                 //decode action data according to type
                 if (effectData.effectType == EffectType.PhysicalDamage) {
@@ -277,9 +262,9 @@ contract CombatSystem is System {
         }
     }
 
-    function getStatModifier(int256 stat, int256 modifierBonus) internal pure returns (uint256 multiplier) {
-        multiplier = ((stat + modifierBonus * int256(WAD)) / int256(STAT_MODIFIER)) > 0
-            ? uint256((stat + modifierBonus * int256(WAD)) / int256(STAT_MODIFIER))
+    function getStatModifier(int256 stat, int256 modifierBonus) internal view returns (uint256 multiplier) {
+        multiplier = (((stat + modifierBonus) * int256(WAD)) / int256(STAT_MODIFIER)) > 0
+            ? uint256(((stat + modifierBonus) * int256(WAD)) / int256(STAT_MODIFIER))
             : WAD;
     }
 
@@ -315,6 +300,15 @@ contract CombatSystem is System {
                 damage = _calculateMagicDamage(
                     attackStats, spell, rnChunks[2], attacker.intelligence, defender.intelligence, crit
                 );
+                if (damage < 0) {
+                    int256 currentHp = Stats.getCurrentHp(defenderId);
+                    int256 maxHp = Stats.getMaxHp(defenderId);
+
+                    if (currentHp - damage > int256(maxHp)) {
+                        damage = -(maxHp - currentHp);
+                        console.logInt(damage);
+                    }
+                }
                 if (!crit) {
                     console.log("magic damage: ");
                     console.logInt(damage);
@@ -322,6 +316,15 @@ contract CombatSystem is System {
 
                 if (crit) {
                     damage = damage * int256(CRIT_MULTIPLIER);
+
+                    if (damage < 0) {
+                        int256 maxHp = Stats.getMaxHp(defenderId);
+                        int256 currentHp = Stats.getCurrentHp(defenderId);
+
+                        if (currentHp - damage > int256(maxHp)) {
+                            damage = -(maxHp - currentHp);
+                        }
+                    }
                     console.log("magic CRIT!");
                     console.logInt(damage);
                     crit = true;

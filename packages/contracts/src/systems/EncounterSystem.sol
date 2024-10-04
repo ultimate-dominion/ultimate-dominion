@@ -174,7 +174,6 @@ contract EncounterSystem is System {
                 // if timestamp is less than timeout
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
                     require(isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER");
-
                     // if player is attacker add +1 to current turn
                     if (isParticipant(playerAddress, encounterData.attackers)) {
                         encounterData.currentTurn += 1;
@@ -296,6 +295,32 @@ contract EncounterSystem is System {
         for (uint256 i; i < participants.length;) {
             if (account == IWorld(_world()).UD__getOwnerAddress(participants[i])) {
                 _isParticipant = true;
+                break;
+            }
+            {
+                i++;
+            }
+        }
+    }
+
+    function isAttacker(bytes32 encounterId, bytes32 entityId) public returns (bool _isAttacker) {
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        for (uint256 i; i < encounterData.attackers.length;) {
+            if (entityId == encounterData.attackers[i]) {
+                _isAttacker = true;
+                break;
+            }
+            {
+                i++;
+            }
+        }
+    }
+
+    function isDefender(bytes32 encounterId, bytes32 entityId) public returns (bool _isDefender) {
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        for (uint256 i; i < encounterData.defenders.length;) {
+            if (entityId == encounterData.defenders[i]) {
+                _isDefender = true;
                 break;
             }
             {

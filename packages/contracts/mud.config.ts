@@ -329,6 +329,7 @@ export default defineWorld({
         // by default this is bytes(0), if this entity is in an encounter it will be set,
         encounterId: "bytes32",
         died: "bool",
+        pvpTimer: "uint256",
         appliedStatusEffects: "bytes32[]",
       },
     },

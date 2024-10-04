@@ -160,12 +160,29 @@ const Progress = {
         bg: 'green',
       },
     },
+    maxed: {
+      filledTrack: {
+        bg: 'purple',
+      },
+    },
     timer: {
       filledTrack: {
         bg: 'blue',
       },
       track: {
         borderRadius: 0,
+      },
+    },
+  },
+};
+
+const Select = {
+  variants: {
+    outline: {
+      field: {
+        border: '2px solid',
+        borderColor: 'grey',
+        borderRadius: '5px',
       },
     },
   },
@@ -245,6 +262,7 @@ export const theme = extendTheme({
     Input,
     Modal,
     Progress,
+    Select,
     Text,
     Textarea,
     Tooltip,
