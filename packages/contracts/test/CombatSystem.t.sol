@@ -357,14 +357,21 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, attackers, pvpDefenders);
 
         vm.prank(bob);
-        // bob's move
-        world.UD__removeEntityFromBoard(bobCharacterId);
+        world.UD__fleePvp(bobCharacterId);
+
         uint256 afterFlee = world.UD__getEscrowBalance(bobCharacterId);
 
         vm.prank(alice);
+        // test pvp timer
         vm.expectRevert();
         world.UD__createEncounter(EncounterType.PvP, attackers, pvpDefenders);
         assertEq(afterFlee, 3 ether);
+    }
+
+    function test_Flee_PvP_Revert_NotInCombat() public {
+        vm.prank(bob);
+        vm.expectRevert();
+        world.UD__fleePvp(bobCharacterId);
     }
 
     function test_EndTurn_Revert_NonCombatant() public {
