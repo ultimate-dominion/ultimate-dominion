@@ -123,6 +123,11 @@ contract LootManagerSystem is ERC1155Holder, System {
         _addEscrowBalance(characterId, amount);
     }
 
+    function increaseEscrowBalance(bytes32 characterId, uint256 amount) public returns (uint256 newBalance) {
+        _requireAccess(address(this), _msgSender());
+        _addEscrowBalance(characterId, amount);
+    }
+
     function _addEscrowBalance(bytes32 characterId, uint256 amount) internal {
         uint256 currentBalance = getEscrowBalance(characterId);
         uint256 balance = currentBalance + amount;
@@ -136,7 +141,7 @@ contract LootManagerSystem is ERC1155Holder, System {
             _requireAccess(address(this), _msgSender());
         }
         _withdrawEscrowBalance(characterId, amount);
-        // transfer gold to loot manager
+        // transfer gold to player
         _goldToken().transfer(IWorld(_world()).UD__getOwner(characterId), amount);
     }
 

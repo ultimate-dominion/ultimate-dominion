@@ -40,6 +40,7 @@ contract SetUp is Test {
     uint256 public userNonce = 0;
     IWorld public world;
     address public worldAddress;
+    address public lootManagerAddress;
     IEntropy public entropy;
 
     IERC20Mintable public goldToken;
@@ -74,7 +75,7 @@ contract SetUp is Test {
         worldAddress = json.readAddress(".worldAddress");
         vm.label(address(worldAddress), "World");
         StoreSwitch.setStoreAddress(worldAddress);
-
+        lootManagerAddress = Systems.getSystem(_lootManagerSystemId("UD"));
         string memory starterItemsJson = vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/items.json")));
         bytes memory parsedJson = vm.parseJson(starterItemsJson);
         StarterItems memory _starterItems = abi.decode(parsedJson, (StarterItems));
@@ -105,7 +106,7 @@ contract SetUp is Test {
 
         startingWeaponId = starterItems.armor.length;
         startingSpellId = starterItems.armor.length + starterItems.weapons.length;
-        startingConsumableId = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length + 1;
+        startingConsumableId = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length;
         totalItems = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length;
         world = IWorld(worldAddress);
         entropy = IEntropy(world.UD__getEntropy());

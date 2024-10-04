@@ -10,37 +10,19 @@ import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
     Effects,
     EffectsData,
-    RandomNumbers,
     EncounterEntity,
-    EncounterEntityData,
     Stats,
     StatsData,
     Effects,
-    MobStats,
     EffectsData,
-    Items,
-    CharacterEquipment,
-    CharacterEquipmentData,
     CombatEncounter,
     CombatEncounterData,
-    CombatOutcome,
-    CombatOutcomeData,
-    Position,
-    Mobs,
-    Spawned,
-    MobsData,
-    Counters,
     ActionOutcome,
     ActionOutcomeData,
-    ArmorStats,
-    ArmorStatsData,
     WeaponStats,
     WeaponStatsData,
-    StatRestrictions,
-    StatRestrictionsData,
     SpellStatsData,
     SpellStats,
-    ConsumableStats,
     PhysicalDamageStats,
     PhysicalDamageStatsData,
     MagicDamageStats,
@@ -72,10 +54,14 @@ contract CombatSystem is System {
         returns (ActionOutcomeData memory)
     {
         _requireAccess(address(this), _msgSender());
+
         // if the defender is alive and attacker is alive, execute the action
         if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
             // executeEffects
             for (uint256 i; i < actionOutcomeData.effectIds.length; i++) {
+                // hash the random number with the attack number and the effectId to allow different attack outcomes in the same block
+                randomNumber = uint256(keccak256(abi.encode(randomNumber, i, actionOutcomeData.effectIds[i])));
+
                 EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
                 require(effectData.effectExists, "action does not exist");
                 //decode action data according to type
