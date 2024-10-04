@@ -1703,6 +1703,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__fleePvp",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__fulfillOrder",
     "inputs": [
       {

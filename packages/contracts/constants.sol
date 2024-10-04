@@ -32,4 +32,6 @@ uint256 constant MAX_LEVEL = 10;
 uint256 constant BONUS_POINT_LEVEL = 1;
 uint256 constant SESSION_TIMEOUT = 10 minutes;
 uint256 constant PVP_GOLD_DENOMINATOR = 2;
+
+uint256 constant PVP_TIMER = 30 seconds;
 uint256 constant MAX_MONSTERS = 20;

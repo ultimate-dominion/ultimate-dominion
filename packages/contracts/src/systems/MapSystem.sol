@@ -129,12 +129,8 @@ contract MapSystem is System {
         require(availableMonsters.length > 0, "No monsters available for this distance");
 
         uint32[] memory rng;
-        // TODO for testing, remove for deployment
-        if (block.chainid == 31337) {
-            rng = LibChunks.get8Chunks(block.timestamp ** 8);
-        } else {
-            rng = LibChunks.get8Chunks(block.prevrandao);
-        }
+
+        rng = LibChunks.get8Chunks(block.prevrandao);
 
         for (uint256 i; i < (rng[0] % 6); i++) {
             SystemSwitch.call(
@@ -168,56 +164,17 @@ contract MapSystem is System {
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
+            // if sender is owner
             if (senderIsOwner) {
-                if (encounterId != bytes32(0)) {
-                    bool attackersWin;
-                    uint256 amountToDrop;
-                    CombatEncounterData memory encounterData = IWorld(_world()).UD__getEncounter(encounterId);
-                    // if pve only allow player to flee in first roung
-                    if (encounterData.encounterType == EncounterType.PvE) {
-                        revert("cannot run from PvE");
-                        // give up 25% of escrow wallet
-                    } else if (encounterData.encounterType == EncounterType.PvP) {
-                        // take 25% of escrow gold
-                        uint256 escrowBalance = AdventureEscrow.get(entityId);
-                        if (escrowBalance > 4) {
-                            amountToDrop = escrowBalance - (escrowBalance / 4);
-                            AdventureEscrow.set(entityId, (escrowBalance - amountToDrop));
-                            // if quitter is attacker
-                            if (IWorld(_world()).UD__isAttacker(encounterId, entityId)) {
-                                // split the money up amongst the defenders
-                                for (uint256 i; i < encounterData.defenders.length; i++) {
-                                    IWorld(_world()).UD__increaseEscrowBalance(
-                                        encounterData.defenders[i], amountToDrop / encounterData.defenders.length
-                                    );
-                                }
-                                // if quitter is defender
-                            } else if (IWorld(_world()).UD__isDefender(encounterId, entityId)) {
-                                attackersWin = true;
-                                // split the money up amongst the attackers
-                                for (uint256 i; i < encounterData.attackers.length; i++) {
-                                    IWorld(_world()).UD__increaseEscrowBalance(
-                                        encounterData.attackers[i], amountToDrop / encounterData.attackers.length
-                                    );
-                                }
-                            }
-                        }
-                    }
-                    CombatOutcomeData memory combatOutcome = CombatOutcomeData({
-                        endTime: block.timestamp,
-                        attackersWin: attackersWin,
-                        expDropped: 0,
-                        goldDropped: amountToDrop,
-                        itemsDropped: new uint256[](0)
-                    });
-                    CombatOutcome.set(encounterId, combatOutcome);
-                    CombatEncounter.setEnd(encounterId, block.timestamp);
-                }
+                // if character is in combat use the combat flee function
+                require(encounterId == bytes32(0), "use correct fleeing function");
+                // if caller is not a system
             } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
                 require(
                     (SessionTimer.get(entityId) + SESSION_TIMEOUT) < block.timestamp,
                     "This player's session has not timed out"
                 );
+                // require access
             } else {
                 _requireAccess(address(this), _msgSender());
             }

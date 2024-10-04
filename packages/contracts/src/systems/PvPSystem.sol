@@ -28,7 +28,8 @@ import {
     MobsData,
     Counters,
     ActionOutcome,
-    ActionOutcomeData
+    ActionOutcomeData,
+    AdventureEscrow
 } from "@codegen/index.sol";
 import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
 import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
@@ -41,7 +42,8 @@ import {
     DEFENSE_MODIFIER,
     ATTACK_MODIFIER,
     CRIT_MODIFIER,
-    BASE_GOLD_DROP
+    BASE_GOLD_DROP,
+    PVP_TIMER
 } from "../../constants.sol";
 import "forge-std/console.sol";
 
@@ -70,6 +72,10 @@ contract PvPSystem is System {
                 _isValidPvP = false;
                 break;
             }
+            if (EncounterEntity.getPvpTimer(attackers[i]) > block.timestamp - PVP_TIMER) {
+                _isValidPvP = false;
+                break;
+            }
             {
                 i++;
             }
@@ -85,9 +91,11 @@ contract PvPSystem is System {
                     _isValidPvP = false;
                     break;
                 }
-                if (entityX >= 5 || entityY >= 5) {
-                    // intentionally left empty
-                } else {
+                if (entityX < 5 || entityY < 5) {
+                    _isValidPvP = false;
+                    break;
+                }
+                if (EncounterEntity.getPvpTimer(defenders[i]) > block.timestamp - PVP_TIMER) {
                     _isValidPvP = false;
                     break;
                 }
@@ -131,6 +139,58 @@ contract PvPSystem is System {
         if (encounterEnded) {
             _setCharacterSpawns(encounterData);
             IWorld(_world()).UD__endEncounter(encounterId, randomNumber, attackersWin);
+        }
+    }
+
+    function fleePvp(bytes32 entityId) public {
+        require(IWorld(_world()).UD__isValidOwner(entityId, _msgSender()), "Cannot flee another's character");
+        bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
+        require(encounterId != bytes32(0), "use removeEntityFromMap to logout");
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        if (encounterData.encounterType == EncounterType.PvE) {
+            revert("cannot flee from pve");
+        } else if (encounterData.encounterType == EncounterType.PvP) {
+            uint256 amountToDrop;
+            bool attackersWin;
+            // take 25% of escrow gold
+            uint256 escrowBalance = AdventureEscrow.get(entityId);
+            if (escrowBalance > 4) {
+                amountToDrop = escrowBalance / 4;
+                AdventureEscrow.set(entityId, (escrowBalance - amountToDrop));
+                // if quitter is attacker
+                if (IWorld(_world()).UD__isAttacker(encounterId, entityId)) {
+                    // split the money up amongst the defenders
+                    for (uint256 i; i < encounterData.defenders.length; i++) {
+                        IWorld(_world()).UD__increaseEscrowBalance(
+                            encounterData.defenders[i], amountToDrop / encounterData.defenders.length
+                        );
+                    }
+                    // if quitter is defender
+                } else if (IWorld(_world()).UD__isDefender(encounterId, entityId)) {
+                    attackersWin = true;
+                    // split the money up amongst the attackers
+                    for (uint256 i; i < encounterData.attackers.length; i++) {
+                        IWorld(_world()).UD__increaseEscrowBalance(
+                            encounterData.attackers[i], amountToDrop / encounterData.attackers.length
+                        );
+                    }
+                    // set pvp timer
+                    EncounterEntity.setPvpTimer(entityId, block.timestamp);
+                }
+            }
+            CombatOutcomeData memory combatOutcome = CombatOutcomeData({
+                endTime: block.timestamp,
+                attackersWin: attackersWin,
+                expDropped: 0,
+                goldDropped: amountToDrop,
+                itemsDropped: new uint256[](0)
+            });
+
+            CombatOutcome.set(encounterId, combatOutcome);
+            CombatEncounter.setEnd(encounterId, block.timestamp);
+            IWorld(_world()).UD__removeEntityFromBoard(entityId);
+        } else {
+            revert("Unrecognized encounter type");
         }
     }
 
