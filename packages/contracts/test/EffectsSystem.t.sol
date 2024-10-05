@@ -96,7 +96,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         world.UD__adminSetStats(bobCharacterId, newStats);
         // health potion
         uint256 healthPotionId = startingConsumableId;
-        // world.UD__adminDropItem(bobCharacterId, startingConsumableId, 1);
+        world.UD__adminDropItem(bobCharacterId, startingConsumableId, 1);
         assertEq(erc1155System.balanceOf(bob, healthPotionId), 1);
         vm.startPrank(bob);
         erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
@@ -107,18 +107,10 @@ contract Test_EffectsSystem is SetUp, GasReporter {
     }
 
     function test_Consumable_Heals_Revert_NoItem() public {
-        StatsData memory newStats = world.UD__getStats(bobCharacterId);
-        newStats.currentHp = 1;
-        world.UD__adminSetStats(bobCharacterId, newStats);
         // health potion
         uint256 healthPotionId = startingConsumableId;
-        assertEq(erc1155System.balanceOf(bob, healthPotionId), 1);
-        vm.startPrank(bob);
-        erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
-        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, healthPotionId);
 
         assertEq(erc1155System.balanceOf(bob, healthPotionId), 0);
-        assertGt(world.UD__getStats(bobCharacterId).currentHp, 1);
         vm.expectRevert();
         world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, healthPotionId);
     }
@@ -192,7 +184,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         newStats.currentHp = 100;
         world.UD__adminSetStats(bobCharacterId, newStats);
 
-        uint256 poisonDartId = startingWeaponId + 7;
+        uint256 poisonDartId = startingWeaponId + 9;
 
         vm.prank(deployer);
         bytes32 entityId = world.UD__spawnMob(2, 0, 1);

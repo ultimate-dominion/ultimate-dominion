@@ -68,7 +68,8 @@ contract PvPSystem is System {
             }
             if (entityX >= 5 || entityY >= 5) {
                 // intentionally left empty
-            } else {
+            }
+            else {
                 _isValidPvP = false;
                 break;
             }
@@ -147,6 +148,13 @@ contract PvPSystem is System {
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
         require(encounterId != bytes32(0), "use removeEntityFromMap to logout");
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        bool entityIsDefender = IWorld(_world()).UD__isDefender(encounterId, entityId);
+        if (entityIsDefender) {
+            require(encounterData.currentTurn == 2, "can only flee on your first turn");
+        } else {
+            require(IWorld(_world()).UD__isAttacker(encounterId, entityId), "invalid fleeing");
+            require(encounterData.currentTurn == 1, "can only flee on your first turn");
+        }
         if (encounterData.encounterType == EncounterType.PvE) {
             revert("cannot flee from pve");
         } else if (encounterData.encounterType == EncounterType.PvP) {
@@ -158,7 +166,7 @@ contract PvPSystem is System {
                 amountToDrop = escrowBalance / 4;
                 AdventureEscrow.set(entityId, (escrowBalance - amountToDrop));
                 // if quitter is attacker
-                if (IWorld(_world()).UD__isAttacker(encounterId, entityId)) {
+                if (!entityIsDefender) {
                     // split the money up amongst the defenders
                     for (uint256 i; i < encounterData.defenders.length; i++) {
                         IWorld(_world()).UD__increaseEscrowBalance(
@@ -166,7 +174,7 @@ contract PvPSystem is System {
                         );
                     }
                     // if quitter is defender
-                } else if (IWorld(_world()).UD__isDefender(encounterId, entityId)) {
+                } else if (entityIsDefender) {
                     attackersWin = true;
                     // split the money up amongst the attackers
                     for (uint256 i; i < encounterData.attackers.length; i++) {
@@ -188,7 +196,6 @@ contract PvPSystem is System {
 
             CombatOutcome.set(encounterId, combatOutcome);
             CombatEncounter.setEnd(encounterId, block.timestamp);
-            IWorld(_world()).UD__removeEntityFromBoard(entityId);
         } else {
             revert("Unrecognized encounter type");
         }

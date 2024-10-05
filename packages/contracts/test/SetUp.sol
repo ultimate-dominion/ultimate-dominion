@@ -80,6 +80,14 @@ contract SetUp is Test {
         bytes memory parsedJson = vm.parseJson(starterItemsJson);
         StarterItems memory _starterItems = abi.decode(parsedJson, (StarterItems));
 
+        world = IWorld(worldAddress);
+        entropy = IEntropy(world.UD__getEntropy());
+        alice = getUser();
+        bob = getUser();
+        goldToken = IERC20Mintable(world.UD__getGoldToken());
+        characterToken = IERC721Mintable(world.UD__getCharacterToken());
+        erc1155System = IERC1155System(world.UD__getItemsContract());
+
         // this is to keep the correct item ids in tests without having to update manually
         // order the items are created in:
         // 1. armor
@@ -105,16 +113,12 @@ contract SetUp is Test {
         }
 
         startingWeaponId = starterItems.armor.length;
-        startingSpellId = starterItems.armor.length + starterItems.weapons.length;
-        startingConsumableId = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length;
+        startingSpellId = starterItems.armor.length + starterItems.weapons.length + 1;
+
+        assertGt(world.UD__getSpellStats(startingSpellId).effects.length, 0, "invalid spell effect");
+        startingConsumableId = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length + 1;
+        assertGt(world.UD__getConsumableStats(startingConsumableId).effects.length, 0, "invalid consumable effect");
         totalItems = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length;
-        world = IWorld(worldAddress);
-        entropy = IEntropy(world.UD__getEntropy());
-        alice = getUser();
-        bob = getUser();
-        goldToken = IERC20Mintable(world.UD__getGoldToken());
-        characterToken = IERC721Mintable(world.UD__getCharacterToken());
-        erc1155System = IERC1155System(world.UD__getItemsContract());
 
         basicMagicDamageStatsId = bytes32(bytes8(keccak256(abi.encode("basic magic attack"))));
         basicActionIdStatsId = bytes32(bytes8(keccak256(abi.encode("basic weapon attack"))));

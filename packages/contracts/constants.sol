@@ -21,6 +21,10 @@ uint256 constant CRIT_MODIFIER = 10;
 // the character's stats are divided by STAT_MODIFIER when applying stat bonuses
 int256 constant STAT_MODIFIER = 20;
 
+int256 constant STARTING_HIT_PROBABILITY = 90;
+uint256 constant DEFENDER_HIT_DAMPENER = 30;
+uint256 constant ATTACKER_HIT_DAMPENER = 95;
+
 //Gold Drop constants
 uint256 constant BASE_GOLD_DROP = 5 ether; //
 
