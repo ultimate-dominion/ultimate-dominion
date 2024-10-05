@@ -4,47 +4,23 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {Math} from "@libraries/Math.sol";
-import {LibChunks} from "@libraries/LibChunks.sol";
-import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
-    EncounterEntityData,
-    Stats,
-    StatsData,
     Effects,
-    EffectsData,
-    Items,
-    CharacterEquipment,
-    CharacterEquipmentData,
     CombatEncounter,
     CombatEncounterData,
     CombatOutcome,
     CombatOutcomeData,
     Position,
-    Mobs,
     Spawned,
-    MobsData,
-    Counters,
     ActionOutcome,
     ActionOutcomeData,
     AdventureEscrow
 } from "@codegen/index.sol";
-import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
-import {IRngSystem} from "../interfaces/IRngSystem.sol";
-import {
-    DEFAULT_MAX_TURNS,
-    TO_HIT_MODIFIER,
-    DEFENSE_MODIFIER,
-    ATTACK_MODIFIER,
-    CRIT_MODIFIER,
-    BASE_GOLD_DROP,
-    PVP_TIMER
-} from "../../constants.sol";
+import {EncounterType} from "@codegen/common.sol";
+import {Action} from "@interfaces/Structs.sol";
+import {_requireAccess} from "../utils.sol";
+import {PVP_TIMER} from "../../constants.sol";
 import "forge-std/console.sol";
 
 contract PvPSystem is System {

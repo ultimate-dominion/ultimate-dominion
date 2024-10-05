@@ -2,23 +2,20 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {Math, WAD} from "@libraries/Math.sol";
 import {
     Counters,
-    RandomNumbers,
     Position,
     EntitiesAtPosition,
-    EncounterEntity,
     MobsByLevel,
     Mobs,
     MobsData,
     MobStats,
     MobStatsData
 } from "@codegen/index.sol";
-import {RngRequestType, MobType, Alignment} from "@codegen/common.sol";
+import {MobType} from "@codegen/common.sol";
 import {MonsterStats, NPCStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig, Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
+import {Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
 import {MAX_MONSTERS} from "../../constants.sol";
 
 contract MobSystem is System {

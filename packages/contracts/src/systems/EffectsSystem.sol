@@ -3,22 +3,17 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
     EncounterEntityData,
     EffectsData,
     Effects,
     Stats,
     CombatEncounter,
-    CombatEncounterData,
-    CharacterEquipment,
     StatsData,
-    MobStats,
     PhysicalDamageStats,
     PhysicalDamageStatsData,
     MagicDamageStats,
     MagicDamageStatsData,
-    ConsumableStats,
     StatusEffectStats,
     StatusEffectStatsData,
     StatusEffectValidity,
@@ -28,13 +23,9 @@ import {
     DamageOverTimeAppliedData
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {RngRequestType, MobType, EncounterType, EffectType, Classes} from "@codegen/common.sol";
-import {Counters} from "@tables/Counters.sol";
-import {Mobs, MobsData} from "@tables/Mobs.sol";
-import {MonsterStats, AdjustedCombatStats, Action} from "@interfaces/Structs.sol";
+import {EffectType} from "@codegen/common.sol";
+import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
-import {DEFAULT_MAX_TURNS} from "../../constants.sol";
 import "forge-std/console.sol";
 
 contract EffectsSystem is System {

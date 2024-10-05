@@ -2,9 +2,8 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {Math, WAD, RAD} from "@libraries/Math.sol";
+import {Math, WAD} from "@libraries/Math.sol";
 import {LibChunks} from "@libraries/LibChunks.sol";
 import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
@@ -28,19 +27,14 @@ import {
     MagicDamageStats,
     MagicDamageStatsData
 } from "@codegen/index.sol";
-import {RngRequestType, MobType, Alignment, EncounterType, ResistanceStat, EffectType} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {ResistanceStat, EffectType} from "@codegen/common.sol";
+import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {_requireAccess} from "../utils.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {
-    DEFAULT_MAX_TURNS,
-    TO_HIT_MODIFIER,
     DEFENSE_MODIFIER,
     ATTACK_MODIFIER,
-    CRIT_MODIFIER,
     CRIT_MULTIPLIER,
-    BASE_GOLD_DROP,
     STAT_MODIFIER,
     STARTING_HIT_PROBABILITY,
     ATTACKER_HIT_DAMPENER,

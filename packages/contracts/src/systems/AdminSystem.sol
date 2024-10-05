@@ -5,29 +5,18 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
-    EffectsData,
-    Effects,
     Stats,
     StatsData,
-    MobStats,
     Characters,
     CombatEncounter,
     CombatEncounterData,
-    CharacterEquipment,
     Admin,
-    UltimateDominionConfig,
     EntitiesAtPosition,
     Position
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {RngRequestType, MobType, EncounterType, EffectType} from "@codegen/common.sol";
-import {Counters} from "@tables/Counters.sol";
-import {Mobs, MobsData} from "@tables/Mobs.sol";
-import {MonsterStats, NPCStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
-import {DEFAULT_MAX_TURNS} from "../../constants.sol";
+import {_requireAccess} from "../utils.sol";
 
 contract AdminSystem is System {
     modifier onlyAdmin() {
