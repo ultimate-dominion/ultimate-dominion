@@ -132,10 +132,10 @@ export const CharacterPage = (): JSX.Element => {
         uriToHttp(`ipfs://${metadataURI}`)[0],
       );
 
-      const encounterId = getComponentValue(
+      const { encounterId, pvpTimer } = getComponentValue(
         EncounterEntity,
         id as Entity,
-      )?.encounterId;
+      ) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) };
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
       const decodedBaseStats = decodeBaseStats(characterData.baseStats);
@@ -159,6 +159,7 @@ export const CharacterPage = (): JSX.Element => {
           size: 32,
         }),
         owner: characterData.owner,
+        pvpCooldownTimer: pvpTimer,
         strength: characterStats.strength.toString(),
         tokenId: characterData.tokenId.toString(),
       };

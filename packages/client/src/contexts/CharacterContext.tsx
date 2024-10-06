@@ -127,10 +127,10 @@ export const CharacterProvider = ({
       const escrowGoldBalance =
         getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0);
 
-      const encounterId = getComponentValue(
+      const { encounterId, pvpTimer } = getComponentValue(
         EncounterEntity,
         entity,
-      )?.encounterId;
+      ) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) };
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
       let decodedBaseStats = {
@@ -164,6 +164,7 @@ export const CharacterProvider = ({
         maxHp: characterStats?.maxHp.toString() ?? '0',
         name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
         owner: characterData.owner,
+        pvpCooldownTimer: pvpTimer,
         strength: characterStats?.strength.toString() ?? '0',
         tokenId: tokenId.toString(),
       };

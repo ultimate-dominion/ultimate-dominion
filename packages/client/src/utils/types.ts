@@ -149,6 +149,7 @@ export type CharacterData = {
   inBattle: boolean;
   locked: boolean;
   owner: string;
+  pvpCooldownTimer: bigint;
   tokenId: string;
 };
 

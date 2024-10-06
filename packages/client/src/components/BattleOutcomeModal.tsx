@@ -22,6 +22,7 @@ import { zeroAddress, zeroHash } from 'viem';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
@@ -49,7 +50,8 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     components: { Levels },
   } = useMUD();
   const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
-  const { character } = useCharacter();
+  const { character, refreshCharacter } = useCharacter();
+  const { refreshEntities } = useMap();
   const { onContinueToBattleOutcome, opponent } = useBattle();
 
   const [armor, setArmor] = useState<Armor[]>([]);
@@ -57,11 +59,19 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
 
-  const onAcknowledge = useCallback(() => {
+  const onAcknowledge = useCallback(async () => {
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
     onContinueToBattleOutcome(false);
+    await refreshCharacter();
+    refreshEntities();
     onClose();
-  }, [battleOutcome.encounterId, onContinueToBattleOutcome, onClose]);
+  }, [
+    battleOutcome.encounterId,
+    onContinueToBattleOutcome,
+    onClose,
+    refreshCharacter,
+    refreshEntities,
+  ]);
 
   const nextLevelXpRequirement =
     useComponentValue(
