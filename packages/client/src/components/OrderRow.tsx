@@ -13,13 +13,18 @@ import { getComponentValueStrict, Has, HasValue } from '@latticexyz/recs';
 import { useCallback, useMemo, useState } from 'react';
 import { BiPurchaseTagAlt } from 'react-icons/bi';
 import { FaTimes } from 'react-icons/fa';
-import { hexToString, parseEther } from 'viem';
+import { hexToString } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { getEmoji, removeEmoji, shortenAddress } from '../utils/helpers';
+import {
+  etherToFixedNumber,
+  getEmoji,
+  removeEmoji,
+  shortenAddress,
+} from '../utils/helpers';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -98,10 +103,7 @@ export const OrderRow = ({
   const insufficientGold = useMemo(() => {
     if (!character) return false;
     if (order.offer.tokenType === TokenType.ERC20) return false;
-    return (
-      parseEther(order.consideration.amount) >
-      BigInt(character.externalGoldBalance)
-    );
+    return order.consideration.amount > character.externalGoldBalance;
   }, [character, order]);
 
   const onFulfillOrder = useCallback(async () => {
@@ -114,7 +116,7 @@ export const OrderRow = ({
 
       if (
         order.consideration.tokenType === TokenType.ERC20 &&
-        goldMarketplaceAllowance < parseEther(order.consideration.amount)
+        goldMarketplaceAllowance < order.consideration.amount
       ) {
         onOpenAllowanceModal();
         return;
@@ -194,16 +196,17 @@ export const OrderRow = ({
               {')'}
             </Text>
           </HStack>
-          <Text fontWeight="bold" size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            Wants {consideration.amount}{' '}
-            {consideration.tokenType === TokenType.ERC20
-              ? '$GOLD'
-              : removeEmoji(item.name)}{' '}
-            for {offer.amount}{' '}
-            {offer.tokenType === TokenType.ERC20
-              ? '$GOLD'
-              : removeEmoji(item.name)}
-          </Text>
+          {consideration.tokenType === TokenType.ERC20 ? (
+            <Text fontWeight="bold" size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
+              Wants {etherToFixedNumber(consideration.amount)} $GOLD for{' '}
+              {offer.amount.toString()} {removeEmoji(item.name)}
+            </Text>
+          ) : (
+            <Text fontWeight="bold" size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
+              Wants {consideration.amount.toString()} {removeEmoji(item.name)}{' '}
+              for {etherToFixedNumber(offer.amount)} $GOLD
+            </Text>
+          )}
         </VStack>
       </Flex>
       <HStack ml={2} mr={{ base: 2, sm: 4 }}>

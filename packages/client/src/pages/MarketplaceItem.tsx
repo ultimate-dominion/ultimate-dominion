@@ -41,7 +41,11 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
-import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
+import {
+  CHARACTER_CREATION_PATH,
+  HOME_PATH,
+  MARKETPLACE_PATH,
+} from '../Routes';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -441,7 +445,7 @@ export const MarketplaceItem = (): JSX.Element => {
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(MARKETPLACE_PATH)}
           size="xs"
           variant="outline"
         >
@@ -459,7 +463,7 @@ export const MarketplaceItem = (): JSX.Element => {
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
           my={4}
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(MARKETPLACE_PATH)}
           size="xs"
           variant="outline"
         >
@@ -481,7 +485,7 @@ export const MarketplaceItem = (): JSX.Element => {
         <Button
           alignSelf="start"
           leftIcon={<IoMdArrowRoundBack />}
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(MARKETPLACE_PATH)}
           size="xs"
           variant="outline"
         >
@@ -914,7 +918,7 @@ export const MarketplaceItem = (): JSX.Element => {
         itemName={selectedItem.name}
         onClose={onCloseAllowanceModal}
         onComplete={onCreateOrder}
-        orderPrice={orderPrice}
+        orderPrice={orderPrice ? parseEther(orderPrice) : BigInt(0)}
         orderType={orderType}
       />
       <InfoModal

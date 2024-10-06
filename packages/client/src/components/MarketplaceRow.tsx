@@ -79,10 +79,14 @@ export const MarketplaceRow = ({
           </HStack>
           {itemType !== ItemType.Spell && (
             <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-              HP {(item as ArmorTemplate | WeaponTemplate).hpModifier} • STR{' '}
-              {(item as ArmorTemplate | WeaponTemplate).strModifier} • AGI{' '}
-              {(item as ArmorTemplate | WeaponTemplate).agiModifier} • INT{' '}
-              {(item as ArmorTemplate | WeaponTemplate).intModifier}
+              HP{' '}
+              {(item as ArmorTemplate | WeaponTemplate).hpModifier.toString()} •
+              STR{' '}
+              {(item as ArmorTemplate | WeaponTemplate).strModifier.toString()}{' '}
+              • AGI{' '}
+              {(item as ArmorTemplate | WeaponTemplate).agiModifier.toString()}{' '}
+              • INT{' '}
+              {(item as ArmorTemplate | WeaponTemplate).intModifier.toString()}
             </Text>
           )}
         </VStack>
