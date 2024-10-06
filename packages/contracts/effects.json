@@ -67,7 +67,7 @@
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
-        "validTurns": 2
+        "validTurns": 6
       }
     },
     {
@@ -124,7 +124,7 @@
         "cooldown": 2,
         "maxStacks": 2,
         "validTime": 0,
-        "validTurns": 3
+        "validTurns": 6
       }
     },
     {
@@ -162,7 +162,7 @@
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
-        "validTurns": 2
+        "validTurns": 6
       }
     },
     {
@@ -181,7 +181,7 @@
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
-        "validTurns": 2
+        "validTurns": 6
       }
     }
   ]
