@@ -29,6 +29,7 @@ import {
   type Character,
   type CombatDetails,
   type CombatOutcomeType,
+  EncounterType,
   type Monster,
   type StatusAction,
 } from '../utils/types';
@@ -66,9 +67,11 @@ type BattleContextType = {
   attackingItemId: null | string;
   continueToBattleOutcome: boolean;
   currentBattle: CombatDetails | null;
+  isFleeing: boolean;
   lastestBattleOutcome: CombatOutcomeType | null;
   onAttack: (itemId: string) => void;
   onContinueToBattleOutcome: (cont: boolean) => void;
+  onFleePvp: () => void;
   opponent: Character | Monster | null;
   statusEffectActions: StatusAction[];
   userCharacterForBattleRendering: Character | null;
@@ -79,9 +82,11 @@ const BattleContext = createContext<BattleContextType>({
   attackingItemId: null,
   continueToBattleOutcome: false,
   currentBattle: null,
+  isFleeing: false,
   lastestBattleOutcome: null,
   onAttack: () => {},
   onContinueToBattleOutcome: () => {},
+  onFleePvp: () => {},
   opponent: null,
   statusEffectActions: [],
   userCharacterForBattleRendering: null,
@@ -94,7 +99,7 @@ export type BattleProviderProps = {
 export const BattleProvider = ({
   children,
 }: BattleProviderProps): JSX.Element => {
-  const { renderError } = useToast();
+  const { renderError, renderSuccess } = useToast();
   const {
     components: {
       ActionOutcome,
@@ -104,12 +109,13 @@ export const BattleProvider = ({
       StatusEffectValidity,
     },
     delegatorAddress,
-    systemCalls: { endTurn },
+    systemCalls: { endTurn, fleePvp },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
   const { allMonsters, allCharacters } = useMap();
 
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
+  const [isFleeing, setIsFleeing] = useState<boolean>(false);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
 
   const allBattles = useEntityQuery([Has(CombatEncounter)])
@@ -366,6 +372,47 @@ export const BattleProvider = ({
     ],
   );
 
+  const onFleePvp = useCallback(async () => {
+    try {
+      setIsFleeing(true);
+
+      if (!character) {
+        throw new Error('No character found.');
+      }
+
+      if (!delegatorAddress) {
+        throw new Error('Missing delegation.');
+      }
+
+      if (!currentBattle) {
+        throw new Error('No battle found.');
+      }
+
+      if (currentBattle.encounterType !== EncounterType.PvP) {
+        throw new Error('Cannot flee from a PvE battle.');
+      }
+
+      const { error, success } = await fleePvp(character.id);
+
+      if (error && !success) {
+        throw new Error(error);
+      }
+
+      renderSuccess('Successfully fled the battle.');
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Error fleeing from battle.', e);
+    } finally {
+      setIsFleeing(false);
+    }
+  }, [
+    character,
+    currentBattle,
+    delegatorAddress,
+    fleePvp,
+    renderError,
+    renderSuccess,
+  ]);
+
   return (
     <BattleContext.Provider
       value={{
@@ -373,9 +420,11 @@ export const BattleProvider = ({
         attackingItemId,
         continueToBattleOutcome,
         currentBattle,
+        isFleeing,
         lastestBattleOutcome,
         onAttack,
         onContinueToBattleOutcome,
+        onFleePvp,
         opponent,
         statusEffectActions,
         userCharacterForBattleRendering,
