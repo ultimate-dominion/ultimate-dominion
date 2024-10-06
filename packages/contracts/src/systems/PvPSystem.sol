@@ -165,6 +165,7 @@ contract PvPSystem is System {
             CombatOutcomeData memory combatOutcome = CombatOutcomeData({
                 endTime: block.timestamp,
                 attackersWin: attackersWin,
+                playerFled: true,
                 expDropped: 0,
                 goldDropped: amountToDrop,
                 itemsDropped: new uint256[](0)
@@ -172,6 +173,17 @@ contract PvPSystem is System {
 
             CombatOutcome.set(encounterId, combatOutcome);
             CombatEncounter.setEnd(encounterId, block.timestamp);
+
+            bytes32[] memory empty;
+            // reset encounter entities
+            for (uint256 i; i < encounterData.attackers.length; i++) {
+                EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
+                EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], empty);
+            }
+            for (uint256 i; i < encounterData.defenders.length; i++) {
+                EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+                EncounterEntity.setAppliedStatusEffects(encounterData.defenders[i], empty);
+            }
         } else {
             revert("Unrecognized encounter type");
         }

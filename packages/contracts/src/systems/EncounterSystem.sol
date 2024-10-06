@@ -220,6 +220,7 @@ contract EncounterSystem is System {
         CombatOutcomeData memory combatOutcome = CombatOutcomeData({
             endTime: block.timestamp,
             attackersWin: attackersWin,
+            playerFled: false,
             expDropped: expAmount,
             goldDropped: goldAmount,
             itemsDropped: itemsDropped
