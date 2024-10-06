@@ -11,10 +11,8 @@ import {
     CharacterEquipment,
     CombatEncounterData,
     CombatEncounter,
-    CombatOutcomeData,
     CombatOutcome,
     MapConfig,
-    AdventureEscrow,
     Position,
     Spawned,
     Stats,
@@ -22,7 +20,6 @@ import {
     EncounterEntity,
     SessionTimer
 } from "../codegen/index.sol";
-import {EncounterType} from "@codegen/common.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {IMobSystem} from "@world/IWorld.sol";

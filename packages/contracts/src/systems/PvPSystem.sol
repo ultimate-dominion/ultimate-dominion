@@ -4,47 +4,23 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {Math} from "@libraries/Math.sol";
-import {LibChunks} from "@libraries/LibChunks.sol";
-import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
-    EncounterEntityData,
-    Stats,
-    StatsData,
     Effects,
-    EffectsData,
-    Items,
-    CharacterEquipment,
-    CharacterEquipmentData,
     CombatEncounter,
     CombatEncounterData,
     CombatOutcome,
     CombatOutcomeData,
     Position,
-    Mobs,
     Spawned,
-    MobsData,
-    Counters,
     ActionOutcome,
     ActionOutcomeData,
     AdventureEscrow
 } from "@codegen/index.sol";
-import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
-import {IRngSystem} from "../interfaces/IRngSystem.sol";
-import {
-    DEFAULT_MAX_TURNS,
-    TO_HIT_MODIFIER,
-    DEFENSE_MODIFIER,
-    ATTACK_MODIFIER,
-    CRIT_MODIFIER,
-    BASE_GOLD_DROP,
-    PVP_TIMER
-} from "../../constants.sol";
+import {EncounterType} from "@codegen/common.sol";
+import {Action} from "@interfaces/Structs.sol";
+import {_requireAccess} from "../utils.sol";
+import {PVP_TIMER} from "../../constants.sol";
 import "forge-std/console.sol";
 
 contract PvPSystem is System {
@@ -68,7 +44,8 @@ contract PvPSystem is System {
             }
             if (entityX >= 5 || entityY >= 5) {
                 // intentionally left empty
-            } else {
+            }
+            else {
                 _isValidPvP = false;
                 break;
             }
@@ -147,6 +124,13 @@ contract PvPSystem is System {
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
         require(encounterId != bytes32(0), "use removeEntityFromMap to logout");
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        bool entityIsDefender = IWorld(_world()).UD__isDefender(encounterId, entityId);
+        if (entityIsDefender) {
+            require(encounterData.currentTurn == 2, "can only flee on your first turn");
+        } else {
+            require(IWorld(_world()).UD__isAttacker(encounterId, entityId), "invalid fleeing");
+            require(encounterData.currentTurn == 1, "can only flee on your first turn");
+        }
         if (encounterData.encounterType == EncounterType.PvE) {
             revert("cannot flee from pve");
         } else if (encounterData.encounterType == EncounterType.PvP) {
@@ -158,7 +142,7 @@ contract PvPSystem is System {
                 amountToDrop = escrowBalance / 4;
                 AdventureEscrow.set(entityId, (escrowBalance - amountToDrop));
                 // if quitter is attacker
-                if (IWorld(_world()).UD__isAttacker(encounterId, entityId)) {
+                if (!entityIsDefender) {
                     // split the money up amongst the defenders
                     for (uint256 i; i < encounterData.defenders.length; i++) {
                         IWorld(_world()).UD__increaseEscrowBalance(
@@ -166,7 +150,7 @@ contract PvPSystem is System {
                         );
                     }
                     // if quitter is defender
-                } else if (IWorld(_world()).UD__isDefender(encounterId, entityId)) {
+                } else if (entityIsDefender) {
                     attackersWin = true;
                     // split the money up amongst the attackers
                     for (uint256 i; i < encounterData.attackers.length; i++) {
@@ -188,7 +172,6 @@ contract PvPSystem is System {
 
             CombatOutcome.set(encounterId, combatOutcome);
             CombatEncounter.setEnd(encounterId, block.timestamp);
-            IWorld(_world()).UD__removeEntityFromBoard(entityId);
         } else {
             revert("Unrecognized encounter type");
         }
