@@ -127,12 +127,12 @@ export type AttackOutcomeType = {
   blockNumber: bigint;
   crit: boolean[];
   currentTurn: bigint;
-  effectIds: string[];
-  encounterId: string;
   damagePerHit: bigint[];
   defenderDamageDelt: bigint;
   defenderDied: boolean;
   defenderId: string;
+  effectIds: string[];
+  encounterId: string;
   hit: boolean[];
   itemId: string;
   miss: boolean[];
@@ -173,12 +173,12 @@ export type ConsiderationData = {
 
 export type EntityStats = {
   agility: bigint;
-  maxHp: bigint;
   currentHp: bigint;
   entityClass: StatsClasses;
   experience: bigint;
   intelligence: bigint;
   level: bigint;
+  maxHp: bigint;
   strength: bigint;
 };
 
@@ -201,11 +201,11 @@ export type Metadata = {
 };
 
 export type Monster = MonsterTemplate & {
-  maxHp: bigint;
   currentHp: bigint;
   id: Entity;
   inBattle: boolean;
   isSpawned: boolean;
+  maxHp: bigint;
   position: { x: number; y: number };
 };
 

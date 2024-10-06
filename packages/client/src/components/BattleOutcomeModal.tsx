@@ -176,7 +176,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 </Text>{' '}
                 experience and{' '}
                 <Text as="span" color="gold" fontWeight="bold">
-                  {Number(etherToFixedNumber(goldDropped)).toLocaleString()}
+                  {etherToFixedNumber(goldDropped)}
                 </Text>{' '}
                 $GOLD.
               </Text>

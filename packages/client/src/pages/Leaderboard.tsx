@@ -123,7 +123,6 @@ export const Leaderboard = (): JSX.Element => {
             return {
               ...fetachedMetadata,
               agility: characterStats.agility,
-              maxHp: characterStats.maxHp,
               entityClass: characterStats.class,
               escrowGoldBalance,
               experience: characterStats.experience,
@@ -132,6 +131,7 @@ export const Leaderboard = (): JSX.Element => {
               intelligence: characterStats.intelligence,
               level: characterStats.level,
               locked: characterData.locked,
+              maxHp: characterStats.maxHp,
               name: hexToString(characterData.name as `0x${string}`, {
                 size: 32,
               }),

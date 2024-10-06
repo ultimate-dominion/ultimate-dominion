@@ -98,7 +98,7 @@ export const StatsPanel = (): JSX.Element => {
     strength,
   } = character;
 
-  const currentHpWithFloor = currentHp < 0 ? 0 : currentHp;
+  const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
 
   return (
     <VStack alignItems="start" h="100%" p={2} spacing={4}>
