@@ -19,7 +19,7 @@ uint256 constant CRIT_MULTIPLIER = 2;
 // attack roll has to be CRIT_MODIFIER times greater than the defense roll in order to crit
 uint256 constant CRIT_MODIFIER = 10;
 // the character's stats are divided by STAT_MODIFIER when applying stat bonuses
-int256 constant STAT_MODIFIER = 6;
+int256 constant STAT_MODIFIER = 20;
 
 //Gold Drop constants
 uint256 constant BASE_GOLD_DROP = 5 ether; //
@@ -28,6 +28,10 @@ uint256 constant BASE_GOLD_DROP = 5 ether; //
 int256 constant BASE_HP_GAIN = 1;
 int256 constant ABILITY_POINTS_PER_LEVEL = 2;
 uint256 constant EXP_MODIFIER = 2;
-
+uint256 constant MAX_LEVEL = 10;
+uint256 constant BONUS_POINT_LEVEL = 1;
 uint256 constant SESSION_TIMEOUT = 10 minutes;
 uint256 constant PVP_GOLD_DENOMINATOR = 2;
+
+uint256 constant PVP_TIMER = 30 seconds;
+uint256 constant MAX_MONSTERS = 20;

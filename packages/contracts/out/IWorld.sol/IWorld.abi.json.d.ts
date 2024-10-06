@@ -1703,6 +1703,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__fleePvp",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__fulfillOrder",
     "inputs": [
       {
@@ -3420,6 +3433,30 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__increaseEscrowBalance",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "newBalance",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__incrementCounter",
     "inputs": [
       {
@@ -3465,6 +3502,54 @@ declare const abi: [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isAttacker",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isAttacker",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__isDefender",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isDefender",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",

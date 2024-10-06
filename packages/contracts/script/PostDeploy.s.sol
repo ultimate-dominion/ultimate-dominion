@@ -33,7 +33,8 @@ import {
     ERC721_NAME,
     ERC721_SYMBOL,
     ITEMS_NAMESPACE,
-    TOKEN_URI
+    TOKEN_URI,
+    MAX_LEVEL
 } from "../constants.sol";
 import {
     ArmorStats,
@@ -496,14 +497,14 @@ contract PostDeploy is Script {
         Levels.setExperience(8, 48000);
         Levels.setExperience(9, 64000);
         Levels.setExperience(10, 85000);
-        Levels.setExperience(11, 100000);
-        Levels.setExperience(12, 120000);
-        Levels.setExperience(13, 140000);
-        Levels.setExperience(14, 165000);
-        Levels.setExperience(15, 195000);
-        Levels.setExperience(16, 225000);
-        Levels.setExperience(17, 265000);
-        Levels.setExperience(18, 305000);
-        Levels.setExperience(19, 355000);
+        // Levels.setExperience(11, 100000);
+        // Levels.setExperience(12, 120000);
+        // Levels.setExperience(13, 140000);
+        // Levels.setExperience(14, 165000);
+        // Levels.setExperience(15, 195000);
+        // Levels.setExperience(16, 225000);
+        // Levels.setExperience(17, 265000);
+        // Levels.setExperience(18, 305000);
+        // Levels.setExperience(19, 355000);
     }
 }

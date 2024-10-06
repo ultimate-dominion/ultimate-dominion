@@ -19,6 +19,7 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 struct EncounterEntityData {
   bytes32 encounterId;
   bool died;
+  uint256 pvpTimer;
   bytes32[] appliedStatusEffects;
 }
 
@@ -27,12 +28,12 @@ library EncounterEntity {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000456e636f756e746572456e7469747900);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0021020120010000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0041030120012000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (bytes32, bool, bytes32[])
-  Schema constant _valueSchema = Schema.wrap(0x002102015f60c100000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bytes32, bool, uint256, bytes32[])
+  Schema constant _valueSchema = Schema.wrap(0x004103015f601fc1000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -48,10 +49,11 @@ library EncounterEntity {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](3);
+    fieldNames = new string[](4);
     fieldNames[0] = "encounterId";
     fieldNames[1] = "died";
-    fieldNames[2] = "appliedStatusEffects";
+    fieldNames[2] = "pvpTimer";
+    fieldNames[3] = "appliedStatusEffects";
   }
 
   /**
@@ -150,6 +152,48 @@ library EncounterEntity {
     _keyTuple[0] = encounterEntityId;
 
     StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((died)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get pvpTimer.
+   */
+  function getPvpTimer(bytes32 encounterEntityId) internal view returns (uint256 pvpTimer) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = encounterEntityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get pvpTimer.
+   */
+  function _getPvpTimer(bytes32 encounterEntityId) internal view returns (uint256 pvpTimer) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = encounterEntityId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set pvpTimer.
+   */
+  function setPvpTimer(bytes32 encounterEntityId, uint256 pvpTimer) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = encounterEntityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((pvpTimer)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set pvpTimer.
+   */
+  function _setPvpTimer(bytes32 encounterEntityId, uint256 pvpTimer) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = encounterEntityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((pvpTimer)), _fieldLayout);
   }
 
   /**
@@ -355,9 +399,10 @@ library EncounterEntity {
     bytes32 encounterEntityId,
     bytes32 encounterId,
     bool died,
+    uint256 pvpTimer,
     bytes32[] memory appliedStatusEffects
   ) internal {
-    bytes memory _staticData = encodeStatic(encounterId, died);
+    bytes memory _staticData = encodeStatic(encounterId, died, pvpTimer);
 
     EncodedLengths _encodedLengths = encodeLengths(appliedStatusEffects);
     bytes memory _dynamicData = encodeDynamic(appliedStatusEffects);
@@ -375,9 +420,10 @@ library EncounterEntity {
     bytes32 encounterEntityId,
     bytes32 encounterId,
     bool died,
+    uint256 pvpTimer,
     bytes32[] memory appliedStatusEffects
   ) internal {
-    bytes memory _staticData = encodeStatic(encounterId, died);
+    bytes memory _staticData = encodeStatic(encounterId, died, pvpTimer);
 
     EncodedLengths _encodedLengths = encodeLengths(appliedStatusEffects);
     bytes memory _dynamicData = encodeDynamic(appliedStatusEffects);
@@ -392,7 +438,7 @@ library EncounterEntity {
    * @notice Set the full data using the data struct.
    */
   function set(bytes32 encounterEntityId, EncounterEntityData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.encounterId, _table.died);
+    bytes memory _staticData = encodeStatic(_table.encounterId, _table.died, _table.pvpTimer);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.appliedStatusEffects);
     bytes memory _dynamicData = encodeDynamic(_table.appliedStatusEffects);
@@ -407,7 +453,7 @@ library EncounterEntity {
    * @notice Set the full data using the data struct.
    */
   function _set(bytes32 encounterEntityId, EncounterEntityData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.encounterId, _table.died);
+    bytes memory _staticData = encodeStatic(_table.encounterId, _table.died, _table.pvpTimer);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.appliedStatusEffects);
     bytes memory _dynamicData = encodeDynamic(_table.appliedStatusEffects);
@@ -421,10 +467,12 @@ library EncounterEntity {
   /**
    * @notice Decode the tightly packed blob of static data using this table's field layout.
    */
-  function decodeStatic(bytes memory _blob) internal pure returns (bytes32 encounterId, bool died) {
+  function decodeStatic(bytes memory _blob) internal pure returns (bytes32 encounterId, bool died, uint256 pvpTimer) {
     encounterId = (Bytes.getBytes32(_blob, 0));
 
     died = (_toBool(uint8(Bytes.getBytes1(_blob, 32))));
+
+    pvpTimer = (uint256(Bytes.getBytes32(_blob, 33)));
   }
 
   /**
@@ -453,7 +501,7 @@ library EncounterEntity {
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (EncounterEntityData memory _table) {
-    (_table.encounterId, _table.died) = decodeStatic(_staticData);
+    (_table.encounterId, _table.died, _table.pvpTimer) = decodeStatic(_staticData);
 
     (_table.appliedStatusEffects) = decodeDynamic(_encodedLengths, _dynamicData);
   }
@@ -482,8 +530,8 @@ library EncounterEntity {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(bytes32 encounterId, bool died) internal pure returns (bytes memory) {
-    return abi.encodePacked(encounterId, died);
+  function encodeStatic(bytes32 encounterId, bool died, uint256 pvpTimer) internal pure returns (bytes memory) {
+    return abi.encodePacked(encounterId, died, pvpTimer);
   }
 
   /**
@@ -514,9 +562,10 @@ library EncounterEntity {
   function encode(
     bytes32 encounterId,
     bool died,
+    uint256 pvpTimer,
     bytes32[] memory appliedStatusEffects
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(encounterId, died);
+    bytes memory _staticData = encodeStatic(encounterId, died, pvpTimer);
 
     EncodedLengths _encodedLengths = encodeLengths(appliedStatusEffects);
     bytes memory _dynamicData = encodeDynamic(appliedStatusEffects);
