@@ -16,15 +16,17 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatEther, parseEther } from 'viem';
 import { useAccount, useBalance, useDisconnect, useWalletClient } from 'wagmi';
 
+import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { shortenAddress } from '../utils/helpers';
+import { EncounterType } from '../utils/types';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { CopyText } from './CopyText';
 
@@ -45,6 +47,7 @@ export const WalletDetailsModal = ({
     network: { walletClient },
     systemCalls: { removeEntityFromBoard },
   } = useMUD();
+  const { currentBattle } = useBattle();
   const { data: externalWalletBalance, refetch } = useBalance({
     address: externalWalletClient?.account.address,
   });
@@ -200,6 +203,14 @@ export const WalletDetailsModal = ({
     }
   }, [renderError]);
 
+  const inPvPBattle = useMemo(() => {
+    if (!currentBattle) return false;
+    if (currentBattle.encounterType === EncounterType.PvP) {
+      return true;
+    }
+    return false;
+  }, [currentBattle]);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -231,9 +242,19 @@ export const WalletDetailsModal = ({
                     ? formatEther(externalWalletBalance.value)
                     : '0'}
                 </Text>
-                <Button isLoading={isLoggingOut} onClick={onLogout} size="sm">
+                <Button
+                  isDisabled={inPvPBattle}
+                  isLoading={isLoggingOut}
+                  onClick={onLogout}
+                  size="sm"
+                >
                   Logout
                 </Button>
+                {inPvPBattle && (
+                  <Text color="orange" fontWeight={700} size="sm">
+                    You cannot logout during a PvP battle.
+                  </Text>
+                )}
                 <Divider />
                 <Text>Session Account:</Text>
                 <VStack alignItems="start" spacing={0}>
