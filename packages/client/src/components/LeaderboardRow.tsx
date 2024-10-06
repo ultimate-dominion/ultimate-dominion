@@ -68,8 +68,8 @@ export const LeaderboardRow = ({
             </Center>
           </HStack>
           <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            HP {maxHp} • STR {strength} • AGI
-            {agility} • INT {intelligence}
+            HP {maxHp.toString()} • STR {strength.toString()} • AGI
+            {agility.toString()} • INT {intelligence.toString()}
           </Text>
         </VStack>
       </Flex>
@@ -90,7 +90,7 @@ export const LeaderboardRow = ({
             textAlign="center"
             w="100%"
           >
-            {level}
+            {level.toString()}
           </Text>
           <Text
             fontWeight={500}

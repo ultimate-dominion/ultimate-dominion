@@ -468,7 +468,7 @@ export const ActionsPanel = (): JSX.Element => {
                       </Text>{' '}
                       with {itemName} for{' '}
                       <Text as="span" color="red">
-                        {attack.attackerDamageDelt}
+                        {attack.attackerDamageDelt.toString()}
                       </Text>{' '}
                       damage.
                     </Text>
@@ -482,7 +482,7 @@ export const ActionsPanel = (): JSX.Element => {
                       </Text>{' '}
                       attacked you with {itemName} for{' '}
                       <Text as="span" color="red">
-                        {attack.attackerDamageDelt}
+                        {attack.attackerDamageDelt.toString()}
                       </Text>{' '}
                       damage.
                     </Text>

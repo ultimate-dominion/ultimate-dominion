@@ -192,14 +192,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             const _position = getComponentValueStrict(Position, entity);
 
             let decodedBaseStats = {
-              agility: '0',
-              currentHp: '0',
+              agility: BigInt(0),
+              currentHp: BigInt(0),
               entityClass: 0,
-              experience: '0',
-              intelligence: '0',
-              level: '0',
-              maxHp: '0',
-              strength: '0',
+              experience: BigInt(0),
+              intelligence: BigInt(0),
+              level: BigInt(0),
+              maxHp: BigInt(0),
+              strength: BigInt(0),
             };
 
             if (characterData.baseStats !== '0x') {
@@ -208,26 +208,26 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
             return {
               ...fetachedMetadata,
-              agility: characterStats.agility.toString(),
+              agility: characterStats.agility,
               baseStats: decodedBaseStats,
-              currentHp: characterStats.currentHp.toString(),
+              currentHp: characterStats.currentHp,
               entityClass: characterStats.class,
               escrowGoldBalance,
-              experience: characterStats.experience.toString(),
+              experience: characterStats.experience,
               externalGoldBalance,
               id: entity,
               inBattle,
-              intelligence: characterStats.intelligence.toString(),
+              intelligence: characterStats.intelligence,
               isSpawned,
-              level: characterStats.level.toString(),
+              level: characterStats.level,
               locked: characterData.locked,
-              maxHp: characterStats.maxHp.toString(),
+              maxHp: characterStats.maxHp,
               name: hexToString(characterData.name as `0x${string}`, {
                 size: 32,
               }),
               owner: characterData.owner,
               position: { x: _position.x, y: _position.y },
-              strength: characterStats.strength.toString(),
+              strength: characterStats.strength,
               tokenId: tokenId.toString(),
             } as Character & {
               isSpawned: boolean;
@@ -271,10 +271,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             entity,
           )?.encounterId;
 
-          const currentHp = getComponentValueStrict(
-            Stats,
-            entity,
-          ).currentHp.toString();
+          const currentHp = getComponentValueStrict(Stats, entity).currentHp;
           const inBattle = !!encounterId && encounterId !== zeroHash;
           const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
           const _position = getComponentValueStrict(Position, entity);
@@ -285,7 +282,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
           return {
             ...monsterTemplate,
-            maxHp: monsterTemplate?.hitPoints.toString() ?? '0',
+            maxHp: monsterTemplate?.hitPoints ?? BigInt(0),
             currentHp,
             id: entity,
             inBattle,
@@ -317,10 +314,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             position: { x: _position.x, y: _position.y },
             priceMarkdown: shopData.priceMarkdown,
             priceMarkup: shopData.priceMarkup,
-            restock: shopData.stock.map(item => item.toString()),
+            restock: shopData.stock,
             sellableItems: shopData.sellableItems.map(item => item.toString()),
             shopId: entity,
-            stock: shopData.stock.map(item => item.toString()),
+            stock: shopData.stock,
           } as Shop;
         });
 
