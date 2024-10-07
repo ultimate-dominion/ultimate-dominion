@@ -55,7 +55,7 @@ export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
               cursor: 'not-allowed',
             }
           : {
-              bg: 'transparent',
+              bg: 'grey300',
               border: '1px solid',
               cursor: 'pointer',
             }

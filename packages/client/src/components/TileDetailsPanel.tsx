@@ -561,12 +561,9 @@ const OpponentRow = ({
     <HStack
       border="1px solid transparent"
       h={ROW_HEIGHT}
-      w="100%"
-      justify="space-between"
+      spacing={0}
       _active={{
-        bg: inBattle ? 'transparent' : 'grey300',
         border: '1px solid',
-        cursor: inBattle ? 'not-allowed' : 'pointer',
       }}
       _hover={{
         border: '1px solid',
@@ -575,13 +572,17 @@ const OpponentRow = ({
     >
       <HStack
         as="button"
-        h={ROW_HEIGHT}
+        h="98%"
         justifyContent="space-between"
         onClick={inBattle ? undefined : onClick}
         px={{ base: 1, sm: 2 }}
         transition="all 0.3s ease"
+        w="100%"
+        _active={{
+          bg: inBattle ? 'transparent' : 'grey300',
+        }}
       >
-        <HStack justifyContent="start" spacing={0}>
+        <HStack justifyContent="start" spacing={4}>
           <Text
             color={OPPONENT_COLORS[opponent.entityClass]}
             filter={inBattle ? 'grayscale(100%)' : 'none'}
@@ -613,10 +614,11 @@ const OpponentRow = ({
             as={Button}
             borderRadius={0}
             h="100%"
-            rightIcon={<BsThreeDotsVertical />}
-            size="xxs"
+            size="xs"
             variant="ghost"
-          />
+          >
+            <BsThreeDotsVertical size={14} />
+          </MenuButton>
           <MenuList>
             <MenuItem
               onClick={() =>
