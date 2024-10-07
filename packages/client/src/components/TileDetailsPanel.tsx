@@ -22,7 +22,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -555,12 +555,14 @@ const OpponentRow = ({
   onClick: () => void;
 }) => {
   const { inBattle, level, name } = opponent;
+  const navigate = useNavigate();
 
   return (
     <HStack
       border="1px solid transparent"
       h={ROW_HEIGHT}
       w="100%"
+      justify="space-between"
       _active={{
         bg: inBattle ? 'transparent' : 'grey300',
         border: '1px solid',
@@ -571,23 +573,6 @@ const OpponentRow = ({
         cursor: inBattle ? 'not-allowed' : 'pointer',
       }}
     >
-      {encounterType === EncounterType.PvP && (
-        <Menu>
-          <MenuButton
-            as={Button}
-            borderRadius={0}
-            h="100%"
-            rightIcon={<BsThreeDotsVertical />}
-            size="xxs"
-            variant="ghost"
-          />
-          <MenuList>
-            <MenuItem as="a" href={'/characters/' + (opponent as Character).id}>
-              Character Page
-            </MenuItem>
-          </MenuList>
-        </Menu>
-      )}
       <HStack
         as="button"
         h={ROW_HEIGHT}
@@ -622,6 +607,27 @@ const OpponentRow = ({
           </Text>
         )}
       </HStack>
+      {encounterType === EncounterType.PvP && (
+        <Menu>
+          <MenuButton
+            as={Button}
+            borderRadius={0}
+            h="100%"
+            rightIcon={<BsThreeDotsVertical />}
+            size="xxs"
+            variant="ghost"
+          />
+          <MenuList>
+            <MenuItem
+              onClick={() =>
+                navigate('/characters/' + (opponent as Character).id)
+              }
+            >
+              View character
+            </MenuItem>
+          </MenuList>
+        </Menu>
+      )}
     </HStack>
   );
 };
