@@ -15,25 +15,26 @@ export const HealthBar = ({
   statusEffect,
   ...stackProps
 }: {
-  maxHp: string;
-  currentHp: string;
-  level?: string;
+  maxHp: bigint;
+  currentHp: bigint;
+  level?: bigint;
   statusEffect?: string;
 } & StackProps): JSX.Element => {
-  const currentHpWithFloor = parseInt(currentHp) < 0 ? 0 : parseInt(currentHp);
-  const health = (currentHpWithFloor / parseInt(maxHp)) * 100;
+  const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
+  const health =
+    (Number(currentHpWithFloor.toString()) / Number(maxHp.toString())) * 100;
 
   const barColor = health > 50 ? 'green' : health > 15 ? 'yellow' : 'red';
 
   return (
     <VStack spacing={0.5} {...stackProps}>
-      {level && (
+      {!!level && (
         <Text
           alignSelf="start"
           fontWeight="bold"
           size={{ base: '3xs', md: '2xs' }}
         >
-          Lvl {level}
+          Lvl {level.toString()}
         </Text>
       )}
       <Flex
@@ -66,7 +67,7 @@ export const HealthBar = ({
           </Badge>
         )}
         <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
-          {currentHpWithFloor} / {maxHp}
+          {currentHpWithFloor.toString()} / {maxHp.toString()}
         </Text>
       </HStack>
     </VStack>

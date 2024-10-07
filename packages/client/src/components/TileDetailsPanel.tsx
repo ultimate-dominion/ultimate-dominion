@@ -103,7 +103,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     }
 
     if (
-      attackOutcomes[attackIndex]?.attackerDamageDelt !== '0' &&
+      attackOutcomes[attackIndex]?.attackerDamageDelt !== BigInt(0) &&
       attackIndex - Number(currentBattle.currentTurn) <= 2
     ) {
       setIsUserHit(true);
@@ -138,7 +138,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     }
 
     if (
-      attackOutcomes[attackIndex]?.attackerDamageDelt !== '0' &&
+      attackOutcomes[attackIndex]?.attackerDamageDelt !== BigInt(0) &&
       attackIndex - Number(currentBattle.currentTurn) <= 2
     ) {
       setIsMonsterHit(true);
@@ -313,42 +313,55 @@ export const TileDetailsPanel = (): JSX.Element => {
         </HStack>
         <HStack alignItems="start" w="100%">
           <VStack spacing={{ base: 0, lg: 2 }} w="48%">
-            <HealthBar
-              maxHp={opponent.maxHp}
-              currentHp={opponent.currentHp}
-              level={opponent.level}
-              statusEffect={opponentStatusEffect}
-              w="90%"
-            />
+            {opponent.maxHp > BigInt(0) && (
+              <HealthBar
+                maxHp={opponent.maxHp}
+                currentHp={opponent.currentHp}
+                level={opponent.level}
+                statusEffect={opponentStatusEffect}
+                w="90%"
+              />
+            )}
+
             <VStack alignItems="start" px={4}>
-              <Text size={{ base: '2xs', lg: 'sm' }}>
-                Agility: {opponent.agility}
-              </Text>
-              <Text size={{ base: '2xs', lg: 'sm' }}>
-                Intelligence: {opponent.intelligence}
-              </Text>
-              <Text size={{ base: '2xs', lg: 'sm' }}>
-                Strength: {opponent.strength}
-              </Text>
+              {!!opponent.agility && (
+                <Text size={{ base: '2xs', lg: 'sm' }}>
+                  Agility: {opponent.agility.toString()}
+                </Text>
+              )}
+              {!!opponent.intelligence && (
+                <Text size={{ base: '2xs', lg: 'sm' }}>
+                  Intelligence: {opponent.intelligence.toString()}
+                </Text>
+              )}
+              {!!opponent.strength && (
+                <Text size={{ base: '2xs', lg: 'sm' }}>
+                  Strength: {opponent.strength.toString()}
+                </Text>
+              )}
             </VStack>
           </VStack>
           <VStack spacing={{ base: 0, lg: 2 }} w="48%">
-            <HealthBar
-              maxHp={userCharacterForBattleRendering.maxHp}
-              currentHp={userCharacterForBattleRendering.currentHp}
-              level={userCharacterForBattleRendering.level}
-              statusEffect={userCharacterStatusEffect}
-              w="90%"
-            />
+            {userCharacterForBattleRendering.maxHp > BigInt(0) && (
+              <HealthBar
+                maxHp={userCharacterForBattleRendering.maxHp}
+                currentHp={userCharacterForBattleRendering.currentHp}
+                level={userCharacterForBattleRendering.level}
+                statusEffect={userCharacterStatusEffect}
+                w="90%"
+              />
+            )}
+
             <VStack alignItems="start" px={4}>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Agility: {userCharacterForBattleRendering.agility}
+                Agility: {userCharacterForBattleRendering.agility.toString()}
               </Text>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Intelligence: {userCharacterForBattleRendering.intelligence}
+                Intelligence:{' '}
+                {userCharacterForBattleRendering.intelligence.toString()}
               </Text>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Strength: {userCharacterForBattleRendering.strength}
+                Strength: {userCharacterForBattleRendering.strength.toString()}
               </Text>
             </VStack>
           </VStack>
@@ -596,7 +609,7 @@ const OpponentRow = ({
           fontWeight="bold"
           size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
         >
-          Level {level}
+          Level {level.toString()}
         </Text>
       )}
       {inBattle && (

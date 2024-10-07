@@ -11,6 +11,8 @@ import {
     Characters,
     CombatEncounter,
     CombatEncounterData,
+    EncounterEntity,
+    EncounterEntityData,
     Admin,
     EntitiesAtPosition,
     Position
@@ -24,12 +26,23 @@ contract AdminSystem is System {
         _;
     }
 
-    function adminClearBattleState(bytes32 entityId) public onlyAdmin {
+    function adminClearEncounterState(bytes32 entityId) public onlyAdmin {
+        bytes32[] memory empty;
         EncounterEntity.setEncounterId(entityId, bytes32(0));
+        EncounterEntity.setAppliedStatusEffects(entityId, empty);
+        EncounterEntity.setPvpTimer(entityId, 0);
+        EncounterEntity.setDied(entityId, false);
     }
 
     function adminSetCombatEncounter(bytes32 encounterId, CombatEncounterData memory encounterData) public onlyAdmin {
         CombatEncounter.set(encounterId, encounterData);
+    }
+
+    function adminSetEncounterEntity(bytes32 entityId, EncounterEntityData memory encounterEntityData)
+        public
+        onlyAdmin
+    {
+        EncounterEntity.set(entityId, encounterEntityData);
     }
 
     function setAdmin(address newAdmin, bool adminState) public onlyAdmin {

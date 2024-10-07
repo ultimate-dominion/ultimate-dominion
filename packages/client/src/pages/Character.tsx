@@ -142,25 +142,25 @@ export const CharacterPage = (): JSX.Element => {
 
       const _character = {
         ...fetachedMetadata,
-        agility: characterStats.agility.toString(),
+        agility: characterStats.agility,
         baseStats: decodedBaseStats,
-        currentHp: characterStats.currentHp.toString(),
+        currentHp: characterStats.currentHp,
         entityClass: characterStats.class,
         escrowGoldBalance,
-        experience: characterStats.experience.toString(),
+        experience: characterStats.experience,
         externalGoldBalance,
         id: id as Entity,
         inBattle,
-        intelligence: characterStats.intelligence.toString(),
-        level: characterStats.level.toString(),
+        intelligence: characterStats.intelligence,
+        level: characterStats.level,
         locked: characterData.locked,
-        maxHp: characterStats.maxHp.toString(),
+        maxHp: characterStats.maxHp,
         name: hexToString(characterData.name as `0x${string}`, {
           size: 32,
         }),
         owner: characterData.owner,
         pvpCooldownTimer: pvpTimer,
-        strength: characterStats.strength.toString(),
+        strength: characterStats.strength,
         tokenId: characterData.tokenId.toString(),
       };
 
@@ -380,7 +380,9 @@ export const CharacterPage = (): JSX.Element => {
                   </HStack>
                 </VStack>
                 <HStack justify="space-between" mt={4}>
-                  <Text fontWeight="bold">Level {character.level}</Text>
+                  <Text fontWeight="bold">
+                    Level {character.level.toString()}
+                  </Text>
                   <Text>
                     <Text
                       as="span"
@@ -395,7 +397,7 @@ export const CharacterPage = (): JSX.Element => {
                           : 'normal'
                       }
                     >
-                      {character.experience}
+                      {character.experience.toString()}
                     </Text>
                     /{nextLevelXpRequirement.toString()} XP
                   </Text>
@@ -534,12 +536,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
             return {
               ...armor,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Armor;
           })
-          .filter(a => a.balance !== '0');
+          .filter(a => a.balance !== BigInt(0));
 
         const _consumables = consumableTemplates
           .map(consumable => {
@@ -555,12 +557,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
             return {
               ...consumable,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Consumable;
           })
-          .filter(c => c.balance !== '0');
+          .filter(c => c.balance !== BigInt(0));
 
         const _spells = spellTemplates
           .map(spell => {
@@ -576,12 +578,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
             return {
               ...spell,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Spell;
           })
-          .filter(s => s.balance !== '0');
+          .filter(s => s.balance !== BigInt(0));
 
         const _weapons = weaponTemplates
           .map(weapon => {
@@ -597,12 +599,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
             return {
               ...weapon,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Weapon;
           })
-          .filter(w => w.balance !== '0');
+          .filter(w => w.balance !== BigInt(0));
 
         const _equippedArmor = _equippedArmorIds
           .map(id => _armor.find(a => a.tokenId === id.toString()))

@@ -113,7 +113,7 @@ export const StatsPanel = (): JSX.Element => {
     strength,
   } = character;
 
-  const currentHpWithFloor = parseInt(currentHp) < 0 ? 0 : parseInt(currentHp);
+  const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
 
   return (
     <VStack alignItems="start" h="100%" p={2} spacing={4}>
@@ -141,7 +141,7 @@ export const StatsPanel = (): JSX.Element => {
         </GridItem>
         <GridItem>
           <Text>
-            {currentHpWithFloor}/{maxHp}
+            {currentHpWithFloor.toString()}/{maxHp.toString()}
           </Text>
         </GridItem>
         <GridItem>
@@ -150,7 +150,7 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{strength}</Text>
+          <Text>{strength.toString()}</Text>
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">
@@ -158,7 +158,7 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{agility}</Text>
+          <Text>{agility.toString()}</Text>
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">
@@ -166,7 +166,7 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{intelligence}</Text>
+          <Text>{intelligence.toString()}</Text>
         </GridItem>
       </Grid>
 
@@ -202,7 +202,7 @@ export const StatsPanel = (): JSX.Element => {
               BigInt(experience) >= nextLevelXpRequirement ? 'bold' : 'normal'
             }
           >
-            {experience}
+            {experience.toString()}
           </Text>
           /{nextLevelXpRequirement.toString()} XP
         </Text>

@@ -134,14 +134,14 @@ export const CharacterProvider = ({
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
       let decodedBaseStats = {
-        agility: '0',
-        currentHp: '0',
+        agility: BigInt(0),
+        currentHp: BigInt(0),
         entityClass: 0,
-        experience: '0',
-        intelligence: '0',
-        level: '0',
-        maxHp: '0',
-        strength: '0',
+        experience: BigInt(0),
+        intelligence: BigInt(0),
+        level: BigInt(0),
+        maxHp: BigInt(0),
+        strength: BigInt(0),
       };
 
       if (characterData.baseStats !== '0x') {
@@ -149,23 +149,23 @@ export const CharacterProvider = ({
       }
 
       return {
-        agility: characterStats?.agility.toString() ?? '0',
+        agility: characterStats?.agility ?? BigInt(0),
         baseStats: decodedBaseStats,
-        currentHp: characterStats?.currentHp.toString() ?? '0',
+        currentHp: characterStats?.currentHp ?? BigInt(0),
         entityClass: characterStats?.class ?? 0,
         escrowGoldBalance,
-        experience: characterStats?.experience.toString() ?? '0',
+        experience: characterStats?.experience ?? BigInt(0),
         externalGoldBalance,
         id: entity,
         inBattle,
-        intelligence: characterStats?.intelligence.toString() ?? '0',
-        level: characterStats?.level.toString() ?? '0',
+        intelligence: characterStats?.intelligence ?? BigInt(0),
+        level: characterStats?.level ?? BigInt(0),
         locked: characterData.locked,
-        maxHp: characterStats?.maxHp.toString() ?? '0',
+        maxHp: characterStats?.maxHp ?? BigInt(0),
         name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
         owner: characterData.owner,
         pvpCooldownTimer: pvpTimer,
-        strength: characterStats?.strength.toString() ?? '0',
+        strength: characterStats?.strength ?? BigInt(0),
         tokenId: tokenId.toString(),
       };
     })[0];
@@ -248,12 +248,12 @@ export const CharacterProvider = ({
 
             return {
               ...armor,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Armor;
           })
-          .filter(a => a.balance !== '0');
+          .filter(a => a.balance !== BigInt(0));
 
         const _consumables = consumableTemplates
           .map(consumable => {
@@ -269,12 +269,12 @@ export const CharacterProvider = ({
 
             return {
               ...consumable,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Consumable;
           })
-          .filter(c => c.balance !== '0');
+          .filter(c => c.balance !== BigInt(0));
 
         const _spells = spellTemplates
           .map(spell => {
@@ -290,12 +290,12 @@ export const CharacterProvider = ({
 
             return {
               ...spell,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Spell;
           })
-          .filter(s => s.balance !== '0');
+          .filter(s => s.balance !== BigInt(0));
 
         const _weapons = weaponTemplates
           .map(weapon => {
@@ -311,12 +311,12 @@ export const CharacterProvider = ({
 
             return {
               ...weapon,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Weapon;
           })
-          .filter(w => w.balance !== '0');
+          .filter(w => w.balance !== BigInt(0));
 
         const _equippedArmor = _equippedArmorIds
           .map(id => _armor.find(a => a.tokenId === id.toString()))

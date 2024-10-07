@@ -16,7 +16,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { formatEther, hexToBigInt, sliceHex } from 'viem';
+import { hexToBigInt, sliceHex } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
@@ -124,14 +124,14 @@ export const BattleProvider = ({
 
       return {
         attackers: encounter.attackers as Entity[],
-        currentTurn: encounter.currentTurn.toString(),
-        currentTurnTimer: encounter.currentTurnTimer.toString(),
+        currentTurn: encounter.currentTurn,
+        currentTurnTimer: encounter.currentTurnTimer,
         defenders: encounter.defenders as Entity[],
         encounterId: entity,
         encounterType: encounter.encounterType,
-        end: encounter.end.toString(),
-        maxTurns: encounter.maxTurns.toString(),
-        start: encounter.start.toString(),
+        end: encounter.end,
+        maxTurns: encounter.maxTurns,
+        start: encounter.start,
       };
     })
     .filter(
@@ -150,14 +150,16 @@ export const BattleProvider = ({
 
     if (!latestBattle) return null;
 
-    const latestCompletedBattle = allBattles.filter(b => b.end !== '0').pop();
+    const latestCompletedBattle = allBattles
+      .filter(b => b.end !== BigInt(0))
+      .pop();
 
     if (latestCompletedBattle) {
       const combatOutcome = getComponentValue(
         CombatOutcome,
         latestCompletedBattle.encounterId,
       );
-      if (latestBattle.end !== '0' && !combatOutcome) return null;
+      if (latestBattle.end !== BigInt(0) && !combatOutcome) return null;
     }
 
     const latestBattleOutcomeSeen = localStorage.getItem(
@@ -170,7 +172,9 @@ export const BattleProvider = ({
   }, [allBattles, CombatOutcome]);
 
   const lastestBattleOutcome = useMemo(() => {
-    const latestCompletedBattle = allBattles.filter(b => b.end !== '0').pop();
+    const latestCompletedBattle = allBattles
+      .filter(b => b.end !== BigInt(0))
+      .pop();
     if (!latestCompletedBattle) return null;
 
     const combatOutcome = getComponentValue(
@@ -188,9 +192,9 @@ export const BattleProvider = ({
       attackers: latestCompletedBattle.attackers,
       defenders: latestCompletedBattle.defenders,
       encounterId: latestCompletedBattle.encounterId,
-      endTime: combatOutcome.endTime.toString(),
-      expDropped: combatOutcome.expDropped.toString(),
-      goldDropped: formatEther(combatOutcome.goldDropped).toString(),
+      endTime: combatOutcome.endTime,
+      expDropped: combatOutcome.expDropped,
+      goldDropped: combatOutcome.goldDropped,
       itemsDropped: combatOutcome.itemsDropped.map(i => i.toString()),
       winner,
     };
@@ -239,23 +243,23 @@ export const BattleProvider = ({
       );
 
       return {
-        attackerDamageDelt: _attackOutcome.attackerDamageDelt.toString(),
+        attackerDamageDelt: _attackOutcome.attackerDamageDelt,
         attackerDied: _attackOutcome.attackerDied,
-        attackerId: _attackOutcome.attackerId.toString(),
-        attackNumber: attackNumber.toString(),
-        blockNumber: _attackOutcome.blockNumber.toString(),
+        attackerId: _attackOutcome.attackerId,
+        attackNumber: attackNumber,
+        blockNumber: _attackOutcome.blockNumber,
         crit: _attackOutcome.crit,
-        currentTurn: currentTurn.toString(),
-        effectIds: _attackOutcome.effectIds.map(e => e.toString()),
-        encounterId: encounterId.toString(),
-        damagePerHit: _attackOutcome.damagePerHit.map(d => d.toString()),
-        defenderDamageDelt: _attackOutcome.defenderDamageDelt.toString(),
+        currentTurn: currentTurn,
+        damagePerHit: _attackOutcome.damagePerHit,
+        defenderDamageDelt: _attackOutcome.defenderDamageDelt,
         defenderDied: _attackOutcome.defenderDied,
-        defenderId: _attackOutcome.defenderId.toString(),
+        defenderId: _attackOutcome.defenderId,
+        effectIds: _attackOutcome.effectIds,
+        encounterId: encounterId,
         hit: _attackOutcome.hit,
         itemId: _attackOutcome.itemId.toString(),
         miss: _attackOutcome.miss,
-        timestamp: _attackOutcome.timestamp.toString(),
+        timestamp: _attackOutcome.timestamp,
       } as AttackOutcomeType;
     })
     .filter(

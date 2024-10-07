@@ -105,7 +105,7 @@ export const LevelingPanel = ({
             return;
           }
 
-          setNewStrength(prev => (BigInt(prev) - BigInt(1)).toString());
+          setNewStrength(prev => prev - BigInt(1));
           break;
         case 'agi':
           if (newAgility === character.baseStats.agility) return;
@@ -117,7 +117,7 @@ export const LevelingPanel = ({
             return;
           }
 
-          setNewAgility(prev => (BigInt(prev) - BigInt(1)).toString());
+          setNewAgility(prev => prev - BigInt(1));
           break;
         case 'int':
           if (newIntelligence === character.baseStats.intelligence) return;
@@ -129,7 +129,7 @@ export const LevelingPanel = ({
             return;
           }
 
-          setNewIntelligence(prev => (BigInt(prev) - BigInt(1)).toString());
+          setNewIntelligence(prev => prev - BigInt(1));
           break;
         default:
       }
@@ -166,13 +166,13 @@ export const LevelingPanel = ({
 
       switch (stat) {
         case 'str':
-          setNewStrength(prev => (BigInt(prev) + BigInt(1)).toString());
+          setNewStrength(prev => prev + BigInt(1));
           break;
         case 'agi':
-          setNewAgility(prev => (BigInt(prev) + BigInt(1)).toString());
+          setNewAgility(prev => prev + BigInt(1));
           break;
         case 'int':
-          setNewIntelligence(prev => (BigInt(prev) + BigInt(1)).toString());
+          setNewIntelligence(prev => prev + BigInt(1));
           break;
         default:
       }
@@ -295,7 +295,7 @@ export const LevelingPanel = ({
             size={{ base: 'xs', sm: 'sm' }}
             w="33%"
           >
-            {newStrength}
+            {newStrength.toString()}
           </Text>
           {canLevel && (
             <Box w="33%">
@@ -319,7 +319,7 @@ export const LevelingPanel = ({
           )}
           {!canLevel && (
             <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {character.strength}
+              {character.strength.toString()}
             </Text>
           )}
         </HStack>
@@ -350,7 +350,7 @@ export const LevelingPanel = ({
             size={{ base: 'xs', sm: 'sm' }}
             w="33%"
           >
-            {newAgility}
+            {newAgility.toString()}
           </Text>
           {canLevel && (
             <Box w="33%">
@@ -374,7 +374,7 @@ export const LevelingPanel = ({
           )}
           {!canLevel && (
             <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {character.agility}
+              {character.agility.toString()}
             </Text>
           )}
         </HStack>
@@ -405,7 +405,7 @@ export const LevelingPanel = ({
             size={{ base: 'xs', sm: 'sm' }}
             w="33%"
           >
-            {newIntelligence}
+            {newIntelligence.toString()}
           </Text>
           {canLevel && (
             <Box w="33%">
@@ -429,7 +429,7 @@ export const LevelingPanel = ({
           )}
           {!canLevel && (
             <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {character.intelligence}
+              {character.intelligence.toString()}
             </Text>
           )}
         </HStack>

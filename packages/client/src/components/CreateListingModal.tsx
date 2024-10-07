@@ -106,7 +106,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     const unfilteredTemplates = allItemTemplates.map(item => {
       return {
         ...item,
-        balance: '0',
+        balance: BigInt(0),
         itemId: zeroHash as Entity,
         owner: zeroAddress,
       };
