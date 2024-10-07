@@ -22,6 +22,7 @@ import { zeroAddress, zeroHash } from 'viem';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
@@ -50,7 +51,8 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     components: { Levels },
   } = useMUD();
   const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
-  const { character } = useCharacter();
+  const { character, refreshCharacter } = useCharacter();
+  const { refreshEntities } = useMap();
   const { onContinueToBattleOutcome, opponent } = useBattle();
 
   const [armor, setArmor] = useState<Armor[]>([]);
@@ -58,11 +60,19 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
 
-  const onAcknowledge = useCallback(() => {
+  const onAcknowledge = useCallback(async () => {
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
     onContinueToBattleOutcome(false);
+    await refreshCharacter();
+    refreshEntities();
     onClose();
-  }, [battleOutcome.encounterId, onContinueToBattleOutcome, onClose]);
+  }, [
+    battleOutcome.encounterId,
+    onContinueToBattleOutcome,
+    onClose,
+    refreshCharacter,
+    refreshEntities,
+  ]);
 
   const nextLevelXpRequirement =
     useComponentValue(
@@ -145,7 +155,51 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     return <Box />;
   }
 
-  const { expDropped, goldDropped, winner } = battleOutcome;
+  const { expDropped, goldDropped, playerFled, winner } = battleOutcome;
+
+  if (playerFled) {
+    return (
+      <Modal isOpen={isOpen} onClose={onAcknowledge}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader textAlign="center">
+            {winner === character.id ? 'Victory!' : 'Defeat...'}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody p={4} textAlign="center">
+            <VStack alignItems="center" pb={8} spacing={4}>
+              <Text>
+                {winner === character.id
+                  ? `${opponent?.name} fled!`
+                  : `You fled from ${opponent?.name}.`}
+              </Text>
+              {winner === character.id ? (
+                <Text>
+                  You earned{' '}
+                  <Text as="span" color="gold" fontWeight="bold">
+                    {etherToFixedNumber(goldDropped)}
+                  </Text>{' '}
+                  $GOLD.
+                </Text>
+              ) : (
+                <Text>
+                  Fleeing causes you to drop 25% of the $GOLD in your Adventure
+                  Escrow. You lost{' '}
+                  <Text as="span" color="gold" fontWeight="bold">
+                    {etherToFixedNumber(goldDropped)}
+                  </Text>{' '}
+                  $GOLD.
+                </Text>
+              )}
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onAcknowledge}>Continue</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onAcknowledge}>

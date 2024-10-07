@@ -42,6 +42,7 @@ type MapContextType = {
   onSpawn: () => void;
   otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
+  refreshEntities: () => void;
   shopsOnTile: Shop[];
 };
 
@@ -57,6 +58,7 @@ const MapContext = createContext<MapContextType>({
   onSpawn: () => {},
   otherCharactersOnTile: [],
   position: null,
+  refreshEntities: () => {},
   shopsOnTile: [],
 });
 
@@ -97,8 +99,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [monstersOnTile, setMonstersOnTile] = useState<Monster[]>([]);
 
   const [allShops, setAllShops] = useState<Shop[]>([]);
-
   const [shopsOnTile, setShopsOnTile] = useState<Shop[]>([]);
+
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
   const position = useComponentValue(
     Position,
     encodeEntity(
@@ -182,10 +186,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               uriToHttp(`ipfs://${metadataURI}`)[0],
             );
 
-            const encounterId = getComponentValue(
+            const { encounterId, pvpTimer } = getComponentValue(
               EncounterEntity,
               entity,
-            )?.encounterId;
+            ) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) };
             const inBattle = !!encounterId && encounterId !== zeroHash;
 
             const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
@@ -227,6 +231,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               }),
               owner: characterData.owner,
               position: { x: _position.x, y: _position.y },
+              pvpCooldownTimer: pvpTimer,
               strength: characterStats.strength,
               tokenId: tokenId.toString(),
             } as Character & {
@@ -330,6 +335,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     [Position, Shops, renderError],
   );
 
+  const refreshEntities = useCallback(() => {
+    setRefreshCounter(prev => prev + 1);
+  }, []);
+
   useEffect(() => {
     (async () => {
       if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;
@@ -351,67 +360,66 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     getMonsters,
     getShops,
     isSynced,
+    refreshCounter,
   ]);
 
   useEffect(() => {
-    (async (): Promise<void> => {
-      if (!position || (position.x === 0 && position.y === 0)) {
-        setOtherCharactersOnTile([]);
-        setMonstersOnTile([]);
-        setShopsOnTile([]);
-      }
+    if (!position || (position.x === 0 && position.y === 0)) {
+      setOtherCharactersOnTile([]);
+      setMonstersOnTile([]);
+      setShopsOnTile([]);
+    }
 
-      if (allMonsters.length > 0 && position) {
-        setMonstersOnTile(
-          (
-            allMonsters as (Monster & {
-              isSpawned: boolean;
-              position: { x: number; y: number };
-            })[]
-          ).filter(
-            m =>
-              Number(m.currentHp) > 0 &&
-              m.position.x === position.x &&
-              m.position.y === position.y,
-          ),
-        );
-      }
-      if (allShops.length > 0 && position) {
-        setShopsOnTile(
-          (
-            allShops as (Shop & {
-              isSpawned: boolean;
-              position: { x: number; y: number };
-            })[]
-          ).filter(
-            m => m.position.x === position.x && m.position.y === position.y,
-          ),
-        );
-      }
-
-      if (allCharacters.length > 0 && position) {
-        const _otherPlayersOnTile = (
-          allCharacters as (Character & {
+    if (allMonsters.length > 0 && position) {
+      setMonstersOnTile(
+        (
+          allMonsters as (Monster & {
             isSpawned: boolean;
             position: { x: number; y: number };
           })[]
         ).filter(
-          (
-            c: Character & {
-              isSpawned: boolean;
-              position: { x: number; y: number };
-            },
-          ) =>
-            c.position.x === position.x &&
-            c.position.y === position.y &&
-            c.owner !== delegatorAddress &&
-            c.isSpawned,
-        );
-        setOtherCharactersOnTile(_otherPlayersOnTile as Character[]);
-      }
+          m =>
+            Number(m.currentHp) > 0 &&
+            m.position.x === position.x &&
+            m.position.y === position.y,
+        ),
+      );
+    }
+    if (allShops.length > 0 && position) {
+      setShopsOnTile(
+        (
+          allShops as (Shop & {
+            isSpawned: boolean;
+            position: { x: number; y: number };
+          })[]
+        ).filter(
+          m => m.position.x === position.x && m.position.y === position.y,
+        ),
+      );
+    }
 
-      setIsFetchingEntities(false);
-    })();
+    if (allCharacters.length > 0 && position) {
+      const _otherPlayersOnTile = (
+        allCharacters as (Character & {
+          isSpawned: boolean;
+          position: { x: number; y: number };
+        })[]
+      ).filter(
+        (
+          c: Character & {
+            isSpawned: boolean;
+            position: { x: number; y: number };
+          },
+        ) =>
+          c.position.x === position.x &&
+          c.position.y === position.y &&
+          c.owner !== delegatorAddress &&
+          c.isSpawned,
+      );
+      setOtherCharactersOnTile(_otherPlayersOnTile as Character[]);
+    }
+
+    setIsFetchingEntities(false);
   }, [
     allCharacters,
     allMonsters,
@@ -469,6 +477,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         onSpawn,
         otherCharactersOnTile,
         position: position ? { x: position.x, y: position.y } : null,
+        refreshEntities,
         shopsOnTile,
       }}
     >

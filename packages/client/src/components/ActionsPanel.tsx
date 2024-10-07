@@ -28,9 +28,11 @@ export const ActionsPanel = (): JSX.Element => {
     attackOutcomes,
     attackingItemId,
     currentBattle,
+    isFleeing,
     lastestBattleOutcome,
     onAttack,
     onContinueToBattleOutcome,
+    onFleePvp,
     opponent,
     statusEffectActions,
   } = useBattle();
@@ -204,6 +206,27 @@ export const ActionsPanel = (): JSX.Element => {
     [spellTemplates, weaponTemplates],
   );
 
+  const canFlee = useMemo(() => {
+    if (!character) return false;
+    if (!currentBattle) return false;
+
+    if (currentBattle.encounterType === EncounterType.PvE) {
+      return false;
+    }
+
+    const isAttacker = currentBattle.attackers.includes(character.id);
+
+    if (isAttacker && currentBattle.currentTurn === BigInt('1')) {
+      return true;
+    }
+
+    if (!isAttacker && currentBattle.currentTurn === BigInt('2')) {
+      return true;
+    }
+
+    return false;
+  }, [character, currentBattle]);
+
   if (isItemTemplatesLoading) {
     return (
       <VStack mt={12}>
@@ -290,7 +313,9 @@ export const ActionsPanel = (): JSX.Element => {
                   borderLeft={index === 0 ? 'none' : '2px'}
                   borderRadius={0}
                   borderRight="none"
-                  isDisabled={attackingItemId !== null || !canAttack}
+                  isDisabled={
+                    attackingItemId !== null || !canAttack || isFleeing
+                  }
                   isLoading={attackingItemId === item.tokenId}
                   key={`equipped-item-${index}`}
                   loadingText="Attacking..."
@@ -303,6 +328,27 @@ export const ActionsPanel = (): JSX.Element => {
                 </Button>
               ))}
             </HStack>
+            {canFlee && (
+              <VStack>
+                <Button
+                  alignSelf="center"
+                  isLoading={isFleeing}
+                  mt={4}
+                  size="sm"
+                  onClick={onFleePvp}
+                  variant="outline"
+                >
+                  Flee
+                </Button>
+                <Text size="xs" textAlign="center">
+                  You can only flee on your first turn.
+                </Text>
+                <Text size="xs" textAlign="center">
+                  By fleeing, you will lose 25% of the $GOLD in your Adventure
+                  Escrow.
+                </Text>
+              </VStack>
+            )}
           </VStack>
         )}
       <Stack p={{ base: 2, lg: 4 }}>
