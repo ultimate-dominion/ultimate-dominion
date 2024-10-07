@@ -5,7 +5,7 @@ import { css } from '@emotion/react';
 
 export const globalStyles = css`
   body {
-    background: #fff;
+    background: #a2a9b0;
     color: #000;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 1rem;
@@ -247,14 +247,18 @@ export const theme = extendTheme({
   },
   colors: {
     black: '#000',
-    blue: '#0B5ED7',
-    green: '#0BA789',
-    grey300: '#E6E6E6',
-    grey400: '#D1D1D1',
-    grey500: '#808080',
-    red: '#F24725',
+    blue300: '#1633B6',
+    blue400: '#0A2187',
+    blue500: '#131832',
+    green: '#008F07',
+    grey100: '#D0D0D0',
+    grey200: '#A8ADB2',
+    grey300: '#A2A9B0',
+    grey400: '#7E848A',
+    grey500: '#3D4247',
+    red: '#AF0D08',
     white: '#fff',
-    yellow: '#F9C712',
+    yellow: '#EFD31C',
   },
   components: {
     Button,
