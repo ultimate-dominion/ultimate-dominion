@@ -161,6 +161,7 @@ export type CombatOutcomeType = {
   expDropped: bigint;
   goldDropped: bigint;
   itemsDropped: string[];
+  playerFled: boolean;
   winner: Entity;
 };
 

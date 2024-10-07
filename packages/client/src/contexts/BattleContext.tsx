@@ -196,6 +196,7 @@ export const BattleProvider = ({
       expDropped: combatOutcome.expDropped,
       goldDropped: combatOutcome.goldDropped,
       itemsDropped: combatOutcome.itemsDropped.map(i => i.toString()),
+      playerFled: combatOutcome.playerFled,
       winner,
     };
   }, [allBattles, CombatOutcome]);

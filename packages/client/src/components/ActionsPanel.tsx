@@ -216,11 +216,11 @@ export const ActionsPanel = (): JSX.Element => {
 
     const isAttacker = currentBattle.attackers.includes(character.id);
 
-    if (isAttacker && currentBattle.currentTurn === '1') {
+    if (isAttacker && currentBattle.currentTurn === BigInt('1')) {
       return true;
     }
 
-    if (!isAttacker && currentBattle.currentTurn === '2') {
+    if (!isAttacker && currentBattle.currentTurn === BigInt('2')) {
       return true;
     }
 
