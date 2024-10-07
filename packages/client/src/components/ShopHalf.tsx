@@ -47,9 +47,9 @@ export const ShopHalf = ({
   characterId: Entity;
   name: string;
   items: Array<{
-    balance: string | null;
+    balance: bigint | null;
     item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
-    stock: string | null;
+    stock: bigint | null;
     index: string;
   }>;
   shop: Shop;
@@ -57,9 +57,9 @@ export const ShopHalf = ({
 }): JSX.Element => {
   const [entries, setEntries] = useState<
     Array<{
-      balance: string | null;
+      balance: bigint | null;
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
-      stock: string | null;
+      stock: bigint | null;
       index: string;
     }>
   >([]);
@@ -87,9 +87,9 @@ export const ShopHalf = ({
       return;
     }
     let entriesCopy: Array<{
-      balance: string | null;
+      balance: bigint | null;
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
-      stock: string | null;
+      stock: bigint | null;
       index: string;
     }> = [...items];
     const searcher = new FuzzySearch(

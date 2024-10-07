@@ -158,11 +158,11 @@ export const Marketplace = (): JSX.Element => {
 
     itemsCopy = [...itemsCopy].sort((itemA, itemB) => {
       let result = false;
-      const lowestPriceA = lowestPrices[itemA.tokenId] ?? '0';
-      const lowestPriceB = lowestPrices[itemB.tokenId] ?? '0';
+      const lowestPriceA = lowestPrices[itemA.tokenId.toString()] ?? '0';
+      const lowestPriceB = lowestPrices[itemB.tokenId.toString()] ?? '0';
 
-      const highestOfferA = highestOffers[itemA.tokenId] ?? '0';
-      const highestOfferB = highestOffers[itemB.tokenId] ?? '0';
+      const highestOfferA = highestOffers[itemA.tokenId.toString()] ?? '0';
+      const highestOfferB = highestOffers[itemB.tokenId.toString()] ?? '0';
 
       switch (sort.sorted) {
         case SortOptions.Level:
@@ -443,14 +443,14 @@ export const Marketplace = (): JSX.Element => {
             return (
               <MarketplaceRow
                 highestOffer={
-                  highestOffers[item.tokenId]
-                    ? formatEther(highestOffers[item.tokenId])
+                  highestOffers[item.tokenId.toString()]
+                    ? formatEther(highestOffers[item.tokenId.toString()])
                     : '0'
                 }
                 key={`marketplace-row-${i}`}
                 lowestPrice={
-                  lowestPrices[item.tokenId]
-                    ? formatEther(lowestPrices[item.tokenId])
+                  lowestPrices[item.tokenId.toString()]
+                    ? formatEther(lowestPrices[item.tokenId.toString()])
                     : '0'
                 }
                 orderType={

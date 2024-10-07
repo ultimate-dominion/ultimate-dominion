@@ -93,7 +93,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
       }
       await refreshCharacter();
       renderSuccess(`${item.name} was consumed!`);
-      setItemBalance((Number(itemBalance) - 1).toString());
+      setItemBalance(prev => prev - BigInt(1));
       setIsConsumed(true);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to consume item.', e);
@@ -104,7 +104,6 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     character,
     delegatorAddress,
     item,
-    itemBalance,
     itemsLootManagerAllowance,
     onOpenAllowanceModal,
     refreshCharacter,
@@ -114,7 +113,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   ]);
 
   const isHealthRestore = useMemo(
-    () => item.hpRestoreAmount !== '0',
+    () => item.hpRestoreAmount !== BigInt(0),
     [item.hpRestoreAmount],
   );
 
@@ -176,7 +175,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
               You must be spawned to consume items.
             </Text>
           )}
-          {isHealthFull && isOwner && !isConsumed && (
+          {isHealthRestore && isHealthFull && isOwner && !isConsumed && (
             <Text color="orange" fontWeight="bold" mt={4} size="sm">
               Your health is full.
             </Text>

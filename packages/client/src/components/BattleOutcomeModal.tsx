@@ -25,6 +25,7 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
+import { etherToFixedNumber } from '../utils/helpers';
 import {
   type Armor,
   type CombatOutcomeType,
@@ -85,7 +86,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
           .map(armor => {
             return {
               ...armor,
-              balance: '1',
+              balance: BigInt(1),
               itemId: zeroHash,
               owner: zeroAddress,
             } as Armor;
@@ -96,7 +97,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
           .map(spell => {
             return {
               ...spell,
-              balance: '1',
+              balance: BigInt(1),
               itemId: zeroHash,
               owner: zeroAddress,
             } as Spell;
@@ -107,7 +108,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
           .map(weapon => {
             return {
               ...weapon,
-              balance: '1',
+              balance: BigInt(1),
               itemId: zeroHash,
               owner: zeroAddress,
             } as Weapon;
@@ -171,11 +172,11 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
               <Text>
                 You earned{' '}
                 <Text as="span" color="green" fontWeight="bold">
-                  {expDropped}
+                  {expDropped.toString()}
                 </Text>{' '}
                 experience and{' '}
                 <Text as="span" color="gold" fontWeight="bold">
-                  {Number(goldDropped).toLocaleString()}
+                  {etherToFixedNumber(goldDropped)}
                 </Text>{' '}
                 $GOLD.
               </Text>
