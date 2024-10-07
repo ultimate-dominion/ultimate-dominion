@@ -4,39 +4,21 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
-    EncounterEntityData,
-    EffectsData,
     Effects,
     Stats,
     CombatEncounter,
-    CombatEncounterData,
-    CharacterEquipment,
     StatsData,
-    PhysicalDamageStats,
-    PhysicalDamageStatsData,
-    MagicDamageStats,
-    MagicDamageStatsData,
     ConsumableStats,
     ConsumableStatsData,
-    StatusEffectStats,
-    StatusEffectStatsData,
-    StatusEffectValidity,
-    StatusEffectValidityData,
-    WorldStatusEffects,
     ActionOutcome,
     ActionOutcomeData
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {RngRequestType, MobType, EncounterType, EffectType, Classes} from "@codegen/common.sol";
-import {Counters} from "@tables/Counters.sol";
-import {Mobs, MobsData} from "@tables/Mobs.sol";
-import {MonsterStats, AdjustedCombatStats, Action} from "@interfaces/Structs.sol";
+import {RngRequestType, EncounterType} from "@codegen/common.sol";
+import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
-import {DEFAULT_MAX_TURNS} from "../../constants.sol";
+import {_requireAccess} from "../utils.sol";
 import "forge-std/console.sol";
 
 contract WorldActionSystem is System {

@@ -506,6 +506,7 @@ export default defineWorld({
         encounterId: "bytes32",
         endTime: "uint256",
         attackersWin: "bool",
+        playerFled: "bool",
         expDropped: "uint256",
         goldDropped: "uint256",
         itemsDropped: "uint256[]",

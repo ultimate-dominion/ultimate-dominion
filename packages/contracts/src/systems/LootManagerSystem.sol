@@ -6,51 +6,29 @@ import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20System.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
-import {IERC1155Receiver} from "@erc1155/IERC1155Receiver.sol";
 import {WorldContextConsumer} from "@latticexyz/world/src/WorldContext.sol";
 import {Math, WAD, RAD} from "@libraries/Math.sol";
 import {
     UltimateDominionConfig,
     Items,
     ItemsData,
-    Counters,
     StarterItems,
     StarterItemsData,
     Characters,
-    CharactersData,
     Stats,
     StatsData,
     CharacterEquipment,
-    CharacterEquipmentData,
     CombatEncounter,
     CombatEncounterData,
     Mobs,
     EncounterEntity,
     AdventureEscrow
 } from "@codegen/index.sol";
-import {ItemType, Classes} from "@codegen/common.sol";
-import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
-import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
-import {
-    _erc1155SystemId,
-    _characterSystemId,
-    _requireOwner,
-    _requireAccess,
-    _combatSystemId,
-    _lootManagerSystemId
-} from "../utils.sol";
-import {
-    ITEMS_NAMESPACE, WORLD_NAMESPACE, BASE_GOLD_DROP, EXP_MODIFIER, PVP_GOLD_DENOMINATOR
-} from "../../constants.sol";
+import {_characterSystemId, _requireAccess, _lootManagerSystemId} from "../utils.sol";
+import {WORLD_NAMESPACE, BASE_GOLD_DROP, EXP_MODIFIER, PVP_GOLD_DENOMINATOR} from "../../constants.sol";
 import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
-import {
-    _metadataTableId,
-    _erc1155URIStorageTableId,
-    _totalSupplyTableId,
-    _operatorApprovalTableId,
-    _ownersTableId
-} from "@erc1155/utils.sol";
+
 import "forge-std/console.sol";
 
 contract LootManagerSystem is ERC1155Holder, System {

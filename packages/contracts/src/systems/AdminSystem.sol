@@ -5,29 +5,20 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
-    EffectsData,
-    Effects,
     Stats,
     StatsData,
-    MobStats,
     Characters,
     CombatEncounter,
     CombatEncounterData,
-    CharacterEquipment,
+    EncounterEntity,
+    EncounterEntityData,
     Admin,
-    UltimateDominionConfig,
     EntitiesAtPosition,
     Position
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {RngRequestType, MobType, EncounterType, EffectType} from "@codegen/common.sol";
-import {Counters} from "@tables/Counters.sol";
-import {Mobs, MobsData} from "@tables/Mobs.sol";
-import {MonsterStats, NPCStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
-import {DEFAULT_MAX_TURNS} from "../../constants.sol";
+import {_requireAccess} from "../utils.sol";
 
 contract AdminSystem is System {
     modifier onlyAdmin() {
@@ -35,12 +26,23 @@ contract AdminSystem is System {
         _;
     }
 
-    function adminClearBattleState(bytes32 entityId) public onlyAdmin {
+    function adminClearEncounterState(bytes32 entityId) public onlyAdmin {
+        bytes32[] memory empty;
         EncounterEntity.setEncounterId(entityId, bytes32(0));
+        EncounterEntity.setAppliedStatusEffects(entityId, empty);
+        EncounterEntity.setPvpTimer(entityId, 0);
+        EncounterEntity.setDied(entityId, false);
     }
 
     function adminSetCombatEncounter(bytes32 encounterId, CombatEncounterData memory encounterData) public onlyAdmin {
         CombatEncounter.set(encounterId, encounterData);
+    }
+
+    function adminSetEncounterEntity(bytes32 entityId, EncounterEntityData memory encounterEntityData)
+        public
+        onlyAdmin
+    {
+        EncounterEntity.set(entityId, encounterEntityData);
     }
 
     function setAdmin(address newAdmin, bool adminState) public onlyAdmin {

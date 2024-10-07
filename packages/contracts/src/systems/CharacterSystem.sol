@@ -3,7 +3,6 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {
-    RandomNumbers,
     Levels,
     NameExists,
     Counters,
@@ -12,14 +11,13 @@ import {
     CharacterEquipment,
     StatsData,
     CharacterOwner,
-    CharacterOwnerData,
     Characters,
-    CharactersData,
-    Effects
+    CharactersData
 } from "@codegen/index.sol";
-import {RngRequestType, EffectType} from "@codegen/common.sol";
+import {RngRequestType} from "@codegen/common.sol";
 
 import {UltimateDominionConfig} from "@codegen/index.sol";
+
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {TokenURI} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/TokenURI.sol";
@@ -29,27 +27,17 @@ import {IItemsSystem} from "@codegen/world/IItemsSystem.sol";
 import {ILootManagerSystem} from "@codegen/world/ILootManagerSystem.sol";
 import {Classes} from "@codegen/common.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
-import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
-import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
+import {ResourceId} from "@latticexyz/world/src/WorldResourceId.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
-import {Math, WAD} from "@libraries/Math.sol";
+import {Math} from "@libraries/Math.sol";
 import "forge-std/console.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_erc721SystemId, _erc1155SystemId, _itemsSystemId, _requireAccess} from "../utils.sol";
-import {
-    GOLD_NAMESPACE,
-    CHARACTERS_NAMESPACE,
-    WORLD_NAMESPACE,
-    ITEMS_NAMESPACE,
-    BASE_HP_GAIN,
-    ABILITY_POINTS_PER_LEVEL,
-    MAX_LEVEL,
-    BONUS_POINT_LEVEL
-} from "../../constants.sol";
+import {_erc721SystemId, _requireAccess} from "../utils.sol";
+import {CHARACTERS_NAMESPACE, ABILITY_POINTS_PER_LEVEL, MAX_LEVEL, BONUS_POINT_LEVEL} from "../../constants.sol";
 
 contract CharacterSystem is System {
     modifier onlyOwner(bytes32 characterId) {

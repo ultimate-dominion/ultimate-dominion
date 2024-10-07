@@ -2,9 +2,8 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {Math, WAD, RAD} from "@libraries/Math.sol";
+import {Math, WAD} from "@libraries/Math.sol";
 import {LibChunks} from "@libraries/LibChunks.sol";
 import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
@@ -28,20 +27,18 @@ import {
     MagicDamageStats,
     MagicDamageStatsData
 } from "@codegen/index.sol";
-import {RngRequestType, MobType, Alignment, EncounterType, ResistanceStat, EffectType} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {ResistanceStat, EffectType} from "@codegen/common.sol";
+import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {_requireAccess} from "../utils.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {
-    DEFAULT_MAX_TURNS,
-    TO_HIT_MODIFIER,
     DEFENSE_MODIFIER,
     ATTACK_MODIFIER,
-    CRIT_MODIFIER,
     CRIT_MULTIPLIER,
-    BASE_GOLD_DROP,
-    STAT_MODIFIER
+    STAT_MODIFIER,
+    STARTING_HIT_PROBABILITY,
+    ATTACKER_HIT_DAMPENER,
+    DEFENDER_HIT_DAMPENER
 } from "../../constants.sol";
 import "forge-std/console.sol";
 
@@ -164,7 +161,6 @@ contract CombatSystem is System {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
             (hit, crit) = _calculateToHit(
                 uint256(rnChunks[0]),
-                uint256(rnChunks[1]),
                 attackStats.attackModifierBonus,
                 attackStats.critChanceBonus,
                 attacker.agility,
@@ -244,21 +240,27 @@ contract CombatSystem is System {
 
     function _calculateToHit(
         uint256 attackRoll,
-        uint256 defenseRoll,
         int256 attackModifierBonus,
         int256 critChanceBonus,
         int256 attackerStat,
         int256 defenderStat
     ) internal view returns (bool attackLands, bool crit) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        uint256 attackTotal =
-            (getStatModifier(attackerStat, attackModifierBonus) * (((attackRoll) % 1000)) * TO_HIT_MODIFIER) / WAD;
 
-        uint256 defenseTotal = ((((defenseRoll) % 400) * getStatModifier(defenderStat, 0)) * DEFENSE_MODIFIER) / WAD;
-        attackLands = attackTotal >= defenseTotal;
+        uint256 hitDampener = (attackerStat > defenderStat ? ATTACKER_HIT_DAMPENER : DEFENDER_HIT_DAMPENER);
+
+        int256 startingProbability = STARTING_HIT_PROBABILITY
+            + int256(
+                (((attackerStat - defenderStat) + attackModifierBonus) * 1000)
+                    / int256(int256(Math.absolute(attackerStat - defenderStat) + hitDampener) * 10)
+            );
+
+        uint256 probability = uint256(uint256(startingProbability) > 98 ? 98 : uint256(startingProbability));
+
+        attackLands = (attackRoll % 100) + 1 <= probability;
 
         if (attackLands) {
-            crit = uint256(int256(attackTotal) + critChanceBonus) >= defenseTotal * CRIT_MODIFIER;
+            crit = ((int256(attackRoll % 100) - critChanceBonus) + 1) < 5;
         }
     }
 
@@ -290,7 +292,6 @@ contract CombatSystem is System {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
             (hit, crit) = _calculateToHit(
                 uint256(rnChunks[0]),
-                uint256(rnChunks[1]),
                 attackStats.attackModifierBonus,
                 attackStats.critChanceBonus,
                 attacker.intelligence,
@@ -394,7 +395,6 @@ contract CombatSystem is System {
             } else if (resistanceStat == ResistanceStat.Strength) {
                 (hit,) = _calculateToHit(
                     uint256(rnChunks[0]),
-                    uint256(rnChunks[1]),
                     attackStats.attackModifierBonus,
                     attackStats.critChanceBonus,
                     attacker.strength,
@@ -403,7 +403,6 @@ contract CombatSystem is System {
             } else if (resistanceStat == ResistanceStat.Agility) {
                 (hit,) = _calculateToHit(
                     uint256(rnChunks[0]),
-                    uint256(rnChunks[1]),
                     attackStats.attackModifierBonus,
                     attackStats.critChanceBonus,
                     attacker.agility,
@@ -412,7 +411,6 @@ contract CombatSystem is System {
             } else if (resistanceStat == ResistanceStat.Intelligence) {
                 (hit,) = _calculateToHit(
                     uint256(rnChunks[0]),
-                    uint256(rnChunks[1]),
                     attackStats.attackModifierBonus,
                     attackStats.critChanceBonus,
                     attacker.intelligence,

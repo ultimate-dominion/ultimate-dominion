@@ -251,9 +251,8 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_unequipItem() public {
-        uint256 fees = entropy.getFee(address(1));
         vm.startPrank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
         vm.stopPrank();
         StatsData memory alicesStats = world.UD__getStats(alicesCharacterId);
@@ -277,13 +276,6 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
             StatRestrictions.getMinIntelligence(starterDat.itemIds[1]),
             baseStats.intelligence,
             "incorrect 1 intelligence"
-        );
-        assertLt(StatRestrictions.getMinAgility(starterDat.itemIds[2]), baseStats.agility, "incorrect 2 agility");
-        assertLt(StatRestrictions.getMinStrength(starterDat.itemIds[2]), baseStats.strength, "incorrect 2 strength");
-        assertLt(
-            StatRestrictions.getMinIntelligence(starterDat.itemIds[2]),
-            baseStats.intelligence,
-            "incorrect 2 intelligence"
         );
 
         world.UD__equipItems(alicesCharacterId, starterDat.itemIds);

@@ -231,9 +231,19 @@ export const WalletDetailsModal = ({
                     ? formatEther(externalWalletBalance.value)
                     : '0'}
                 </Text>
-                <Button isLoading={isLoggingOut} onClick={onLogout} size="sm">
+                <Button
+                  isDisabled={character?.inBattle}
+                  isLoading={isLoggingOut}
+                  onClick={onLogout}
+                  size="sm"
+                >
                   Logout
                 </Button>
+                {character?.inBattle && (
+                  <Text color="orange" fontWeight={700} size="sm">
+                    You cannot logout while in battle.
+                  </Text>
+                )}
                 <Divider />
                 <Text>Session Account:</Text>
                 <VStack alignItems="start" spacing={0}>

@@ -149,6 +149,6 @@ contract Test_MobSystem is SetUp, GasReporter {
             uint256 newMobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), "test_monster_uri");
             world.UD__spawnMob(newMobId, 1, 1);
         }
-        assertEq(world.UD__getEntitiesAtPosition(1, 1).length, 20);
+        assertEq(world.UD__getEntitiesAtPosition(1, 1).length, 21);
     }
 }

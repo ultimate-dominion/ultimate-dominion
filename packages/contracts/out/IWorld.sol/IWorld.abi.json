@@ -19,7 +19,7 @@
   },
   {
     "type": "function",
-    "name": "UD__adminClearBattleState",
+    "name": "UD__adminClearEncounterState",
     "inputs": [
       {
         "name": "entityId",
@@ -168,6 +168,46 @@
           },
           {
             "name": "attackers",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminSetEncounterEntity",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "encounterEntityData",
+        "type": "tuple",
+        "internalType": "struct EncounterEntityData",
+        "components": [
+          {
+            "name": "encounterId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "died",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "pvpTimer",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "appliedStatusEffects",
             "type": "bytes32[]",
             "internalType": "bytes32[]"
           }

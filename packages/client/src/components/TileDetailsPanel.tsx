@@ -61,7 +61,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     delegatorAddress,
     systemCalls: { createEncounter },
   } = useMUD();
-  const { character, isMoveEquipped } = useCharacter();
+  const { character, isMoveEquipped, refreshCharacter } = useCharacter();
   const {
     inSafetyZone,
     isSpawned,
@@ -177,13 +177,21 @@ export const TileDetailsPanel = (): JSX.Element => {
         }
 
         renderSuccess('Battle has begun!');
+        refreshCharacter();
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to initiate battle.', e);
       } finally {
         setIsInitiating(false);
       }
     },
-    [character, createEncounter, delegatorAddress, renderError, renderSuccess],
+    [
+      character,
+      createEncounter,
+      delegatorAddress,
+      refreshCharacter,
+      renderError,
+      renderSuccess,
+    ],
   );
 
   const isHomeTile = useMemo(() => {
@@ -564,30 +572,38 @@ const OpponentRow = ({
 }) => {
   const { inBattle, level, name } = opponent;
 
+  const inCooldown = useMemo(() => {
+    const cooldownTimer = (opponent as Character).pvpCooldownTimer;
+    if (!cooldownTimer) return false;
+    return Number(cooldownTimer) + 30 > Date.now() / 1000;
+  }, [opponent]);
+
+  const disableRow = inBattle || inCooldown;
+
   return (
     <HStack
       as="button"
       border="1px solid transparent"
       h={ROW_HEIGHT}
       justifyContent="space-between"
-      onClick={inBattle ? undefined : onClick}
+      onClick={disableRow ? undefined : onClick}
       px={{ base: 1, sm: 2, md: 4 }}
       transition="all 0.3s ease"
       w="100%"
       _active={{
-        bg: inBattle ? 'transparent' : 'grey300',
+        bg: disableRow ? 'transparent' : 'grey300',
         border: '1px solid',
-        cursor: inBattle ? 'not-allowed' : 'pointer',
+        cursor: disableRow ? 'not-allowed' : 'pointer',
       }}
       _hover={{
         border: '1px solid',
-        cursor: inBattle ? 'not-allowed' : 'pointer',
+        cursor: disableRow ? 'not-allowed' : 'pointer',
       }}
     >
       <HStack justifyContent="start" spacing={4}>
         <Text
           color={OPPONENT_COLORS[opponent.entityClass]}
-          filter={inBattle ? 'grayscale(100%)' : 'none'}
+          filter={disableRow ? 'grayscale(100%)' : 'none'}
           size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
         >
           {name}
@@ -596,7 +612,7 @@ const OpponentRow = ({
           <Avatar size="xs" src={opponent.image} />
         )}
       </HStack>
-      {!inBattle && (
+      {!disableRow && (
         <Text
           fontWeight="bold"
           size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
@@ -607,6 +623,11 @@ const OpponentRow = ({
       {inBattle && (
         <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
           (In battle...)
+        </Text>
+      )}
+      {inCooldown && (
+        <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
+          (In cooldown...)
         </Text>
       )}
     </HStack>
