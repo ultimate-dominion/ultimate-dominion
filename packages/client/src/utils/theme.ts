@@ -14,7 +14,9 @@ export const globalStyles = css`
 
 const Button = {
   baseStyle: {
-    borderRadius: 5,
+    borderRadius: '12px',
+    boxShadow: '-10px -10px 20px 0px #54545440',
+    fontWeight: 500,
   },
   defaultProps: {
     variant: 'solid',
@@ -24,8 +26,8 @@ const Button = {
       p: 5,
     },
     md: {
-      px: 10,
-      py: 6,
+      px: 14,
+      py: 5,
     },
   },
   variants: {
@@ -60,18 +62,18 @@ const Button = {
       borderColor: 'grey500',
     },
     solid: {
-      bg: 'black',
+      bg: 'blue400',
       border: '2px solid',
-      borderColor: 'black',
+      borderColor: 'blue400',
       color: 'white',
       _active: {
-        bg: 'rgba(0, 0, 0, 1)',
+        bg: 'blue300',
         _disabled: {
           bg: 'rgba(0, 0, 0, 0.7)',
         },
       },
       _hover: {
-        bg: 'rgba(0, 0, 0, 0.8)',
+        bg: 'blue300',
         _disabled: {
           bg: 'rgba(0, 0, 0, 0.7)',
         },
@@ -96,6 +98,9 @@ const Heading = {
     },
     md: {
       fontSize: '24px',
+    },
+    lg: {
+      fontSize: '48px',
     },
   },
 };
