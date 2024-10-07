@@ -38,17 +38,19 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       const { agiModifier, hpRestoreAmount, intModifier, strModifier } =
         item as Consumable;
 
-      if (hpRestoreAmount === '0') {
+      if (hpRestoreAmount === BigInt(0)) {
         return (
           <HStack alignItems="start">
             <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
               Mods:
             </Text>
             <Text size={{ base: '2xs', sm: 'xs' }}>
-              STR {getStatSymbol(strModifier)}
-              {strModifier} AGI {getStatSymbol(agiModifier)}
-              {agiModifier} INT {getStatSymbol(intModifier)}
-              {intModifier}
+              STR {getStatSymbol(strModifier.toString())}
+              {strModifier.toString()} AGI{' '}
+              {getStatSymbol(agiModifier.toString())}
+              {agiModifier.toString()} INT{' '}
+              {getStatSymbol(intModifier.toString())}
+              {intModifier.toString()}
             </Text>
           </HStack>
         );
@@ -56,7 +58,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
       return (
         <Text size={{ base: '2xs', sm: 'xs' }}>
-          Restores {hpRestoreAmount} HP
+          Restores {hpRestoreAmount.toString()} HP
         </Text>
       );
     }
@@ -72,7 +74,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               Damage:
             </Text>
             <Text size={{ base: '2xs', sm: 'xs' }}>
-              {minDamage} - {maxDamage}
+              {minDamage.toString()} - {maxDamage.toString()}
             </Text>
           </HStack>
           <HStack alignItems="start">
@@ -80,9 +82,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               Requirements:
             </Text>
             <Text size={{ base: '2xs', sm: 'xs' }}>
-              LVL {minLevel} STR {statRestrictions.minStrength} AGI{' '}
-              {statRestrictions.minAgility} INT{' '}
-              {statRestrictions.minIntelligence}
+              LVL {minLevel.toString()} STR{' '}
+              {statRestrictions.minStrength.toString()} AGI{' '}
+              {statRestrictions.minAgility.toString()} INT{' '}
+              {statRestrictions.minIntelligence.toString()}
             </Text>
           </HStack>
         </>
@@ -104,12 +107,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             Mods:
           </Text>
           <Text size={{ base: '2xs', sm: 'xs' }}>
-            STR {getStatSymbol(strModifier)}
-            {strModifier} AGI {getStatSymbol(agiModifier)}
-            {agiModifier} INT {getStatSymbol(intModifier)}
-            {intModifier}{' '}
+            STR {getStatSymbol(strModifier.toString())}
+            {strModifier.toString()} AGI {getStatSymbol(agiModifier.toString())}
+            {agiModifier.toString()} INT {getStatSymbol(intModifier.toString())}
+            {intModifier.toString()}{' '}
             {(item as Armor).armorModifier
-              ? `ARM ${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
+              ? `ARM ${getStatSymbol((item as Armor).armorModifier.toString())}${(item as Armor).armorModifier}`
               : ''}
           </Text>
         </HStack>
@@ -118,8 +121,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             Requirements:
           </Text>
           <Text size={{ base: '2xs', sm: 'xs' }}>
-            LVL {minLevel} STR {statRestrictions.minStrength} AGI{' '}
-            {statRestrictions.minAgility} INT {statRestrictions.minIntelligence}
+            LVL {minLevel.toString()} STR{' '}
+            {statRestrictions.minStrength.toString()} AGI{' '}
+            {statRestrictions.minAgility.toString()} INT{' '}
+            {statRestrictions.minIntelligence.toString()}
           </Text>
         </HStack>
       </>
@@ -161,7 +166,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           {showBalance && (
             <Text as="span" size="xs">
               {' '}
-              x {balance}
+              x {balance.toString()}
             </Text>
           )}
         </Text>
@@ -216,12 +221,12 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
       <Box>
         <Text size="xs">{removeEmoji(name)}</Text>
         <Text size="xs">
-          STR{getStatSymbol(strModifier)}
-          {strModifier} AGI{getStatSymbol(agiModifier)}
-          {agiModifier} INT{getStatSymbol(intModifier)}
-          {intModifier}{' '}
+          STR{getStatSymbol(strModifier.toString())}
+          {strModifier.toString()} AGI{getStatSymbol(agiModifier.toString())}
+          {agiModifier.toString()} INT{getStatSymbol(intModifier.toString())}
+          {intModifier.toString()}{' '}
           {(item as Armor).armorModifier
-            ? `ARM${getStatSymbol((item as Armor).armorModifier)}${(item as Armor).armorModifier}`
+            ? `ARM${getStatSymbol((item as Armor).armorModifier.toString())}${(item as Armor).armorModifier}`
             : ''}
         </Text>
       </Box>

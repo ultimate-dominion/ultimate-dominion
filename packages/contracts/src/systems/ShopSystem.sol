@@ -6,20 +6,14 @@ import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 
 import {Shops, Items, UltimateDominionConfig} from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {TokenType, OrderStatus} from "@codegen/common.sol";
-import {Counters} from "@tables/Counters.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
-import {_requireOwner, _requireAccess, _lootManagerSystemId} from "../utils.sol";
-import {_erc1155SystemId, _erc20SystemId} from "../utils.sol";
-import {ITEMS_NAMESPACE, WORLD_NAMESPACE, GOLD_NAMESPACE} from "../../constants.sol";
+import {_lootManagerSystemId} from "../utils.sol";
+import {WORLD_NAMESPACE} from "../../constants.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 
-import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {WorldContextConsumer} from "@latticexyz/world/src/WorldContext.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import "forge-std/console.sol";
 

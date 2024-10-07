@@ -5,7 +5,6 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {
     RandomNumbers,
     RandomNumbersData,
-    Characters,
     Counters,
     Stats,
     UltimateDominionConfig,
@@ -14,7 +13,7 @@ import {
     RngLogsData,
     CombatEncounter
 } from "@codegen/index.sol";
-import {Math, WAD} from "@libraries/Math.sol";
+import {Math} from "@libraries/Math.sol";
 import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";

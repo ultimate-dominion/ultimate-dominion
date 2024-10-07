@@ -5,7 +5,6 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
-import {IERC1155Receiver} from "@erc1155/IERC1155Receiver.sol";
 import {
     UltimateDominionConfig,
     Items,
@@ -13,12 +12,8 @@ import {
     Counters,
     StarterItems,
     StarterItemsData,
-    Characters,
-    CharactersData,
     Stats,
     StatsData,
-    CharacterEquipment,
-    CharacterEquipmentData,
     ArmorStats,
     ArmorStatsData,
     WeaponStats,
@@ -31,22 +26,14 @@ import {
     ConsumableStatsData
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
-import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
-import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
-import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess, _lootManagerSystemId} from "../utils.sol";
+import {_erc1155SystemId, _requireOwner, _requireAccess, _lootManagerSystemId} from "../utils.sol";
 import {ITEMS_NAMESPACE, WORLD_NAMESPACE} from "../../constants.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
-import {ERC1155MetadataURI} from "@erc1155/tables/ERC1155MetadataURI.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
-import {
-    _metadataTableId,
-    _erc1155URIStorageTableId,
-    _totalSupplyTableId,
-    _operatorApprovalTableId,
-    _ownersTableId
-} from "@erc1155/utils.sol";
+import {_erc1155URIStorageTableId, _totalSupplyTableId, _ownersTableId} from "@erc1155/utils.sol";
+
 import "forge-std/console.sol";
 
 contract ItemsSystem is System {

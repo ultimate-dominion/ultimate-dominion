@@ -4,45 +4,23 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {Math} from "@libraries/Math.sol";
-import {LibChunks} from "@libraries/LibChunks.sol";
-import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
-    EncounterEntityData,
-    Stats,
-    StatsData,
     Effects,
-    EffectsData,
-    Items,
-    CharacterEquipment,
-    CharacterEquipmentData,
     CombatEncounter,
     CombatEncounterData,
     CombatOutcome,
     CombatOutcomeData,
     Position,
-    Mobs,
     Spawned,
-    MobsData,
-    Counters,
     ActionOutcome,
-    ActionOutcomeData
+    ActionOutcomeData,
+    AdventureEscrow
 } from "@codegen/index.sol";
-import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
-import {IRngSystem} from "../interfaces/IRngSystem.sol";
-import {
-    DEFAULT_MAX_TURNS,
-    TO_HIT_MODIFIER,
-    DEFENSE_MODIFIER,
-    ATTACK_MODIFIER,
-    CRIT_MODIFIER,
-    BASE_GOLD_DROP
-} from "../../constants.sol";
+import {EncounterType} from "@codegen/common.sol";
+import {Action} from "@interfaces/Structs.sol";
+import {_requireAccess} from "../utils.sol";
+import {PVP_TIMER} from "../../constants.sol";
 import "forge-std/console.sol";
 
 contract PvPSystem is System {
@@ -66,7 +44,12 @@ contract PvPSystem is System {
             }
             if (entityX >= 5 || entityY >= 5) {
                 // intentionally left empty
-            } else {
+            }
+            else {
+                _isValidPvP = false;
+                break;
+            }
+            if (EncounterEntity.getPvpTimer(attackers[i]) > block.timestamp - PVP_TIMER) {
                 _isValidPvP = false;
                 break;
             }
@@ -86,8 +69,13 @@ contract PvPSystem is System {
                     break;
                 }
                 if (entityX >= 5 || entityY >= 5) {
-                    // intentionally left empty
-                } else {
+                // intentionally left empty
+                }
+                else {
+                    _isValidPvP = false;
+                    break;
+                }
+                if (EncounterEntity.getPvpTimer(defenders[i]) > block.timestamp - PVP_TIMER) {
                     _isValidPvP = false;
                     break;
                 }
@@ -131,6 +119,76 @@ contract PvPSystem is System {
         if (encounterEnded) {
             _setCharacterSpawns(encounterData);
             IWorld(_world()).UD__endEncounter(encounterId, randomNumber, attackersWin);
+        }
+    }
+
+    function fleePvp(bytes32 entityId) public {
+        require(IWorld(_world()).UD__isValidOwner(entityId, _msgSender()), "Cannot flee another's character");
+        bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
+        require(encounterId != bytes32(0), "use removeEntityFromMap to logout");
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        bool entityIsDefender = IWorld(_world()).UD__isDefender(encounterId, entityId);
+        if (entityIsDefender) {
+            require(encounterData.currentTurn == 2, "can only flee on your first turn");
+        } else {
+            require(IWorld(_world()).UD__isAttacker(encounterId, entityId), "invalid fleeing");
+            require(encounterData.currentTurn == 1, "can only flee on your first turn");
+        }
+        if (encounterData.encounterType == EncounterType.PvE) {
+            revert("cannot flee from pve");
+        } else if (encounterData.encounterType == EncounterType.PvP) {
+            uint256 amountToDrop;
+            bool attackersWin;
+            // take 25% of escrow gold
+            uint256 escrowBalance = AdventureEscrow.get(entityId);
+            if (escrowBalance > 4) {
+                amountToDrop = escrowBalance / 4;
+                AdventureEscrow.set(entityId, (escrowBalance - amountToDrop));
+                // if quitter is attacker
+                if (!entityIsDefender) {
+                    // split the money up amongst the defenders
+                    for (uint256 i; i < encounterData.defenders.length; i++) {
+                        IWorld(_world()).UD__increaseEscrowBalance(
+                            encounterData.defenders[i], amountToDrop / encounterData.defenders.length
+                        );
+                    }
+                    // if quitter is defender
+                } else if (entityIsDefender) {
+                    attackersWin = true;
+                    // split the money up amongst the attackers
+                    for (uint256 i; i < encounterData.attackers.length; i++) {
+                        IWorld(_world()).UD__increaseEscrowBalance(
+                            encounterData.attackers[i], amountToDrop / encounterData.attackers.length
+                        );
+                    }
+                    // set pvp timer
+                    EncounterEntity.setPvpTimer(entityId, block.timestamp);
+                }
+            }
+            CombatOutcomeData memory combatOutcome = CombatOutcomeData({
+                endTime: block.timestamp,
+                attackersWin: attackersWin,
+                playerFled: true,
+                expDropped: 0,
+                goldDropped: amountToDrop,
+                itemsDropped: new uint256[](0)
+            });
+
+            CombatOutcome.set(encounterId, combatOutcome);
+            CombatEncounter.setEnd(encounterId, block.timestamp);
+
+            bytes32[] memory empty;
+            // reset encounter entities
+            for (uint256 i; i < encounterData.attackers.length; i++) {
+                EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
+                EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], empty);
+            }
+            for (uint256 i; i < encounterData.defenders.length; i++) {
+                EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+                EncounterEntity.setAppliedStatusEffects(encounterData.defenders[i], empty);
+            }
+        } else {
+            revert("Unrecognized encounter type");
         }
     }
 

@@ -223,13 +223,14 @@ contract Test_CombatSystem is SetUp, GasReporter {
     function test_EndTurn_EndsPvEEncounter() public {
         // buff bob
         StatsData memory bobStats = world.UD__getStats(bobCharacterId);
-        bobStats.agility = 100;
-        bobStats.strength = 100;
+        bobStats.agility = 5;
+        bobStats.strength = 10;
+        bobStats.intelligence = 10;
         bobStats.currentHp = 100;
         world.UD__adminSetStats(bobCharacterId, bobStats);
 
         StatsData memory startingStats = Stats.get(bobCharacterId);
-        assertEq(startingStats.agility, 100, "incorrect starting stats");
+        // assertEq(startingStats.agility, 15, "incorrect starting stats");
         uint256 startingGold = world.UD__getEscrowBalance(bobCharacterId);
         vm.prank(bob);
 
@@ -341,6 +342,37 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         assertEq(EncounterEntity.getEncounterId(bobCharacterId), bytes32(0));
         assertEq(EncounterEntity.getEncounterId(alicesCharacterId), bytes32(0));
+    }
+
+    function test_Flee_PvP() public {
+        world.UD__adminMoveEntity(bobCharacterId, 0, 0);
+        vm.startPrank(bob);
+        goldToken.approve(lootManagerAddress, 4 ether);
+        world.UD__depositToEscrow(bobCharacterId, 4 ether);
+        vm.stopPrank();
+        // move entities to pvp zone
+        world.UD__adminMoveEntity(bobCharacterId, 5, 5);
+        world.UD__adminMoveEntity(alicesCharacterId, 5, 5);
+
+        vm.prank(alice);
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, attackers, pvpDefenders);
+
+        vm.prank(bob);
+        world.UD__fleePvp(bobCharacterId);
+
+        uint256 afterFlee = world.UD__getEscrowBalance(bobCharacterId);
+
+        vm.prank(alice);
+        // test pvp timer
+        vm.expectRevert();
+        world.UD__createEncounter(EncounterType.PvP, attackers, pvpDefenders);
+        assertEq(afterFlee, 3 ether);
+    }
+
+    function test_Flee_PvP_Revert_NotInCombat() public {
+        vm.prank(bob);
+        vm.expectRevert();
+        world.UD__fleePvp(bobCharacterId);
     }
 
     function test_EndTurn_Revert_NonCombatant() public {

@@ -9,7 +9,6 @@ import {IERC1155Receiver} from "@erc1155/IERC1155Receiver.sol";
 import {
     Items,
     ItemsData,
-    StarterItems,
     Characters,
     CharactersData,
     Stats,
@@ -21,32 +20,18 @@ import {
     ArmorStats,
     ArmorStatsData,
     SpellStats,
-    SpellStatsData,
     ConsumableStats,
     StatRestrictions,
     StatRestrictionsData,
-    ConsumableStats,
-    ConsumableStatsData,
-    WorldStatusEffects
+    ConsumableStats
 } from "@codegen/index.sol";
-import {ItemType, Classes} from "@codegen/common.sol";
-import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
-import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
-import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess} from "../utils.sol";
-import {ITEMS_NAMESPACE} from "../../constants.sol";
+import {ItemType} from "@codegen/common.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
 import {ERC1155MetadataURI} from "@erc1155/tables/ERC1155MetadataURI.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
-import {
-    _metadataTableId,
-    _erc1155URIStorageTableId,
-    _totalSupplyTableId,
-    _operatorApprovalTableId,
-    _ownersTableId
-} from "@erc1155/utils.sol";
-import {AdjustedCombatStats, MonsterStats} from "@interfaces/Structs.sol";
+import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 
 contract EquipmentSystem is System {
     modifier inGame(bytes32 characterId) {

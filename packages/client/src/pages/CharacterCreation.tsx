@@ -122,7 +122,7 @@ export const CharacterCreation = (): JSX.Element => {
 
           return {
             ...item,
-            balance: '1',
+            balance: BigInt(1),
             itemId: zeroHash as Entity,
             owner: zeroAddress,
           };
@@ -284,7 +284,7 @@ export const CharacterCreation = (): JSX.Element => {
 
   const rolledOnce = useMemo(() => {
     if (!character) return false;
-    return character.maxHp !== '0';
+    return character.maxHp !== BigInt(0);
   }, [character]);
 
   const onEnterGame = useCallback(async () => {
@@ -424,11 +424,11 @@ export const CharacterCreation = (): JSX.Element => {
                     href={`${EXPLORER_URLS[chainId]}/token/${characterToken}/instance/${character.tokenId}`}
                     isExternal
                   >
-                    {character.tokenId}
+                    {character.tokenId.toString()}
                   </Link>
                 ) : (
                   <Text as="span" fontWeight={700}>
-                    {character.tokenId}
+                    {character.tokenId.toString()}
                   </Text>
                 )}
               </Text>
@@ -632,19 +632,19 @@ export const CharacterCreation = (): JSX.Element => {
               <VStack w="100%">
                 <HStack justify="space-between" w="100%">
                   <Text>HP - Hit Points</Text>
-                  <Text>{character?.maxHp ?? '0'}</Text>
+                  <Text>{character?.maxHp.toString() ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>STR - Strength</Text>
-                  <Text>{character?.strength ?? '0'}</Text>
+                  <Text>{character?.strength.toString() ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>AGI - Agility</Text>
-                  <Text>{character?.agility ?? '0'}</Text>
+                  <Text>{character?.agility.toString() ?? '0'}</Text>
                 </HStack>
                 <HStack justify="space-between" w="100%">
                   <Text>INT - Intelligence</Text>
-                  <Text>{character?.intelligence ?? '0'}</Text>
+                  <Text>{character?.intelligence.toString() ?? '0'}</Text>
                 </HStack>
               </VStack>
             </VStack>

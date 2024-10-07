@@ -73,18 +73,18 @@ export enum TokenType {
 }
 
 export type Armor = ArmorTemplate & {
-  balance: string;
+  balance: bigint;
   itemId: Entity;
   owner: string;
 };
 
 export type ArmorStats = {
-  agiModifier: string;
-  armorModifier: string;
-  hpModifier: string;
-  intModifier: string;
-  minLevel: string;
-  strModifier: string;
+  agiModifier: bigint;
+  armorModifier: bigint;
+  hpModifier: bigint;
+  intModifier: bigint;
+  minLevel: bigint;
+  strModifier: bigint;
 };
 
 export type ArmorTemplate = ArmorStats &
@@ -96,19 +96,19 @@ export type ArmorTemplate = ArmorStats &
   };
 
 export type Consumable = ConsumableTemplate & {
-  balance: string;
+  balance: bigint;
   itemId: Entity;
   owner: string;
 };
 
 export type ConsumableStats = {
-  agiModifier: string;
+  agiModifier: bigint;
   effects: string[];
-  hpModifier: string;
-  hpRestoreAmount: string;
-  intModifier: string;
-  minLevel: string;
-  strModifier: string;
+  hpModifier: bigint;
+  hpRestoreAmount: bigint;
+  intModifier: bigint;
+  minLevel: bigint;
+  strModifier: bigint;
 };
 
 export type ConsumableTemplate = ConsumableStats &
@@ -120,23 +120,23 @@ export type ConsumableTemplate = ConsumableStats &
   };
 
 export type AttackOutcomeType = {
-  attackerDamageDelt: string;
+  attackerDamageDelt: bigint;
   attackerDied: boolean;
   attackerId: string;
-  attackNumber: string;
-  blockNumber: string;
+  attackNumber: bigint;
+  blockNumber: bigint;
   crit: boolean[];
-  currentTurn: string;
-  effectIds: string[];
-  encounterId: string;
-  damagePerHit: string[];
-  defenderDamageDelt: string;
+  currentTurn: bigint;
+  damagePerHit: bigint[];
+  defenderDamageDelt: bigint;
   defenderDied: boolean;
   defenderId: string;
+  effectIds: string[];
+  encounterId: string;
   hit: boolean[];
   itemId: string;
   miss: boolean[];
-  timestamp: string;
+  timestamp: bigint;
 };
 
 export type Character = CharacterData & EntityStats & Metadata;
@@ -149,6 +149,7 @@ export type CharacterData = {
   inBattle: boolean;
   locked: boolean;
   owner: string;
+  pvpCooldownTimer: bigint;
   tokenId: string;
 };
 
@@ -156,15 +157,16 @@ export type CombatOutcomeType = {
   attackers: Entity[];
   defenders: Entity[];
   encounterId: Entity;
-  endTime: string;
-  expDropped: string;
-  goldDropped: string;
+  endTime: bigint;
+  expDropped: bigint;
+  goldDropped: bigint;
   itemsDropped: string[];
+  playerFled: boolean;
   winner: Entity;
 };
 
 export type ConsiderationData = {
-  amount: string;
+  amount: bigint;
   identifier: string;
   recipient: string;
   token: string;
@@ -172,26 +174,26 @@ export type ConsiderationData = {
 };
 
 export type EntityStats = {
-  agility: string;
-  maxHp: string;
-  currentHp: string;
+  agility: bigint;
+  currentHp: bigint;
   entityClass: StatsClasses;
-  experience: string;
-  intelligence: string;
-  level: string;
-  strength: string;
+  experience: bigint;
+  intelligence: bigint;
+  level: bigint;
+  maxHp: bigint;
+  strength: bigint;
 };
 
 export type CombatDetails = {
   attackers: Entity[];
-  currentTurn: string;
-  currentTurnTimer: string;
+  currentTurn: bigint;
+  currentTurnTimer: bigint;
   defenders: Entity[];
   encounterId: Entity;
   encounterType: EncounterType;
-  end: string;
-  maxTurns: string;
-  start: string;
+  end: bigint;
+  maxTurns: bigint;
+  start: bigint;
 };
 
 export type Metadata = {
@@ -201,24 +203,24 @@ export type Metadata = {
 };
 
 export type Monster = MonsterTemplate & {
-  maxHp: string;
-  currentHp: string;
+  currentHp: bigint;
   id: Entity;
   inBattle: boolean;
   isSpawned: boolean;
+  maxHp: bigint;
   position: { x: number; y: number };
 };
 
 export type MonsterStats = {
-  agility: string;
-  armor: string;
+  agility: bigint;
+  armor: bigint;
   entityClass: StatsClasses;
-  experience: string;
-  hitPoints: string;
-  intelligence: string;
+  experience: bigint;
+  hitPoints: bigint;
+  intelligence: bigint;
   inventory: string[];
-  level: string;
-  strength: string;
+  level: bigint;
+  strength: bigint;
 };
 
 export type MonsterTemplate = MonsterStats &
@@ -249,7 +251,7 @@ export type NewOrder = {
 };
 
 export type OfferData = {
-  amount: string;
+  amount: bigint;
   identifier: string;
   token: string;
   tokenType: TokenType;
@@ -272,11 +274,11 @@ export type Shop = {
   priceMarkup: bigint;
   sellableItems: string[];
   shopId: string;
-  stock: string[];
+  stock: bigint[];
 };
 
 export type Spell = SpellTemplate & {
-  balance: string;
+  balance: bigint;
   itemId: Entity;
   owner: string;
 };
@@ -284,9 +286,9 @@ export type Spell = SpellTemplate & {
 export type SpellStats = {
   effects: string[];
   itemId: string;
-  maxDamage: string;
-  minDamage: string;
-  minLevel: string;
+  maxDamage: bigint;
+  minDamage: bigint;
+  minLevel: bigint;
 };
 
 export type SpellTemplate = SpellStats &
@@ -298,9 +300,9 @@ export type SpellTemplate = SpellStats &
   };
 
 export type StatRestrictions = {
-  minAgility: string;
-  minIntelligence: string;
-  minStrength: string;
+  minAgility: bigint;
+  minIntelligence: bigint;
+  minStrength: bigint;
 };
 
 export type StatusAction = {
@@ -313,20 +315,20 @@ export type StatusAction = {
 };
 
 export type Weapon = WeaponTemplate & {
-  balance: string;
+  balance: bigint;
   itemId: Entity;
   owner: string;
 };
 
 export type WeaponStats = {
-  agiModifier: string;
+  agiModifier: bigint;
   effects: string[];
-  hpModifier: string;
-  intModifier: string;
-  maxDamage: string;
-  minDamage: string;
-  minLevel: string;
-  strModifier: string;
+  hpModifier: bigint;
+  intModifier: bigint;
+  maxDamage: bigint;
+  minDamage: bigint;
+  minLevel: bigint;
+  strModifier: bigint;
 };
 
 export type WeaponTemplate = WeaponStats &
