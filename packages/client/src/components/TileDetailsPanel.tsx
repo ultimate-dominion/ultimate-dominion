@@ -61,7 +61,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     delegatorAddress,
     systemCalls: { createEncounter },
   } = useMUD();
-  const { character, isMoveEquipped } = useCharacter();
+  const { character, isMoveEquipped, refreshCharacter } = useCharacter();
   const {
     inSafetyZone,
     isSpawned,
@@ -177,13 +177,21 @@ export const TileDetailsPanel = (): JSX.Element => {
         }
 
         renderSuccess('Battle has begun!');
+        refreshCharacter();
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to initiate battle.', e);
       } finally {
         setIsInitiating(false);
       }
     },
-    [character, createEncounter, delegatorAddress, renderError, renderSuccess],
+    [
+      character,
+      createEncounter,
+      delegatorAddress,
+      refreshCharacter,
+      renderError,
+      renderSuccess,
+    ],
   );
 
   const isHomeTile = useMemo(() => {
