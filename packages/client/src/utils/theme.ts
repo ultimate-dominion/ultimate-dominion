@@ -1,20 +1,22 @@
-import '@fontsource/ibm-plex-mono';
+import '@fontsource/fira-code';
 
 import { extendTheme } from '@chakra-ui/react';
 import { css } from '@emotion/react';
 
 export const globalStyles = css`
   body {
-    background: #fff;
+    background: #a2a9b0;
     color: #000;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Fira Code', monospace;
     font-size: 1rem;
   }
 `;
 
 const Button = {
   baseStyle: {
-    borderRadius: 5,
+    borderRadius: '12px',
+    boxShadow: '-10px -10px 20px 0px #54545440',
+    fontWeight: 500,
   },
   defaultProps: {
     variant: 'solid',
@@ -24,8 +26,8 @@ const Button = {
       p: 5,
     },
     md: {
-      px: 10,
-      py: 6,
+      px: 14,
+      py: 5,
     },
   },
   variants: {
@@ -60,18 +62,18 @@ const Button = {
       borderColor: 'grey500',
     },
     solid: {
-      bg: 'black',
+      bg: 'blue400',
       border: '2px solid',
-      borderColor: 'black',
+      borderColor: 'blue400',
       color: 'white',
       _active: {
-        bg: 'rgba(0, 0, 0, 1)',
+        bg: 'blue300',
         _disabled: {
           bg: 'rgba(0, 0, 0, 0.7)',
         },
       },
       _hover: {
-        bg: 'rgba(0, 0, 0, 0.8)',
+        bg: 'blue300',
         _disabled: {
           bg: 'rgba(0, 0, 0, 0.7)',
         },
@@ -96,6 +98,9 @@ const Heading = {
     },
     md: {
       fontSize: '24px',
+    },
+    lg: {
+      fontSize: '48px',
     },
   },
 };
@@ -242,19 +247,23 @@ const Tooltip = {
 export const theme = extendTheme({
   config: { initialColorMode: 'light', useSystemColorMode: false },
   fonts: {
-    body: `'IBM Plex Mono', monospace`,
-    heading: `'IBM Plex Mono', monospace`,
+    body: `'Fira Code', monospace`,
+    heading: `'Fira Code', monospace`,
   },
   colors: {
     black: '#000',
-    blue: '#0B5ED7',
-    green: '#0BA789',
-    grey300: '#E6E6E6',
-    grey400: '#D1D1D1',
-    grey500: '#808080',
-    red: '#F24725',
+    blue300: '#1633B6',
+    blue400: '#0A2187',
+    blue500: '#131832',
+    green: '#008F07',
+    grey100: '#D0D0D0',
+    grey200: '#A8ADB2',
+    grey300: '#A2A9B0',
+    grey400: '#7E848A',
+    grey500: '#3D4247',
+    red: '#AF0D08',
     white: '#fff',
-    yellow: '#F9C712',
+    yellow: '#EFD31C',
   },
   components: {
     Button,
