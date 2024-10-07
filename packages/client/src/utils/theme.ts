@@ -1,4 +1,4 @@
-import '@fontsource/ibm-plex-mono';
+import '@fontsource/fira-code';
 
 import { extendTheme } from '@chakra-ui/react';
 import { css } from '@emotion/react';
@@ -7,7 +7,7 @@ export const globalStyles = css`
   body {
     background: #a2a9b0;
     color: #000;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Fira Code', monospace;
     font-size: 1rem;
   }
 `;
@@ -242,8 +242,8 @@ const Tooltip = {
 export const theme = extendTheme({
   config: { initialColorMode: 'light', useSystemColorMode: false },
   fonts: {
-    body: `'IBM Plex Mono', monospace`,
-    heading: `'IBM Plex Mono', monospace`,
+    body: `'Fira Code', monospace`,
+    heading: `'Fira Code', monospace`,
   },
   colors: {
     black: '#000',
