@@ -126,51 +126,50 @@ const AppInner = (): JSX.Element => {
   }, [pathname, onOpenChatBox]);
 
   return (
-    <Box>
+    <Grid
+      minHeight="100vh"
+      templateColumns="100%"
+      templateRows="auto 1fr auto"
+      w="100%"
+    >
       <Header onOpenWalletDetailsModal={onOpenWalletDetailsModal} />
-      <Grid
-        maxW="1800px"
-        minHeight="100vh"
-        px={{ base: 2, sm: 12, md: 20 }}
-        templateColumns="100%"
-        templateRows="auto 1fr auto"
-      >
+      <Box maxW="1800px" px={{ base: 2, sm: 12, md: 20 }}>
         <AppRoutes />
-        {isDesktop && <Footer />}
-        {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && (
-          <>
-            <Box
-              bottom={{ base: 2, lg: 6 }}
-              position="fixed"
-              right={{ base: 2, lg: 6 }}
-            >
-              <ScaleFade initialScale={0.9} in={!isChatBoxOpen}>
-                <Button
-                  onClick={onOpenChatBox}
-                  opacity={isChatBoxOpen ? 0 : 1}
-                  px={4}
-                  py={{ base: 5, lg: 6 }}
-                  transition="opacity 0.3s ease"
-                >
-                  <IoChatbubble size={isDesktop ? 28 : 24} />
-                </Button>
-              </ScaleFade>
-            </Box>
-            <Box
-              bottom={isChatBoxOpen ? { base: 2, lg: 6 } : { base: -1 }}
-              position="fixed"
-              right={{ base: 2, lg: 6 }}
-            >
-              <ChatBox />
-            </Box>
-          </>
-        )}
+      </Box>
+      {isDesktop && <Footer />}
+      {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && (
+        <>
+          <Box
+            bottom={{ base: 2, lg: 6 }}
+            position="fixed"
+            right={{ base: 2, lg: 6 }}
+          >
+            <ScaleFade initialScale={0.9} in={!isChatBoxOpen}>
+              <Button
+                onClick={onOpenChatBox}
+                opacity={isChatBoxOpen ? 0 : 1}
+                px={4}
+                py={{ base: 5, lg: 6 }}
+                transition="opacity 0.3s ease"
+              >
+                <IoChatbubble size={isDesktop ? 28 : 24} />
+              </Button>
+            </ScaleFade>
+          </Box>
+          <Box
+            bottom={isChatBoxOpen ? { base: 2, lg: 6 } : { base: -1 }}
+            position="fixed"
+            right={{ base: 2, lg: 6 }}
+          >
+            <ChatBox />
+          </Box>
+        </>
+      )}
 
-        <WalletDetailsModal
-          isOpen={isWalletDetailsModalOpen}
-          onClose={onCloseWalletDetailsModal}
-        />
-      </Grid>
-    </Box>
+      <WalletDetailsModal
+        isOpen={isWalletDetailsModalOpen}
+        onClose={onCloseWalletDetailsModal}
+      />
+    </Grid>
   );
 };
