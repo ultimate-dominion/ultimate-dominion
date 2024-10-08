@@ -51,6 +51,7 @@ export const Welcome = (): JSX.Element => {
           justifyContent="center"
           mb={16}
           mt={{ base: 20, sm: 32 }}
+          px={{ base: 2, sm: 12, md: 20 }}
           spacing={{ base: 12, md: 16 }}
         >
           <Heading
