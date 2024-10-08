@@ -127,14 +127,15 @@ const AppInner = (): JSX.Element => {
 
   return (
     <Grid
-      maxW="1800px"
       minHeight="100vh"
-      px={{ base: 2, sm: 12, md: 20 }}
       templateColumns="100%"
       templateRows="auto 1fr auto"
+      w="100%"
     >
       <Header onOpenWalletDetailsModal={onOpenWalletDetailsModal} />
-      <AppRoutes />
+      <Box m="0 auto" maxW="1800px" px={{ base: 2, sm: 12, md: 20 }} w="100%">
+        <AppRoutes />
+      </Box>
       {isDesktop && <Footer />}
       {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && (
         <>

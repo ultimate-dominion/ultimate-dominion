@@ -15,7 +15,6 @@ export const globalStyles = css`
 const Button = {
   baseStyle: {
     borderRadius: '12px',
-    boxShadow: '-10px -10px 20px 0px #54545440',
     fontWeight: 500,
   },
   defaultProps: {
@@ -65,6 +64,8 @@ const Button = {
       bg: 'blue400',
       border: '2px solid',
       borderColor: 'blue400',
+      boxShadow:
+        '2px 2px 5px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 0, 255, 0.5)',
       color: 'white',
       _active: {
         bg: 'blue300',
@@ -127,6 +128,9 @@ const Modal = {
       overflow: 'hidden',
     },
     dialog: {
+      bgColor: '#B3B9BE',
+      clipPath:
+        'polygon(40px 0%, 100% 0%, 100% calc(100% - 50px), calc(100% - 50px) 100%, 0% 100%, 0% 80px)',
       maxH: { base: '100%', md: 'calc(100% - 7.5rem)' },
       minW: { base: '100%', md: '500px' },
       maxW: { base: '100%', md: '500px' },
@@ -138,6 +142,11 @@ const Modal = {
       borderTop: '1px solid',
       display: 'flex',
       justifyContent: 'center',
+    },
+    header: {
+      color: '#283570',
+      fontWeight: 700,
+      textAlign: 'center',
     },
   },
 };

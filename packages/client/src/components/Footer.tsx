@@ -1,15 +1,17 @@
 import { Grid, GridItem, HStack, Link, Stack, VStack } from '@chakra-ui/react';
-import { FaDiscord, FaTwitter } from 'react-icons/fa';
+import { FaDiscord } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 
 export const Footer = (): JSX.Element => {
   return (
-    <HStack alignItems="center" as="footer" h="150px">
-      <Grid
-        alignItems="center"
-        templateColumns="repeat(4, 1fr)"
-        h="90px"
-        w="100%"
-      >
+    <HStack
+      alignItems="center"
+      as="footer"
+      borderTop="1px solid black"
+      px={20}
+      py={4}
+    >
+      <Grid alignItems="center" templateColumns="repeat(4, 1fr)" w="100%">
         <GridItem colSpan={{ base: 3, sm: 2, md: 3 }}>
           <HStack spacing={{ base: 4, md: 10 }}>
             <Stack
@@ -18,27 +20,15 @@ export const Footer = (): JSX.Element => {
             >
               <Link
                 alignSelf="start"
-                borderBottom="2px solid"
                 borderColor="grey400"
-                fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-                pb={1}
-                _hover={{
-                  borderColor: 'grey500',
-                  textDecoration: 'none',
-                }}
+                fontSize={{ base: 'xs', sm: 'sm' }}
               >
                 About
               </Link>
               <Link
                 alignSelf="start"
-                borderBottom="2px solid"
                 borderColor="grey400"
-                fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-                pb={1}
-                _hover={{
-                  borderColor: 'grey500',
-                  textDecoration: 'none',
-                }}
+                fontSize={{ base: 'xs', sm: 'sm' }}
               >
                 Guild Info
               </Link>
@@ -49,27 +39,15 @@ export const Footer = (): JSX.Element => {
             >
               <Link
                 alignSelf="start"
-                borderBottom="2px solid"
                 borderColor="grey400"
-                fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-                pb={1}
-                _hover={{
-                  borderColor: 'grey500',
-                  textDecoration: 'none',
-                }}
+                fontSize={{ base: 'xs', sm: 'sm' }}
               >
                 Map Info
               </Link>
               <Link
                 alignSelf="start"
-                borderBottom="2px solid"
                 borderColor="grey400"
-                fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-                pb={1}
-                _hover={{
-                  borderColor: 'grey500',
-                  textDecoration: 'none',
-                }}
+                fontSize={{ base: 'xs', sm: 'sm' }}
               >
                 Create Map
               </Link>
@@ -85,15 +63,14 @@ export const Footer = (): JSX.Element => {
             <Stack
               alignItems="center"
               direction={{ base: 'column', sm: 'row' }}
-              spacing={{ base: 3, md: 10 }}
+              spacing={{ base: 3, md: 8 }}
             >
-              <Link>
-                <FaDiscord />
+              <Link bgColor="black" borderRadius="50%" p={1.5}>
+                <FaDiscord color="white" />
               </Link>
-              <Link>
-                <FaTwitter />
+              <Link bgColor="black" borderRadius="50%" p={1.5}>
+                <FaXTwitter color="white" />
               </Link>
-              <Link fontWeight={700}>T&C</Link>
             </Stack>
           </VStack>
         </GridItem>
