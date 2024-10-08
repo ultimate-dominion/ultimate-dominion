@@ -133,7 +133,7 @@ const AppInner = (): JSX.Element => {
       w="100%"
     >
       <Header onOpenWalletDetailsModal={onOpenWalletDetailsModal} />
-      <Box maxW="1800px" px={{ base: 2, sm: 12, md: 20 }}>
+      <Box m="0 auto" maxW="1800px" px={{ base: 2, sm: 12, md: 20 }} w="100%">
         <AppRoutes />
       </Box>
       {isDesktop && <Footer />}

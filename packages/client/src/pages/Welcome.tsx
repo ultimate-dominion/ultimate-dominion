@@ -46,7 +46,7 @@ export const Welcome = (): JSX.Element => {
 
   return (
     <Box border="6px solid #1A244E" my={12} p={1.5}>
-      <Box border="1px solid #1A244E">
+      <Box border="0.5px solid #1A244E">
         <VStack
           justifyContent="center"
           mb={16}
