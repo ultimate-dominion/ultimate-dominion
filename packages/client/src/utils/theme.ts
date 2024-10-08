@@ -15,7 +15,6 @@ export const globalStyles = css`
 const Button = {
   baseStyle: {
     borderRadius: '12px',
-    boxShadow: '-10px -10px 20px 0px #54545440',
     fontWeight: 500,
   },
   defaultProps: {
@@ -65,6 +64,8 @@ const Button = {
       bg: 'blue400',
       border: '2px solid',
       borderColor: 'blue400',
+      boxShadow:
+        '2px 2px 5px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 0, 255, 0.5)',
       color: 'white',
       _active: {
         bg: 'blue300',
