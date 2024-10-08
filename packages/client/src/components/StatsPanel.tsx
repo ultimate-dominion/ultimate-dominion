@@ -14,6 +14,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
+import { Has, runQuery } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
 import { BsBackpack4Fill } from 'react-icons/bs';
@@ -22,6 +23,7 @@ import {
   IoMdInformationCircleOutline,
 } from 'react-icons/io';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { hexToBigInt } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -40,6 +42,19 @@ export const StatsPanel = (): JSX.Element => {
   } = useMUD();
   const { character, equippedArmor, equippedSpells, equippedWeapons } =
     useCharacter();
+
+  const maxLevelXpRequirement = useMemo(
+    () =>
+      hexToBigInt(
+        Array.from(runQuery([Has(Levels)])).slice(-1)[0] as `0x${string}`,
+      ),
+    [Levels],
+  );
+
+  const maxed = useMemo(() => {
+    if (!character) return false;
+    return maxLevelXpRequirement <= BigInt(character.level);
+  }, [character, maxLevelXpRequirement]);
 
   const currentLevelXpRequirement =
     useComponentValue(
@@ -98,7 +113,7 @@ export const StatsPanel = (): JSX.Element => {
     strength,
   } = character;
 
-  const currentHpWithFloor = parseInt(currentHp) < 0 ? 0 : parseInt(currentHp);
+  const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
 
   return (
     <VStack alignItems="start" h="100%" p={2} spacing={4}>
@@ -126,7 +141,7 @@ export const StatsPanel = (): JSX.Element => {
         </GridItem>
         <GridItem>
           <Text>
-            {currentHpWithFloor}/{maxHp}
+            {currentHpWithFloor.toString()}/{maxHp.toString()}
           </Text>
         </GridItem>
         <GridItem>
@@ -135,7 +150,7 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{strength}</Text>
+          <Text>{strength.toString()}</Text>
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">
@@ -143,7 +158,7 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{agility}</Text>
+          <Text>{agility.toString()}</Text>
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">
@@ -151,11 +166,15 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{intelligence}</Text>
+          <Text>{intelligence.toString()}</Text>
         </GridItem>
       </Grid>
 
-      <Level currentLevel={character.level} levelPercent={levelPercent} />
+      <Level
+        currentLevel={character.level}
+        levelPercent={levelPercent}
+        maxed={maxed}
+      />
 
       <HStack alignItems="start" w="100%">
         <HStack>
@@ -183,13 +202,13 @@ export const StatsPanel = (): JSX.Element => {
               BigInt(experience) >= nextLevelXpRequirement ? 'bold' : 'normal'
             }
           >
-            {experience}
+            {experience.toString()}
           </Text>
           /{nextLevelXpRequirement.toString()} XP
         </Text>
       </HStack>
 
-      {BigInt(experience) >= nextLevelXpRequirement && (
+      {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
         <Button
           alignSelf="center"
           onClick={() => navigate(`/characters/${character.id}`)}

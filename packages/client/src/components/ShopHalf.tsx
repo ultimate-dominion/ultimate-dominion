@@ -6,6 +6,7 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
+  Select,
   Spacer,
   Stack,
   Text,
@@ -18,7 +19,9 @@ import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   ItemFilterOptions,
+  ItemType,
   OrderType,
   Shop,
   type SpellTemplate,
@@ -44,9 +47,9 @@ export const ShopHalf = ({
   characterId: Entity;
   name: string;
   items: Array<{
-    balance: string | null;
-    item: ArmorTemplate | SpellTemplate | WeaponTemplate;
-    stock: string | null;
+    balance: bigint | null;
+    item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+    stock: bigint | null;
     index: string;
   }>;
   shop: Shop;
@@ -54,9 +57,9 @@ export const ShopHalf = ({
 }): JSX.Element => {
   const [entries, setEntries] = useState<
     Array<{
-      balance: string | null;
-      item: ArmorTemplate | WeaponTemplate | SpellTemplate;
-      stock: string | null;
+      balance: bigint | null;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      stock: bigint | null;
       index: string;
     }>
   >([]);
@@ -68,7 +71,7 @@ export const ShopHalf = ({
     sorted: SortOptions.Price,
     reversed: false,
   });
-  const [filter, setFilter] = useState<ItemFilterOptions>(
+  const [itemTypeFilter, setItemTypeFilter] = useState<ItemFilterOptions>(
     ItemFilterOptions.All,
   );
 
@@ -84,9 +87,9 @@ export const ShopHalf = ({
       return;
     }
     let entriesCopy: Array<{
-      balance: string | null;
-      item: ArmorTemplate | SpellTemplate | WeaponTemplate;
-      stock: string | null;
+      balance: bigint | null;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      stock: bigint | null;
       index: string;
     }> = [...items];
     const searcher = new FuzzySearch(
@@ -97,11 +100,15 @@ export const ShopHalf = ({
     entriesCopy = searcher.search(query);
 
     entriesCopy = [...entriesCopy].filter(entry => {
-      switch (filter) {
-        case ItemFilterOptions.Weapon:
-          return entry.item.itemType == 0 ? 1 : 0;
+      switch (itemTypeFilter) {
         case ItemFilterOptions.Armor:
-          return entry.item.itemType == 1 ? 1 : 0;
+          return entry.item.itemType == ItemType.Armor;
+        case ItemFilterOptions.Consumable:
+          return entry.item.itemType == ItemType.Consumable;
+        case ItemFilterOptions.Spell:
+          return entry.item.itemType == ItemType.Spell;
+        case ItemFilterOptions.Weapon:
+          return entry.item.itemType == ItemType.Weapon;
 
         default:
           return true;
@@ -131,7 +138,15 @@ export const ShopHalf = ({
     if (pageNumber > pageLimit) {
       setPage(pageLimit);
     }
-  }, [filter, items, pageLimit, pageNumber, query, sort.reversed, sort.sorted]);
+  }, [
+    items,
+    itemTypeFilter,
+    pageLimit,
+    pageNumber,
+    query,
+    sort.reversed,
+    sort.sorted,
+  ]);
 
   return (
     <VStack>
@@ -139,12 +154,13 @@ export const ShopHalf = ({
         {name}
       </Text>
       <Stack
+        alignItems="center"
         direction={{ base: 'column', md: 'row' }}
         mb={8}
         spacing={{ base: 4, md: 8 }}
         w="100%"
       >
-        <InputGroup w="100%">
+        <InputGroup w="50%">
           <InputLeftElement pointerEvents="none">
             <FaSearch />
           </InputLeftElement>
@@ -154,29 +170,20 @@ export const ShopHalf = ({
             value={query}
           />
         </InputGroup>
-        <HStack>
-          <Button
-            onClick={() => setFilter(ItemFilterOptions.All)}
-            size="sm"
-            variant={filter === ItemFilterOptions.All ? 'solid' : 'outline'}
-          >
-            All
-          </Button>
-          <Button
-            onClick={() => setFilter(ItemFilterOptions.Armor)}
-            size="sm"
-            variant={filter === ItemFilterOptions.Armor ? 'solid' : 'outline'}
-          >
-            Armor
-          </Button>
-          <Button
-            onClick={() => setFilter(ItemFilterOptions.Weapon)}
-            size="sm"
-            variant={filter === ItemFilterOptions.Weapon ? 'solid' : 'outline'}
-          >
-            Weapon
-          </Button>
-        </HStack>
+        <Select
+          onChange={e => setItemTypeFilter(e.target.value as ItemFilterOptions)}
+          size="md"
+          value={itemTypeFilter}
+          w="50%"
+        >
+          {Object.keys(ItemFilterOptions).map(k => {
+            return (
+              <option key={`item-type-filter-${k}`} value={k}>
+                {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
+              </option>
+            );
+          })}
+        </Select>
       </Stack>
       <HStack w="100%">
         <Flex justify="space-between" w="100%">

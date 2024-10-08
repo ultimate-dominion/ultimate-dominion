@@ -33,7 +33,8 @@ import {
     ERC721_NAME,
     ERC721_SYMBOL,
     ITEMS_NAMESPACE,
-    TOKEN_URI
+    TOKEN_URI,
+    MAX_LEVEL
 } from "../constants.sol";
 import {
     ArmorStats,
@@ -186,9 +187,10 @@ contract PostDeploy is Script {
 
         //register mint function selector on world
         IWorld(worldAddress).registerFunctionSelector(resourceIds.erc20SystemId, "mint(address,uint256)");
-
         // transfer erc20 contract ownership to the loot manager system
         world.transferOwnership(resourceIds.erc20NamespaceId, Systems.getSystem(resourceIds.lootManagerSystemId));
+        // set gold approval for marketplace
+        world.UD__setGoldApproval(world.UD__marketplaceAddress(), type(uint256).max);
 
         // System systemContract = new ERC721System();
 
@@ -217,6 +219,9 @@ contract PostDeploy is Script {
         _createEffects();
         _createShops();
         _createMonsters();
+        // approve marketplace to spend loot manager items
+        world.UD__setItemsApproval(world.UD__marketplaceAddress(), true);
+
         address _marketplaceAddress = world.UD__marketplaceAddress();
         UltimateDominionConfig.setMarketplace(_marketplaceAddress);
         address _shopSystemAddress = world.UD__shopSystemAddress();
@@ -311,9 +316,9 @@ contract PostDeploy is Script {
 
         StarterItems memory itemsData = abi.decode(data, (StarterItems));
 
-        uint256[] memory warriorItemIds = new uint256[](3);
-        uint256[] memory rogueItemIds = new uint256[](3);
-        uint256[] memory mageItemIds = new uint256[](3);
+        uint256[] memory warriorItemIds = new uint256[](2);
+        uint256[] memory rogueItemIds = new uint256[](2);
+        uint256[] memory mageItemIds = new uint256[](2);
 
         for (uint256 i = 0; i < itemsData.armor.length; i++) {
             ArmorTemplateDetails memory armorTemplate = itemsData.armor[i];
@@ -417,18 +422,11 @@ contract PostDeploy is Script {
                 abi.encode(newConsumable, consumablesTemplate.statRestrictions),
                 consumablesTemplate.metadataUri
             );
-
-            if (i == 0) {
-                warriorItemIds[2] = starterConsumableId;
-                rogueItemIds[2] = starterConsumableId;
-                mageItemIds[2] = starterConsumableId;
-            }
         }
 
-        uint256[] memory amounts = new uint256[](3);
+        uint256[] memory amounts = new uint256[](2);
         amounts[0] = 1;
         amounts[1] = 1;
-        amounts[2] = 1;
 
         world.UD__setStarterItems(Classes.Warrior, warriorItemIds, amounts);
         world.UD__setStarterItems(Classes.Rogue, rogueItemIds, amounts);
@@ -436,12 +434,12 @@ contract PostDeploy is Script {
     }
 
     function _createShops() internal {
-        uint256[] memory sellableItems = new uint256[](10);
-        uint256[] memory buyableItems = new uint256[](10);
-        uint256[] memory stock = new uint256[](10);
-        for(uint i = 0; i < 10; ++i){
-            sellableItems[i] = i;
-            buyableItems[i] = i;
+        uint256[] memory sellableItems = new uint256[](26);
+        uint256[] memory buyableItems = new uint256[](26);
+        uint256[] memory stock = new uint256[](26);
+        for (uint256 i = 0; i < 26; ++i) {
+            sellableItems[i] = i + 1;
+            buyableItems[i] = i + 1;
             stock[i] = 10;
         }
 
@@ -499,14 +497,14 @@ contract PostDeploy is Script {
         Levels.setExperience(8, 48000);
         Levels.setExperience(9, 64000);
         Levels.setExperience(10, 85000);
-        Levels.setExperience(11, 100000);
-        Levels.setExperience(12, 120000);
-        Levels.setExperience(13, 140000);
-        Levels.setExperience(14, 165000);
-        Levels.setExperience(15, 195000);
-        Levels.setExperience(16, 225000);
-        Levels.setExperience(17, 265000);
-        Levels.setExperience(18, 305000);
-        Levels.setExperience(19, 355000);
+        // Levels.setExperience(11, 100000);
+        // Levels.setExperience(12, 120000);
+        // Levels.setExperience(13, 140000);
+        // Levels.setExperience(14, 165000);
+        // Levels.setExperience(15, 195000);
+        // Levels.setExperience(16, 225000);
+        // Levels.setExperience(17, 265000);
+        // Levels.setExperience(18, 305000);
+        // Levels.setExperience(19, 355000);
     }
 }

@@ -36,6 +36,7 @@ import {
 } from '../utils/helpers';
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   ItemType,
   OrderType,
   Shop,
@@ -53,13 +54,13 @@ export const ShopItemRow = ({
   stock,
   shop,
 }: {
-  balance: string | null;
+  balance: bigint | null;
   characterId: Entity;
-  item: ArmorTemplate | SpellTemplate | WeaponTemplate;
+  item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;
   orderType: OrderType;
   shop: Shop;
-  stock: string | null;
+  stock: bigint | null;
 }): JSX.Element => {
   const {
     systemCalls: { buy, sell },
@@ -131,7 +132,7 @@ export const ShopItemRow = ({
 
         if (orderType == OrderType.Buying) {
           const { error, success } = await buy(
-            amount.toString(),
+            BigInt(amount),
             shop.shopId,
             itemIndex,
             characterId,
@@ -143,7 +144,7 @@ export const ShopItemRow = ({
           renderSuccess('Item purchased successfully!');
         } else {
           const { error, success } = await sell(
-            amount.toString(),
+            BigInt(amount),
             shop.shopId,
             itemIndex,
             characterId,
@@ -235,7 +236,7 @@ export const ShopItemRow = ({
             textAlign="center"
             w="75px"
           >
-            {balance || stock}
+            {balance?.toString() || stock?.toString()}
           </Text>
           <Text
             display={{ base: 'none', lg: 'block' }}
@@ -297,22 +298,42 @@ export const ShopItemRow = ({
                   <Text fontWeight={700} fontSize={14}>
                     Stats
                   </Text>
-                  {item.itemType == ItemType.Armor ||
-                    (item.itemType == ItemType.Weapon && (
+                  {(item.itemType == ItemType.Armor ||
+                    (item.itemType == ItemType.Consumable &&
+                      (item as ConsumableTemplate).hpRestoreAmount ===
+                        BigInt(0)) ||
+                    item.itemType == ItemType.Weapon) && (
+                    <Text fontWeight={400} fontSize={14}>
+                      STR
+                      {getStatSymbol(
+                        (item as WeaponTemplate).strModifier.toString(),
+                      )}
+                      {(item as WeaponTemplate).strModifier.toString()} AGI
+                      {getStatSymbol(
+                        (item as WeaponTemplate).agiModifier.toString(),
+                      )}
+                      {(item as WeaponTemplate).agiModifier.toString()} INT
+                      {getStatSymbol(
+                        (item as WeaponTemplate).intModifier.toString(),
+                      )}
+                      {(item as WeaponTemplate).intModifier.toString()}{' '}
+                    </Text>
+                  )}
+                  {item.itemType == ItemType.Consumable &&
+                    (item as ConsumableTemplate).hpRestoreAmount !==
+                      BigInt(0) && (
                       <Text fontWeight={400} fontSize={14}>
-                        STR
-                        {getStatSymbol((item as WeaponTemplate).strModifier)}
-                        {(item as WeaponTemplate).strModifier} AGI
-                        {getStatSymbol((item as WeaponTemplate).agiModifier)}
-                        {(item as WeaponTemplate).agiModifier} INT
-                        {getStatSymbol((item as WeaponTemplate).intModifier)}
-                        {(item as WeaponTemplate).intModifier}{' '}
+                        Restores{' '}
+                        {(
+                          item as ConsumableTemplate
+                        ).hpRestoreAmount.toString()}{' '}
+                        HP
                       </Text>
-                    ))}
+                    )}
                   {item.itemType == ItemType.Armor && (
                     <Text fontWeight={400} fontSize={14}>
                       {(item as ArmorTemplate).armorModifier
-                        ? `ARM${getStatSymbol((item as ArmorTemplate).armorModifier)}${(item as ArmorTemplate).armorModifier}`
+                        ? `ARM${getStatSymbol((item as ArmorTemplate).armorModifier.toString())}${(item as ArmorTemplate).armorModifier}`
                         : ''}
                     </Text>
                   )}
@@ -321,7 +342,7 @@ export const ShopItemRow = ({
                     Restrictions
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
-                    - LVL {item?.minLevel || 0}
+                    - LVL {item?.minLevel.toString() || '0'}
                   </Text>
                   <Text fontWeight={400} fontSize={14}>
                     -{' '}
@@ -346,7 +367,9 @@ export const ShopItemRow = ({
                 >
                   <VStack spacing={4}>
                     <VStack>
-                      <Text>AMOUNT (MAX {stock || balance})</Text>
+                      <Text>
+                        AMOUNT (MAX {stock?.toString() || balance?.toString()})
+                      </Text>
                       <HStack>
                         <Button
                           isDisabled={amount <= 1}
@@ -362,7 +385,7 @@ export const ShopItemRow = ({
                           <IoRemove />
                         </Button>
                         <Input
-                          max={stock || balance || 0}
+                          max={stock?.toString() || balance?.toString() || 0}
                           min={1}
                           onChange={e => {
                             const value = e.target.value;
@@ -376,8 +399,11 @@ export const ShopItemRow = ({
                             if (Number(value) < 1) {
                               return;
                             }
-                            if (Number(value) > Number(stock || balance)) {
-                              setAmount(Number(stock || balance));
+                            if (
+                              Number(value) >
+                              Number(stock || balance?.toString())
+                            ) {
+                              setAmount(Number(stock || balance?.toString()));
                               return;
                             }
                             setAmount(Number(value));
@@ -389,10 +415,13 @@ export const ShopItemRow = ({
                           w={10}
                         />
                         <Button
-                          isDisabled={amount === Number(stock || balance)}
+                          isDisabled={
+                            amount === Number(stock || balance?.toString())
+                          }
                           onClick={() =>
                             setAmount(
-                              amount > -1 && amount < Number(stock || balance)
+                              amount > -1 &&
+                                amount < Number(stock || balance?.toString())
                                 ? amount + 1
                                 : amount,
                             )

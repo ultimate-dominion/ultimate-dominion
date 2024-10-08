@@ -4,46 +4,28 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
-    EncounterEntityData,
-    EffectsData,
     Effects,
     Stats,
     CombatEncounter,
-    CombatEncounterData,
-    CharacterEquipment,
     StatsData,
-    PhysicalDamageStats,
-    PhysicalDamageStatsData,
-    MagicDamageStats,
-    MagicDamageStatsData,
     ConsumableStats,
     ConsumableStatsData,
-    StatusEffectStats,
-    StatusEffectStatsData,
-    StatusEffectValidity,
-    StatusEffectValidityData,
-    WorldStatusEffects,
     ActionOutcome,
     ActionOutcomeData
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {RngRequestType, MobType, EncounterType, EffectType, Classes} from "@codegen/common.sol";
-import {Counters} from "@tables/Counters.sol";
-import {Mobs, MobsData} from "@tables/Mobs.sol";
-import {MonsterStats, AdjustedCombatStats, Action} from "@interfaces/Structs.sol";
+import {RngRequestType, EncounterType} from "@codegen/common.sol";
+import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
-import {DEFAULT_MAX_TURNS} from "../../constants.sol";
+import {_requireAccess} from "../utils.sol";
+import "forge-std/console.sol";
 
 contract WorldActionSystem is System {
     function useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId) public {
         require(IWorld(_world()).UD__isValidOwner(givingEntity, _msgSender()), "Cannot consume another's item");
         require(IWorld(_world()).UD__isItemOwner(itemId, _msgSender()), "you do not own this item");
         require(EncounterEntity.getEncounterId(givingEntity) == bytes32(0), "cannot use in an encounter");
-        // require(IWorld(_world()).UD__isEquipped(givingEntity, itemId), "item is not equipped");
         ConsumableStatsData memory consumableStats = IWorld(_world()).UD__getConsumableStats(itemId);
         Action[] memory actions = new Action[](consumableStats.effects.length);
         Action memory tempAction;
@@ -53,9 +35,12 @@ contract WorldActionSystem is System {
             tempAction.itemId = itemId;
             actions[i] = tempAction;
         }
+        // if min / max damage are negative and equal consume item and apply health potion bypassing the combat system.
 
         if (consumableStats.maxDamage > 0) {
             _requestWorldRng(givingEntity, actions);
+        } else if (consumableStats.maxDamage == consumableStats.minDamage && consumableStats.maxDamage < 0) {
+            _applyHealingPotion(givingEntity, receivingEntity, itemId);
         } else {
             _executeWorldActions(0, givingEntity, actions);
         }
@@ -108,5 +93,23 @@ contract WorldActionSystem is System {
             blockNumber: block.number,
             timestamp: block.timestamp
         });
+    }
+
+    function _applyHealingPotion(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId)
+        internal
+        returns (int256 _heal)
+    {
+        require(IWorld(_world()).UD__getItemBalance(givingEntity, itemId) > 0, "You do not own a healing potion.");
+        StatsData memory stats = Stats.get(receivingEntity);
+        _heal = IWorld(_world()).UD__getConsumableStats(itemId).maxDamage;
+        console.logInt(_heal);
+        console.logInt(stats.currentHp - _heal);
+        if (stats.currentHp - _heal > int256(stats.maxHp)) {
+            _heal = -(stats.maxHp - stats.currentHp);
+        }
+        console.logInt(_heal);
+        stats.currentHp -= _heal;
+
+        Stats.setCurrentHp(receivingEntity, stats.currentHp);
     }
 }

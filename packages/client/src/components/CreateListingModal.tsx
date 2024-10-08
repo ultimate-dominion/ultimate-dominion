@@ -11,8 +11,8 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Select,
   Spinner,
-  Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
@@ -28,6 +28,7 @@ import { useItems } from '../contexts/ItemsContext';
 import { ITEM_PATH } from '../Routes';
 import {
   type Armor,
+  type Consumable,
   ItemFilterOptions,
   ItemType,
   type Spell,
@@ -52,11 +53,17 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   const navigate = useNavigate();
   const {
     armorTemplates,
+    consumableTemplates,
     isLoading: isLoadingItemTemplates,
     spellTemplates,
     weaponTemplates,
   } = useItems();
-  const { inventoryArmor, inventorySpells, inventoryWeapons } = useCharacter();
+  const {
+    inventoryArmor,
+    inventoryConsumables,
+    inventorySpells,
+    inventoryWeapons,
+  } = useCharacter();
 
   const [itemListingFilter, setItemListingFilter] =
     useState<ItemListingFilterOptions>(ItemListingFilterOptions.AllItems);
@@ -66,11 +73,13 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   const [query, setQuery] = useState('');
 
   const filterAndSearchItems = useCallback(
-    (items: (Armor | Spell | Weapon)[]) => {
+    (items: (Armor | Consumable | Spell | Weapon)[]) => {
       const filteredItems = items.filter(entry => {
         switch (itemTypeFilter) {
           case ItemFilterOptions.Armor:
             return entry.itemType == ItemType.Armor;
+          case ItemFilterOptions.Consumable:
+            return entry.itemType == ItemType.Consumable;
           case ItemFilterOptions.Spell:
             return entry.itemType == ItemType.Spell;
           case ItemFilterOptions.Weapon:
@@ -89,6 +98,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   const allItems = useMemo(() => {
     const allItemTemplates = [
       ...armorTemplates,
+      ...consumableTemplates,
       ...spellTemplates,
       ...weaponTemplates,
     ];
@@ -96,23 +106,36 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     const unfilteredTemplates = allItemTemplates.map(item => {
       return {
         ...item,
-        balance: '0',
+        balance: BigInt(0),
         itemId: zeroHash as Entity,
         owner: zeroAddress,
       };
     });
 
     return filterAndSearchItems(unfilteredTemplates);
-  }, [armorTemplates, filterAndSearchItems, spellTemplates, weaponTemplates]);
+  }, [
+    armorTemplates,
+    consumableTemplates,
+    filterAndSearchItems,
+    spellTemplates,
+    weaponTemplates,
+  ]);
 
   const allInventoryItems = useMemo(() => {
     const unfilteredInventory = [
       ...inventoryArmor,
+      ...inventoryConsumables,
       ...inventorySpells,
       ...inventoryWeapons,
     ];
     return filterAndSearchItems(unfilteredInventory);
-  }, [inventoryArmor, filterAndSearchItems, inventorySpells, inventoryWeapons]);
+  }, [
+    inventoryArmor,
+    inventoryConsumables,
+    filterAndSearchItems,
+    inventorySpells,
+    inventoryWeapons,
+  ]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -171,38 +194,31 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                 value={query}
               />
             </InputGroup>
-            <Stack
+            <HStack
               alignItems="center"
-              direction={{ base: 'column', md: 'row' }}
-              spacing={{ base: 4, md: 8 }}
+              alignSelf="start"
+              justifyContent="space-between"
+              w="100%"
             >
-              <Text size="xs">Filter by:</Text>
-              <HStack>
+              <Text size="xs" w="40%">
+                Filter by:
+              </Text>
+              <Select
+                onChange={e =>
+                  setItemTypeFilter(e.target.value as ItemFilterOptions)
+                }
+                size="sm"
+                value={itemTypeFilter}
+              >
                 {Object.keys(ItemFilterOptions).map(k => {
                   return (
-                    <Button
-                      key={`item-type-filter-${k}`}
-                      onClick={() =>
-                        setItemTypeFilter(
-                          ItemFilterOptions[
-                            k as keyof typeof ItemFilterOptions
-                          ],
-                        )
-                      }
-                      size={{ base: 'xs', sm: 'sm' }}
-                      variant={
-                        itemTypeFilter ===
-                        ItemFilterOptions[k as keyof typeof ItemFilterOptions]
-                          ? 'solid'
-                          : 'outline'
-                      }
-                    >
+                    <option key={`item-type-filter-${k}`} value={k}>
                       {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
-                    </Button>
+                    </option>
                   );
                 })}
-              </HStack>
-            </Stack>
+              </Select>
+            </HStack>
             {isLoadingItemTemplates ? (
               <Spinner my={12} size="lg" />
             ) : (

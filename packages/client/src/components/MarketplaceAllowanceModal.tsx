@@ -10,9 +10,9 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
+import { etherToFixedNumber } from '../utils/helpers';
 import { OrderType, SystemToAllow } from '../utils/types';
 
 export const MarketplaceAllowanceModal = ({
@@ -31,7 +31,7 @@ export const MarketplaceAllowanceModal = ({
   itemName: string;
   onClose: () => void;
   onComplete: (e: React.FormEvent) => void;
-  orderPrice: string;
+  orderPrice: bigint;
   orderType: OrderType;
 }): JSX.Element => {
   const {
@@ -44,7 +44,7 @@ export const MarketplaceAllowanceModal = ({
   } = useAllowance();
 
   if (
-    (goldMarketplaceAllowance >= parseEther(orderPrice) &&
+    (goldMarketplaceAllowance >= orderPrice &&
       orderType === OrderType.Buying) ||
     (itemsMarketplaceAllowance && orderType === OrderType.Selling)
   ) {
@@ -83,15 +83,12 @@ export const MarketplaceAllowanceModal = ({
             <VStack spacing={10}>
               <Text alignSelf="start">
                 In order to buy {itemName}, you must allow the marketplace to
-                use {orderPrice} of your $GOLD.
+                use {etherToFixedNumber(orderPrice)} of your $GOLD.
               </Text>
               <Button
                 isLoading={isApprovingGold}
                 onClick={() =>
-                  onApproveGoldAllowance(
-                    SystemToAllow.Marketplace,
-                    parseEther(orderPrice),
-                  )
+                  onApproveGoldAllowance(SystemToAllow.Marketplace, orderPrice)
                 }
               >
                 Allow

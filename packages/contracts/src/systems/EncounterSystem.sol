@@ -5,38 +5,25 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {Math} from "@libraries/Math.sol";
-import {LibChunks} from "@libraries/LibChunks.sol";
-import {ArrayManagers} from "@libraries/ArrayManagers.sol";
 import {
     EncounterEntity,
     EncounterEntityData,
     Stats,
     Effects,
     Items,
-    CharacterEquipment,
     CombatEncounter,
     CombatEncounterData,
     CombatOutcome,
     CombatOutcomeData,
     Position,
     Mobs,
-    Counters,
-    ActionOutcome,
     SessionTimer
 } from "@codegen/index.sol";
-import {RngRequestType, MobType, Alignment, EncounterType} from "@codegen/common.sol";
-import {MonsterStats, NPCStats, Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {RngRequestType, EncounterType} from "@codegen/common.sol";
+import {Action} from "@interfaces/Structs.sol";
+import {_requireAccess} from "../utils.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
-import {
-    DEFAULT_MAX_TURNS,
-    TO_HIT_MODIFIER,
-    DEFENSE_MODIFIER,
-    ATTACK_MODIFIER,
-    CRIT_MODIFIER,
-    BASE_GOLD_DROP
-} from "../../constants.sol";
+import {DEFAULT_MAX_TURNS} from "../../constants.sol";
 import "forge-std/console.sol";
 
 contract EncounterSystem is System {
@@ -174,7 +161,6 @@ contract EncounterSystem is System {
                 // if timestamp is less than timeout
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
                     require(isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER");
-
                     // if player is attacker add +1 to current turn
                     if (isParticipant(playerAddress, encounterData.attackers)) {
                         encounterData.currentTurn += 1;
@@ -234,6 +220,7 @@ contract EncounterSystem is System {
         CombatOutcomeData memory combatOutcome = CombatOutcomeData({
             endTime: block.timestamp,
             attackersWin: attackersWin,
+            playerFled: false,
             expDropped: expAmount,
             goldDropped: goldAmount,
             itemsDropped: itemsDropped
@@ -296,6 +283,32 @@ contract EncounterSystem is System {
         for (uint256 i; i < participants.length;) {
             if (account == IWorld(_world()).UD__getOwnerAddress(participants[i])) {
                 _isParticipant = true;
+                break;
+            }
+            {
+                i++;
+            }
+        }
+    }
+
+    function isAttacker(bytes32 encounterId, bytes32 entityId) public returns (bool _isAttacker) {
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        for (uint256 i; i < encounterData.attackers.length;) {
+            if (entityId == encounterData.attackers[i]) {
+                _isAttacker = true;
+                break;
+            }
+            {
+                i++;
+            }
+        }
+    }
+
+    function isDefender(bytes32 encounterId, bytes32 entityId) public returns (bool _isDefender) {
+        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        for (uint256 i; i < encounterData.defenders.length;) {
+            if (entityId == encounterData.defenders[i]) {
+                _isDefender = true;
                 break;
             }
             {

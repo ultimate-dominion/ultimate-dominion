@@ -7,7 +7,9 @@ import worldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import lootManagerSystemAbi from 'contracts/out/LootManagerSystem.sol/LootManagerSystem.abi.json';
 import mapSystemAbi from 'contracts/out/MapSystem.sol/MapSystem.abi.json';
 import marketplaceSystemAbi from 'contracts/out/MarketplaceSystem.sol/MarketplaceSystem.abi.json';
+import pvpSystemAbi from 'contracts/out/PvPSystem.sol/PvPSystem.abi.json';
 import shopSystemAbi from 'contracts/out/ShopSystem.sol/ShopSystem.abi.json';
+import worldActionSystemAbi from 'contracts/out/WorldActionSystem.sol/WorldActionSystem.abi.json';
 import { useEffect, useMemo } from 'react';
 
 import { useMUD } from '../contexts/MUDContext';
@@ -26,8 +28,10 @@ export function DevTools(): null {
       ...lootManagerSystemAbi,
       ...mapSystemAbi,
       ...marketplaceSystemAbi,
+      ...pvpSystemAbi,
       ...shopSystemAbi,
       ...worldAbi,
+      ...worldActionSystemAbi,
     ],
     [network.worldContract.abi],
   );

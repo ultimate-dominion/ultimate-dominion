@@ -1,10 +1,38 @@
-import { Button, HStack, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { getStatSymbol } from '../utils/helpers';
 import { type Character } from '../utils/types';
+import { HealthBar } from './HealthBar';
+
+const getStatWithSymbol = (stat: bigint | string): JSX.Element => {
+  const statString = BigInt(stat).toString();
+
+  const isNegative = statString.startsWith('-');
+
+  if (isNegative) {
+    return (
+      <Text
+        as="span"
+        color="red"
+      >{`${getStatSymbol(statString)}${statString}`}</Text>
+    );
+  }
+
+  if (statString === '0') {
+    return <Text as="span">{statString}</Text>;
+  }
+
+  return (
+    <Text
+      as="span"
+      color="green"
+    >{`${getStatSymbol(statString)}${statString}`}</Text>
+  );
+};
 
 export const LevelingPanel = ({
   canLevel,
@@ -77,7 +105,7 @@ export const LevelingPanel = ({
             return;
           }
 
-          setNewStrength(prev => (BigInt(prev) - BigInt(1)).toString());
+          setNewStrength(prev => prev - BigInt(1));
           break;
         case 'agi':
           if (newAgility === character.baseStats.agility) return;
@@ -89,7 +117,7 @@ export const LevelingPanel = ({
             return;
           }
 
-          setNewAgility(prev => (BigInt(prev) - BigInt(1)).toString());
+          setNewAgility(prev => prev - BigInt(1));
           break;
         case 'int':
           if (newIntelligence === character.baseStats.intelligence) return;
@@ -101,7 +129,7 @@ export const LevelingPanel = ({
             return;
           }
 
-          setNewIntelligence(prev => (BigInt(prev) - BigInt(1)).toString());
+          setNewIntelligence(prev => prev - BigInt(1));
           break;
         default:
       }
@@ -138,13 +166,13 @@ export const LevelingPanel = ({
 
       switch (stat) {
         case 'str':
-          setNewStrength(prev => (BigInt(prev) + BigInt(1)).toString());
+          setNewStrength(prev => prev + BigInt(1));
           break;
         case 'agi':
-          setNewAgility(prev => (BigInt(prev) + BigInt(1)).toString());
+          setNewAgility(prev => prev + BigInt(1));
           break;
         case 'int':
-          setNewIntelligence(prev => (BigInt(prev) + BigInt(1)).toString());
+          setNewIntelligence(prev => prev + BigInt(1));
           break;
         default:
       }
@@ -203,9 +231,6 @@ export const LevelingPanel = ({
     renderWarning,
   ]);
 
-  const currentHpWithFloor =
-    parseInt(character.currentHp) < 0 ? 0 : parseInt(character.currentHp);
-
   return (
     <VStack>
       <HStack justify="space-between" w="100%">
@@ -216,21 +241,44 @@ export const LevelingPanel = ({
           Ability Points: {abilityPoints}
         </Text>
       </HStack>
-      <Text alignSelf="end" mt={4} size="xs">
-        Base
-      </Text>
-      <VStack w="100%">
-        <HStack justify="space-between" w="100%">
-          <Text>HP - Hit Points</Text>
-          <Text>
-            {currentHpWithFloor}/{character.maxHp}
+      <HealthBar
+        currentHp={character.currentHp}
+        maxHp={character.maxHp}
+        mt={2}
+        level={character.level}
+        w="100%"
+      />
+      <HStack justifyContent="end" mt={4} w="100%">
+        <HStack
+          justifyContent={canLevel ? 'center' : 'end'}
+          textAlign="end"
+          w="50%"
+        >
+          <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
+            Base
           </Text>
+          {!canLevel && (
+            <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
+              Bonus
+            </Text>
+          )}
+          {!canLevel && (
+            <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
+              Total
+            </Text>
+          )}
         </HStack>
-
-        <HStack justify="space-between" w="100%">
-          <Text>STR - Strength</Text>
-          <HStack>
-            {strengthIncreased && (
+      </HStack>
+      <HStack w="100%">
+        <Text size={{ base: 'xs', md: 'sm', xl: 'md' }} w="50%">
+          STR -{' '}
+          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
+            Strength
+          </Text>
+        </Text>
+        <HStack justifyContent="end" textAlign="end" w="50%">
+          {strengthIncreased && (
+            <Box w="33%">
               <Button
                 borderWidth="1.5px"
                 onClick={() => onDecrementStat('str')}
@@ -239,14 +287,18 @@ export const LevelingPanel = ({
               >
                 <Text>-</Text>
               </Button>
-            )}
-            <Text
-              color={strengthIncreased ? 'green' : 'black'}
-              fontWeight={strengthIncreased ? 'bold' : 'normal'}
-            >
-              {newStrength}
-            </Text>
-            {canLevel && (
+            </Box>
+          )}
+          <Text
+            color={strengthIncreased ? 'green' : 'black'}
+            fontWeight={strengthIncreased ? 'bold' : 'normal'}
+            size={{ base: 'xs', sm: 'sm' }}
+            w="33%"
+          >
+            {newStrength.toString()}
+          </Text>
+          {canLevel && (
+            <Box w="33%">
               <Button
                 borderWidth="1.5px"
                 isDisabled={abilityPoints <= 0}
@@ -256,14 +308,32 @@ export const LevelingPanel = ({
               >
                 <Text>+</Text>
               </Button>
-            )}
-          </HStack>
+            </Box>
+          )}
+          {!canLevel && (
+            <Text size={{ base: 'xs', sm: 'sm' }} w="33%">
+              {getStatWithSymbol(
+                BigInt(character.strength) - BigInt(newStrength),
+              )}
+            </Text>
+          )}
+          {!canLevel && (
+            <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
+              {character.strength.toString()}
+            </Text>
+          )}
         </HStack>
-
-        <HStack justify="space-between" w="100%">
-          <Text>AGI - Agility</Text>
-          <HStack>
-            {agilityIncreased && (
+      </HStack>
+      <HStack w="100%">
+        <Text size={{ base: 'xs', md: 'sm', xl: 'md' }} w="50%">
+          AGI -{' '}
+          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
+            Agility
+          </Text>
+        </Text>
+        <HStack justifyContent="end" textAlign="end" w="50%">
+          {agilityIncreased && (
+            <Box w="33%">
               <Button
                 borderWidth="1.5px"
                 onClick={() => onDecrementStat('agi')}
@@ -272,14 +342,18 @@ export const LevelingPanel = ({
               >
                 <Text>-</Text>
               </Button>
-            )}
-            <Text
-              color={agilityIncreased ? 'green' : 'black'}
-              fontWeight={agilityIncreased ? 'bold' : 'normal'}
-            >
-              {newAgility}
-            </Text>
-            {canLevel && (
+            </Box>
+          )}
+          <Text
+            color={agilityIncreased ? 'green' : 'black'}
+            fontWeight={agilityIncreased ? 'bold' : 'normal'}
+            size={{ base: 'xs', sm: 'sm' }}
+            w="33%"
+          >
+            {newAgility.toString()}
+          </Text>
+          {canLevel && (
+            <Box w="33%">
               <Button
                 borderWidth="1.5px"
                 isDisabled={abilityPoints <= 0}
@@ -289,14 +363,32 @@ export const LevelingPanel = ({
               >
                 <Text>+</Text>
               </Button>
-            )}
-          </HStack>
+            </Box>
+          )}
+          {!canLevel && (
+            <Text size={{ base: 'xs', sm: 'sm' }} w="33%">
+              {getStatWithSymbol(
+                BigInt(character.agility) - BigInt(newAgility),
+              )}
+            </Text>
+          )}
+          {!canLevel && (
+            <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
+              {character.agility.toString()}
+            </Text>
+          )}
         </HStack>
-
-        <HStack justify="space-between" w="100%">
-          <Text>INT - Intelligence</Text>
-          <HStack>
-            {intelligenceIncreased && (
+      </HStack>
+      <HStack w="100%">
+        <Text size={{ base: 'xs', md: 'sm', xl: 'md' }} w="50%">
+          INT -{' '}
+          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
+            Intelligence
+          </Text>
+        </Text>
+        <HStack justifyContent="end" textAlign="end" w="50%">
+          {intelligenceIncreased && (
+            <Box w="33%">
               <Button
                 borderWidth="1.5px"
                 onClick={() => onDecrementStat('int')}
@@ -305,14 +397,18 @@ export const LevelingPanel = ({
               >
                 <Text>-</Text>
               </Button>
-            )}
-            <Text
-              color={intelligenceIncreased ? 'green' : 'black'}
-              fontWeight={intelligenceIncreased ? 'bold' : 'normal'}
-            >
-              {newIntelligence}
-            </Text>
-            {canLevel && (
+            </Box>
+          )}
+          <Text
+            color={intelligenceIncreased ? 'green' : 'black'}
+            fontWeight={intelligenceIncreased ? 'bold' : 'normal'}
+            size={{ base: 'xs', sm: 'sm' }}
+            w="33%"
+          >
+            {newIntelligence.toString()}
+          </Text>
+          {canLevel && (
+            <Box w="33%">
               <Button
                 borderWidth="1.5px"
                 isDisabled={abilityPoints <= 0}
@@ -322,10 +418,23 @@ export const LevelingPanel = ({
               >
                 <Text>+</Text>
               </Button>
-            )}
-          </HStack>
+            </Box>
+          )}
+          {!canLevel && (
+            <Text size={{ base: 'xs', sm: 'sm' }} w="33%">
+              {getStatWithSymbol(
+                BigInt(character.intelligence) - BigInt(newIntelligence),
+              )}
+            </Text>
+          )}
+          {!canLevel && (
+            <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
+              {character.intelligence.toString()}
+            </Text>
+          )}
         </HStack>
-      </VStack>
+      </HStack>
+
       {canLevel && (
         <Button
           isLoading={isLeveling}

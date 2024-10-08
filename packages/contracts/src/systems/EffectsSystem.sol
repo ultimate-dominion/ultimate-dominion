@@ -3,22 +3,17 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
     EncounterEntityData,
     EffectsData,
     Effects,
     Stats,
     CombatEncounter,
-    CombatEncounterData,
-    CharacterEquipment,
     StatsData,
-    MobStats,
     PhysicalDamageStats,
     PhysicalDamageStatsData,
     MagicDamageStats,
     MagicDamageStatsData,
-    ConsumableStats,
     StatusEffectStats,
     StatusEffectStatsData,
     StatusEffectValidity,
@@ -28,13 +23,9 @@ import {
     DamageOverTimeAppliedData
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {RngRequestType, MobType, EncounterType, EffectType, Classes} from "@codegen/common.sol";
-import {Counters} from "@tables/Counters.sol";
-import {Mobs, MobsData} from "@tables/Mobs.sol";
-import {MonsterStats, AdjustedCombatStats, Action} from "@interfaces/Structs.sol";
+import {EffectType} from "@codegen/common.sol";
+import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
-import {DEFAULT_MAX_TURNS} from "../../constants.sol";
 import "forge-std/console.sol";
 
 contract EffectsSystem is System {
@@ -167,21 +158,57 @@ contract EffectsSystem is System {
         StatusEffectValidityData memory effectValidity = StatusEffectValidity.get(effectId);
         StatusEffectStatsData memory effectStats = getStatusEffectStats(effectId);
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
-        if (effectValidity.validTurns != 0 && encounterId != bytes32(0)) {
-            EncounterEntity.pushAppliedStatusEffects(entityId, appliedEffectId);
-            checkWorldStatusEffects(entityId);
-        } else if (effectValidity.validTime != 0 && encounterId == bytes32(0)) {
-            WorldStatusEffects.pushAppliedStatusEffects(entityId, appliedEffectId);
+        uint256 currentStacks = currentStacks(entityId, effectId);
+        if (currentStacks < effectValidity.maxStacks) {
+            if (effectValidity.validTurns != 0 && encounterId != bytes32(0)) {
+                EncounterEntity.pushAppliedStatusEffects(entityId, appliedEffectId);
+                checkWorldStatusEffects(entityId);
+            } else if (effectValidity.validTime != 0 && encounterId == bytes32(0)) {
+                _adjustedStats.agility += effectStats.agiModifier;
+                _adjustedStats.strength += effectStats.strModifier;
+                _adjustedStats.intelligence += effectStats.intModifier;
+                _adjustedStats.armor += effectStats.armorModifier;
+                _adjustedStats.maxHp += effectStats.hpModifier;
+                checkWorldStatusEffects(entityId);
+                IWorld(_world()).UD__setStats(entityId, _adjustedStats);
+                WorldStatusEffects.pushAppliedStatusEffects(entityId, appliedEffectId);
+            } else {
+                revert("invalid effect application");
+            }
+        }
+    }
 
+    function applyWorldEffects(bytes32 entityId) public returns (AdjustedCombatStats memory _adjustedStats) {
+        _requireAccess(address(this), _msgSender());
+        bytes32[] memory worldEffects = WorldStatusEffects.get(entityId);
+        _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
+        StatusEffectStatsData memory effectStats;
+        checkWorldStatusEffects(entityId);
+        for (uint256 i; i < worldEffects.length; i++) {
+            effectStats = getStatusEffectStats(worldEffects[i]);
             _adjustedStats.agility += effectStats.agiModifier;
             _adjustedStats.strength += effectStats.strModifier;
             _adjustedStats.intelligence += effectStats.intModifier;
             _adjustedStats.armor += effectStats.armorModifier;
             _adjustedStats.maxHp += effectStats.hpModifier;
-            checkWorldStatusEffects(entityId);
-            IWorld(_world()).UD__setStats(entityId, _adjustedStats);
+        }
+        IWorld(_world()).UD__setStats(entityId, _adjustedStats);
+    }
+
+    function currentStacks(bytes32 entityId, bytes32 effectId) public returns (uint256 _appliedStack) {
+        StatusEffectValidityData memory effectValidity = StatusEffectValidity.get(effectId);
+        if (effectValidity.validTurns != 0 && effectValidity.validTime == 0) {
+            bytes32[] memory appliedEffects = EncounterEntity.getAppliedStatusEffects(entityId);
+            for (uint256 i; i < appliedEffects.length; i++) {
+                if (effectId == getEffectStatId(appliedEffects[i])) _appliedStack++;
+            }
+        } else if (effectValidity.validTime != 0 && effectValidity.validTurns == 0) {
+            bytes32[] memory appliedEffects = WorldStatusEffects.getAppliedStatusEffects(entityId);
+            for (uint256 i; i < appliedEffects.length; i++) {
+                if (effectId == getEffectStatId(appliedEffects[i])) _appliedStack++;
+            }
         } else {
-            revert("invalid effect application");
+            revert("invalid effect type");
         }
     }
 
@@ -235,12 +262,14 @@ contract EffectsSystem is System {
 
         int256[] memory damages = new int256[](appliedStatusEffects.length);
 
-        for (uint256 i; i < appliedStatusEffects.length; i++) {
-            int256 damageToApply = StatusEffectStats.getDamagePerTick(appliedStatusEffects[i]);
-            damages[i] = damageToApply;
-            totalDamage += damageToApply;
-            int256 currentHp = Stats.getCurrentHp(entityId) + damageToApply;
-            if (damageToApply != 0) Stats.setCurrentHp(entityId, currentHp);
+        if (appliedStatusEffects.length > 0) {
+            for (uint256 i; i < appliedStatusEffects.length; i++) {
+                int256 damageToApply = StatusEffectStats.getDamagePerTick(getEffectStatId(appliedStatusEffects[i]));
+                damages[i] = damageToApply;
+                totalDamage += damageToApply;
+                int256 currentHp = Stats.getCurrentHp(entityId) - damageToApply;
+                if (damageToApply != 0) Stats.setCurrentHp(entityId, currentHp);
+            }
         }
 
         if (totalDamage != 0) {

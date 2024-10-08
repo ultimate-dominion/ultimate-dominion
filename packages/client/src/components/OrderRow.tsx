@@ -13,15 +13,21 @@ import { getComponentValueStrict, Has, HasValue } from '@latticexyz/recs';
 import { useCallback, useMemo, useState } from 'react';
 import { BiPurchaseTagAlt } from 'react-icons/bi';
 import { FaTimes } from 'react-icons/fa';
-import { hexToString, parseEther } from 'viem';
+import { hexToString } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { getEmoji, removeEmoji, shortenAddress } from '../utils/helpers';
+import {
+  etherToFixedNumber,
+  getEmoji,
+  removeEmoji,
+  shortenAddress,
+} from '../utils/helpers';
 import {
   type ArmorTemplate,
+  type ConsumableTemplate,
   type Order,
   OrderType,
   type SpellTemplate,
@@ -31,7 +37,7 @@ import {
 import { MarketplaceAllowanceModal } from './MarketplaceAllowanceModal';
 
 type OrderRowProps = {
-  item: ArmorTemplate | WeaponTemplate | SpellTemplate;
+  item: ArmorTemplate | ConsumableTemplate | WeaponTemplate | SpellTemplate;
   order: Order;
   refreshOrders: () => void;
 };
@@ -47,7 +53,8 @@ export const OrderRow = ({
     systemCalls: { cancelOrder, fulfillOrder },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
-  const { goldAllowance, itemsAllowance } = useAllowance();
+  const { goldMarketplaceAllowance, itemsMarketplaceAllowance } =
+    useAllowance();
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [isFilling, setIsFilling] = useState(false);
@@ -96,10 +103,7 @@ export const OrderRow = ({
   const insufficientGold = useMemo(() => {
     if (!character) return false;
     if (order.offer.tokenType === TokenType.ERC20) return false;
-    return (
-      parseEther(order.consideration.amount) >
-      BigInt(character.externalGoldBalance)
-    );
+    return order.consideration.amount > character.externalGoldBalance;
   }, [character, order]);
 
   const onFulfillOrder = useCallback(async () => {
@@ -112,13 +116,16 @@ export const OrderRow = ({
 
       if (
         order.consideration.tokenType === TokenType.ERC20 &&
-        goldAllowance < parseEther(order.consideration.amount)
+        goldMarketplaceAllowance < order.consideration.amount
       ) {
         onOpenAllowanceModal();
         return;
       }
 
-      if (order.offer.tokenType === TokenType.ERC20 && !itemsAllowance) {
+      if (
+        order.offer.tokenType === TokenType.ERC20 &&
+        !itemsMarketplaceAllowance
+      ) {
         onOpenAllowanceModal();
         return;
       }
@@ -140,9 +147,9 @@ export const OrderRow = ({
     }
   }, [
     fulfillOrder,
-    goldAllowance,
+    goldMarketplaceAllowance,
     insufficientGold,
-    itemsAllowance,
+    itemsMarketplaceAllowance,
     onCloseAllowanceModal,
     onOpenAllowanceModal,
     order,
@@ -189,16 +196,17 @@ export const OrderRow = ({
               {')'}
             </Text>
           </HStack>
-          <Text fontWeight="bold" size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            Wants {consideration.amount}{' '}
-            {consideration.tokenType === TokenType.ERC20
-              ? '$GOLD'
-              : removeEmoji(item.name)}{' '}
-            for {offer.amount}{' '}
-            {offer.tokenType === TokenType.ERC20
-              ? '$GOLD'
-              : removeEmoji(item.name)}
-          </Text>
+          {consideration.tokenType === TokenType.ERC20 ? (
+            <Text fontWeight="bold" size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
+              Wants {etherToFixedNumber(consideration.amount)} $GOLD for{' '}
+              {offer.amount.toString()} {removeEmoji(item.name)}
+            </Text>
+          ) : (
+            <Text fontWeight="bold" size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
+              Wants {consideration.amount.toString()} {removeEmoji(item.name)}{' '}
+              for {etherToFixedNumber(offer.amount)} $GOLD
+            </Text>
+          )}
         </VStack>
       </Flex>
       <HStack ml={2} mr={{ base: 2, sm: 4 }}>

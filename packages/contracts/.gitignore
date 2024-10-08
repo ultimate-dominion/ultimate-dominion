@@ -6,8 +6,10 @@ out/*
 !out/EquipmentSystem.sol
 !out/LootManagerSystem.sol
 !out/MapSystem.sol
+!out/PvPSystem.sol
 !out/ShopSystem.sol
 !out/IWorld.sol
+!out/WorldActionSystem.sol
 cache/
 node_modules/
 codegen/

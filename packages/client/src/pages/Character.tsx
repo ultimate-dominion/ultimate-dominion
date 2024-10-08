@@ -21,6 +21,8 @@ import {
   Entity,
   getComponentValue,
   getComponentValueStrict,
+  Has,
+  runQuery,
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -29,12 +31,13 @@ import {
   IoMdInformationCircleOutline,
 } from 'react-icons/io';
 import { useNavigate, useParams } from 'react-router-dom';
-import { hexToString, zeroHash } from 'viem';
+import { hexToBigInt, hexToString, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
 import { ItemCard } from '../components/ItemCard';
+import { ItemConsumeModal } from '../components/ItemConsumeModal';
 import { ItemEquipModal } from '../components/ItemEquipModal';
 import { Level } from '../components/Level';
 import { LevelingPanel } from '../components/LevelingPanel';
@@ -54,6 +57,7 @@ import {
 import {
   type Armor,
   type Character,
+  type Consumable,
   type Spell,
   type Weapon,
 } from '../utils/types';
@@ -128,34 +132,35 @@ export const CharacterPage = (): JSX.Element => {
         uriToHttp(`ipfs://${metadataURI}`)[0],
       );
 
-      const encounterId = getComponentValue(
+      const { encounterId, pvpTimer } = getComponentValue(
         EncounterEntity,
         id as Entity,
-      )?.encounterId;
+      ) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) };
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
       const decodedBaseStats = decodeBaseStats(characterData.baseStats);
 
       const _character = {
         ...fetachedMetadata,
-        agility: characterStats.agility.toString(),
+        agility: characterStats.agility,
         baseStats: decodedBaseStats,
-        currentHp: characterStats.currentHp.toString(),
+        currentHp: characterStats.currentHp,
         entityClass: characterStats.class,
         escrowGoldBalance,
-        experience: characterStats.experience.toString(),
+        experience: characterStats.experience,
         externalGoldBalance,
         id: id as Entity,
         inBattle,
-        intelligence: characterStats.intelligence.toString(),
-        level: characterStats.level.toString(),
+        intelligence: characterStats.intelligence,
+        level: characterStats.level,
         locked: characterData.locked,
-        maxHp: characterStats.maxHp.toString(),
+        maxHp: characterStats.maxHp,
         name: hexToString(characterData.name as `0x${string}`, {
           size: 32,
         }),
         owner: characterData.owner,
-        strength: characterStats.strength.toString(),
+        pvpCooldownTimer: pvpTimer,
+        strength: characterStats.strength,
         tokenId: characterData.tokenId.toString(),
       };
 
@@ -233,11 +238,25 @@ export const CharacterPage = (): JSX.Element => {
     return percent > 100 ? 100 : percent;
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
+  const maxLevelXpRequirement = useMemo(
+    () =>
+      hexToBigInt(
+        Array.from(runQuery([Has(Levels)])).slice(-1)[0] as `0x${string}`,
+      ),
+    [Levels],
+  );
+
+  const maxed = useMemo(() => {
+    if (!character) return false;
+    return maxLevelXpRequirement <= BigInt(character.level);
+  }, [character, maxLevelXpRequirement]);
+
   const canLevel = useMemo(() => {
     if (!character) return false;
+    if (maxed) return false;
     if (nextLevelXpRequirement === BigInt(0)) return false;
     return BigInt(character.experience) >= nextLevelXpRequirement;
-  }, [character, nextLevelXpRequirement]);
+  }, [character, maxed, nextLevelXpRequirement]);
 
   if (isLoadingCharacter) {
     return (
@@ -361,7 +380,9 @@ export const CharacterPage = (): JSX.Element => {
                   </HStack>
                 </VStack>
                 <HStack justify="space-between" mt={4}>
-                  <Text fontWeight="bold">Level {character.level}</Text>
+                  <Text fontWeight="bold">
+                    Level {character.level.toString()}
+                  </Text>
                   <Text>
                     <Text
                       as="span"
@@ -376,7 +397,7 @@ export const CharacterPage = (): JSX.Element => {
                           : 'normal'
                       }
                     >
-                      {character.experience}
+                      {character.experience.toString()}
                     </Text>
                     /{nextLevelXpRequirement.toString()} XP
                   </Text>
@@ -384,6 +405,7 @@ export const CharacterPage = (): JSX.Element => {
                 <Level
                   currentLevel={character.level}
                   levelPercent={levelPercent}
+                  maxed={maxed}
                 />
               </Box>
 
@@ -460,6 +482,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   } = useMUD();
   const {
     armorTemplates,
+    consumableTemplates,
     isLoading: isLoadingItemTemplates,
     spellTemplates,
     weaponTemplates,
@@ -470,11 +493,21 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     onClose: onCloseItemModal,
     onOpen: onOpenItemModal,
   } = useDisclosure();
+  const {
+    isOpen: isConsumableModalOpen,
+    onClose: onCloseConsumableModal,
+    onOpen: onOpenConsumableModal,
+  } = useDisclosure();
 
   const [selectedItem, setSelectedItem] = useState<
     Armor | Spell | Weapon | null
   >(null);
+  const [selectedConsumable, setSelectedConsumable] =
+    useState<Consumable | null>(null);
   const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
+  const [inventoryConsumables, setInventoryConsumables] = useState<
+    Consumable[]
+  >([]);
   const [inventorySpells, setInventorySpells] = useState<Spell[]>([]);
   const [inventoryWeapons, setInventoryWeapons] = useState<Weapon[]>([]);
   const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
@@ -503,12 +536,33 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
             return {
               ...armor,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Armor;
           })
-          .filter(a => a.balance !== '0');
+          .filter(a => a.balance !== BigInt(0));
+
+        const _consumables = consumableTemplates
+          .map(consumable => {
+            const tokenOwnersEntity = encodeEntity(
+              { owner: 'address', tokenId: 'uint256' },
+              {
+                owner: _character.owner as `0x${string}`,
+                tokenId: BigInt(consumable.tokenId),
+              },
+            );
+
+            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+
+            return {
+              ...consumable,
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
+              itemId: tokenOwnersEntity,
+              owner: _character.owner,
+            } as Consumable;
+          })
+          .filter(c => c.balance !== BigInt(0));
 
         const _spells = spellTemplates
           .map(spell => {
@@ -524,12 +578,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
             return {
               ...spell,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Spell;
           })
-          .filter(s => s.balance !== '0');
+          .filter(s => s.balance !== BigInt(0));
 
         const _weapons = weaponTemplates
           .map(weapon => {
@@ -545,12 +599,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
             return {
               ...weapon,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Weapon;
           })
-          .filter(w => w.balance !== '0');
+          .filter(w => w.balance !== BigInt(0));
 
         const _equippedArmor = _equippedArmorIds
           .map(id => _armor.find(a => a.tokenId === id.toString()))
@@ -563,6 +617,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           .filter(Boolean) as Weapon[];
 
         setInventoryArmor(_armor);
+        setInventoryConsumables(_consumables);
         setInventorySpells(_spells);
         setInventoryWeapons(_weapons);
 
@@ -576,7 +631,14 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         );
       }
     },
-    [armorTemplates, ItemsOwners, renderError, spellTemplates, weaponTemplates],
+    [
+      armorTemplates,
+      consumableTemplates,
+      ItemsOwners,
+      renderError,
+      spellTemplates,
+      weaponTemplates,
+    ],
   );
 
   useEffect(() => {
@@ -652,7 +714,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         mt={4}
       >
         {inventoryArmor.length === 0 && <Text>No armor found</Text>}
-        {inventoryArmor.map(function (ar, i) {
+        {inventoryArmor.map((ar, i) => {
           const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
           return (
             <GridItem key={i}>
@@ -688,7 +750,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         mt={4}
       >
         {spellsAndWeapons.length === 0 && <Text>No weapons found</Text>}
-        {spellsAndWeapons.map(function (item, i) {
+        {spellsAndWeapons.map((item, i) => {
           const isEquipped = equippedSpellsAndWeaponsIds.includes(
             BigInt(item.tokenId),
           );
@@ -711,6 +773,34 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           );
         })}
       </Grid>
+      <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
+        Consumables {inventoryConsumables.length}
+      </Text>
+      <Grid
+        templateColumns={{
+          base: 'repeat(1, 1fr)',
+          sm: 'repeat(1, 1fr)',
+          md: 'repeat(2, 1fr)',
+          xl: 'repeat(3, 1fr)',
+        }}
+        gap={2}
+        mt={4}
+      >
+        {inventoryConsumables.length === 0 && <Text>No consumables found</Text>}
+        {inventoryConsumables.map((consumable, i) => {
+          return (
+            <GridItem key={i}>
+              <ItemCard
+                onClick={() => {
+                  setSelectedConsumable(consumable);
+                  onOpenConsumableModal();
+                }}
+                {...consumable}
+              />
+            </GridItem>
+          );
+        })}
+      </Grid>
       {selectedItem && (
         <ItemEquipModal
           isEquipped={
@@ -725,6 +815,16 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
             setSelectedItem(null);
           }}
           {...selectedItem}
+        />
+      )}
+      {selectedConsumable && (
+        <ItemConsumeModal
+          isOpen={isConsumableModalOpen}
+          onClose={() => {
+            onCloseConsumableModal();
+            setSelectedConsumable(null);
+          }}
+          {...selectedConsumable}
         />
       )}
     </Box>
