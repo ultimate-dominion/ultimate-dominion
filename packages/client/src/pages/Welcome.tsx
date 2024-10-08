@@ -48,12 +48,16 @@ export const Welcome = (): JSX.Element => {
       justifyContent="center"
       mb={10}
       mt={{ base: 20, sm: 32 }}
-      spacing={{ base: 12, sm: 20 }}
+      spacing={{ base: 12, md: 20 }}
     >
-      <Heading size="lg" textAlign="center" textTransform="uppercase">
+      <Heading
+        size={{ base: 'md', md: 'lg' }}
+        textAlign="center"
+        textTransform="uppercase"
+      >
         Welcome to Ultimate Dominion
       </Heading>
-      <VStack maxW="800px" spacing={6} textAlign="center">
+      <VStack fontWeight={500} maxW="800px" spacing={6} textAlign="center">
         <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
           As you awaken, your eyes flutter open to the stark, eerie ambiance of
           a dimly lit cave. Confusion clouds your mind; the cold, hard ground
