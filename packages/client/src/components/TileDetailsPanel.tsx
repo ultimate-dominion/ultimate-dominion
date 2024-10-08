@@ -6,6 +6,10 @@ import {
   Grid,
   GridItem,
   HStack,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   Spinner,
   Stack,
   Text,
@@ -15,9 +19,10 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { BsThreeDotsVertical } from 'react-icons/bs';
 import { GiCrossedSwords } from 'react-icons/gi';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -571,6 +576,7 @@ const OpponentRow = ({
   onClick: () => void;
 }) => {
   const { inBattle, level, name } = opponent;
+  const navigate = useNavigate();
 
   const inCooldown = useMemo(() => {
     const cooldownTimer = (opponent as Character).pvpCooldownTimer;
@@ -582,53 +588,82 @@ const OpponentRow = ({
 
   return (
     <HStack
-      as="button"
       border="1px solid transparent"
       h={ROW_HEIGHT}
-      justifyContent="space-between"
-      onClick={disableRow ? undefined : onClick}
-      px={{ base: 1, sm: 2, md: 4 }}
-      transition="all 0.3s ease"
-      w="100%"
+      spacing={0}
       _active={{
-        bg: disableRow ? 'transparent' : 'grey300',
         border: '1px solid',
-        cursor: disableRow ? 'not-allowed' : 'pointer',
       }}
       _hover={{
         border: '1px solid',
         cursor: disableRow ? 'not-allowed' : 'pointer',
       }}
     >
-      <HStack justifyContent="start" spacing={4}>
-        <Text
-          color={OPPONENT_COLORS[opponent.entityClass]}
-          filter={disableRow ? 'grayscale(100%)' : 'none'}
-          size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
-        >
-          {name}
-        </Text>
-        {encounterType === EncounterType.PvP && (
-          <Avatar size="xs" src={opponent.image} />
+      <HStack
+        as="button"
+        h="98%"
+        justifyContent="space-between"
+        onClick={disableRow ? undefined : onClick}
+        px={{ base: 1, sm: 2 }}
+        transition="all 0.3s ease"
+        w="100%"
+        _active={{
+          bg: disableRow ? 'transparent' : 'grey300',
+          cursor: disableRow ? 'not-allowed' : 'pointer',
+        }}
+      >
+        <HStack justifyContent="start" spacing={4}>
+          <Text
+            color={OPPONENT_COLORS[opponent.entityClass]}
+            filter={disableRow ? 'grayscale(100%)' : 'none'}
+            size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+          >
+            {name}
+          </Text>
+          {encounterType === EncounterType.PvP && (
+            <Avatar size="xs" src={opponent.image} />
+          )}
+        </HStack>
+        {!disableRow && (
+          <Text
+            fontWeight="bold"
+            size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+          >
+            Level {level.toString()}
+          </Text>
+        )}
+        {inBattle && (
+          <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
+            (In battle...)
+          </Text>
+        )}
+        {inCooldown && (
+          <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
+            (In cooldown...)
+          </Text>
         )}
       </HStack>
-      {!disableRow && (
-        <Text
-          fontWeight="bold"
-          size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
-        >
-          Level {level.toString()}
-        </Text>
-      )}
-      {inBattle && (
-        <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
-          (In battle...)
-        </Text>
-      )}
-      {inCooldown && (
-        <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
-          (In cooldown...)
-        </Text>
+      {encounterType === EncounterType.PvP && (
+        <Menu>
+          <MenuButton
+            as={Button}
+            borderRadius={0}
+            h="100%"
+            size="xs"
+            variant="ghost"
+          >
+            <BsThreeDotsVertical size={14} />
+          </MenuButton>
+          <MenuList>
+            <MenuItem
+              onClick={() =>
+                navigate('/characters/' + (opponent as Character).id)
+              }
+            >
+              View character
+            </MenuItem>
+          </MenuList>
+        </Menu>
       )}
     </HStack>
   );
