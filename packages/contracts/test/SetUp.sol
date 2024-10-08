@@ -81,7 +81,6 @@ contract SetUp is Test {
         StarterItems memory _starterItems = abi.decode(parsedJson, (StarterItems));
 
         world = IWorld(worldAddress);
-        entropy = IEntropy(world.UD__getEntropy());
         alice = getUser();
         bob = getUser();
         goldToken = IERC20Mintable(world.UD__getGoldToken());

@@ -2394,19 +2394,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getEntropy",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "_entropy",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__getEscrowBalance",
     "inputs": [
       {
@@ -3147,19 +3134,6 @@ declare const abi: [
         "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__getPythProvider",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "_provider",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "stateMutability": "view"
