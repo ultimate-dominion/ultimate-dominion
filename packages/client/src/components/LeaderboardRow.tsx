@@ -18,17 +18,25 @@ import { etherToFixedNumber } from '../utils/helpers';
 import { type Character, StatsClasses } from '../utils/types';
 
 export const LeaderboardRow = ({
-  agility,
-  entityClass,
-  externalGoldBalance,
-  id,
-  image,
-  intelligence,
-  level,
-  maxHp,
-  name,
-  strength,
-}: Character): JSX.Element => {
+  character: {
+    agility,
+    entityClass,
+    externalGoldBalance,
+    id,
+    image,
+    intelligence,
+    level,
+    maxHp,
+    name,
+    strength,
+  },
+  index,
+  top,
+}: {
+  character: Character;
+  index: number;
+  top: boolean;
+}): JSX.Element => {
   const navigate = useNavigate();
 
   const totalStats = useMemo(
@@ -38,9 +46,12 @@ export const LeaderboardRow = ({
 
   return (
     <Flex
-      border="2px solid"
-      borderColor="grey400"
+      backgroundColor={top ? '#F5F5FA1F' : '#F5F5FA1F'}
       borderRadius={2}
+      boxShadow={
+        '-5px -5px 10px 0px #B3B9BE inset,5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset'
+      }
+      h="78px"
       justify="space-between"
       onClick={() => navigate(`/characters/${id}`)}
       w="100%"
@@ -57,17 +68,37 @@ export const LeaderboardRow = ({
       }}
     >
       <Flex>
-        <Avatar borderRadius={0} size="lg" src={image} />
+        <HStack ml={4}>
+          <Text
+            color="#283570"
+            fontSize="16px"
+            fontWeight={700}
+            justifySelf="center"
+          >
+            {index + 1}
+          </Text>
+          <Avatar borderRadius="100%" size="md" src={image} />
+        </HStack>
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
+            <Text
+              color="black"
+              fontWeight={700}
+              size={{ base: 'lg', lg: 'xl' }}
+            >
+              {name}
+            </Text>
             <Center>
               {entityClass == StatsClasses.Warrior && <GiAxeSword size={15} />}
               {entityClass == StatsClasses.Rogue && <GiRogue size={15} />}
               {entityClass == StatsClasses.Mage && <FaHatWizard size={15} />}
             </Center>
           </HStack>
-          <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
+          <Text
+            color="#121B45"
+            fontWeight={500}
+            size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+          >
             HP {maxHp.toString()} • STR {strength.toString()} • AGI
             {agility.toString()} • INT {intelligence.toString()}
           </Text>
@@ -76,6 +107,7 @@ export const LeaderboardRow = ({
       <HStack>
         <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
           <Text
+            color="#121B45"
             display={{ base: 'none', lg: 'block' }}
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
@@ -85,6 +117,7 @@ export const LeaderboardRow = ({
             {totalStats}
           </Text>
           <Text
+            color="black"
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -93,6 +126,7 @@ export const LeaderboardRow = ({
             {level.toString()}
           </Text>
           <Text
+            color="#EFD31C"
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -102,7 +136,7 @@ export const LeaderboardRow = ({
           </Text>
         </HStack>
         <Box display={{ base: 'none', md: 'block' }} w="50px">
-          <Button p={3} variant="ghost">
+          <Button p={3} variant="link">
             <IoIosArrowForward />
           </Button>
         </Box>
