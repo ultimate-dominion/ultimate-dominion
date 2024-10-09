@@ -56,6 +56,10 @@ const Button = {
         },
       },
     },
+    none: {
+      border: 0,
+      background: 'transparent',
+    },
     outline: {
       border: '2px solid',
       borderColor: 'grey500',
@@ -112,7 +116,7 @@ const Input = {
       field: {
         border: '2px solid',
         borderColor: 'grey',
-        borderRadius: '5px',
+        borderRadius: '8px',
         py: 5,
       },
     },
