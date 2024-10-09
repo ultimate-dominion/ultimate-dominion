@@ -246,6 +246,7 @@ export const LevelingPanel = ({
         maxHp={character.maxHp}
         mt={2}
         level={character.level}
+        statusEffects={character?.worldStatusEffects.map(e => e.name)}
         w="100%"
       />
       <HStack justifyContent="end" mt={4} w="100%">

@@ -203,28 +203,28 @@ export const TileDetailsPanel = (): JSX.Element => {
     return position?.x === 0 && position?.y === 0;
   }, [position]);
 
-  const opponentStatusEffect = useMemo(() => {
+  const opponentStatusEffects = useMemo(() => {
     const activeStatusEffects = statusEffectActions.filter(
       action => action.active,
     );
 
-    const opponentStatusEffect = activeStatusEffects.find(
+    const _opponentStatusEffects = activeStatusEffects.filter(
       action => action.victimId === opponent?.id,
     );
 
-    return opponentStatusEffect?.name ?? '';
+    return _opponentStatusEffects.map(action => action.name);
   }, [opponent, statusEffectActions]);
 
-  const userCharacterStatusEffect = useMemo(() => {
+  const userCharacterStatusEffects = useMemo(() => {
     const activeStatusEffects = statusEffectActions.filter(
       action => action.active,
     );
 
-    const userCharacterStatusEffect = activeStatusEffects.find(
+    const _userCharacterStatusEffects = activeStatusEffects.filter(
       action => action.victimId === character?.id,
     );
 
-    return userCharacterStatusEffect?.name ?? '';
+    return _userCharacterStatusEffects.map(action => action.name);
   }, [character, statusEffectActions]);
 
   if (!character) {
@@ -331,7 +331,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                 maxHp={opponent.maxHp}
                 currentHp={opponent.currentHp}
                 level={opponent.level}
-                statusEffect={opponentStatusEffect}
+                statusEffects={opponentStatusEffects}
                 w="90%"
               />
             )}
@@ -360,7 +360,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                 maxHp={userCharacterForBattleRendering.maxHp}
                 currentHp={userCharacterForBattleRendering.currentHp}
                 level={userCharacterForBattleRendering.level}
-                statusEffect={userCharacterStatusEffect}
+                statusEffects={userCharacterStatusEffects}
                 w="90%"
               />
             )}
@@ -596,7 +596,6 @@ const OpponentRow = ({
       }}
       _hover={{
         border: '1px solid',
-        cursor: disableRow ? 'not-allowed' : 'pointer',
       }}
     >
       <HStack
@@ -611,6 +610,9 @@ const OpponentRow = ({
           bg: disableRow ? 'transparent' : 'grey300',
           cursor: disableRow ? 'not-allowed' : 'pointer',
         }}
+        _hover={{
+          cursor: disableRow ? 'not-allowed' : 'pointer',
+        }}
       >
         <HStack justifyContent="start" spacing={4}>
           <Text
@@ -621,7 +623,11 @@ const OpponentRow = ({
             {name}
           </Text>
           {encounterType === EncounterType.PvP && (
-            <Avatar size="xs" src={opponent.image} />
+            <Avatar
+              filter={disableRow ? 'grayscale(100%)' : 'none'}
+              size="xs"
+              src={opponent.image}
+            />
           )}
         </HStack>
         {!disableRow && (

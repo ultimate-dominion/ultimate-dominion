@@ -25,6 +25,13 @@ import { HealthBar } from './HealthBar';
 import { ItemCard } from './ItemCard';
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
 
+const getMinutesAndSeconds = (seconds: bigint): string => {
+  const secondsNumber = Number(seconds);
+  const minutes = Math.floor(secondsNumber / 60);
+  const remainingSeconds = secondsNumber % 60;
+  return `${minutes}m ${remainingSeconds}s`;
+};
+
 type ItemConsumeModalProps = Consumable & {
   isOpen: boolean;
   onClose: () => void;
@@ -150,7 +157,11 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
               {isConsumed ? (
                 <Text mb={6}>{item.name} was consumed!</Text>
               ) : (
-                <Text mb={6}>Do you want to consume this item?</Text>
+                <Text mb={6}>
+                  Do you want to consume this item?{' '}
+                  {item.validTime > BigInt(0) &&
+                    `Its effect will last for ${getMinutesAndSeconds(item.validTime)}.`}
+                </Text>
               )}
               {isHealthRestore && (
                 <HealthBar

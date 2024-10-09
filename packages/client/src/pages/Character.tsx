@@ -46,8 +46,13 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { HOME_PATH, LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
-import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
+  MAX_EQUIPPED_ARMOR,
+  MAX_EQUIPPED_WEAPONS,
+  STATUS_EFFECT_NAME_MAPPING,
+} from '../utils/constants';
+import {
+  decodeAppliedStatusEffectId,
   decodeBaseStats,
   decodeCharacterId,
   etherToFixedNumber,
@@ -60,6 +65,7 @@ import {
   type Consumable,
   type Spell,
   type Weapon,
+  type WorldStatusEffect,
 } from '../utils/types';
 
 export const CharacterPage = (): JSX.Element => {
@@ -77,6 +83,8 @@ export const CharacterPage = (): JSX.Element => {
       GoldBalances,
       Levels,
       Stats,
+      StatusEffectValidity,
+      WorldStatusEffects,
     },
     isSynced,
     network: { publicClient, worldContract },
@@ -140,6 +148,43 @@ export const CharacterPage = (): JSX.Element => {
 
       const decodedBaseStats = decodeBaseStats(characterData.baseStats);
 
+      const worldStatusEffectsComponent = getComponentValue(
+        WorldStatusEffects,
+        id as Entity,
+      );
+
+      const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
+        appliedStatusEffects: [],
+      };
+
+      const decodedStatusEffects = appliedStatusEffects.map(
+        decodeAppliedStatusEffectId,
+      );
+
+      const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects
+        .map(effect => {
+          const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
+          const validity = getComponentValueStrict(
+            StatusEffectValidity,
+            paddedEffectId,
+          );
+
+          const timestampEnd = effect.timestamp + validity.validTime;
+          const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
+
+          const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+
+          return {
+            active: isActive,
+            effectId: paddedEffectId,
+            maxStacks: validity.maxStacks,
+            name,
+            timestampEnd,
+            timestampStart: effect.timestamp,
+          };
+        })
+        .filter(effect => effect.active);
+
       const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility,
@@ -162,6 +207,7 @@ export const CharacterPage = (): JSX.Element => {
         pvpCooldownTimer: pvpTimer,
         strength: characterStats.strength,
         tokenId: characterData.tokenId.toString(),
+        worldStatusEffects,
       };
 
       setCharacter(_character);
@@ -182,10 +228,12 @@ export const CharacterPage = (): JSX.Element => {
     EncounterEntity,
     GoldBalances,
     id,
+    publicClient,
     renderError,
     Stats,
-    publicClient,
+    StatusEffectValidity,
     worldContract,
+    WorldStatusEffects,
   ]);
 
   const isOwner = useMemo(() => {

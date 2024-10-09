@@ -95,30 +95,6 @@ export type ArmorTemplate = ArmorStats &
     tokenId: string;
   };
 
-export type Consumable = ConsumableTemplate & {
-  balance: bigint;
-  itemId: Entity;
-  owner: string;
-};
-
-export type ConsumableStats = {
-  agiModifier: bigint;
-  effects: string[];
-  hpModifier: bigint;
-  hpRestoreAmount: bigint;
-  intModifier: bigint;
-  minLevel: bigint;
-  strModifier: bigint;
-};
-
-export type ConsumableTemplate = ConsumableStats &
-  Metadata & {
-    itemType: ItemType;
-    price: bigint;
-    statRestrictions: StatRestrictions;
-    tokenId: string;
-  };
-
 export type AttackOutcomeType = {
   attackerDamageDelt: bigint;
   attackerDied: boolean;
@@ -151,6 +127,7 @@ export type CharacterData = {
   owner: string;
   pvpCooldownTimer: bigint;
   tokenId: string;
+  worldStatusEffects: WorldStatusEffect[];
 };
 
 export type CombatOutcomeType = {
@@ -171,6 +148,38 @@ export type ConsiderationData = {
   recipient: string;
   token: string;
   tokenType: TokenType;
+};
+
+export type Consumable = ConsumableTemplate & {
+  balance: bigint;
+  itemId: Entity;
+  owner: string;
+};
+
+export type ConsumableStats = {
+  agiModifier: bigint;
+  effects: string[];
+  hpModifier: bigint;
+  hpRestoreAmount: bigint;
+  intModifier: bigint;
+  minLevel: bigint;
+  strModifier: bigint;
+};
+
+export type ConsumableTemplate = ConsumableStats &
+  ConsumableValidity &
+  Metadata & {
+    itemType: ItemType;
+    price: bigint;
+    statRestrictions: StatRestrictions;
+    tokenId: string;
+  };
+
+export type ConsumableValidity = {
+  cooldown: bigint;
+  maxStacks: bigint;
+  validTime: bigint;
+  validTurns: bigint;
 };
 
 export type EntityStats = {
@@ -338,3 +347,12 @@ export type WeaponTemplate = WeaponStats &
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
+
+export type WorldStatusEffect = {
+  active: boolean;
+  effectId: string;
+  maxStacks: bigint;
+  name: string;
+  timestampEnd: bigint;
+  timestampStart: bigint;
+};
