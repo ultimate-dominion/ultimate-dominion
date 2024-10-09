@@ -47,8 +47,11 @@ export const LeaderboardRow = ({
       <Flex
         backgroundColor={top ? '#b1b8be' : '#a2a9b0'}
         borderRadius={2}
+        dropShadow={''}
         boxShadow={
-          '-5px -5px 10px 0px #B3B9BE inset,5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset'
+          top
+            ? '-5px -5px 10px 0px #B3B9BE,5px 5px 10px 0px #949CA380, 2px 2px 4px 0px #88919980'
+            : 'box-shadow: -5px -5px 10px 0px #B3B9BE inset,5px 5px 10px 0px #949CA380 inset,2px 2px 4px 0px #88919980 inset'
         }
         h="78px"
         justify="space-between"
@@ -83,7 +86,7 @@ export const LeaderboardRow = ({
               <Text
                 color="black"
                 fontWeight={700}
-                size={{ base: 'lg', lg: 'xl' }}
+                size={{ base: 'sm', lg: 'xl' }}
               >
                 {name}
               </Text>
@@ -164,7 +167,7 @@ export const LeaderboardRow = ({
             <Text
               color="#121B45"
               fontWeight={500}
-              size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+              size={{ base: 'xs', lg: 'md' }}
             >
               HP {maxHp.toString()} • STR {strength.toString()} • AGI{' '}
               {agility.toString()} • INT {intelligence.toString()}
