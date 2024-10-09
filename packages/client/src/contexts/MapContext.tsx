@@ -19,13 +19,20 @@ import {
 import { hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
+import { STATUS_EFFECT_NAME_MAPPING } from '../utils/constants';
 import {
+  decodeAppliedStatusEffectId,
   decodeBaseStats,
   decodeMobInstanceId,
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
-import { type Character, type Monster, Shop } from '../utils/types';
+import {
+  type Character,
+  type Monster,
+  type Shop,
+  type WorldStatusEffect,
+} from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
@@ -79,6 +86,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       Shops,
       Spawned,
       Stats,
+      StatusEffectValidity,
+      WorldStatusEffects,
     },
     delegatorAddress,
     isSynced,
@@ -210,6 +219,48 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               decodedBaseStats = decodeBaseStats(characterData.baseStats);
             }
 
+            const worldStatusEffectsComponent = getComponentValue(
+              WorldStatusEffects,
+              entity,
+            );
+
+            const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
+              appliedStatusEffects: [],
+            };
+
+            const decodedStatusEffects = appliedStatusEffects.map(
+              decodeAppliedStatusEffectId,
+            );
+
+            const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects
+              .map(effect => {
+                const paddedEffectId = effect.effectId.padEnd(
+                  66,
+                  '0',
+                ) as Entity;
+                const validity = getComponentValueStrict(
+                  StatusEffectValidity,
+                  paddedEffectId,
+                );
+
+                const timestampEnd = effect.timestamp + validity.validTime;
+                const isActive =
+                  timestampEnd > BigInt(Date.now()) / BigInt(1000);
+
+                const name =
+                  STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+
+                return {
+                  active: isActive,
+                  effectId: paddedEffectId,
+                  maxStacks: validity.maxStacks,
+                  name,
+                  timestampEnd,
+                  timestampStart: effect.timestamp,
+                };
+              })
+              .filter(effect => effect.active);
+
             return {
               ...fetachedMetadata,
               agility: characterStats.agility,
@@ -234,6 +285,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               pvpCooldownTimer: pvpTimer,
               strength: characterStats.strength,
               tokenId: tokenId.toString(),
+              worldStatusEffects,
             } as Character & {
               isSpawned: boolean;
               position: { x: number; y: number };
@@ -262,7 +314,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       renderError,
       Spawned,
       Stats,
+      StatusEffectValidity,
       worldContract,
+      WorldStatusEffects,
     ],
   );
 

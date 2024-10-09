@@ -212,7 +212,13 @@ export const TileDetailsPanel = (): JSX.Element => {
       action => action.victimId === opponent?.id,
     );
 
-    return _opponentStatusEffects.map(action => action.name);
+    return _opponentStatusEffects
+      .map(action => action.name)
+      .concat(
+        (opponent as Character)?.worldStatusEffects?.map(
+          effect => effect.name,
+        ) ?? [],
+      );
   }, [opponent, statusEffectActions]);
 
   const userCharacterStatusEffects = useMemo(() => {
@@ -224,7 +230,9 @@ export const TileDetailsPanel = (): JSX.Element => {
       action => action.victimId === character?.id,
     );
 
-    return _userCharacterStatusEffects.map(action => action.name);
+    return _userCharacterStatusEffects
+      .map(action => action.name)
+      .concat(character?.worldStatusEffects?.map(effect => effect.name) ?? []);
   }, [character, statusEffectActions]);
 
   if (!character) {
@@ -630,7 +638,7 @@ const OpponentRow = ({
             />
           )}
         </HStack>
-        {!disableRow && (
+        {!disableRow && !!level && (
           <Text
             fontWeight="bold"
             size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
