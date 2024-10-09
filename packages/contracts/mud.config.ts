@@ -400,6 +400,7 @@ export default defineWorld({
         marketplace: "address",
         lootManager: "address",
         shop: "address",
+        maxPlayers: "uint256",
       },
     },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////

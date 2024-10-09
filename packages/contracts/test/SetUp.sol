@@ -218,8 +218,8 @@ contract SetUp is Test {
 
         vm.startPrank(bob);
         bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
-        uint256 fees = entropy.getFee(address(1));
-        world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Mage);
+
+        world.UD__rollStats(alicesRandomness, bobCharacterId, Classes.Mage);
         world.UD__enterGame(bobCharacterId);
         vm.stopPrank();
     }

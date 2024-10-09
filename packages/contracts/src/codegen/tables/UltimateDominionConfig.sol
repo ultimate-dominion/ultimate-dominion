@@ -24,6 +24,7 @@ struct UltimateDominionConfigData {
   address marketplace;
   address lootManager;
   address shop;
+  uint256 maxPlayers;
 }
 
 library UltimateDominionConfig {
@@ -31,12 +32,12 @@ library UltimateDominionConfig {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000556c74696d617465446f6d696e696f6e);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0079070001141414141414000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0099080001141414141414200000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (bool, address, address, address, address, address, address)
-  Schema constant _valueSchema = Schema.wrap(0x0079070060616161616161000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bool, address, address, address, address, address, address, uint256)
+  Schema constant _valueSchema = Schema.wrap(0x00990800606161616161611f0000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -51,7 +52,7 @@ library UltimateDominionConfig {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](7);
+    fieldNames = new string[](8);
     fieldNames[0] = "locked";
     fieldNames[1] = "goldToken";
     fieldNames[2] = "characterToken";
@@ -59,6 +60,7 @@ library UltimateDominionConfig {
     fieldNames[4] = "marketplace";
     fieldNames[5] = "lootManager";
     fieldNames[6] = "shop";
+    fieldNames[7] = "maxPlayers";
   }
 
   /**
@@ -342,6 +344,44 @@ library UltimateDominionConfig {
   }
 
   /**
+   * @notice Get maxPlayers.
+   */
+  function getMaxPlayers() internal view returns (uint256 maxPlayers) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get maxPlayers.
+   */
+  function _getMaxPlayers() internal view returns (uint256 maxPlayers) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set maxPlayers.
+   */
+  function setMaxPlayers(uint256 maxPlayers) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((maxPlayers)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set maxPlayers.
+   */
+  function _setMaxPlayers(uint256 maxPlayers) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((maxPlayers)), _fieldLayout);
+  }
+
+  /**
    * @notice Get the full data.
    */
   function get() internal view returns (UltimateDominionConfigData memory _table) {
@@ -379,9 +419,19 @@ library UltimateDominionConfig {
     address items,
     address marketplace,
     address lootManager,
-    address shop
+    address shop,
+    uint256 maxPlayers
   ) internal {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, items, marketplace, lootManager, shop);
+    bytes memory _staticData = encodeStatic(
+      locked,
+      goldToken,
+      characterToken,
+      items,
+      marketplace,
+      lootManager,
+      shop,
+      maxPlayers
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -401,9 +451,19 @@ library UltimateDominionConfig {
     address items,
     address marketplace,
     address lootManager,
-    address shop
+    address shop,
+    uint256 maxPlayers
   ) internal {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, items, marketplace, lootManager, shop);
+    bytes memory _staticData = encodeStatic(
+      locked,
+      goldToken,
+      characterToken,
+      items,
+      marketplace,
+      lootManager,
+      shop,
+      maxPlayers
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -424,7 +484,8 @@ library UltimateDominionConfig {
       _table.items,
       _table.marketplace,
       _table.lootManager,
-      _table.shop
+      _table.shop,
+      _table.maxPlayers
     );
 
     EncodedLengths _encodedLengths;
@@ -446,7 +507,8 @@ library UltimateDominionConfig {
       _table.items,
       _table.marketplace,
       _table.lootManager,
-      _table.shop
+      _table.shop,
+      _table.maxPlayers
     );
 
     EncodedLengths _encodedLengths;
@@ -472,7 +534,8 @@ library UltimateDominionConfig {
       address items,
       address marketplace,
       address lootManager,
-      address shop
+      address shop,
+      uint256 maxPlayers
     )
   {
     locked = (_toBool(uint8(Bytes.getBytes1(_blob, 0))));
@@ -488,6 +551,8 @@ library UltimateDominionConfig {
     lootManager = (address(Bytes.getBytes20(_blob, 81)));
 
     shop = (address(Bytes.getBytes20(_blob, 101)));
+
+    maxPlayers = (uint256(Bytes.getBytes32(_blob, 121)));
   }
 
   /**
@@ -508,7 +573,8 @@ library UltimateDominionConfig {
       _table.items,
       _table.marketplace,
       _table.lootManager,
-      _table.shop
+      _table.shop,
+      _table.maxPlayers
     ) = decodeStatic(_staticData);
   }
 
@@ -541,9 +607,10 @@ library UltimateDominionConfig {
     address items,
     address marketplace,
     address lootManager,
-    address shop
+    address shop,
+    uint256 maxPlayers
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(locked, goldToken, characterToken, items, marketplace, lootManager, shop);
+    return abi.encodePacked(locked, goldToken, characterToken, items, marketplace, lootManager, shop, maxPlayers);
   }
 
   /**
@@ -559,9 +626,19 @@ library UltimateDominionConfig {
     address items,
     address marketplace,
     address lootManager,
-    address shop
+    address shop,
+    uint256 maxPlayers
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(locked, goldToken, characterToken, items, marketplace, lootManager, shop);
+    bytes memory _staticData = encodeStatic(
+      locked,
+      goldToken,
+      characterToken,
+      items,
+      marketplace,
+      lootManager,
+      shop,
+      maxPlayers
+    );
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

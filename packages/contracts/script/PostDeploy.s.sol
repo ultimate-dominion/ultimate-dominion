@@ -201,6 +201,8 @@ contract PostDeploy is Script {
         world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
 
         UltimateDominionConfig.setItems(address(items));
+        // set max players on board
+        UltimateDominionConfig.setMaxPlayers(100);
         //allow entropy system to call callback on Combat system
         // world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
         _createStarterItems();

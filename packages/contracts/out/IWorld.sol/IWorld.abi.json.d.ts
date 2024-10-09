@@ -4257,6 +4257,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__setMaxPlayers",
+    "inputs": [
+      {
+        "name": "newMax",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__setStarterItems",
     "inputs": [
       {
