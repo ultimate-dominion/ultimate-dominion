@@ -9,12 +9,12 @@ import {
 } from '@chakra-ui/react';
 
 const STATUS_EFFECT_COLOR_MAPPING: { [key: string]: string } = {
-  'agility gain': 'yellow',
+  'AGI boost': 'yellow',
   blind: 'black',
   drunk: 'red',
-  'intelligence gain': 'blue',
+  'INT boost': 'blue',
   poison: 'purple',
-  'strength gain': 'red',
+  'STR boost': 'red',
   stupify: 'blue',
   weaken: 'red',
 };

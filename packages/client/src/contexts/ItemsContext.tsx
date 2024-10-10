@@ -201,6 +201,7 @@ export const ItemsProvider = ({
               0n,
             ),
             cooldown: statusEffectValidities[0]?.cooldown ?? 0n,
+            effects: consumableStats.effects,
             hpModifier: statusEffectStats.reduce(
               (acc, curr) => acc + BigInt(curr.hpModifier),
               0n,
