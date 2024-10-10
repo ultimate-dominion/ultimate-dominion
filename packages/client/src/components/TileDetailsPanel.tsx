@@ -215,9 +215,9 @@ export const TileDetailsPanel = (): JSX.Element => {
     return _opponentStatusEffects
       .map(action => action.name)
       .concat(
-        (opponent as Character)?.worldStatusEffects?.map(
-          effect => effect.name,
-        ) ?? [],
+        (opponent as Character)?.worldStatusEffects
+          ?.filter(effect => effect.active)
+          .map(effect => effect.name) ?? [],
       );
   }, [opponent, statusEffectActions]);
 
@@ -227,13 +227,104 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
 
     const _userCharacterStatusEffects = activeStatusEffects.filter(
-      action => action.victimId === character?.id,
+      action => action.victimId === userCharacterForBattleRendering?.id,
     );
 
     return _userCharacterStatusEffects
       .map(action => action.name)
-      .concat(character?.worldStatusEffects?.map(effect => effect.name) ?? []);
-  }, [character, statusEffectActions]);
+      .concat(
+        userCharacterForBattleRendering?.worldStatusEffects
+          ?.filter(effect => effect.active)
+          .map(effect => effect.name) ?? [],
+      );
+  }, [statusEffectActions, userCharacterForBattleRendering]);
+
+  const expiredOpponentEffectModifications: {
+    agiModifier: bigint;
+    intModifier: bigint;
+    strModifier: bigint;
+  } = useMemo(() => {
+    if (!opponent) {
+      return {
+        agiModifier: BigInt(0),
+        intModifier: BigInt(0),
+        strModifier: BigInt(0),
+      };
+    }
+
+    if (!(opponent as Character).worldStatusEffects) {
+      return {
+        agiModifier: BigInt(0),
+        intModifier: BigInt(0),
+        strModifier: BigInt(0),
+      };
+    }
+
+    const inactiveEffects = (opponent as Character).worldStatusEffects.filter(
+      effect => !effect.active,
+    );
+
+    const agiModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.agiModifier,
+      BigInt(0),
+    );
+
+    const intModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.intModifier,
+      BigInt(0),
+    );
+
+    const strModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.strModifier,
+      BigInt(0),
+    );
+
+    return {
+      agiModifier,
+      intModifier,
+      strModifier,
+    };
+  }, [opponent]);
+
+  const expiredUserEffectModifications: {
+    agiModifier: bigint;
+    intModifier: bigint;
+    strModifier: bigint;
+  } = useMemo(() => {
+    if (!userCharacterForBattleRendering) {
+      return {
+        agiModifier: BigInt(0),
+        intModifier: BigInt(0),
+        strModifier: BigInt(0),
+      };
+    }
+
+    const inactiveEffects =
+      userCharacterForBattleRendering.worldStatusEffects.filter(
+        effect => !effect.active,
+      );
+
+    const agiModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.agiModifier,
+      BigInt(0),
+    );
+
+    const intModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.intModifier,
+      BigInt(0),
+    );
+
+    const strModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.strModifier,
+      BigInt(0),
+    );
+
+    return {
+      agiModifier,
+      intModifier,
+      strModifier,
+    };
+  }, [userCharacterForBattleRendering]);
 
   if (!character) {
     return (
@@ -347,17 +438,29 @@ export const TileDetailsPanel = (): JSX.Element => {
             <VStack alignItems="start" px={4}>
               {!!opponent.agility && (
                 <Text size={{ base: '2xs', lg: 'sm' }}>
-                  Agility: {opponent.agility.toString()}
+                  Agility:{' '}
+                  {(
+                    opponent.agility -
+                    expiredOpponentEffectModifications.agiModifier
+                  ).toString()}
                 </Text>
               )}
               {!!opponent.intelligence && (
                 <Text size={{ base: '2xs', lg: 'sm' }}>
-                  Intelligence: {opponent.intelligence.toString()}
+                  Intelligence:{' '}
+                  {(
+                    opponent.intelligence -
+                    expiredOpponentEffectModifications.intModifier
+                  ).toString()}
                 </Text>
               )}
               {!!opponent.strength && (
                 <Text size={{ base: '2xs', lg: 'sm' }}>
-                  Strength: {opponent.strength.toString()}
+                  Strength:{' '}
+                  {(
+                    opponent.strength -
+                    expiredOpponentEffectModifications.strModifier
+                  ).toString()}
                 </Text>
               )}
             </VStack>
@@ -375,14 +478,25 @@ export const TileDetailsPanel = (): JSX.Element => {
 
             <VStack alignItems="start" px={4}>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Agility: {userCharacterForBattleRendering.agility.toString()}
+                Agility:{' '}
+                {(
+                  userCharacterForBattleRendering.agility -
+                  expiredUserEffectModifications.agiModifier
+                ).toString()}
               </Text>
               <Text size={{ base: '2xs', lg: 'sm' }}>
                 Intelligence:{' '}
-                {userCharacterForBattleRendering.intelligence.toString()}
+                {(
+                  userCharacterForBattleRendering.intelligence -
+                  expiredUserEffectModifications.intModifier
+                ).toString()}
               </Text>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Strength: {userCharacterForBattleRendering.strength.toString()}
+                Strength:{' '}
+                {(
+                  userCharacterForBattleRendering.strength -
+                  expiredUserEffectModifications.strModifier
+                ).toString()}
               </Text>
             </VStack>
           </VStack>

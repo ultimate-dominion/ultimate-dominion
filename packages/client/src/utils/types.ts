@@ -349,10 +349,13 @@ export type WeaponTemplate = WeaponStats &
   };
 
 export type WorldStatusEffect = {
+  agiModifier: bigint;
   active: boolean;
   effectId: string;
+  intModifier: bigint;
   maxStacks: bigint;
   name: string;
+  strModifier: bigint;
   timestampEnd: bigint;
   timestampStart: bigint;
 };

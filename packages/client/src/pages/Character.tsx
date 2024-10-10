@@ -83,6 +83,7 @@ export const CharacterPage = (): JSX.Element => {
       GoldBalances,
       Levels,
       Stats,
+      StatusEffectStats,
       StatusEffectValidity,
       WorldStatusEffects,
     },
@@ -161,9 +162,14 @@ export const CharacterPage = (): JSX.Element => {
         decodeAppliedStatusEffectId,
       );
 
-      const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects
-        .map(effect => {
+      const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects.map(
+        effect => {
           const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
+          const effectStats = getComponentValueStrict(
+            StatusEffectStats,
+            paddedEffectId,
+          );
+
           const validity = getComponentValueStrict(
             StatusEffectValidity,
             paddedEffectId,
@@ -176,14 +182,17 @@ export const CharacterPage = (): JSX.Element => {
 
           return {
             active: isActive,
+            agiModifier: effectStats.agiModifier,
             effectId: paddedEffectId,
+            intModifier: effectStats.intModifier,
             maxStacks: validity.maxStacks,
             name,
+            strModifier: effectStats.strModifier,
             timestampEnd,
             timestampStart: effect.timestamp,
           };
-        })
-        .filter(effect => effect.active);
+        },
+      );
 
       const _character = {
         ...fetachedMetadata,
@@ -231,6 +240,7 @@ export const CharacterPage = (): JSX.Element => {
     publicClient,
     renderError,
     Stats,
+    StatusEffectStats,
     StatusEffectValidity,
     worldContract,
     WorldStatusEffects,
