@@ -203,29 +203,128 @@ export const TileDetailsPanel = (): JSX.Element => {
     return position?.x === 0 && position?.y === 0;
   }, [position]);
 
-  const opponentStatusEffect = useMemo(() => {
+  const opponentStatusEffects = useMemo(() => {
     const activeStatusEffects = statusEffectActions.filter(
       action => action.active,
     );
 
-    const opponentStatusEffect = activeStatusEffects.find(
+    const _opponentStatusEffects = activeStatusEffects.filter(
       action => action.victimId === opponent?.id,
     );
 
-    return opponentStatusEffect?.name ?? '';
+    return _opponentStatusEffects
+      .map(action => action.name)
+      .concat(
+        (opponent as Character)?.worldStatusEffects
+          ?.filter(effect => effect.active)
+          .map(effect => effect.name) ?? [],
+      );
   }, [opponent, statusEffectActions]);
 
-  const userCharacterStatusEffect = useMemo(() => {
+  const userCharacterStatusEffects = useMemo(() => {
     const activeStatusEffects = statusEffectActions.filter(
       action => action.active,
     );
 
-    const userCharacterStatusEffect = activeStatusEffects.find(
-      action => action.victimId === character?.id,
+    const _userCharacterStatusEffects = activeStatusEffects.filter(
+      action => action.victimId === userCharacterForBattleRendering?.id,
     );
 
-    return userCharacterStatusEffect?.name ?? '';
-  }, [character, statusEffectActions]);
+    return _userCharacterStatusEffects
+      .map(action => action.name)
+      .concat(
+        userCharacterForBattleRendering?.worldStatusEffects
+          ?.filter(effect => effect.active)
+          .map(effect => effect.name) ?? [],
+      );
+  }, [statusEffectActions, userCharacterForBattleRendering]);
+
+  const expiredOpponentEffectModifications: {
+    agiModifier: bigint;
+    intModifier: bigint;
+    strModifier: bigint;
+  } = useMemo(() => {
+    if (!opponent) {
+      return {
+        agiModifier: BigInt(0),
+        intModifier: BigInt(0),
+        strModifier: BigInt(0),
+      };
+    }
+
+    if (!(opponent as Character).worldStatusEffects) {
+      return {
+        agiModifier: BigInt(0),
+        intModifier: BigInt(0),
+        strModifier: BigInt(0),
+      };
+    }
+
+    const inactiveEffects = (opponent as Character).worldStatusEffects.filter(
+      effect => !effect.active,
+    );
+
+    const agiModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.agiModifier,
+      BigInt(0),
+    );
+
+    const intModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.intModifier,
+      BigInt(0),
+    );
+
+    const strModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.strModifier,
+      BigInt(0),
+    );
+
+    return {
+      agiModifier,
+      intModifier,
+      strModifier,
+    };
+  }, [opponent]);
+
+  const expiredUserEffectModifications: {
+    agiModifier: bigint;
+    intModifier: bigint;
+    strModifier: bigint;
+  } = useMemo(() => {
+    if (!userCharacterForBattleRendering) {
+      return {
+        agiModifier: BigInt(0),
+        intModifier: BigInt(0),
+        strModifier: BigInt(0),
+      };
+    }
+
+    const inactiveEffects =
+      userCharacterForBattleRendering.worldStatusEffects.filter(
+        effect => !effect.active,
+      );
+
+    const agiModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.agiModifier,
+      BigInt(0),
+    );
+
+    const intModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.intModifier,
+      BigInt(0),
+    );
+
+    const strModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.strModifier,
+      BigInt(0),
+    );
+
+    return {
+      agiModifier,
+      intModifier,
+      strModifier,
+    };
+  }, [userCharacterForBattleRendering]);
 
   if (!character) {
     return (
@@ -331,7 +430,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                 maxHp={opponent.maxHp}
                 currentHp={opponent.currentHp}
                 level={opponent.level}
-                statusEffect={opponentStatusEffect}
+                statusEffects={opponentStatusEffects}
                 w="90%"
               />
             )}
@@ -339,17 +438,29 @@ export const TileDetailsPanel = (): JSX.Element => {
             <VStack alignItems="start" px={4}>
               {!!opponent.agility && (
                 <Text size={{ base: '2xs', lg: 'sm' }}>
-                  Agility: {opponent.agility.toString()}
+                  Agility:{' '}
+                  {(
+                    opponent.agility -
+                    expiredOpponentEffectModifications.agiModifier
+                  ).toString()}
                 </Text>
               )}
               {!!opponent.intelligence && (
                 <Text size={{ base: '2xs', lg: 'sm' }}>
-                  Intelligence: {opponent.intelligence.toString()}
+                  Intelligence:{' '}
+                  {(
+                    opponent.intelligence -
+                    expiredOpponentEffectModifications.intModifier
+                  ).toString()}
                 </Text>
               )}
               {!!opponent.strength && (
                 <Text size={{ base: '2xs', lg: 'sm' }}>
-                  Strength: {opponent.strength.toString()}
+                  Strength:{' '}
+                  {(
+                    opponent.strength -
+                    expiredOpponentEffectModifications.strModifier
+                  ).toString()}
                 </Text>
               )}
             </VStack>
@@ -360,21 +471,32 @@ export const TileDetailsPanel = (): JSX.Element => {
                 maxHp={userCharacterForBattleRendering.maxHp}
                 currentHp={userCharacterForBattleRendering.currentHp}
                 level={userCharacterForBattleRendering.level}
-                statusEffect={userCharacterStatusEffect}
+                statusEffects={userCharacterStatusEffects}
                 w="90%"
               />
             )}
 
             <VStack alignItems="start" px={4}>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Agility: {userCharacterForBattleRendering.agility.toString()}
+                Agility:{' '}
+                {(
+                  userCharacterForBattleRendering.agility -
+                  expiredUserEffectModifications.agiModifier
+                ).toString()}
               </Text>
               <Text size={{ base: '2xs', lg: 'sm' }}>
                 Intelligence:{' '}
-                {userCharacterForBattleRendering.intelligence.toString()}
+                {(
+                  userCharacterForBattleRendering.intelligence -
+                  expiredUserEffectModifications.intModifier
+                ).toString()}
               </Text>
               <Text size={{ base: '2xs', lg: 'sm' }}>
-                Strength: {userCharacterForBattleRendering.strength.toString()}
+                Strength:{' '}
+                {(
+                  userCharacterForBattleRendering.strength -
+                  expiredUserEffectModifications.strModifier
+                ).toString()}
               </Text>
             </VStack>
           </VStack>
@@ -596,7 +718,6 @@ const OpponentRow = ({
       }}
       _hover={{
         border: '1px solid',
-        cursor: disableRow ? 'not-allowed' : 'pointer',
       }}
     >
       <HStack
@@ -611,6 +732,9 @@ const OpponentRow = ({
           bg: disableRow ? 'transparent' : 'grey300',
           cursor: disableRow ? 'not-allowed' : 'pointer',
         }}
+        _hover={{
+          cursor: disableRow ? 'not-allowed' : 'pointer',
+        }}
       >
         <HStack justifyContent="start" spacing={4}>
           <Text
@@ -621,10 +745,14 @@ const OpponentRow = ({
             {name}
           </Text>
           {encounterType === EncounterType.PvP && (
-            <Avatar size="xs" src={opponent.image} />
+            <Avatar
+              filter={disableRow ? 'grayscale(100%)' : 'none'}
+              size="xs"
+              src={opponent.image}
+            />
           )}
         </HStack>
-        {!disableRow && (
+        {!disableRow && !!level && (
           <Text
             fontWeight="bold"
             size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}

@@ -3,6 +3,7 @@ import {
   formatEther,
   hexToBigInt,
   parseEther,
+  sliceHex,
 } from 'viem';
 
 import {
@@ -38,6 +39,27 @@ export const getEmoji = (name: string): string => {
 
 export const removeEmoji = (name: string): string => {
   return name ? name.replace(/[\p{Emoji}\u200d]+/gu, '') || '' : name || '';
+};
+
+export const decodeAppliedStatusEffectId = (
+  encodedId: string,
+): {
+  effectId: string;
+  timestamp: bigint;
+  turnApplied: bigint;
+} => {
+  const effectId = sliceHex(encodedId as `0x${string}`, 0, 8);
+  const timestampHex = sliceHex(encodedId as `0x${string}`, 8, 16);
+  const turnAppliedHex = sliceHex(encodedId as `0x${string}`, 24, 32);
+
+  const timestamp = hexToBigInt(timestampHex);
+  const turnApplied = hexToBigInt(turnAppliedHex);
+
+  return {
+    effectId,
+    timestamp,
+    turnApplied,
+  };
 };
 
 export const decodeBaseStats = (statsBytes: string): EntityStats => {
