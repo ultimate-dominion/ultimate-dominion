@@ -396,12 +396,11 @@ export default defineWorld({
         locked: "bool",
         goldToken: "address",
         characterToken: "address",
-        entropy: "address",
-        pythProvider: "address",
         items: "address",
         marketplace: "address",
         lootManager: "address",
         shop: "address",
+        maxPlayers: "uint256",
       },
     },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////
@@ -458,9 +457,6 @@ export default defineWorld({
       schema: {
         requestId: "uint256",
         sequenceNumber: "uint64",
-        provider: "address",
-        entropy: "address",
-        fee: "uint256",
         requestType: "RngRequestType",
         randomNumber: "uint256",
         userRandomNumber: "bytes32",
