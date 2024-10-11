@@ -26,7 +26,7 @@ import {
     TOKEN_URI,
     ITEMS_NAMESPACE
 } from "../constants.sol";
-import {CombatEncounterData} from "@codegen/index.sol";
+import {CombatEncounterData, StarterItemsData} from "@codegen/index.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
 
 contract Test_CombatSystem is SetUp, GasReporter {
@@ -73,6 +73,18 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__move(bobCharacterId, 0, 1);
         vm.prank(alice);
         world.UD__move(alicesCharacterId, 0, 1);
+
+        // get alice starter Items
+        StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
+
+        vm.prank(alice);
+        world.UD__equipItems(alicesCharacterId, starterDat.itemIds);
+
+        // get bob starter items
+        starterDat = world.UD__getStarterItems(Classes.Mage);
+
+        vm.prank(bob);
+        world.UD__equipItems(bobCharacterId, starterDat.itemIds);
 
         defenders.push(entityId);
         attackers.push(bobCharacterId);
@@ -232,11 +244,11 @@ contract Test_CombatSystem is SetUp, GasReporter {
         StatsData memory startingStats = Stats.get(bobCharacterId);
         // assertEq(startingStats.agility, 15, "incorrect starting stats");
         uint256 startingGold = world.UD__getEscrowBalance(bobCharacterId);
-        vm.prank(bob);
 
+        vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
-
+        console.log("STARTING SPELLID: {%p}", startingSpellId);
         actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingSpellId});
         uint256 fees = 0; // entropy.getFee(address(1));
         vm.prank(bob);

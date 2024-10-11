@@ -164,8 +164,10 @@ contract MapSystem is System {
 
     function removeEntityFromBoard(bytes32 entityId) public {
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
+
         // if entity is a character
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            uint256 spawnedPlayers = Counters.get(address(this), 0);
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             // if sender is owner
             if (senderIsOwner) {
@@ -204,7 +206,6 @@ contract MapSystem is System {
         }
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, false);
-        uint256 spawnedPlayers = Counters.get(address(this), 0);
 
         bytes32[] memory emptyArray;
 

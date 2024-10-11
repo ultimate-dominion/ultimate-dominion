@@ -19,6 +19,7 @@ import {
     ActionOutcome,
     ActionOutcomeData,
     WeaponStats,
+    Items,
     WeaponStatsData,
     SpellStatsData,
     SpellStats,
@@ -27,7 +28,7 @@ import {
     MagicDamageStats,
     MagicDamageStatsData
 } from "@codegen/index.sol";
-import {ResistanceStat, EffectType} from "@codegen/common.sol";
+import {ResistanceStat, EffectType, ItemType} from "@codegen/common.sol";
 import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireAccess} from "../utils.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -61,10 +62,16 @@ contract CombatSystem is System {
 
                 EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
                 require(effectData.effectExists, "action does not exist");
-                require(
-                    IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId),
-                    "Item not equipped"
-                );
+                // if actor is a character.  require item is equipped
+                if (
+                    IWorld(_world()).UD__isValidCharacterId(actionOutcomeData.attackerId)
+                        && Items.getItemType(actionOutcomeData.itemId) != ItemType.Consumable
+                ) {
+                    require(
+                        IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId),
+                        "Item not equipped"
+                    );
+                }
                 //decode action data according to type
                 if (effectData.effectType == EffectType.PhysicalDamage) {
                     // calculate damage

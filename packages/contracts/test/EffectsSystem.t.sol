@@ -23,7 +23,8 @@ import {
     MagicDamageStats,
     PhysicalDamageStatsData,
     StatusEffectStatsData,
-    StatusEffectValidityData
+    StatusEffectValidityData,
+    StarterItemsData
 } from "@codegen/index.sol";
 import {_mobSystemId, _lootManagerSystemId} from "../src/utils.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
@@ -71,6 +72,18 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         world.UD__move(bobCharacterId, 0, 1);
         vm.prank(alice);
         world.UD__move(alicesCharacterId, 0, 1);
+
+        // get alice starter Items
+        StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
+
+        vm.prank(alice);
+        world.UD__equipItems(alicesCharacterId, starterDat.itemIds);
+
+        // get bob starter items
+        starterDat = world.UD__getStarterItems(Classes.Mage);
+
+        vm.prank(bob);
+        world.UD__equipItems(bobCharacterId, starterDat.itemIds);
 
         defenders.push(entityId);
         attackers.push(bobCharacterId);
