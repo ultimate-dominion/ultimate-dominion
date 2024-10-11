@@ -219,6 +219,7 @@ contract MapSystem is System {
                 EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
                 EncounterEntity.setAppliedStatusEffects(encounterData.defenders[i], emptyArray);
             }
+
             EncounterEntity.setDied(entityId, true);
             CombatEncounter.setEnd(encounterId, block.timestamp);
         }
