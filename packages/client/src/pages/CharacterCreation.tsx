@@ -4,13 +4,13 @@ import {
   Button,
   ButtonGroup,
   Center,
+  Divider,
   FormControl,
   FormHelperText,
   Heading,
   HStack,
   Input,
   Link,
-  SimpleGrid,
   Stack,
   Text,
   Textarea,
@@ -24,7 +24,7 @@ import {
   Has,
   runQuery,
 } from '@latticexyz/recs';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
+import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -58,7 +58,7 @@ export const CharacterCreation = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { chainId, isConnected } = useAccount();
   const {
-    components: { Items, StarterItems, UltimateDominionConfig },
+    components: { Items, Levels, StarterItems, UltimateDominionConfig },
     delegatorAddress,
     isSynced,
     systemCalls: { enterGame, mintCharacter, rollStats },
@@ -362,6 +362,12 @@ export const CharacterCreation = (): JSX.Element => {
     rolledOnce,
   ]);
 
+  const nextLevelXpRequirement =
+    useComponentValue(
+      Levels,
+      encodeEntity({ level: 'uint256' }, { level: BigInt('1') }),
+    )?.experience ?? BigInt(0);
+
   const UploadedAvatar = useMemo(() => {
     return (
       <Center
@@ -582,7 +588,10 @@ export const CharacterCreation = (): JSX.Element => {
             <Heading size="sm" textAlign="left">
               Choose Your Class
             </Heading>
-            <ButtonGroup justifyContent="space-between">
+            <ButtonGroup
+              justifyContent="space-between"
+              mx={{ base: -4, sm: 0 }}
+            >
               <Button
                 leftIcon={
                   <WarriorSvg
@@ -664,67 +673,100 @@ export const CharacterCreation = (): JSX.Element => {
                 . Re-roll stats to change class.
               </Text>
             )}
-          <SimpleGrid
-            columns={{ base: 1, xl: 2 }}
-            mb={{ base: 0, lg: 24 }}
-            mt={{ base: 8, sm: 12 }}
-            spacing={{ base: 12, sm: 16 }}
-          >
-            <VStack spacing={8}>
+          <VStack mt={{ base: 8, sm: 12 }} spacing={4}>
+            <HStack justify="space-between" w="100%">
+              <Heading size="sm" textAlign="left">
+                Stats
+              </Heading>
+              <Button
+                isDisabled={isDisabled}
+                isLoading={isRollingStats}
+                loadingText="Rolling..."
+                onClick={onRollStats}
+                size="sm"
+              >
+                {rolledOnce ? 'Re-roll' : 'Roll Stats'}
+              </Button>
+            </HStack>
+            <VStack fontWeight={700} spacing={1.5} w="100%">
+              <Divider
+                bgColor="#F5F5FA1F"
+                border="none"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
+                h={1}
+                w={{ base: 'calc(100% + 45px)', sm: 'calc(100% + 90px)' }}
+              />
               <HStack justify="space-between" w="100%">
-                <VStack alignItems="left" spacing={4}>
-                  <Heading size="sm" textAlign="left">
-                    Roll Stats
-                  </Heading>
-                  <Button
-                    isDisabled={isDisabled}
-                    isLoading={isRollingStats}
-                    loadingText="Rolling..."
-                    onClick={onRollStats}
-                    size="sm"
-                  >
-                    {rolledOnce ? 'Re-roll' : 'Roll'}
-                  </Button>
-                </VStack>
+                <Text color="#121B45">HP - Hit Points</Text>
+                <Text color="grey500" size="lg">
+                  {character?.maxHp.toString() ?? '0'}
+                </Text>
               </HStack>
-              <VStack w="100%">
-                <HStack justify="space-between" w="100%">
-                  <Text>HP - Hit Points</Text>
-                  <Text>{character?.maxHp.toString() ?? '0'}</Text>
-                </HStack>
-                <HStack justify="space-between" w="100%">
-                  <Text>STR - Strength</Text>
-                  <Text>{character?.strength.toString() ?? '0'}</Text>
-                </HStack>
-                <HStack justify="space-between" w="100%">
-                  <Text>AGI - Agility</Text>
-                  <Text>{character?.agility.toString() ?? '0'}</Text>
-                </HStack>
-                <HStack justify="space-between" w="100%">
-                  <Text>INT - Intelligence</Text>
-                  <Text>{character?.intelligence.toString() ?? '0'}</Text>
-                </HStack>
-              </VStack>
+              <Divider
+                bgColor="#F5F5FA1F"
+                border="none"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
+                h={1}
+                w={{ base: 'calc(100% + 45px)', sm: 'calc(100% + 90px)' }}
+              />
+              <HStack justify="space-between" w="100%">
+                <Text color="#121B45">STR - Strength</Text>
+                <Text color="grey500" size="lg">
+                  {character?.strength.toString() ?? '0'}
+                </Text>
+              </HStack>
+              <Divider
+                bgColor="#F5F5FA1F"
+                border="none"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
+                h={1}
+                w={{ base: 'calc(100% + 45px)', sm: 'calc(100% + 90px)' }}
+              />
+              <HStack justify="space-between" w="100%">
+                <Text color="#121B45">AGI - Agility</Text>
+                <Text color="grey500" size="lg">
+                  {character?.agility.toString() ?? '0'}
+                </Text>
+              </HStack>
+              <Divider
+                bgColor="#F5F5FA1F"
+                border="none"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
+                h={1}
+                w={{ base: 'calc(100% + 45px)', sm: 'calc(100% + 90px)' }}
+              />
+              <HStack justify="space-between" w="100%">
+                <Text color="#121B45">INT - Intelligence</Text>
+                <Text color="grey500" size="lg">
+                  {character?.intelligence.toString() ?? '0'}
+                </Text>
+              </HStack>
             </VStack>
-            <VStack spacing={5}>
-              <HStack justify="space-between" w="100%">
-                <Heading size="sm">$Gold</Heading>
-                <Text>5</Text>
-              </HStack>
-              <HStack justify="space-between" w="100%">
-                <Heading size="sm">Items</Heading>
-                <Text>{starterItems[characterClass].length}</Text>
-              </HStack>
-              <VStack w="100%">
-                {starterItems[characterClass].map(item => (
-                  <ItemCardSmall
-                    key={`starter-item-${StatsClasses[characterClass]}-${item.tokenId}`}
-                    {...item}
-                  />
-                ))}
-              </VStack>
+          </VStack>
+          <VStack mt={4} spacing={5}>
+            <HStack justify="space-between" w="100%">
+              <Text color="yellow" fontWeight={700} size="lg">
+                5 $GOLD
+              </Text>
+              <Text color="grey500" fontWeight={500} size="lg">
+                0 / {nextLevelXpRequirement.toString()} XP
+              </Text>
+            </HStack>
+            <HStack justify="space-between" w="100%">
+              <Heading size="sm">Items</Heading>
+              <Text color="grey500" fontWeight={700} size="lg">
+                {starterItems[characterClass].length}
+              </Text>
+            </HStack>
+            <VStack w="100%">
+              {starterItems[characterClass].map(item => (
+                <ItemCardSmall
+                  key={`starter-item-${StatsClasses[characterClass]}-${item.tokenId}`}
+                  {...item}
+                />
+              ))}
             </VStack>
-          </SimpleGrid>
+          </VStack>
           {!isSmallScreen && (
             <Box bottom={10} left={0} mt={16} pos="absolute" px={10} right={0}>
               {character && !rolledOnce && showError && (
