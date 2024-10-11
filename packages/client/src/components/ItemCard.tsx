@@ -182,20 +182,22 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
 }): JSX.Element => {
   if (item.itemType === ItemType.Spell) {
     return (
-      <HStack border="1px solid" borderColor="grey400" w="100%">
-        <Stack
-          alignItems="center"
-          bgColor="grey400"
-          h="50px"
-          justifyContent="center"
-          w="50px"
-        >
+      <HStack
+        borderBottom="2px solid"
+        borderColor="white"
+        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+        px={{ base: 4, sm: 10 }}
+        w="100%"
+      >
+        <Stack alignItems="center" h="60px" justifyContent="center" mr={8}>
           <Text color="white" fontSize="2xl">
             {getEmoji(item.name)}
           </Text>
         </Stack>
         <Box>
-          <Text size="xs">{removeEmoji(item.name)}</Text>
+          <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }}>
+            {removeEmoji(item.name)}
+          </Text>
         </Box>
       </HStack>
     );
@@ -206,21 +208,23 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
     | Weapon;
 
   return (
-    <HStack border="1px solid" borderColor="grey400" w="100%">
-      <Stack
-        alignItems="center"
-        bgColor="grey400"
-        h="50px"
-        justifyContent="center"
-        w="50px"
-      >
+    <HStack
+      borderBottom="2px solid"
+      borderColor="white"
+      boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+      px={{ base: 4, sm: 10 }}
+      w="100%"
+    >
+      <Stack alignItems="center" h="60px" justifyContent="center" mr={8}>
         <Text color="white" fontSize="2xl">
           {getEmoji(item.name)}
         </Text>
       </Stack>
       <Box>
-        <Text size="xs">{removeEmoji(name)}</Text>
-        <Text size="xs">
+        <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }}>
+          {removeEmoji(name)}
+        </Text>
+        <Text fontWeight={500} size={{ base: 'xs', sm: 'sm' }}>
           STR{getStatSymbol(strModifier.toString())}
           {strModifier.toString()} AGI{getStatSymbol(agiModifier.toString())}
           {agiModifier.toString()} INT{getStatSymbol(intModifier.toString())}
