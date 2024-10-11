@@ -91,7 +91,7 @@ export const ConnectWalletModal = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <PolygonalCard />
+        <PolygonalCard isModal />
         <ModalHeader>
           {isConnected ? 'Delegate Account' : 'Connect Wallet'}
         </ModalHeader>

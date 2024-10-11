@@ -27,6 +27,7 @@ import { useToast } from '../hooks/useToast';
 import { shortenAddress } from '../utils/helpers';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { CopyText } from './CopyText';
+import { PolygonalCard } from './PolygonalCard';
 
 export const WalletDetailsModal = ({
   isOpen,
@@ -204,6 +205,7 @@ export const WalletDetailsModal = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>
           {isConnected ? 'Wallet Details' : 'Connect Wallet'}
         </ModalHeader>

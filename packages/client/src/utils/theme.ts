@@ -170,6 +170,7 @@ const Modal = {
       minW: { base: '100%', md: '500px' },
       maxW: { base: '100%', md: '500px' },
       position: 'absolute',
+      pr: 4,
     },
     body: {
       overflow: 'auto',

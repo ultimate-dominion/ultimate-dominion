@@ -4,18 +4,24 @@ import { ReactNode } from 'react';
 export const PolygonalCard = ({
   children,
   clipPath = 'polygon(40px 0%, 100% 0%, 100% calc(100% - 50px), calc(100% - 50px) 100%, 0% 100%, 0% 80px)',
+  h = '100%',
+  isModal = false,
+  w = '100%',
   ...stackProps
-}: { children?: ReactNode; clipPath?: string } & StackProps): JSX.Element => {
+}: {
+  children?: ReactNode;
+  clipPath?: string;
+  isModal?: boolean;
+} & StackProps): JSX.Element => {
   return (
     <Box
       bgColor="#1A244E"
       clipPath={clipPath}
-      h="100%"
-      position="absolute"
+      h={h}
+      position={isModal ? 'absolute' : 'initial'}
       py="5px"
-      w="100%"
-      zIndex={-1}
-      {...stackProps}
+      zIndex={isModal ? -1 : 'initial'}
+      w={w}
     >
       <Box
         bgColor="#B3B9BE"
@@ -40,7 +46,9 @@ export const PolygonalCard = ({
             ml=".25px"
             w="calc(100% - 0.5px)"
           >
-            {children}
+            <Box {...stackProps} h="100%" w="100%">
+              {children}
+            </Box>
           </Box>
         </Box>
       </Box>

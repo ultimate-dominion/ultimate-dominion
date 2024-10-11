@@ -32,6 +32,7 @@ import { zeroAddress, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { ItemCardSmall } from '../components/ItemCard';
+import { PolygonalCard } from '../components/PolygonalCard';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -397,7 +398,12 @@ export const CharacterCreation = (): JSX.Element => {
       w="100%"
     >
       {character && characterToken ? (
-        <Box border="2px solid" p={8} w={{ base: '100%', lg: '50%' }}>
+        <PolygonalCard
+          clipPath="none"
+          h="initial"
+          p={8}
+          w={{ base: '100%', lg: '50%' }}
+        >
           <VStack h="100%" justifyContent="center" spacing={{ base: 4, md: 8 }}>
             <Center>
               <Avatar size={{ base: 'lg', sm: 'xl' }} src={character.image} />
@@ -447,18 +453,19 @@ export const CharacterCreation = (): JSX.Element => {
               Class: {rolledOnce ? StatsClasses[character.entityClass] : 'None'}
             </Text>
           </VStack>
-        </Box>
+        </PolygonalCard>
       ) : (
-        <Box
+        <PolygonalCard
           as="form"
+          clipPath="none"
+          h="initial"
           onSubmit={onCreateCharacter}
           w={{ base: '100%', lg: '50%' }}
         >
           <Box
-            border="2px solid"
             h={{ base: 'auto', lg: '100%' }}
             p={{ base: 4, sm: 10 }}
-            pos="relative"
+            position="relative"
           >
             <Heading mb={2} size="sm" textAlign="left">
               Who are you in this dark realm?
@@ -531,7 +538,7 @@ export const CharacterCreation = (): JSX.Element => {
               </FormControl>
             </VStack>
             {!isSmallScreen && (
-              <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
+              <Box bottom={10} left={0} position="absolute" px={10} right={0}>
                 <Button
                   isLoading={isCreating}
                   loadingText="Creating..."
@@ -554,18 +561,19 @@ export const CharacterCreation = (): JSX.Element => {
               Create Character
             </Button>
           )}
-        </Box>
+        </PolygonalCard>
       )}
-      <Box
+      <PolygonalCard
         as="form"
+        clipPath="none"
+        h="initial"
         onSubmit={(e: React.FormEvent<HTMLDivElement>) => e.preventDefault()}
         w={{ base: '100%', lg: '50%' }}
       >
         <Box
-          border="2px solid"
           h={{ base: 'auto', lg: '100%' }}
           p={{ base: 4, sm: 10 }}
-          pos="relative"
+          position="relative"
         >
           <VStack alignItems="left" spacing={4}>
             <Heading size="sm" textAlign="left">
@@ -727,7 +735,7 @@ export const CharacterCreation = (): JSX.Element => {
             )}
           </>
         )}
-      </Box>
+      </PolygonalCard>
     </Stack>
   );
 };
