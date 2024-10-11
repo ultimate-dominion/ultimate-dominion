@@ -248,7 +248,10 @@ contract EncounterSystem is System {
             EncounterEntity.setAppliedStatusEffects(entityTemp, emptyArray);
             if (EncounterEntity.getDied(entityTemp)) {
                 IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
+                // removing entity from the board resets died to false so set it again here.
                 EncounterEntity.setDied(entityTemp, true);
+                // if entity died remove world stat bonuses
+                WorldStatusEffects.setAppliedStatusEffects(entityTemp, emptyArray);
             }
         }
 

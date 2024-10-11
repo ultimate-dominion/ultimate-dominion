@@ -35,7 +35,7 @@ import {
     DEFENSE_MODIFIER,
     ATTACK_MODIFIER,
     CRIT_MULTIPLIER,
-    STAT_MODIFIER,
+    PROFICIENCY_DENOMINATOR,
     STARTING_HIT_PROBABILITY,
     ATTACKER_HIT_DAMPENER,
     DEFENDER_HIT_DAMPENER
@@ -230,7 +230,7 @@ contract CombatSystem is System {
         if (stat > 0) {
             // uint256 multiplier = uint256(Math.wmul(baseDamage * int256(WAD), (stat * int256(WAD) / 200))) ;
             int256 _unroundedDamage =
-                (Math.wmul(baseDamage, ((stat * int256(WAD)) / int256(STAT_MODIFIER))) + baseDamage);
+                (Math.wmul(baseDamage, ((stat * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR))) + baseDamage);
             _totalDamage = Math.roundInt(_unroundedDamage, int256(1 ether)) / int256(WAD);
         } else {
             // if you have a negative adjusted stat.  do half damage
@@ -264,9 +264,9 @@ contract CombatSystem is System {
         }
     }
 
-    function getStatModifier(int256 stat, int256 modifierBonus) internal view returns (uint256 multiplier) {
-        multiplier = (((stat + modifierBonus) * int256(WAD)) / int256(STAT_MODIFIER)) > 0
-            ? uint256(((stat + modifierBonus) * int256(WAD)) / int256(STAT_MODIFIER))
+    function _getStatModifier(int256 stat, int256 modifierBonus) internal view returns (uint256 multiplier) {
+        multiplier = (((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR)) > 0
+            ? uint256(((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR))
             : WAD;
     }
 

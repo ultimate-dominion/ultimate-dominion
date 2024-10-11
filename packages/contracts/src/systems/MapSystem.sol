@@ -164,6 +164,7 @@ contract MapSystem is System {
 
     function removeEntityFromBoard(bytes32 entityId) public {
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
+        // if entity is a character
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             // if sender is owner
