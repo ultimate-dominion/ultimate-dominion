@@ -111,9 +111,22 @@ const Input = {
     outline: {
       field: {
         border: '2px solid',
-        borderColor: 'grey',
-        borderRadius: '5px',
+        borderColor: 'transparent',
+        borderRadius: '8px',
+        boxShadow:
+          '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
+
         py: 5,
+        _active: {
+          borderColor: 'blue400',
+          boxShadow:
+            '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
+        },
+        _focus: {
+          borderColor: 'blue400',
+          boxShadow:
+            '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
+        },
       },
     },
   },
@@ -137,20 +150,21 @@ const Modal = {
       position: 'absolute',
     },
     body: {
-      mb: 8,
       overflow: 'auto',
+      pb: 8,
       px: 8,
     },
     footer: {
       borderTop: '1px solid',
       display: 'flex',
       justifyContent: 'center',
-      p: 8,
+      p: 4,
     },
     header: {
       color: '#283570',
       fontWeight: 700,
-      p: 8,
+      px: 4,
+      py: 8,
       textAlign: 'center',
     },
   },

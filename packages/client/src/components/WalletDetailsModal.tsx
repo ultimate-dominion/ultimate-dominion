@@ -210,7 +210,7 @@ export const WalletDetailsModal = ({
         <ModalCloseButton />
         <ModalBody>
           {address && externalWalletClient && isConnected ? (
-            <VStack p={4} spacing={10}>
+            <VStack spacing={10}>
               <VStack alignItems="start" spacing={4}>
                 {burnerBalance === '0' && (
                   <>
@@ -321,7 +321,7 @@ export const WalletDetailsModal = ({
               </VStack>
             </VStack>
           ) : (
-            <VStack p={4} spacing={10}>
+            <VStack spacing={10}>
               <Text textAlign="center">Connect your wallet to play.</Text>
               <ConnectWalletButton />
             </VStack>
