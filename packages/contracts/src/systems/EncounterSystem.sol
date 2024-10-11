@@ -17,7 +17,8 @@ import {
     CombatOutcomeData,
     Position,
     Mobs,
-    SessionTimer
+    SessionTimer,
+    WorldStatusEffects
 } from "@codegen/index.sol";
 import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";

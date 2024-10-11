@@ -132,7 +132,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         // alice should move 1st even though she is defender if combat timer is out
         vm.warp(block.timestamp + 31);
         vm.prank(alice);
-        world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+        world.UD__endTurn(encounterId, alicesCharacterId, aliceActions);
     }
 
     function test_CreateEncounterPvP_Revert_WrongPosition() public {
@@ -185,7 +185,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: 11});
         uint256 fees = 0; // entropy.getFee(address(1));
         vm.prank(bob);
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+        world.UD__endTurn(encounterId, bobCharacterId, actions);
     }
 
     // function test_MagicHeals() public {
@@ -208,7 +208,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     //     actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: 21});
     //     uint256 fees = 0; // entropy.getFee(address(1));
     //     vm.prank(bob);
-    //     world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+    //     world.UD__endTurn(encounterId, bobCharacterId, actions);
 
     //     assertEq(world.UD__getStats(bobCharacterId).currentHp, world.UD__getStats(bobCharacterId).maxHp);
     // }
@@ -240,12 +240,12 @@ contract Test_CombatSystem is SetUp, GasReporter {
         actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingSpellId});
         uint256 fees = 0; // entropy.getFee(address(1));
         vm.prank(bob);
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+        world.UD__endTurn(encounterId, bobCharacterId, actions);
 
         while (world.UD__getEncounter(encounterId).end == 0) {
             console.log("bob's move");
             vm.prank(bob);
-            world.UD__endTurn{value: fees}(encounterId, bobCharacterId, actions);
+            world.UD__endTurn(encounterId, bobCharacterId, actions);
             int256 bobHp = Stats.getCurrentHp(bobCharacterId);
             int256 entityHp = Stats.getCurrentHp(entityId);
             console.log("BOB HP");
@@ -314,7 +314,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         while (world.UD__getEncounter(encounterId).end == 0) {
             vm.prank(bob);
             console.log("bob move");
-            world.UD__endTurn{value: fees}(encounterId, bobCharacterId, bobActions);
+            world.UD__endTurn(encounterId, bobCharacterId, bobActions);
             // break if bob wins
             if (world.UD__getEncounter(encounterId).end != 0) {
                 break;
@@ -322,7 +322,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
             // bob's move
             vm.prank(alice);
             console.log("alice move");
-            world.UD__endTurn{value: fees}(encounterId, alicesCharacterId, aliceActions);
+            world.UD__endTurn(encounterId, alicesCharacterId, aliceActions);
             // break if bob wins
             if (world.UD__getEncounter(encounterId).end != 0) {
                 break;
@@ -380,8 +380,8 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory effects = new Action[](1);
         effects[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: 1});
-        uint256 fees = entropy.getFee(address(1));
+
         vm.expectRevert("ENCOUNTER SYSTEM: NON-COMBATANT");
-        world.UD__endTurn{value: fees}(encounterId, bobCharacterId, effects);
+        world.UD__endTurn(encounterId, bobCharacterId, effects);
     }
 }

@@ -294,7 +294,11 @@ contract LootManagerSystem is ERC1155Holder, System {
                     if (_goldAmount > uint256(0)) {
                         dropGoldToEscrow(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
                     }
-                    if (_expAmount > uint256(0) && distTemps.livingPlayers > uint256(0)) {
+                    if (
+                        _expAmount > uint256(0) && distTemps.livingPlayers > uint256(0)
+                            && IWorld(_world()).UD__getCurrentAvailableLevel(Stats.getExperience(distTemps.entityIdTemp))
+                                < 10
+                    ) {
                         statsTemp.experience += (
                             (_expAmount / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)
                         ) / WAD;
