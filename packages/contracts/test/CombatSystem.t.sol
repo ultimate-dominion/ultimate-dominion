@@ -345,24 +345,39 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_Flee_PvP() public {
-        world.UD__adminMoveEntity(bobCharacterId, 0, 0);
-        vm.startPrank(bob);
+        // buff bob
+        StatsData memory bobStats = world.UD__getStats(bobCharacterId);
+        bobStats.agility = 50;
+        bobStats.strength = 10;
+        bobStats.intelligence = 10;
+        bobStats.currentHp = 100;
+
+        world.UD__adminSetStats(bobCharacterId, bobStats);
+        world.UD__adminMoveEntity(alicesCharacterId, 0, 0);
+        vm.startPrank(alice);
         goldToken.approve(lootManagerAddress, 4 ether);
-        world.UD__depositToEscrow(bobCharacterId, 4 ether);
+        world.UD__depositToEscrow(alicesCharacterId, 4 ether);
         vm.stopPrank();
         // move entities to pvp zone
         world.UD__adminMoveEntity(bobCharacterId, 5, 5);
         world.UD__adminMoveEntity(alicesCharacterId, 5, 5);
 
-        vm.prank(alice);
+        vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvP, attackers, pvpDefenders);
 
-        vm.prank(bob);
-        world.UD__fleePvp(bobCharacterId);
+        Action[] memory actions = new Action[](1);
+        actions[0] =
+            Action({attackerEntityId: bobCharacterId, defenderEntityId: alicesCharacterId, itemId: startingWeaponId});
 
-        uint256 afterFlee = world.UD__getEscrowBalance(bobCharacterId);
+        vm.prank(bob);
+        world.UD__endTurn(encounterId, bobCharacterId, actions);
 
         vm.prank(alice);
+        world.UD__fleePvp(alicesCharacterId);
+
+        uint256 afterFlee = world.UD__getEscrowBalance(alicesCharacterId);
+
+        vm.prank(bob);
         // test pvp timer
         vm.expectRevert();
         world.UD__createEncounter(EncounterType.PvP, attackers, pvpDefenders);

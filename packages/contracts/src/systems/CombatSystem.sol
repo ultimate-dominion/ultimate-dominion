@@ -61,6 +61,10 @@ contract CombatSystem is System {
 
                 EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
                 require(effectData.effectExists, "action does not exist");
+                require(
+                    IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId),
+                    "Item not equipped"
+                );
                 //decode action data according to type
                 if (effectData.effectType == EffectType.PhysicalDamage) {
                     // calculate damage
@@ -85,7 +89,6 @@ contract CombatSystem is System {
                     }
                 } else if (effectData.effectType == EffectType.MagicDamage) {
                     // calculate damage
-
                     (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i]) =
                     _calculateMagicEffect(
                         actionOutcomeData.effectIds[i],
