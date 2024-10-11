@@ -43,7 +43,7 @@ export const Leaderboard = (): JSX.Element => {
   const { renderError } = useToast();
   const navigate = useNavigate();
   const { isConnected } = useAccount();
-  const leaderboardWhite = props => (
+  const leaderboard = props => (
     <Icon {...props}>
       <svg
         width="27"
@@ -59,7 +59,7 @@ export const Leaderboard = (): JSX.Element => {
       </svg>
     </Icon>
   );
-  const warriorBlack = props => (
+  const warrior = props => (
     <Icon {...props}>
       <svg
         width="24"
@@ -76,7 +76,7 @@ export const Leaderboard = (): JSX.Element => {
     </Icon>
   );
 
-  const rogueBlack = props => (
+  const rogue = props => (
     <Icon {...props}>
       <svg
         width="24"
@@ -105,7 +105,7 @@ export const Leaderboard = (): JSX.Element => {
     </Icon>
   );
 
-  const mageBlack = props => (
+  const mage = props => (
     <Icon {...props}>
       <svg
         width="24"
@@ -356,14 +356,14 @@ export const Leaderboard = (): JSX.Element => {
   }
 
   return (
-    <PolygonalCardLeaderboard my={4}>
+    <PolygonalCardLeaderboard>
       <VStack>
         <Box
           boxShadow="-4px 0 0 rgba(0, 0, 0, .2);"
           background="#0C1539"
           display="table"
           height="66px"
-          padding="20px"
+          px="20px"
           position="relative"
           width="100%"
         >
@@ -374,7 +374,7 @@ export const Leaderboard = (): JSX.Element => {
             fontWeight="700"
             verticalAlign="middle"
           >
-            <leaderboardWhite /> Leader Board
+            {leaderboard({size: 1})} Leader Board
           </Text>
         </Box>
 
@@ -414,7 +414,7 @@ export const Leaderboard = (): JSX.Element => {
               }
               boxShadow="-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480;"
               fontWeight="500"
-              leftIcon={warriorBlack}
+              leftIcon={warrior({})}
               onClick={() => setFilter({ filtered: 'byWarrior' })}
               size="sm"
               variant={filter.filtered == 'byWarrior' ? 'outline' : 'ghost'}
@@ -426,7 +426,7 @@ export const Leaderboard = (): JSX.Element => {
                 filter.filtered == 'byRogue' ? '#edf2f7' : '#BAC2CA'
               }
               boxShadow="-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480;"
-              leftIcon={rogueBlack}
+              leftIcon={rogue({})}
               onClick={() =>
                 setFilter({
                   filtered: 'byRogue',
@@ -442,7 +442,7 @@ export const Leaderboard = (): JSX.Element => {
                 filter.filtered == 'byMage' ? '#edf2f7' : '#BAC2CA'
               }
               boxShadow="box-shadow: -10px -10px 20px 0px rgba(84, 84, 84, 0.25); box-shadow: 5px 5px 10px 0px rgba(84, 84, 84, 0.5);"
-              leftIcon={mageBlack}
+              leftIcon={mage({})}
               onClick={() => setFilter({ filtered: 'byMage' })}
               size="sm"
               variant={filter.filtered == 'byMage' ? 'outline' : 'ghost'}

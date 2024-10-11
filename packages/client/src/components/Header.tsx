@@ -13,13 +13,18 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useMUD } from '../contexts/MUDContext';
 import {
   CHARACTER_CREATION_PATH,
+  CHARACTERS_PATH,
   GAME_BOARD_PATH,
   HOME_PATH,
   LEADERBOARD_PATH,
 } from '../Routes';
 
-const PAGES_WITHOUT_WALLET_DETAILS = [HOME_PATH, LEADERBOARD_PATH];
-const PAGES_WITH_BACK_BUTTON = [LEADERBOARD_PATH];
+const PAGES_WITHOUT_WALLET_DETAILS = [
+  HOME_PATH,
+  LEADERBOARD_PATH,
+  CHARACTERS_PATH,
+];
+const PAGES_WITH_BACK_BUTTON = [LEADERBOARD_PATH, CHARACTERS_PATH];
 export const Header = ({
   onOpenWalletDetailsModal,
 }: {
@@ -44,8 +49,8 @@ export const Header = ({
       bgColor="grey400"
       direction={{ base: 'column-reverse', lg: 'row' }}
       justify={
-        !PAGES_WITHOUT_WALLET_DETAILS.includes(pathname) ||
-        PAGES_WITH_BACK_BUTTON.includes(pathname)
+        !PAGES_WITHOUT_WALLET_DETAILS.includes(`/${pathname.split('/')[1]}`) ||
+        PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`)
           ? 'space-between'
           : 'end'
       }
@@ -53,7 +58,7 @@ export const Header = ({
       mb={10}
       p={{ base: 1, lg: 2 }}
     >
-      {PAGES_WITH_BACK_BUTTON.includes(pathname) && (
+      {PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`) && (
         <Button
           leftIcon={
             <Icon>
@@ -79,7 +84,7 @@ export const Header = ({
           Game Board
         </Button>
       )}
-      {!PAGES_WITHOUT_WALLET_DETAILS.includes(pathname) && (
+      {!PAGES_WITHOUT_WALLET_DETAILS.includes(`/${pathname.split('/')[1]}`) && (
         <HStack>
           <Button
             alignSelf={{ base: 'start', lg: 'center' }}

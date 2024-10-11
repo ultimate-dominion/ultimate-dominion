@@ -159,6 +159,9 @@ const Progress = {
   baseStyle: {
     track: {
       borderRadius: 5,
+      bg: '#6363634D',
+      boxShadow:
+        '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset',
     },
     filledTrack: {
       transition: 'width 0.5s',
@@ -170,7 +173,7 @@ const Progress = {
   variants: {
     filling: {
       filledTrack: {
-        bg: 'black',
+        bg: '#283570',
       },
     },
     filled: {
