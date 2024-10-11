@@ -209,7 +209,12 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         attackers[0] = bobCharacterId;
         defenders[0] = entityId;
 
+        world.UD__adminDropItem(bobCharacterId, poisonDartId, 1);
+
         vm.startPrank(bob);
+        uint256[] memory itemIds = new uint256[](1);
+        itemIds[0] = poisonDartId;
+        world.UD__equipItems(bobCharacterId, itemIds);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
         actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: poisonDartId});
