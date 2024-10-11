@@ -360,7 +360,13 @@ export const CharacterCreation = (): JSX.Element => {
 
   const UploadedAvatar = useMemo(() => {
     return (
-      <Center>
+      <Center
+        border="4px solid"
+        borderColor="grey300"
+        borderRadius="50%"
+        boxShadow="-10px -10px 20px 0px #A2A9B0 inset, 10px 10px 20px 0px #54545440 inset, 5px 5px 10px 0px #88919980 inset, -5px -5px 10px 0px #54545440 inset"
+        p={1.5}
+      >
         <Avatar
           size={{ base: 'lg', sm: 'xl' }}
           src={
@@ -387,7 +393,7 @@ export const CharacterCreation = (): JSX.Element => {
       gap={{ base: 4, sm: 6 }}
       justifyContent="center"
       mx="auto"
-      my={4}
+      my={{ base: 4, lg: 12 }}
       w="100%"
     >
       {character && characterToken ? (
@@ -455,7 +461,7 @@ export const CharacterCreation = (): JSX.Element => {
             pos="relative"
           >
             <Heading mb={2} size="sm" textAlign="left">
-              Create Your Character
+              Who are you in this dark realm?
             </Heading>
             <Text fontSize="xs" mb={6}>
               Your name, avatar, and description should fit a character you

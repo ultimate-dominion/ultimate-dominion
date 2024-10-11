@@ -36,16 +36,18 @@ export const Header = ({
           : 'end'
       }
       mt={4}
-      p={{ base: 1, lg: 2 }}
+      px={4}
+      py={2}
     >
       {!PAGES_WITHOUT_WALLET_DETAILS.includes(pathname) && (
-        <HStack>
+        <HStack spacing={4}>
           <Button
             alignSelf={{ base: 'start', lg: 'center' }}
-            bgColor="white"
             onClick={onOpenWalletDetailsModal}
-            size="xs"
-            variant="outline"
+            p={4}
+            fontSize="xs"
+            size="sm"
+            variant="dark"
           >
             Wallet Details
           </Button>

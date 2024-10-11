@@ -30,6 +30,32 @@ const Button = {
     },
   },
   variants: {
+    dark: {
+      bg: 'grey500',
+      border: '2px solid',
+      borderColor: 'grey500',
+      borderRadius: '8px',
+      boxShadow: '-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480',
+      color: 'white',
+      _active: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _hover: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _loading: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _hover: {
+          bg: 'rgba(0, 0, 0, 0.8)',
+        },
+      },
+    },
     gold: {
       bg: 'gold',
       border: '2px solid',
@@ -64,6 +90,7 @@ const Button = {
       bg: 'blue400',
       border: '2px solid',
       borderColor: 'blue400',
+      borderRadius: '8px',
       boxShadow:
         '2px 2px 5px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 0, 255, 0.5)',
       color: 'white',
@@ -115,17 +142,12 @@ const Input = {
         borderRadius: '8px',
         boxShadow:
           '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
-
         py: 5,
         _active: {
           borderColor: 'blue400',
-          boxShadow:
-            '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
         },
         _focus: {
           borderColor: 'blue400',
-          boxShadow:
-            '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
         },
       },
     },
@@ -257,8 +279,16 @@ const Textarea = {
   variants: {
     outline: {
       border: '2px solid',
-      borderColor: 'grey',
+      borderColor: 'transparent',
       borderRadius: '5px',
+      boxShadow:
+        '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
+      _active: {
+        borderColor: 'blue400',
+      },
+      _focus: {
+        borderColor: 'blue400',
+      },
     },
   },
 };
