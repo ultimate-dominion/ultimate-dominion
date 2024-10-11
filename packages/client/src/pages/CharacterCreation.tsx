@@ -410,7 +410,7 @@ export const CharacterCreation = (): JSX.Element => {
         <PolygonalCard
           clipPath="none"
           h="initial"
-          p={8}
+          p={{ base: 4, sm: 6 }}
           w={{ base: '100%', lg: '50%' }}
         >
           <VStack h="100%" justifyContent="center" spacing={{ base: 4, md: 8 }}>
@@ -473,8 +473,9 @@ export const CharacterCreation = (): JSX.Element => {
         >
           <Box
             h={{ base: 'auto', lg: '100%' }}
-            p={{ base: 4, sm: 10 }}
             position="relative"
+            px={{ base: 4, sm: 10 }}
+            py={{ base: 4, sm: 6 }}
           >
             <Heading mb={2} size="sm" textAlign="left">
               Who are you in this dark realm?
@@ -547,7 +548,7 @@ export const CharacterCreation = (): JSX.Element => {
               </FormControl>
             </VStack>
             {!isSmallScreen && (
-              <Box bottom={10} left={0} position="absolute" px={10} right={0}>
+              <Box bottom={6} left={0} position="absolute" px={10} right={0}>
                 <Button
                   isLoading={isCreating}
                   loadingText="Creating..."
@@ -563,6 +564,7 @@ export const CharacterCreation = (): JSX.Element => {
             <Button
               isLoading={isCreating || isRefreshing}
               loadingText="Creating..."
+              mb={4}
               mt={2}
               type="submit"
               width="100%"
@@ -579,18 +581,14 @@ export const CharacterCreation = (): JSX.Element => {
         onSubmit={(e: React.FormEvent<HTMLDivElement>) => e.preventDefault()}
         w={{ base: '100%', lg: '50%' }}
       >
-        <Box
-          h={{ base: 'auto', lg: '100%' }}
-          p={{ base: 4, sm: 10 }}
-          position="relative"
-        >
+        <Box position="relative" py={{ base: 4, sm: 6 }}>
           <VStack alignItems="left" spacing={4}>
-            <Heading size="sm" textAlign="left">
+            <Heading px={{ base: 4, sm: 10 }} size="sm" textAlign="left">
               Choose Your Class
             </Heading>
             <ButtonGroup
+              px={{ base: 0, sm: 10 }}
               justifyContent="space-between"
-              mx={{ base: -4, sm: 0 }}
             >
               <Button
                 leftIcon={
@@ -665,7 +663,7 @@ export const CharacterCreation = (): JSX.Element => {
           {character &&
             rolledOnce &&
             characterClass !== character.entityClass && (
-              <Text color="red" fontSize="sm" mt={2}>
+              <Text color="red" fontSize="sm" mt={2} px={{ base: 4, sm: 10 }}>
                 Your current class is{' '}
                 <Text as="span" fontWeight={700}>
                   {StatsClasses[character.entityClass]}
@@ -674,7 +672,7 @@ export const CharacterCreation = (): JSX.Element => {
               </Text>
             )}
           <VStack mt={{ base: 8, sm: 12 }} spacing={4}>
-            <HStack justify="space-between" w="100%">
+            <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
               <Heading size="sm" textAlign="left">
                 Stats
               </Heading>
@@ -694,9 +692,8 @@ export const CharacterCreation = (): JSX.Element => {
                 border="none"
                 boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
                 h={1}
-                w={{ base: 'calc(100% + 45px)', sm: 'calc(100% + 90px)' }}
               />
-              <HStack justify="space-between" w="100%">
+              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">HP - Hit Points</Text>
                 <Text color="grey500" size="lg">
                   {character?.maxHp.toString() ?? '0'}
@@ -707,9 +704,8 @@ export const CharacterCreation = (): JSX.Element => {
                 border="none"
                 boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
                 h={1}
-                w={{ base: 'calc(100% + 45px)', sm: 'calc(100% + 90px)' }}
               />
-              <HStack justify="space-between" w="100%">
+              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">STR - Strength</Text>
                 <Text color="grey500" size="lg">
                   {character?.strength.toString() ?? '0'}
@@ -720,9 +716,8 @@ export const CharacterCreation = (): JSX.Element => {
                 border="none"
                 boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
                 h={1}
-                w={{ base: 'calc(100% + 45px)', sm: 'calc(100% + 90px)' }}
               />
-              <HStack justify="space-between" w="100%">
+              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">AGI - Agility</Text>
                 <Text color="grey500" size="lg">
                   {character?.agility.toString() ?? '0'}
@@ -733,9 +728,8 @@ export const CharacterCreation = (): JSX.Element => {
                 border="none"
                 boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
                 h={1}
-                w={{ base: 'calc(100% + 45px)', sm: 'calc(100% + 90px)' }}
               />
-              <HStack justify="space-between" w="100%">
+              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">INT - Intelligence</Text>
                 <Text color="grey500" size="lg">
                   {character?.intelligence.toString() ?? '0'}
@@ -744,7 +738,7 @@ export const CharacterCreation = (): JSX.Element => {
             </VStack>
           </VStack>
           <VStack mt={4} spacing={5}>
-            <HStack justify="space-between" w="100%">
+            <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
               <Text color="yellow" fontWeight={700} size="lg">
                 5 $GOLD
               </Text>
@@ -752,7 +746,7 @@ export const CharacterCreation = (): JSX.Element => {
                 0 / {nextLevelXpRequirement.toString()} XP
               </Text>
             </HStack>
-            <HStack justify="space-between" w="100%">
+            <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
               <Heading size="sm">Items</Heading>
               <Text color="grey500" fontWeight={700} size="lg">
                 {starterItems[characterClass].length}
@@ -767,25 +761,24 @@ export const CharacterCreation = (): JSX.Element => {
               ))}
             </VStack>
           </VStack>
-          {!isSmallScreen && (
-            <Box bottom={10} left={0} mt={16} pos="absolute" px={10} right={0}>
-              {character && !rolledOnce && showError && (
-                <Text color="red" fontSize="sm" mb={2} textAlign="center">
-                  You must roll stats at least once before entering the game.
-                </Text>
-              )}
-              <Button
-                isDisabled={isDisabled}
-                isLoading={isEnteringGame}
-                loadingText="Entering..."
-                onClick={onEnterGame}
-                type="button"
-                width="100%"
-              >
-                Enter Game
-              </Button>
-            </Box>
-          )}
+          <Box mt={4} px={{ base: 4, sm: 10 }}>
+            {character && !rolledOnce && showError && (
+              <Text color="red" fontSize="sm" mb={2} textAlign="center">
+                You must roll stats at least once before entering the game.
+              </Text>
+            )}
+            <Button
+              isDisabled={isDisabled}
+              isLoading={isEnteringGame}
+              loadingText="Entering..."
+              onClick={onEnterGame}
+              size="sm"
+              type="button"
+              width="100%"
+            >
+              Wake Up to the Dark Cave
+            </Button>
+          </Box>
           {!character && (
             <Box
               pos="absolute"
@@ -801,26 +794,6 @@ export const CharacterCreation = (): JSX.Element => {
             </Box>
           )}
         </Box>
-        {isSmallScreen && (
-          <>
-            <Button
-              isDisabled={isDisabled}
-              isLoading={isEnteringGame}
-              loadingText="Entering..."
-              onClick={onEnterGame}
-              mt={2}
-              type="button"
-              width="100%"
-            >
-              Enter Game
-            </Button>
-            {showError && !rolledOnce && (
-              <Text color="red" fontSize="sm" mt={2} textAlign="center">
-                You must roll stats at least once before entering the game.
-              </Text>
-            )}
-          </>
-        )}
       </PolygonalCard>
     </Stack>
   );
