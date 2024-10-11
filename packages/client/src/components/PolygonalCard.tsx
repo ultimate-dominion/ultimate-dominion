@@ -44,6 +44,7 @@ export const PolygonalCard = ({
             clipPath={clipPath}
             h="100%"
             ml=".25px"
+            overflow="hidden"
             w="calc(100% - 0.5px)"
           >
             <Box {...stackProps} h="100%" w="100%">

@@ -737,7 +737,7 @@ export const CharacterCreation = (): JSX.Element => {
               </HStack>
             </VStack>
           </VStack>
-          <VStack mt={4} spacing={5}>
+          <VStack mt={4} spacing={2}>
             <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
               <Text color="yellow" fontWeight={700} size="lg">
                 5 $GOLD
@@ -746,13 +746,18 @@ export const CharacterCreation = (): JSX.Element => {
                 0 / {nextLevelXpRequirement.toString()} XP
               </Text>
             </HStack>
-            <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
+            <HStack
+              mt={4}
+              justify="space-between"
+              px={{ base: 4, sm: 10 }}
+              w="100%"
+            >
               <Heading size="sm">Items</Heading>
               <Text color="grey500" fontWeight={700} size="lg">
                 {starterItems[characterClass].length}
               </Text>
             </HStack>
-            <VStack w="100%">
+            <VStack spacing={0} w="100%">
               {starterItems[characterClass].map(item => (
                 <ItemCardSmall
                   key={`starter-item-${StatsClasses[characterClass]}-${item.tokenId}`}
