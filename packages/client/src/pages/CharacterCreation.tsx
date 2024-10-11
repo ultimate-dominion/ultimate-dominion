@@ -32,7 +32,10 @@ import { zeroAddress, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { ItemCardSmall } from '../components/ItemCard';
+import { MageSvg } from '../components/MageSvg';
 import { PolygonalCard } from '../components/PolygonalCard';
+import { RogueSvg } from '../components/RogueSvg';
+import { WarriorSvg } from '../components/WarriorSvg';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -581,28 +584,69 @@ export const CharacterCreation = (): JSX.Element => {
             </Heading>
             <ButtonGroup justifyContent="space-between">
               <Button
+                leftIcon={
+                  <WarriorSvg
+                    theme={
+                      characterClass === StatsClasses.Warrior ? 'light' : 'dark'
+                    }
+                  />
+                }
+                bgColor={
+                  characterClass === StatsClasses.Warrior
+                    ? 'grey500'
+                    : undefined
+                }
+                color={
+                  characterClass === StatsClasses.Warrior ? 'white' : undefined
+                }
                 isDisabled={isDisabled}
                 onClick={() => setCharacterClass(StatsClasses.Warrior)}
                 size="sm"
-                variant={characterClass === 0 ? 'solid' : 'outline'}
+                variant="white"
                 w="150px"
               >
                 Warrior
               </Button>
               <Button
+                leftIcon={
+                  <RogueSvg
+                    theme={
+                      characterClass === StatsClasses.Rogue ? 'light' : 'dark'
+                    }
+                  />
+                }
+                bgColor={
+                  characterClass === StatsClasses.Rogue ? 'grey500' : undefined
+                }
+                color={
+                  characterClass === StatsClasses.Rogue ? 'white' : undefined
+                }
                 isDisabled={isDisabled}
                 onClick={() => setCharacterClass(StatsClasses.Rogue)}
                 size="sm"
-                variant={characterClass === 1 ? 'solid' : 'outline'}
+                variant="white"
                 w="150px"
               >
                 Rogue
               </Button>
               <Button
+                leftIcon={
+                  <MageSvg
+                    theme={
+                      characterClass === StatsClasses.Mage ? 'light' : 'dark'
+                    }
+                  />
+                }
+                bgColor={
+                  characterClass === StatsClasses.Mage ? 'grey500' : undefined
+                }
+                color={
+                  characterClass === StatsClasses.Mage ? 'white' : undefined
+                }
                 isDisabled={isDisabled}
                 onClick={() => setCharacterClass(StatsClasses.Mage)}
                 size="sm"
-                variant={characterClass === 2 ? 'solid' : 'outline'}
+                variant="white"
                 w="150px"
               >
                 Mage

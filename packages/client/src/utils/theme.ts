@@ -18,7 +18,7 @@ const Button = {
     fontWeight: 500,
   },
   defaultProps: {
-    variant: 'solid',
+    variant: 'blue',
   },
   sizes: {
     sm: {
@@ -85,8 +85,9 @@ const Button = {
     outline: {
       border: '2px solid',
       borderColor: 'grey500',
+      bg: 'white',
     },
-    solid: {
+    blue: {
       bg: 'blue400',
       border: '2px solid',
       borderColor: 'blue400',
@@ -110,6 +111,33 @@ const Button = {
         bg: 'rgba(0, 0, 0, 0.8)',
         _hover: {
           bg: 'rgba(0, 0, 0, 0.8)',
+        },
+      },
+    },
+    white: {
+      bg: 'white',
+      borderRadius: '8px',
+      boxShadow: '-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480',
+      color: 'black',
+      _active: {
+        bg: 'grey500',
+        color: 'white',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _hover: {
+        bg: 'grey500',
+        color: 'white',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _loading: {
+        bg: 'grey500',
+        color: 'white',
+        _hover: {
+          bg: 'grey500',
         },
       },
     },
