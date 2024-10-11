@@ -14,6 +14,7 @@ import {
   Stack,
   Text,
   Textarea,
+  Tooltip,
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
@@ -590,74 +591,98 @@ export const CharacterCreation = (): JSX.Element => {
               px={{ base: 0, sm: 10 }}
               justifyContent="space-between"
             >
-              <Button
-                leftIcon={
-                  <WarriorSvg
-                    theme={
-                      characterClass === StatsClasses.Warrior ? 'light' : 'dark'
-                    }
-                  />
-                }
-                bgColor={
-                  characterClass === StatsClasses.Warrior
-                    ? 'grey500'
-                    : undefined
-                }
-                color={
-                  characterClass === StatsClasses.Warrior ? 'white' : undefined
-                }
-                isDisabled={isDisabled}
-                onClick={() => setCharacterClass(StatsClasses.Warrior)}
-                size="sm"
-                variant="white"
-                w="150px"
+              <Tooltip
+                bg="#070D2A"
+                label="The Warrior class grants your character 1 additional STR Ability Point per level."
+                placement="top"
               >
-                Warrior
-              </Button>
-              <Button
-                leftIcon={
-                  <RogueSvg
-                    theme={
-                      characterClass === StatsClasses.Rogue ? 'light' : 'dark'
-                    }
-                  />
-                }
-                bgColor={
-                  characterClass === StatsClasses.Rogue ? 'grey500' : undefined
-                }
-                color={
-                  characterClass === StatsClasses.Rogue ? 'white' : undefined
-                }
-                isDisabled={isDisabled}
-                onClick={() => setCharacterClass(StatsClasses.Rogue)}
-                size="sm"
-                variant="white"
-                w="150px"
+                <Button
+                  leftIcon={
+                    <WarriorSvg
+                      theme={
+                        characterClass === StatsClasses.Warrior
+                          ? 'light'
+                          : 'dark'
+                      }
+                    />
+                  }
+                  bgColor={
+                    characterClass === StatsClasses.Warrior
+                      ? 'grey500'
+                      : undefined
+                  }
+                  color={
+                    characterClass === StatsClasses.Warrior
+                      ? 'white'
+                      : undefined
+                  }
+                  isDisabled={isDisabled}
+                  onClick={() => setCharacterClass(StatsClasses.Warrior)}
+                  size="sm"
+                  variant="white"
+                  w="150px"
+                >
+                  Warrior
+                </Button>
+              </Tooltip>
+              <Tooltip
+                bg="#070D2A"
+                label="The Rogue class grants your character 1 additional AGI Ability Point per level."
+                placement="top"
               >
-                Rogue
-              </Button>
-              <Button
-                leftIcon={
-                  <MageSvg
-                    theme={
-                      characterClass === StatsClasses.Mage ? 'light' : 'dark'
-                    }
-                  />
-                }
-                bgColor={
-                  characterClass === StatsClasses.Mage ? 'grey500' : undefined
-                }
-                color={
-                  characterClass === StatsClasses.Mage ? 'white' : undefined
-                }
-                isDisabled={isDisabled}
-                onClick={() => setCharacterClass(StatsClasses.Mage)}
-                size="sm"
-                variant="white"
-                w="150px"
+                <Button
+                  leftIcon={
+                    <RogueSvg
+                      theme={
+                        characterClass === StatsClasses.Rogue ? 'light' : 'dark'
+                      }
+                    />
+                  }
+                  bgColor={
+                    characterClass === StatsClasses.Rogue
+                      ? 'grey500'
+                      : undefined
+                  }
+                  color={
+                    characterClass === StatsClasses.Rogue ? 'white' : undefined
+                  }
+                  isDisabled={isDisabled}
+                  onClick={() => setCharacterClass(StatsClasses.Rogue)}
+                  size="sm"
+                  variant="white"
+                  w="150px"
+                >
+                  Rogue
+                </Button>
+              </Tooltip>
+              <Tooltip
+                bg="#070D2A"
+                label="The Mage class grants your character 1 additional INT Ability Point per level."
+                placement="top"
               >
-                Mage
-              </Button>
+                <Button
+                  leftIcon={
+                    <MageSvg
+                      theme={
+                        characterClass === StatsClasses.Mage ? 'light' : 'dark'
+                      }
+                    />
+                  }
+                  bgColor={
+                    characterClass === StatsClasses.Mage ? 'grey500' : undefined
+                  }
+                  color={
+                    characterClass === StatsClasses.Mage ? 'white' : undefined
+                  }
+                  isDisabled={isDisabled}
+                  onClick={() => setCharacterClass(StatsClasses.Mage)}
+                  size="sm"
+                  variant="white"
+                  w="150px"
+                >
+                  Mage
+                </Button>
+              </Tooltip>
             </ButtonGroup>
           </VStack>
           {character &&

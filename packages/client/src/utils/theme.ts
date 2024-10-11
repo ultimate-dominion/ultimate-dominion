@@ -324,8 +324,9 @@ const Textarea = {
 
 const Tooltip = {
   baseStyle: {
-    bg: 'black',
+    bg: '#070D2A',
     borderRadius: 0,
+    clipPath: 'polygon(0% 0%, 93% 0%, 100% 18%, 100% 100%, 10% 100%, 0% 90%);',
     color: 'white',
     p: 4,
   },
