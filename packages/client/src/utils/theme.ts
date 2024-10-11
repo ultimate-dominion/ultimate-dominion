@@ -131,21 +131,26 @@ const Modal = {
       bgColor: '#B3B9BE',
       clipPath:
         'polygon(40px 0%, 100% 0%, 100% calc(100% - 50px), calc(100% - 50px) 100%, 0% 100%, 0% 80px)',
-      maxH: { base: '100%', md: 'calc(100% - 7.5rem)' },
+      maxH: 'calc(100% - 7.5rem)',
       minW: { base: '100%', md: '500px' },
       maxW: { base: '100%', md: '500px' },
+      position: 'absolute',
     },
     body: {
+      mb: 8,
       overflow: 'auto',
+      px: 8,
     },
     footer: {
       borderTop: '1px solid',
       display: 'flex',
       justifyContent: 'center',
+      p: 8,
     },
     header: {
       color: '#283570',
       fontWeight: 700,
+      p: 8,
       textAlign: 'center',
     },
   },
