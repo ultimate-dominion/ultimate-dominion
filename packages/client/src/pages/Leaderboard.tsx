@@ -67,7 +67,7 @@ export const Leaderboard = (): JSX.Element => {
 
   const [entries, setEntries] = useState<Character[]>([]);
   const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
-  const [filter, setFilter] = useState({ filtered: 'all' });
+  const [filter, setFilter] = useState<StatsClasses | 'All'>('All');
   const [query, setQuery] = useState('');
 
   const [page, setPage] = useState(1);
@@ -225,12 +225,12 @@ export const Leaderboard = (): JSX.Element => {
       }
     });
     entriesCopy = [...entriesCopy].filter(entry => {
-      switch (filter.filtered) {
-        case 'byWarrior':
+      switch (filter) {
+        case StatsClasses.Warrior:
           return entry.entityClass == StatsClasses.Warrior;
-        case 'byRogue':
+        case StatsClasses.Rogue:
           return entry.entityClass == StatsClasses.Rogue;
-        case 'byMage':
+        case StatsClasses.Mage:
           return entry.entityClass == StatsClasses.Mage;
         default:
           return true;
@@ -256,7 +256,7 @@ export const Leaderboard = (): JSX.Element => {
     }
   }, [
     characters,
-    filter.filtered,
+    filter,
     pageLimit,
     pageNumber,
     query,
@@ -300,9 +300,9 @@ export const Leaderboard = (): JSX.Element => {
           </InputGroup>
           <HStack px={3}>
             <Button
-              bgColor={filter.filtered == 'all' ? 'grey500' : undefined}
-              color={filter.filtered == 'all' ? 'white' : undefined}
-              onClick={() => setFilter({ filtered: 'all' })}
+              bgColor={filter == 'All' ? 'grey500' : undefined}
+              color={filter == 'All' ? 'white' : undefined}
+              onClick={() => setFilter('All')}
               size="sm"
               variant="white"
             >
@@ -311,12 +311,12 @@ export const Leaderboard = (): JSX.Element => {
             <Button
               leftIcon={
                 <WarriorSvg
-                  theme={filter.filtered == 'byWarrior' ? 'light' : 'dark'}
+                  theme={filter === StatsClasses.Warrior ? 'light' : 'dark'}
                 />
               }
-              bgColor={filter.filtered == 'byWarrior' ? 'grey500' : undefined}
-              color={filter.filtered == 'byWarrior' ? 'white' : undefined}
-              onClick={() => setFilter({ filtered: 'byWarrior' })}
+              bgColor={filter === StatsClasses.Warrior ? 'grey500' : undefined}
+              color={filter === StatsClasses.Warrior ? 'white' : undefined}
+              onClick={() => setFilter(StatsClasses.Warrior)}
               size="sm"
               variant="white"
             >
@@ -325,12 +325,12 @@ export const Leaderboard = (): JSX.Element => {
             <Button
               leftIcon={
                 <RogueSvg
-                  theme={filter.filtered == 'byRogue' ? 'light' : 'dark'}
+                  theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
                 />
               }
-              bgColor={filter.filtered == 'byRogue' ? 'grey500' : undefined}
-              color={filter.filtered == 'byRogue' ? 'white' : undefined}
-              onClick={() => setFilter({ filtered: 'byRogue' })}
+              bgColor={filter === StatsClasses.Rogue ? 'grey500' : undefined}
+              color={filter === StatsClasses.Rogue ? 'white' : undefined}
+              onClick={() => setFilter(StatsClasses.Rogue)}
               size="sm"
               variant="white"
             >
@@ -339,12 +339,12 @@ export const Leaderboard = (): JSX.Element => {
             <Button
               leftIcon={
                 <MageSvg
-                  theme={filter.filtered == 'byMage' ? 'light' : 'dark'}
+                  theme={filter === StatsClasses.Mage ? 'light' : 'dark'}
                 />
               }
-              bgColor={filter.filtered == 'byMage' ? 'grey500' : undefined}
-              color={filter.filtered == 'byMage' ? 'white' : undefined}
-              onClick={() => setFilter({ filtered: 'byMage' })}
+              bgColor={filter === StatsClasses.Mage ? 'grey500' : undefined}
+              color={filter === StatsClasses.Mage ? 'white' : undefined}
+              onClick={() => setFilter(StatsClasses.Mage)}
               size="sm"
               variant="white"
             >
