@@ -15,7 +15,8 @@ import {
     EncounterEntityData,
     Admin,
     EntitiesAtPosition,
-    Position
+    Position,
+    UltimateDominionConfig
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {_requireAccess} from "../utils.sol";
@@ -47,6 +48,10 @@ contract AdminSystem is System {
 
     function setAdmin(address newAdmin, bool adminState) public onlyAdmin {
         Admin.set(newAdmin, adminState);
+    }
+
+    function setMaxPlayers(uint256 newMax) public onlyAdmin {
+        UltimateDominionConfig.setMaxPlayers(newMax);
     }
 
     function adminDropGold(bytes32 characterId, uint256 goldAmount) public onlyAdmin {

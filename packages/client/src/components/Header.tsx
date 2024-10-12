@@ -55,8 +55,8 @@ export const Header = ({
           : 'end'
       }
       mt={4}
-      mb={10}
-      p={{ base: 1, lg: 2 }}
+      px={4}
+      py={2}
     >
       {PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`) && (
         <Button
@@ -85,13 +85,14 @@ export const Header = ({
         </Button>
       )}
       {!PAGES_WITHOUT_WALLET_DETAILS.includes(`/${pathname.split('/')[1]}`) && (
-        <HStack>
+        <HStack spacing={4}>
           <Button
             alignSelf={{ base: 'start', lg: 'center' }}
-            bgColor="white"
             onClick={onOpenWalletDetailsModal}
-            size="xs"
-            variant="outline"
+            fontSize="xs"
+            p={4}
+            size="sm"
+            variant="dark"
           >
             Wallet Details
           </Button>

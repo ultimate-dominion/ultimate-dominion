@@ -7,6 +7,7 @@ import {IWorld} from "@world/IWorld.sol";
 import {
     Characters,
     CombatEncounter,
+    Counters,
     EntitiesAtPosition,
     CharacterEquipment,
     CombatEncounterData,
@@ -18,7 +19,8 @@ import {
     Stats,
     MobsByLevel,
     EncounterEntity,
-    SessionTimer
+    SessionTimer,
+    UltimateDominionConfig
 } from "../codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
@@ -51,7 +53,8 @@ contract MapSystem is System {
     function spawn(bytes32 entityId) public {
         address owner = Characters.getOwner(entityId);
         require(_msgSender() == owner, "Only the owner can spawn a character");
-
+        uint256 spawnedPlayers = Counters.get(address(this), 0);
+        require(spawnedPlayers <= UltimateDominionConfig.getMaxPlayers(), "max players reached");
         require(!Spawned.getSpawned(entityId), "Character already spawned");
         int256 maxHp = Stats.getMaxHp(entityId);
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
@@ -73,6 +76,8 @@ contract MapSystem is System {
         }
         EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
+        // add 1 to spawned players
+        Counters.set(address(this), 0, (spawnedPlayers + 1));
     }
 
     function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
@@ -195,6 +200,8 @@ contract MapSystem is System {
         }
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, false);
+        uint256 spawnedPlayers = Counters.get(address(this), 0);
+        Counters.set(address(this), 0, (spawnedPlayers - 1));
         bytes32[] memory emptyArray;
 
         // end combat for entity

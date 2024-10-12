@@ -6,6 +6,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { getStatSymbol } from '../utils/helpers';
 import { type Character } from '../utils/types';
+import { HealthBar } from './HealthBar';
 
 const getStatWithSymbol = (stat: bigint | string): JSX.Element => {
   const statString = BigInt(stat).toString();
@@ -239,6 +240,45 @@ export const LevelingPanel = ({
     renderWarning,
   ]);
 
+  const expiredEffectModifications: {
+    agiModifier: bigint;
+    intModifier: bigint;
+    strModifier: bigint;
+  } = useMemo(() => {
+    if (!character) {
+      return {
+        agiModifier: BigInt(0),
+        intModifier: BigInt(0),
+        strModifier: BigInt(0),
+      };
+    }
+
+    const inactiveEffects = character.worldStatusEffects.filter(
+      effect => !effect.active,
+    );
+
+    const agiModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.agiModifier,
+      BigInt(0),
+    );
+
+    const intModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.intModifier,
+      BigInt(0),
+    );
+
+    const strModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.strModifier,
+      BigInt(0),
+    );
+
+    return {
+      agiModifier,
+      intModifier,
+      strModifier,
+    };
+  }, [character]);
+
   return (
     <VStack>
       <HStack justify="space-between" p={6} w="100%">
@@ -249,7 +289,17 @@ export const LevelingPanel = ({
           Ability Points: {abilityPoints}
         </Text>
       </HStack>
-      <HStack px={6} justifyContent="end" w="100%">
+      <HealthBar
+        currentHp={character.currentHp}
+        maxHp={character.maxHp}
+        mt={2}
+        level={character.level}
+        statusEffects={character?.worldStatusEffects
+          .filter(e => e.active)
+          .map(e => e.name)}
+        w="100%"
+      />
+      <HStack justifyContent="end" mt={4} w="100%">
         <HStack
           justifyContent={canLevel ? 'center' : 'end'}
           textAlign="end"
@@ -318,13 +368,17 @@ export const LevelingPanel = ({
           {!canLevel && (
             <Text size={{ base: 'xs', sm: 'sm' }} w="33%">
               {getStatWithSymbol(
-                BigInt(character.strength) - BigInt(newStrength),
+                BigInt(character.strength) -
+                  expiredEffectModifications.strModifier -
+                  BigInt(newStrength),
               )}
             </Text>
           )}
           {!canLevel && (
             <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {character.strength.toString()}
+              {(
+                character.strength - expiredEffectModifications.strModifier
+              ).toString()}
             </Text>
           )}
         </HStack>
@@ -399,7 +453,7 @@ export const LevelingPanel = ({
           </Text>
         </HStack>
 
-        <HStack  color="#3D4247" justifyContent="end" textAlign="end" w="50%">
+        <HStack color="#3D4247" justifyContent="end" textAlign="end" w="50%">
           {agilityIncreased && (
             <Box w="33%">
               <Button
@@ -436,13 +490,17 @@ export const LevelingPanel = ({
           {!canLevel && (
             <Text size={{ base: 'xs', sm: 'sm' }} w="33%">
               {getStatWithSymbol(
-                BigInt(character.agility) - BigInt(newAgility),
+                BigInt(character.agility) -
+                  expiredEffectModifications.agiModifier -
+                  BigInt(newAgility),
               )}
             </Text>
           )}
           {!canLevel && (
             <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {character.agility.toString()}
+              {(
+                character.agility - expiredEffectModifications.agiModifier
+              ).toString()}
             </Text>
           )}
         </HStack>
@@ -496,13 +554,17 @@ export const LevelingPanel = ({
           {!canLevel && (
             <Text size={{ base: 'xs', sm: 'sm' }} w="33%">
               {getStatWithSymbol(
-                BigInt(character.intelligence) - BigInt(newIntelligence),
+                BigInt(character.intelligence) -
+                  expiredEffectModifications.intModifier -
+                  BigInt(newIntelligence),
               )}
             </Text>
           )}
           {!canLevel && (
             <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {character.intelligence.toString()}
+              {(
+                character.intelligence - expiredEffectModifications.intModifier
+              ).toString()}
             </Text>
           )}
         </HStack>

@@ -109,18 +109,6 @@ contract PostDeploy is Script {
 
         // Start broadcasting transeffects from the deployer account
         vm.startBroadcast(deployerPrivateKey);
-        if (block.chainid == 31337) {
-            // Set entropy contracts
-            address mockEntropy = address(new MockEntropy());
-            UltimateDominionConfig.setEntropy(mockEntropy);
-            UltimateDominionConfig.setPythProvider(address(1));
-        } else if (block.chainid == 84532) {
-            UltimateDominionConfig.setEntropy(0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c);
-            UltimateDominionConfig.setPythProvider(0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344);
-        } else if (block.chainid == 8453) {
-            UltimateDominionConfig.setEntropy(0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb);
-            UltimateDominionConfig.setPythProvider(0x52DeaA1c84233F7bb8C8A45baeDE41091c616506);
-        }
 
         uint16 height = uint16(10);
         uint16 width = uint16(10);
@@ -213,8 +201,10 @@ contract PostDeploy is Script {
         world.transferOwnership(resourceIds.erc1155NamespaceId, itemsSystemAddress);
 
         UltimateDominionConfig.setItems(address(items));
+        // set max players on board
+        UltimateDominionConfig.setMaxPlayers(100);
         //allow entropy system to call callback on Combat system
-        world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
+        // world.grantAccess(resourceIds.combatSystemId, UltimateDominionConfig.getEntropy());
         _createStarterItems();
         _createEffects();
         _createShops();
