@@ -33,10 +33,10 @@ import { zeroAddress, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { ItemCardSmall } from '../components/ItemCard';
-import { MageSvg } from '../components/MageSvg';
 import { PolygonalCard } from '../components/PolygonalCard';
-import { RogueSvg } from '../components/RogueSvg';
-import { WarriorSvg } from '../components/WarriorSvg';
+import { MageSvg } from '../components/SVGs/MageSvg';
+import { RogueSvg } from '../components/SVGs/RogueSvg';
+import { WarriorSvg } from '../components/SVGs/WarriorSvg';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';

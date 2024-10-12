@@ -136,8 +136,8 @@ const AppInner = (): JSX.Element => {
       <Box
         m="0 auto"
         maxW="1800px"
-        px={{ base: 2, sm: 12, md: 20 }}
         my={{ base: 4, lg: 12 }}
+        px={{ base: 2, sm: 12, md: 20 }}
         w="100%"
       >
         <AppRoutes />

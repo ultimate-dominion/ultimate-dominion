@@ -1,3 +1,5 @@
+import { Icon } from '@chakra-ui/react';
+
 export const RogueSvg = ({
   size = 20,
   theme = 'light',
@@ -8,7 +10,7 @@ export const RogueSvg = ({
   const color = theme === 'light' ? 'white' : 'black';
 
   return (
-    <svg
+    <Icon
       width={size}
       height={size}
       viewBox="0 0 18 11"
@@ -30,6 +32,6 @@ export const RogueSvg = ({
           />
         </clipPath>
       </defs>
-    </svg>
+    </Icon>
   );
 };

@@ -1,12 +1,4 @@
-import {
-  Button,
-  HStack,
-  Icon,
-  Image,
-  Stack,
-  Text,
-  Tooltip,
-} from '@chakra-ui/react';
+import { Button, HStack, Image, Stack, Text, Tooltip } from '@chakra-ui/react';
 import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -17,14 +9,16 @@ import {
   GAME_BOARD_PATH,
   HOME_PATH,
   LEADERBOARD_PATH,
+  MARKETPLACE_PATH,
 } from '../Routes';
+import { BackCaretSvg } from './SVGs/BackCaretSvg';
 
-const PAGES_WITHOUT_WALLET_DETAILS = [
-  HOME_PATH,
-  LEADERBOARD_PATH,
+const PAGES_WITH_BACK_BUTTON = [
   CHARACTERS_PATH,
+  LEADERBOARD_PATH,
+  MARKETPLACE_PATH,
 ];
-const PAGES_WITH_BACK_BUTTON = [LEADERBOARD_PATH, CHARACTERS_PATH];
+
 export const Header = ({
   onOpenWalletDetailsModal,
 }: {
@@ -49,7 +43,7 @@ export const Header = ({
       bgColor="grey400"
       direction={{ base: 'column-reverse', lg: 'row' }}
       justify={
-        !PAGES_WITHOUT_WALLET_DETAILS.includes(`/${pathname.split('/')[1]}`) ||
+        pathname === GAME_BOARD_PATH ||
         PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`)
           ? 'space-between'
           : 'end'
@@ -58,34 +52,9 @@ export const Header = ({
       px={4}
       py={2}
     >
-      {PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`) && (
-        <Button
-          leftIcon={
-            <Icon>
-              <svg
-                width="8"
-                viewBox="0 0 8 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M7.47541 11.7489C7.1093 12.0837 6.5157 12.0837 6.14959 11.7489L0.524588 6.60609C0.158472 6.27136 0.158472 5.72864 0.524588 5.39391L6.14959 0.251051C6.5157 -0.0836841 7.1093 -0.083684 7.47541 0.251051C7.84153 0.585786 7.84153 1.1285 7.47541 1.46323L2.51333 6L7.47541 10.5368C7.84153 10.8715 7.84153 11.4142 7.47541 11.7489Z"
-                  fill="#F2F2F2"
-                />
-              </svg>
-            </Icon>
-          }
-          ml="60px"
-          onClick={() => navigate(-1)}
-          size="lg"
-        >
-          Game Board
-        </Button>
-      )}
-      {!PAGES_WITHOUT_WALLET_DETAILS.includes(`/${pathname.split('/')[1]}`) && (
-        <HStack spacing={4}>
+      <HStack spacing={4}>
+        {pathname === HOME_PATH ||
+        !PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`) ? (
           <Button
             alignSelf={{ base: 'start', lg: 'center' }}
             onClick={onOpenWalletDetailsModal}
@@ -96,16 +65,26 @@ export const Header = ({
           >
             Wallet Details
           </Button>
-          <Tooltip
-            aria-label="Your session wallet balance"
-            bg="black"
-            hasArrow
-            label="Your session wallet balance"
+        ) : (
+          <Button
+            fontSize="xs"
+            leftIcon={<BackCaretSvg />}
+            onClick={() => navigate(-1)}
+            p={4}
+            size="sm"
           >
-            <Text size="2xs">Balance: {Number(burnerBalance).toFixed(5)}</Text>
-          </Tooltip>
-        </HStack>
-      )}
+            Back
+          </Button>
+        )}
+        <Tooltip
+          aria-label="Your session wallet balance"
+          bg="black"
+          hasArrow
+          label="Your session wallet balance"
+        >
+          <Text size="2xs">Balance: {Number(burnerBalance).toFixed(5)}</Text>
+        </Tooltip>
+      </HStack>
       <Button
         mb={4}
         mt={-5}
