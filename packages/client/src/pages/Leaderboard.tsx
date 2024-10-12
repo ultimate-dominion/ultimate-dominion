@@ -3,9 +3,8 @@ import {
   Button,
   Center,
   Flex,
+  Heading,
   HStack,
-  Icon,
-  IconProps,
   Input,
   InputGroup,
   InputLeftElement,
@@ -32,7 +31,12 @@ import { useAccount } from 'wagmi';
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Pagination } from '../components/Pagination';
 import { PolygonalCard } from '../components/PolygonalCard';
-import { MageSvg, RogueSvg, WarriorSvg } from '../components/SVGs';
+import {
+  LeaderboardIconSvg,
+  MageSvg,
+  RogueSvg,
+  WarriorSvg,
+} from '../components/SVGs';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { HOME_PATH } from '../Routes';
@@ -271,25 +275,10 @@ export const Leaderboard = (): JSX.Element => {
   return (
     <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
       <VStack>
-        <Box
-          boxShadow="-4px 0 0 rgba(0, 0, 0, .2);"
-          background="#0C1539"
-          display="table"
-          height="66px"
-          px="20px"
-          position="relative"
-          width="100%"
-        >
-          <Text
-            color="white"
-            display="table-cell"
-            size="24px"
-            fontWeight="700"
-            verticalAlign="middle"
-          >
-            <LeaderboardIcon /> Leader Board
-          </Text>
-        </Box>
+        <HStack bgColor="blue500" h="66px" px="20px" width="100%">
+          <LeaderboardIconSvg />
+          <Heading color="white">Leaderboard</Heading>
+        </HStack>
 
         <Stack
           direction={{ base: 'column', md: 'row' }}
@@ -299,13 +288,11 @@ export const Leaderboard = (): JSX.Element => {
           spacing={{ base: 4, md: 8 }}
           w="100%"
         >
-          <InputGroup w="100%" backgroundColor="#A2A9B0">
+          <InputGroup>
             <InputLeftElement h="100%" pointerEvents="none">
               <FaSearch />
             </InputLeftElement>
             <Input
-              boxShadow="-5px -5px 10px 0px #54545440 inset,5px 5px 10px 0px #A6A6A680 inset,2px 2px 4px 0px #18161640 inset,-2px -2px 4px 0px #A2A9B080 inset;"
-              gap="10px"
               onChange={e => setQuery(e.target.value)}
               placeholder="Search"
               value={query}
@@ -313,52 +300,53 @@ export const Leaderboard = (): JSX.Element => {
           </InputGroup>
           <HStack px={3}>
             <Button
-              backgroundColor={filter.filtered == 'all' ? '#edf2f7' : '#BAC2CA'}
-              boxShadow="-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480;"
+              bgColor={filter.filtered == 'all' ? 'grey500' : undefined}
+              color={filter.filtered == 'all' ? 'white' : undefined}
               onClick={() => setFilter({ filtered: 'all' })}
               size="sm"
-              variant={filter.filtered == 'all' ? 'outline' : 'ghost'}
+              variant="white"
             >
               All
             </Button>
             <Button
-              backgroundColor={
-                filter.filtered == 'byWarrior' ? '#edf2f7' : '#BAC2CA'
+              leftIcon={
+                <WarriorSvg
+                  theme={filter.filtered == 'byWarrior' ? 'light' : 'dark'}
+                />
               }
-              boxShadow="-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480;"
-              fontWeight="500"
-              leftIcon={<WarriorSvg theme="dark" />}
+              bgColor={filter.filtered == 'byWarrior' ? 'grey500' : undefined}
+              color={filter.filtered == 'byWarrior' ? 'white' : undefined}
               onClick={() => setFilter({ filtered: 'byWarrior' })}
               size="sm"
-              variant={filter.filtered == 'byWarrior' ? 'outline' : 'ghost'}
+              variant="white"
             >
               Warrior
             </Button>
             <Button
-              backgroundColor={
-                filter.filtered == 'byRogue' ? '#edf2f7' : '#BAC2CA'
+              leftIcon={
+                <RogueSvg
+                  theme={filter.filtered == 'byRogue' ? 'light' : 'dark'}
+                />
               }
-              boxShadow="-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480;"
-              leftIcon={<RogueSvg theme="dark" />}
-              onClick={() =>
-                setFilter({
-                  filtered: 'byRogue',
-                })
-              }
+              bgColor={filter.filtered == 'byRogue' ? 'grey500' : undefined}
+              color={filter.filtered == 'byRogue' ? 'white' : undefined}
+              onClick={() => setFilter({ filtered: 'byRogue' })}
               size="sm"
-              variant={filter.filtered == 'byRogue' ? 'outline' : 'ghost'}
+              variant="white"
             >
               Rogue
             </Button>
             <Button
-              backgroundColor={
-                filter.filtered == 'byMage' ? '#edf2f7' : '#BAC2CA'
+              leftIcon={
+                <MageSvg
+                  theme={filter.filtered == 'byMage' ? 'light' : 'dark'}
+                />
               }
-              boxShadow="box-shadow: -10px -10px 20px 0px rgba(84, 84, 84, 0.25); box-shadow: 5px 5px 10px 0px rgba(84, 84, 84, 0.5);"
-              leftIcon={<MageSvg theme="dark" />}
+              bgColor={filter.filtered == 'byMage' ? 'grey500' : undefined}
+              color={filter.filtered == 'byMage' ? 'white' : undefined}
               onClick={() => setFilter({ filtered: 'byMage' })}
               size="sm"
-              variant={filter.filtered == 'byMage' ? 'outline' : 'ghost'}
+              variant="white"
             >
               Mage
             </Button>
@@ -491,20 +479,3 @@ export const Leaderboard = (): JSX.Element => {
     </PolygonalCard>
   );
 };
-
-const LeaderboardIcon = (props: IconProps) => (
-  <Icon {...props}>
-    <svg
-      width="27"
-      height="26"
-      viewBox="0 0 27 26"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M25.7159 9.58634H18.4534V1.26035C18.4534 1.11664 18.3261 1 18.1693 1H8.83068C8.67386 1 8.54659 1.11664 8.54659 1.26035V14H1V24H26L26 9.84669C26 9.70246 25.8722 9.58634 25.7159 9.58634ZM15.0347 7.94562C14.5506 7.80815 14.0813 7.62747 13.6352 7.40565C13.5932 7.3843 13.5466 7.37389 13.5 7.37389C13.4534 7.37389 13.4068 7.3843 13.3648 7.40565C12.9188 7.62747 12.4494 7.80815 11.9653 7.94562C11.958 7.48063 12.0011 7.01617 12.0932 6.55847C12.1108 6.47204 12.0795 6.38352 12.0102 6.3226C11.6426 6.00341 11.3097 5.65037 11.0176 5.27026C11.496 5.12082 11.992 5.01408 12.496 4.95472C12.5915 4.94326 12.6739 4.88755 12.7159 4.8084C12.9347 4.38767 13.1983 3.99038 13.5017 3.6186C13.8051 3.99038 14.0688 4.38872 14.2875 4.8084C14.329 4.88755 14.4119 4.94326 14.5074 4.95472C15.0114 5.01408 15.5074 5.12082 15.9858 5.27026C15.6938 5.65037 15.3608 6.00341 14.9932 6.3226C14.9239 6.38352 14.892 6.47204 14.9102 6.55847C14.9994 7.01617 15.042 7.48115 15.0347 7.94562Z"
-        fill="white"
-      />
-    </svg>
-  </Icon>
-);
