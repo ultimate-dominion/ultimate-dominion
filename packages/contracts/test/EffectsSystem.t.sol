@@ -7,7 +7,7 @@ import {StatsData, Stats} from "@tables/Stats.sol";
 import {EncounterEntity} from "@tables/EncounterEntity.sol";
 import "forge-std/console.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {UltimateDominionConfig, WorldStatusEffects} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
@@ -240,6 +240,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
 
         world.UD__endTurn(encounterId, bobCharacterId, actions);
         StatsData memory endingStats = world.UD__getStats(bobCharacterId);
+        assertEq(WorldStatusEffects.lengthAppliedStatusEffects(bobCharacterId), 0);
     }
 
     function test_Poison() public {
