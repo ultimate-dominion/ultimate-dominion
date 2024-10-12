@@ -31,7 +31,7 @@ import { useAccount } from 'wagmi';
 
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Pagination } from '../components/Pagination';
-import { PolygonalCardLeaderboard } from '../components/PolygonalCardLeaderboard';
+import { PolygonalCard } from '../components/PolygonalCard';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { HOME_PATH } from '../Routes';
@@ -268,7 +268,7 @@ export const Leaderboard = (): JSX.Element => {
   }
 
   return (
-    <PolygonalCardLeaderboard>
+    <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
       <VStack>
         <Box
           boxShadow="-4px 0 0 rgba(0, 0, 0, .2);"
@@ -485,7 +485,7 @@ export const Leaderboard = (): JSX.Element => {
           />
         </HStack>
       </VStack>
-    </PolygonalCardLeaderboard>
+    </PolygonalCard>
   );
 };
 
