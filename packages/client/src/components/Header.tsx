@@ -11,7 +11,7 @@ import {
   LEADERBOARD_PATH,
   MARKETPLACE_PATH,
 } from '../Routes';
-import { BackCaretSvg } from './SVGs/BackCaretSvg';
+import { BackCaretSvg } from './SVGs';
 
 const PAGES_WITH_BACK_BUTTON = [
   CHARACTERS_PATH,
@@ -54,18 +54,19 @@ export const Header = ({
     >
       <HStack spacing={4}>
         {pathname === HOME_PATH ||
-        !PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`) ? (
-          <Button
-            alignSelf={{ base: 'start', lg: 'center' }}
-            onClick={onOpenWalletDetailsModal}
-            fontSize="xs"
-            p={4}
-            size="sm"
-            variant="dark"
-          >
-            Wallet Details
-          </Button>
-        ) : (
+          (!PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`) && (
+            <Button
+              alignSelf={{ base: 'start', lg: 'center' }}
+              onClick={onOpenWalletDetailsModal}
+              fontSize="xs"
+              p={4}
+              size="sm"
+              variant="dark"
+            >
+              Wallet Details
+            </Button>
+          ))}
+        {PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`) && (
           <Button
             fontSize="xs"
             leftIcon={<BackCaretSvg />}
@@ -76,14 +77,16 @@ export const Header = ({
             Back
           </Button>
         )}
-        <Tooltip
-          aria-label="Your session wallet balance"
-          bg="black"
-          hasArrow
-          label="Your session wallet balance"
-        >
-          <Text size="2xs">Balance: {Number(burnerBalance).toFixed(5)}</Text>
-        </Tooltip>
+        {pathname !== HOME_PATH && (
+          <Tooltip
+            aria-label="Your session wallet balance"
+            bg="black"
+            hasArrow
+            label="Your session wallet balance"
+          >
+            <Text size="2xs">Balance: {Number(burnerBalance).toFixed(5)}</Text>
+          </Tooltip>
+        )}
       </HStack>
       <Button
         mb={4}

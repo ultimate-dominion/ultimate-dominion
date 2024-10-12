@@ -34,9 +34,7 @@ import { useAccount } from 'wagmi';
 
 import { ItemCardSmall } from '../components/ItemCard';
 import { PolygonalCard } from '../components/PolygonalCard';
-import { MageSvg } from '../components/SVGs/MageSvg';
-import { RogueSvg } from '../components/SVGs/RogueSvg';
-import { WarriorSvg } from '../components/SVGs/WarriorSvg';
+import { MageSvg, RogueSvg, WarriorSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';

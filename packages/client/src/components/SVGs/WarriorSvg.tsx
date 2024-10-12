@@ -1,7 +1,7 @@
 import { Icon } from '@chakra-ui/react';
 
 export const WarriorSvg = ({
-  size = 16,
+  size = 4,
   theme = 'light',
 }: {
   size?: number;

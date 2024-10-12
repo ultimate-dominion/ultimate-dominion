@@ -1,7 +1,7 @@
 import { Icon } from '@chakra-ui/react';
 
 export const RogueSvg = ({
-  size = 20,
+  size = 6,
   theme = 'light',
 }: {
   size?: number;
