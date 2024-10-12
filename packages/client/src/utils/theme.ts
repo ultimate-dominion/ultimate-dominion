@@ -82,10 +82,6 @@ const Button = {
         },
       },
     },
-    none: {
-      border: 0,
-      background: 'transparent',
-    },
     outline: {
       border: '2px solid',
       borderColor: 'grey500',

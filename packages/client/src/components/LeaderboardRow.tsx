@@ -139,8 +139,8 @@ export const LeaderboardRow = ({
               {etherToFixedNumber(externalGoldBalance)}
             </Text>
           </HStack>
-          <Box display={{ base: 'none', md: 'block' }} w="50px">
-            <Button p={3} variant="none">
+          <Box display={{ base: 'none', md: 'block' }}>
+            <Button size="sm" variant="ghost">
               <svg
                 width="24"
                 height="24"

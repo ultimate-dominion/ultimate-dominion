@@ -384,7 +384,7 @@ export const Leaderboard = (): JSX.Element => {
                 }
                 p={1}
                 size={{ base: '2xs', lg: 'sm' }}
-                variant="none"
+                variant="unstyled"
                 w="100%"
               >
                 <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
@@ -400,6 +400,7 @@ export const Leaderboard = (): JSX.Element => {
               </Button>
               <Button
                 color="#565555"
+                display="flex"
                 fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
                 onClick={() =>
                   setSort({
@@ -409,7 +410,7 @@ export const Leaderboard = (): JSX.Element => {
                 }
                 p={1}
                 size={{ base: '2xs', lg: 'sm' }}
-                variant="none"
+                variant="unstyled"
                 w="100%"
               >
                 <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
@@ -425,6 +426,7 @@ export const Leaderboard = (): JSX.Element => {
               </Button>
               <Button
                 color="#565555"
+                display="flex"
                 fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
                 onClick={() =>
                   setSort({
@@ -434,7 +436,7 @@ export const Leaderboard = (): JSX.Element => {
                 }
                 p={1}
                 size={{ base: '2xs', lg: 'sm' }}
-                variant="none"
+                variant="unstyled"
                 w="100%"
               >
                 <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
