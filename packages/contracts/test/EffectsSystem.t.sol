@@ -73,6 +73,22 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         vm.prank(alice);
         world.UD__move(alicesCharacterId, 0, 1);
 
+        // buff bob
+        StatsData memory bobStats = world.UD__getStats(bobCharacterId);
+        bobStats.agility = 10;
+        bobStats.strength = 10;
+        bobStats.intelligence = 10;
+        bobStats.currentHp = 100;
+        world.UD__adminSetStats(bobCharacterId, bobStats);
+
+        // buff alice
+        StatsData memory aliceStats = world.UD__getStats(alicesCharacterId);
+        aliceStats.agility = 9;
+        aliceStats.strength = 9;
+        aliceStats.intelligence = 9;
+        aliceStats.currentHp = 10;
+        world.UD__adminSetStats(alicesCharacterId, aliceStats);
+
         // get alice starter Items
         StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
 
@@ -188,6 +204,42 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         world.UD__endTurn(encounterId, bobCharacterId, actions);
         StatsData memory endingStats = world.UD__getStats(bobCharacterId);
         assertEq(endingStats.strength, beginningStats.strength);
+    }
+
+    function test_expireMultipleEffects() public {
+        StatsData memory beginningStats = world.UD__getStats(bobCharacterId);
+        uint256 strBuffId = startingConsumableId + 1;
+        uint256 agiBuffId = startingConsumableId + 2;
+        uint256 intBuffId = startingConsumableId + 3;
+        world.UD__adminDropItem(bobCharacterId, strBuffId, 1);
+        world.UD__adminDropItem(bobCharacterId, agiBuffId, 1);
+        world.UD__adminDropItem(bobCharacterId, intBuffId, 1);
+
+        assertEq(erc1155System.balanceOf(bob, strBuffId), 1);
+
+        vm.prank(deployer);
+        bytes32 entityId = world.UD__spawnMob(2, 0, 1);
+
+        vm.startPrank(bob);
+        erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, strBuffId);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, agiBuffId);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, intBuffId);
+
+        vm.warp(block.timestamp + 1000);
+
+        bytes32[] memory defenders = new bytes32[](1);
+        bytes32[] memory attackers = new bytes32[](1);
+
+        attackers[0] = bobCharacterId;
+        defenders[0] = entityId;
+
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingSpellId});
+
+        world.UD__endTurn(encounterId, bobCharacterId, actions);
+        StatsData memory endingStats = world.UD__getStats(bobCharacterId);
     }
 
     function test_Poison() public {

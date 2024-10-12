@@ -75,7 +75,18 @@ contract EffectsSystem is System {
                 bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
                 if (!isNotExpired(updatedEffectId)) {
                     WorldStatusEffects.updateAppliedStatusEffects(entityId, i, updatedEffectId);
-                    cullExpiredWorldEffect(entityId, updatedEffectId, i);
+                    numberOfExpiredEffects++;
+                }
+            }
+        }
+
+        // cull expired effects
+        for (uint256 i; i < numberOfExpiredEffects; i++) {
+            bytes32[] memory cullingEffects = WorldStatusEffects.get(entityId);
+            for (uint256 j; j < cullingEffects.length; j++) {
+                if (!isNotExpired(cullingEffects[j])) {
+                    cullExpiredWorldEffect(entityId, cullingEffects[j], j);
+                    break;
                 }
             }
         }
@@ -89,7 +100,6 @@ contract EffectsSystem is System {
     {
         checkWorldStatusEffects(entityId);
         StatusEffectStatsData memory statsData;
-
         bytes32 effectId;
 
         _adjustedStats = _incomingStats;
@@ -116,18 +126,22 @@ contract EffectsSystem is System {
 
     function calculateAllStatusEffects(bytes32 entityId) public returns (AdjustedCombatStats memory _adjustedStats) {
         checkWorldStatusEffects(entityId);
+
         _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
+
         _adjustedStats = calculateCombatStatusEffects(entityId, _adjustedStats);
     }
 
     function cullExpiredWorldEffect(bytes32 entityId, bytes32 effectId, uint256 index) public {
+        uint256 effectsLength = WorldStatusEffects.lengthAppliedStatusEffects(entityId);
+        require(effectsLength > index, "non existent index");
         bytes32 worldStatusEffect = WorldStatusEffects.getItem(entityId, index);
+        require(getEffectStatId(effectId) == getEffectStatId(worldStatusEffect), "invalid effectId");
         AdjustedCombatStats memory _statInput = IWorld(_world()).UD__getCombatStats(entityId);
 
         if (worldStatusEffect != bytes32(0)) {
             if (!isNotExpired(effectId) && worldStatusEffect == effectId) {
                 StatusEffectStatsData memory effectStats = getStatusEffectStats(effectId);
-                uint256 effectsLength = WorldStatusEffects.length(entityId);
                 if (effectsLength > 1) {
                     bytes32 lastEffectId = WorldStatusEffects.getItemAppliedStatusEffects(entityId, effectsLength - 1);
                     WorldStatusEffects.updateAppliedStatusEffects(entityId, index, lastEffectId);
@@ -180,10 +194,11 @@ contract EffectsSystem is System {
 
     function applyWorldEffects(bytes32 entityId) public returns (AdjustedCombatStats memory _adjustedStats) {
         _requireAccess(address(this), _msgSender());
+        checkWorldStatusEffects(entityId);
         bytes32[] memory worldEffects = WorldStatusEffects.get(entityId);
         _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
         StatusEffectStatsData memory effectStats;
-        checkWorldStatusEffects(entityId);
+
         for (uint256 i; i < worldEffects.length; i++) {
             effectStats = getStatusEffectStats(worldEffects[i]);
             _adjustedStats.agility += effectStats.agiModifier;

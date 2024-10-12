@@ -58,11 +58,6 @@ contract Test_CombatSystem is SetUp, GasReporter {
         alicesStats.agility = 9;
         world.UD__adminSetStats(alicesCharacterId, alicesStats);
 
-        // bob has higher agi to go first
-        StatsData memory BobStats = world.UD__getStats(bobCharacterId);
-        BobStats.agility = 10;
-        world.UD__adminSetStats(bobCharacterId, BobStats);
-
         // spawn characters
         vm.prank(bob);
         world.UD__spawn(bobCharacterId);
@@ -73,6 +68,22 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__move(bobCharacterId, 0, 1);
         vm.prank(alice);
         world.UD__move(alicesCharacterId, 0, 1);
+
+        // buff bob
+        StatsData memory bobStats = world.UD__getStats(bobCharacterId);
+        bobStats.agility = 10;
+        bobStats.strength = 10;
+        bobStats.intelligence = 10;
+        bobStats.currentHp = 100;
+        world.UD__adminSetStats(bobCharacterId, bobStats);
+
+        // buff alice
+        StatsData memory aliceStats = world.UD__getStats(alicesCharacterId);
+        aliceStats.agility = 9;
+        aliceStats.strength = 9;
+        aliceStats.intelligence = 9;
+        aliceStats.currentHp = 10;
+        world.UD__adminSetStats(alicesCharacterId, aliceStats);
 
         // get alice starter Items
         StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);

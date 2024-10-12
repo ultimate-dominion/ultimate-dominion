@@ -75,7 +75,6 @@ contract CombatSystem is System {
                 //decode action data according to type
                 if (effectData.effectType == EffectType.PhysicalDamage) {
                     // calculate damage
-
                     (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i]) =
                     _calculatePhysicalEffect(
                         actionOutcomeData.effectIds[i],
@@ -317,7 +316,6 @@ contract CombatSystem is System {
 
                     if (currentHp - damage > int256(maxHp)) {
                         damage = -(maxHp - currentHp);
-                        console.logInt(damage);
                     }
                 }
                 if (!crit) {
