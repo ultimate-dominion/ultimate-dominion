@@ -437,27 +437,35 @@ export const Leaderboard = (): JSX.Element => {
                 {sort.sorted != 'byGold' && <FaSortAmountDown color="grey" />}
               </Button>
             </HStack>
-            <Box display={{ base: 'none', md: 'block' }} w="50px" />
+            <Box display={{ base: 'none', md: 'block' }} w="80px" />
           </HStack>
         </Flex>
 
-        <VStack gap={3} overflowX="auto" w="100%">
+        <VStack overflowX="auto" spacing={0} w="100%">
           <Box
-            background="#F5F5FA1F"
+            bgColor="#F5F5FA1F"
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
             h="5px"
             w="100%"
-            boxShadow="box-shadow: -5px -5px 10px 0px #B3B9BE inset;box-shadow: 5px 5px 10px 0px #949CA380 inset;box-shadow: 2px 2px 4px 0px #88919980 inset;box-shadow: 0px 0px 4px 0px #545454 inset;"
-          ></Box>
+          />
           {entries.length > 0 ? (
             [...entries, ...entries, ...entries, ...entries, ...entries].map(
               function (entry, i) {
                 return (
-                  <LeaderboardRow
-                    key={`leaderboard-row-${i}`}
-                    top={i == 0 || i == 1 || i == 2}
-                    index={i}
-                    character={entry}
-                  />
+                  <>
+                    <LeaderboardRow
+                      key={`leaderboard-row-${i}`}
+                      top3={i == 0 || i == 1 || i == 2}
+                      index={i}
+                      character={entry}
+                    />
+                    <Box
+                      bgColor="#F5F5FA1F"
+                      boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                      h="5px"
+                      w="100%"
+                    />
+                  </>
                 );
               },
             )
