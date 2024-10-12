@@ -34,15 +34,6 @@ const getStatWithSymbol = (stat: bigint | string): JSX.Element => {
   );
 };
 
-const divider = (
-  <Box
-    backgroundColor="#F5F5FA1F"
-    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-    h="6px"
-    w="100%"
-  />
-);
-
 export const LevelingPanel = ({
   canLevel,
   character,
@@ -280,12 +271,12 @@ export const LevelingPanel = ({
   }, [character]);
 
   return (
-    <VStack>
-      <HStack justify="space-between" p={6} w="100%">
-        <Text alignSelf="start" color="#283570" fontWeight="700" size="24px">
+    <VStack py={6}>
+      <HStack color="#283570" justify="space-between" px={6} w="100%">
+        <Text alignSelf="start" fontWeight={700}>
           My Stats
         </Text>
-        <Text alignSelf="start" color="#283570" fontWeight="700" size="24px">
+        <Text alignSelf="start" fontWeight={700}>
           Ability Points: {abilityPoints}
         </Text>
       </HStack>
@@ -294,12 +285,13 @@ export const LevelingPanel = ({
         maxHp={character.maxHp}
         mt={2}
         level={character.level}
+        px={6}
         statusEffects={character?.worldStatusEffects
           .filter(e => e.active)
           .map(e => e.name)}
         w="100%"
       />
-      <HStack justifyContent="end" mt={4} w="100%">
+      <HStack justifyContent="end" mt={4} px={6} w="100%">
         <HStack
           justifyContent={canLevel ? 'center' : 'end'}
           textAlign="end"
@@ -310,7 +302,7 @@ export const LevelingPanel = ({
           </Text>
           {!canLevel && (
             <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
-              Items
+              Bonus
             </Text>
           )}
           {!canLevel && (
@@ -320,18 +312,24 @@ export const LevelingPanel = ({
           )}
         </HStack>
       </HStack>
-      {divider}
+      <Box
+        backgroundColor="#F5F5FA1F"
+        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+        h="6px"
+        w="100%"
+      />
       <HStack px={6} w="100%">
-        <HStack w="50%">
-          <Text size="24px" fontWeight={700} w="66px">
-            HP{' '}
+        <Text
+          fontWeight={700}
+          size={{ base: 'xs', md: 'sm', xl: 'md' }}
+          w="50%"
+        >
+          STR -{' '}
+          <Text as="span" fontWeight={500} size={{ base: '2xs', sm: 'xs' }}>
+            Strength
           </Text>
-          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
-            Hit
-          </Text>
-        </HStack>
-
-        <HStack color="#3D4247" justifyContent="end" textAlign="end" w="50%">
+        </Text>
+        <HStack justifyContent="end" textAlign="end" w="50%">
           {strengthIncreased && (
             <Box w="33%">
               <Button
@@ -345,7 +343,7 @@ export const LevelingPanel = ({
             </Box>
           )}
           <Text
-            color={strengthIncreased ? 'green' : ' #3D4247'}
+            color={strengthIncreased ? 'green' : 'black'}
             fontWeight={strengthIncreased ? 'bold' : 'normal'}
             size={{ base: 'xs', sm: 'sm' }}
             w="33%"
@@ -383,77 +381,24 @@ export const LevelingPanel = ({
           )}
         </HStack>
       </HStack>
-      {divider}
+      <Box
+        backgroundColor="#F5F5FA1F"
+        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+        h="6px"
+        w="100%"
+      />
       <HStack px={6} w="100%">
-        <HStack w="50%">
-          <Text size="24px" fontWeight={700} w="66px">
-            STR{' '}
-          </Text>
-          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
-            Strength
-          </Text>{' '}
-        </HStack>
-
-        <HStack color="#3D4247" justifyContent="end" textAlign="end" w="50%">
-          {strengthIncreased && (
-            <Box w="33%">
-              <Button
-                borderWidth="1.5px"
-                onClick={() => onDecrementStat('str')}
-                size="xs"
-                variant="outline"
-              >
-                <Text>-</Text>
-              </Button>
-            </Box>
-          )}
-          <Text
-            color={strengthIncreased ? 'green' : '#3D4247'}
-            fontWeight={strengthIncreased ? 'bold' : 'normal'}
-            size={{ base: 'xs', sm: 'sm' }}
-            w="33%"
-          >
-            {newStrength.toString()}
-          </Text>
-          {canLevel && (
-            <Box w="33%">
-              <Button
-                borderWidth="1.5px"
-                isDisabled={abilityPoints <= 0}
-                onClick={() => onIncrementStat('str')}
-                size="xs"
-                variant="outline"
-              >
-                <Text>+</Text>
-              </Button>
-            </Box>
-          )}
-          {!canLevel && (
-            <Text size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {getStatWithSymbol(
-                BigInt(character.strength) - BigInt(newStrength),
-              )}
-            </Text>
-          )}
-          {!canLevel && (
-            <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {character.strength.toString()}
-            </Text>
-          )}
-        </HStack>
-      </HStack>
-      {divider}
-      <HStack px={6} w="100%">
-        <HStack w="50%">
-          <Text size="24px" fontWeight={700} w="66px">
-            AGI
-          </Text>
-          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
+        <Text
+          fontWeight={700}
+          size={{ base: 'xs', md: 'sm', xl: 'md' }}
+          w="50%"
+        >
+          AGI -{' '}
+          <Text as="span" fontWeight={500} size={{ base: '2xs', sm: 'xs' }}>
             Agility
           </Text>
-        </HStack>
-
-        <HStack color="#3D4247" justifyContent="end" textAlign="end" w="50%">
+        </Text>
+        <HStack justifyContent="end" textAlign="end" w="50%">
           {agilityIncreased && (
             <Box w="33%">
               <Button
@@ -467,7 +412,7 @@ export const LevelingPanel = ({
             </Box>
           )}
           <Text
-            color={agilityIncreased ? 'green' : ' #3D4247'}
+            color={agilityIncreased ? 'green' : 'black'}
             fontWeight={agilityIncreased ? 'bold' : 'normal'}
             size={{ base: 'xs', sm: 'sm' }}
             w="33%"
@@ -505,19 +450,24 @@ export const LevelingPanel = ({
           )}
         </HStack>
       </HStack>
-      {divider}
-
+      <Box
+        backgroundColor="#F5F5FA1F"
+        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+        h="6px"
+        w="100%"
+      />
       <HStack px={6} w="100%">
-        <HStack w="50%">
-          <Text size="24px" fontWeight={700} w="66px">
-            INT
-          </Text>
-          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
+        <Text
+          fontWeight={700}
+          size={{ base: 'xs', md: 'sm', xl: 'md' }}
+          w="50%"
+        >
+          INT -{' '}
+          <Text as="span" fontWeight={500} size={{ base: '2xs', sm: 'xs' }}>
             Intelligence
           </Text>
-        </HStack>
-
-        <HStack color="#3D4247" justifyContent="end" textAlign="end" w="50%">
+        </Text>
+        <HStack justifyContent="end" textAlign="end" w="50%">
           {intelligenceIncreased && (
             <Box w="33%">
               <Button
@@ -531,7 +481,7 @@ export const LevelingPanel = ({
             </Box>
           )}
           <Text
-            color={intelligenceIncreased ? 'green' : ' #3D4247'}
+            color={intelligenceIncreased ? 'green' : 'black'}
             fontWeight={intelligenceIncreased ? 'bold' : 'normal'}
             size={{ base: 'xs', sm: 'sm' }}
             w="33%"
@@ -569,7 +519,12 @@ export const LevelingPanel = ({
           )}
         </HStack>
       </HStack>
-      {divider}
+      <Box
+        backgroundColor="#F5F5FA1F"
+        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+        h="6px"
+        w="100%"
+      />
 
       {canLevel && (
         <Button

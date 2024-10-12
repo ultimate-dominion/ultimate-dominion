@@ -4,7 +4,6 @@ import {
   Button,
   ButtonGroup,
   Center,
-  Divider,
   FormControl,
   FormHelperText,
   Heading,
@@ -709,11 +708,11 @@ export const CharacterCreation = (): JSX.Element => {
               </Button>
             </HStack>
             <VStack fontWeight={700} spacing={1.5} w="100%">
-              <Divider
-                bgColor="#F5F5FA1F"
-                border="none"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
-                h={1}
+              <Box
+                backgroundColor="#F5F5FA1F"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                h="6px"
+                w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">HP - Hit Points</Text>
@@ -721,11 +720,11 @@ export const CharacterCreation = (): JSX.Element => {
                   {character?.maxHp.toString() ?? '0'}
                 </Text>
               </HStack>
-              <Divider
-                bgColor="#F5F5FA1F"
-                border="none"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
-                h={1}
+              <Box
+                backgroundColor="#F5F5FA1F"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                h="6px"
+                w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">STR - Strength</Text>
@@ -733,11 +732,11 @@ export const CharacterCreation = (): JSX.Element => {
                   {character?.strength.toString() ?? '0'}
                 </Text>
               </HStack>
-              <Divider
-                bgColor="#F5F5FA1F"
-                border="none"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
-                h={1}
+              <Box
+                backgroundColor="#F5F5FA1F"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                h="6px"
+                w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">AGI - Agility</Text>
@@ -745,11 +744,11 @@ export const CharacterCreation = (): JSX.Element => {
                   {character?.agility.toString() ?? '0'}
                 </Text>
               </HStack>
-              <Divider
-                bgColor="#F5F5FA1F"
-                border="none"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA3 inset, 2px 2px 4px 0px #889199 inset"
-                h={1}
+              <Box
+                backgroundColor="#F5F5FA1F"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                h="6px"
+                w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">INT - Intelligence</Text>

@@ -44,6 +44,7 @@ export const Header = ({
       direction={{ base: 'column-reverse', lg: 'row' }}
       justify={
         pathname === GAME_BOARD_PATH ||
+        pathname === CHARACTER_CREATION_PATH ||
         PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`)
           ? 'space-between'
           : 'end'

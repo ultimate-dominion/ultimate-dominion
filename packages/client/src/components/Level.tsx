@@ -24,13 +24,7 @@ export const Level = ({
           <Text display="none" position="absolute" right="0%" top="-15px">
             100%
           </Text>
-          <Progress
-            backgroundColor="#6363634D"
-            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset"
-            h={2}
-            value={100}
-            variant="maxed"
-          />
+          <Progress h={2} value={100} variant="maxed" />
           <HStack mt={1}>
             <Spacer />
             <Text>Level {Number(currentLevel)}</Text>
@@ -39,21 +33,19 @@ export const Level = ({
       ) : (
         <Box>
           <Text
-            color={levelPercent === 100 ? 'green' : '#3D4247'}
+            color={levelPercent === 100 ? 'green' : 'grey500'}
             fontWeight={levelPercent === 100 ? 'bold' : 'normal'}
             position="absolute"
             right={95 - levelPercent - 2 + '%'}
-            size="14px"
             top="-15px"
           >
             {levelPercent.toFixed(2)}%
           </Text>
           <Text
-            color="#3D4247"
+            color="grey500"
             display={levelPercent > 90 ? 'none' : 'block'}
             position="absolute"
             right="0%"
-            size="14px"
             top="-15px"
           >
             100%

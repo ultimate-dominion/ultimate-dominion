@@ -187,6 +187,10 @@ const Modal = {
     scrollBehavior: 'inside',
   },
   baseStyle: {
+    closeButton: {
+      right: 5,
+      top: 4,
+    },
     dialogContainer: {
       overflow: 'hidden',
     },
@@ -198,7 +202,6 @@ const Modal = {
       minW: { base: '100%', md: '500px' },
       maxW: { base: '100%', md: '500px' },
       position: 'absolute',
-      pr: 4,
     },
     body: {
       overflow: 'auto',
@@ -209,7 +212,8 @@ const Modal = {
       borderTop: '1px solid',
       display: 'flex',
       justifyContent: 'center',
-      p: 4,
+      pb: 6,
+      pt: 4,
     },
     header: {
       color: '#283570',
