@@ -404,7 +404,6 @@ export const CharacterCreation = (): JSX.Element => {
       gap={{ base: 4, sm: 6 }}
       justifyContent="center"
       mx="auto"
-      my={{ base: 4, lg: 12 }}
       w="100%"
     >
       {character && characterToken ? (

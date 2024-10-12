@@ -10,7 +10,6 @@ export const Footer = (): JSX.Element => {
       borderTop="1px solid black"
       px={20}
       py={4}
-      mt={4}
     >
       <Grid alignItems="center" templateColumns="repeat(4, 1fr)" w="100%">
         <GridItem colSpan={{ base: 3, sm: 2, md: 3 }}>
