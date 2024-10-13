@@ -8,17 +8,28 @@ import {
   VStack,
 } from '@chakra-ui/react';
 
+const STATUS_EFFECT_COLOR_MAPPING: { [key: string]: string } = {
+  'AGI boost': 'yellow',
+  blind: 'black',
+  drunk: 'red',
+  'INT boost': 'blue',
+  poison: 'purple',
+  'STR boost': 'red',
+  stupify: 'blue',
+  weaken: 'red',
+};
+
 export const HealthBar = ({
   maxHp,
   currentHp,
   level,
-  statusEffect,
+  statusEffects,
   ...stackProps
 }: {
   maxHp: bigint;
   currentHp: bigint;
   level?: bigint;
-  statusEffect?: string;
+  statusEffects?: string[];
 } & StackProps): JSX.Element => {
   const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
   const health =
@@ -60,12 +71,23 @@ export const HealthBar = ({
           />
         </Box>
       </Flex>
-      <HStack justify={statusEffect ? 'space-between' : 'end'} w="100%">
-        {statusEffect && (
-          <Badge bgColor="red" color="white" fontSize="2xs" size="xs">
-            {statusEffect}
-          </Badge>
-        )}
+      <HStack
+        justify={statusEffects && statusEffects[0] ? 'space-between' : 'end'}
+        w="100%"
+      >
+        <HStack>
+          {statusEffects?.slice(0, 3).map(statusEffect => (
+            <Badge
+              bgColor={STATUS_EFFECT_COLOR_MAPPING[statusEffect] ?? 'red'}
+              color="white"
+              fontSize="2xs"
+              key={`status-effect-display-${statusEffect}`}
+              size="xs"
+            >
+              {statusEffect}
+            </Badge>
+          ))}
+        </HStack>
         <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
           {currentHpWithFloor.toString()} / {maxHp.toString()}
         </Text>

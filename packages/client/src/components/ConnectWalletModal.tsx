@@ -39,7 +39,7 @@ export const ConnectWalletModal = ({
   const bodyContent = useMemo(() => {
     if (address && externalWalletClient && isConnected) {
       return (
-        <VStack p={4} spacing={10}>
+        <VStack spacing={10}>
           <VStack fontWeight={500} spacing={4}>
             <Text size="sm" textAlign="center">
               Connected account:
@@ -80,7 +80,7 @@ export const ConnectWalletModal = ({
     }
 
     return (
-      <VStack p={4} spacing={10}>
+      <VStack spacing={10}>
         <Text textAlign="center">Connect your wallet to play.</Text>
         <ConnectWalletButton />
       </VStack>
@@ -91,15 +91,14 @@ export const ConnectWalletModal = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <PolygonalCard>
-          <ModalHeader>
-            {isConnected ? 'Delegate Account' : 'Connect Wallet'}
-          </ModalHeader>
-          <ModalCloseButton>
-            <IoClose size={30} />
-          </ModalCloseButton>
-          <ModalBody>{bodyContent}</ModalBody>
-        </PolygonalCard>
+        <PolygonalCard isModal />
+        <ModalHeader>
+          {isConnected ? 'Delegate Account' : 'Connect Wallet'}
+        </ModalHeader>
+        <ModalCloseButton>
+          <IoClose size={30} />
+        </ModalCloseButton>
+        <ModalBody>{bodyContent}</ModalBody>
       </ModalContent>
     </Modal>
   );
