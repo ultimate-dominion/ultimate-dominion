@@ -178,18 +178,11 @@ contract CombatSystem is System {
             if (hit) {
                 damage = _calculateWeaponDamage(attackStats, attacker.strength, weapon, rnChunks[2], crit)
                     - _calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
-                if (!crit) {
-                    console.log("HIT!");
-                    console.logInt(damage);
-                }
                 if (crit) {
                     damage = damage * int256(CRIT_MULTIPLIER);
                     crit = true;
-                    console.log("CRIT!");
-                    console.logInt(damage);
                 }
             } else {
-                console.log("MISS!");
                 damage = 0;
                 hit = false;
             }
@@ -318,10 +311,6 @@ contract CombatSystem is System {
                         damage = -(maxHp - currentHp);
                     }
                 }
-                if (!crit) {
-                    console.log("magic damage: ");
-                    console.logInt(damage);
-                }
 
                 if (crit) {
                     damage = damage * int256(CRIT_MULTIPLIER);
@@ -334,12 +323,10 @@ contract CombatSystem is System {
                             damage = -(maxHp - currentHp);
                         }
                     }
-                    console.log("magic CRIT!");
-                    console.logInt(damage);
+
                     crit = true;
                 }
             } else {
-                console.log("magic MISS!");
                 damage = 0;
                 hit = false;
             }
