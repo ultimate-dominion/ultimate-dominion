@@ -26,7 +26,7 @@ import {
 } from "@codegen/index.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {_characterSystemId, _requireAccess, _lootManagerSystemId} from "../utils.sol";
-import {WORLD_NAMESPACE, BASE_GOLD_DROP, EXP_MODIFIER, PVP_GOLD_DENOMINATOR} from "../../constants.sol";
+import {WORLD_NAMESPACE, BASE_GOLD_DROP, EXP_MODIFIER, PVP_GOLD_DENOMINATOR, MAX_LEVEL} from "../../constants.sol";
 import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
 
 import "forge-std/console.sol";
@@ -297,7 +297,7 @@ contract LootManagerSystem is ERC1155Holder, System {
                     if (
                         _expAmount > uint256(0) && distTemps.livingPlayers > uint256(0)
                             && IWorld(_world()).UD__getCurrentAvailableLevel(Stats.getExperience(distTemps.entityIdTemp))
-                                < 10
+                                < MAX_LEVEL
                     ) {
                         statsTemp.experience += (
                             (_expAmount / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)
@@ -352,8 +352,9 @@ contract LootManagerSystem is ERC1155Holder, System {
         address playerAddr = IWorld(_world()).UD__getOwnerAddress(characterId);
         if (_msgSender() == playerAddr) {
             // consoom
+        } else {
+            _requireAccess(address(this), _msgSender());
         }
-        else _requireAccess(address(this), _msgSender());
 
         // address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
         //will require approval
