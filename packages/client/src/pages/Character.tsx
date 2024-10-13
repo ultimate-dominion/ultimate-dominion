@@ -394,7 +394,6 @@ export const CharacterPage = (): JSX.Element => {
             border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
-            p={6}
           >
             <LevelingPanel canLevel={canLevel} character={character} />
           </GridItem>

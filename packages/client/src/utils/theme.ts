@@ -187,6 +187,10 @@ const Modal = {
     scrollBehavior: 'inside',
   },
   baseStyle: {
+    closeButton: {
+      right: 5,
+      top: 4,
+    },
     dialogContainer: {
       overflow: 'hidden',
     },
@@ -198,7 +202,6 @@ const Modal = {
       minW: { base: '100%', md: '500px' },
       maxW: { base: '100%', md: '500px' },
       position: 'absolute',
-      pr: 4,
     },
     body: {
       overflow: 'auto',
@@ -209,7 +212,8 @@ const Modal = {
       borderTop: '1px solid',
       display: 'flex',
       justifyContent: 'center',
-      p: 4,
+      pb: 6,
+      pt: 4,
     },
     header: {
       color: '#283570',
@@ -225,6 +229,9 @@ const Progress = {
   baseStyle: {
     track: {
       borderRadius: 5,
+      bg: '#6363634D',
+      boxShadow:
+        '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset',
     },
     filledTrack: {
       transition: 'width 0.5s',
@@ -236,7 +243,7 @@ const Progress = {
   variants: {
     filling: {
       filledTrack: {
-        bg: 'black',
+        bg: '#283570',
       },
     },
     filled: {
@@ -342,7 +349,8 @@ export const theme = extendTheme({
     black: '#000',
     blue300: '#1633B6',
     blue400: '#0A2187',
-    blue500: '#131832',
+    blue500: '#0C1539',
+    blue600: '#131832',
     green: '#008F07',
     grey100: '#D0D0D0',
     grey200: '#A8ADB2',

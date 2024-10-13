@@ -3,9 +3,21 @@ import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useMUD } from '../contexts/MUDContext';
-import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import {
+  CHARACTER_CREATION_PATH,
+  CHARACTERS_PATH,
+  GAME_BOARD_PATH,
+  HOME_PATH,
+  LEADERBOARD_PATH,
+  MARKETPLACE_PATH,
+} from '../Routes';
+import { BackCaretSvg } from './SVGs';
 
-const PAGES_WITHOUT_WALLET_DETAILS = [HOME_PATH];
+const PAGES_WITH_BACK_BUTTON = [
+  CHARACTERS_PATH,
+  LEADERBOARD_PATH,
+  MARKETPLACE_PATH,
+];
 
 export const Header = ({
   onOpenWalletDetailsModal,
@@ -31,7 +43,9 @@ export const Header = ({
       bgColor="grey400"
       direction={{ base: 'column-reverse', lg: 'row' }}
       justify={
-        !PAGES_WITHOUT_WALLET_DETAILS.includes(pathname)
+        pathname === GAME_BOARD_PATH ||
+        pathname === CHARACTER_CREATION_PATH ||
+        PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`)
           ? 'space-between'
           : 'end'
       }
@@ -39,18 +53,32 @@ export const Header = ({
       px={4}
       py={2}
     >
-      {!PAGES_WITHOUT_WALLET_DETAILS.includes(pathname) && (
-        <HStack spacing={4}>
+      <HStack spacing={4}>
+        {pathname === HOME_PATH ||
+          (!PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`) && (
+            <Button
+              alignSelf={{ base: 'start', lg: 'center' }}
+              onClick={onOpenWalletDetailsModal}
+              fontSize="xs"
+              p={4}
+              size="sm"
+              variant="dark"
+            >
+              Wallet Details
+            </Button>
+          ))}
+        {PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`) && (
           <Button
-            alignSelf={{ base: 'start', lg: 'center' }}
-            onClick={onOpenWalletDetailsModal}
-            p={4}
             fontSize="xs"
+            leftIcon={<BackCaretSvg />}
+            onClick={() => navigate(-1)}
+            p={4}
             size="sm"
-            variant="dark"
           >
-            Wallet Details
+            Back
           </Button>
+        )}
+        {pathname !== HOME_PATH && (
           <Tooltip
             aria-label="Your session wallet balance"
             bg="black"
@@ -59,8 +87,8 @@ export const Header = ({
           >
             <Text size="2xs">Balance: {Number(burnerBalance).toFixed(5)}</Text>
           </Tooltip>
-        </HStack>
-      )}
+        )}
+      </HStack>
       <Button
         mb={4}
         mt={-5}

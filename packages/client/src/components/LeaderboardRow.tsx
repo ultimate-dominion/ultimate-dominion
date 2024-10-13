@@ -9,26 +9,33 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
-import { FaHatWizard } from 'react-icons/fa';
-import { GiAxeSword, GiRogue } from 'react-icons/gi';
-import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
 import { etherToFixedNumber } from '../utils/helpers';
 import { type Character, StatsClasses } from '../utils/types';
+import { MageSvg, RogueSvg, WarriorSvg } from './SVGs';
+import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const LeaderboardRow = ({
-  agility,
-  entityClass,
-  externalGoldBalance,
-  id,
-  image,
-  intelligence,
-  level,
-  maxHp,
-  name,
-  strength,
-}: Character): JSX.Element => {
+  character: {
+    agility,
+    entityClass,
+    externalGoldBalance,
+    id,
+    image,
+    intelligence,
+    level,
+    maxHp,
+    name,
+    strength,
+  },
+  index,
+  top3,
+}: {
+  character: Character;
+  index: number;
+  top3: boolean;
+}): JSX.Element => {
   const navigate = useNavigate();
 
   const totalStats = useMemo(
@@ -38,16 +45,16 @@ export const LeaderboardRow = ({
 
   return (
     <Flex
-      border="2px solid"
-      borderColor="grey400"
-      borderRadius={2}
+      bgColor={top3 ? '#F5F5FA1F' : '#a2a9b0'}
       justify="space-between"
       onClick={() => navigate(`/characters/${id}`)}
+      px={{ base: 1, sm: 2, md: 4 }}
+      py={2}
       w="100%"
       _hover={{
         cursor: 'pointer',
         button: {
-          bgColor: 'grey300',
+          bgColor: 'grey100',
         },
       }}
       _active={{
@@ -56,26 +63,61 @@ export const LeaderboardRow = ({
         },
       }}
     >
-      <Flex>
-        <Avatar borderRadius={0} size="lg" src={image} />
-        <VStack align="start" justify="center" ml={4}>
-          <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>{name}</Text>
+      <Flex position="relative">
+        <HStack ml={{ base: 3, sm: 0 }} spacing={{ base: 2, md: 6 }}>
+          <Text
+            color="#283570"
+            fontWeight={700}
+            justifySelf="center"
+            left={0}
+            position={{ base: 'absolute', sm: 'static' }}
+            size={{ base: 'xs', lg: 'md' }}
+            top={0}
+          >
+            {index + 1}
+          </Text>
+          <Avatar
+            borderRadius="100%"
+            size={{ base: 'sm', md: 'md' }}
+            src={image}
+          />
+        </HStack>
+        <VStack
+          align="start"
+          justify="center"
+          ml={{ base: 3, sm: 4 }}
+          spacing={{ base: 0, sm: 1 }}
+        >
+          <HStack>
+            <Text
+              color="black"
+              fontWeight={700}
+              size={{ base: 'sm', lg: 'xl' }}
+            >
+              {name}
+            </Text>
             <Center>
-              {entityClass == StatsClasses.Warrior && <GiAxeSword size={15} />}
-              {entityClass == StatsClasses.Rogue && <GiRogue size={15} />}
-              {entityClass == StatsClasses.Mage && <FaHatWizard size={15} />}
+              {entityClass == StatsClasses.Warrior && (
+                <WarriorSvg theme="dark" />
+              )}
+              {entityClass == StatsClasses.Rogue && <RogueSvg theme="dark" />}
+              {entityClass == StatsClasses.Mage && <MageSvg theme="dark" />}
             </Center>
           </HStack>
-          <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-            HP {maxHp.toString()} • STR {strength.toString()} • AGI
+          <Text
+            color="#121B45"
+            fontWeight={500}
+            size={{ base: '2xs', lg: 'md' }}
+          >
+            HP {maxHp.toString()} • STR {strength.toString()} • AGI{' '}
             {agility.toString()} • INT {intelligence.toString()}
           </Text>
         </VStack>
       </Flex>
       <HStack>
-        <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
+        <HStack w={{ base: '120px', sm: '185px', md: '300px', lg: '450px' }}>
           <Text
+            color="#121B45"
             display={{ base: 'none', lg: 'block' }}
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
@@ -85,6 +127,7 @@ export const LeaderboardRow = ({
             {totalStats}
           </Text>
           <Text
+            color="black"
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -93,6 +136,7 @@ export const LeaderboardRow = ({
             {level.toString()}
           </Text>
           <Text
+            color="#EFD31C"
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -101,9 +145,9 @@ export const LeaderboardRow = ({
             {etherToFixedNumber(externalGoldBalance)}
           </Text>
         </HStack>
-        <Box display={{ base: 'none', md: 'block' }} w="50px">
-          <Button p={3} variant="ghost">
-            <IoIosArrowForward />
+        <Box display={{ base: 'none', md: 'block' }}>
+          <Button size="sm" variant="ghost">
+            <ForwardCaretSvg />
           </Button>
         </Box>
       </HStack>

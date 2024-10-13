@@ -271,12 +271,12 @@ export const LevelingPanel = ({
   }, [character]);
 
   return (
-    <VStack>
-      <HStack justify="space-between" w="100%">
-        <Text alignSelf="start" fontWeight="bold">
+    <VStack py={6}>
+      <HStack color="#283570" justify="space-between" px={6} w="100%">
+        <Text alignSelf="start" fontWeight={700}>
           My Stats
         </Text>
-        <Text alignSelf="start" fontWeight="bold">
+        <Text alignSelf="start" fontWeight={700}>
           Ability Points: {abilityPoints}
         </Text>
       </HStack>
@@ -285,12 +285,13 @@ export const LevelingPanel = ({
         maxHp={character.maxHp}
         mt={2}
         level={character.level}
+        px={6}
         statusEffects={character?.worldStatusEffects
           .filter(e => e.active)
           .map(e => e.name)}
         w="100%"
       />
-      <HStack justifyContent="end" mt={4} w="100%">
+      <HStack justifyContent="end" mt={4} px={6} w="100%">
         <HStack
           justifyContent={canLevel ? 'center' : 'end'}
           textAlign="end"
@@ -311,10 +312,20 @@ export const LevelingPanel = ({
           )}
         </HStack>
       </HStack>
-      <HStack w="100%">
-        <Text size={{ base: 'xs', md: 'sm', xl: 'md' }} w="50%">
+      <Box
+        backgroundColor="#F5F5FA1F"
+        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+        h="6px"
+        w="100%"
+      />
+      <HStack px={6} w="100%">
+        <Text
+          fontWeight={700}
+          size={{ base: 'xs', md: 'sm', xl: 'md' }}
+          w="50%"
+        >
           STR -{' '}
-          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
+          <Text as="span" fontWeight={500} size={{ base: '2xs', sm: 'xs' }}>
             Strength
           </Text>
         </Text>
@@ -370,10 +381,20 @@ export const LevelingPanel = ({
           )}
         </HStack>
       </HStack>
-      <HStack w="100%">
-        <Text size={{ base: 'xs', md: 'sm', xl: 'md' }} w="50%">
+      <Box
+        backgroundColor="#F5F5FA1F"
+        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+        h="6px"
+        w="100%"
+      />
+      <HStack px={6} w="100%">
+        <Text
+          fontWeight={700}
+          size={{ base: 'xs', md: 'sm', xl: 'md' }}
+          w="50%"
+        >
           AGI -{' '}
-          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
+          <Text as="span" fontWeight={500} size={{ base: '2xs', sm: 'xs' }}>
             Agility
           </Text>
         </Text>
@@ -429,10 +450,20 @@ export const LevelingPanel = ({
           )}
         </HStack>
       </HStack>
-      <HStack w="100%">
-        <Text size={{ base: 'xs', md: 'sm', xl: 'md' }} w="50%">
+      <Box
+        backgroundColor="#F5F5FA1F"
+        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+        h="6px"
+        w="100%"
+      />
+      <HStack px={6} w="100%">
+        <Text
+          fontWeight={700}
+          size={{ base: 'xs', md: 'sm', xl: 'md' }}
+          w="50%"
+        >
           INT -{' '}
-          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
+          <Text as="span" fontWeight={500} size={{ base: '2xs', sm: 'xs' }}>
             Intelligence
           </Text>
         </Text>
@@ -488,6 +519,12 @@ export const LevelingPanel = ({
           )}
         </HStack>
       </HStack>
+      <Box
+        backgroundColor="#F5F5FA1F"
+        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+        h="6px"
+        w="100%"
+      />
 
       {canLevel && (
         <Button

@@ -3,6 +3,7 @@ import {
   Button,
   Center,
   Flex,
+  Heading,
   HStack,
   Input,
   InputGroup,
@@ -10,6 +11,7 @@ import {
   Spinner,
   Stack,
   Text,
+  useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
 import { useEntityQuery } from '@latticexyz/react';
@@ -23,13 +25,19 @@ import { encodeEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
-import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 import { formatEther, hexToString } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Pagination } from '../components/Pagination';
+import { PolygonalCard } from '../components/PolygonalCard';
+import {
+  LeaderboardIconSvg,
+  MageSvg,
+  RogueSvg,
+  WarriorSvg,
+} from '../components/SVGs';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { HOME_PATH } from '../Routes';
@@ -39,6 +47,7 @@ import { Character, StatsClasses } from '../utils/types';
 const PLAYERS_PER_PAGE = 10;
 
 export const Leaderboard = (): JSX.Element => {
+  const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { renderError } = useToast();
   const navigate = useNavigate();
   const { isConnected } = useAccount();
@@ -60,7 +69,7 @@ export const Leaderboard = (): JSX.Element => {
 
   const [entries, setEntries] = useState<Character[]>([]);
   const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
-  const [filter, setFilter] = useState({ filtered: 'all' });
+  const [filter, setFilter] = useState<StatsClasses | 'All'>('All');
   const [query, setQuery] = useState('');
 
   const [page, setPage] = useState(1);
@@ -218,12 +227,12 @@ export const Leaderboard = (): JSX.Element => {
       }
     });
     entriesCopy = [...entriesCopy].filter(entry => {
-      switch (filter.filtered) {
-        case 'byWarrior':
+      switch (filter) {
+        case StatsClasses.Warrior:
           return entry.entityClass == StatsClasses.Warrior;
-        case 'byRogue':
+        case StatsClasses.Rogue:
           return entry.entityClass == StatsClasses.Rogue;
-        case 'byMage':
+        case StatsClasses.Mage:
           return entry.entityClass == StatsClasses.Mage;
         default:
           return true;
@@ -249,7 +258,7 @@ export const Leaderboard = (): JSX.Element => {
     }
   }, [
     characters,
-    filter.filtered,
+    filter,
     pageLimit,
     pageNumber,
     query,
@@ -266,163 +275,239 @@ export const Leaderboard = (): JSX.Element => {
   }
 
   return (
-    <VStack>
-      <Button
-        alignSelf="start"
-        leftIcon={<IoMdArrowRoundBack />}
-        my={4}
-        onClick={() => navigate(-1)}
-        size="xs"
-        variant="outline"
-      >
-        Back
-      </Button>
-      <Stack
-        direction={{ base: 'column', md: 'row' }}
-        mb={8}
-        spacing={{ base: 4, md: 8 }}
-        w="100%"
-      >
-        <InputGroup w="100%">
-          <InputLeftElement h="100%" pointerEvents="none">
-            <FaSearch />
-          </InputLeftElement>
-          <Input
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search"
-            value={query}
-          />
-        </InputGroup>
-        <HStack>
-          <Button
-            onClick={() => setFilter({ filtered: 'all' })}
-            size="sm"
-            variant={filter.filtered == 'all' ? 'solid' : 'outline'}
-          >
-            All
-          </Button>
-          <Button
-            onClick={() => setFilter({ filtered: 'byWarrior' })}
-            size="sm"
-            variant={filter.filtered == 'byWarrior' ? 'solid' : 'outline'}
-          >
-            Warrior
-          </Button>
-          <Button
-            onClick={() =>
-              setFilter({
-                filtered: 'byRogue',
-              })
-            }
-            size="sm"
-            variant={filter.filtered == 'byRogue' ? 'solid' : 'outline'}
-          >
-            Rogue
-          </Button>
-          <Button
-            onClick={() => setFilter({ filtered: 'byMage' })}
-            size="sm"
-            variant={filter.filtered == 'byMage' ? 'solid' : 'outline'}
-          >
-            Mage
-          </Button>
+    <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
+      <VStack>
+        <HStack bgColor="blue500" h="66px" px="20px" width="100%">
+          <LeaderboardIconSvg />
+          <Heading color="white">Leaderboard</Heading>
         </HStack>
-      </Stack>
-      <Flex justify="space-between" w="100%">
-        <Text>Players {characters.length}</Text>
-        <HStack>
-          <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
+
+        <Stack
+          direction={{ base: 'column', md: 'row' }}
+          mb={8}
+          my={4}
+          px={3}
+          spacing={{ base: 4, md: 8 }}
+          w="100%"
+        >
+          <InputGroup>
+            <InputLeftElement h="100%" pointerEvents="none">
+              <FaSearch />
+            </InputLeftElement>
+            <Input
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search"
+              value={query}
+            />
+          </InputGroup>
+          <HStack px={{ base: 0, sm: 3 }}>
             <Button
-              display={{ base: 'none', lg: 'flex' }}
-              fontWeight={sort.sorted == 'byStats' ? 'bold' : 'normal'}
-              onClick={() =>
-                setSort({
-                  sorted: 'byStats',
-                  reversed: !sort.reversed,
-                })
-              }
-              p={1}
-              size={{ base: '2xs', lg: 'sm' }}
-              variant="ghost"
-              w="100%"
+              bgColor={filter == 'All' ? 'grey500' : undefined}
+              color={filter == 'All' ? 'white' : undefined}
+              onClick={() => setFilter('All')}
+              size="sm"
+              variant="white"
             >
-              <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                Total Stats
-              </Text>
-              {sort.sorted == 'byStats' && sort.reversed && <FaSortAmountUp />}
-              {sort.sorted == 'byStats' && !sort.reversed && (
-                <FaSortAmountDown />
-              )}
-              {sort.sorted != 'byStats' && <FaSortAmountDown color="grey" />}
+              All
             </Button>
             <Button
-              fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
-              onClick={() =>
-                setSort({
-                  sorted: 'byLevel',
-                  reversed: !sort.reversed,
-                })
+              leftIcon={
+                isSmallScreen ? undefined : (
+                  <WarriorSvg
+                    theme={filter === StatsClasses.Warrior ? 'light' : 'dark'}
+                  />
+                )
               }
-              p={1}
-              size={{ base: '2xs', lg: 'sm' }}
-              variant="ghost"
-              w="100%"
+              bgColor={filter === StatsClasses.Warrior ? 'grey500' : undefined}
+              color={filter === StatsClasses.Warrior ? 'white' : undefined}
+              onClick={() => setFilter(StatsClasses.Warrior)}
+              size="sm"
+              variant="white"
             >
-              <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                Level
-              </Text>
-              {sort.sorted == 'byLevel' && sort.reversed && <FaSortAmountUp />}
-              {sort.sorted == 'byLevel' && !sort.reversed && (
-                <FaSortAmountDown />
+              {!isSmallScreen ? (
+                'Warrior'
+              ) : (
+                <WarriorSvg
+                  theme={filter === StatsClasses.Warrior ? 'light' : 'dark'}
+                />
               )}
-              {sort.sorted != 'byLevel' && <FaSortAmountDown color="grey" />}
             </Button>
             <Button
-              fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
-              onClick={() =>
-                setSort({
-                  sorted: 'byGold',
-                  reversed: !sort.reversed,
-                })
+              leftIcon={
+                isSmallScreen ? undefined : (
+                  <RogueSvg
+                    theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
+                  />
+                )
               }
-              p={1}
-              size={{ base: '2xs', lg: 'sm' }}
-              variant="ghost"
-              w="100%"
+              bgColor={filter === StatsClasses.Rogue ? 'grey500' : undefined}
+              color={filter === StatsClasses.Rogue ? 'white' : undefined}
+              onClick={() => setFilter(StatsClasses.Rogue)}
+              size="sm"
+              variant="white"
             >
-              <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                $Gold
-              </Text>
-              {sort.sorted == 'byGold' && sort.reversed && <FaSortAmountUp />}
-              {sort.sorted == 'byGold' && !sort.reversed && (
-                <FaSortAmountDown />
+              {!isSmallScreen ? (
+                'Rogue'
+              ) : (
+                <RogueSvg
+                  theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
+                />
               )}
-              {sort.sorted != 'byGold' && <FaSortAmountDown color="grey" />}
+            </Button>
+            <Button
+              leftIcon={
+                isSmallScreen ? undefined : (
+                  <MageSvg
+                    theme={filter === StatsClasses.Mage ? 'light' : 'dark'}
+                  />
+                )
+              }
+              bgColor={filter === StatsClasses.Mage ? 'grey500' : undefined}
+              color={filter === StatsClasses.Mage ? 'white' : undefined}
+              onClick={() => setFilter(StatsClasses.Mage)}
+              size="sm"
+              variant="white"
+            >
+              {!isSmallScreen ? (
+                'Mage'
+              ) : (
+                <MageSvg
+                  theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
+                />
+              )}
             </Button>
           </HStack>
-          <Box display={{ base: 'none', md: 'block' }} w="50px" />
-        </HStack>
-      </Flex>
+        </Stack>
+        <Flex alignItems="center" justify="space-between" w="100%">
+          <Text pl={4} color="#565555" fontWeight={400} fontSize="14px">
+            {characters.length} Players
+          </Text>
+          <HStack>
+            <HStack
+              w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}
+            >
+              <Button
+                color="#565555"
+                display={{ base: 'none', lg: 'flex' }}
+                fontWeight={sort.sorted == 'byStats' ? 'bold' : 'normal'}
+                onClick={() =>
+                  setSort({
+                    sorted: 'byStats',
+                    reversed: !sort.reversed,
+                  })
+                }
+                p={1}
+                size={{ base: '2xs', lg: 'sm' }}
+                variant="unstyled"
+                w="100%"
+              >
+                <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
+                  Total Stats
+                </Text>
+                {sort.sorted == 'byStats' && sort.reversed && (
+                  <FaSortAmountUp />
+                )}
+                {sort.sorted == 'byStats' && !sort.reversed && (
+                  <FaSortAmountDown />
+                )}
+                {sort.sorted != 'byStats' && <FaSortAmountDown color="grey" />}
+              </Button>
+              <Button
+                color="#565555"
+                display="flex"
+                fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
+                onClick={() =>
+                  setSort({
+                    sorted: 'byLevel',
+                    reversed: !sort.reversed,
+                  })
+                }
+                p={1}
+                size={{ base: '2xs', lg: 'sm' }}
+                variant="unstyled"
+                w="100%"
+              >
+                <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
+                  Level
+                </Text>
+                {sort.sorted == 'byLevel' && sort.reversed && (
+                  <FaSortAmountUp />
+                )}
+                {sort.sorted == 'byLevel' && !sort.reversed && (
+                  <FaSortAmountDown />
+                )}
+                {sort.sorted != 'byLevel' && <FaSortAmountDown color="grey" />}
+              </Button>
+              <Button
+                color="#565555"
+                display="flex"
+                fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
+                onClick={() =>
+                  setSort({
+                    sorted: 'byGold',
+                    reversed: !sort.reversed,
+                  })
+                }
+                p={1}
+                size={{ base: '2xs', lg: 'sm' }}
+                variant="unstyled"
+                w="100%"
+              >
+                <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
+                  $Gold
+                </Text>
+                {sort.sorted == 'byGold' && sort.reversed && <FaSortAmountUp />}
+                {sort.sorted == 'byGold' && !sort.reversed && (
+                  <FaSortAmountDown />
+                )}
+                {sort.sorted != 'byGold' && <FaSortAmountDown color="grey" />}
+              </Button>
+            </HStack>
+            <Box display={{ base: 'none', md: 'block' }} w="80px" />
+          </HStack>
+        </Flex>
 
-      <VStack gap={3} overflowX="auto" w="100%">
-        {entries.length > 0 ? (
-          entries.map(function (entry, i) {
-            return <LeaderboardRow key={`leaderboard-row-${i}`} {...entry} />;
-          })
-        ) : (
-          <Text mt={12}>No players</Text>
-        )}
+        <VStack overflowX="auto" spacing={0} w="100%">
+          <Box
+            bgColor="#F5F5FA1F"
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+            h="5px"
+            w="100%"
+          />
+          {entries.length > 0 ? (
+            [...entries].map(function (entry, i) {
+              return (
+                <>
+                  <LeaderboardRow
+                    key={`leaderboard-row-${i}`}
+                    top3={i == 0 || i == 1 || i == 2}
+                    index={i}
+                    character={entry}
+                  />
+                  <Box
+                    bgColor="#F5F5FA1F"
+                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                    h="5px"
+                    w="100%"
+                  />
+                </>
+              );
+            })
+          ) : (
+            <Text mt={12}>No players</Text>
+          )}
+        </VStack>
+        <HStack my={5} visibility={entries.length > 0 ? 'visible' : 'hidden'}>
+          <Pagination
+            length={length}
+            page={page}
+            pageLimit={pageLimit}
+            perPage={PLAYERS_PER_PAGE}
+            setPage={setPage}
+            setPageLimit={setPageLimit}
+          />
+        </HStack>
       </VStack>
-      <HStack my={5} visibility={entries.length > 0 ? 'visible' : 'hidden'}>
-        <Pagination
-          length={length}
-          page={page}
-          pageLimit={pageLimit}
-          perPage={PLAYERS_PER_PAGE}
-          setPage={setPage}
-          setPageLimit={setPageLimit}
-        />
-      </HStack>
-    </VStack>
+    </PolygonalCard>
   );
 };
