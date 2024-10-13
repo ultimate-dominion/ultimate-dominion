@@ -4,7 +4,6 @@ import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, EncounterType} from "@codegen/common.sol";
 import {StatsData, Stats} from "@tables/Stats.sol";
 import {EncounterEntity} from "@tables/EncounterEntity.sol";
-import "forge-std/console.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
@@ -28,6 +27,7 @@ import {
 } from "../constants.sol";
 import {CombatEncounterData, StarterItemsData} from "@codegen/index.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
+import "forge-std/console.sol";
 
 contract Test_CombatSystem is SetUp, GasReporter {
     bytes32[] public defenders;
@@ -259,22 +259,16 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
-        console.log("STARTING SPELLID: {%p}", startingSpellId);
         actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingSpellId});
         uint256 fees = 0; // entropy.getFee(address(1));
         vm.prank(bob);
         world.UD__endTurn(encounterId, bobCharacterId, actions);
 
         while (world.UD__getEncounter(encounterId).end == 0) {
-            console.log("bob's move");
             vm.prank(bob);
             world.UD__endTurn(encounterId, bobCharacterId, actions);
             int256 bobHp = Stats.getCurrentHp(bobCharacterId);
             int256 entityHp = Stats.getCurrentHp(entityId);
-            console.log("BOB HP");
-            console.logInt(bobHp);
-            console.log("Entity Hp");
-            console.logInt(entityHp);
         }
 
         StatsData memory endingStats = Stats.get(bobCharacterId);
@@ -336,7 +330,6 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         while (world.UD__getEncounter(encounterId).end == 0) {
             vm.prank(bob);
-            console.log("bob move");
             world.UD__endTurn(encounterId, bobCharacterId, bobActions);
             // break if bob wins
             if (world.UD__getEncounter(encounterId).end != 0) {
@@ -344,7 +337,6 @@ contract Test_CombatSystem is SetUp, GasReporter {
             }
             // bob's move
             vm.prank(alice);
-            console.log("alice move");
             world.UD__endTurn(encounterId, alicesCharacterId, aliceActions);
             // break if bob wins
             if (world.UD__getEncounter(encounterId).end != 0) {

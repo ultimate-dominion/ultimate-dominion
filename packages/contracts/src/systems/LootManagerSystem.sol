@@ -16,6 +16,7 @@ import {
     StarterItemsData,
     Characters,
     Stats,
+    Levels,
     StatsData,
     CharacterEquipment,
     CombatEncounter,
@@ -242,7 +243,7 @@ contract LootManagerSystem is ERC1155Holder, System {
 
         // check dead attackers and defenders
         StatsData memory statsTemp;
-
+        uint256 _baseExp;
         if (encounterData.attackersAreMobs) {
             distTemps.monsters = encounterData.attackers;
             distTemps.players = encounterData.defenders;
@@ -268,7 +269,7 @@ contract LootManagerSystem is ERC1155Holder, System {
                 ? true
                 : (distTemps.cumulativePlayerLevels - distTemps.defenderLevelTemp) <= 5;
             if (EncounterEntity.getDied(distTemps.monsterTemp) && correctLevelSpread) {
-                _expAmount += Stats.getExperience(distTemps.monsterTemp);
+                _baseExp += Stats.getExperience(distTemps.monsterTemp);
                 _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
                 EncounterEntity.setEncounterId(distTemps.monsterTemp, bytes32(0));
 
@@ -295,13 +296,25 @@ contract LootManagerSystem is ERC1155Holder, System {
                         dropGoldToEscrow(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
                     }
                     if (
-                        _expAmount > uint256(0) && distTemps.livingPlayers > uint256(0)
-                            && IWorld(_world()).UD__getCurrentAvailableLevel(Stats.getExperience(distTemps.entityIdTemp))
-                                < MAX_LEVEL
+                        Stats.getExperience(distTemps.entityIdTemp) == Levels.get(MAX_LEVEL) || _baseExp == uint256(0)
+                            || distTemps.livingPlayers == uint256(0)
+                    ) {
+                        //do nothing
+                    } else if (
+                        (_baseExp / distTemps.livingPlayers) + Stats.getExperience(distTemps.entityIdTemp)
+                            < Levels.get(MAX_LEVEL)
                     ) {
                         statsTemp.experience += (
-                            (_expAmount / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)
+                            (_baseExp / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)
                         ) / WAD;
+                        _expAmount += statsTemp.experience;
+                    } else if (
+                        _baseExp / distTemps.livingPlayers + Stats.getExperience(distTemps.entityIdTemp)
+                            > Levels.get(MAX_LEVEL)
+                    ) {
+                        uint256 _expToGive = Levels.get(MAX_LEVEL) - Stats.getExperience(distTemps.entityIdTemp);
+                        statsTemp.experience += _expToGive;
+                        _expAmount += statsTemp.experience;
                     }
                 }
                 Stats.set(distTemps.entityIdTemp, statsTemp);
