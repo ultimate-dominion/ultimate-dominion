@@ -48,8 +48,8 @@ export const LeaderboardRow = ({
       bgColor={top3 ? '#F5F5FA1F' : '#a2a9b0'}
       justify="space-between"
       onClick={() => navigate(`/characters/${id}`)}
-      px={4}
-      py={1}
+      px={{ base: 1, sm: 2, md: 4 }}
+      py={2}
       w="100%"
       _hover={{
         cursor: 'pointer',
@@ -63,15 +63,32 @@ export const LeaderboardRow = ({
         },
       }}
     >
-      <Flex>
-        <HStack spacing={6}>
-          <Text color="#283570" fontWeight={700} justifySelf="center">
+      <Flex position="relative">
+        <HStack ml={{ base: 3, sm: 0 }} spacing={{ base: 2, md: 6 }}>
+          <Text
+            color="#283570"
+            fontWeight={700}
+            justifySelf="center"
+            left={0}
+            position={{ base: 'absolute', sm: 'static' }}
+            size={{ base: 'xs', lg: 'md' }}
+            top={0}
+          >
             {index + 1}
           </Text>
-          <Avatar borderRadius="100%" src={image} />
+          <Avatar
+            borderRadius="100%"
+            size={{ base: 'sm', md: 'md' }}
+            src={image}
+          />
         </HStack>
-        <VStack align="start" justify="center" ml={4}>
-          <HStack w="100%">
+        <VStack
+          align="start"
+          justify="center"
+          ml={{ base: 3, sm: 4 }}
+          spacing={{ base: 0, sm: 1 }}
+        >
+          <HStack>
             <Text
               color="black"
               fontWeight={700}
@@ -90,7 +107,7 @@ export const LeaderboardRow = ({
           <Text
             color="#121B45"
             fontWeight={500}
-            size={{ base: 'xs', lg: 'md' }}
+            size={{ base: '2xs', lg: 'md' }}
           >
             HP {maxHp.toString()} • STR {strength.toString()} • AGI{' '}
             {agility.toString()} • INT {intelligence.toString()}
@@ -98,7 +115,7 @@ export const LeaderboardRow = ({
         </VStack>
       </Flex>
       <HStack>
-        <HStack w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}>
+        <HStack w={{ base: '120px', sm: '185px', md: '300px', lg: '450px' }}>
           <Text
             color="#121B45"
             display={{ base: 'none', lg: 'block' }}

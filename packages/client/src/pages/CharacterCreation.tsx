@@ -558,16 +558,18 @@ export const CharacterCreation = (): JSX.Element => {
             )}
           </Box>
           {isSmallScreen && (
-            <Button
-              isLoading={isCreating || isRefreshing}
-              loadingText="Creating..."
-              mb={4}
-              mt={2}
-              type="submit"
-              width="100%"
-            >
-              Create Character
-            </Button>
+            <Box px={4}>
+              <Button
+                isLoading={isCreating || isRefreshing}
+                loadingText="Creating..."
+                mb={4}
+                mt={2}
+                type="submit"
+                width="100%"
+              >
+                Create Character
+              </Button>
+            </Box>
           )}
         </PolygonalCard>
       )}

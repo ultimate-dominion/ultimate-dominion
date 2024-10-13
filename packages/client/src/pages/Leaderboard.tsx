@@ -11,6 +11,7 @@ import {
   Spinner,
   Stack,
   Text,
+  useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
 import { useEntityQuery } from '@latticexyz/react';
@@ -46,6 +47,7 @@ import { Character, StatsClasses } from '../utils/types';
 const PLAYERS_PER_PAGE = 10;
 
 export const Leaderboard = (): JSX.Element => {
+  const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { renderError } = useToast();
   const navigate = useNavigate();
   const { isConnected } = useAccount();
@@ -298,7 +300,7 @@ export const Leaderboard = (): JSX.Element => {
               value={query}
             />
           </InputGroup>
-          <HStack px={3}>
+          <HStack px={{ base: 0, sm: 3 }}>
             <Button
               bgColor={filter == 'All' ? 'grey500' : undefined}
               color={filter == 'All' ? 'white' : undefined}
@@ -310,9 +312,11 @@ export const Leaderboard = (): JSX.Element => {
             </Button>
             <Button
               leftIcon={
-                <WarriorSvg
-                  theme={filter === StatsClasses.Warrior ? 'light' : 'dark'}
-                />
+                isSmallScreen ? undefined : (
+                  <WarriorSvg
+                    theme={filter === StatsClasses.Warrior ? 'light' : 'dark'}
+                  />
+                )
               }
               bgColor={filter === StatsClasses.Warrior ? 'grey500' : undefined}
               color={filter === StatsClasses.Warrior ? 'white' : undefined}
@@ -320,13 +324,21 @@ export const Leaderboard = (): JSX.Element => {
               size="sm"
               variant="white"
             >
-              Warrior
+              {!isSmallScreen ? (
+                'Warrior'
+              ) : (
+                <WarriorSvg
+                  theme={filter === StatsClasses.Warrior ? 'light' : 'dark'}
+                />
+              )}
             </Button>
             <Button
               leftIcon={
-                <RogueSvg
-                  theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
-                />
+                isSmallScreen ? undefined : (
+                  <RogueSvg
+                    theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
+                  />
+                )
               }
               bgColor={filter === StatsClasses.Rogue ? 'grey500' : undefined}
               color={filter === StatsClasses.Rogue ? 'white' : undefined}
@@ -334,13 +346,21 @@ export const Leaderboard = (): JSX.Element => {
               size="sm"
               variant="white"
             >
-              Rogue
+              {!isSmallScreen ? (
+                'Rogue'
+              ) : (
+                <RogueSvg
+                  theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
+                />
+              )}
             </Button>
             <Button
               leftIcon={
-                <MageSvg
-                  theme={filter === StatsClasses.Mage ? 'light' : 'dark'}
-                />
+                isSmallScreen ? undefined : (
+                  <MageSvg
+                    theme={filter === StatsClasses.Mage ? 'light' : 'dark'}
+                  />
+                )
               }
               bgColor={filter === StatsClasses.Mage ? 'grey500' : undefined}
               color={filter === StatsClasses.Mage ? 'white' : undefined}
@@ -348,7 +368,13 @@ export const Leaderboard = (): JSX.Element => {
               size="sm"
               variant="white"
             >
-              Mage
+              {!isSmallScreen ? (
+                'Mage'
+              ) : (
+                <MageSvg
+                  theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
+                />
+              )}
             </Button>
           </HStack>
         </Stack>
@@ -449,26 +475,24 @@ export const Leaderboard = (): JSX.Element => {
             w="100%"
           />
           {entries.length > 0 ? (
-            [...entries, ...entries, ...entries, ...entries, ...entries].map(
-              function (entry, i) {
-                return (
-                  <>
-                    <LeaderboardRow
-                      key={`leaderboard-row-${i}`}
-                      top3={i == 0 || i == 1 || i == 2}
-                      index={i}
-                      character={entry}
-                    />
-                    <Box
-                      bgColor="#F5F5FA1F"
-                      boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
-                      h="5px"
-                      w="100%"
-                    />
-                  </>
-                );
-              },
-            )
+            [...entries].map(function (entry, i) {
+              return (
+                <>
+                  <LeaderboardRow
+                    key={`leaderboard-row-${i}`}
+                    top3={i == 0 || i == 1 || i == 2}
+                    index={i}
+                    character={entry}
+                  />
+                  <Box
+                    bgColor="#F5F5FA1F"
+                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                    h="5px"
+                    w="100%"
+                  />
+                </>
+              );
+            })
           ) : (
             <Text mt={12}>No players</Text>
           )}
