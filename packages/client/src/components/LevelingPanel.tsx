@@ -399,7 +399,7 @@ export const LevelingPanel = ({
           </Text>
         </HStack>
 
-        <HStack  color="#3D4247" justifyContent="end" textAlign="end" w="50%">
+        <HStack color="#3D4247" justifyContent="end" textAlign="end" w="50%">
           {agilityIncreased && (
             <Box w="33%">
               <Button

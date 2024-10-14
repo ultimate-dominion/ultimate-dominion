@@ -374,7 +374,7 @@ export const Leaderboard = (): JSX.Element => {
             fontWeight="700"
             verticalAlign="middle"
           >
-            {leaderboard({size: 1})} Leader Board
+            {leaderboard({ size: 1 })} Leader Board
           </Text>
         </Box>
 

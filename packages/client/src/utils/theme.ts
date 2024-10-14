@@ -127,6 +127,29 @@ const Modal = {
   defaultProps: {
     scrollBehavior: 'inside',
   },
+  characterPageStyle: {
+    dialogContainer: {
+      border: '6px solid #1A244E',
+      padding: 6,
+    },
+    dialog: {
+      bgColor: '#B3B9BE',
+      border: 'solid 1px #3B82C4',
+    },
+    body: {
+      overflow: 'auto',
+    },
+    footer: {
+      borderTop: '1px solid',
+      display: 'flex',
+      justifyContent: 'center',
+    },
+    header: {
+      color: '#283570',
+      fontWeight: 700,
+      textAlign: 'center',
+    },
+  },
   baseStyle: {
     dialogContainer: {
       overflow: 'hidden',

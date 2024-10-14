@@ -192,7 +192,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
   }, [avatar, description, name, newDescription, newName]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal variant="characterPageStyle" isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <Box as="form" onSubmit={onEditCharacter}>

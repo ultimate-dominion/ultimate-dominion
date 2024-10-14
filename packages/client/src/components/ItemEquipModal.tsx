@@ -156,7 +156,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
   if (isEquipped) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal variant="characterPageStyle" isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
