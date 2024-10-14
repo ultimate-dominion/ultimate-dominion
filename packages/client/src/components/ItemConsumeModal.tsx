@@ -141,8 +141,8 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     if (!character) return false;
     if (!item) return false;
 
-    const effectsApplied = character.worldStatusEffects.filter(effect =>
-      item.effects.includes(effect.effectId),
+    const effectsApplied = character.worldStatusEffects.filter(
+      effect => effect.active && item.effects.includes(effect.effectId),
     );
 
     const effectsCounter = effectsApplied.reduce(
