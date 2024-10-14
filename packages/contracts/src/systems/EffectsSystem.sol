@@ -196,18 +196,20 @@ contract EffectsSystem is System {
         _requireAccess(address(this), _msgSender());
         checkWorldStatusEffects(entityId);
         bytes32[] memory worldEffects = WorldStatusEffects.get(entityId);
-        _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
-        StatusEffectStatsData memory effectStats;
+        if (worldEffects.length > 0) {
+            _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
+            StatusEffectStatsData memory effectStats;
 
-        for (uint256 i; i < worldEffects.length; i++) {
-            effectStats = getStatusEffectStats(worldEffects[i]);
-            _adjustedStats.agility += effectStats.agiModifier;
-            _adjustedStats.strength += effectStats.strModifier;
-            _adjustedStats.intelligence += effectStats.intModifier;
-            _adjustedStats.armor += effectStats.armorModifier;
-            _adjustedStats.maxHp += effectStats.hpModifier;
+            for (uint256 i; i < worldEffects.length; i++) {
+                effectStats = getStatusEffectStats(worldEffects[i]);
+                _adjustedStats.agility += effectStats.agiModifier;
+                _adjustedStats.strength += effectStats.strModifier;
+                _adjustedStats.intelligence += effectStats.intModifier;
+                _adjustedStats.armor += effectStats.armorModifier;
+                _adjustedStats.maxHp += effectStats.hpModifier;
+            }
+            IWorld(_world()).UD__setStats(entityId, _adjustedStats);
         }
-        IWorld(_world()).UD__setStats(entityId, _adjustedStats);
     }
 
     function currentStacks(bytes32 entityId, bytes32 effectId) public returns (uint256 _appliedStack) {

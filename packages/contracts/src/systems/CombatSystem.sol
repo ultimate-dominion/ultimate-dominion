@@ -266,7 +266,7 @@ contract CombatSystem is System {
         }
     }
 
-    function _getStatModifier(int256 stat, int256 modifierBonus) internal view returns (uint256 multiplier) {
+    function _getStatModifier(int256 stat, int256 modifierBonus) internal pure returns (uint256 multiplier) {
         multiplier = (((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR)) > 0
             ? uint256(((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR))
             : WAD;

@@ -71,15 +71,16 @@ contract MapSystem is System {
         // set character position to home point
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
+
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             SessionTimer.set(entityId, block.timestamp);
+            // re-calculate equipment bonuses
+            IWorld(_world()).UD__setStats(entityId, IWorld(_world()).UD__calculateEquipmentBonuses(entityId));
         }
         EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
         // add 1 to spawned players
         Counters.set(address(this), 0, (spawnedPlayers + 1));
-        // re-apply world effects
-        IWorld(_world()).UD__applyWorldEffects(entityId);
     }
 
     function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
