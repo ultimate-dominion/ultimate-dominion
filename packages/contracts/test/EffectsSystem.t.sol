@@ -7,7 +7,7 @@ import {StatsData, Stats} from "@tables/Stats.sol";
 import {EncounterEntity} from "@tables/EncounterEntity.sol";
 import "forge-std/console.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {UltimateDominionConfig, WorldStatusEffects} from "@codegen/index.sol";
 import {UltimateDominionConfigSystem} from "@systems/UltimateDominionConfigSystem.sol";
 import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
@@ -23,7 +23,8 @@ import {
     MagicDamageStats,
     PhysicalDamageStatsData,
     StatusEffectStatsData,
-    StatusEffectValidityData
+    StatusEffectValidityData,
+    StarterItemsData
 } from "@codegen/index.sol";
 import {_mobSystemId, _lootManagerSystemId} from "../src/utils.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
@@ -71,6 +72,34 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         world.UD__move(bobCharacterId, 0, 1);
         vm.prank(alice);
         world.UD__move(alicesCharacterId, 0, 1);
+
+        // buff bob
+        StatsData memory bobStats = world.UD__getStats(bobCharacterId);
+        bobStats.agility = 10;
+        bobStats.strength = 10;
+        bobStats.intelligence = 10;
+        bobStats.currentHp = 100;
+        world.UD__adminSetStats(bobCharacterId, bobStats);
+
+        // buff alice
+        StatsData memory aliceStats = world.UD__getStats(alicesCharacterId);
+        aliceStats.agility = 9;
+        aliceStats.strength = 9;
+        aliceStats.intelligence = 9;
+        aliceStats.currentHp = 10;
+        world.UD__adminSetStats(alicesCharacterId, aliceStats);
+
+        // get alice starter Items
+        StarterItemsData memory starterDat = world.UD__getStarterItems(Classes.Rogue);
+
+        vm.prank(alice);
+        world.UD__equipItems(alicesCharacterId, starterDat.itemIds);
+
+        // get bob starter items
+        starterDat = world.UD__getStarterItems(Classes.Mage);
+
+        vm.prank(bob);
+        world.UD__equipItems(bobCharacterId, starterDat.itemIds);
 
         defenders.push(entityId);
         attackers.push(bobCharacterId);
@@ -177,6 +206,43 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         assertEq(endingStats.strength, beginningStats.strength);
     }
 
+    function test_expireMultipleEffects() public {
+        StatsData memory beginningStats = world.UD__getStats(bobCharacterId);
+        uint256 strBuffId = startingConsumableId + 1;
+        uint256 agiBuffId = startingConsumableId + 2;
+        uint256 intBuffId = startingConsumableId + 3;
+        world.UD__adminDropItem(bobCharacterId, strBuffId, 1);
+        world.UD__adminDropItem(bobCharacterId, agiBuffId, 1);
+        world.UD__adminDropItem(bobCharacterId, intBuffId, 1);
+
+        assertEq(erc1155System.balanceOf(bob, strBuffId), 1);
+
+        vm.prank(deployer);
+        bytes32 entityId = world.UD__spawnMob(2, 0, 1);
+
+        vm.startPrank(bob);
+        erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, strBuffId);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, agiBuffId);
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, intBuffId);
+
+        vm.warp(block.timestamp + 1000);
+
+        bytes32[] memory defenders = new bytes32[](1);
+        bytes32[] memory attackers = new bytes32[](1);
+
+        attackers[0] = bobCharacterId;
+        defenders[0] = entityId;
+
+        bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingSpellId});
+
+        world.UD__endTurn(encounterId, bobCharacterId, actions);
+        StatsData memory endingStats = world.UD__getStats(bobCharacterId);
+        assertEq(WorldStatusEffects.lengthAppliedStatusEffects(bobCharacterId), 0);
+    }
+
     function test_Poison() public {
         StatsData memory newStats = world.UD__getStats(bobCharacterId);
         newStats.agility = 20;
@@ -196,7 +262,12 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         attackers[0] = bobCharacterId;
         defenders[0] = entityId;
 
+        world.UD__adminDropItem(bobCharacterId, poisonDartId, 1);
+
         vm.startPrank(bob);
+        uint256[] memory itemIds = new uint256[](1);
+        itemIds[0] = poisonDartId;
+        world.UD__equipItems(bobCharacterId, itemIds);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
         actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: poisonDartId});

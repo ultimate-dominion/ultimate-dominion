@@ -274,7 +274,6 @@ contract EquipmentSystem is System {
     /// @dev returns the base stats + the equipment stats of a character
     function calculateEquipmentBonuses(bytes32 entityId) public view returns (AdjustedCombatStats memory) {
         AdjustedCombatStats memory combatStats = getCombatStats(entityId);
-        ////  REWORKING THIS TO NOT RE_APPLY STATS EVERY ACTION ONLY WHEN STATUS EFFECTS / ITEMS ARE EQUIPPED /  UNEQUIPPED
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             StatsData memory baseStats = abi.decode(Characters.getBaseStats(entityId), (StatsData));
             CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
