@@ -538,10 +538,7 @@ export const CharacterPage = (): JSX.Element => {
                     <Heading fontSize="24px" margin="0px 20px" size="lg">
                       {character.name}
                     </Heading>
-                    <ClassSymbol
-                      size={24}
-                      entityClass={character.entityClass}
-                    />
+                    <ClassSymbol entityClass={character.entityClass} />
                   </Center>
                   <Spacer />
                 </HStack>

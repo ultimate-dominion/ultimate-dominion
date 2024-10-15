@@ -11,10 +11,10 @@ export const RogueSvg = ({
 
   return (
     <Icon
-      width={size}
+      fill="none"
       height={size}
       viewBox="0 0 18 11"
-      fill="none"
+      width={size}
       xmlns="http://www.w3.org/2000/svg"
     >
       <g clipPath="url(#clip0_548_4792)">

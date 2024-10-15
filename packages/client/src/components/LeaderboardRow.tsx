@@ -2,7 +2,6 @@ import {
   Avatar,
   Box,
   Button,
-  Center,
   Flex,
   HStack,
   Text,
@@ -12,8 +11,8 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { etherToFixedNumber } from '../utils/helpers';
-import { type Character, StatsClasses } from '../utils/types';
-import { MageSvg, RogueSvg, WarriorSvg } from './SVGs';
+import { type Character } from '../utils/types';
+import { ClassSymbol } from './ClassSymbol';
 import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const LeaderboardRow = ({
@@ -93,16 +92,11 @@ export const LeaderboardRow = ({
               color="black"
               fontWeight={700}
               size={{ base: 'sm', lg: 'xl' }}
+              mt={1}
             >
               {name}
             </Text>
-            <Center>
-              {entityClass == StatsClasses.Warrior && (
-                <WarriorSvg theme="dark" />
-              )}
-              {entityClass == StatsClasses.Rogue && <RogueSvg theme="dark" />}
-              {entityClass == StatsClasses.Mage && <MageSvg theme="dark" />}
-            </Center>
+            <ClassSymbol entityClass={entityClass} responsive theme="dark" />
           </HStack>
           <Text
             color="#121B45"
