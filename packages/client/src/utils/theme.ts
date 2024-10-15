@@ -18,7 +18,7 @@ const Button = {
     fontWeight: 500,
   },
   defaultProps: {
-    variant: 'solid',
+    variant: 'blue',
   },
   sizes: {
     sm: {
@@ -30,6 +30,32 @@ const Button = {
     },
   },
   variants: {
+    dark: {
+      bg: 'grey500',
+      border: '2px solid',
+      borderColor: 'grey500',
+      borderRadius: '8px',
+      boxShadow: '-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480',
+      color: 'white',
+      _active: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _hover: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _loading: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _hover: {
+          bg: 'rgba(0, 0, 0, 0.8)',
+        },
+      },
+    },
     gold: {
       bg: 'gold',
       border: '2px solid',
@@ -56,18 +82,16 @@ const Button = {
         },
       },
     },
-    none: {
-      border: 0,
-      background: 'transparent',
-    },
     outline: {
       border: '2px solid',
       borderColor: 'grey500',
+      bg: 'white',
     },
-    solid: {
+    blue: {
       bg: 'blue400',
       border: '2px solid',
       borderColor: 'blue400',
+      borderRadius: '8px',
       boxShadow:
         '2px 2px 5px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 0, 255, 0.5)',
       color: 'white',
@@ -87,6 +111,33 @@ const Button = {
         bg: 'rgba(0, 0, 0, 0.8)',
         _hover: {
           bg: 'rgba(0, 0, 0, 0.8)',
+        },
+      },
+    },
+    white: {
+      bg: 'white',
+      borderRadius: '8px',
+      boxShadow: '-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480',
+      color: 'black',
+      _active: {
+        bg: 'grey500',
+        color: 'white',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _hover: {
+        bg: 'grey500',
+        color: 'white',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _loading: {
+        bg: 'grey500',
+        color: 'white',
+        _hover: {
+          bg: 'grey500',
         },
       },
     },
@@ -115,9 +166,17 @@ const Input = {
     outline: {
       field: {
         border: '2px solid',
-        borderColor: 'grey',
+        borderColor: 'transparent',
         borderRadius: '8px',
+        boxShadow:
+          '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
         py: 5,
+        _active: {
+          borderColor: 'blue400',
+        },
+        _focus: {
+          borderColor: 'blue400',
+        },
       },
     },
   },
@@ -151,6 +210,10 @@ const Modal = {
     },
   },
   baseStyle: {
+    closeButton: {
+      right: 5,
+      top: 4,
+    },
     dialogContainer: {
       overflow: 'hidden',
     },
@@ -158,21 +221,28 @@ const Modal = {
       bgColor: '#B3B9BE',
       clipPath:
         'polygon(40px 0%, 100% 0%, 100% calc(100% - 50px), calc(100% - 50px) 100%, 0% 100%, 0% 80px)',
-      maxH: { base: '100%', md: 'calc(100% - 7.5rem)' },
+      maxH: 'calc(100% - 7.5rem)',
       minW: { base: '100%', md: '500px' },
       maxW: { base: '100%', md: '500px' },
+      position: 'absolute',
     },
     body: {
       overflow: 'auto',
+      pb: 8,
+      px: 8,
     },
     footer: {
       borderTop: '1px solid',
       display: 'flex',
       justifyContent: 'center',
+      pb: 6,
+      pt: 4,
     },
     header: {
       color: '#283570',
       fontWeight: 700,
+      px: 4,
+      py: 8,
       textAlign: 'center',
     },
   },
@@ -268,16 +338,25 @@ const Textarea = {
   variants: {
     outline: {
       border: '2px solid',
-      borderColor: 'grey',
+      borderColor: 'transparent',
       borderRadius: '5px',
+      boxShadow:
+        '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
+      _active: {
+        borderColor: 'blue400',
+      },
+      _focus: {
+        borderColor: 'blue400',
+      },
     },
   },
 };
 
 const Tooltip = {
   baseStyle: {
-    bg: 'black',
+    bg: '#070D2A',
     borderRadius: 0,
+    clipPath: 'polygon(0% 0%, 93% 0%, 100% 18%, 100% 100%, 10% 100%, 0% 90%);',
     color: 'white',
     p: 4,
   },
@@ -293,7 +372,8 @@ export const theme = extendTheme({
     black: '#000',
     blue300: '#1633B6',
     blue400: '#0A2187',
-    blue500: '#131832',
+    blue500: '#0C1539',
+    blue600: '#131832',
     green: '#008F07',
     grey100: '#D0D0D0',
     grey200: '#A8ADB2',

@@ -1,4 +1,5 @@
 import {
+  Entity,
   getComponentValue,
   getComponentValueStrict,
   HasValue,
@@ -17,7 +18,9 @@ import {
 import { hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
+import { STATUS_EFFECT_NAME_MAPPING } from '../utils/constants';
 import {
+  decodeAppliedStatusEffectId,
   decodeBaseStats,
   fetchMetadataFromUri,
   uriToHttp,
@@ -30,6 +33,7 @@ import type {
   EntityStats,
   Spell,
   Weapon,
+  WorldStatusEffect,
 } from '../utils/types';
 import { useItems } from './ItemsContext';
 import { useMUD } from './MUDContext';
@@ -79,6 +83,9 @@ export const CharacterProvider = ({
       GoldBalances,
       ItemsOwners,
       Stats,
+      StatusEffectStats,
+      StatusEffectValidity,
+      WorldStatusEffects,
     },
     delegatorAddress,
     isSynced,
@@ -148,6 +155,52 @@ export const CharacterProvider = ({
         decodedBaseStats = decodeBaseStats(characterData.baseStats);
       }
 
+      const worldStatusEffectsComponent = getComponentValue(
+        WorldStatusEffects,
+        entity,
+      );
+
+      const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
+        appliedStatusEffects: [],
+      };
+
+      const decodedStatusEffects = appliedStatusEffects.map(
+        decodeAppliedStatusEffectId,
+      );
+
+      const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects.map(
+        effect => {
+          const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
+
+          const effectStats = getComponentValueStrict(
+            StatusEffectStats,
+            paddedEffectId,
+          );
+
+          const validity = getComponentValueStrict(
+            StatusEffectValidity,
+            paddedEffectId,
+          );
+
+          const timestampEnd = effect.timestamp + validity.validTime;
+          const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
+
+          const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+
+          return {
+            active: isActive,
+            agiModifier: effectStats.agiModifier,
+            effectId: paddedEffectId,
+            intModifier: effectStats.intModifier,
+            maxStacks: validity.maxStacks,
+            name,
+            strModifier: effectStats.strModifier,
+            timestampEnd,
+            timestampStart: effect.timestamp,
+          };
+        },
+      );
+
       return {
         agility: characterStats?.agility ?? BigInt(0),
         baseStats: decodedBaseStats,
@@ -167,6 +220,7 @@ export const CharacterProvider = ({
         pvpCooldownTimer: pvpTimer,
         strength: characterStats?.strength ?? BigInt(0),
         tokenId: tokenId.toString(),
+        worldStatusEffects,
       };
     })[0];
 
@@ -200,7 +254,10 @@ export const CharacterProvider = ({
     GoldBalances,
     publicClient,
     Stats,
+    StatusEffectStats,
+    StatusEffectValidity,
     worldContract,
+    WorldStatusEffects,
   ]);
 
   const refreshCharacter = useCallback(async () => {

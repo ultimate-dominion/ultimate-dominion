@@ -27,6 +27,7 @@ import { useToast } from '../hooks/useToast';
 import { shortenAddress } from '../utils/helpers';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { CopyText } from './CopyText';
+import { PolygonalCard } from './PolygonalCard';
 
 export const WalletDetailsModal = ({
   isOpen,
@@ -204,13 +205,14 @@ export const WalletDetailsModal = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>
           {isConnected ? 'Wallet Details' : 'Connect Wallet'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {address && externalWalletClient && isConnected ? (
-            <VStack p={4} spacing={10}>
+            <VStack spacing={10}>
               <VStack alignItems="start" spacing={4}>
                 {burnerBalance === '0' && (
                   <>
@@ -321,7 +323,7 @@ export const WalletDetailsModal = ({
               </VStack>
             </VStack>
           ) : (
-            <VStack p={4} spacing={10}>
+            <VStack spacing={10}>
               <Text textAlign="center">Connect your wallet to play.</Text>
               <ConnectWalletButton />
             </VStack>

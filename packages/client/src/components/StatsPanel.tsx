@@ -93,6 +93,45 @@ export const StatsPanel = (): JSX.Element => {
     [equippedArmor, equippedSpells, equippedWeapons],
   );
 
+  const expiredEffectModifications: {
+    agiModifier: bigint;
+    intModifier: bigint;
+    strModifier: bigint;
+  } = useMemo(() => {
+    if (!character) {
+      return {
+        agiModifier: BigInt(0),
+        intModifier: BigInt(0),
+        strModifier: BigInt(0),
+      };
+    }
+
+    const inactiveEffects = character.worldStatusEffects.filter(
+      effect => !effect.active,
+    );
+
+    const agiModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.agiModifier,
+      BigInt(0),
+    );
+
+    const intModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.intModifier,
+      BigInt(0),
+    );
+
+    const strModifier = inactiveEffects.reduce(
+      (acc, effect) => acc + effect.strModifier,
+      BigInt(0),
+    );
+
+    return {
+      agiModifier,
+      intModifier,
+      strModifier,
+    };
+  }, [character]);
+
   if (!character) {
     return (
       <VStack h="100%" justify="center">
@@ -150,7 +189,9 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{strength.toString()}</Text>
+          <Text>
+            {(strength - expiredEffectModifications.strModifier).toString()}
+          </Text>
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">
@@ -158,7 +199,9 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{agility.toString()}</Text>
+          <Text>
+            {(agility - expiredEffectModifications.agiModifier).toString()}
+          </Text>
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" size="lg">
@@ -166,7 +209,9 @@ export const StatsPanel = (): JSX.Element => {
           </Text>
         </GridItem>
         <GridItem>
-          <Text>{intelligence.toString()}</Text>
+          <Text>
+            {(intelligence - expiredEffectModifications.intModifier).toString()}
+          </Text>
         </GridItem>
       </Grid>
 

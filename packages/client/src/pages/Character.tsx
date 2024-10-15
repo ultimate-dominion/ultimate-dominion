@@ -10,6 +10,7 @@ import {
   Heading,
   HStack,
   Icon,
+  IconProps,
   Spacer,
   Spinner,
   Text,
@@ -45,8 +46,13 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { HOME_PATH, LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
-import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
+  MAX_EQUIPPED_ARMOR,
+  MAX_EQUIPPED_WEAPONS,
+  STATUS_EFFECT_NAME_MAPPING,
+} from '../utils/constants';
+import {
+  decodeAppliedStatusEffectId,
   decodeBaseStats,
   decodeCharacterId,
   etherToFixedNumber,
@@ -59,47 +65,44 @@ import {
   type Consumable,
   type Spell,
   type Weapon,
+  type WorldStatusEffect,
 } from '../utils/types';
 
+const MarketplaceIcon = (props: IconProps) => (
+  <Icon
+    {...props}
+    width="26"
+    height="26"
+    viewBox="0 0 26 26"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M1.85814 22.3131H0.929069C0.415747 22.3131 0 21.9006 0 21.3913C0 20.882 0.415747 20.4696 0.929069 20.4696H15.7942C16.3075 20.4696 16.7232 20.882 16.7232 21.3913C16.7232 21.9006 16.3075 22.3131 15.7942 22.3131H14.8651V24.3409C14.8651 24.69 14.7316 25.0322 14.447 25.3225C14.087 25.6901 13.3798 26 12.5425 26H4.18084C3.34352 26 2.63627 25.6901 2.27626 25.3225C1.99174 25.0322 1.8582 24.69 1.8582 24.3409L1.85814 22.3131ZM19.586 9.14828L13.6735 15.0141C13.6886 15.1212 13.6967 15.2307 13.6967 15.3401C13.6967 15.9508 13.4517 16.5373 13.0162 16.9693L12.3589 17.6214C11.9234 18.0535 11.3334 18.2966 10.7179 18.2966C10.1013 18.2966 9.5113 18.0535 9.07465 17.6214L5.13302 13.7109C4.69753 13.2788 4.45246 12.6924 4.45246 12.0817C4.45246 11.4699 4.69751 10.8835 5.13302 10.4514L5.79032 9.80046C6.22581 9.36841 6.81694 9.12528 7.43244 9.12528C7.54277 9.12528 7.6531 9.13334 7.76111 9.14832L13.6736 3.28253C13.6585 3.17538 13.6503 3.06592 13.6503 2.95646C13.6503 2.34581 13.8954 1.75935 14.3309 1.3273L14.9882 0.675184C15.4237 0.243132 16.0136 0 16.6291 0C17.2458 0 17.8358 0.243109 18.2724 0.675184L22.2141 4.58571C22.6495 5.01776 22.8946 5.60422 22.8946 6.21487C22.8946 6.82666 22.6496 7.41313 22.2141 7.84518L21.5568 8.49614C21.1213 8.92938 20.5301 9.17133 19.9146 9.17133C19.8043 9.17133 19.694 9.16326 19.586 9.14828ZM20.047 11.5621L25.1743 16.6477C26.2752 17.74 26.2752 19.512 25.1743 20.6043L25.172 20.6066C24.0977 21.6723 22.3557 21.6723 21.2815 20.6066L16.1066 15.4726L20.047 11.5621Z"
+      fill="black"
+    />
+  </Icon>
+);
+
+const LeaderboardIcon = (props: IconProps) => (
+  <Icon
+    {...props}
+    width="27"
+    height="26"
+    viewBox="0 0 27 26"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M25.7159 9.58634H18.4534V1.26035C18.4534 1.11664 18.3261 1 18.1693 1H8.83068C8.67386 1 8.54659 1.11664 8.54659 1.26035V14H1V24H26L26 9.84669C26 9.70246 25.8722 9.58634 25.7159 9.58634ZM15.0347 7.94562C14.5506 7.80815 14.0813 7.62747 13.6352 7.40565C13.5932 7.3843 13.5466 7.37389 13.5 7.37389C13.4534 7.37389 13.4068 7.3843 13.3648 7.40565C12.9188 7.62747 12.4494 7.80815 11.9653 7.94562C11.958 7.48063 12.0011 7.01617 12.0932 6.55847C12.1108 6.47204 12.0795 6.38352 12.0102 6.3226C11.6426 6.00341 11.3097 5.65037 11.0176 5.27026C11.496 5.12082 11.992 5.01408 12.496 4.95472C12.5915 4.94326 12.6739 4.88755 12.7159 4.8084C12.9347 4.38767 13.1983 3.99038 13.5017 3.6186C13.8051 3.99038 14.0688 4.38872 14.2875 4.8084C14.329 4.88755 14.4119 4.94326 14.5074 4.95472C15.0114 5.01408 15.5074 5.12082 15.9858 5.27026C15.6938 5.65037 15.3608 6.00341 14.9932 6.3226C14.9239 6.38352 14.892 6.47204 14.9102 6.55847C14.9994 7.01617 15.042 7.48115 15.0347 7.94562Z"
+      fill="black"
+    />
+  </Icon>
+);
+
 export const CharacterPage = (): JSX.Element => {
-  const marketplace = props => (
-    <Icon>
-      <svg
-        {...props}
-        width="26"
-        height="26"
-        viewBox="0 0 26 26"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M1.85814 22.3131H0.929069C0.415747 22.3131 0 21.9006 0 21.3913C0 20.882 0.415747 20.4696 0.929069 20.4696H15.7942C16.3075 20.4696 16.7232 20.882 16.7232 21.3913C16.7232 21.9006 16.3075 22.3131 15.7942 22.3131H14.8651V24.3409C14.8651 24.69 14.7316 25.0322 14.447 25.3225C14.087 25.6901 13.3798 26 12.5425 26H4.18084C3.34352 26 2.63627 25.6901 2.27626 25.3225C1.99174 25.0322 1.8582 24.69 1.8582 24.3409L1.85814 22.3131ZM19.586 9.14828L13.6735 15.0141C13.6886 15.1212 13.6967 15.2307 13.6967 15.3401C13.6967 15.9508 13.4517 16.5373 13.0162 16.9693L12.3589 17.6214C11.9234 18.0535 11.3334 18.2966 10.7179 18.2966C10.1013 18.2966 9.5113 18.0535 9.07465 17.6214L5.13302 13.7109C4.69753 13.2788 4.45246 12.6924 4.45246 12.0817C4.45246 11.4699 4.69751 10.8835 5.13302 10.4514L5.79032 9.80046C6.22581 9.36841 6.81694 9.12528 7.43244 9.12528C7.54277 9.12528 7.6531 9.13334 7.76111 9.14832L13.6736 3.28253C13.6585 3.17538 13.6503 3.06592 13.6503 2.95646C13.6503 2.34581 13.8954 1.75935 14.3309 1.3273L14.9882 0.675184C15.4237 0.243132 16.0136 0 16.6291 0C17.2458 0 17.8358 0.243109 18.2724 0.675184L22.2141 4.58571C22.6495 5.01776 22.8946 5.60422 22.8946 6.21487C22.8946 6.82666 22.6496 7.41313 22.2141 7.84518L21.5568 8.49614C21.1213 8.92938 20.5301 9.17133 19.9146 9.17133C19.8043 9.17133 19.694 9.16326 19.586 9.14828ZM20.047 11.5621L25.1743 16.6477C26.2752 17.74 26.2752 19.512 25.1743 20.6043L25.172 20.6066C24.0977 21.6723 22.3557 21.6723 21.2815 20.6066L16.1066 15.4726L20.047 11.5621Z"
-          fill="black"
-        />
-      </svg>
-    </Icon>
-  );
-
-  const leaderboard = props => (
-    <Icon>
-      <svg
-        {...props}
-        width="27"
-        height="26"
-        viewBox="0 0 27 26"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M25.7159 9.58634H18.4534V1.26035C18.4534 1.11664 18.3261 1 18.1693 1H8.83068C8.67386 1 8.54659 1.11664 8.54659 1.26035V14H1V24H26L26 9.84669C26 9.70246 25.8722 9.58634 25.7159 9.58634ZM15.0347 7.94562C14.5506 7.80815 14.0813 7.62747 13.6352 7.40565C13.5932 7.3843 13.5466 7.37389 13.5 7.37389C13.4534 7.37389 13.4068 7.3843 13.3648 7.40565C12.9188 7.62747 12.4494 7.80815 11.9653 7.94562C11.958 7.48063 12.0011 7.01617 12.0932 6.55847C12.1108 6.47204 12.0795 6.38352 12.0102 6.3226C11.6426 6.00341 11.3097 5.65037 11.0176 5.27026C11.496 5.12082 11.992 5.01408 12.496 4.95472C12.5915 4.94326 12.6739 4.88755 12.7159 4.8084C12.9347 4.38767 13.1983 3.99038 13.5017 3.6186C13.8051 3.99038 14.0688 4.38872 14.2875 4.8084C14.329 4.88755 14.4119 4.94326 14.5074 4.95472C15.0114 5.01408 15.5074 5.12082 15.9858 5.27026C15.6938 5.65037 15.3608 6.00341 14.9932 6.3226C14.9239 6.38352 14.892 6.47204 14.9102 6.55847C14.9994 7.01617 15.042 7.48115 15.0347 7.94562Z"
-          fill="black"
-        />
-      </svg>
-    </Icon>
-  );
-
   const { id } = useParams();
   const { renderError } = useToast();
   const navigate = useNavigate();
@@ -114,6 +117,9 @@ export const CharacterPage = (): JSX.Element => {
       GoldBalances,
       Levels,
       Stats,
+      StatusEffectStats,
+      StatusEffectValidity,
+      WorldStatusEffects,
     },
     isSynced,
     network: { publicClient, worldContract },
@@ -177,6 +183,51 @@ export const CharacterPage = (): JSX.Element => {
 
       const decodedBaseStats = decodeBaseStats(characterData.baseStats);
 
+      const worldStatusEffectsComponent = getComponentValue(
+        WorldStatusEffects,
+        id as Entity,
+      );
+
+      const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
+        appliedStatusEffects: [],
+      };
+
+      const decodedStatusEffects = appliedStatusEffects.map(
+        decodeAppliedStatusEffectId,
+      );
+
+      const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects.map(
+        effect => {
+          const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
+          const effectStats = getComponentValueStrict(
+            StatusEffectStats,
+            paddedEffectId,
+          );
+
+          const validity = getComponentValueStrict(
+            StatusEffectValidity,
+            paddedEffectId,
+          );
+
+          const timestampEnd = effect.timestamp + validity.validTime;
+          const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
+
+          const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+
+          return {
+            active: isActive,
+            agiModifier: effectStats.agiModifier,
+            effectId: paddedEffectId,
+            intModifier: effectStats.intModifier,
+            maxStacks: validity.maxStacks,
+            name,
+            strModifier: effectStats.strModifier,
+            timestampEnd,
+            timestampStart: effect.timestamp,
+          };
+        },
+      );
+
       const _character = {
         ...fetachedMetadata,
         agility: characterStats.agility,
@@ -199,6 +250,7 @@ export const CharacterPage = (): JSX.Element => {
         pvpCooldownTimer: pvpTimer,
         strength: characterStats.strength,
         tokenId: characterData.tokenId.toString(),
+        worldStatusEffects,
       };
 
       setCharacter(_character);
@@ -219,10 +271,13 @@ export const CharacterPage = (): JSX.Element => {
     EncounterEntity,
     GoldBalances,
     id,
+    publicClient,
     renderError,
     Stats,
-    publicClient,
+    StatusEffectStats,
+    StatusEffectValidity,
     worldContract,
+    WorldStatusEffects,
   ]);
 
   const isOwner = useMemo(() => {
@@ -337,12 +392,12 @@ export const CharacterPage = (): JSX.Element => {
             <VStack h="100%">
               <Box w="100%">
                 <VStack alignItems="start" spacing={0}>
-                  <HStack w="100%">
+                  <HStack>
                     <Text color="#DCCD4D" fontWeight={700} fontSize="24px">
                       {etherToFixedNumber(character.externalGoldBalance)} $GOLD
                     </Text>
                     <Tooltip
-                      bg="#3D4247"
+                      bg="black"
                       hasArrow
                       label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
                       placement="top"
@@ -350,25 +405,6 @@ export const CharacterPage = (): JSX.Element => {
                     >
                       <IoMdInformationCircleOutline />
                     </Tooltip>
-                    <Spacer />
-                    <Text>
-                      <Text
-                        as="span"
-                        color={
-                          BigInt(character.experience) >= nextLevelXpRequirement
-                            ? 'green'
-                            : '#3D4247'
-                        }
-                        fontWeight={
-                          BigInt(character.experience) >= nextLevelXpRequirement
-                            ? 'bold'
-                            : 'normal'
-                        }
-                      >
-                        {character.experience.toString()}
-                      </Text>
-                      /{nextLevelXpRequirement.toString()} XP
-                    </Text>
                   </HStack>
                   <HStack>
                     <Text
@@ -381,7 +417,7 @@ export const CharacterPage = (): JSX.Element => {
                       {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
                     </Text>
                     <Tooltip
-                      bg="#3D4247"
+                      bg="black"
                       hasArrow
                       label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
                       placement="top"
@@ -391,6 +427,29 @@ export const CharacterPage = (): JSX.Element => {
                     </Tooltip>
                   </HStack>
                 </VStack>
+                <HStack justify="space-between" mt={4}>
+                  <Text color="#3D4247" fontWeight="bold">
+                    Level {character.level.toString()}
+                  </Text>
+                  <Text>
+                    <Text
+                      as="span"
+                      color={
+                        BigInt(character.experience) >= nextLevelXpRequirement
+                          ? 'green'
+                          : 'black'
+                      }
+                      fontWeight={
+                        BigInt(character.experience) >= nextLevelXpRequirement
+                          ? 'bold'
+                          : 'normal'
+                      }
+                    >
+                      {character.experience.toString()}
+                    </Text>
+                    /{nextLevelXpRequirement.toString()} XP
+                  </Text>
+                </HStack>
                 <Level
                   currentLevel={character.level}
                   levelPercent={levelPercent}
@@ -406,7 +465,7 @@ export const CharacterPage = (): JSX.Element => {
                   boxShadow="-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480;"
                   fontSize="14px"
                   height="50px"
-                  leftIcon={isOwner ? marketplace({}) : <IoChatbubble />}
+                  leftIcon={isOwner ? <MarketplaceIcon /> : <IoChatbubble />}
                   m="5px 0"
                   w="100%"
                   onClick={() => {
@@ -424,7 +483,7 @@ export const CharacterPage = (): JSX.Element => {
                   boxShadow="-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480;"
                   fontSize="14px"
                   height="50px"
-                  leftIcon={leaderboard({})}
+                  leftIcon={<LeaderboardIcon />}
                   m="5px 0"
                   onClick={() => navigate(LEADERBOARD_PATH)}
                   w="100%"
