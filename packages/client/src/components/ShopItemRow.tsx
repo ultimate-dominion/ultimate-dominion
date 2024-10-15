@@ -53,6 +53,7 @@ export const ShopItemRow = ({
   orderType,
   stock,
   shop,
+  theme,
 }: {
   balance: bigint | null;
   characterId: Entity;
@@ -61,6 +62,7 @@ export const ShopItemRow = ({
   orderType: OrderType;
   shop: Shop;
   stock: bigint | null;
+  theme: string;
 }): JSX.Element => {
   const {
     systemCalls: { buy, sell },
@@ -192,9 +194,9 @@ export const ShopItemRow = ({
 
   return (
     <Flex
-      border="2px solid"
-      borderColor="grey400"
-      borderRadius={2}
+      background="#F5F5FA1F"
+      borderBottom={`4px solid ${theme || 'white'}`}
+      boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset;"
       justify="space-between"
       w="100%"
       _hover={{
@@ -211,12 +213,17 @@ export const ShopItemRow = ({
       onClick={onOpen}
     >
       <Flex>
-        <Avatar backgroundColor={'grey300'} borderRadius={0} name=" " size="lg">
+        <Avatar
+          backgroundColor="transparent"
+          borderRadius={0}
+          name=" "
+          size="lg"
+        >
           {name ? getEmoji(name.toString()) : ''}
         </Avatar>
         <VStack align="start" justify="center" ml={4}>
           <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>
+            <Text fontWeight={700} size={{ base: 'lg', lg: 'xl' }}>
               {name ? removeEmoji(name.toString()) : ''}
             </Text>
           </HStack>

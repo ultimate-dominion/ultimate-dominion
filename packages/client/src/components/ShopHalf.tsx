@@ -38,14 +38,12 @@ enum SortOptions {
 const PER_PAGE = 5;
 
 export const ShopHalf = ({
-  name,
   items,
   shop,
   characterId,
   orderType,
 }: {
   characterId: Entity;
-  name: string;
   items: Array<{
     balance: bigint | null;
     item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
@@ -149,14 +147,12 @@ export const ShopHalf = ({
   ]);
 
   return (
-    <VStack>
-      <Text fontWeight={700} fontSize={24} textAlign="left" w="100%">
-        {name}
-      </Text>
+    <VStack h="100%">
       <Stack
         alignItems="center"
         direction={{ base: 'column', md: 'row' }}
         mb={8}
+        p={1}
         spacing={{ base: 4, md: 8 }}
         w="100%"
       >
@@ -247,7 +243,7 @@ export const ShopHalf = ({
           </HStack>
         </Flex>
       </HStack>
-      <VStack gap={3} maxW="100%" overflowX="auto" w="100%">
+      <VStack gap={0} maxW="100%" overflowX="auto" w="100%">
         {entries.length > 0 ? (
           entries.map((entry, i) => {
             return (
@@ -260,6 +256,7 @@ export const ShopHalf = ({
                 orderType={orderType}
                 shop={shop}
                 stock={entry.stock}
+                theme="white"
               />
             );
           })

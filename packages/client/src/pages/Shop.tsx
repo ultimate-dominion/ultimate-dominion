@@ -1,7 +1,9 @@
 import {
+  Box,
   Button,
   Center,
   Divider,
+  Heading,
   HStack,
   Spacer,
   Stack,
@@ -10,11 +12,12 @@ import {
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import { IoMdArrowRoundBack } from 'react-icons/io';
+import { IoNavigate } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
-// eslint-disable-next-line import/no-named-as-default
-import Typist from 'react-typist';
 
+// eslint-disable-next-line import/no-named-as-default
 import { ShopHalf } from '../components/ShopHalf';
+import { ShopSvg } from '../components/SVGs/ShopSvg';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
@@ -165,22 +168,39 @@ export const Shop = (): JSX.Element => {
   }
 
   return (
-    <VStack mt={16}>
-      <Typist avgTypingDelay={10} cursor={{ show: false }} stdTypingDelay={10}>
-        <Text textAlign="center" w="100%">
-          Hello, and welcome to my shop! Please have a look at my wares. Let me
-          know if you need any help.
-        </Text>
-      </Typist>
-      <HStack border="2px solid" mt={8} p={8} w="100%">
+    <VStack mt={16} height="100%">
+      <Box bgColor="blue500" h="66px" px="20px" width="100%">
+        <HStack bgColor="blue500" h="66px" width="100%">
+          <ShopSvg />
+          <Heading color="white">Pawnshop</Heading>
+          <Spacer />
+          <Text color="white" fontSize="24px" fontWeight={700}>
+            <IoNavigate />
+          </Text>
+          <Text color="white" fontSize="24px" fontWeight={700}>
+            0,0
+          </Text>
+        </HStack>
+      </Box>
+
+      <HStack gap={0} h="100%" mt={8} w="100%">
         <Spacer />
-        <Stack h="100%" w="100%">
+        <Stack minH="100%" border="5px solid #1A244E" h="100%" w="100%">
+          <Box bgColor="blue500" h="66px" px="20px" width="100%">
+            <HStack bgColor="blue500" h="66px" width="100%">
+              <Heading color="white">My Inventory</Heading>
+              <Spacer />
+              <Text color="Gold" align="right" fontSize="24px" fontWeight={700}>
+                {' '}
+                ${etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
+              </Text>
+            </HStack>
+          </Box>{' '}
           {userCharacter && shopId && sellable && sellable.length ? (
             <ShopHalf
               characterId={userCharacter.id}
               shop={shop}
               items={sellable}
-              name={`Character’s Inventory - ${etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD`}
               orderType={OrderType.Selling}
             />
           ) : (
@@ -189,13 +209,21 @@ export const Shop = (): JSX.Element => {
             </Center>
           )}
         </Stack>
-        <Divider border="1px solid black" mx={8} orientation="vertical" />
-        <Stack h="100%" w="100%">
+        <Divider border="1px solid transparent" mx={8} orientation="vertical" />
+        <Stack border="5px solid #1A244E" h="100%" w="100%">
+          <Box bgColor="blue500" h="66px" px="20px" width="100%">
+            <HStack bgColor="blue500" h="66px" width="100%">
+              <Heading color="white">Shopkeeper&apos;s Inventory</Heading>
+              <Spacer />
+              <Text align="right" color="Gold" fontSize="24px" fontWeight={700}>
+                ${etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD
+              </Text>
+            </HStack>
+          </Box>{' '}
           {userCharacter && shopId && buyable && buyable.length ? (
             <ShopHalf
               characterId={userCharacter.id}
               items={buyable}
-              name={`Shopkeeper’s Inventory - ${etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD`}
               shop={shop}
               orderType={OrderType.Buying}
             />
@@ -203,7 +231,6 @@ export const Shop = (): JSX.Element => {
             <Text>No Buyable Items</Text>
           )}
         </Stack>
-        <Spacer />
       </HStack>
     </VStack>
   );
