@@ -379,6 +379,12 @@ export const ShopItemRow = ({
                       </Text>
                       <HStack>
                         <Button
+                          aspectRatio="1 / 1"
+                          background="#D0D0D0"
+                          boxShadow="1.5px 1.5px 3px 0px #54545466, -1px -1px 3px 0px #545454B2"
+                          borderRadius="5px"
+                          minW="24px"
+                          minH="24px"
                           isDisabled={amount <= 1}
                           onClick={() =>
                             setAmount(
@@ -388,12 +394,18 @@ export const ShopItemRow = ({
                             )
                           }
                           size="xs"
+                          variant="ghost"
                         >
                           <IoRemove />
                         </Button>
                         <Input
+                          aspectRatio="1 / 1"
+                          background="#B3B9BE"
+                          boxShadow="-5px -5px 10px 0px #54545440 inset, 5px 5px 2px 0px #A6A6A680 inset, 2px 2px 2px 0px #18161640 inset, -2px -2px 2px 0px #A2A9B080 inset"
                           max={stock?.toString() || balance?.toString() || 0}
                           min={1}
+                          minW="45px"
+                          minH="45px"
                           onChange={e => {
                             const value = e.target.value;
                             if (value === '') {
@@ -415,13 +427,21 @@ export const ShopItemRow = ({
                             }
                             setAmount(Number(value));
                           }}
-                          p={2}
+                          p={4}
                           size="sm"
                           step={1}
                           value={amount === 0 ? '' : amount}
                           w={10}
                         />
                         <Button
+                          aspectRatio="1 / 1"
+                          background="#D0D0D0"
+                          boxShadow="1.5px 1.5px 3px 0px #54545466, -1px -1px 3px 0px #545454B2"
+                          borderRadius="5px"
+                          max={stock?.toString() || balance?.toString() || 0}
+                          min={1}
+                          minW="24px"
+                          minH="24px"
                           isDisabled={
                             amount === Number(stock || balance?.toString())
                           }
@@ -434,6 +454,7 @@ export const ShopItemRow = ({
                             )
                           }
                           size="xs"
+                          variant="ghost"
                         >
                           <IoAdd />
                         </Button>

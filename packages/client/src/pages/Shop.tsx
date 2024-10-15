@@ -178,7 +178,7 @@ export const Shop = (): JSX.Element => {
             <IoNavigate />
           </Text>
           <Text color="white" fontSize="24px" fontWeight={700}>
-            0,0
+            {shop.position.x},{shop.position.y}
           </Text>
         </HStack>
       </Box>
