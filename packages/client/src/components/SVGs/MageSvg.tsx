@@ -1,3 +1,5 @@
+import { Icon } from '@chakra-ui/react';
+
 export const MageSvg = ({
   size = 18,
   theme = 'light',
@@ -8,7 +10,7 @@ export const MageSvg = ({
   const color = theme === 'light' ? 'white' : 'black';
 
   return (
-    <svg
+    <Icon
       width={size}
       height={size}
       viewBox="0 0 19 18"
@@ -29,6 +31,6 @@ export const MageSvg = ({
           />
         </clipPath>
       </defs>
-    </svg>
+    </Icon>
   );
 };
