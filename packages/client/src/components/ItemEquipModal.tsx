@@ -20,6 +20,7 @@ import { useToast } from '../hooks/useToast';
 import { ITEM_PATH } from '../Routes';
 import { type Armor, OrderType, type Spell, type Weapon } from '../utils/types';
 import { ItemCard } from './ItemCard';
+import { PolygonalCard } from './PolygonalCard';
 
 type ItemEquipModalProps = (Armor | Spell | Weapon) & {
   isEquipped: boolean;
@@ -156,9 +157,10 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
   if (isEquipped) {
     return (
-      <Modal variant="characterPageStyle" isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
+          <PolygonalCard isModal />
           <ModalHeader>
             {isOwner ? 'Unequip Item' : 'Make an offer'}
           </ModalHeader>
@@ -212,6 +214,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>{isOwner ? 'Equip Item' : 'Make an offer'}</ModalHeader>
         <ModalCloseButton />
         <ModalBody p={4}>
@@ -232,12 +235,14 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             </Text>
           )}
         </ModalBody>
-        <ModalFooter>
+        <ModalFooter gap={3}>
+          <Button isDisabled={isEquipping} onClick={onClose} variant="ghost">
+            No
+          </Button>
           <Button
             isDisabled={isOwner && (isMissingRequirements || !!currentBattle)}
             isLoading={isEquipping}
             loadingText="Equipping..."
-            mr={3}
             onClick={() =>
               isOwner
                 ? onEquipItem()
@@ -245,9 +250,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             }
           >
             Yes
-          </Button>
-          <Button isDisabled={isEquipping} onClick={onClose} variant="ghost">
-            No
           </Button>
         </ModalFooter>
       </ModalContent>

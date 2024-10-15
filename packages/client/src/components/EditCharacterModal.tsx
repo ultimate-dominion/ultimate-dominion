@@ -14,7 +14,6 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Spacer,
   Text,
   Textarea,
   VStack,
@@ -27,6 +26,7 @@ import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { API_URL } from '../utils/constants';
 import { type Character } from '../utils/types';
+import { PolygonalCard } from './PolygonalCard';
 
 type EditCharacterModalProps = Character & {
   isOpen: boolean;
@@ -192,9 +192,10 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
   }, [avatar, description, name, newDescription, newName]);
 
   return (
-    <Modal variant="characterPageStyle" isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <Box as="form" onSubmit={onEditCharacter}>
           <ModalHeader>
             <Text>Edit Character</Text>
@@ -262,11 +263,10 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
               </FormControl>
             </VStack>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter gap={3}>
             <Button onClick={onClose} variant="ghost">
               Cancel
             </Button>
-            <Spacer />
             <Button
               isDisabled={!hasChanged}
               isLoading={isUpdating}
