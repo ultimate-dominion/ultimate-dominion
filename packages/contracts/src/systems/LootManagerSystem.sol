@@ -295,23 +295,17 @@ contract LootManagerSystem is ERC1155Holder, System {
                     if (_goldAmount > uint256(0)) {
                         dropGoldToEscrow(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
                     }
+                    uint256 _calculatedExp =
+                        ((_baseExp / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)) / WAD;
                     if (
-                        Stats.getExperience(distTemps.entityIdTemp) == Levels.get(MAX_LEVEL) || _baseExp == uint256(0)
+                        Stats.getExperience(distTemps.entityIdTemp) >= Levels.get(MAX_LEVEL) || _baseExp == uint256(0)
                             || distTemps.livingPlayers == uint256(0)
                     ) {
                         //do nothing
-                    } else if (
-                        (_baseExp / distTemps.livingPlayers) + Stats.getExperience(distTemps.entityIdTemp)
-                            < Levels.get(MAX_LEVEL)
-                    ) {
-                        statsTemp.experience += (
-                            (_baseExp / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)
-                        ) / WAD;
+                    } else if (_calculatedExp + Stats.getExperience(distTemps.entityIdTemp) <= Levels.get(MAX_LEVEL)) {
+                        statsTemp.experience += _calculatedExp;
                         _expAmount += statsTemp.experience;
-                    } else if (
-                        _baseExp / distTemps.livingPlayers + Stats.getExperience(distTemps.entityIdTemp)
-                            > Levels.get(MAX_LEVEL)
-                    ) {
+                    } else if (_calculatedExp + Stats.getExperience(distTemps.entityIdTemp) > Levels.get(MAX_LEVEL)) {
                         uint256 _expToGive = Levels.get(MAX_LEVEL) - Stats.getExperience(distTemps.entityIdTemp);
                         statsTemp.experience += _expToGive;
                         _expAmount += statsTemp.experience;
