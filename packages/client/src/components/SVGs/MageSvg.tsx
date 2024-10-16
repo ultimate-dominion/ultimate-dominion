@@ -11,10 +11,10 @@ export const MageSvg = ({
 
   return (
     <Icon
-      width={size}
+      fill={color}
       height={size}
       viewBox="0 0 19 18"
-      fill={color}
+      width={size}
       xmlns="http://www.w3.org/2000/svg"
     >
       <g clipPath="url(#clip0_548_4077)">
