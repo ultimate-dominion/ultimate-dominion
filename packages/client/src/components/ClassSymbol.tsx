@@ -1,51 +1,82 @@
-import { Box, Tooltip } from '@chakra-ui/react';
-import { FaHatWizard } from 'react-icons/fa';
-import { GiAxeSword, GiRogue } from 'react-icons/gi';
+import { Box, Tooltip, useBreakpointValue } from '@chakra-ui/react';
 
 import { StatsClasses } from '../utils/types';
+import { MageSvg, RogueSvg, WarriorSvg } from './SVGs';
+
+const ICON_SIZE = {
+  desktop: {
+    mage: undefined,
+    rogue: undefined,
+    warrior: undefined,
+  },
+  mobile: {
+    mage: 3,
+    rogue: 4,
+    warrior: 3,
+  },
+};
 
 export const ClassSymbol = ({
   entityClass,
-  size = 28,
+  responsive = false,
+  theme = 'light',
 }: {
   entityClass: StatsClasses;
-  size?: number;
+  responsive?: boolean;
+  theme?: 'light' | 'dark';
 }): JSX.Element => {
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
+
   switch (entityClass) {
-    case StatsClasses.Warrior:
+    case StatsClasses.Mage:
       return (
         <Tooltip
-          aria-label="Warrior"
-          bg="black"
+          aria-label="Mage"
+          bg="#070D2A"
           hasArrow
-          label="Warrior"
+          label="Mage"
           shouldWrapChildren
         >
-          <GiAxeSword size={size} />
+          <MageSvg
+            size={
+              ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'].mage
+            }
+            theme={theme}
+          />
         </Tooltip>
       );
     case StatsClasses.Rogue:
       return (
         <Tooltip
           aria-label="Rogue"
-          bg="black"
+          bg="#070D2A"
           hasArrow
           label="Rogue"
           shouldWrapChildren
         >
-          <GiRogue size={size} />
+          <RogueSvg
+            size={
+              ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'].rogue
+            }
+            theme={theme}
+          />
         </Tooltip>
       );
-    case StatsClasses.Mage:
+    case StatsClasses.Warrior:
       return (
         <Tooltip
-          aria-label="Mage"
-          bg="black"
+          aria-label="Warrior"
+          bg="#070D2A"
           hasArrow
-          label="Mage"
+          label="Warrior"
           shouldWrapChildren
         >
-          <FaHatWizard size={size} />
+          <WarriorSvg
+            size={
+              ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'].warrior
+            }
+            theme={theme}
+          />
         </Tooltip>
       );
     default:

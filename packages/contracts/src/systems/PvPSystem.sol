@@ -49,6 +49,7 @@ contract PvPSystem is System {
                 _isValidPvP = false;
                 break;
             }
+
             if (EncounterEntity.getPvpTimer(attackers[i]) > block.timestamp - PVP_TIMER) {
                 _isValidPvP = false;
                 break;
@@ -69,7 +70,7 @@ contract PvPSystem is System {
                     break;
                 }
                 if (entityX >= 5 || entityY >= 5) {
-                // intentionally left empty
+                    // intentionally left empty
                 }
                 else {
                     _isValidPvP = false;
@@ -161,10 +162,11 @@ contract PvPSystem is System {
                             encounterData.attackers[i], amountToDrop / encounterData.attackers.length
                         );
                     }
-                    // set pvp timer
-                    EncounterEntity.setPvpTimer(entityId, block.timestamp);
                 }
             }
+            // set pvp timer
+            EncounterEntity.setPvpTimer(entityId, block.timestamp);
+
             CombatOutcomeData memory combatOutcome = CombatOutcomeData({
                 endTime: block.timestamp,
                 attackersWin: attackersWin,

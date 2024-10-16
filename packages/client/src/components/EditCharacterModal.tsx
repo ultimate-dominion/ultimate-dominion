@@ -14,7 +14,6 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Spacer,
   Text,
   Textarea,
   VStack,
@@ -27,6 +26,7 @@ import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { API_URL } from '../utils/constants';
 import { type Character } from '../utils/types';
+import { PolygonalCard } from './PolygonalCard';
 
 type EditCharacterModalProps = Character & {
   isOpen: boolean;
@@ -195,12 +195,13 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <Box as="form" onSubmit={onEditCharacter}>
           <ModalHeader>
             <Text>Edit Character</Text>
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody p={4}>
+          <ModalBody px={{ base: 6, sm: 8 }}>
             <VStack gap={5}>
               <HStack w="100%" gap={5}>
                 {UploadedAvatar}
@@ -235,7 +236,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                       isLoading={isUploading}
                       loadingText="Uploading..."
                       onClick={onUploadAvatar}
-                      size="sm"
+                      size={{ base: 'xs', sm: 'sm' }}
                       type="button"
                     >
                       Upload Avatar Image
@@ -262,11 +263,10 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
               </FormControl>
             </VStack>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter gap={3}>
             <Button onClick={onClose} variant="ghost">
               Cancel
             </Button>
-            <Spacer />
             <Button
               isDisabled={!hasChanged}
               isLoading={isUpdating}

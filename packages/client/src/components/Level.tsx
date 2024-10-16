@@ -1,15 +1,24 @@
-import { Box, HStack, Progress, Spacer, Text } from '@chakra-ui/react';
+import {
+  Box,
+  BoxProps,
+  HStack,
+  Progress,
+  Spacer,
+  Text,
+} from '@chakra-ui/react';
+
 export const Level = ({
   currentLevel,
   levelPercent,
   maxed,
+  ...props
 }: {
   currentLevel: bigint;
   levelPercent: number;
   maxed: boolean;
-}): JSX.Element => {
+} & BoxProps): JSX.Element => {
   return (
-    <Box fontSize="10px" mt={8} position="relative" w="100%">
+    <Box fontSize="10px" mt={8} position="relative" w="100%" {...props}>
       {maxed ? (
         <Box>
           <Text

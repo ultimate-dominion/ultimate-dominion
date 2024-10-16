@@ -8,8 +8,4 @@ import {IRngSystem} from "../src/interfaces/IRngSystem.sol";
 
 import "forge-std/console.sol";
 
-contract Test_RngSystem is SetUp {
-    function test_getFee() public {
-        assertEq(IRngSystem(address(world)).getFee(), 100000);
-    }
-}
+contract Test_RngSystem is SetUp {}

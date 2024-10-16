@@ -19,6 +19,7 @@ import {
     ActionOutcome,
     ActionOutcomeData,
     WeaponStats,
+    Items,
     WeaponStatsData,
     SpellStatsData,
     SpellStats,
@@ -27,7 +28,7 @@ import {
     MagicDamageStats,
     MagicDamageStatsData
 } from "@codegen/index.sol";
-import {ResistanceStat, EffectType} from "@codegen/common.sol";
+import {ResistanceStat, EffectType, ItemType} from "@codegen/common.sol";
 import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireAccess} from "../utils.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -35,7 +36,7 @@ import {
     DEFENSE_MODIFIER,
     ATTACK_MODIFIER,
     CRIT_MULTIPLIER,
-    STAT_MODIFIER,
+    PROFICIENCY_DENOMINATOR,
     STARTING_HIT_PROBABILITY,
     ATTACKER_HIT_DAMPENER,
     DEFENDER_HIT_DAMPENER
@@ -61,10 +62,19 @@ contract CombatSystem is System {
 
                 EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
                 require(effectData.effectExists, "action does not exist");
+                // if actor is a character.  require item is equipped
+                if (
+                    IWorld(_world()).UD__isValidCharacterId(actionOutcomeData.attackerId)
+                        && Items.getItemType(actionOutcomeData.itemId) != ItemType.Consumable
+                ) {
+                    require(
+                        IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId),
+                        "Item not equipped"
+                    );
+                }
                 //decode action data according to type
                 if (effectData.effectType == EffectType.PhysicalDamage) {
                     // calculate damage
-
                     (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i]) =
                     _calculatePhysicalEffect(
                         actionOutcomeData.effectIds[i],
@@ -85,7 +95,6 @@ contract CombatSystem is System {
                     }
                 } else if (effectData.effectType == EffectType.MagicDamage) {
                     // calculate damage
-
                     (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i]) =
                     _calculateMagicEffect(
                         actionOutcomeData.effectIds[i],
@@ -169,18 +178,11 @@ contract CombatSystem is System {
             if (hit) {
                 damage = _calculateWeaponDamage(attackStats, attacker.strength, weapon, rnChunks[2], crit)
                     - _calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
-                if (!crit) {
-                    console.log("HIT!");
-                    console.logInt(damage);
-                }
                 if (crit) {
                     damage = damage * int256(CRIT_MULTIPLIER);
                     crit = true;
-                    console.log("CRIT!");
-                    console.logInt(damage);
                 }
             } else {
-                console.log("MISS!");
                 damage = 0;
                 hit = false;
             }
@@ -230,7 +232,7 @@ contract CombatSystem is System {
         if (stat > 0) {
             // uint256 multiplier = uint256(Math.wmul(baseDamage * int256(WAD), (stat * int256(WAD) / 200))) ;
             int256 _unroundedDamage =
-                (Math.wmul(baseDamage, ((stat * int256(WAD)) / int256(STAT_MODIFIER))) + baseDamage);
+                (Math.wmul(baseDamage, ((stat * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR))) + baseDamage);
             _totalDamage = Math.roundInt(_unroundedDamage, int256(1 ether)) / int256(WAD);
         } else {
             // if you have a negative adjusted stat.  do half damage
@@ -264,9 +266,9 @@ contract CombatSystem is System {
         }
     }
 
-    function getStatModifier(int256 stat, int256 modifierBonus) internal view returns (uint256 multiplier) {
-        multiplier = (((stat + modifierBonus) * int256(WAD)) / int256(STAT_MODIFIER)) > 0
-            ? uint256(((stat + modifierBonus) * int256(WAD)) / int256(STAT_MODIFIER))
+    function _getStatModifier(int256 stat, int256 modifierBonus) internal pure returns (uint256 multiplier) {
+        multiplier = (((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR)) > 0
+            ? uint256(((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR))
             : WAD;
     }
 
@@ -307,12 +309,7 @@ contract CombatSystem is System {
 
                     if (currentHp - damage > int256(maxHp)) {
                         damage = -(maxHp - currentHp);
-                        console.logInt(damage);
                     }
-                }
-                if (!crit) {
-                    console.log("magic damage: ");
-                    console.logInt(damage);
                 }
 
                 if (crit) {
@@ -326,12 +323,10 @@ contract CombatSystem is System {
                             damage = -(maxHp - currentHp);
                         }
                     }
-                    console.log("magic CRIT!");
-                    console.logInt(damage);
+
                     crit = true;
                 }
             } else {
-                console.log("magic MISS!");
                 damage = 0;
                 hit = false;
             }

@@ -30,9 +30,8 @@ contract Test_CharacterSystem is SetUp, GasReporter {
     function test_RollStats() public {
         startGasReport("rolls stats for a character");
 
-        uint256 fees = entropy.getFee(address(1));
         vm.prank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
         vm.warp(block.number + 1);
         StatsData memory alicesCharacter = world.UD__getStats(alicesCharacterId);
         assertEq(uint8(alicesCharacter.class), uint8(Classes.Rogue));
@@ -48,20 +47,18 @@ contract Test_CharacterSystem is SetUp, GasReporter {
     }
 
     function test_RollStats_Revert_GameStarted() public {
-        uint256 fees = entropy.getFee(address(1));
         vm.startPrank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
         vm.expectRevert();
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
     }
 
     function test_EnterGame() public {
         startGasReport("enters a character into the game");
 
-        uint256 fees = entropy.getFee(address(1));
         vm.startPrank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
         StarterItemsData memory starterItemsDat = world.UD__getStarterItems(Classes.Rogue);
         assertEq(erc1155System.balanceOf(alice, starterItemsDat.itemIds[0]), starterItemsDat.amounts[0]);
@@ -115,9 +112,9 @@ contract Test_CharacterSystem is SetUp, GasReporter {
 
     function test_classLevelBonus() public {
         // create userA
-        uint256 fees = entropy.getFee(address(1));
+
         vm.prank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Mage);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Mage);
         vm.prank(alice);
         world.UD__enterGame(alicesCharacterId);
         // get the stats for userA
