@@ -122,6 +122,9 @@ const Button = {
       _active: {
         bg: 'grey500',
         color: 'white',
+        svg: {
+          fill: 'white',
+        },
         _disabled: {
           bg: 'rgba(0, 0, 0, 0.7)',
         },
@@ -129,6 +132,9 @@ const Button = {
       _hover: {
         bg: 'grey500',
         color: 'white',
+        svg: {
+          fill: 'white',
+        },
         _disabled: {
           bg: 'rgba(0, 0, 0, 0.7)',
         },
