@@ -284,10 +284,10 @@ export const ShopItemRow = ({
           orderType={orderType}
         />
 
-        <Modal isCentered isOpen={isOpen} onClose={onClose} variant="noClip">
+        <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
-            <PolygonalCard clipPath={'none'} isModal={true} />
+            <PolygonalCard isModal />
             <ModalCloseButton />
             <ModalHeader>
               <Text fontWeight={700} fontSize={24}>
@@ -457,8 +457,6 @@ export const ShopItemRow = ({
                           boxShadow="1.5px 1.5px 3px 0px #54545466, -1px -1px 3px 0px #545454B2"
                           borderRadius="5px"
                           color="#1633B6"
-                          max={stock?.toString() || balance?.toString() || 0}
-                          min={1}
                           minW="24px"
                           minH="24px"
                           isDisabled={

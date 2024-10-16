@@ -229,44 +229,6 @@ const Modal = {
       textAlign: 'center',
     },
   },
-  variants: {
-    noClip: {
-      closeButton: {
-        right: 5,
-        top: 4,
-      },
-      dialogContainer: {
-        overflow: 'hidden',
-      },
-      dialog: {
-        bgColor: '#B3B9BE',
-        clipPath: 'none',
-        maxH: 'calc(100% - 7.5rem)',
-        minW: { base: '100%', md: '500px' },
-        maxW: { base: '100%', md: '500px' },
-        position: 'absolute',
-      },
-      body: {
-        overflow: 'auto',
-        pb: 8,
-        px: 8,
-      },
-      footer: {
-        borderTop: '1px solid',
-        display: 'flex',
-        justifyContent: 'center',
-        pb: 6,
-        pt: 4,
-      },
-      header: {
-        color: '#283570',
-        fontWeight: 700,
-        px: 4,
-        py: 8,
-        textAlign: 'center',
-      },
-    },
-  },
 };
 
 const Progress = {

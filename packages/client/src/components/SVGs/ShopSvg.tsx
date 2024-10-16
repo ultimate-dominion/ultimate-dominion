@@ -1,7 +1,7 @@
 import { Icon } from '@chakra-ui/react';
 
 export const ShopSvg = ({
-  size = 6,
+  size = 5,
   theme = 'light',
 }: {
   size?: number;
