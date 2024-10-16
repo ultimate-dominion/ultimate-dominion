@@ -344,7 +344,7 @@ export const CharacterPage = (): JSX.Element => {
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
-            <PolygonalCard clipPath="none" p={6}>
+            <PolygonalCard clipPath="none" p={6} position="relative">
               <VStack alignItems="start" spacing={0}>
                 <HStack justify="space-between" w="100%">
                   <HStack>
@@ -412,7 +412,15 @@ export const CharacterPage = (): JSX.Element => {
                 mt={10}
               />
 
-              <VStack mt={{ base: 12, sm: 20 }} spacing={3}>
+              <VStack
+                bottom={6}
+                mt={{ base: 12, sm: 20 }}
+                left={0}
+                position={{ base: 'static', lg: 'absolute' }}
+                px={{ base: 0, lg: 6 }}
+                spacing={3}
+                w="100%"
+              >
                 <Button
                   leftIcon={
                     isOwner ? (
@@ -443,19 +451,9 @@ export const CharacterPage = (): JSX.Element => {
             </PolygonalCard>
           </GridItem>
           <GridItem
-            border="6px solid #1A244E"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
-            position="relative"
           >
-            <Box
-              border="solid 1px #3B82C4"
-              bottom="5px"
-              left="5px"
-              position="absolute"
-              right="5px"
-              top="5px"
-            />
             <LevelingPanel canLevel={canLevel} character={character} />
           </GridItem>
           <GridItem
