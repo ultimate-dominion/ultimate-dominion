@@ -7,7 +7,6 @@ import {
   Center,
   Grid,
   GridItem,
-  Heading,
   HStack,
   Spacer,
   Spinner,
@@ -457,57 +456,39 @@ export const CharacterPage = (): JSX.Element => {
             <LevelingPanel canLevel={canLevel} character={character} />
           </GridItem>
           <GridItem
-            border="6px solid #1A244E"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
-            position="relative"
           >
-            <Box
-              border="solid 1px #3B82C4"
-              bottom="5px"
-              left="5px"
-              position="absolute"
-              right="5px"
-              top="5px"
-            ></Box>
-            <Box h="100%" position="relative">
-              <VStack>
-                <HStack
-                  color="white"
-                  backgroundColor="#0C1539"
-                  height="120px"
-                  px={6}
-                  w="100%"
+            <PolygonalCard
+              bgColor="#070D2A"
+              clipPath="none"
+              color="white"
+              p={6}
+              position="relative"
+            >
+              <HStack spacing={4}>
+                <Avatar size="lg" src={character.image} />
+                <Text fontWeight={700} mt={1} size="xl">
+                  {character.name}
+                </Text>
+                <ClassSymbol entityClass={character.entityClass} />
+              </HStack>
+              <Text fontWeight={500} my={12} size={{ base: 'sm', sm: 'md' }}>
+                {character.description}
+              </Text>
+              {isOwner && (
+                <Button
+                  bottom={6}
+                  onClick={onOpenEditModal}
+                  position="absolute"
+                  right={6}
+                  size="sm"
+                  variant="white"
                 >
-                  <Center>
-                    <Avatar size="lg" src={character.image} />
-                    <Heading fontSize="24px" margin="0px 20px" size="lg">
-                      {character.name}
-                    </Heading>
-                    <ClassSymbol entityClass={character.entityClass} />
-                  </Center>
-                  <Spacer />
-                </HStack>
-                <Spacer />
-                <Box p={6} w="100%">
-                  <Text overflow="hidden" size="sm" textAlign="left">
-                    {character.description}
-                  </Text>
-                  {isOwner && (
-                    <Button
-                      bottom={6}
-                      onClick={onOpenEditModal}
-                      position="absolute"
-                      right={6}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      Edit Character
-                    </Button>
-                  )}
-                </Box>
-              </VStack>
-            </Box>
+                  Edit Character
+                </Button>
+              )}
+            </PolygonalCard>
           </GridItem>
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
