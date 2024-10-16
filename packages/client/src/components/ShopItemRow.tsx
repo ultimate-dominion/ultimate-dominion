@@ -21,8 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { Entity } from '@latticexyz/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IoIosArrowForward } from 'react-icons/io';
-import { IoAdd, IoRemove } from 'react-icons/io5';
+import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -43,7 +42,9 @@ import {
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
+import { PolygonalCard } from './PolygonalCard';
 import { ShopAllowanceModal } from './ShopAllowanceModal';
+import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const ShopItemRow = ({
   balance,
@@ -51,6 +52,7 @@ export const ShopItemRow = ({
   item,
   itemIndex,
   orderType,
+  unsellable,
   stock,
   shop,
   theme,
@@ -60,6 +62,7 @@ export const ShopItemRow = ({
   item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;
   orderType: OrderType;
+  unsellable: boolean;
   shop: Shop;
   stock: bigint | null;
   theme: string;
@@ -111,6 +114,12 @@ export const ShopItemRow = ({
     return price > BigInt(userCharacter.externalGoldBalance);
   }, [orderType, price, userCharacter]);
 
+  const unsellableError = useMemo(() => {
+    if (!userCharacter) return false;
+    if (orderType === OrderType.Buying) return false;
+    return unsellable;
+  }, [orderType, unsellable, userCharacter]);
+
   const onBuyOrSell = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -118,7 +127,10 @@ export const ShopItemRow = ({
         setShowError(true);
         return;
       }
-
+      if (unsellableError) {
+        setShowError(true);
+        return;
+      }
       try {
         setIsTxPending(true);
         if (orderType == OrderType.Buying && goldShopAllowance < price) {
@@ -184,6 +196,7 @@ export const ShopItemRow = ({
       renderSuccess,
       sell,
       shop.shopId,
+      unsellableError,
     ],
   );
 
@@ -271,13 +284,15 @@ export const ShopItemRow = ({
           orderType={orderType}
         />
 
-        <Modal isCentered isOpen={isOpen} onClose={onClose}>
+        <Modal isCentered isOpen={isOpen} onClose={onClose} variant="noClip">
           <ModalOverlay />
           <ModalContent>
+            <PolygonalCard clipPath={'none'} isModal={true} />
             <ModalCloseButton />
             <ModalHeader>
               <Text fontWeight={700} fontSize={24}>
-                Buy {name ? removeEmoji(name.toString()) : ''}
+                {orderType == OrderType.Buying ? 'Buy' : 'Sell'}{' '}
+                {name ? removeEmoji(name.toString()) : ''}
               </Text>
             </ModalHeader>
             <ModalBody>
@@ -374,8 +389,8 @@ export const ShopItemRow = ({
                 >
                   <VStack spacing={4}>
                     <VStack>
-                      <Text>
-                        AMOUNT (MAX {stock?.toString() || balance?.toString()})
+                      <Text fontSize={{ base: 'sm' }} fontWeight={500}>
+                        max {stock?.toString() || balance?.toString()} items
                       </Text>
                       <HStack>
                         <Button
@@ -383,6 +398,7 @@ export const ShopItemRow = ({
                           background="#D0D0D0"
                           boxShadow="1.5px 1.5px 3px 0px #54545466, -1px -1px 3px 0px #545454B2"
                           borderRadius="5px"
+                          color="#1633B6"
                           minW="24px"
                           minH="24px"
                           isDisabled={amount <= 1}
@@ -396,12 +412,14 @@ export const ShopItemRow = ({
                           size="xs"
                           variant="ghost"
                         >
-                          <IoRemove />
+                          <IoIosArrowBack />
                         </Button>
                         <Input
                           aspectRatio="1 / 1"
                           background="#B3B9BE"
                           boxShadow="-5px -5px 10px 0px #54545440 inset, 5px 5px 2px 0px #A6A6A680 inset, 2px 2px 2px 0px #18161640 inset, -2px -2px 2px 0px #A2A9B080 inset"
+                          fontSize="lg"
+                          fontWeight={500}
                           max={stock?.toString() || balance?.toString() || 0}
                           min={1}
                           minW="45px"
@@ -438,6 +456,7 @@ export const ShopItemRow = ({
                           background="#D0D0D0"
                           boxShadow="1.5px 1.5px 3px 0px #54545466, -1px -1px 3px 0px #545454B2"
                           borderRadius="5px"
+                          color="#1633B6"
                           max={stock?.toString() || balance?.toString() || 0}
                           min={1}
                           minW="24px"
@@ -456,30 +475,46 @@ export const ShopItemRow = ({
                           size="xs"
                           variant="ghost"
                         >
-                          <IoAdd />
+                          <IoIosArrowForward />
                         </Button>
                       </HStack>
                     </VStack>
+                    <Box
+                      backgroundColor="#F5F5FA1F"
+                      boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset"
+                      h="7px"
+                      w="100%"
+                    ></Box>
                     <VStack>
                       {orderType == OrderType.Buying ? (
-                        <Text>
+                        <Text fontSize={{ base: 'sm' }} fontWeight={700}>
                           Total Cost: {etherToFixedNumber(price)} $GOLD
                         </Text>
                       ) : (
-                        <Text>
+                        <Text fontSize={{ base: 'sm' }} fontWeight={700}>
                           Total to recieve: {etherToFixedNumber(price)} $GOLD
                         </Text>
                       )}
-                      <Text size="xs">
-                        Your $GOLD Balance:{' '}
+                      <Text color="#3D4247" size="xs">
+                        Current Balance{' '}
                         {etherToFixedNumber(
                           userCharacter?.externalGoldBalance ?? '0',
-                        )}
+                        )}{' '}
+                        $GOLD
                       </Text>
-                      <FormControl isInvalid={showError && insufficientGold}>
+                      <FormControl
+                        isInvalid={
+                          showError && (insufficientGold || unsellableError)
+                        }
+                      >
                         {showError && insufficientGold && (
                           <FormHelperText color="red" m={3}>
                             You don&apos;t have enough $GOLD to buy this.
+                          </FormHelperText>
+                        )}
+                        {showError && unsellableError && (
+                          <FormHelperText color="red" m={3}>
+                            You can&apos;t sell your last item.
                           </FormHelperText>
                         )}
                         {orderType == OrderType.Buying &&
@@ -535,6 +570,9 @@ export const ShopItemRow = ({
                             </Button>
                           )}
                       </FormControl>
+                      <Button onClick={() => onClose()} variant="ghost">
+                        Cancel
+                      </Button>
                     </VStack>
                   </VStack>
                 </GridItem>
@@ -542,9 +580,9 @@ export const ShopItemRow = ({
             </ModalBody>
           </ModalContent>
         </Modal>
-        <Box display={{ base: 'none', md: 'block' }} w="30px">
-          <Button onClick={onOpen} p={3} variant="ghost">
-            <IoIosArrowForward />
+        <Box display={{ base: 'none', md: 'block' }} w="40px">
+          <Button onClick={onOpen} p={1} variant="ghost">
+            <ForwardCaretSvg />
           </Button>
         </Box>
       </HStack>

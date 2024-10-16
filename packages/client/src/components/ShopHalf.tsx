@@ -49,6 +49,7 @@ export const ShopHalf = ({
     item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
     stock: bigint | null;
     index: string;
+    unsellable: boolean;
   }>;
   shop: Shop;
   orderType: OrderType;
@@ -59,6 +60,7 @@ export const ShopHalf = ({
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       stock: bigint | null;
       index: string;
+      unsellable: boolean;
     }>
   >([]);
   const [page, setPage] = useState(1);
@@ -89,6 +91,7 @@ export const ShopHalf = ({
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       stock: bigint | null;
       index: string;
+      unsellable: boolean;
     }> = [...items];
     const searcher = new FuzzySearch(
       [...entriesCopy],
@@ -186,6 +189,7 @@ export const ShopHalf = ({
           <HStack textAlign="right" w="100%">
             <Spacer />
             <Button
+              color="#565555"
               display={{ base: 'none', lg: 'flex' }}
               fontWeight={sort.sorted === SortOptions.Stock ? 'bold' : 'normal'}
               onClick={() =>
@@ -213,6 +217,7 @@ export const ShopHalf = ({
               )}
             </Button>
             <Button
+              color="#565555"
               display={{ base: 'none', lg: 'flex' }}
               fontWeight={sort.sorted === SortOptions.Price ? 'bold' : 'normal'}
               onClick={() =>
@@ -254,6 +259,7 @@ export const ShopHalf = ({
                 itemIndex={entry.index}
                 key={`shop-row-${i}`}
                 orderType={orderType}
+                unsellable={entry.unsellable}
                 shop={shop}
                 stock={entry.stock}
                 theme="white"

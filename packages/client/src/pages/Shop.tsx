@@ -2,7 +2,8 @@ import {
   Box,
   Button,
   Center,
-  Divider,
+  Grid,
+  GridItem,
   Heading,
   HStack,
   Spacer,
@@ -47,6 +48,9 @@ export const Shop = (): JSX.Element => {
     inventoryConsumables,
     inventorySpells,
     inventoryWeapons,
+    equippedArmor,
+    equippedSpells,
+    equippedWeapons,
   } = useCharacter();
   const { allShops } = useMap();
 
@@ -61,6 +65,7 @@ export const Shop = (): JSX.Element => {
       balance: bigint | null;
       stock: bigint | null;
       index: string;
+      unsellable: boolean;
     }>
   >([]);
 
@@ -70,6 +75,7 @@ export const Shop = (): JSX.Element => {
       balance: bigint | null;
       stock: bigint | null;
       index: string;
+      unsellable: boolean;
     }>
   >([]);
 
@@ -93,10 +99,20 @@ export const Shop = (): JSX.Element => {
       // add back the balances of the item and itemIndexes
       .map(item => {
         const index = shop?.sellableItems.indexOf(item.tokenId).toString();
+        let unsellable = false;
+        if (item.balance == BigInt(1)) {
+          if (equippedArmor.filter(armor => armor.tokenId == index))
+            unsellable = true;
+          if (equippedSpells.filter(spell => spell.tokenId == index))
+            unsellable = true;
+          if (equippedWeapons.filter(weapon => weapon.tokenId == index))
+            unsellable = true;
+        }
         return {
           index: index,
           item: item,
           balance: item.balance,
+          unsellable: unsellable,
           stock: null,
         };
       });
@@ -116,6 +132,7 @@ export const Shop = (): JSX.Element => {
           stock: shop.stock[Number(index)],
           balance: null,
           index: index,
+          unsellable: true,
         };
       });
 
@@ -124,6 +141,9 @@ export const Shop = (): JSX.Element => {
   }, [
     armorTemplates,
     consumableTemplates,
+    equippedArmor,
+    equippedSpells,
+    equippedWeapons,
     isItemsLoading,
     items,
     shop,
@@ -183,55 +203,73 @@ export const Shop = (): JSX.Element => {
         </HStack>
       </Box>
 
-      <HStack gap={0} h="100%" mt={8} w="100%">
-        <Spacer />
-        <Stack minH="100%" border="5px solid #1A244E" h="100%" w="100%">
-          <Box bgColor="blue500" h="66px" px="20px" width="100%">
-            <HStack bgColor="blue500" h="66px" width="100%">
-              <Heading color="white">My Inventory</Heading>
-              <Spacer />
-              <Text color="Gold" align="right" fontSize="24px" fontWeight={700}>
-                {' '}
-                ${etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
-              </Text>
-            </HStack>
-          </Box>{' '}
-          {userCharacter && shopId && sellable && sellable.length ? (
-            <ShopHalf
-              characterId={userCharacter.id}
-              shop={shop}
-              items={sellable}
-              orderType={OrderType.Selling}
-            />
-          ) : (
-            <Center>
-              <Text>No Sellable Items</Text>
-            </Center>
-          )}
-        </Stack>
-        <Divider border="1px solid transparent" mx={8} orientation="vertical" />
-        <Stack border="5px solid #1A244E" h="100%" w="100%">
-          <Box bgColor="blue500" h="66px" px="20px" width="100%">
-            <HStack bgColor="blue500" h="66px" width="100%">
-              <Heading color="white">Shopkeeper&apos;s Inventory</Heading>
-              <Spacer />
-              <Text align="right" color="Gold" fontSize="24px" fontWeight={700}>
-                ${etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD
-              </Text>
-            </HStack>
-          </Box>{' '}
-          {userCharacter && shopId && buyable && buyable.length ? (
-            <ShopHalf
-              characterId={userCharacter.id}
-              items={buyable}
-              shop={shop}
-              orderType={OrderType.Buying}
-            />
-          ) : (
-            <Text>No Buyable Items</Text>
-          )}
-        </Stack>
-      </HStack>
+      <Grid
+        gap={5}
+        h="100%"
+        mt={8}
+        templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' }}
+        w="100%"
+      >
+        <GridItem>
+          <Stack minH="100%" border="5px solid #1A244E" h="100%" w="100%">
+            <Box bgColor="blue500" h="66px" px="20px" width="100%">
+              <HStack bgColor="blue500" h="66px" width="100%">
+                <Heading color="white">My Inventory</Heading>
+                <Spacer />
+                <Text
+                  color="Gold"
+                  align="right"
+                  fontSize="24px"
+                  fontWeight={700}
+                >
+                  {' '}
+                  {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
+                </Text>
+              </HStack>
+            </Box>{' '}
+            {userCharacter && shopId && sellable && sellable.length ? (
+              <ShopHalf
+                characterId={userCharacter.id}
+                shop={shop}
+                items={sellable}
+                orderType={OrderType.Selling}
+              />
+            ) : (
+              <Center>
+                <Text>No Sellable Items</Text>
+              </Center>
+            )}
+          </Stack>
+        </GridItem>
+        <GridItem>
+          <Stack border="5px solid #1A244E" h="100%" w="100%">
+            <Box bgColor="blue500" h="66px" px="20px" width="100%">
+              <HStack bgColor="blue500" h="66px" width="100%">
+                <Heading color="white">Shopkeeper&apos;s Inventory</Heading>
+                <Spacer />
+                <Text
+                  align="right"
+                  color="Gold"
+                  fontSize="24px"
+                  fontWeight={700}
+                >
+                  {etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD
+                </Text>
+              </HStack>
+            </Box>{' '}
+            {userCharacter && shopId && buyable && buyable.length ? (
+              <ShopHalf
+                characterId={userCharacter.id}
+                items={buyable}
+                shop={shop}
+                orderType={OrderType.Buying}
+              />
+            ) : (
+              <Text>No Buyable Items</Text>
+            )}
+          </Stack>
+        </GridItem>
+      </Grid>
     </VStack>
   );
 };

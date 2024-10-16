@@ -38,7 +38,6 @@ export const Header = ({
       ? CHARACTER_CREATION_PATH
       : GAME_BOARD_PATH;
   }, [pathname]);
-
   return (
     <Stack
       as="header"
