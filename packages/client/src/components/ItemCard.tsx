@@ -63,7 +63,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         item as Spell;
 
       return (
-        <VStack alignItems="start">
+        <VStack alignItems="start" spacing={0}>
           <Stack
             alignItems="start"
             direction={{ base: 'column', lg: 'row' }}
@@ -104,7 +104,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     } = item as Armor | Weapon;
 
     return (
-      <VStack alignItems="start">
+      <VStack alignItems="start" spacing={0}>
         <Stack
           alignItems="start"
           direction={{ base: 'column', lg: 'row' }}
