@@ -215,7 +215,7 @@ const Modal = {
       px: 8,
     },
     footer: {
-      borderTop: '1px solid',
+      borderTop: '1px #1A244E solid',
       display: 'flex',
       justifyContent: 'center',
       pb: 6,

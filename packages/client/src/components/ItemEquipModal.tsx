@@ -165,7 +165,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             {isOwner ? 'Unequip Item' : 'Make an offer'}
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody p={4}>
+          <ModalBody px={{ base: 6, sm: 8 }}>
             {isOwner ? (
               <Text mb={6}>Do you want to unequip this item?</Text>
             ) : (
@@ -217,7 +217,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         <PolygonalCard isModal />
         <ModalHeader>{isOwner ? 'Equip Item' : 'Make an offer'}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4}>
+        <ModalBody px={{ base: 6, sm: 8 }}>
           {isOwner ? (
             <Text mb={6}>Do you want to equip this item?</Text>
           ) : (

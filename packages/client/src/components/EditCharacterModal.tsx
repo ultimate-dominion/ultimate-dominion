@@ -201,7 +201,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
             <Text>Edit Character</Text>
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody p={4}>
+          <ModalBody px={{ base: 6, sm: 8 }}>
             <VStack gap={5}>
               <HStack w="100%" gap={5}>
                 {UploadedAvatar}
@@ -236,7 +236,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                       isLoading={isUploading}
                       loadingText="Uploading..."
                       onClick={onUploadAvatar}
-                      size="sm"
+                      size={{ base: 'xs', sm: 'sm' }}
                       type="button"
                     >
                       Upload Avatar Image

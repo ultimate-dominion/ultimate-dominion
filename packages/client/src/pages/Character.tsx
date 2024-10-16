@@ -8,7 +8,6 @@ import {
   Grid,
   GridItem,
   HStack,
-  Spacer,
   Spinner,
   Text,
   Tooltip,
@@ -478,11 +477,12 @@ export const CharacterPage = (): JSX.Element => {
               </Text>
               {isOwner && (
                 <Button
+                  borderRadius="4px"
                   bottom={6}
                   onClick={onOpenEditModal}
                   position="absolute"
                   right={6}
-                  size="sm"
+                  size="xs"
                   variant="white"
                 >
                   Edit Character
@@ -493,41 +493,8 @@ export const CharacterPage = (): JSX.Element => {
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            pb={{ base: 12, lg: 0 }}
-            border="6px solid #1A244E"
-            position="relative"
           >
-            <Box
-              color="white"
-              backgroundColor="#1A244E"
-              display="table"
-              fontSize="24px"
-              fontWeight={700}
-              h="68px"
-              px="20px"
-              w="100%"
-            >
-              <HStack h="100%">
-                <Text color="white" size="24px" fontWeight="700">
-                  Items Inventory
-                </Text>{' '}
-                <Spacer></Spacer>
-                <Text color="white" size="24px" fontWeight="700">
-                  1/50
-                </Text>
-              </HStack>{' '}
-            </Box>
-            <Box
-              border="solid 1px #3B82C4"
-              bottom="5px"
-              left="5px"
-              position="absolute"
-              right="5px"
-              top="5px"
-            ></Box>
-            <Box p={6}>
-              <ItemsPanel character={character} />
-            </Box>
+            <ItemsPanel character={character} />
           </GridItem>
         </Grid>
       ) : (
@@ -788,135 +755,156 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
   return (
     <Box>
-      <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
-        Armor {inventoryArmor.length} - {equippedArmor.length}/
-        {MAX_EQUIPPED_ARMOR} equipped{' '}
-      </Text>
-      {maxArmorEquipped && <Text fontSize="sm">(Max armor equipped)</Text>}
-      <Grid
-        templateColumns={{
-          base: 'repeat(1, 1fr)',
-          sm: 'repeat(1, 1fr)',
-          md: 'repeat(2, 1fr)',
-          xl: 'repeat(3, 1fr)',
-        }}
-        gap={2}
-        mt={4}
+      <HStack
+        color="white"
+        bgColor="#1A244E"
+        h="68px"
+        justifyContent="space-between"
+        px={6}
       >
-        {inventoryArmor.length === 0 && <Text>No armor found</Text>}
-        {inventoryArmor.map((ar, i) => {
-          const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
-          return (
-            <GridItem key={i}>
-              <ItemCard
-                isEquipped={isEquipped}
-                onClick={
-                  maxArmorEquipped && !isEquipped
-                    ? undefined
-                    : () => {
-                        setSelectedItem(ar);
-                        onOpenItemModal();
-                      }
-                }
-                {...ar}
-              />
-            </GridItem>
-          );
-        })}
-      </Grid>
-      <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
-        Weapons & Spells {spellsAndWeapons.length} -{' '}
-        {equippedSpellsAndWeaponsIds.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
-      </Text>
-      {maxWeaponsEquipped && <Text fontSize="sm">(Max weapons equipped)</Text>}
-      <Grid
-        templateColumns={{
-          base: 'repeat(1, 1fr)',
-          sm: 'repeat(1, 1fr)',
-          md: 'repeat(2, 1fr)',
-          xl: 'repeat(3, 1fr)',
-        }}
-        gap={2}
-        mt={4}
-      >
-        {spellsAndWeapons.length === 0 && <Text>No weapons found</Text>}
-        {spellsAndWeapons.map((item, i) => {
-          const isEquipped = equippedSpellsAndWeaponsIds.includes(
-            BigInt(item.tokenId),
-          );
+        <Text color="white" fontWeight={700} size={{ base: 'lg', sm: 'xl' }}>
+          Items Inventory
+        </Text>
+        <Text color="white" fontWeight={500} size={{ base: 'md', sm: 'lg' }}>
+          Total:{' '}
+          {inventoryArmor.length +
+            spellsAndWeapons.length +
+            inventoryConsumables.length}
+        </Text>
+      </HStack>
+      <PolygonalCard clipPath="none" p={6}>
+        <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
+          Armor ({inventoryArmor.length}) - {equippedArmor.length}/
+          {MAX_EQUIPPED_ARMOR} equipped{' '}
+        </Text>
+        {maxArmorEquipped && <Text fontSize="sm">(Max armor equipped)</Text>}
+        <Grid
+          templateColumns={{
+            base: 'repeat(1, 1fr)',
+            sm: 'repeat(1, 1fr)',
+            md: 'repeat(2, 1fr)',
+            xl: 'repeat(3, 1fr)',
+          }}
+          gap={2}
+          mt={4}
+        >
+          {inventoryArmor.length === 0 && <Text>No armor</Text>}
+          {inventoryArmor.map((ar, i) => {
+            const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
+            return (
+              <GridItem key={i}>
+                <ItemCard
+                  isEquipped={isEquipped}
+                  onClick={
+                    maxArmorEquipped && !isEquipped
+                      ? undefined
+                      : () => {
+                          setSelectedItem(ar);
+                          onOpenItemModal();
+                        }
+                  }
+                  {...ar}
+                />
+              </GridItem>
+            );
+          })}
+        </Grid>
+        <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
+          Weapons & Spells ({spellsAndWeapons.length}) -{' '}
+          {equippedSpellsAndWeaponsIds.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
+        </Text>
+        {maxWeaponsEquipped && (
+          <Text fontSize="sm">(Max weapons equipped)</Text>
+        )}
+        <Grid
+          templateColumns={{
+            base: 'repeat(1, 1fr)',
+            sm: 'repeat(1, 1fr)',
+            md: 'repeat(2, 1fr)',
+            xl: 'repeat(3, 1fr)',
+          }}
+          gap={2}
+          mt={4}
+        >
+          {spellsAndWeapons.length === 0 && <Text>No weapons</Text>}
+          {spellsAndWeapons.map((item, i) => {
+            const isEquipped = equippedSpellsAndWeaponsIds.includes(
+              BigInt(item.tokenId),
+            );
 
-          return (
-            <GridItem key={i}>
-              <ItemCard
-                isEquipped={isEquipped}
-                onClick={
-                  maxWeaponsEquipped && !isEquipped
-                    ? undefined
-                    : () => {
-                        setSelectedItem(item);
-                        onOpenItemModal();
-                      }
-                }
-                {...item}
-              />
-            </GridItem>
-          );
-        })}
-      </Grid>
-      <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
-        Consumables {inventoryConsumables.length}
-      </Text>
-      <Grid
-        templateColumns={{
-          base: 'repeat(1, 1fr)',
-          sm: 'repeat(1, 1fr)',
-          md: 'repeat(2, 1fr)',
-          xl: 'repeat(3, 1fr)',
-        }}
-        gap={2}
-        mt={4}
-      >
-        {/* {inventoryConsumables.length === 0 && <Text>No consumables found</Text>} */}
-        {inventoryConsumables.map((consumable, i) => {
-          return (
-            <GridItem key={i}>
-              <ItemCard
-                onClick={() => {
-                  setSelectedConsumable(consumable);
-                  onOpenConsumableModal();
-                }}
-                {...consumable}
-              />
-            </GridItem>
-          );
-        })}
-      </Grid>
-      {selectedItem && (
-        <ItemEquipModal
-          isEquipped={
-            equippedArmorIds.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
-            equippedSpellsAndWeaponsIds.includes(
-              BigInt(selectedItem?.tokenId ?? 0),
-            )
-          }
-          isOpen={isItemModalOpen}
-          onClose={() => {
-            onCloseItemModal();
-            setSelectedItem(null);
+            return (
+              <GridItem key={i}>
+                <ItemCard
+                  isEquipped={isEquipped}
+                  onClick={
+                    maxWeaponsEquipped && !isEquipped
+                      ? undefined
+                      : () => {
+                          setSelectedItem(item);
+                          onOpenItemModal();
+                        }
+                  }
+                  {...item}
+                />
+              </GridItem>
+            );
+          })}
+        </Grid>
+        <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
+          Consumables ({inventoryConsumables.length})
+        </Text>
+        <Grid
+          templateColumns={{
+            base: 'repeat(1, 1fr)',
+            sm: 'repeat(1, 1fr)',
+            md: 'repeat(2, 1fr)',
+            xl: 'repeat(3, 1fr)',
           }}
-          {...selectedItem}
-        />
-      )}
-      {selectedConsumable && (
-        <ItemConsumeModal
-          isOpen={isConsumableModalOpen}
-          onClose={() => {
-            onCloseConsumableModal();
-            setSelectedConsumable(null);
-          }}
-          {...selectedConsumable}
-        />
-      )}
+          gap={2}
+          mt={4}
+        >
+          {inventoryConsumables.length === 0 && <Text>No consumables</Text>}
+          {inventoryConsumables.map((consumable, i) => {
+            return (
+              <GridItem key={i}>
+                <ItemCard
+                  onClick={() => {
+                    setSelectedConsumable(consumable);
+                    onOpenConsumableModal();
+                  }}
+                  {...consumable}
+                />
+              </GridItem>
+            );
+          })}
+        </Grid>
+        {selectedItem && (
+          <ItemEquipModal
+            isEquipped={
+              equippedArmorIds.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
+              equippedSpellsAndWeaponsIds.includes(
+                BigInt(selectedItem?.tokenId ?? 0),
+              )
+            }
+            isOpen={isItemModalOpen}
+            onClose={() => {
+              onCloseItemModal();
+              setSelectedItem(null);
+            }}
+            {...selectedItem}
+          />
+        )}
+        {selectedConsumable && (
+          <ItemConsumeModal
+            isOpen={isConsumableModalOpen}
+            onClose={() => {
+              onCloseConsumableModal();
+              setSelectedConsumable(null);
+            }}
+            {...selectedConsumable}
+          />
+        )}
+      </PolygonalCard>
     </Box>
   );
 };
