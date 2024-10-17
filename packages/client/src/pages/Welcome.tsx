@@ -45,7 +45,7 @@ export const Welcome = (): JSX.Element => {
   }, [character, delegatorAddress, isConnected, navigate, onOpen]);
 
   return (
-    <Box border="6px solid #1A244E" my={12} p={1.5}>
+    <Box border="6px solid #1A244E" p={1.5}>
       <Box border="0.5px solid #1A244E">
         <VStack
           justifyContent="center"

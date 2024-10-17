@@ -7,9 +7,7 @@ import {
   Center,
   Grid,
   GridItem,
-  Heading,
   HStack,
-  Spacer,
   Spinner,
   Text,
   Tooltip,
@@ -26,10 +24,8 @@ import {
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  IoMdArrowRoundBack,
-  IoMdInformationCircleOutline,
-} from 'react-icons/io';
+import { IoMdInformationCircleOutline } from 'react-icons/io';
+import { IoChatbubble } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
 import { hexToBigInt, hexToString, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
@@ -41,6 +37,8 @@ import { ItemConsumeModal } from '../components/ItemConsumeModal';
 import { ItemEquipModal } from '../components/ItemEquipModal';
 import { Level } from '../components/Level';
 import { LevelingPanel } from '../components/LevelingPanel';
+import { PolygonalCard } from '../components/PolygonalCard';
+import { LeaderboardIconSvg, MarketplaceIconSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -326,15 +324,6 @@ export const CharacterPage = (): JSX.Element => {
 
   return (
     <Box>
-      <Button
-        leftIcon={<IoMdArrowRoundBack />}
-        my={4}
-        onClick={() => navigate(-1)}
-        size="xs"
-        variant="outline"
-      >
-        Back
-      </Button>
       {character ? (
         <Grid
           gap={2}
@@ -350,69 +339,22 @@ export const CharacterPage = (): JSX.Element => {
           }}
         >
           <GridItem
-            border="solid"
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            p={6}
           >
-            <Box h="100%" position="relative">
-              <VStack>
-                <HStack w="100%">
-                  <Center>
-                    <Avatar size="lg" src={character.image} />
-                    <Heading margin="0px 20px" size="lg">
-                      {character.name}
-                    </Heading>
-                  </Center>
-                  <Spacer />
-                  <Center>
-                    <ClassSymbol entityClass={character.entityClass} />
-                  </Center>
-                </HStack>
-                <Spacer />
-                <Box mt={3} w="100%">
-                  <Text overflow="hidden" size="sm" textAlign="left">
-                    {character.description}
-                  </Text>
-                  {isOwner && (
-                    <Button
-                      bottom="0"
-                      onClick={onOpenEditModal}
-                      position="absolute"
-                      right="0"
-                      size="sm"
-                      variant="ghost"
-                    >
-                      Edit Character
-                    </Button>
-                  )}
-                </Box>
-              </VStack>
-            </Box>
-          </GridItem>
-          <GridItem
-            border="solid"
-            colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
-            p={6}
-          >
-            <LevelingPanel canLevel={canLevel} character={character} />
-          </GridItem>
-          <GridItem
-            border="solid"
-            colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
-            p={6}
-          >
-            <VStack h="100%">
-              <Box w="100%">
-                <VStack alignItems="start" spacing={0}>
+            <PolygonalCard clipPath="none" p={6} position="relative">
+              <VStack alignItems="start" spacing={0}>
+                <HStack justify="space-between" w="100%">
                   <HStack>
-                    <Text fontWeight="bold">
+                    <Text
+                      color="yellow"
+                      fontWeight={700}
+                      size={{ base: 'md', sm: 'lg', md: 'xl' }}
+                    >
                       {etherToFixedNumber(character.externalGoldBalance)} $GOLD
                     </Text>
                     <Tooltip
-                      bg="black"
+                      bg="#070D2A"
                       hasArrow
                       label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
                       placement="top"
@@ -421,27 +363,7 @@ export const CharacterPage = (): JSX.Element => {
                       <IoMdInformationCircleOutline />
                     </Tooltip>
                   </HStack>
-                  <HStack>
-                    <Text fontSize="xs" fontWeight="bold" textAlign="start">
-                      Adventure Escrow balance:{' '}
-                      {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
-                    </Text>
-                    <Tooltip
-                      bg="black"
-                      hasArrow
-                      label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
-                      placement="top"
-                      shouldWrapChildren
-                    >
-                      <IoMdInformationCircleOutline />
-                    </Tooltip>
-                  </HStack>
-                </VStack>
-                <HStack justify="space-between" mt={4}>
-                  <Text fontWeight="bold">
-                    Level {character.level.toString()}
-                  </Text>
-                  <Text>
+                  <Text size={{ base: 'sm', sm: 'md' }}>
                     <Text
                       as="span"
                       color={
@@ -460,40 +382,117 @@ export const CharacterPage = (): JSX.Element => {
                     /{nextLevelXpRequirement.toString()} XP
                   </Text>
                 </HStack>
-                <Level
-                  currentLevel={character.level}
-                  levelPercent={levelPercent}
-                  maxed={maxed}
-                />
-              </Box>
+                <HStack>
+                  <Text
+                    color="#3D4247"
+                    size="xs"
+                    fontWeight="bold"
+                    textAlign="start"
+                  >
+                    Adventure Escrow balance:{' '}
+                    {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
+                  </Text>
+                  <Tooltip
+                    bg="#070D2A"
+                    hasArrow
+                    label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+                    placement="top"
+                    shouldWrapChildren
+                  >
+                    <IoMdInformationCircleOutline />
+                  </Tooltip>
+                </HStack>
+              </VStack>
+              <Level
+                currentLevel={character.level}
+                levelPercent={levelPercent}
+                maxed={maxed}
+                mt={10}
+              />
 
-              <Spacer />
-              <Box alignSelf="start" w="100%">
+              <VStack
+                bottom={6}
+                mt={{ base: 12, sm: 20 }}
+                left={0}
+                position={{ base: 'static', lg: 'absolute' }}
+                px={{ base: 0, lg: 6 }}
+                spacing={3}
+                w="100%"
+              >
                 <Button
-                  m="5px 0"
-                  w="100%"
+                  leftIcon={
+                    isOwner ? (
+                      <MarketplaceIconSvg theme="dark" />
+                    ) : (
+                      <IoChatbubble />
+                    )
+                  }
                   onClick={() => {
                     if (isOwner) {
                       navigate(MARKETPLACE_PATH);
                     }
                   }}
+                  variant="white"
+                  w="100%"
                 >
-                  {isOwner ? 'Marketplace' : 'Chat'}
+                  {isOwner ? <Text>{} Marketplace</Text> : <Text>Chat</Text>}
                 </Button>
                 <Button
-                  m="5px 0"
+                  leftIcon={<LeaderboardIconSvg theme="dark" />}
                   onClick={() => navigate(LEADERBOARD_PATH)}
+                  variant="white"
                   w="100%"
                 >
                   Leaderboard
                 </Button>
-              </Box>
-            </VStack>
+              </VStack>
+            </PolygonalCard>
+          </GridItem>
+          <GridItem
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
+          >
+            <LevelingPanel canLevel={canLevel} character={character} />
+          </GridItem>
+          <GridItem
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+          >
+            <PolygonalCard
+              bgColor="#070D2A"
+              clipPath="none"
+              color="white"
+              p={6}
+              position="relative"
+            >
+              <HStack spacing={4}>
+                <Avatar size="lg" src={character.image} />
+                <Text fontWeight={700} mt={1} size="xl">
+                  {character.name}
+                </Text>
+                <ClassSymbol entityClass={character.entityClass} />
+              </HStack>
+              <Text fontWeight={500} my={12} size={{ base: 'sm', sm: 'md' }}>
+                {character.description}
+              </Text>
+              {isOwner && (
+                <Button
+                  borderRadius="4px"
+                  bottom={6}
+                  onClick={onOpenEditModal}
+                  position="absolute"
+                  right={6}
+                  size="xs"
+                  variant="white"
+                >
+                  Edit Character
+                </Button>
+              )}
+            </PolygonalCard>
           </GridItem>
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            pb={{ base: 12, lg: 0 }}
           >
             <ItemsPanel character={character} />
           </GridItem>
@@ -756,135 +755,156 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
   return (
     <Box>
-      <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
-        Armor {inventoryArmor.length} - {equippedArmor.length}/
-        {MAX_EQUIPPED_ARMOR} equipped{' '}
-      </Text>
-      {maxArmorEquipped && <Text fontSize="sm">(Max armor equipped)</Text>}
-      <Grid
-        templateColumns={{
-          base: 'repeat(1, 1fr)',
-          sm: 'repeat(1, 1fr)',
-          md: 'repeat(2, 1fr)',
-          xl: 'repeat(3, 1fr)',
-        }}
-        gap={2}
-        mt={4}
+      <HStack
+        color="white"
+        bgColor="#1A244E"
+        h="68px"
+        justifyContent="space-between"
+        px={6}
       >
-        {inventoryArmor.length === 0 && <Text>No armor found</Text>}
-        {inventoryArmor.map((ar, i) => {
-          const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
-          return (
-            <GridItem key={i}>
-              <ItemCard
-                isEquipped={isEquipped}
-                onClick={
-                  maxArmorEquipped && !isEquipped
-                    ? undefined
-                    : () => {
-                        setSelectedItem(ar);
-                        onOpenItemModal();
-                      }
-                }
-                {...ar}
-              />
-            </GridItem>
-          );
-        })}
-      </Grid>
-      <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
-        Weapons & Spells {spellsAndWeapons.length} -{' '}
-        {equippedSpellsAndWeaponsIds.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
-      </Text>
-      {maxWeaponsEquipped && <Text fontSize="sm">(Max weapons equipped)</Text>}
-      <Grid
-        templateColumns={{
-          base: 'repeat(1, 1fr)',
-          sm: 'repeat(1, 1fr)',
-          md: 'repeat(2, 1fr)',
-          xl: 'repeat(3, 1fr)',
-        }}
-        gap={2}
-        mt={4}
-      >
-        {spellsAndWeapons.length === 0 && <Text>No weapons found</Text>}
-        {spellsAndWeapons.map((item, i) => {
-          const isEquipped = equippedSpellsAndWeaponsIds.includes(
-            BigInt(item.tokenId),
-          );
+        <Text color="white" fontWeight={700} size={{ base: 'lg', sm: 'xl' }}>
+          Items Inventory
+        </Text>
+        <Text color="white" fontWeight={500} size={{ base: 'md', sm: 'lg' }}>
+          Total:{' '}
+          {inventoryArmor.length +
+            spellsAndWeapons.length +
+            inventoryConsumables.length}
+        </Text>
+      </HStack>
+      <PolygonalCard clipPath="none" p={6}>
+        <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
+          Armor ({inventoryArmor.length}) - {equippedArmor.length}/
+          {MAX_EQUIPPED_ARMOR} equipped{' '}
+        </Text>
+        {maxArmorEquipped && <Text fontSize="sm">(Max armor equipped)</Text>}
+        <Grid
+          templateColumns={{
+            base: 'repeat(1, 1fr)',
+            sm: 'repeat(1, 1fr)',
+            md: 'repeat(2, 1fr)',
+            xl: 'repeat(3, 1fr)',
+          }}
+          gap={2}
+          mt={4}
+        >
+          {inventoryArmor.length === 0 && <Text>No armor</Text>}
+          {inventoryArmor.map((ar, i) => {
+            const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
+            return (
+              <GridItem key={i}>
+                <ItemCard
+                  isEquipped={isEquipped}
+                  onClick={
+                    maxArmorEquipped && !isEquipped
+                      ? undefined
+                      : () => {
+                          setSelectedItem(ar);
+                          onOpenItemModal();
+                        }
+                  }
+                  {...ar}
+                />
+              </GridItem>
+            );
+          })}
+        </Grid>
+        <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
+          Weapons & Spells ({spellsAndWeapons.length}) -{' '}
+          {equippedSpellsAndWeaponsIds.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
+        </Text>
+        {maxWeaponsEquipped && (
+          <Text fontSize="sm">(Max weapons equipped)</Text>
+        )}
+        <Grid
+          templateColumns={{
+            base: 'repeat(1, 1fr)',
+            sm: 'repeat(1, 1fr)',
+            md: 'repeat(2, 1fr)',
+            xl: 'repeat(3, 1fr)',
+          }}
+          gap={2}
+          mt={4}
+        >
+          {spellsAndWeapons.length === 0 && <Text>No weapons</Text>}
+          {spellsAndWeapons.map((item, i) => {
+            const isEquipped = equippedSpellsAndWeaponsIds.includes(
+              BigInt(item.tokenId),
+            );
 
-          return (
-            <GridItem key={i}>
-              <ItemCard
-                isEquipped={isEquipped}
-                onClick={
-                  maxWeaponsEquipped && !isEquipped
-                    ? undefined
-                    : () => {
-                        setSelectedItem(item);
-                        onOpenItemModal();
-                      }
-                }
-                {...item}
-              />
-            </GridItem>
-          );
-        })}
-      </Grid>
-      <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
-        Consumables {inventoryConsumables.length}
-      </Text>
-      <Grid
-        templateColumns={{
-          base: 'repeat(1, 1fr)',
-          sm: 'repeat(1, 1fr)',
-          md: 'repeat(2, 1fr)',
-          xl: 'repeat(3, 1fr)',
-        }}
-        gap={2}
-        mt={4}
-      >
-        {inventoryConsumables.length === 0 && <Text>No consumables found</Text>}
-        {inventoryConsumables.map((consumable, i) => {
-          return (
-            <GridItem key={i}>
-              <ItemCard
-                onClick={() => {
-                  setSelectedConsumable(consumable);
-                  onOpenConsumableModal();
-                }}
-                {...consumable}
-              />
-            </GridItem>
-          );
-        })}
-      </Grid>
-      {selectedItem && (
-        <ItemEquipModal
-          isEquipped={
-            equippedArmorIds.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
-            equippedSpellsAndWeaponsIds.includes(
-              BigInt(selectedItem?.tokenId ?? 0),
-            )
-          }
-          isOpen={isItemModalOpen}
-          onClose={() => {
-            onCloseItemModal();
-            setSelectedItem(null);
+            return (
+              <GridItem key={i}>
+                <ItemCard
+                  isEquipped={isEquipped}
+                  onClick={
+                    maxWeaponsEquipped && !isEquipped
+                      ? undefined
+                      : () => {
+                          setSelectedItem(item);
+                          onOpenItemModal();
+                        }
+                  }
+                  {...item}
+                />
+              </GridItem>
+            );
+          })}
+        </Grid>
+        <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
+          Consumables ({inventoryConsumables.length})
+        </Text>
+        <Grid
+          templateColumns={{
+            base: 'repeat(1, 1fr)',
+            sm: 'repeat(1, 1fr)',
+            md: 'repeat(2, 1fr)',
+            xl: 'repeat(3, 1fr)',
           }}
-          {...selectedItem}
-        />
-      )}
-      {selectedConsumable && (
-        <ItemConsumeModal
-          isOpen={isConsumableModalOpen}
-          onClose={() => {
-            onCloseConsumableModal();
-            setSelectedConsumable(null);
-          }}
-          {...selectedConsumable}
-        />
-      )}
+          gap={2}
+          mt={4}
+        >
+          {inventoryConsumables.length === 0 && <Text>No consumables</Text>}
+          {inventoryConsumables.map((consumable, i) => {
+            return (
+              <GridItem key={i}>
+                <ItemCard
+                  onClick={() => {
+                    setSelectedConsumable(consumable);
+                    onOpenConsumableModal();
+                  }}
+                  {...consumable}
+                />
+              </GridItem>
+            );
+          })}
+        </Grid>
+        {selectedItem && (
+          <ItemEquipModal
+            isEquipped={
+              equippedArmorIds.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
+              equippedSpellsAndWeaponsIds.includes(
+                BigInt(selectedItem?.tokenId ?? 0),
+              )
+            }
+            isOpen={isItemModalOpen}
+            onClose={() => {
+              onCloseItemModal();
+              setSelectedItem(null);
+            }}
+            {...selectedItem}
+          />
+        )}
+        {selectedConsumable && (
+          <ItemConsumeModal
+            isOpen={isConsumableModalOpen}
+            onClose={() => {
+              onCloseConsumableModal();
+              setSelectedConsumable(null);
+            }}
+            {...selectedConsumable}
+          />
+        )}
+      </PolygonalCard>
     </Box>
   );
 };

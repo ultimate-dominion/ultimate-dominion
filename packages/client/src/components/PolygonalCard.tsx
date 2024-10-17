@@ -2,6 +2,7 @@ import { Box, StackProps } from '@chakra-ui/react';
 import { ReactNode } from 'react';
 
 export const PolygonalCard = ({
+  bgColor = '#B3B9BE',
   children,
   clipPath = 'polygon(40px 0%, 100% 0%, 100% calc(100% - 50px), calc(100% - 50px) 100%, 0% 100%, 0% 80px)',
   h = '100%',
@@ -24,7 +25,7 @@ export const PolygonalCard = ({
       w={w}
     >
       <Box
-        bgColor="#B3B9BE"
+        bgColor={bgColor}
         clipPath={clipPath}
         h="100%"
         ml="6px"
@@ -40,7 +41,7 @@ export const PolygonalCard = ({
           w="calc(100% - 12px)"
         >
           <Box
-            bgColor="#B3B9BE"
+            bgColor={bgColor}
             clipPath={clipPath}
             h="100%"
             ml=".25px"

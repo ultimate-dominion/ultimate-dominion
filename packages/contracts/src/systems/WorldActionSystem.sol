@@ -102,12 +102,9 @@ contract WorldActionSystem is System {
         require(IWorld(_world()).UD__getItemBalance(givingEntity, itemId) > 0, "You do not own a healing potion.");
         StatsData memory stats = Stats.get(receivingEntity);
         _heal = IWorld(_world()).UD__getConsumableStats(itemId).maxDamage;
-        console.logInt(_heal);
-        console.logInt(stats.currentHp - _heal);
         if (stats.currentHp - _heal > int256(stats.maxHp)) {
             _heal = -(stats.maxHp - stats.currentHp);
         }
-        console.logInt(_heal);
         stats.currentHp -= _heal;
 
         Stats.setCurrentHp(receivingEntity, stats.currentHp);

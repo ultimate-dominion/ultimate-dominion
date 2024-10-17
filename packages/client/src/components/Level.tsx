@@ -1,15 +1,24 @@
-import { Box, HStack, Progress, Spacer, Text } from '@chakra-ui/react';
+import {
+  Box,
+  BoxProps,
+  HStack,
+  Progress,
+  Spacer,
+  Text,
+} from '@chakra-ui/react';
+
 export const Level = ({
   currentLevel,
   levelPercent,
   maxed,
+  ...props
 }: {
   currentLevel: bigint;
   levelPercent: number;
   maxed: boolean;
-}): JSX.Element => {
+} & BoxProps): JSX.Element => {
   return (
-    <Box fontSize="10px" mt={8} position="relative" w="100%">
+    <Box fontSize="10px" mt={8} position="relative" w="100%" {...props}>
       {maxed ? (
         <Box>
           <Text
@@ -33,15 +42,16 @@ export const Level = ({
       ) : (
         <Box>
           <Text
-            color={levelPercent === 100 ? 'green' : 'black'}
+            color={levelPercent === 100 ? 'green' : 'grey500'}
             fontWeight={levelPercent === 100 ? 'bold' : 'normal'}
             position="absolute"
-            right={100 - levelPercent - 2 + '%'}
+            right={95 - levelPercent - 2 + '%'}
             top="-15px"
           >
             {levelPercent.toFixed(2)}%
           </Text>
           <Text
+            color="grey500"
             display={levelPercent > 90 ? 'none' : 'block'}
             position="absolute"
             right="0%"

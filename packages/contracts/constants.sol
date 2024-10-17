@@ -15,8 +15,8 @@ uint256 constant DEFENSE_MODIFIER = 1 ether;
 uint256 constant ATTACK_MODIFIER = 1.2 ether;
 // the amount crits damage is multiplied by
 uint256 constant CRIT_MULTIPLIER = 2;
-// the character's stats are divided by STAT_MODIFIER when applying stat bonuses
-int256 constant STAT_MODIFIER = 20;
+// the character's stats are divided by PROFICIENCY_DENOMINATOR when applying stat bonuses
+int256 constant PROFICIENCY_DENOMINATOR = 20;
 
 int256 constant STARTING_HIT_PROBABILITY = 90;
 uint256 constant DEFENDER_HIT_DAMPENER = 30;

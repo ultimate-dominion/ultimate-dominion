@@ -7,6 +7,7 @@ import { useToast } from '../hooks/useToast';
 import { getStatSymbol } from '../utils/helpers';
 import { type Character } from '../utils/types';
 import { HealthBar } from './HealthBar';
+import { PolygonalCard } from './PolygonalCard';
 
 const getStatWithSymbol = (stat: bigint | string): JSX.Element => {
   const statString = BigInt(stat).toString();
@@ -271,235 +272,311 @@ export const LevelingPanel = ({
   }, [character]);
 
   return (
-    <VStack>
-      <HStack justify="space-between" w="100%">
-        <Text alignSelf="start" fontWeight="bold">
-          My Stats
-        </Text>
-        <Text alignSelf="start" fontWeight="bold">
-          Ability Points: {abilityPoints}
-        </Text>
-      </HStack>
-      <HealthBar
-        currentHp={character.currentHp}
-        maxHp={character.maxHp}
-        mt={2}
-        level={character.level}
-        statusEffects={character?.worldStatusEffects
-          .filter(e => e.active)
-          .map(e => e.name)}
-        w="100%"
-      />
-      <HStack justifyContent="end" mt={4} w="100%">
-        <HStack
-          justifyContent={canLevel ? 'center' : 'end'}
-          textAlign="end"
-          w="50%"
-        >
-          <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
-            Base
+    <PolygonalCard clipPath="none" py={6}>
+      <VStack>
+        <HStack color="#283570" justify="space-between" px={6} w="100%">
+          <Text alignSelf="start" fontWeight={700}>
+            My Stats
           </Text>
-          {!canLevel && (
+          <Text alignSelf="start" fontWeight={700}>
+            Ability Points: {abilityPoints}
+          </Text>
+        </HStack>
+        <HealthBar
+          currentHp={character.currentHp}
+          maxHp={character.maxHp}
+          mt={2}
+          level={character.level}
+          px={6}
+          statusEffects={character?.worldStatusEffects
+            .filter(e => e.active)
+            .map(e => e.name)}
+          w="100%"
+        />
+        <HStack justifyContent="end" mt={4} px={6} w="100%">
+          <HStack
+            justifyContent={canLevel ? 'center' : 'end'}
+            textAlign="end"
+            w="50%"
+          >
             <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
-              Bonus
+              Base
             </Text>
-          )}
-          {!canLevel && (
-            <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
-              Total
-            </Text>
-          )}
+            {!canLevel && (
+              <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
+                Bonus
+              </Text>
+            )}
+            {!canLevel && (
+              <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
+                Total
+              </Text>
+            )}
+          </HStack>
         </HStack>
-      </HStack>
-      <HStack w="100%">
-        <Text size={{ base: 'xs', md: 'sm', xl: 'md' }} w="50%">
-          STR -{' '}
-          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
-            Strength
-          </Text>
-        </Text>
-        <HStack justifyContent="end" textAlign="end" w="50%">
-          {strengthIncreased && (
-            <Box w="33%">
-              <Button
-                borderWidth="1.5px"
-                onClick={() => onDecrementStat('str')}
-                size="xs"
-                variant="outline"
-              >
-                <Text>-</Text>
-              </Button>
-            </Box>
-          )}
+        <Box
+          backgroundColor="#F5F5FA1F"
+          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+          h="6px"
+          w="100%"
+        />
+        <HStack px={6} w="100%">
           <Text
-            color={strengthIncreased ? 'green' : 'black'}
-            fontWeight={strengthIncreased ? 'bold' : 'normal'}
-            size={{ base: 'xs', sm: 'sm' }}
-            w="33%"
+            color="blue400"
+            fontWeight={700}
+            size={{ base: 'xs', md: 'sm', lg: 'md', xl: 'lg' }}
+            w="50%"
           >
-            {newStrength.toString()}
+            STR -{' '}
+            <Text
+              as="span"
+              color="black"
+              fontWeight={500}
+              size={{ base: '2xs', sm: 'xs' }}
+            >
+              Strength
+            </Text>
           </Text>
-          {canLevel && (
-            <Box w="33%">
-              <Button
-                borderWidth="1.5px"
-                isDisabled={abilityPoints <= 0}
-                onClick={() => onIncrementStat('str')}
-                size="xs"
-                variant="outline"
+          <HStack justifyContent="end" textAlign="end" w="50%">
+            {strengthIncreased && (
+              <Box w="33%">
+                <Button
+                  borderRadius="8px"
+                  borderWidth="1.5px"
+                  onClick={() => onDecrementStat('str')}
+                  size="xs"
+                  variant="outline"
+                >
+                  <Text>-</Text>
+                </Button>
+              </Box>
+            )}
+            <Text
+              color={strengthIncreased ? 'green' : 'black'}
+              fontWeight={strengthIncreased ? 'bold' : 'normal'}
+              size={{ base: 'xs', sm: 'sm', md: 'lg' }}
+              w="33%"
+            >
+              {newStrength.toString()}
+            </Text>
+            {canLevel && (
+              <Box w="33%">
+                <Button
+                  borderRadius="8px"
+                  borderWidth="1.5px"
+                  isDisabled={abilityPoints <= 0}
+                  onClick={() => onIncrementStat('str')}
+                  size="xs"
+                  variant="outline"
+                >
+                  <Text>+</Text>
+                </Button>
+              </Box>
+            )}
+            {!canLevel && (
+              <Text size={{ base: 'xs', sm: 'sm', md: 'lg' }} w="33%">
+                {getStatWithSymbol(
+                  BigInt(character.strength) -
+                    expiredEffectModifications.strModifier -
+                    BigInt(newStrength),
+                )}
+              </Text>
+            )}
+            {!canLevel && (
+              <Text
+                fontWeight="600"
+                size={{ base: 'xs', sm: 'sm', md: 'lg' }}
+                w="33%"
               >
-                <Text>+</Text>
-              </Button>
-            </Box>
-          )}
-          {!canLevel && (
-            <Text size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {getStatWithSymbol(
-                BigInt(character.strength) -
-                  expiredEffectModifications.strModifier -
-                  BigInt(newStrength),
-              )}
-            </Text>
-          )}
-          {!canLevel && (
-            <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {(
-                character.strength - expiredEffectModifications.strModifier
-              ).toString()}
-            </Text>
-          )}
+                {(
+                  character.strength - expiredEffectModifications.strModifier
+                ).toString()}
+              </Text>
+            )}
+          </HStack>
         </HStack>
-      </HStack>
-      <HStack w="100%">
-        <Text size={{ base: 'xs', md: 'sm', xl: 'md' }} w="50%">
-          AGI -{' '}
-          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
-            Agility
-          </Text>
-        </Text>
-        <HStack justifyContent="end" textAlign="end" w="50%">
-          {agilityIncreased && (
-            <Box w="33%">
-              <Button
-                borderWidth="1.5px"
-                onClick={() => onDecrementStat('agi')}
-                size="xs"
-                variant="outline"
-              >
-                <Text>-</Text>
-              </Button>
-            </Box>
-          )}
+        <Box
+          backgroundColor="#F5F5FA1F"
+          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+          h="6px"
+          w="100%"
+        />
+        <HStack px={6} w="100%">
           <Text
-            color={agilityIncreased ? 'green' : 'black'}
-            fontWeight={agilityIncreased ? 'bold' : 'normal'}
-            size={{ base: 'xs', sm: 'sm' }}
-            w="33%"
+            color="blue400"
+            fontWeight={700}
+            size={{ base: 'xs', md: 'sm', lg: 'md', xl: 'lg' }}
+            w="50%"
           >
-            {newAgility.toString()}
+            AGI -{' '}
+            <Text
+              as="span"
+              color="black"
+              fontWeight={500}
+              size={{ base: '2xs', sm: 'xs' }}
+            >
+              Agility
+            </Text>
           </Text>
-          {canLevel && (
-            <Box w="33%">
-              <Button
-                borderWidth="1.5px"
-                isDisabled={abilityPoints <= 0}
-                onClick={() => onIncrementStat('agi')}
-                size="xs"
-                variant="outline"
+          <HStack justifyContent="end" textAlign="end" w="50%">
+            {agilityIncreased && (
+              <Box w="33%">
+                <Button
+                  borderRadius="8px"
+                  borderWidth="1.5px"
+                  onClick={() => onDecrementStat('agi')}
+                  size="xs"
+                  variant="outline"
+                >
+                  <Text>-</Text>
+                </Button>
+              </Box>
+            )}
+            <Text
+              color={agilityIncreased ? 'green' : 'black'}
+              fontWeight={agilityIncreased ? 'bold' : 'normal'}
+              size={{ base: 'xs', sm: 'sm', md: 'lg' }}
+              w="33%"
+            >
+              {newAgility.toString()}
+            </Text>
+            {canLevel && (
+              <Box w="33%">
+                <Button
+                  borderRadius="8px"
+                  borderWidth="1.5px"
+                  isDisabled={abilityPoints <= 0}
+                  onClick={() => onIncrementStat('agi')}
+                  size="xs"
+                  variant="outline"
+                >
+                  <Text>+</Text>
+                </Button>
+              </Box>
+            )}
+            {!canLevel && (
+              <Text size={{ base: 'xs', sm: 'sm', md: 'lg' }} w="33%">
+                {getStatWithSymbol(
+                  BigInt(character.agility) -
+                    expiredEffectModifications.agiModifier -
+                    BigInt(newAgility),
+                )}
+              </Text>
+            )}
+            {!canLevel && (
+              <Text
+                fontWeight="600"
+                size={{ base: 'xs', sm: 'sm', md: 'lg' }}
+                w="33%"
               >
-                <Text>+</Text>
-              </Button>
-            </Box>
-          )}
-          {!canLevel && (
-            <Text size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {getStatWithSymbol(
-                BigInt(character.agility) -
-                  expiredEffectModifications.agiModifier -
-                  BigInt(newAgility),
-              )}
-            </Text>
-          )}
-          {!canLevel && (
-            <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {(
-                character.agility - expiredEffectModifications.agiModifier
-              ).toString()}
-            </Text>
-          )}
+                {(
+                  character.agility - expiredEffectModifications.agiModifier
+                ).toString()}
+              </Text>
+            )}
+          </HStack>
         </HStack>
-      </HStack>
-      <HStack w="100%">
-        <Text size={{ base: 'xs', md: 'sm', xl: 'md' }} w="50%">
-          INT -{' '}
-          <Text as="span" size={{ base: '2xs', sm: 'xs' }}>
-            Intelligence
-          </Text>
-        </Text>
-        <HStack justifyContent="end" textAlign="end" w="50%">
-          {intelligenceIncreased && (
-            <Box w="33%">
-              <Button
-                borderWidth="1.5px"
-                onClick={() => onDecrementStat('int')}
-                size="xs"
-                variant="outline"
-              >
-                <Text>-</Text>
-              </Button>
-            </Box>
-          )}
+        <Box
+          backgroundColor="#F5F5FA1F"
+          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+          h="6px"
+          w="100%"
+        />
+        <HStack px={6} w="100%">
           <Text
-            color={intelligenceIncreased ? 'green' : 'black'}
-            fontWeight={intelligenceIncreased ? 'bold' : 'normal'}
-            size={{ base: 'xs', sm: 'sm' }}
-            w="33%"
+            color="blue400"
+            fontWeight={700}
+            size={{ base: 'xs', md: 'sm', lg: 'md', xl: 'lg' }}
+            w="50%"
           >
-            {newIntelligence.toString()}
+            INT -{' '}
+            <Text
+              as="span"
+              color="black"
+              fontWeight={500}
+              size={{ base: '2xs', sm: 'xs' }}
+            >
+              Intelligence
+            </Text>
           </Text>
-          {canLevel && (
-            <Box w="33%">
-              <Button
-                borderWidth="1.5px"
-                isDisabled={abilityPoints <= 0}
-                onClick={() => onIncrementStat('int')}
-                size="xs"
-                variant="outline"
+          <HStack justifyContent="end" textAlign="end" w="50%">
+            {intelligenceIncreased && (
+              <Box w="33%">
+                <Button
+                  borderRadius="8px"
+                  borderWidth="1.5px"
+                  onClick={() => onDecrementStat('int')}
+                  size="xs"
+                  variant="outline"
+                >
+                  <Text>-</Text>
+                </Button>
+              </Box>
+            )}
+            <Text
+              color={intelligenceIncreased ? 'green' : 'black'}
+              fontWeight={intelligenceIncreased ? 'bold' : 'normal'}
+              size={{ base: 'xs', sm: 'sm', md: 'lg' }}
+              w="33%"
+            >
+              {newIntelligence.toString()}
+            </Text>
+            {canLevel && (
+              <Box w="33%">
+                <Button
+                  borderRadius="8px"
+                  borderWidth="1.5px"
+                  isDisabled={abilityPoints <= 0}
+                  onClick={() => onIncrementStat('int')}
+                  size="xs"
+                  variant="outline"
+                >
+                  <Text>+</Text>
+                </Button>
+              </Box>
+            )}
+            {!canLevel && (
+              <Text size={{ base: 'xs', sm: 'sm', md: 'lg' }} w="33%">
+                {getStatWithSymbol(
+                  BigInt(character.intelligence) -
+                    expiredEffectModifications.intModifier -
+                    BigInt(newIntelligence),
+                )}
+              </Text>
+            )}
+            {!canLevel && (
+              <Text
+                fontWeight="600"
+                size={{ base: 'xs', sm: 'sm', md: 'lg' }}
+                w="33%"
               >
-                <Text>+</Text>
-              </Button>
-            </Box>
-          )}
-          {!canLevel && (
-            <Text size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {getStatWithSymbol(
-                BigInt(character.intelligence) -
-                  expiredEffectModifications.intModifier -
-                  BigInt(newIntelligence),
-              )}
-            </Text>
-          )}
-          {!canLevel && (
-            <Text fontWeight="600" size={{ base: 'xs', sm: 'sm' }} w="33%">
-              {(
-                character.intelligence - expiredEffectModifications.intModifier
-              ).toString()}
-            </Text>
-          )}
+                {(
+                  character.intelligence -
+                  expiredEffectModifications.intModifier
+                ).toString()}
+              </Text>
+            )}
+          </HStack>
         </HStack>
-      </HStack>
+        <Box
+          backgroundColor="#F5F5FA1F"
+          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+          h="6px"
+          w="100%"
+        />
 
-      {canLevel && (
-        <Button
-          isLoading={isLeveling}
-          mt={8}
-          onClick={onLevelCharacter}
-          size="sm"
-          variant="gold"
-        >
-          Level Up!
-        </Button>
-      )}
-    </VStack>
+        {canLevel && (
+          <Button
+            isLoading={isLeveling}
+            mt={8}
+            onClick={onLevelCharacter}
+            size="sm"
+            variant="gold"
+          >
+            Level Up!
+          </Button>
+        )}
+      </VStack>
+    </PolygonalCard>
   );
 };

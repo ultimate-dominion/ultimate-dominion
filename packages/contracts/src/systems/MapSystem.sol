@@ -71,8 +71,11 @@ contract MapSystem is System {
         // set character position to home point
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
+
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             SessionTimer.set(entityId, block.timestamp);
+            // re-calculate equipment bonuses
+            IWorld(_world()).UD__setStats(entityId, IWorld(_world()).UD__calculateEquipmentBonuses(entityId));
         }
         EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
@@ -164,21 +167,27 @@ contract MapSystem is System {
 
     function removeEntityFromBoard(bytes32 entityId) public {
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
+
+        // if entity is a character
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            uint256 spawnedPlayers = Counters.get(address(this), 0);
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             // if sender is owner
             if (senderIsOwner) {
                 // if character is in combat use the combat flee function
                 require(encounterId == bytes32(0), "use correct fleeing function");
+                Counters.set(address(this), 0, (spawnedPlayers - 1));
                 // if caller is not a system
             } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
                 require(
                     (SessionTimer.get(entityId) + SESSION_TIMEOUT) < block.timestamp,
                     "This player's session has not timed out"
                 );
+                Counters.set(address(this), 0, (spawnedPlayers - 1));
                 // require access
             } else {
                 _requireAccess(address(this), _msgSender());
+                Counters.set(address(this), 0, (spawnedPlayers - 1));
             }
         } else {
             _requireAccess(address(this), _msgSender());
@@ -200,8 +209,7 @@ contract MapSystem is System {
         }
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, false);
-        uint256 spawnedPlayers = Counters.get(address(this), 0);
-        Counters.set(address(this), 0, (spawnedPlayers - 1));
+
         bytes32[] memory emptyArray;
 
         // end combat for entity
@@ -215,6 +223,7 @@ contract MapSystem is System {
                 EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
                 EncounterEntity.setAppliedStatusEffects(encounterData.defenders[i], emptyArray);
             }
+
             EncounterEntity.setDied(entityId, true);
             CombatEncounter.setEnd(encounterId, block.timestamp);
         }
