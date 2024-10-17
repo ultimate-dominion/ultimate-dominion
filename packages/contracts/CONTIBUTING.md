@@ -39,7 +39,7 @@ Join us in the RaidGuild Discord and post your question #product-support channel
 
 #### Game Mechanics
 
-### Creating Items
+### Creating New Items
 
 ## Item Stats
 
@@ -240,7 +240,7 @@ derived from `bytes8(keccak256(abi.encode("basic weapon attack")));`
 
 the rest of the 32 bytes is filled in with data when the effect is applied and removed as a temporary on chain effect Id.
 
-### Mobs
+### Creating new Mobs
 
 `createMob(MobType mobType, bytes memory stats, string memory mobMetadataUri)`
 
