@@ -33,7 +33,7 @@ contract EffectsSystem is System {
         public
         returns (bytes32 effectStatsId)
     {
-        _requireOwner(address(this), _msgSender());
+        _requireAccess(address(this), _msgSender());
         effectStatsId = bytes32(bytes8(keccak256(abi.encode(name))));
 
         require(!Effects.getEffectExists(effectStatsId), "Effect already exists");

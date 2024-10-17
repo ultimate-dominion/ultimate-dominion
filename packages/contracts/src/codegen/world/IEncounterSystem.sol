@@ -34,9 +34,9 @@ interface IEncounterSystem {
     bytes32[] memory participants
   ) external view returns (bool _isParticipant);
 
-  function UD__isAttacker(bytes32 encounterId, bytes32 entityId) external returns (bool _isAttacker);
+  function UD__isAttacker(bytes32 encounterId, bytes32 entityId) external view returns (bool _isAttacker);
 
-  function UD__isDefender(bytes32 encounterId, bytes32 entityId) external returns (bool _isDefender);
+  function UD__isDefender(bytes32 encounterId, bytes32 entityId) external view returns (bool _isDefender);
 
   function UD__isInEncounter(bytes32 entityId) external view returns (bool);
 }

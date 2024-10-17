@@ -45,7 +45,7 @@ contract ItemsSystem is System {
         bytes memory stats,
         string memory itemMetadataURI
     ) public returns (uint256) {
-        _requireOwner(address(this), _msgSender());
+        _requireAccess(address(this), _msgSender());
         uint256 itemId = _incrementItemsCounter();
         // create new item struct
         ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, price: price, stats: stats});

@@ -291,7 +291,7 @@ contract EncounterSystem is System {
         }
     }
 
-    function isAttacker(bytes32 encounterId, bytes32 entityId) public returns (bool _isAttacker) {
+    function isAttacker(bytes32 encounterId, bytes32 entityId) public view returns (bool _isAttacker) {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         for (uint256 i; i < encounterData.attackers.length;) {
             if (entityId == encounterData.attackers[i]) {
@@ -304,7 +304,7 @@ contract EncounterSystem is System {
         }
     }
 
-    function isDefender(bytes32 encounterId, bytes32 entityId) public returns (bool _isDefender) {
+    function isDefender(bytes32 encounterId, bytes32 entityId) public view returns (bool _isDefender) {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         for (uint256 i; i < encounterData.defenders.length;) {
             if (entityId == encounterData.defenders[i]) {
