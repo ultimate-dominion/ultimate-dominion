@@ -57,7 +57,7 @@ const Button = {
       },
     },
     gold: {
-      bg: 'gold',
+      bg: 'yellow',
       border: '2px solid',
       borderColor: 'black',
       color: 'black',

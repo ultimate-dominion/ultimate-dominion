@@ -1,22 +1,18 @@
 import {
   Box,
-  Button,
-  Center,
   Grid,
   GridItem,
   Heading,
   HStack,
   Spacer,
-  Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
-import { IoMdArrowRoundBack } from 'react-icons/io';
 import { IoNavigate } from 'react-icons/io5';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
-// eslint-disable-next-line import/no-named-as-default
+import { PolygonalCard } from '../components/PolygonalCard';
 import { ShopHalf } from '../components/ShopHalf';
 import { ShopSvg } from '../components/SVGs/ShopSvg';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -32,7 +28,6 @@ import {
 } from '../utils/types';
 
 export const Shop = (): JSX.Element => {
-  const navigate = useNavigate();
   const { shopId } = useParams();
 
   const {
@@ -61,20 +56,20 @@ export const Shop = (): JSX.Element => {
 
   const [sellable, setSellable] = useState<
     Array<{
-      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       balance: bigint | null;
-      stock: bigint | null;
       index: string;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      stock: bigint | null;
       unsellable: boolean;
     }>
   >([]);
 
   const [buyable, setBuyable] = useState<
     Array<{
-      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       balance: bigint | null;
-      stock: bigint | null;
       index: string;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      stock: bigint | null;
       unsellable: boolean;
     }>
   >([]);
@@ -109,11 +104,11 @@ export const Shop = (): JSX.Element => {
             unsellable = true;
         }
         return {
+          balance: item.balance,
           index: index,
           item: item,
-          balance: item.balance,
-          unsellable: unsellable,
           stock: null,
+          unsellable: unsellable,
         };
       });
 
@@ -128,10 +123,10 @@ export const Shop = (): JSX.Element => {
       .map(item => {
         const index = shop?.buyableItems.indexOf(item.tokenId).toString();
         return {
-          item: item,
-          stock: shop.stock[Number(index)],
           balance: null,
           index: index,
+          item: item,
+          stock: shop.stock[Number(index)],
           unsellable: true,
         };
       });
@@ -154,16 +149,6 @@ export const Shop = (): JSX.Element => {
   if (!shop) {
     return (
       <VStack>
-        <Button
-          alignSelf="flex-start"
-          leftIcon={<IoMdArrowRoundBack />}
-          my={4}
-          onClick={() => navigate(-1)}
-          size="xs"
-          variant="outline"
-        >
-          Back
-        </Button>
         <Text>Shop not found</Text>
       </VStack>
     );
@@ -172,61 +157,37 @@ export const Shop = (): JSX.Element => {
   if (!userCharacter) {
     return (
       <VStack>
-        <Button
-          alignSelf="flex-start"
-          leftIcon={<IoMdArrowRoundBack />}
-          my={4}
-          onClick={() => navigate(-1)}
-          size="xs"
-          variant="outline"
-        >
-          Back
-        </Button>
         <Text>Character not found</Text>
       </VStack>
     );
   }
 
   return (
-    <VStack mt={16} height="100%">
-      <Box bgColor="blue500" h="66px" px="20px" width="100%">
-        <HStack bgColor="blue500" h="66px" width="100%">
-          <ShopSvg />
-          <Heading color="white">Pawnshop</Heading>
-          <Spacer />
-          <Text color="white" fontSize="24px" fontWeight={700}>
-            <IoNavigate />
-          </Text>
-          <Text color="white" fontSize="24px" fontWeight={700}>
-            {shop.position.x},{shop.position.y}
-          </Text>
-        </HStack>
-      </Box>
+    <Box>
+      <HStack bgColor="#1A244E" color="white" h="68px" px={6}>
+        <ShopSvg />
+        <Heading>Pawnshop</Heading>
+        <Spacer />
+        <IoNavigate size={20} />
+        <Text fontWeight={700} size="xl">
+          {shop.position.x},{shop.position.y}
+        </Text>
+      </HStack>
 
       <Grid
-        gap={5}
-        h="100%"
-        mt={8}
+        gap={4}
+        mt={4}
         templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' }}
-        w="100%"
       >
         <GridItem>
-          <Stack minH="100%" border="5px solid #1A244E" h="100%" w="100%">
-            <Box bgColor="blue500" h="66px" px="20px" width="100%">
-              <HStack bgColor="blue500" h="66px" width="100%">
-                <Heading color="white">My Inventory</Heading>
-                <Spacer />
-                <Text
-                  color="Gold"
-                  align="right"
-                  fontSize="24px"
-                  fontWeight={700}
-                >
-                  {' '}
-                  {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
-                </Text>
-              </HStack>
-            </Box>{' '}
+          <HStack bgColor="#1A244E" h="68px" px={6}>
+            <Heading color="white">My Inventory</Heading>
+            <Spacer />
+            <Text color="yellow" fontWeight={700} size="xl">
+              {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
+            </Text>
+          </HStack>
+          <PolygonalCard clipPath="none" h="calc(100% - 68px)">
             {userCharacter && shopId && sellable && sellable.length ? (
               <ShopHalf
                 characterId={userCharacter.id}
@@ -235,28 +196,21 @@ export const Shop = (): JSX.Element => {
                 orderType={OrderType.Selling}
               />
             ) : (
-              <Center>
+              <VStack p={6}>
                 <Text>No Sellable Items</Text>
-              </Center>
+              </VStack>
             )}
-          </Stack>
+          </PolygonalCard>
         </GridItem>
         <GridItem>
-          <Stack border="5px solid #1A244E" h="100%" w="100%">
-            <Box bgColor="blue500" h="66px" px="20px" width="100%">
-              <HStack bgColor="blue500" h="66px" width="100%">
-                <Heading color="white">Shopkeeper&apos;s Inventory</Heading>
-                <Spacer />
-                <Text
-                  align="right"
-                  color="Gold"
-                  fontSize="24px"
-                  fontWeight={700}
-                >
-                  {etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD
-                </Text>
-              </HStack>
-            </Box>{' '}
+          <HStack bgColor="#1A244E" h="68px" px={6}>
+            <Heading color="white">Shopkeeper&apos;s Inventory</Heading>
+            <Spacer />
+            <Text color="yellow" fontWeight={700} size="xl">
+              {etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD
+            </Text>
+          </HStack>
+          <PolygonalCard clipPath="none" h="calc(100% - 68px)">
             {userCharacter && shopId && buyable && buyable.length ? (
               <ShopHalf
                 characterId={userCharacter.id}
@@ -265,11 +219,13 @@ export const Shop = (): JSX.Element => {
                 orderType={OrderType.Buying}
               />
             ) : (
-              <Text>No Buyable Items</Text>
+              <VStack p={6}>
+                <Text>No Buyable Items</Text>
+              </VStack>
             )}
-          </Stack>
+          </PolygonalCard>
         </GridItem>
       </Grid>
-    </VStack>
+    </Box>
   );
 };
