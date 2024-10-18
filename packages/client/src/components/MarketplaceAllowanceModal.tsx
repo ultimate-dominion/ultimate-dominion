@@ -1,5 +1,6 @@
 import {
   Button,
+  HStack,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -40,6 +41,7 @@ export const MarketplaceAllowanceModal = ({
     isApprovingItems,
     itemsMarketplaceAllowance,
     onApproveGoldAllowance,
+    onApproveMaxGoldAllowance,
     onSetApprovalForAllItems,
   } = useAllowance();
 
@@ -85,14 +87,31 @@ export const MarketplaceAllowanceModal = ({
                 In order to buy {itemName}, you must allow the marketplace to
                 use {etherToFixedNumber(orderPrice)} of your $GOLD.
               </Text>
-              <Button
-                isLoading={isApprovingGold}
-                onClick={() =>
-                  onApproveGoldAllowance(SystemToAllow.Marketplace, orderPrice)
-                }
-              >
-                Allow
-              </Button>
+              <HStack>
+                <Button
+                  isLoading={isApprovingGold}
+                  onClick={() =>
+                    onApproveMaxGoldAllowance(
+                      SystemToAllow.Marketplace,
+                      orderPrice,
+                    )
+                  }
+                  variant="ghost"
+                >
+                  Allow All
+                </Button>
+                <Button
+                  isLoading={isApprovingGold}
+                  onClick={() =>
+                    onApproveGoldAllowance(
+                      SystemToAllow.Marketplace,
+                      orderPrice,
+                    )
+                  }
+                >
+                  Allow
+                </Button>
+              </HStack>
             </VStack>
           )}
           {orderType === OrderType.Selling && (

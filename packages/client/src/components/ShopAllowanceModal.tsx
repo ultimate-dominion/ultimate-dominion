@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Modal,
   ModalBody,
@@ -40,6 +41,7 @@ export const ShopAllowanceModal = ({
     isApprovingItems,
     itemsShopAllowance,
     onApproveGoldAllowance,
+    onApproveMaxGoldAllowance,
     onSetApprovalForAllItems,
   } = useAllowance();
 
@@ -92,18 +94,29 @@ export const ShopAllowanceModal = ({
           )}
         </ModalBody>
         <ModalFooter gap={3}>
-          <Button onClick={onClose} variant="ghost">
+          {/* <Button onClick={onClose} variant="ghost">
             Close
-          </Button>
+          </Button> */}
           {orderType === OrderType.Buying && (
-            <Button
-              isLoading={isApprovingGold}
-              onClick={() =>
-                onApproveGoldAllowance(SystemToAllow.Shop, orderPrice)
-              }
-            >
-              Allow
-            </Button>
+            <Box>
+              <Button
+                isLoading={isApprovingGold}
+                onClick={() =>
+                  onApproveMaxGoldAllowance(SystemToAllow.Shop, orderPrice)
+                }
+                variant="ghost"
+              >
+                Allow All
+              </Button>{' '}
+              <Button
+                isLoading={isApprovingGold}
+                onClick={() =>
+                  onApproveGoldAllowance(SystemToAllow.Shop, orderPrice)
+                }
+              >
+                Allow
+              </Button>
+            </Box>
           )}
           {orderType === OrderType.Selling && (
             <Button
