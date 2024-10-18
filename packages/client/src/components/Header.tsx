@@ -17,10 +17,10 @@ import {
   Tooltip,
   useDisclosure,
 } from '@chakra-ui/react';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { FaDiscord } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
-import { IoMenuSharp } from 'react-icons/io5';
+import { IoMdMenu } from 'react-icons/io';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useMUD } from '../contexts/MUDContext';
@@ -51,7 +51,6 @@ export const Header = ({
   const navigate = useNavigate();
   const { burnerBalance } = useMUD();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const btnRef = React.useRef();
 
   const logoLink = useMemo(() => {
     if (pathname === HOME_PATH) {
@@ -61,6 +60,18 @@ export const Header = ({
       ? CHARACTER_CREATION_PATH
       : GAME_BOARD_PATH;
   }, [pathname]);
+
+  const showWalletDetails = useMemo(() => {
+    return (
+      pathname !== HOME_PATH &&
+      !PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`)
+    );
+  }, [pathname]);
+
+  const showBackButton = useMemo(() => {
+    return PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`);
+  }, [pathname]);
+
   return (
     <Grid
       as="header"
@@ -68,10 +79,10 @@ export const Header = ({
       mt={4}
       px={4}
       py={2}
-      templateColumns={{ base: 'repeat(2, 1fr)', lg: 'repeat(1, fr)' }}
+      templateColumns={{ base: 'repeat(4, 1fr)', lg: 'repeat(1, fr)' }}
       w="100%"
     >
-      <GridItem colSpan={{ base: 1, lg: 2 }}>
+      <GridItem colSpan={{ base: 3, lg: 4 }}>
         <Stack
           direction={{ base: 'column-reverse', lg: 'row' }}
           justify={
@@ -83,22 +94,19 @@ export const Header = ({
           }
         >
           <HStack spacing={4}>
-            {pathname === HOME_PATH ||
-              (!PAGES_WITH_BACK_BUTTON.includes(
-                `/${pathname.split('/')[1]}`,
-              ) && (
-                <Button
-                  alignSelf={{ base: 'start', lg: 'center' }}
-                  onClick={onOpenWalletDetailsModal}
-                  fontSize="xs"
-                  p={4}
-                  size="sm"
-                  variant="dark"
-                >
-                  Wallet Details
-                </Button>
-              ))}
-            {PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`) && (
+            {showWalletDetails && (
+              <Button
+                alignSelf={{ base: 'start', lg: 'center' }}
+                onClick={onOpenWalletDetailsModal}
+                fontSize="xs"
+                p={4}
+                size="sm"
+                variant="dark"
+              >
+                Wallet Details
+              </Button>
+            )}
+            {showBackButton && (
               <Button
                 fontSize="xs"
                 leftIcon={<BackCaretSvg />}
@@ -123,15 +131,15 @@ export const Header = ({
             )}
           </HStack>
           <Button
-            mb={4}
-            mt={-5}
+            mb={{ base: pathname !== HOME_PATH ? 4 : 0, sm: 4 }}
+            mt={{ base: pathname !== HOME_PATH ? -5 : -4, sm: -5 }}
             onClick={() => navigate(logoLink)}
             variant="unstyled"
           >
             <Image
               alt="Ultimate Dominion Logo"
               src="/images/ultimate-dominion-logo.svg"
-              width="225px"
+              width={{ base: '200px', sm: '225px' }}
             />
           </Button>
         </Stack>
@@ -144,20 +152,14 @@ export const Header = ({
       >
         <Button
           backgroundColor="#D0D0D0"
-          mx={4}
           onClick={onOpen}
-          ref={btnRef}
+          p={3}
           size="sm"
-          variant="ghost"
+          variant="white"
         >
-          <IoMenuSharp />
+          <IoMdMenu size={20} />
         </Button>
-        <Drawer
-          isOpen={isOpen}
-          placement="right"
-          onClose={onClose}
-          finalFocusRef={btnRef}
-        >
+        <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />
@@ -168,35 +170,19 @@ export const Header = ({
                 direction={{ base: 'column' }}
                 spacing={{ base: 4, md: 10 }}
               >
-                <Link
-                  alignSelf="start"
-                  borderColor="grey400"
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                >
+                <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
                   About
                 </Link>
-                <Link
-                  alignSelf="start"
-                  borderColor="grey400"
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                >
+                <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
                   Guild Info
                 </Link>
-                <Link
-                  alignSelf="start"
-                  borderColor="grey400"
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                >
+                <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
                   Map Info
                 </Link>
-                <Link
-                  alignSelf="start"
-                  borderColor="grey400"
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                >
+                <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
                   Create Map
                 </Link>
-              </Stack>{' '}
+              </Stack>
             </DrawerBody>
 
             <DrawerFooter>
