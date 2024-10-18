@@ -10,6 +10,7 @@ import {
   HOME_PATH,
   LEADERBOARD_PATH,
   MARKETPLACE_PATH,
+  SHOP_PATH,
 } from '../Routes';
 import { BackCaretSvg } from './SVGs';
 
@@ -17,6 +18,7 @@ const PAGES_WITH_BACK_BUTTON = [
   CHARACTERS_PATH,
   LEADERBOARD_PATH,
   MARKETPLACE_PATH,
+  SHOP_PATH,
 ];
 
 export const Header = ({

@@ -73,7 +73,7 @@ export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
     >
       <HStack justifyContent="start" spacing={4}>
         <Text size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}>
-          General Store 🏪
+          Pawnshop 🏪
         </Text>
         {isRestocking && <Spinner size="sm" />}
       </HStack>

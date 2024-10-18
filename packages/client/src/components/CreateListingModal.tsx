@@ -227,7 +227,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   allItems.map(item => (
                     <ItemCard
                       key={`item-${item.tokenId}`}
-                      onClick={() => navigate(`${ITEM_PATH}${item.tokenId}`)}
+                      onClick={() => navigate(`${ITEM_PATH}/${item.tokenId}`)}
                       showBalance={false}
                       {...item}
                     />
@@ -237,7 +237,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   allInventoryItems.map(item => (
                     <ItemCard
                       key={`item-${item.tokenId}`}
-                      onClick={() => navigate(`${ITEM_PATH}${item.tokenId}`)}
+                      onClick={() => navigate(`${ITEM_PATH}/${item.tokenId}`)}
                       {...item}
                     />
                   ))}

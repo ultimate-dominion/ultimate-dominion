@@ -249,7 +249,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
                 isOwner
                   ? onUseConsumable()
                   : navigate(
-                      `${ITEM_PATH}${item.tokenId}?${buyingSearchParams}`,
+                      `${ITEM_PATH}/${item.tokenId}?${buyingSearchParams}`,
                     )
               }
             >

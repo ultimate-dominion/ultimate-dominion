@@ -50,7 +50,7 @@ export const MarketplaceRow = ({
       borderColor="grey400"
       borderRadius={2}
       justify="space-between"
-      onClick={() => navigate(`${ITEM_PATH}${tokenId}?${newSearchParams}`)}
+      onClick={() => navigate(`${ITEM_PATH}/${tokenId}?${newSearchParams}`)}
       w="100%"
       _hover={{
         cursor: 'pointer',
