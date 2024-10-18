@@ -195,7 +195,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
                 isOwner
                   ? onUnequipItem()
                   : navigate(
-                      `${ITEM_PATH}${item.tokenId}?${buyingSearchParams}`,
+                      `${ITEM_PATH}/${item.tokenId}?${buyingSearchParams}`,
                     )
               }
             >
@@ -246,7 +246,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             onClick={() =>
               isOwner
                 ? onEquipItem()
-                : navigate(`${ITEM_PATH}${item.tokenId}?${buyingSearchParams}`)
+                : navigate(`${ITEM_PATH}/${item.tokenId}?${buyingSearchParams}`)
             }
           >
             Yes
