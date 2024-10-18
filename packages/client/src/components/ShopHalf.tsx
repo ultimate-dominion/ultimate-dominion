@@ -38,18 +38,18 @@ enum SortOptions {
 const PER_PAGE = 5;
 
 export const ShopHalf = ({
-  items,
-  shop,
   characterId,
+  items,
   orderType,
+  shop,
 }: {
   characterId: Entity;
   items: Array<{
     balance: bigint | null;
+    index: string;
+    isEquipped: boolean;
     item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
     stock: bigint | null;
-    index: string;
-    unsellable: boolean;
   }>;
   shop: Shop;
   orderType: OrderType;
@@ -57,10 +57,10 @@ export const ShopHalf = ({
   const [entries, setEntries] = useState<
     Array<{
       balance: bigint | null;
+      index: string;
+      isEquipped: boolean;
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       stock: bigint | null;
-      index: string;
-      unsellable: boolean;
     }>
   >([]);
   const [page, setPage] = useState(1);
@@ -88,10 +88,10 @@ export const ShopHalf = ({
     }
     let entriesCopy: Array<{
       balance: bigint | null;
+      index: string;
+      isEquipped: boolean;
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       stock: bigint | null;
-      index: string;
-      unsellable: boolean;
     }> = [...items];
     const searcher = new FuzzySearch(
       [...entriesCopy],
@@ -150,16 +150,16 @@ export const ShopHalf = ({
   ]);
 
   return (
-    <VStack h="100%">
+    <VStack>
       <Stack
         alignItems="center"
         direction={{ base: 'column', md: 'row' }}
         mb={8}
-        p={1}
+        p={2}
         spacing={{ base: 4, md: 8 }}
         w="100%"
       >
-        <InputGroup w="50%">
+        <InputGroup w={{ base: '100%', md: '50%' }}>
           <InputLeftElement pointerEvents="none">
             <FaSearch />
           </InputLeftElement>
@@ -173,7 +173,7 @@ export const ShopHalf = ({
           onChange={e => setItemTypeFilter(e.target.value as ItemFilterOptions)}
           size="md"
           value={itemTypeFilter}
-          w="50%"
+          w={{ base: '100%', md: '50%' }}
         >
           {Object.keys(ItemFilterOptions).map(k => {
             return (
@@ -190,7 +190,6 @@ export const ShopHalf = ({
             <Spacer />
             <Button
               color="#565555"
-              display={{ base: 'none', lg: 'flex' }}
               fontWeight={sort.sorted === SortOptions.Stock ? 'bold' : 'normal'}
               onClick={() =>
                 setSort({
@@ -218,7 +217,6 @@ export const ShopHalf = ({
             </Button>
             <Button
               color="#565555"
-              display={{ base: 'none', lg: 'flex' }}
               fontWeight={sort.sorted === SortOptions.Price ? 'bold' : 'normal'}
               onClick={() =>
                 setSort({
@@ -244,7 +242,7 @@ export const ShopHalf = ({
                 <FaSortAmountDown color="grey" />
               )}
             </Button>
-            <Box display={{ base: 'none', md: 'block' }} w="40px" />
+            <Box display={{ base: 'none', md: 'block' }} w="60px" />
           </HStack>
         </Flex>
       </HStack>
@@ -255,11 +253,11 @@ export const ShopHalf = ({
               <ShopItemRow
                 balance={entry.balance}
                 characterId={characterId}
+                isEquipped={entry.isEquipped}
                 item={entry.item}
                 itemIndex={entry.index}
                 key={`shop-row-${i}`}
                 orderType={orderType}
-                unsellable={entry.unsellable}
                 shop={shop}
                 stock={entry.stock}
                 theme="white"
@@ -267,7 +265,7 @@ export const ShopHalf = ({
             );
           })
         ) : (
-          <Text mt={4}>No Data</Text>
+          <Text mt={4}>No Items</Text>
         )}
       </VStack>
       <Spacer />

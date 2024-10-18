@@ -158,7 +158,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       onClick={onClick}
       py={4}
       px={{ base: 4, sm: 8 }}
-      transition="all 0.2s"
+      transition="all 0.3s"
       w="100%"
       _active={
         onClick && {

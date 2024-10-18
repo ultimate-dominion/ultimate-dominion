@@ -58,9 +58,9 @@ export const Shop = (): JSX.Element => {
     Array<{
       balance: bigint | null;
       index: string;
+      isEquipped: boolean;
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       stock: bigint | null;
-      unsellable: boolean;
     }>
   >([]);
 
@@ -68,9 +68,9 @@ export const Shop = (): JSX.Element => {
     Array<{
       balance: bigint | null;
       index: string;
+      isEquipped: boolean;
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       stock: bigint | null;
-      unsellable: boolean;
     }>
   >([]);
 
@@ -88,27 +88,27 @@ export const Shop = (): JSX.Element => {
     if (items.length === 0) return;
     if (!shop) return;
 
+    const equippedItems = [
+      ...equippedArmor,
+      ...equippedSpells,
+      ...equippedWeapons,
+    ];
+
     const sellableInventory = items
       // filter out the items this shop does not sell
       .filter(item => shop.sellableItems.includes(item.tokenId))
       // add back the balances of the item and itemIndexes
       .map(item => {
         const index = shop?.sellableItems.indexOf(item.tokenId).toString();
-        let unsellable = false;
-        if (item.balance == BigInt(1)) {
-          if (equippedArmor.filter(armor => armor.tokenId == index))
-            unsellable = true;
-          if (equippedSpells.filter(spell => spell.tokenId == index))
-            unsellable = true;
-          if (equippedWeapons.filter(weapon => weapon.tokenId == index))
-            unsellable = true;
-        }
+        const isEquipped = equippedItems.some(
+          equippedItem => equippedItem.tokenId === item.tokenId,
+        );
         return {
           balance: item.balance,
           index: index,
+          isEquipped,
           item: item,
           stock: null,
-          unsellable: unsellable,
         };
       });
 
@@ -125,9 +125,9 @@ export const Shop = (): JSX.Element => {
         return {
           balance: null,
           index: index,
+          isEquipped: false,
           item: item,
           stock: shop.stock[Number(index)],
-          unsellable: true,
         };
       });
 
@@ -166,10 +166,10 @@ export const Shop = (): JSX.Element => {
     <Box>
       <HStack bgColor="#1A244E" color="white" h="68px" px={6}>
         <ShopSvg />
-        <Heading>Pawnshop</Heading>
+        <Heading size={{ base: 'sm', md: 'md' }}>Pawnshop</Heading>
         <Spacer />
         <IoNavigate size={20} />
-        <Text fontWeight={700} size="xl">
+        <Text fontWeight={700} size={{ base: 'lg', md: 'xl' }}>
           {shop.position.x},{shop.position.y}
         </Text>
       </HStack>
@@ -177,13 +177,19 @@ export const Shop = (): JSX.Element => {
       <Grid
         gap={4}
         mt={4}
-        templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' }}
+        templateColumns={{ base: 'repeat(1, 1fr)', xl: 'repeat(2, 1fr)' }}
       >
         <GridItem>
           <HStack bgColor="#1A244E" h="68px" px={6}>
-            <Heading color="white">My Inventory</Heading>
+            <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+              My Inventory
+            </Heading>
             <Spacer />
-            <Text color="yellow" fontWeight={700} size="xl">
+            <Text
+              color="yellow"
+              fontWeight={700}
+              size={{ base: 'lg', md: 'xl' }}
+            >
               {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
             </Text>
           </HStack>
@@ -204,9 +210,15 @@ export const Shop = (): JSX.Element => {
         </GridItem>
         <GridItem>
           <HStack bgColor="#1A244E" h="68px" px={6}>
-            <Heading color="white">Shopkeeper&apos;s Inventory</Heading>
+            <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+              Shopkeeper&apos;s Inventory
+            </Heading>
             <Spacer />
-            <Text color="yellow" fontWeight={700} size="xl">
+            <Text
+              color="yellow"
+              fontWeight={700}
+              size={{ base: 'lg', md: 'xl' }}
+            >
               {etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD
             </Text>
           </HStack>
