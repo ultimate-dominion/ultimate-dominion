@@ -27,7 +27,7 @@ contract MobSystem is System {
      *  @return mobId, the identifier for this mob template
      */
     function createMob(MobType mobType, bytes memory stats, string memory mobMetadataUri) public returns (uint256) {
-        _requireOwner(address(this), _msgSender());
+        _requireAccess(address(this), _msgSender());
         uint256 mobId = _incrementMobId();
         require(mobId < type(uint32).max, "MOB SYSTEM: Max Monster types reached");
         Mobs.set(mobId, mobType, stats, mobMetadataUri);

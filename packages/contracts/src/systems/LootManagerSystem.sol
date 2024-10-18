@@ -155,7 +155,7 @@ contract LootManagerSystem is ERC1155Holder, System {
         for (uint256 i; i < monsterStats.inventory.length; i++) {
             tempItemId = monsterStats.inventory[i];
             uint256 dropChance = Items.getDropChance(tempItemId);
-            if (randomNumber % 100_000_000 < dropChance) {
+            if (randomNumber % 100_000_000 < (dropChance * 1000000)) {
                 console.log("ITEM DROPPED", tempItemId);
                 IWorld(_world()).UD__dropItem(characterId, tempItemId, 1);
                 itemIdsDropped[i] = tempItemId;
