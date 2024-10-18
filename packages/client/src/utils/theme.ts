@@ -57,7 +57,7 @@ const Button = {
       },
     },
     gold: {
-      bg: 'gold',
+      bg: 'yellow',
       border: '2px solid',
       borderColor: 'black',
       color: 'black',
@@ -278,7 +278,7 @@ const Select = {
     outline: {
       field: {
         border: '2px solid',
-        borderColor: 'grey',
+        borderColor: 'white',
         borderRadius: '5px',
       },
     },
