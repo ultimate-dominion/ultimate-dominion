@@ -69,11 +69,15 @@ export const MarketplaceRow = ({
           {getEmoji(name)}
         </Avatar>
         <VStack align="start" justify="center" ml={4}>
-          <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>{removeEmoji(name)}</Text>
-          </HStack>
+          <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
+            {removeEmoji(name)}
+          </Text>
           {itemType !== ItemType.Spell && (
-            <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
+            <Text
+              color="#121B45"
+              fontWeight={500}
+              size={{ base: '2xs', lg: 'md' }}
+            >
               HP{' '}
               {(item as ArmorTemplate | WeaponTemplate).hpModifier.toString()} •
               STR{' '}
