@@ -301,6 +301,7 @@ export const Marketplace = (): JSX.Element => {
           width="100%"
         >
           <Stack
+            alignItems="center"
             direction={{ base: 'column', md: 'row' }}
             spacing={{ base: 2, md: 4 }}
           >

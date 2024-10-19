@@ -76,7 +76,7 @@ export const ChatBox: React.FC = () => {
             <HStack>
               <Text fontSize="lg">Chat</Text>
               <Tooltip
-                bg="black"
+                bg="#070D2A"
                 hasArrow
                 label="This chat is permanent and public to all other players. Do not share personal information or sensitive data."
                 placement="top"
@@ -148,7 +148,7 @@ export const ChatBox: React.FC = () => {
                             </Box>
                           )}
                           <Tooltip
-                            bg="black"
+                            bg="#070D2A"
                             hasArrow
                             label={`Sent: ${new Date(message.timestamp).toLocaleString()}`}
                             placement={isUser ? 'left' : 'right'}

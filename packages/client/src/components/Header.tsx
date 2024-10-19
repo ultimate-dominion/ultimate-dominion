@@ -21,7 +21,7 @@ import { useMemo } from 'react';
 import { FaDiscord } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { IoMdMenu } from 'react-icons/io';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { To, useLocation, useNavigate } from 'react-router-dom';
 
 import { useMUD } from '../contexts/MUDContext';
 import {
@@ -29,6 +29,7 @@ import {
   CHARACTERS_PATH,
   GAME_BOARD_PATH,
   HOME_PATH,
+  ITEM_PATH,
   LEADERBOARD_PATH,
   MARKETPLACE_PATH,
   SHOP_PATH,
@@ -110,7 +111,13 @@ export const Header = ({
               <Button
                 fontSize="xs"
                 leftIcon={<BackCaretSvg />}
-                onClick={() => navigate(-1)}
+                onClick={() =>
+                  navigate(
+                    (pathname.includes(ITEM_PATH)
+                      ? MARKETPLACE_PATH
+                      : -1) as To,
+                  )
+                }
                 p={4}
                 size="sm"
               >
@@ -120,7 +127,7 @@ export const Header = ({
             {pathname !== HOME_PATH && (
               <Tooltip
                 aria-label="Your session wallet balance"
-                bg="black"
+                bg="#070D2A"
                 hasArrow
                 label="Your session wallet balance"
               >
