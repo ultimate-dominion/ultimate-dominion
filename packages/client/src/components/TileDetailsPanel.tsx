@@ -5,6 +5,7 @@ import {
   Flex,
   Grid,
   GridItem,
+  Heading,
   HStack,
   Menu,
   MenuButton,
@@ -41,7 +42,7 @@ import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
 import { ShopRow } from './ShopRow';
 
-const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
+const ROW_HEIGHT = { base: 5, md: 8 };
 
 export const TileDetailsPanel = (): JSX.Element => {
   const { renderError, renderSuccess } = useToast();
@@ -66,7 +67,12 @@ export const TileDetailsPanel = (): JSX.Element => {
     delegatorAddress,
     systemCalls: { createEncounter },
   } = useMUD();
-  const { character, isMoveEquipped, refreshCharacter } = useCharacter();
+  const {
+    character,
+    isMoveEquipped,
+    isRefreshing: isRefreshingCharacter,
+    refreshCharacter,
+  } = useCharacter();
   const {
     inSafetyZone,
     isSpawned,
@@ -328,24 +334,43 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   if (!character) {
     return (
-      <Flex alignItems="center" h="100%" justifyContent="center">
-        <Text>An error occurred.</Text>
-      </Flex>
+      <Box>
+        <HStack bgColor="blue500" h="66px" px="20px" width="100%">
+          <Heading color="white">Tile Details</Heading>
+        </HStack>
+        {isRefreshingCharacter ? (
+          <Flex alignItems="center" h="100%" justifyContent="center" mt={6}>
+            <Spinner size="lg" />
+          </Flex>
+        ) : (
+          <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }} p={6}>
+            An error occurred.
+          </Text>
+        )}
+      </Box>
     );
   }
 
   if (!currentBattle && isRefreshing) {
     return (
-      <Flex alignItems="center" h="100%" justifyContent="center">
-        <Spinner size="lg" />
-      </Flex>
+      <Box>
+        <HStack bgColor="blue500" h="66px" px="20px" width="100%">
+          <Heading color="white">Moving...</Heading>
+        </HStack>
+        <Flex alignItems="center" h="100%" justifyContent="center" mt={6}>
+          <Spinner size="lg" />
+        </Flex>
+      </Box>
     );
   }
 
   if (!currentBattle && !isSpawned) {
     return (
       <Box>
-        <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+        <HStack bgColor="blue500" h="66px" px="20px" width="100%">
+          <Heading color="white">Tile Details</Heading>
+        </HStack>
+        <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }} p={6}>
           You have not yet spawned to the map.
         </Text>
       </Box>
@@ -369,7 +394,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         <HStack alignItems="start" w="100%">
           {currentBattle.encounterType === EncounterType.PvE ? (
             <VStack w="48%">
-              <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+              <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
                 {isDesktop ? removeEmoji(opponent.name) : opponent.name}
               </Text>
               {isDesktop && (
@@ -390,7 +415,7 @@ export const TileDetailsPanel = (): JSX.Element => {
               justify={{ base: 'center', lg: 'start' }}
               w="48%"
             >
-              <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+              <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
                 {opponent.name}
               </Text>
               <Avatar
@@ -411,7 +436,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             justify={{ base: 'center', lg: 'start' }}
             w="48%"
           >
-            <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
+            <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
               {userCharacterForBattleRendering.name}
             </Text>
             <Avatar
@@ -509,7 +534,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     return (
       <Box h="100%">
         <VStack h="100%" justifyContent="center" spacing={8}>
-          <Text fontWeight="bold" size={{ base: 'md', lg: 'xl' }}>
+          <Text fontWeight={700} size={{ base: 'md', lg: 'xl' }}>
             Initiating battle!
           </Text>
           <Spinner color="red" size="xl" />
@@ -519,106 +544,186 @@ export const TileDetailsPanel = (): JSX.Element => {
   }
 
   return (
-    <Box>
-      <VStack align="start">
-        <HStack>
-          <Text fontSize="xs" fontWeight="bold" textAlign="start">
-            Adventure Escrow balance:{' '}
-            {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
-          </Text>
-          <Tooltip
-            bg="#070D2A"
-            hasArrow
-            label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
-            placement="top"
-            shouldWrapChildren
-          >
-            <IoMdInformationCircleOutline />
-          </Tooltip>
-        </HStack>
-        {isHomeTile && (
-          <Button
-            onClick={onOpenAdventureEscrowModal}
-            size="xs"
-            variant="outline"
-          >
-            Deposit or Withdraw $GOLD
-          </Button>
-        )}
-      </VStack>
-      <Grid gap={5} mt={4} templateColumns="repeat(4, 1fr)">
-        {shopsOnTile.length > 0 && (
+    <Box h="calc(100% - 66px)">
+      <HStack bgColor="blue500" h="66px" position="relative">
+        <Box
+          background={
+            inSafetyZone
+              ? 'linear-gradient(180deg, rgba(180, 183, 53, 0.33) 0%, rgba(80, 81, 23, 0) 100%)'
+              : 'linear-gradient(180deg, rgba(183, 53, 53, 0.33) 0%, rgba(81, 23, 23, 0) 100%)'
+          }
+          h="40px"
+          position="absolute"
+          right={0}
+          bottom="-40px"
+          w="100%"
+          zIndex={0}
+        />
+        <Grid
+          alignItems="center"
+          color="white"
+          h="100%"
+          px={6}
+          templateColumns="repeat(4, 1fr)"
+          w="100%"
+        >
+          {shopsOnTile.length > 0 && (
+            <GridItem colSpan={2}>
+              <Heading size={{ base: 'sm', sm: 'md' }}>Shops</Heading>
+            </GridItem>
+          )}
+          {!isHomeTile && (
+            <GridItem colSpan={2}>
+              <Heading size={{ base: 'sm', sm: 'md' }}>Monsters</Heading>
+            </GridItem>
+          )}
           <GridItem colSpan={2}>
-            <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-              Shops
-            </Text>
+            <Heading size={{ base: 'sm', sm: 'md' }}>Players</Heading>
           </GridItem>
-        )}
-        {!isHomeTile && (
-          <GridItem colSpan={2}>
-            <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-              Monsters
-            </Text>
-          </GridItem>
-        )}
-        <GridItem colSpan={2}>
-          <Text fontWeight="bold" size={{ base: 'sm', lg: 'lg' }}>
-            Players
-            <Text as="span" size="sm">
-              {' '}
-              {inSafetyZone ? '(Safety Zone)' : '(Outer Realms)'}
-            </Text>
-          </Text>
-        </GridItem>
-      </Grid>
-      <Grid gap={5} mt={1} templateColumns="repeat(4, 1fr)">
+        </Grid>
+      </HStack>
+
+      <Grid h="100%" overflowY="auto" templateColumns="repeat(4, 1fr)">
         {isHomeTile && (
-          <GridItem colSpan={2}>
+          <GridItem
+            borderColor="blue500"
+            borderRight="6px solid"
+            colSpan={2}
+            zIndex={1}
+          >
+            <VStack alignItems="start" h="76px" p={2}>
+              <HStack>
+                <Text fontSize="xs" fontWeight={700} textAlign="start">
+                  Adventure Escrow balance:{' '}
+                  {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
+                </Text>
+                <Tooltip
+                  bg="#070D2A"
+                  hasArrow
+                  label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+                  placement="top"
+                  shouldWrapChildren
+                >
+                  <IoMdInformationCircleOutline />
+                </Tooltip>
+              </HStack>
+              {isHomeTile && (
+                <Button
+                  borderRadius="0px"
+                  onClick={onOpenAdventureEscrowModal}
+                  size="xs"
+                  variant="outline"
+                >
+                  Move $GOLD
+                </Button>
+              )}
+            </VStack>
+            <Box
+              backgroundColor="#F5F5FA1F"
+              boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+              h="6px"
+              w="100%"
+            />
             {shopsOnTile.map((shop, i) => (
-              <ShopRow key={`tile-shop-${i}`} shopId={shop.shopId} />
+              <>
+                <ShopRow key={`tile-shop-${i}`} shopId={shop.shopId} />
+                <Box
+                  backgroundColor="#F5F5FA1F"
+                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                  h="6px"
+                  w="100%"
+                />
+              </>
             ))}
           </GridItem>
         )}
 
         {!isHomeTile && (
-          <GridItem colSpan={2}>
+          <GridItem
+            borderColor="blue500"
+            borderRight="6px solid"
+            colSpan={2}
+            zIndex={1}
+          >
+            <Box
+              backgroundColor="#F5F5FA1F"
+              boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+              h="6px"
+              w="100%"
+            />
             {monstersOnTile.length > 0 &&
               monstersOnTile.map((monster, i) => (
-                <OpponentRow
-                  encounterType={EncounterType.PvE}
-                  key={`tile-monster-${i}-${monster.name}`}
-                  onClick={() =>
-                    isMoveEquipped
-                      ? onInitiateCombat(monster, EncounterType.PvE)
-                      : onOpenNoMoveEquippedModal()
-                  }
-                  opponent={monster}
-                />
+                <>
+                  <OpponentRow
+                    encounterType={EncounterType.PvE}
+                    key={`tile-monster-${i}-${monster.name}`}
+                    onClick={() =>
+                      isMoveEquipped
+                        ? onInitiateCombat(monster, EncounterType.PvE)
+                        : onOpenNoMoveEquippedModal()
+                    }
+                    opponent={monster}
+                  />
+                  <Box
+                    backgroundColor="#F5F5FA1F"
+                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    h="6px"
+                    w="100%"
+                  />
+                </>
               ))}
             {monstersOnTile.length === 0 && (
-              <Text size={{ base: '2xs', lg: 'sm' }}>
+              <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
                 No monsters in this area
               </Text>
             )}
           </GridItem>
         )}
 
-        <GridItem colSpan={2}>
+        <GridItem colSpan={2} zIndex={1}>
+          <Box
+            backgroundColor="#F5F5FA1F"
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+            h="6px"
+            w="100%"
+          />
+          <HStack justifyContent="end" h={ROW_HEIGHT}>
+            <Text
+              size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+              textAlign="right"
+            >
+              {inSafetyZone ? 'Safety Zone' : 'Outer Realms'}
+            </Text>
+          </HStack>
+          <Box
+            backgroundColor="#F5F5FA1F"
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+            h="6px"
+            w="100%"
+          />
           {otherCharactersOnTile.length > 0 &&
             otherCharactersOnTile.map((player, i) => (
-              <OpponentRow
-                encounterType={EncounterType.PvP}
-                key={`tile-player-${i}-${player.name}`}
-                onClick={() =>
-                  inSafetyZone
-                    ? onOpenSafetyZoneInfoModal()
-                    : onInitiateCombat(player, EncounterType.PvP)
-                }
-                opponent={player}
-              />
+              <>
+                <OpponentRow
+                  encounterType={EncounterType.PvP}
+                  key={`tile-player-${i}-${player.name}`}
+                  onClick={() =>
+                    inSafetyZone
+                      ? onOpenSafetyZoneInfoModal()
+                      : onInitiateCombat(player, EncounterType.PvP)
+                  }
+                  opponent={player}
+                />
+                <Box
+                  backgroundColor="#F5F5FA1F"
+                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                  h="6px"
+                  w="100%"
+                />
+              </>
             ))}
           {otherCharactersOnTile.length === 0 && (
-            <Text size={{ base: '2xs', lg: 'sm' }}>
+            <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
               No players in this area
             </Text>
           )}
@@ -710,14 +815,14 @@ const OpponentRow = ({
 
   return (
     <HStack
-      border="1px solid transparent"
+      borderBottom="2px solid transparent"
       h={ROW_HEIGHT}
       spacing={0}
       _active={{
-        border: '1px solid',
+        borderBottom: '2px solid white',
       }}
       _hover={{
-        border: '1px solid',
+        borderBottom: '2px solid white',
       }}
     >
       <HStack
@@ -725,7 +830,7 @@ const OpponentRow = ({
         h="98%"
         justifyContent="space-between"
         onClick={disableRow ? undefined : onClick}
-        px={{ base: 1, sm: 2 }}
+        px={{ base: 1, sm: 4 }}
         transition="all 0.3s ease"
         w="100%"
         _active={{
@@ -747,26 +852,23 @@ const OpponentRow = ({
           {encounterType === EncounterType.PvP && (
             <Avatar
               filter={disableRow ? 'grayscale(100%)' : 'none'}
-              size="xs"
+              size={{ base: '2xs', md: 'xs' }}
               src={opponent.image}
             />
           )}
         </HStack>
         {!disableRow && !!level && (
-          <Text
-            fontWeight="bold"
-            size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
-          >
+          <Text fontWeight={500} size={{ base: '3xs', sm: '2xs', md: 'sm' }}>
             Level {level.toString()}
           </Text>
         )}
         {inBattle && (
-          <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
+          <Text color="red" fontWeight={700} size={{ base: '3xs', sm: '2xs' }}>
             (In battle...)
           </Text>
         )}
         {inCooldown && (
-          <Text color="red" fontWeight="bold" size={{ base: '3xs', sm: '2xs' }}>
+          <Text color="red" fontWeight={700} size={{ base: '3xs', sm: '2xs' }}>
             (In cooldown...)
           </Text>
         )}
