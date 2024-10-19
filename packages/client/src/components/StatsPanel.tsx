@@ -227,7 +227,7 @@ export const StatsPanel = (): JSX.Element => {
             {etherToFixedNumber(externalGoldBalance)} $GOLD
           </Text>
           <Tooltip
-            bg="black"
+            bg="#070D2A"
             hasArrow
             label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
             placement="top"
@@ -268,7 +268,7 @@ export const StatsPanel = (): JSX.Element => {
         <HStack fontWeight="bold" w="100%">
           <Text>Equipped Items</Text>
           <Tooltip
-            bg="black"
+            bg="#070D2A"
             hasArrow
             label="Visit the character page to equip items"
             placement="top"
