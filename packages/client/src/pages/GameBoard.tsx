@@ -153,7 +153,6 @@ export const GameBoard = (): JSX.Element => {
     <Grid
       gap={2}
       h="calc(100vh - 100px)"
-      mt={4}
       templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
       templateRows="repeat(12, 1fr)"
     >
@@ -161,8 +160,6 @@ export const GameBoard = (): JSX.Element => {
         border="2px solid"
         colSpan={{ base: 1, lg: 4 }}
         display={{ base: 'none', lg: 'block' }}
-        overflowY="auto"
-        p={4}
         rowSpan={{ base: 12, lg: 12 }}
       >
         <StatsPanel />
@@ -214,7 +211,7 @@ export const GameBoard = (): JSX.Element => {
               </Button>
             </VStack>
           </PopoverTrigger>
-          <PopoverContent p={4}>
+          <PopoverContent>
             <StatsPanel />
           </PopoverContent>
         </Popover>

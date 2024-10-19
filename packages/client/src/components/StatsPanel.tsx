@@ -2,8 +2,6 @@ import {
   Avatar,
   Box,
   Button,
-  Grid,
-  GridItem,
   HStack,
   Link,
   Spacer,
@@ -30,7 +28,11 @@ import { useMUD } from '../contexts/MUDContext';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
+import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
+import { PolygonalCard } from './PolygonalCard';
+import { LeaderboardIconSvg, MarketplaceIconSvg } from './SVGs';
+import { PotionSvg } from './SVGs/PotionSvg';
 
 const MAX_EQUIPPED_ITEMS = MAX_EQUIPPED_ARMOR + MAX_EQUIPPED_WEAPONS;
 
@@ -40,8 +42,13 @@ export const StatsPanel = (): JSX.Element => {
   const {
     components: { Levels },
   } = useMUD();
-  const { character, equippedArmor, equippedSpells, equippedWeapons } =
-    useCharacter();
+  const {
+    character,
+    equippedArmor,
+    equippedSpells,
+    equippedWeapons,
+    inventoryConsumables,
+  } = useCharacter();
 
   const maxLevelXpRequirement = useMemo(
     () =>
@@ -155,212 +162,285 @@ export const StatsPanel = (): JSX.Element => {
   const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
 
   return (
-    <VStack alignItems="start" h="100%" p={2} spacing={4}>
-      <HStack
-        as="button"
-        onClick={() => navigate(`/characters/${character.id}`)}
-        spacing={4}
-        _hover={{ cursor: 'pointer', textDecoration: 'underline' }}
-      >
-        <Avatar src={image} />
-        <Text fontWeight="700">{name}</Text>
-        <IoIosArrowForward size={20} />
-      </HStack>
-
-      <Grid
-        alignSelf="start"
-        columnGap={2}
-        templateColumns="repeat(2, 1fr)"
-        w="75%"
-      >
-        <GridItem>
-          <Text fontWeight="bold" size="lg">
-            HP
-          </Text>
-        </GridItem>
-        <GridItem>
-          <Text>
-            {currentHpWithFloor.toString()}/{maxHp.toString()}
-          </Text>
-        </GridItem>
-        <GridItem>
-          <Text fontWeight="bold" size="lg">
-            STR
-          </Text>
-        </GridItem>
-        <GridItem>
-          <Text>
-            {(strength - expiredEffectModifications.strModifier).toString()}
-          </Text>
-        </GridItem>
-        <GridItem>
-          <Text fontWeight="bold" size="lg">
-            AGI
-          </Text>
-        </GridItem>
-        <GridItem>
-          <Text>
-            {(agility - expiredEffectModifications.agiModifier).toString()}
-          </Text>
-        </GridItem>
-        <GridItem>
-          <Text fontWeight="bold" size="lg">
-            INT
-          </Text>
-        </GridItem>
-        <GridItem>
-          <Text>
-            {(intelligence - expiredEffectModifications.intModifier).toString()}
-          </Text>
-        </GridItem>
-      </Grid>
-
-      <Level
-        currentLevel={character.level}
-        levelPercent={levelPercent}
-        maxed={maxed}
-      />
-
-      <HStack alignItems="start" w="100%">
-        <HStack>
-          <Text fontWeight="bold">
-            {etherToFixedNumber(externalGoldBalance)} $GOLD
-          </Text>
-          <Tooltip
-            bg="#070D2A"
-            hasArrow
-            label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
-            placement="top"
-            shouldWrapChildren
-          >
-            <IoMdInformationCircleOutline />
-          </Tooltip>
-        </HStack>
-        <Spacer />
-        <Text>
-          <Text
-            as="span"
-            color={
-              BigInt(experience) >= nextLevelXpRequirement ? 'green' : 'black'
-            }
-            fontWeight={
-              BigInt(experience) >= nextLevelXpRequirement ? 'bold' : 'normal'
-            }
-          >
-            {experience.toString()}
-          </Text>
-          /{nextLevelXpRequirement.toString()} XP
-        </Text>
-      </HStack>
-
-      {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
-        <Button
-          alignSelf="center"
-          onClick={() => navigate(`/characters/${character.id}`)}
-          size="xs"
-          variant="gold"
+    <PolygonalCard clipPath="none" overflowY="auto">
+      <VStack alignItems="start" h="100%" spacing={0}>
+        <HStack
+          bgColor="blue500"
+          minH={{ base: '100px', md: '66px' }}
+          px="20px"
+          width="100%"
         >
-          Level Up!
-        </Button>
-      )}
-
-      <VStack align="stretch" alignItems="start" mt={4} spacing={2} w="100%">
-        <HStack fontWeight="bold" w="100%">
-          <Text>Equipped Items</Text>
-          <Tooltip
-            bg="#070D2A"
-            hasArrow
-            label="Visit the character page to equip items"
-            placement="top"
+          <HStack
+            as="button"
+            color="white"
+            justifyContent="space-between"
+            onClick={() => navigate(`/characters/${character.id}`)}
+            spacing={4}
+            w="100%"
+            _hover={{ cursor: 'pointer', textDecoration: 'underline' }}
           >
-            <Button
-              onClick={() => navigate(`/characters/${character.id}`)}
-              p="0 2px"
-              size="sm"
-              variant="ghost"
+            <HStack>
+              <Avatar size="sm" src={image} />
+              <Text fontWeight={700} ml={2} size="lg">
+                {name}
+              </Text>
+              <ClassSymbol
+                entityClass={character.entityClass}
+                mb={0.5}
+                theme="light"
+              />
+            </HStack>
+            <IoIosArrowForward size={20} />
+          </HStack>
+        </HStack>
+
+        <VStack mt={4} spacing={0} w="100%">
+          <HStack
+            fontWeight={700}
+            justifyContent="space-between"
+            px={2}
+            py={1}
+            w="100%"
+          >
+            <Text size="lg">HP</Text>
+            <Text color="grey500" size="lg">
+              {currentHpWithFloor.toString()}/{maxHp.toString()}
+            </Text>
+          </HStack>
+          <Box
+            backgroundColor="#F5F5FA1F"
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+            h="6px"
+            w="100%"
+          />
+          <HStack
+            fontWeight={700}
+            justifyContent="space-between"
+            px={2}
+            py={1}
+            w="100%"
+          >
+            <Text size="lg">STR</Text>
+            <Text color="grey500" size="lg">
+              {(strength - expiredEffectModifications.strModifier).toString()}
+            </Text>
+          </HStack>
+          <Box
+            backgroundColor="#F5F5FA1F"
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+            h="6px"
+            w="100%"
+          />
+          <HStack
+            fontWeight={700}
+            justifyContent="space-between"
+            px={2}
+            py={1}
+            w="100%"
+          >
+            <Text size="lg">AGI</Text>
+            <Text color="grey500" size="lg">
+              {(agility - expiredEffectModifications.agiModifier).toString()}
+            </Text>
+          </HStack>
+          <Box
+            backgroundColor="#F5F5FA1F"
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+            h="6px"
+            w="100%"
+          />
+          <HStack
+            fontWeight={700}
+            justifyContent="space-between"
+            px={2}
+            py={1}
+            w="100%"
+          >
+            <Text size="lg">INT</Text>
+            <Text color="grey500" size="lg">
+              {(
+                intelligence - expiredEffectModifications.intModifier
+              ).toString()}
+            </Text>
+          </HStack>
+          <Box
+            backgroundColor="#F5F5FA1F"
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+            h="6px"
+            w="100%"
+          />
+        </VStack>
+
+        <HStack mt={4} px={4} w="100%">
+          <Level
+            currentLevel={character.level}
+            levelPercent={levelPercent}
+            maxed={maxed}
+          />
+        </HStack>
+
+        <HStack alignItems="start" mt={4} px={2} w="100%">
+          <HStack>
+            <Text color="yellow" fontWeight={700} size="lg">
+              {etherToFixedNumber(externalGoldBalance)} $GOLD
+            </Text>
+            <Tooltip
+              bg="#070D2A"
+              hasArrow
+              label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
+              placement="top"
+              shouldWrapChildren
             >
-              <BsBackpack4Fill size={12} />
-            </Button>
-          </Tooltip>
+              <IoMdInformationCircleOutline />
+            </Tooltip>
+          </HStack>
           <Spacer />
-          <Text>
-            {allItems.length}/{MAX_EQUIPPED_ITEMS}
+          <Text color="gray500" fontWeight={500}>
+            <Text
+              as="span"
+              color={
+                BigInt(experience) >= nextLevelXpRequirement ? 'green' : 'black'
+              }
+              fontWeight={
+                BigInt(experience) >= nextLevelXpRequirement ? 'bold' : 'normal'
+              }
+            >
+              {experience.toString()}
+            </Text>
+            /{nextLevelXpRequirement.toString()} XP
           </Text>
         </HStack>
-        {allItems.map((item, index) => (
-          <HStack
-            fontSize="xs"
-            justify="space-between"
-            key={`equipped-item-${index}`}
-            pl={2}
-            w="100%"
+
+        {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
+          <Button
+            alignSelf="center"
+            onClick={() => navigate(`/characters/${character.id}`)}
+            size="xs"
+            variant="gold"
           >
-            <Text>{item.name}</Text>
-            <Box h={6} />
-          </HStack>
-        ))}
-        {Array.from({
-          length: MAX_EQUIPPED_ITEMS - allItems.length,
-        }).map((_, index) => (
-          <HStack
-            key={`empty-weapon-${index}`}
-            justify="space-between"
-            fontSize="xs"
-            pl={2}
-            w="100%"
-          >
-            <Text>Empty Slot</Text>
-            <Button
-              h={6}
-              onClick={() => navigate(`/characters/${character.id}`)}
-              p="0 2px"
-              size="sm"
-              variant="ghost"
+            Level Up!
+          </Button>
+        )}
+
+        <VStack align="stretch" alignItems="start" mt={6} spacing={1} w="100%">
+          <HStack fontWeight={700} mb={2} px={2} w="100%">
+            <Text size="lg">Equipped Items</Text>
+            <Tooltip
+              bg="#070D2A"
+              hasArrow
+              label="Visit the character page to equip items"
+              placement="top"
             >
-              +
-            </Button>
+              <Button
+                onClick={() => navigate(`/characters/${character.id}`)}
+                p="0 2px"
+                size="sm"
+                variant="ghost"
+              >
+                <BsBackpack4Fill size={12} />
+              </Button>
+            </Tooltip>
+            <Spacer />
+            <Text color="grey500" size="lg">
+              {allItems.length}/{MAX_EQUIPPED_ITEMS}
+            </Text>
           </HStack>
-        ))}
-      </VStack>
-
-      <HStack justify="space-between" fontWeight="bold" mt={4} w="100%">
-        <Text>Health Potion</Text>
-        <Text>0</Text>
-      </HStack>
-
-      {isDesktop && (
-        <VStack alignItems="start" pb={8}>
-          <Link
-            as={RouterLink}
-            to={MARKETPLACE_PATH}
-            borderBottom="2px solid"
-            borderColor="grey400"
-            fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-            pb={1}
-            textAlign="left"
-            _hover={{
-              borderColor: 'grey500',
-              textDecoration: 'none',
-            }}
+          {allItems.map((item, index) => (
+            <HStack
+              borderBottom="2px solid"
+              borderColor="white"
+              boxShadow="0px 0px 0px 0px #A2A9B0, 0px 0px 0px 0px #54545480, 5px 5px 10px 0px #54545440, -5px -5px 10px 0px #5454547D"
+              fontSize="xs"
+              justify="space-between"
+              key={`equipped-item-${index}`}
+              overflow="hidden"
+              px={2}
+              py={1}
+              w="100%"
+            >
+              <Text fontWeight={500}>{item.name}</Text>
+              <Box h={6} />
+            </HStack>
+          ))}
+          {Array.from({
+            length: MAX_EQUIPPED_ITEMS - allItems.length,
+          }).map((_, index) => (
+            <HStack
+              boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+              key={`empty-weapon-${index}`}
+              fontSize="xs"
+              justify="space-between"
+              px={2}
+              py={1}
+              w="100%"
+            >
+              <Text>Empty Slot</Text>
+              <Button
+                h={6}
+                onClick={() => navigate(`/characters/${character.id}`)}
+                p={0}
+                size="sm"
+                variant="ghost"
+                w={4}
+              >
+                +
+              </Button>
+            </HStack>
+          ))}
+          <HStack
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+            fontSize="xs"
+            justify="space-between"
+            mt={2}
+            pl={2}
+            pr={5}
+            py={2}
+            w="100%"
           >
-            Marketplace
-          </Link>
-          <Link
-            as={RouterLink}
-            borderBottom="2px solid"
-            borderColor="grey400"
-            fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
-            to={LEADERBOARD_PATH}
-            pb={1}
-            _hover={{
-              borderColor: 'grey500',
-              textDecoration: 'none',
-            }}
-          >
-            Leaderboard
-          </Link>
+            <Text fontWeight={500}>Consumables</Text>
+            <HStack h={6}>
+              <Text fontWeight={700}>{inventoryConsumables.length}</Text>
+              <PotionSvg mb={0.5} theme="dark" />
+            </HStack>
+          </HStack>
         </VStack>
-      )}
-    </VStack>
+
+        {isDesktop && (
+          <HStack
+            justifyContent="space-between"
+            m="0 auto"
+            maxWidth="250px"
+            pb={6}
+            pt={4}
+            w="100%"
+          >
+            <Link
+              alignItems="center"
+              as={RouterLink}
+              display="flex"
+              fontSize={{ base: 'xs', sm: 'sm' }}
+              gap={1}
+              textDecoration="underline"
+              to={MARKETPLACE_PATH}
+            >
+              <MarketplaceIconSvg size={3} theme="dark" />
+              Marketplace
+            </Link>
+            <Link
+              alignItems="center"
+              as={RouterLink}
+              display="flex"
+              fontSize={{ base: 'xs', sm: 'sm' }}
+              gap={1}
+              textDecoration="underline"
+              to={LEADERBOARD_PATH}
+            >
+              <LeaderboardIconSvg size={3} theme="dark" />
+              Leaderboard
+            </Link>
+          </HStack>
+        )}
+      </VStack>
+    </PolygonalCard>
   );
 };
