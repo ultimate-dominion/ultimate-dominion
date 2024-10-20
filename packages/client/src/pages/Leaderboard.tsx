@@ -170,12 +170,10 @@ export const Leaderboard = (): JSX.Element => {
       if (!allCharacterEntities) return;
 
       await getAllCharacters(allCharacterEntities);
-      debugger;
     })();
   }, [allCharacterEntities, getAllCharacters]);
 
   useEffect(() => {
-    debugger;
     if (pageNumber < 1) {
       return;
     }
