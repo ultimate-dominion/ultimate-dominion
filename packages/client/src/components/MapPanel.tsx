@@ -3,25 +3,20 @@ import {
   Button,
   Heading,
   HStack,
+  Icon,
   Stack,
   Text,
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
 import { BiSolidNavigation } from 'react-icons/bi';
-import {
-  IoIosArrowDropdownCircle,
-  IoIosArrowDropleftCircle,
-  IoIosArrowDroprightCircle,
-  IoIosArrowDropupCircle,
-} from 'react-icons/io';
-import { TbDirectionArrows } from 'react-icons/tb';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
+import { CompassSvg } from './SVGs/CompassSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
 
 const SAFE_ZONE_AREA = {
@@ -38,7 +33,7 @@ export const MapPanel = (): JSX.Element => {
 
   return (
     <Stack
-      alignItems={{ base: 'start', lg: 'center' }}
+      alignItems="center"
       direction={{ base: 'row', lg: 'column' }}
       h="100%"
     >
@@ -187,110 +182,132 @@ const NavigationCompass = ({
       h={175}
       justifyContent="space-between"
       mt={{ base: 0, lg: 12, xl: 8 }}
-      pos="relative"
+      position="relative"
       w={175}
     >
       <Box
-        border="2px solid black"
-        borderRadius="50%"
-        h={110}
-        pos="absolute"
-        top="50%"
         left="50%"
+        position="absolute"
+        top="50%"
         transform="translate(-50%, -50%)"
-        w={110}
-        zIndex={-1}
-      />
-      <Box
-        bg="black"
-        h="2px"
-        left="50%"
-        pos="absolute"
-        top="50%"
-        transform="translate(-50%, 50%)"
-        w={85}
-        zIndex={-1}
-      />
-      <Box
-        bg="black"
-        h={85}
-        pos="absolute"
-        right="50%"
-        top="50%"
-        transform="translate(50%, -50%)"
-        w="2px"
-        zIndex={-1}
-      />
-      <Box
-        bg="white"
-        left="50%"
-        pos="absolute"
-        top="50%"
-        transform="translate(-50%, -45%)"
       >
-        <TbDirectionArrows size={32} />
+        <CompassSvg />
       </Box>
       <VStack spacing={0}>
-        <Text fontWeight={700} size="xs">
-          N
-        </Text>
-        <Button
-          bg="white"
-          borderRadius="50%"
-          isDisabled={isDisabled}
-          p={0}
-          onClick={() => onMove('up')}
-          variant="ghost"
+        <Icon
+          fill="none"
+          height={3}
+          viewBox="0 0 22 9"
+          width={4}
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <IoIosArrowDropupCircle size={32} />
+          <path
+            d="M20.6967 7.93237L10.9997 1.212L1.30273 7.93237"
+            stroke="#283570"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+          />
+        </Icon>
+
+        <Button
+          borderRadius="50%"
+          fontWeight={700}
+          isDisabled={isDisabled}
+          onClick={() => onMove('up')}
+          p={0}
+          size="sm"
+          variant="blue"
+        >
+          N
         </Button>
       </VStack>
       <HStack justifyContent="space-between" spacing={10}>
         <HStack spacing={1}>
-          <Text fontWeight={700} size="xs">
-            W
-          </Text>
-          <Button
-            bg="white"
-            borderRadius="50%"
-            isDisabled={isDisabled}
-            p={0}
-            onClick={() => onMove('left')}
-            variant="ghost"
+          <Icon
+            fill="none"
+            height={4}
+            viewBox="0 0 10 22"
+            width={2}
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <IoIosArrowDropleftCircle size={32} />
+            <path
+              d="M8.20899 1.09093L1.48862 10.7879L8.20898 20.4849"
+              stroke="#283570"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+            />
+          </Icon>
+
+          <Button
+            borderRadius="50%"
+            fontWeight={700}
+            isDisabled={isDisabled}
+            onClick={() => onMove('left')}
+            p={0}
+            size="sm"
+            variant="blue"
+          >
+            W
           </Button>
         </HStack>
         <HStack spacing={1}>
           <Button
-            bg="white"
             borderRadius="50%"
+            fontWeight={700}
             isDisabled={isDisabled}
-            p={0}
             onClick={() => onMove('right')}
-            variant="ghost"
+            p={0}
+            size="sm"
+            variant="blue"
           >
-            <IoIosArrowDroprightCircle size={32} />
-          </Button>
-          <Text fontWeight={700} size="xs">
             E
-          </Text>
+          </Button>
+          <Icon
+            fill="none"
+            height={4}
+            viewBox="0 0 10 22"
+            width={2}
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M1.79101 20.4848L8.51138 10.7878L1.79102 1.09082"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              stroke="#283570"
+            />
+          </Icon>
         </HStack>
       </HStack>
       <VStack spacing={0}>
         <Button
-          bg="white"
           borderRadius="50%"
+          fontWeight={700}
           isDisabled={isDisabled}
-          p={0}
           onClick={() => onMove('down')}
-          variant="ghost"
+          p={0}
+          size="sm"
+          variant="blue"
         >
-          <IoIosArrowDropdownCircle size={32} />
-        </Button>
-        <Text fontWeight={700} size="xs">
           S
-        </Text>
+        </Button>
+        <Icon
+          fill="none"
+          height={3}
+          viewBox="0 0 22 10"
+          width={4}
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M1.30332 1.51514L11.0003 8.2355L20.6973 1.51514"
+            stroke="#283570"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+          />
+        </Icon>
       </VStack>
     </VStack>
   );
