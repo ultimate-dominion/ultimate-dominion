@@ -189,7 +189,7 @@ export const GameBoard = (): JSX.Element => {
       <GridItem
         colSpan={{ base: 1, lg: 4 }}
         colStart={{ base: 0, lg: 13 }}
-        rowSpan={{ base: 3, lg: 7 }}
+        rowSpan={{ base: 4, lg: 12 }}
         rowStart={{ base: 8, lg: 0 }}
       >
         <MapPanel />

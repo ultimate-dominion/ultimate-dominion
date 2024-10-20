@@ -335,8 +335,15 @@ export const TileDetailsPanel = (): JSX.Element => {
   if (!character) {
     return (
       <Box>
-        <HStack bgColor="blue500" h="66px" px="20px" width="100%">
-          <Heading color="white">Tile Details</Heading>
+        <HStack
+          bgColor="blue500"
+          h={{ base: '40px', md: '66px' }}
+          px="20px"
+          width="100%"
+        >
+          <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+            Tile Details
+          </Heading>
         </HStack>
         {isRefreshingCharacter ? (
           <Flex alignItems="center" h="100%" justifyContent="center" mt={6}>
@@ -354,8 +361,15 @@ export const TileDetailsPanel = (): JSX.Element => {
   if (!currentBattle && isRefreshing) {
     return (
       <Box>
-        <HStack bgColor="blue500" h="66px" px="20px" width="100%">
-          <Heading color="white">Moving...</Heading>
+        <HStack
+          bgColor="blue500"
+          h={{ base: '40px', md: '66px' }}
+          px="20px"
+          width="100%"
+        >
+          <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+            Moving...
+          </Heading>
         </HStack>
         <Flex alignItems="center" h="100%" justifyContent="center" mt={6}>
           <Spinner size="lg" />
@@ -367,8 +381,15 @@ export const TileDetailsPanel = (): JSX.Element => {
   if (!currentBattle && !isSpawned) {
     return (
       <Box>
-        <HStack bgColor="blue500" h="66px" px="20px" width="100%">
-          <Heading color="white">Tile Details</Heading>
+        <HStack
+          bgColor="blue500"
+          h={{ base: '40px', md: '66px' }}
+          px="20px"
+          width="100%"
+        >
+          <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+            Tile Details
+          </Heading>
         </HStack>
         <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }} p={6}>
           You have not yet spawned to the map.
@@ -544,8 +565,12 @@ export const TileDetailsPanel = (): JSX.Element => {
   }
 
   return (
-    <Box h="calc(100% - 66px)">
-      <HStack bgColor="blue500" h="66px" position="relative">
+    <Box h={{ base: 'calc(100% - 40px)', md: 'calc(100% - 66px)' }}>
+      <HStack
+        bgColor="blue500"
+        h={{ base: '40px', md: '66px' }}
+        position="relative"
+      >
         <Box
           background={
             inSafetyZone
@@ -556,8 +581,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           position="absolute"
           right={0}
           bottom="-40px"
-          w="100%"
-          zIndex={0}
+          w="50%"
         />
         <Grid
           alignItems="center"
@@ -569,28 +593,23 @@ export const TileDetailsPanel = (): JSX.Element => {
         >
           {shopsOnTile.length > 0 && (
             <GridItem colSpan={2}>
-              <Heading size={{ base: 'sm', sm: 'md' }}>Shops</Heading>
+              <Heading size={{ base: 'sm', md: 'md' }}>Shops</Heading>
             </GridItem>
           )}
           {!isHomeTile && (
             <GridItem colSpan={2}>
-              <Heading size={{ base: 'sm', sm: 'md' }}>Monsters</Heading>
+              <Heading size={{ base: 'sm', md: 'md' }}>Monsters</Heading>
             </GridItem>
           )}
           <GridItem colSpan={2}>
-            <Heading size={{ base: 'sm', sm: 'md' }}>Players</Heading>
+            <Heading size={{ base: 'sm', md: 'md' }}>Players</Heading>
           </GridItem>
         </Grid>
       </HStack>
 
       <Grid h="100%" overflowY="auto" templateColumns="repeat(4, 1fr)">
         {isHomeTile && (
-          <GridItem
-            borderColor="blue500"
-            borderRight="6px solid"
-            colSpan={2}
-            zIndex={1}
-          >
+          <GridItem borderColor="blue500" borderRight="6px solid" colSpan={2}>
             <VStack alignItems="start" h="76px" p={2}>
               <HStack>
                 <Text fontSize="xs" fontWeight={700} textAlign="start">
@@ -639,12 +658,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         )}
 
         {!isHomeTile && (
-          <GridItem
-            borderColor="blue500"
-            borderRight="6px solid"
-            colSpan={2}
-            zIndex={1}
-          >
+          <GridItem borderColor="blue500" borderRight="6px solid" colSpan={2}>
             <Box
               backgroundColor="#F5F5FA1F"
               boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
@@ -680,18 +694,15 @@ export const TileDetailsPanel = (): JSX.Element => {
           </GridItem>
         )}
 
-        <GridItem colSpan={2} zIndex={1}>
+        <GridItem colSpan={2}>
           <Box
             backgroundColor="#F5F5FA1F"
             boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
             h="6px"
             w="100%"
           />
-          <HStack justifyContent="end" h={ROW_HEIGHT}>
-            <Text
-              size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
-              textAlign="right"
-            >
+          <HStack h={ROW_HEIGHT} justifyContent="end" px={4}>
+            <Text size={{ base: '3xs', sm: '2xs', md: 'xs' }} textAlign="right">
               {inSafetyZone ? 'Safety Zone' : 'Outer Realms'}
             </Text>
           </HStack>
