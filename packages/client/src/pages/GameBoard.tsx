@@ -177,14 +177,14 @@ export const GameBoard = (): JSX.Element => {
         </PolygonalCard>
       </GridItem>
       <GridItem
-        border="2px solid"
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
-        position="relative"
         rowSpan={{ base: 4, lg: 6 }}
         rowStart={{ base: 4, lg: 7 }}
       >
-        <ActionsPanel />
+        <PolygonalCard clipPath="none" overflowY="auto">
+          <ActionsPanel />
+        </PolygonalCard>
       </GridItem>
       <GridItem
         colSpan={{ base: 1, lg: 4 }}

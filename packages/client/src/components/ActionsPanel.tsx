@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Divider,
   HStack,
   Progress,
   Spinner,
@@ -236,7 +235,7 @@ export const ActionsPanel = (): JSX.Element => {
   }
 
   return (
-    <Box maxH="100%" overflowY="auto" pb={4} ref={parentDivRef}>
+    <Box maxH="100%" ref={parentDivRef} fontWeight={500}>
       {currentBattle && equippedSpellsAndWeapons.length === 0 && (
         <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
           You have no equipped items. In order to attack, you must go to your{' '}
@@ -539,7 +538,12 @@ export const ActionsPanel = (): JSX.Element => {
       </Stack>
       {battleOver && currentBattle && (
         <Stack my={4} spacing={4}>
-          <Divider />
+          <Box
+            backgroundColor="#F5F5FA1F"
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+            h="6px"
+            w="100%"
+          />
           <Typist
             avgTypingDelay={10}
             cursor={{ show: false }}
