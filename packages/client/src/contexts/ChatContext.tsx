@@ -199,6 +199,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   }, []);
 
   const onSendMessage = useCallback(async () => {
+    const oldMessage = newMessage;
+
     try {
       setIsSending(true);
 
@@ -221,15 +223,16 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         },
       ]);
 
+      setNewMessage('');
+      setIsSending(false);
+
       await user.chat.send(GROUP_CHAT_ID, {
         content: newMessage,
         type: 'Text',
       });
-      setNewMessage('');
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to send message.', e);
-    } finally {
-      setIsSending(false);
+      setNewMessage(oldMessage);
     }
   }, [newMessage, renderError, user]);
 

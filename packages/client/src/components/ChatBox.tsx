@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   CloseButton,
+  Heading,
   HStack,
   ScaleFade,
   Spinner,
@@ -16,6 +17,7 @@ import { IoIosSend, IoMdInformationCircleOutline } from 'react-icons/io';
 
 import { useChat } from '../contexts/ChatContext';
 import { shortenAddress } from '../utils/helpers';
+import { PolygonalCard } from './PolygonalCard';
 
 export const ChatBox: React.FC = () => {
   const {
@@ -61,55 +63,59 @@ export const ChatBox: React.FC = () => {
 
   return (
     <ScaleFade initialScale={0.9} in={isChatBoxOpen}>
-      <Box
-        bg="white"
-        border="2px black solid"
-        display="flex"
-        flexDirection="column"
-        h={isChatBoxOpen ? '350px' : '0'}
-        p={2}
-        transition="height 0.3s ease"
-        w={{ base: '100%', sm: '350px' }}
-      >
-        <VStack alignItems="flex-start" mb={2} spacing={2}>
-          <HStack justify="space-between" w="100%">
-            <HStack>
-              <Text fontSize="lg">Chat</Text>
-              <Tooltip
-                bg="#070D2A"
-                hasArrow
-                label="This chat is permanent and public to all other players. Do not share personal information or sensitive data."
-                placement="top"
-                shouldWrapChildren
-              >
-                <IoMdInformationCircleOutline />
-              </Tooltip>
-            </HStack>
-            <CloseButton onClick={onCloseChatBox} />
-          </HStack>
-        </VStack>
-        {isInitializing && (
-          <VStack h="100%" justifyContent="center">
-            <Spinner mb={12} size="lg" />
-          </VStack>
-        )}
-        {!isInitializing && !isGroupMember && (
-          <VStack justifyContent="center" mt={8} spacing={8}>
-            <Text size="sm" textAlign="center">
-              Ultimate Dominion&apos;s chat is public and permanent. Do not
-              share personal information or sensitive data.
-            </Text>
-            <Button
-              isLoading={isJoiningGroupChat}
-              onClick={onJoinGroupChat}
-              size="sm"
+      <PolygonalCard clipPath="none" w={{ base: '350px', sm: '365px' }}>
+        <HStack
+          bgColor="blue500"
+          color="white"
+          h={
+            isChatBoxOpen
+              ? { base: '40px', md: '66px' }
+              : { base: '0', md: '0' }
+          }
+          justifyContent="space-between"
+          px={4}
+          w="100%"
+        >
+          <HStack>
+            <Heading size={{ base: 'sm', md: 'md' }}>Chat</Heading>
+            <Tooltip
+              bg="#070D2A"
+              hasArrow
+              label="This chat is permanent and public to all other players. Do not share personal information or sensitive data."
+              placement="top"
+              shouldWrapChildren
             >
-              Join Chat
-            </Button>
-          </VStack>
-        )}
-        {!isInitializing && isGroupMember && chatUser && (
-          <>
+              <IoMdInformationCircleOutline />
+            </Tooltip>
+          </HStack>
+          <CloseButton onClick={onCloseChatBox} />
+        </HStack>
+        <Box
+          h={isChatBoxOpen ? '250px' : '0'}
+          overflowY="auto"
+          transition="height 0.3s ease"
+        >
+          {isInitializing && (
+            <VStack h="100%" justifyContent="center">
+              <Spinner mb={12} size="lg" />
+            </VStack>
+          )}
+          {!isInitializing && !isGroupMember && (
+            <VStack justifyContent="center" mt={8} p={2} spacing={8}>
+              <Text size="sm" textAlign="center">
+                Ultimate Dominion&apos;s chat is public and permanent. Do not
+                share personal information or sensitive data.
+              </Text>
+              <Button
+                isLoading={isJoiningGroupChat}
+                onClick={onJoinGroupChat}
+                size="sm"
+              >
+                Join Chat
+              </Button>
+            </VStack>
+          )}
+          {!isInitializing && isGroupMember && chatUser && (
             <VStack bg="grey300" flex="1" overflowY="auto" p={2} spacing={2}>
               {messages.map((message, index) => {
                 const isUser = message.from === chatUser.account;
@@ -174,37 +180,39 @@ export const ChatBox: React.FC = () => {
               })}
               <Box ref={messagesEndRef} />
             </VStack>
-
-            <HStack alignItems="center" mt={4}>
-              <Textarea
-                h="auto"
-                maxH="50px"
-                minH="40px"
-                onChange={e => onSetNewMessage(e.target.value)}
-                overflow="hidden"
-                placeholder="Type a message..."
-                ref={textareaRef}
-                resize="none"
-                size="xs"
-                value={newMessage}
-                onFocus={() => onSetMessageInputFocus(true)}
-                onBlur={() => onSetMessageInputFocus(false)}
-              />
-              <Button
-                isDisabled={!newMessage || isSending}
-                isLoading={isSending}
-                onClick={onSendMessage}
-                px={2}
-                py={6}
-                size="sm"
-                variant="ghost"
-              >
-                <IoIosSend size={32} />
-              </Button>
-            </HStack>
-          </>
+          )}
+        </Box>
+        {!isInitializing && isGroupMember && chatUser && isChatBoxOpen && (
+          <HStack alignItems="center" pr={2}>
+            <Textarea
+              h="auto"
+              isDisabled={isSending}
+              maxH="50px"
+              minH="40px"
+              onChange={e => onSetNewMessage(e.target.value)}
+              overflow="hidden"
+              placeholder="Type a message..."
+              ref={textareaRef}
+              resize="none"
+              size="xs"
+              value={newMessage}
+              onFocus={() => onSetMessageInputFocus(true)}
+              onBlur={() => onSetMessageInputFocus(false)}
+            />
+            <Button
+              isDisabled={!newMessage || isSending}
+              isLoading={isSending}
+              onClick={onSendMessage}
+              px={2}
+              py={4}
+              size="sm"
+              variant="blue"
+            >
+              <IoIosSend size={32} />
+            </Button>
+          </HStack>
         )}
-      </Box>
+      </PolygonalCard>
     </ScaleFade>
   );
 };
