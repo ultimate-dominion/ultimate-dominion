@@ -14,6 +14,7 @@ import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { SystemToAllow } from '../utils/types';
+import { PolygonalCard } from './PolygonalCard';
 
 export const LootManagerAllowanceModal = ({
   amount,
@@ -48,14 +49,13 @@ export const LootManagerAllowanceModal = ({
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
+          <PolygonalCard isModal />
           <ModalHeader>{heading}</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <VStack p={4} spacing={10}>
-              <Text textAlign="center">
-                Allowance was succesful! {successMessage}
-              </Text>
-            </VStack>
+          <ModalBody px={{ base: 6, sm: 8 }}>
+            <Text textAlign="center">
+              Allowance was succesful! {successMessage}
+            </Text>
           </ModalBody>
           <ModalFooter>
             <Button onClick={onClose} size="sm" variant="ghost">
@@ -72,9 +72,10 @@ export const LootManagerAllowanceModal = ({
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
+          <PolygonalCard isModal />
           <ModalHeader>{heading}</ModalHeader>
           <ModalCloseButton />
-          <ModalBody p={4}>
+          <ModalBody px={{ base: 6, sm: 8 }}>
             <VStack spacing={10} textAlign="center">
               {!message && (
                 <Text>
@@ -82,22 +83,22 @@ export const LootManagerAllowanceModal = ({
                 </Text>
               )}
               {message && <Text>{message}</Text>}
-              <Button
-                isLoading={isApprovingGold}
-                onClick={() =>
-                  onApproveGoldAllowance(
-                    SystemToAllow.LootManager,
-                    parseEther(amount),
-                  )
-                }
-              >
-                Allow
-              </Button>
             </VStack>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter gap={3}>
             <Button onClick={onClose} size="sm" variant="ghost">
               Close
+            </Button>
+            <Button
+              isLoading={isApprovingGold}
+              onClick={() =>
+                onApproveGoldAllowance(
+                  SystemToAllow.LootManager,
+                  parseEther(amount),
+                )
+              }
+            >
+              Allow
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -109,27 +110,26 @@ export const LootManagerAllowanceModal = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>{heading}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4}>
+        <ModalBody px={{ base: 6, sm: 8 }}>
           <VStack spacing={10} textAlign="center">
             {!message && (
               <Text>Allow all items to be used by the Loot Manager?</Text>
             )}
             {message && <Text>{message}</Text>}
-            <Button
-              isLoading={isApprovingItems}
-              onClick={() =>
-                onSetApprovalForAllItems(SystemToAllow.LootManager)
-              }
-            >
-              Allow
-            </Button>
           </VStack>
         </ModalBody>
-        <ModalFooter>
+        <ModalFooter gap={3}>
           <Button onClick={onClose} size="sm" variant="ghost">
             Close
+          </Button>
+          <Button
+            isLoading={isApprovingItems}
+            onClick={() => onSetApprovalForAllItems(SystemToAllow.LootManager)}
+          >
+            Allow
           </Button>
         </ModalFooter>
       </ModalContent>
