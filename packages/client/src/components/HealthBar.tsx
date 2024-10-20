@@ -40,36 +40,35 @@ export const HealthBar = ({
   return (
     <VStack spacing={0.5} {...stackProps}>
       {!!level && (
-        <Text
-          alignSelf="start"
-          fontWeight="bold"
-          size={{ base: '3xs', md: '2xs' }}
-        >
+        <Text alignSelf="start" size={{ base: '3xs', md: '2xs' }}>
           Lvl {level.toString()}
         </Text>
       )}
       <Flex
-        border="2px solid black"
+        bgColor="grey100"
+        borderRadius="10px"
+        boxShadow="-2px 2px 3px 0px #00000040"
+        h={{ base: '14px', md: '16px' }}
+        position="relative"
         width="100%"
-        h={{ base: '18px', md: '24px' }}
       >
+        <Box
+          borderRadius="10px"
+          bgColor={barColor}
+          h="100%"
+          position="absolute"
+          transition="all 0.5s"
+          w={`${health}%`}
+        />
         <Text
-          bgColor="black"
-          color="white"
-          fontWeight={700}
-          px={{ base: 1, md: 2 }}
+          color="black"
+          fontWeight={500}
+          position="absolute"
+          left={3}
           size={{ base: '2xs', md: 'xs' }}
         >
           HP
         </Text>
-        <Box borderLeft="2px solid black" h="100%" position="relative" w="100%">
-          <Box
-            bgColor={barColor}
-            h="100%"
-            transition="all 0.5s"
-            w={`${health}%`}
-          />
-        </Box>
       </Flex>
       <HStack
         justify={statusEffects && statusEffects[0] ? 'space-between' : 'end'}
@@ -88,7 +87,7 @@ export const HealthBar = ({
             </Badge>
           ))}
         </HStack>
-        <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
+        <Text size={{ base: '2xs', md: 'xs' }}>
           {currentHpWithFloor.toString()} / {maxHp.toString()}
         </Text>
       </HStack>
