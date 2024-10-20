@@ -27,6 +27,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { etherToFixedNumber } from '../utils/helpers';
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
+import { PolygonalCard } from './PolygonalCard';
 
 type AdventureEscrowModalProps = {
   isOpen: boolean;
@@ -196,9 +197,10 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
+          <PolygonalCard isModal />
           <ModalHeader>Adventure Escrow</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
+          <ModalBody px={{ base: 6, sm: 8 }}>
             <Text>An error occurred.</Text>
           </ModalBody>
           <ModalFooter>
@@ -213,9 +215,14 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>Adventure Escrow</ModalHeader>
         <ModalCloseButton />
-        <ModalBody alignItems="center" textAlign="center" p={4}>
+        <ModalBody
+          alignItems="center"
+          px={{ base: 6, sm: 8 }}
+          textAlign="center"
+        >
           <Text size={{ base: 'xs', sm: 'md' }}>
             External wallet balance:{' '}
             <Text as="span" fontWeight="bold">
@@ -284,7 +291,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
               Deposit
             </Button>
           </HStack>
-          <HStack mb={8} mt={4}>
+          <HStack mt={4}>
             <FormControl isInvalid={!!withdrawErrorMessage}>
               <FormLabel fontSize="xs">Withdraw from session wallet</FormLabel>
               {!!withdrawErrorMessage && (

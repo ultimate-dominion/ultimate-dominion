@@ -612,7 +612,11 @@ export const TileDetailsPanel = (): JSX.Element => {
           <GridItem borderColor="blue500" borderRight="6px solid" colSpan={2}>
             <VStack alignItems="start" h="76px" p={2}>
               <HStack>
-                <Text fontSize="xs" fontWeight={700} textAlign="start">
+                <Text
+                  fontSize={{ base: '3xs', sm: 'xs' }}
+                  fontWeight={700}
+                  textAlign="start"
+                >
                   Adventure Escrow balance:{' '}
                   {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
                 </Text>
