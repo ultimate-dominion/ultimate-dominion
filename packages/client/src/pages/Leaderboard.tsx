@@ -81,7 +81,7 @@ export const Leaderboard = (): JSX.Element => {
     return Number(page);
   }, [page]);
 
-  const allCharacterEntities = useEntityQuery([Has(Characters), Has(Stats)]);
+  const allCharacterEntities = useEntityQuery([Has(Characters)]);
 
   const getAllCharacters = useCallback(
     async (entities: Entity[]): Promise<void> => {
@@ -170,10 +170,12 @@ export const Leaderboard = (): JSX.Element => {
       if (!allCharacterEntities) return;
 
       await getAllCharacters(allCharacterEntities);
+      debugger;
     })();
   }, [allCharacterEntities, getAllCharacters]);
 
   useEffect(() => {
+    debugger;
     if (pageNumber < 1) {
       return;
     }
