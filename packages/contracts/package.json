@@ -7,6 +7,7 @@
     "build": "mud build",
     "clean": "forge clean && rimraf src/codegen",
     "deploy:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337",
+    "update:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337 --worldAddress",
     "deploy:testnet-base": "DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000\" --profile=base-sepolia",
     "deploy:garnet": "DEBUG=mud:* mud deploy --profile=garnet --forgeScriptOptions=\"--slow\"",
     "deploy:redstone": "DEBUG=mud:* mud deploy --profile=redstone --forgeScriptOptions=\"--slow\"",

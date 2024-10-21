@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 
-const ROW_HEIGHT = { base: 5, md: 8, lg: 10 };
+const ROW_HEIGHT = { base: 5, md: 8 };
 
 export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
   const navigate = useNavigate();
@@ -41,12 +41,12 @@ export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
   return (
     <HStack
       as="button"
-      border="1px solid transparent"
+      borderBottom="2px solid transparent"
       h={ROW_HEIGHT}
       disabled={isRestocking}
       justifyContent="space-between"
       onClick={onRestockAndEnter}
-      px={{ base: 1, sm: 2, md: 4 }}
+      px={{ base: 1, sm: 4 }}
       transition="all 0.3s ease"
       w="100%"
       _active={
@@ -55,8 +55,8 @@ export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
               cursor: 'not-allowed',
             }
           : {
-              bg: 'transparent',
-              border: '1px solid',
+              bg: 'grey300',
+              borderBottom: '2px solid white',
               cursor: 'pointer',
             }
       }
@@ -66,14 +66,14 @@ export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
               cursor: 'not-allowed',
             }
           : {
-              border: '1px solid',
+              borderBottom: '2px solid white',
               cursor: 'pointer',
             }
       }
     >
       <HStack justifyContent="start" spacing={4}>
         <Text size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}>
-          General Store 🏪
+          Pawnshop 🏪
         </Text>
         {isRestocking && <Spinner size="sm" />}
       </HStack>

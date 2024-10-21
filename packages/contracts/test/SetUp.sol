@@ -81,7 +81,6 @@ contract SetUp is Test {
         StarterItems memory _starterItems = abi.decode(parsedJson, (StarterItems));
 
         world = IWorld(worldAddress);
-        entropy = IEntropy(world.UD__getEntropy());
         alice = getUser();
         bob = getUser();
         goldToken = IERC20Mintable(world.UD__getGoldToken());
@@ -219,8 +218,8 @@ contract SetUp is Test {
 
         vm.startPrank(bob);
         bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
-        uint256 fees = entropy.getFee(address(1));
-        world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Mage);
+
+        world.UD__rollStats(alicesRandomness, bobCharacterId, Classes.Mage);
         world.UD__enterGame(bobCharacterId);
         vm.stopPrank();
     }

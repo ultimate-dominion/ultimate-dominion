@@ -20,8 +20,8 @@ export const GAME_BOARD_PATH = '/game-board';
 export const CHARACTERS_PATH = '/characters';
 export const LEADERBOARD_PATH = '/leaderboard';
 export const MARKETPLACE_PATH = '/marketplace';
-export const ITEM_PATH = MARKETPLACE_PATH + '/items/';
-export const SHOP_PATH = '/shops/';
+export const ITEM_PATH = MARKETPLACE_PATH + '/items';
+export const SHOP_PATH = '/shops';
 
 const AppRoutes: React.FC = () => {
   const { pathname } = useLocation();
@@ -55,8 +55,8 @@ const AppRoutes: React.FC = () => {
       <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
       <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
       <Route path={MARKETPLACE_PATH} element={<Marketplace />} />
-      <Route path={ITEM_PATH + ':itemId'} element={<MarketplaceItem />} />
-      <Route path={SHOP_PATH + ':shopId'} element={<Shop />} />
+      <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />
+      <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />
     </Routes>
   );
 };

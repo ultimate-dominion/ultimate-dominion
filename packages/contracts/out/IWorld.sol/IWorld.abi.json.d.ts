@@ -2394,19 +2394,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getEntropy",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "_entropy",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__getEscrowBalance",
     "inputs": [
       {
@@ -3153,19 +3140,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getPythProvider",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "_provider",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__getSpawnCounter",
     "inputs": [
       {
@@ -3565,7 +3539,7 @@ declare const abi: [
         "internalType": "bool"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -3589,7 +3563,7 @@ declare const abi: [
         "internalType": "bool"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -4276,6 +4250,19 @@ declare const abi: [
         "name": "approval",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setMaxPlayers",
+    "inputs": [
+      {
+        "name": "newMax",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],

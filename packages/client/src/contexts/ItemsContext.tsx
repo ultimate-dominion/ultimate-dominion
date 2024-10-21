@@ -61,6 +61,7 @@ export const ItemsProvider = ({
       SpellStats,
       StatRestrictions,
       StatusEffectStats,
+      StatusEffectValidity,
       WeaponStats,
     },
     isSynced,
@@ -162,6 +163,21 @@ export const ItemsProvider = ({
             strModifier: bigint;
           }[];
 
+          const statusEffectValidities = consumableStats.effects
+            .map(effect => {
+              const effectEntity = encodeEntity(
+                { effectId: 'bytes32' },
+                { effectId: effect as `0x${string}` },
+              );
+              return getComponentValue(StatusEffectValidity, effectEntity);
+            })
+            .filter(Boolean) as {
+            cooldown: bigint;
+            maxStacks: bigint;
+            validTime: bigint;
+            validTurns: bigint;
+          }[];
+
           const hpRestoreAmount = BigInt(consumableStats.maxDamage) * -1n;
 
           const baseURI = getComponentValueStrict(
@@ -184,6 +200,8 @@ export const ItemsProvider = ({
               (acc, curr) => acc + BigInt(curr.agiModifier),
               0n,
             ),
+            cooldown: statusEffectValidities[0]?.cooldown ?? 0n,
+            effects: consumableStats.effects,
             hpModifier: statusEffectStats.reduce(
               (acc, curr) => acc + BigInt(curr.hpModifier),
               0n,
@@ -194,6 +212,7 @@ export const ItemsProvider = ({
               0n,
             ),
             itemType: itemTemplate.itemType,
+            maxStacks: statusEffectValidities[0]?.maxStacks ?? 0n,
             minLevel: consumableStats.minLevel,
             price: itemTemplate.price,
             tokenId: consumableId.toString(),
@@ -206,6 +225,8 @@ export const ItemsProvider = ({
               (acc, curr) => acc + BigInt(curr.strModifier),
               0n,
             ),
+            validTime: statusEffectValidities[0]?.validTime ?? 0n,
+            validTurns: statusEffectValidities[0]?.validTurns ?? 0n,
           } as ConsumableTemplate;
         }),
       );
@@ -219,6 +240,7 @@ export const ItemsProvider = ({
       ItemsTokenURI,
       StatRestrictions,
       StatusEffectStats,
+      StatusEffectValidity,
     ],
   );
 

@@ -20,6 +20,8 @@ interface IAdminSystem {
 
   function UD__setAdmin(address newAdmin, bool adminState) external;
 
+  function UD__setMaxPlayers(uint256 newMax) external;
+
   function UD__adminDropGold(bytes32 characterId, uint256 goldAmount) external;
 
   function UD__adminDropItem(bytes32 characterId, uint256 itemId, uint256 amount) external;

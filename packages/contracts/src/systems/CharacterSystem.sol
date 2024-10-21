@@ -207,6 +207,8 @@ contract CharacterSystem is System {
 
         // apply equipment bonuses and set them to stat table
         _setStats(characterId, IWorld(_world()).UD__calculateEquipmentBonuses(characterId), stats.level);
+        // re-apply world bonuses
+        IWorld(_world()).UD__applyWorldEffects(characterId);
     }
 
     function setStats(bytes32 entityId, AdjustedCombatStats memory stats) public {

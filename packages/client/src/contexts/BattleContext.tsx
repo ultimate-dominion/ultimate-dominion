@@ -16,14 +16,15 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { hexToBigInt, sliceHex } from 'viem';
 
 import { useToast } from '../hooks/useToast';
 import {
   BATTLE_OUTCOME_SEEN_KEY,
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
+  STATUS_EFFECT_NAME_MAPPING,
 } from '../utils/constants';
+import { decodeAppliedStatusEffectId } from '../utils/helpers';
 import {
   type AttackOutcomeType,
   type Character,
@@ -36,31 +37,6 @@ import {
 import { useCharacter } from './CharacterContext';
 import { useMap } from './MapContext';
 import { useMUD } from './MUDContext';
-
-const decodeAppliedStatusEffectId = (encodedId: string) => {
-  const effectId = sliceHex(encodedId as `0x${string}`, 0, 8);
-  const timestampHex = sliceHex(encodedId as `0x${string}`, 8, 16);
-  const turnAppliedHex = sliceHex(encodedId as `0x${string}`, 24, 32);
-
-  const timestamp = hexToBigInt(timestampHex);
-  const turnApplied = hexToBigInt(turnAppliedHex);
-
-  return {
-    effectId,
-    timestamp,
-    turnApplied,
-  };
-};
-
-const STATUS_EFFECT_NAME_MAPPING: { [key: string]: string } = {
-  '0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000': 'blind',
-  '0x78ded5c390ab6de3000000000000000000000000000000000000000000000000':
-    'poison',
-  '0x54a7e38986f19669000000000000000000000000000000000000000000000000':
-    'stupify',
-  '0x98562f2b32aeb98f000000000000000000000000000000000000000000000000':
-    'weaken',
-};
 
 type BattleContextType = {
   attackOutcomes: AttackOutcomeType[];

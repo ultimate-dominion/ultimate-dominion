@@ -17,7 +17,8 @@ import {
     CombatOutcomeData,
     Position,
     Mobs,
-    SessionTimer
+    SessionTimer,
+    WorldStatusEffects
 } from "@codegen/index.sol";
 import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
@@ -237,6 +238,7 @@ contract EncounterSystem is System {
             if (EncounterEntity.getDied(entityTemp)) {
                 IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
                 EncounterEntity.setDied(entityTemp, true);
+                WorldStatusEffects.setAppliedStatusEffects(entityTemp, emptyArray);
             }
         }
 
@@ -248,7 +250,10 @@ contract EncounterSystem is System {
             EncounterEntity.setAppliedStatusEffects(entityTemp, emptyArray);
             if (EncounterEntity.getDied(entityTemp)) {
                 IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
+                // removing entity from the board resets died to false so set it again here.
                 EncounterEntity.setDied(entityTemp, true);
+                // if entity died remove world stat bonuses
+                WorldStatusEffects.setAppliedStatusEffects(entityTemp, emptyArray);
             }
         }
 
@@ -291,7 +296,7 @@ contract EncounterSystem is System {
         }
     }
 
-    function isAttacker(bytes32 encounterId, bytes32 entityId) public returns (bool _isAttacker) {
+    function isAttacker(bytes32 encounterId, bytes32 entityId) public view returns (bool _isAttacker) {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         for (uint256 i; i < encounterData.attackers.length;) {
             if (entityId == encounterData.attackers[i]) {
@@ -304,7 +309,7 @@ contract EncounterSystem is System {
         }
     }
 
-    function isDefender(bytes32 encounterId, bytes32 entityId) public returns (bool _isDefender) {
+    function isDefender(bytes32 encounterId, bytes32 entityId) public view returns (bool _isDefender) {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         for (uint256 i; i < encounterData.defenders.length;) {
             if (entityId == encounterData.defenders[i]) {

@@ -34,6 +34,7 @@ import {
   type Weapon,
 } from '../utils/types';
 import { ItemCard } from './ItemCard';
+import { PolygonalCard } from './PolygonalCard';
 
 type BattleOutcomeModalProps = {
   isOpen: boolean;
@@ -162,11 +163,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
       <Modal isOpen={isOpen} onClose={onAcknowledge}>
         <ModalOverlay />
         <ModalContent>
+          <PolygonalCard isModal />
           <ModalHeader textAlign="center">
             {winner === character.id ? 'Victory!' : 'Defeat...'}
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody p={4} textAlign="center">
+          <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
             <VStack alignItems="center" pb={8} spacing={4}>
               <Text>
                 {winner === character.id
@@ -205,11 +207,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     <Modal isOpen={isOpen} onClose={onAcknowledge}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader textAlign="center">
           {winner === character.id ? 'Victory!' : 'Defeat...'}
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4} textAlign="center">
+        <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
           <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
             <Text>
               {winner === character.id

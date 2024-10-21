@@ -17,7 +17,7 @@ export const CopyText = ({
 
   return (
     <Tooltip
-      bg="black"
+      bg="#070D2A"
       closeDelay={1000}
       hasArrow
       openDelay={200}
