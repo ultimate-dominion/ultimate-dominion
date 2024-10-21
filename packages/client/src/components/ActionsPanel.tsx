@@ -549,9 +549,15 @@ export const ActionsPanel = (): JSX.Element => {
                 size={{ base: 'xs', sm: 'sm', lg: 'md' }}
                 textAlign="center"
               >
-                {lastestBattleOutcome?.winner === character?.id
+                {lastestBattleOutcome?.playerFled ? 'You escaped!' : ''}
+                {lastestBattleOutcome?.winner === character?.id &&
+                !lastestBattleOutcome?.playerFled
                   ? 'You won!'
-                  : 'You died...'}
+                  : ''}
+                {lastestBattleOutcome?.winner != character?.id &&
+                !lastestBattleOutcome?.playerFled
+                  ? 'You died...'
+                  : ''}
               </Text>
             </Typist>
             <HStack justifyContent="center">
