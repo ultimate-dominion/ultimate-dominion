@@ -1,7 +1,7 @@
 import { Icon, IconProps } from '@chakra-ui/react';
 
 export const CharacterPieceSvg = ({
-  size = 8,
+  size = 7,
   ...props
 }: {
   size?: number;

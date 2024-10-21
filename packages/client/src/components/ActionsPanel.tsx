@@ -254,13 +254,7 @@ export const ActionsPanel = (): JSX.Element => {
         currentBattle &&
         equippedSpellsAndWeapons.length !== 0 &&
         opponent && (
-          <VStack
-            bgColor="white"
-            position="sticky"
-            spacing={0}
-            top={0}
-            w="100%"
-          >
+          <VStack position="sticky" spacing={0} top={0} w="100%">
             {currentBattle.encounterType === EncounterType.PvE && (
               <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
                 <Text as="span" fontWeight="bold">
@@ -537,36 +531,38 @@ export const ActionsPanel = (): JSX.Element => {
           })}
       </Stack>
       {battleOver && currentBattle && (
-        <Stack my={4} spacing={4}>
+        <Stack py={4} spacing={4}>
           <Box
             backgroundColor="#F5F5FA1F"
             boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
             h="6px"
             w="100%"
           />
-          <Typist
-            avgTypingDelay={10}
-            cursor={{ show: false }}
-            stdTypingDelay={10}
-          >
-            <Text
-              fontWeight="bold"
-              size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-              textAlign="center"
+          <HStack justifyContent="space-between" px={{ base: 2, lg: 4 }}>
+            <Typist
+              avgTypingDelay={10}
+              cursor={{ show: false }}
+              stdTypingDelay={10}
             >
-              {lastestBattleOutcome?.winner === character?.id
-                ? 'You won!'
-                : 'You died...'}
-            </Text>
-          </Typist>
-          <HStack justifyContent="center">
-            <Button
-              onClick={() => onContinueToBattleOutcome(true)}
-              size="sm"
-              variant="outline"
-            >
-              View Results
-            </Button>
+              <Text
+                fontWeight="bold"
+                size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                textAlign="center"
+              >
+                {lastestBattleOutcome?.winner === character?.id
+                  ? 'You won!'
+                  : 'You died...'}
+              </Text>
+            </Typist>
+            <HStack justifyContent="center">
+              <Button
+                onClick={() => onContinueToBattleOutcome(true)}
+                size="sm"
+                variant="white"
+              >
+                View Results
+              </Button>
+            </HStack>
           </HStack>
         </Stack>
       )}

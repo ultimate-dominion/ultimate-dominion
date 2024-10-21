@@ -680,23 +680,7 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   return (
     <Box h={{ base: 'calc(100% - 40px)', md: 'calc(100% - 66px)' }}>
-      <HStack
-        bgColor="blue500"
-        h={{ base: '40px', md: '66px' }}
-        position="relative"
-      >
-        <Box
-          background={
-            inSafetyZone
-              ? 'linear-gradient(180deg, rgba(180, 183, 53, 0.33) 0%, rgba(80, 81, 23, 0) 100%)'
-              : 'linear-gradient(180deg, rgba(183, 53, 53, 0.33) 0%, rgba(81, 23, 23, 0) 100%)'
-          }
-          h="40px"
-          position="absolute"
-          right={0}
-          bottom="-40px"
-          w="50%"
-        />
+      <HStack bgColor="blue500" h={{ base: '40px', md: '66px' }}>
         <Grid
           alignItems="center"
           color="white"
@@ -721,7 +705,24 @@ export const TileDetailsPanel = (): JSX.Element => {
         </Grid>
       </HStack>
 
-      <Grid h="100%" overflowY="auto" templateColumns="repeat(4, 1fr)">
+      <Grid
+        h="100%"
+        overflowY="auto"
+        position="relative"
+        templateColumns="repeat(4, 1fr)"
+      >
+        <Box
+          background={
+            inSafetyZone
+              ? 'linear-gradient(180deg, rgba(180, 183, 53, 0.33) 0%, rgba(80, 81, 23, 0) 100%)'
+              : 'linear-gradient(180deg, rgba(183, 53, 53, 0.33) 0%, rgba(81, 23, 23, 0) 100%)'
+          }
+          h="40px"
+          left="50%"
+          position="absolute"
+          top={0}
+          w="50%"
+        />
         {isHomeTile && (
           <GridItem borderColor="blue500" borderRight="6px solid" colSpan={2}>
             <VStack alignItems="start" h="76px" p={2}>
