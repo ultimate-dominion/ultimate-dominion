@@ -1,7 +1,7 @@
 import {
   Avatar,
+  Box,
   Button,
-  Divider,
   FormControl,
   FormHelperText,
   Heading,
@@ -26,7 +26,6 @@ import { getComponentValue } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaCheckCircle } from 'react-icons/fa';
-import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Address, parseEther } from 'viem';
 import { useAccount } from 'wagmi';
@@ -35,17 +34,15 @@ import { InfoModal } from '../components/InfoModal';
 import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
 import { Pagination } from '../components/Pagination';
+import { PolygonalCard } from '../components/PolygonalCard';
+import { MarketplaceIconSvg } from '../components/SVGs';
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
-import {
-  CHARACTER_CREATION_PATH,
-  HOME_PATH,
-  MARKETPLACE_PATH,
-} from '../Routes';
+import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -420,37 +417,15 @@ export const MarketplaceItem = (): JSX.Element => {
 
   if (isLoadingItemTemplates || isLoadingOrders) {
     return (
-      <VStack>
-        <Button
-          alignSelf="start"
-          leftIcon={<IoMdArrowRoundBack />}
-          my={4}
-          onClick={() => navigate(-1)}
-          size="xs"
-          variant="outline"
-        >
-          Back
-        </Button>
-        <HStack h="100%" justifyContent="center" w="100%">
-          <Spinner size="xl" />
-        </HStack>
-      </VStack>
+      <HStack h="100%" justifyContent="center" w="100%">
+        <Spinner size="xl" />
+      </HStack>
     );
   }
 
   if (!userCharacter) {
     return (
       <VStack>
-        <Button
-          alignSelf="start"
-          leftIcon={<IoMdArrowRoundBack />}
-          my={4}
-          onClick={() => navigate(MARKETPLACE_PATH)}
-          size="xs"
-          variant="outline"
-        >
-          Back
-        </Button>
         <Text mt={12}>An error occurred.</Text>
       </VStack>
     );
@@ -459,505 +434,573 @@ export const MarketplaceItem = (): JSX.Element => {
   if (selectedItem == null) {
     return (
       <VStack>
-        <Button
-          alignSelf="start"
-          leftIcon={<IoMdArrowRoundBack />}
-          my={4}
-          onClick={() => navigate(MARKETPLACE_PATH)}
-          size="xs"
-          variant="outline"
-        >
-          Back
-        </Button>
         <Text>Item not found</Text>
       </VStack>
     );
   }
 
   return (
-    <VStack>
-      <Stack
-        direction={{ base: 'column', sm: 'row' }}
-        justify="space-between"
-        my={4}
-        w="100%"
-      >
-        <Button
-          alignSelf="start"
-          leftIcon={<IoMdArrowRoundBack />}
-          onClick={() => navigate(MARKETPLACE_PATH)}
-          size="xs"
-          variant="outline"
+    <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
+      <VStack>
+        <HStack
+          bgColor="blue500"
+          h={{ base: '100px', md: '66px' }}
+          px="20px"
+          width="100%"
         >
-          Back
-        </Button>
-        <Text size={{ base: '2xs', sm: 'sm' }}>
-          $GOLD Balance: {etherToFixedNumber(userCharacter.externalGoldBalance)}
-        </Text>
-      </Stack>
-      <Heading textAlign="center">{removeEmoji(selectedItem.name)}</Heading>
-      <Avatar
-        backgroundColor="transparent"
-        borderRadius={0}
-        display={{ base: 'flex', lg: 'none' }}
-        h={14}
-        mt={4}
-        name={' '}
-        size="2xl"
-      >
-        {getEmoji(selectedItem.name)}
-      </Avatar>
-      <Stack
-        alignItems="start"
-        direction={{ base: 'column-reverse', lg: 'row' }}
-        mt={{ base: 4, lg: 12 }}
-        spacing={12}
-        w="100%"
-      >
-        <Stack p={{ base: 4, sm: 0 }} w={{ base: '100%', lg: '50%' }}>
-          <Text fontWeight="bold" mb={2} textAlign="center">
-            Description
-          </Text>
-          <HStack align="center">
-            <Avatar
-              backgroundColor="transparent"
-              borderRadius={0}
-              display={{ base: 'none', lg: 'flex' }}
-              h={14}
-              name={' '}
-              size="2xl"
-            >
-              {getEmoji(selectedItem.name)}
-            </Avatar>
-            <Text size="sm" textAlign={{ base: 'center', lg: 'start' }}>
-              {selectedItem.description}
-            </Text>
-          </HStack>
           <Stack
-            alignItems="start"
-            direction={{ base: 'column', sm: 'row' }}
-            mt={8}
-            spacing={8}
+            alignItems="center"
+            direction={{ base: 'column', md: 'row' }}
+            spacing={{ base: 2, md: 4 }}
           >
-            <VStack spacing={1} w={{ base: '100%', sm: '50%' }}>
-              <Text fontWeight="bold" mb={2} textAlign="center">
-                Stats
+            <HStack>
+              <MarketplaceIconSvg />
+              <Heading color="white">{removeEmoji(selectedItem.name)}</Heading>
+            </HStack>
+            <Text color="yellow">
+              <Text
+                as="span"
+                display={{ base: 'none', md: 'inline-block' }}
+                mr={2}
+              >
+                -{' '}
               </Text>
-              {selectedItem.itemType !== ItemType.Spell && (
-                <>
-                  <HStack w="100%">
-                    <Text size="sm">Agility Modifier</Text>
-                    <Spacer />
-                    <Text>
-                      {(
-                        selectedItem as ArmorTemplate | WeaponTemplate
-                      ).agiModifier.toString()}
-                    </Text>
-                  </HStack>
-                  <HStack w="100%">
-                    <Text size="sm">Intelligence Modifier</Text>
-                    <Spacer />
-                    <Text>
-                      {(
-                        selectedItem as ArmorTemplate | WeaponTemplate
-                      ).intModifier.toString()}
-                    </Text>
-                  </HStack>
-                  <HStack w="100%">
-                    <Text size="sm">Strength Modifier</Text>
-                    <Spacer />
-                    <Text>
-                      {(
-                        selectedItem as ArmorTemplate | WeaponTemplate
-                      ).strModifier.toString()}
-                    </Text>
-                  </HStack>
-                  <HStack w="100%">
-                    <Text size="sm">HP Modifier</Text>
-                    <Spacer />
-                    <Text>
-                      {(
-                        selectedItem as ArmorTemplate | WeaponTemplate
-                      ).hpModifier.toString()}
-                    </Text>
-                  </HStack>
-                </>
-              )}
-              {selectedItem.itemType === ItemType.Armor && (
-                <HStack w="100%">
-                  <Text size="sm">Armor Modifier</Text>
-                  <Spacer />
-                  <Text>
-                    {(selectedItem as ArmorTemplate).armorModifier.toString()}
-                  </Text>
-                </HStack>
-              )}
-              {selectedItem.itemType !== ItemType.Armor &&
-                selectedItem.itemType !== ItemType.Consumable && (
+              $GOLD Balance:{' '}
+              {etherToFixedNumber(userCharacter.externalGoldBalance)}
+            </Text>
+          </Stack>
+        </HStack>
+        <Avatar
+          backgroundColor="transparent"
+          borderRadius={0}
+          display={{ base: 'flex', lg: 'none' }}
+          h={14}
+          mt={4}
+          name={' '}
+          size="2xl"
+        >
+          {getEmoji(selectedItem.name)}
+        </Avatar>
+        <Stack
+          alignItems="start"
+          direction={{ base: 'column-reverse', lg: 'row' }}
+          mt={{ base: 4, lg: 12 }}
+          px={{ base: 0, sm: 6 }}
+          spacing={12}
+          w="100%"
+        >
+          <Stack p={{ base: 4, sm: 0 }} w={{ base: '100%', lg: '50%' }}>
+            <Text fontWeight="bold" mb={2} textAlign="center">
+              Description
+            </Text>
+            <HStack align="center">
+              <Avatar
+                backgroundColor="transparent"
+                borderRadius={0}
+                display={{ base: 'none', lg: 'flex' }}
+                h={14}
+                name={' '}
+                size="2xl"
+              >
+                {getEmoji(selectedItem.name)}
+              </Avatar>
+              <Text size="sm" textAlign={{ base: 'center', lg: 'start' }}>
+                {selectedItem.description}
+              </Text>
+            </HStack>
+            <Stack
+              alignItems="start"
+              direction={{ base: 'column', sm: 'row' }}
+              mt={8}
+              spacing={8}
+            >
+              <VStack spacing={1} w={{ base: '100%', sm: '50%' }}>
+                <Text fontWeight="bold" mb={2} textAlign="center">
+                  Stats
+                </Text>
+                {selectedItem.itemType !== ItemType.Spell && (
                   <>
                     <HStack w="100%">
-                      <Text size="sm">Min Damage</Text>
+                      <Text size="sm">Agility Modifier</Text>
                       <Spacer />
                       <Text>
                         {(
-                          selectedItem as SpellTemplate | WeaponTemplate
-                        ).minDamage.toString()}
+                          selectedItem as ArmorTemplate | WeaponTemplate
+                        ).agiModifier.toString()}
                       </Text>
                     </HStack>
                     <HStack w="100%">
-                      <Text size="sm">Max Damage</Text>
+                      <Text size="sm">Intelligence Modifier</Text>
                       <Spacer />
                       <Text>
                         {(
-                          selectedItem as SpellTemplate | WeaponTemplate
-                        ).maxDamage.toString()}
+                          selectedItem as ArmorTemplate | WeaponTemplate
+                        ).intModifier.toString()}
+                      </Text>
+                    </HStack>
+                    <HStack w="100%">
+                      <Text size="sm">Strength Modifier</Text>
+                      <Spacer />
+                      <Text>
+                        {(
+                          selectedItem as ArmorTemplate | WeaponTemplate
+                        ).strModifier.toString()}
+                      </Text>
+                    </HStack>
+                    <HStack w="100%">
+                      <Text size="sm">HP Modifier</Text>
+                      <Spacer />
+                      <Text>
+                        {(
+                          selectedItem as ArmorTemplate | WeaponTemplate
+                        ).hpModifier.toString()}
                       </Text>
                     </HStack>
                   </>
                 )}
-            </VStack>
+                {selectedItem.itemType === ItemType.Armor && (
+                  <HStack w="100%">
+                    <Text size="sm">Armor Modifier</Text>
+                    <Spacer />
+                    <Text>
+                      {(selectedItem as ArmorTemplate).armorModifier.toString()}
+                    </Text>
+                  </HStack>
+                )}
+                {selectedItem.itemType !== ItemType.Armor &&
+                  selectedItem.itemType !== ItemType.Consumable && (
+                    <>
+                      <HStack w="100%">
+                        <Text size="sm">Min Damage</Text>
+                        <Spacer />
+                        <Text>
+                          {(
+                            selectedItem as SpellTemplate | WeaponTemplate
+                          ).minDamage.toString()}
+                        </Text>
+                      </HStack>
+                      <HStack w="100%">
+                        <Text size="sm">Max Damage</Text>
+                        <Spacer />
+                        <Text>
+                          {(
+                            selectedItem as SpellTemplate | WeaponTemplate
+                          ).maxDamage.toString()}
+                        </Text>
+                      </HStack>
+                    </>
+                  )}
+              </VStack>
 
-            <VStack spacing={1} w={{ base: '100%', sm: '50%' }}>
-              <Text fontWeight="bold" mb={2} textAlign="center">
-                Requirements
+              <VStack spacing={1} w={{ base: '100%', sm: '50%' }}>
+                <Text fontWeight="bold" mb={2} textAlign="center">
+                  Requirements
+                </Text>
+                <HStack w="100%">
+                  <Text size="sm">Min Level</Text>
+                  <Spacer />
+                  <Text>{selectedItem.minLevel.toString()}</Text>
+                </HStack>
+                <HStack w="100%">
+                  <Text size="sm">Min Agility</Text>
+                  <Spacer />
+                  <Text>
+                    {selectedItem.statRestrictions.minAgility.toString()}
+                  </Text>
+                </HStack>
+                <HStack w="100%">
+                  <Text size="sm">Min Intelligence</Text>
+                  <Spacer />
+                  <Text>
+                    {selectedItem.statRestrictions.minIntelligence.toString()}
+                  </Text>
+                </HStack>
+                <HStack w="100%">
+                  <Text size="sm">Min Strength</Text>
+                  <Spacer />
+                  <Text>
+                    {selectedItem.statRestrictions.minStrength.toString()}
+                  </Text>
+                </HStack>
+              </VStack>
+            </Stack>
+          </Stack>
+          <Stack p={{ base: 4, sm: 0 }} w={{ base: '100%', lg: '50%' }}>
+            <Text fontWeight="bold" mb={2} textAlign="center">
+              Create a request
+            </Text>
+            <HStack w="100%">
+              <Text size="sm">Lowest Item Price</Text>
+              <Spacer />
+              <Text>
+                {lowestPrices[selectedItem.tokenId.toString()]
+                  ? `${etherToFixedNumber(lowestPrices[selectedItem.tokenId.toString()])} $GOLD`
+                  : 'N/A'}
               </Text>
-              <HStack w="100%">
-                <Text size="sm">Min Level</Text>
-                <Spacer />
-                <Text>{selectedItem.minLevel.toString()}</Text>
-              </HStack>
-              <HStack w="100%">
-                <Text size="sm">Min Agility</Text>
-                <Spacer />
-                <Text>
-                  {selectedItem.statRestrictions.minAgility.toString()}
+            </HStack>
+            <HStack w="100%">
+              <Text size="sm">Highest $GOLD Offer</Text>
+              <Spacer />
+              <Text>
+                {highestOffers[selectedItem.tokenId.toString()]
+                  ? `${etherToFixedNumber(highestOffers[selectedItem.tokenId.toString()])} $GOLD`
+                  : 'N/A'}
+              </Text>
+            </HStack>
+            <Box
+              backgroundColor="#F5F5FA1F"
+              boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+              h="6px"
+              my={4}
+              w="100%"
+            />
+            <Text>Buying or selling?</Text>
+            <HStack>
+              <Button
+                bgColor={orderType === OrderType.Buying ? 'grey500' : undefined}
+                color={orderType === OrderType.Buying ? 'white' : undefined}
+                onClick={() => {
+                  const newSearchParams = new URLSearchParams();
+                  newSearchParams.set('orderType', OrderType.Buying);
+                  navigate(`?${newSearchParams}`);
+                  setOrderType(OrderType.Buying);
+                }}
+                size="sm"
+                variant="white"
+              >
+                Buying
+              </Button>
+              <Button
+                bgColor={
+                  orderType === OrderType.Selling ? 'grey500' : undefined
+                }
+                color={orderType === OrderType.Selling ? 'white' : undefined}
+                onClick={() => {
+                  const newSearchParams = new URLSearchParams();
+                  newSearchParams.set('orderType', OrderType.Selling);
+                  navigate(`?${newSearchParams}`);
+                  setOrderType(OrderType.Selling);
+                }}
+                size="sm"
+                variant="white"
+              >
+                Selling
+              </Button>
+            </HStack>
+            {orderType === OrderType.Buying &&
+              (userCharacter.externalGoldBalance === BigInt(0) ? (
+                <Text mt={4} size="sm">
+                  You don&apos;t have any $GOLD in your inventory.
                 </Text>
-              </HStack>
-              <HStack w="100%">
-                <Text size="sm">Min Intelligence</Text>
-                <Spacer />
-                <Text>
-                  {selectedItem.statRestrictions.minIntelligence.toString()}
+              ) : (
+                <VStack alignItems="start" as="form" onSubmit={onCreateOrder}>
+                  {forSaleItems.length > 0 && (
+                    <Text mt={4} size="sm">
+                      Are you sure you want to make an offer for this item?
+                      There are already items for sale, which you can{' '}
+                      <Text
+                        as="span"
+                        color="blue"
+                        cursor="pointer"
+                        onClick={onScrollToTabs}
+                        _hover={{
+                          textDecoration: 'underline',
+                        }}
+                      >
+                        view below
+                      </Text>
+                      .
+                    </Text>
+                  )}
+                  <Text mt={4}>How much $GOLD are you offering?</Text>
+                  <FormControl isInvalid={showError && invalidOrderPrice}>
+                    <InputGroup>
+                      <InputLeftAddon>$GOLD</InputLeftAddon>
+                      <Input
+                        isDisabled={isCreatingOrder}
+                        onChange={e => setOrderPrice(e.target.value)}
+                        placeholder="0.00"
+                        py={0}
+                        type="number"
+                        value={orderPrice}
+                      />
+                    </InputGroup>
+                    {showError && invalidOrderPrice && (
+                      <FormHelperText color="red">
+                        Offer price must be greater than 0.
+                      </FormHelperText>
+                    )}
+                    {showError && insufficientGold && (
+                      <FormHelperText color="red">
+                        You don&apos;t have enough $GOLD to make this offer.
+                      </FormHelperText>
+                    )}
+                  </FormControl>
+                  <Button
+                    fontSize={{ base: 'xs', sm: 'sm' }}
+                    isLoading={isCreatingOrder}
+                    size="sm"
+                    type="submit"
+                    w="100%"
+                  >
+                    Make an Offer for {selectedItem.name}
+                  </Button>
+                </VStack>
+              ))}
+            {orderType === OrderType.Selling &&
+              (userItemBalance === '0' ? (
+                <Text mt={4} size="sm">
+                  You don&apos;t have any {selectedItem.name} in your inventory.
                 </Text>
-              </HStack>
-              <HStack w="100%">
-                <Text size="sm">Min Strength</Text>
-                <Spacer />
-                <Text>
-                  {selectedItem.statRestrictions.minStrength.toString()}
-                </Text>
-              </HStack>
-            </VStack>
+              ) : (
+                <VStack alignItems="start" as="form" onSubmit={onCreateOrder}>
+                  {goldOfferItems.length > 0 && (
+                    <Text mt={4} size="sm">
+                      Are you sure you want to put your item up for sale? There
+                      are already offers for this item, which you can{' '}
+                      <Text
+                        as="span"
+                        color="blue"
+                        cursor="pointer"
+                        onClick={onScrollToTabs}
+                        _hover={{
+                          textDecoration: 'underline',
+                        }}
+                      >
+                        view below
+                      </Text>
+                      .
+                    </Text>
+                  )}
+                  <Text mt={4}>How much $GOLD are you asking for?</Text>
+                  <FormControl isInvalid={showError && invalidOrderPrice}>
+                    <InputGroup>
+                      <InputLeftAddon>$GOLD</InputLeftAddon>
+                      <Input
+                        isDisabled={isCreatingOrder}
+                        onChange={e => setOrderPrice(e.target.value)}
+                        placeholder="0.00"
+                        py={0}
+                        type="number"
+                        value={orderPrice}
+                      />
+                    </InputGroup>
+                    {showError && invalidOrderPrice && (
+                      <FormHelperText color="red">
+                        Asking price must be greater than 0.
+                      </FormHelperText>
+                    )}
+                  </FormControl>
+                  <Button
+                    fontSize={{ base: 'xs', sm: 'sm' }}
+                    isLoading={isCreatingOrder}
+                    size="sm"
+                    type="submit"
+                    w="100%"
+                  >
+                    List {selectedItem.name} for sale
+                  </Button>
+                </VStack>
+              ))}
           </Stack>
         </Stack>
-        <Divider
-          display={{ base: 'none', lg: 'block' }}
-          orientation="vertical"
+
+        <Tabs index={tabIndex} mt={12} ref={tabsRef} variant="line" w="100%">
+          <TabList justifyContent={{ base: 'center', lg: 'start' }}>
+            <Tab
+              fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
+              onClick={() => setTabIndex(0)}
+            >
+              {MarketplaceFilter.ForSale}
+            </Tab>
+            <Tab
+              fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
+              onClick={() => setTabIndex(1)}
+            >
+              {MarketplaceFilter.GoldOffers}
+            </Tab>
+            <Tab
+              fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
+              onClick={() => setTabIndex(2)}
+            >
+              {MarketplaceFilter.MyListings}
+            </Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel p={0}>
+              <Stack gap={0}>
+                <Box
+                  bgColor="#F5F5FA1F"
+                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                  h="5px"
+                  w="100%"
+                />
+                {forSaleItems
+                  .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+                  .map((order, i) => (
+                    <>
+                      <OrderRow
+                        key={`order-${i}`}
+                        item={selectedItem}
+                        order={order}
+                        refreshOrders={refreshOrders}
+                      />
+                      <Box
+                        bgColor="#F5F5FA1F"
+                        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                        h="5px"
+                        w="100%"
+                      />
+                    </>
+                  ))}
+                {forSaleItems.length === 0 && (
+                  <Text mt={8} textAlign="center" w="100%">
+                    No items for sale.
+                  </Text>
+                )}
+              </Stack>
+            </TabPanel>
+            <TabPanel p={0}>
+              <Stack gap={0}>
+                <Box
+                  bgColor="#F5F5FA1F"
+                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                  h="5px"
+                  w="100%"
+                />
+                {goldOfferItems
+                  .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+                  .map((order, i) => (
+                    <>
+                      <OrderRow
+                        key={`order-${i}`}
+                        item={selectedItem}
+                        order={order}
+                        refreshOrders={refreshOrders}
+                      />
+                      <Box
+                        bgColor="#F5F5FA1F"
+                        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                        h="5px"
+                        w="100%"
+                      />
+                    </>
+                  ))}
+                {goldOfferItems.length === 0 && (
+                  <Text mt={8} textAlign="center" w="100%">
+                    No offers for this item.
+                  </Text>
+                )}
+              </Stack>
+            </TabPanel>
+            <TabPanel p={0}>
+              <Stack gap={0}>
+                <Box
+                  bgColor="#F5F5FA1F"
+                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                  h="5px"
+                  w="100%"
+                />
+                {myListings
+                  .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+                  .map((order, i) => (
+                    <>
+                      <OrderRow
+                        key={`order-${i}`}
+                        item={selectedItem}
+                        order={order}
+                        refreshOrders={refreshOrders}
+                      />
+                      <Box
+                        bgColor="#F5F5FA1F"
+                        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                        h="5px"
+                        w="100%"
+                      />
+                    </>
+                  ))}
+                {myListings.length === 0 && (
+                  <Text mt={8} textAlign="center" w="100%">
+                    You have no listings for this item.
+                  </Text>
+                )}
+              </Stack>
+            </TabPanel>
+
+            <HStack
+              justify="center"
+              mt={{ base: 0, lg: 5 }}
+              mb={5}
+              visibility={forSaleItems.length > 0 ? 'visible' : 'hidden'}
+              w="100%"
+            >
+              <Pagination
+                length={
+                  tabIndex === 0
+                    ? forSaleItems.length
+                    : tabIndex === 1
+                      ? goldOfferItems.length
+                      : myListings.length
+                }
+                page={page}
+                pageLimit={pageLimit}
+                perPage={ITEMS_PER_PAGE}
+                setPage={setPage}
+                setPageLimit={setPageLimit}
+              />
+            </HStack>
+          </TabPanels>
+        </Tabs>
+
+        <MarketplaceAllowanceModal
+          completeMessage="Allowance was successful! You can now complete your listing."
+          isCompleting={isCreatingOrder}
+          isOpen={isAllowanceModalOpen}
+          itemName={selectedItem.name}
+          onClose={onCloseAllowanceModal}
+          onComplete={onCreateOrder}
+          orderPrice={orderPrice ? parseEther(orderPrice) : BigInt(0)}
+          orderType={orderType}
         />
-        <Stack p={{ base: 4, sm: 0 }} w={{ base: '100%', lg: '50%' }}>
-          <Text fontWeight="bold" mb={2} textAlign="center">
-            Create a request
-          </Text>
-          <HStack w="100%">
-            <Text size="sm">Lowest Item Price</Text>
-            <Spacer />
-            <Text>
-              {lowestPrices[selectedItem.tokenId.toString()]
-                ? `${etherToFixedNumber(lowestPrices[selectedItem.tokenId.toString()])} $GOLD`
-                : 'N/A'}
-            </Text>
-          </HStack>
-          <HStack w="100%">
-            <Text size="sm">Highest $GOLD Offer</Text>
-            <Spacer />
-            <Text>
-              {highestOffers[selectedItem.tokenId.toString()]
-                ? `${etherToFixedNumber(highestOffers[selectedItem.tokenId.toString()])} $GOLD`
-                : 'N/A'}
-            </Text>
-          </HStack>
-          <Divider my={4} />
-          <Text>Buying or selling?</Text>
-          <HStack>
-            <Button
-              onClick={() => {
-                const newSearchParams = new URLSearchParams();
-                newSearchParams.set('orderType', OrderType.Buying);
-                navigate(`?${newSearchParams}`);
-                setOrderType(OrderType.Buying);
-              }}
-              size="sm"
-              variant={orderType === OrderType.Buying ? 'solid' : 'outline'}
-            >
-              Buying
-            </Button>
-            <Button
-              onClick={() => {
-                const newSearchParams = new URLSearchParams();
-                newSearchParams.set('orderType', OrderType.Selling);
-                navigate(`?${newSearchParams}`);
-                setOrderType(OrderType.Selling);
-              }}
-              size="sm"
-              variant={orderType === OrderType.Selling ? 'solid' : 'outline'}
-            >
-              Selling
-            </Button>
-          </HStack>
-          {orderType === OrderType.Buying &&
-            (userCharacter.externalGoldBalance === BigInt(0) ? (
-              <Text mt={4} size="sm">
-                You don&apos;t have any $GOLD in your inventory.
-              </Text>
-            ) : (
-              <VStack alignItems="start" as="form" onSubmit={onCreateOrder}>
-                {forSaleItems.length > 0 && (
-                  <Text mt={4} size="sm">
-                    Are you sure you want to make an offer for this item? There
-                    are already items for sale, which you can{' '}
-                    <Text
-                      as="span"
-                      color="blue"
-                      cursor="pointer"
-                      onClick={onScrollToTabs}
-                      _hover={{
-                        textDecoration: 'underline',
-                      }}
-                    >
-                      view below
-                    </Text>
-                    .
-                  </Text>
-                )}
-                <Text mt={4}>How much $GOLD are you offering?</Text>
-                <FormControl isInvalid={showError && invalidOrderPrice}>
-                  <InputGroup>
-                    <InputLeftAddon>$GOLD</InputLeftAddon>
-                    <Input
-                      isDisabled={isCreatingOrder}
-                      onChange={e => setOrderPrice(e.target.value)}
-                      placeholder="0.00"
-                      py={0}
-                      type="number"
-                      value={orderPrice}
-                    />
-                  </InputGroup>
-                  {showError && invalidOrderPrice && (
-                    <FormHelperText color="red">
-                      Offer price must be greater than 0.
-                    </FormHelperText>
-                  )}
-                  {showError && insufficientGold && (
-                    <FormHelperText color="red">
-                      You don&apos;t have enough $GOLD to make this offer.
-                    </FormHelperText>
-                  )}
-                </FormControl>
-                <Button
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                  isLoading={isCreatingOrder}
-                  size="sm"
-                  type="submit"
-                  w="100%"
-                >
-                  Make an Offer for {selectedItem.name}
-                </Button>
-              </VStack>
-            ))}
-          {orderType === OrderType.Selling &&
-            (userItemBalance === '0' ? (
-              <Text mt={4} size="sm">
-                You don&apos;t have any {selectedItem.name} in your inventory.
-              </Text>
-            ) : (
-              <VStack alignItems="start" as="form" onSubmit={onCreateOrder}>
-                {goldOfferItems.length > 0 && (
-                  <Text mt={4} size="sm">
-                    Are you sure you want to put your item up for sale? There
-                    are already offers for this item, which you can{' '}
-                    <Text
-                      as="span"
-                      color="blue"
-                      cursor="pointer"
-                      onClick={onScrollToTabs}
-                      _hover={{
-                        textDecoration: 'underline',
-                      }}
-                    >
-                      view below
-                    </Text>
-                    .
-                  </Text>
-                )}
-                <Text mt={4}>How much $GOLD are you asking for?</Text>
-                <FormControl isInvalid={showError && invalidOrderPrice}>
-                  <InputGroup>
-                    <InputLeftAddon>$GOLD</InputLeftAddon>
-                    <Input
-                      isDisabled={isCreatingOrder}
-                      onChange={e => setOrderPrice(e.target.value)}
-                      placeholder="0.00"
-                      py={0}
-                      type="number"
-                      value={orderPrice}
-                    />
-                  </InputGroup>
-                  {showError && invalidOrderPrice && (
-                    <FormHelperText color="red">
-                      Asking price must be greater than 0.
-                    </FormHelperText>
-                  )}
-                </FormControl>
-                <Button
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                  isLoading={isCreatingOrder}
-                  size="sm"
-                  type="submit"
-                  w="100%"
-                >
-                  List {selectedItem.name} for sale
-                </Button>
-              </VStack>
-            ))}
-        </Stack>
-      </Stack>
 
-      <Tabs index={tabIndex} mt={12} ref={tabsRef} variant="line" w="100%">
-        <TabList justifyContent={{ base: 'center', lg: 'start' }}>
-          <Tab
-            fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
-            onClick={() => setTabIndex(0)}
-          >
-            {MarketplaceFilter.ForSale}
-          </Tab>
-          <Tab
-            fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
-            onClick={() => setTabIndex(1)}
-          >
-            {MarketplaceFilter.GoldOffers}
-          </Tab>
-          <Tab
-            fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
-            onClick={() => setTabIndex(2)}
-          >
-            {MarketplaceFilter.MyListings}
-          </Tab>
-        </TabList>
-        <TabPanels>
-          <TabPanel>
-            <Stack gap={2}>
-              {forSaleItems
-                .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
-                .map((order, i) => (
-                  <OrderRow
-                    key={`order-${i}`}
-                    item={selectedItem}
-                    order={order}
-                    refreshOrders={refreshOrders}
-                  />
-                ))}
-            </Stack>
-          </TabPanel>
-          <TabPanel>
-            <Stack gap={2}>
-              {goldOfferItems
-                .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
-                .map((order, i) => (
-                  <OrderRow
-                    key={`order-${i}`}
-                    item={selectedItem}
-                    order={order}
-                    refreshOrders={refreshOrders}
-                  />
-                ))}
-            </Stack>
-          </TabPanel>
-          <TabPanel>
-            <Stack gap={2}>
-              {myListings
-                .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
-                .map((order, i) => (
-                  <OrderRow
-                    key={`order-${i}`}
-                    item={selectedItem}
-                    order={order}
-                    refreshOrders={refreshOrders}
-                  />
-                ))}
-            </Stack>
-          </TabPanel>
-
-          <HStack
-            justify="center"
-            mt={{ base: 0, lg: 5 }}
-            mb={5}
-            visibility={forSaleItems.length > 0 ? 'visible' : 'hidden'}
-            w="100%"
-          >
-            <Pagination
-              length={
-                tabIndex === 0
-                  ? forSaleItems.length
-                  : tabIndex === 1
-                    ? goldOfferItems.length
-                    : myListings.length
-              }
-              page={page}
-              pageLimit={pageLimit}
-              perPage={ITEMS_PER_PAGE}
-              setPage={setPage}
-              setPageLimit={setPageLimit}
-            />
-          </HStack>
-        </TabPanels>
-      </Tabs>
-      <MarketplaceAllowanceModal
-        completeMessage="Allowance was successful! You can now complete your listing."
-        isCompleting={isCreatingOrder}
-        isOpen={isAllowanceModalOpen}
-        itemName={selectedItem.name}
-        onClose={onCloseAllowanceModal}
-        onComplete={onCreateOrder}
-        orderPrice={orderPrice ? parseEther(orderPrice) : BigInt(0)}
-        orderType={orderType}
-      />
-      <InfoModal
-        heading="Listing created!"
-        isOpen={isConfirmationModalOpen}
-        onClose={() => {
-          onScrollToTabs();
-          setTabIndex(2);
-          setOrderPrice('');
-          onCloseConfirmationModal();
-        }}
-      >
-        <VStack>
-          <FaCheckCircle color="green" size={60} />
-          <Text my={4}>
-            {orderType === OrderType.Buying
-              ? `Your offer of ${orderPrice} $GOLD for a ${selectedItem.name} has been placed.`
-              : `Your listing of a ${selectedItem.name} for ${orderPrice} $GOLD has been created.`}{' '}
-            You can view your listings on the{' '}
-            <Text
-              as="span"
-              color="blue"
-              onClick={() => {
-                onScrollToTabs();
-                setTabIndex(2);
-                setOrderPrice('');
-                onCloseConfirmationModal();
-              }}
-              _hover={{
-                cursor: 'pointer',
-                textDecoration: 'underline',
-              }}
-            >
-              &quot;My Listings&quot; tab
-            </Text>{' '}
-            below.
-          </Text>
-        </VStack>
-      </InfoModal>
-    </VStack>
+        <InfoModal
+          heading="Listing created!"
+          isOpen={isConfirmationModalOpen}
+          onClose={() => {
+            onScrollToTabs();
+            setTabIndex(2);
+            setOrderPrice('');
+            onCloseConfirmationModal();
+          }}
+        >
+          <VStack>
+            <FaCheckCircle color="green" size={60} />
+            <Text my={4}>
+              {orderType === OrderType.Buying
+                ? `Your offer of ${orderPrice} $GOLD for a ${selectedItem.name} has been placed.`
+                : `Your listing of a ${selectedItem.name} for ${orderPrice} $GOLD has been created.`}{' '}
+              You can view your listings on the{' '}
+              <Text
+                as="span"
+                color="blue"
+                onClick={() => {
+                  onScrollToTabs();
+                  setTabIndex(2);
+                  setOrderPrice('');
+                  onCloseConfirmationModal();
+                }}
+                _hover={{
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
+              >
+                &quot;My Listings&quot; tab
+              </Text>{' '}
+              below.
+            </Text>
+          </VStack>
+        </InfoModal>
+      </VStack>
+    </PolygonalCard>
   );
 };
