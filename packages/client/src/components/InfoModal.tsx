@@ -11,6 +11,8 @@ import {
 } from '@chakra-ui/react';
 import { ReactNode } from 'react';
 
+import { PolygonalCard } from './PolygonalCard';
+
 type InfoModalProps = {
   children: ReactNode;
   heading: string;
@@ -28,11 +30,12 @@ export const InfoModal: React.FC<InfoModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>
           <Text>{heading}</Text>
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4}>{children}</ModalBody>
+        <ModalBody px={8}>{children}</ModalBody>
         <ModalFooter>
           <Button onClick={onClose} size="sm" variant="ghost">
             Close

@@ -1,4 +1,4 @@
-import { Box, Tooltip, useBreakpointValue } from '@chakra-ui/react';
+import { Box, IconProps, Tooltip, useBreakpointValue } from '@chakra-ui/react';
 
 import { StatsClasses } from '../utils/types';
 import { MageSvg, RogueSvg, WarriorSvg } from './SVGs';
@@ -20,11 +20,12 @@ export const ClassSymbol = ({
   entityClass,
   responsive = false,
   theme = 'light',
+  ...props
 }: {
   entityClass: StatsClasses;
   responsive?: boolean;
   theme?: 'light' | 'dark';
-}): JSX.Element => {
+} & IconProps): JSX.Element => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   switch (entityClass) {
@@ -42,6 +43,7 @@ export const ClassSymbol = ({
               ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'].mage
             }
             theme={theme}
+            {...props}
           />
         </Tooltip>
       );
@@ -59,6 +61,7 @@ export const ClassSymbol = ({
               ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'].rogue
             }
             theme={theme}
+            {...props}
           />
         </Tooltip>
       );
@@ -76,6 +79,7 @@ export const ClassSymbol = ({
               ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'].warrior
             }
             theme={theme}
+            {...props}
           />
         </Tooltip>
       );

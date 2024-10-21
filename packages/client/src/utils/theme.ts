@@ -285,6 +285,21 @@ const Select = {
   },
 };
 
+const Tabs = {
+  defaultProps: {
+    variant: 'line',
+  },
+  variants: {
+    line: {
+      tab: {
+        _selected: {
+          color: 'blue400',
+        },
+      },
+    },
+  },
+};
+
 const Text = {
   sizes: {
     '4xs': {
@@ -374,6 +389,7 @@ export const theme = extendTheme({
     Modal,
     Progress,
     Select,
+    Tabs,
     Text,
     Textarea,
     Tooltip,

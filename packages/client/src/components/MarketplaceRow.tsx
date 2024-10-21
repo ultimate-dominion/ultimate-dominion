@@ -8,7 +8,6 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
-import { IoIosArrowForward } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 
 import { ITEM_PATH } from '../Routes';
@@ -21,6 +20,7 @@ import {
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
+import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const MarketplaceRow = ({
   highestOffer,
@@ -46,16 +46,16 @@ export const MarketplaceRow = ({
 
   return (
     <Flex
-      border="2px solid"
-      borderColor="grey400"
-      borderRadius={2}
+      bgColor="#F5F5FA1F"
       justify="space-between"
       onClick={() => navigate(`${ITEM_PATH}/${tokenId}?${newSearchParams}`)}
+      px={{ base: 1, sm: 2, md: 4 }}
+      py={2}
       w="100%"
       _hover={{
         cursor: 'pointer',
         button: {
-          bgColor: 'grey300',
+          bgColor: 'grey100',
         },
       }}
       _active={{
@@ -65,20 +65,19 @@ export const MarketplaceRow = ({
       }}
     >
       <Flex>
-        <Avatar
-          borderRadius={0}
-          size="lg"
-          name={' '}
-          backgroundColor={'grey300'}
-        >
+        <Avatar bgColor="#F5F5FA1F" borderRadius={0} size="lg" name={' '}>
           {getEmoji(name)}
         </Avatar>
         <VStack align="start" justify="center" ml={4}>
-          <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>{removeEmoji(name)}</Text>
-          </HStack>
+          <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
+            {removeEmoji(name)}
+          </Text>
           {itemType !== ItemType.Spell && (
-            <Text size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
+            <Text
+              color="#121B45"
+              fontWeight={500}
+              size={{ base: '2xs', lg: 'md' }}
+            >
               HP{' '}
               {(item as ArmorTemplate | WeaponTemplate).hpModifier.toString()} •
               STR{' '}
@@ -92,7 +91,7 @@ export const MarketplaceRow = ({
         </VStack>
       </Flex>
       <HStack>
-        <HStack w={{ base: '0px', sm: '250px', md: '350px', lg: '500px' }}>
+        <HStack w={{ base: '0px', md: '350px', lg: '500px' }}>
           <Text
             display={{ base: 'none', md: 'block' }}
             fontWeight={500}
@@ -103,7 +102,7 @@ export const MarketplaceRow = ({
             {Number(minLevel).toLocaleString()}
           </Text>
           <Text
-            display={{ base: 'none', sm: 'block' }}
+            display={{ base: 'none', md: 'block' }}
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -114,7 +113,7 @@ export const MarketplaceRow = ({
               : `${Number(lowestPrice).toLocaleString()} $GOLD`}
           </Text>
           <Text
-            display={{ base: 'none', sm: 'block' }}
+            display={{ base: 'none', md: 'block' }}
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -125,9 +124,9 @@ export const MarketplaceRow = ({
               : `${Number(highestOffer).toLocaleString()} $GOLD`}
           </Text>
         </HStack>
-        <Box display={{ base: 'none', md: 'block' }} w="50px">
-          <Button p={3} variant="ghost">
-            <IoIosArrowForward />
+        <Box display={{ base: 'none', md: 'block' }} mr={2} w="50px">
+          <Button size="sm" variant="ghost">
+            <ForwardCaretSvg />
           </Button>
         </Box>
       </HStack>

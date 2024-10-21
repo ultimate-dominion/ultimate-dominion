@@ -35,6 +35,7 @@ import {
   type Weapon,
 } from '../utils/types';
 import { ItemCard } from './ItemCard';
+import { PolygonalCard } from './PolygonalCard';
 
 enum ItemListingFilterOptions {
   AllItems = 'All Items',
@@ -141,13 +142,30 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>
+        <PolygonalCard isModal />
+        <ModalHeader px={8}>
           <Text>Create Listing</Text>
-          <HStack alignItems="flex-start" mt={4} w="100%">
+          <HStack justifyContent="center" mt={4} w="100%">
             {Object.keys(ItemListingFilterOptions).map(k => {
               return (
                 <Button
-                  key={`item-type-filter-${k}`}
+                  bgColor={
+                    itemListingFilter ===
+                    ItemListingFilterOptions[
+                      k as keyof typeof ItemListingFilterOptions
+                    ]
+                      ? 'grey500'
+                      : undefined
+                  }
+                  color={
+                    itemListingFilter ===
+                    ItemListingFilterOptions[
+                      k as keyof typeof ItemListingFilterOptions
+                    ]
+                      ? 'white'
+                      : undefined
+                  }
+                  key={`item-listing-filter-${k}`}
                   onClick={() =>
                     setItemListingFilter(
                       ItemListingFilterOptions[
@@ -156,14 +174,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     )
                   }
                   size={{ base: 'xs', sm: 'sm' }}
-                  variant={
-                    itemListingFilter ===
-                    ItemListingFilterOptions[
-                      k as keyof typeof ItemListingFilterOptions
-                    ]
-                      ? 'solid'
-                      : 'outline'
-                  }
+                  variant="white"
                 >
                   {
                     ItemListingFilterOptions[
@@ -180,45 +191,46 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
               ? allItems.length
               : allInventoryItems.length}
           </Text>
+          <InputGroup mt={4} w="100%">
+            <InputLeftElement h="100%" pointerEvents="none">
+              <FaSearch />
+            </InputLeftElement>
+            <Input
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search"
+              value={query}
+            />
+          </InputGroup>
+          <HStack
+            alignItems="center"
+            alignSelf="start"
+            justifyContent="space-between"
+            mt={4}
+            w="100%"
+          >
+            <Text size="xs" w="40%">
+              Filter by:
+            </Text>
+            <Select
+              onChange={e =>
+                setItemTypeFilter(e.target.value as ItemFilterOptions)
+              }
+              size="sm"
+              value={itemTypeFilter}
+            >
+              {Object.keys(ItemFilterOptions).map(k => {
+                return (
+                  <option key={`item-type-filter-${k}`} value={k}>
+                    {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
+                  </option>
+                );
+              })}
+            </Select>
+          </HStack>
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4}>
-          <VStack gap={5}>
-            <InputGroup w="100%">
-              <InputLeftElement h="100%" pointerEvents="none">
-                <FaSearch />
-              </InputLeftElement>
-              <Input
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Search"
-                value={query}
-              />
-            </InputGroup>
-            <HStack
-              alignItems="center"
-              alignSelf="start"
-              justifyContent="space-between"
-              w="100%"
-            >
-              <Text size="xs" w="40%">
-                Filter by:
-              </Text>
-              <Select
-                onChange={e =>
-                  setItemTypeFilter(e.target.value as ItemFilterOptions)
-                }
-                size="sm"
-                value={itemTypeFilter}
-              >
-                {Object.keys(ItemFilterOptions).map(k => {
-                  return (
-                    <option key={`item-type-filter-${k}`} value={k}>
-                      {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
-                    </option>
-                  );
-                })}
-              </Select>
-            </HStack>
+        <ModalBody py={0} px={{ base: 3, sm: 8 }}>
+          <VStack pb={{ base: 3, sm: 8 }} spacing={0}>
             {isLoadingItemTemplates ? (
               <Spinner my={12} size="lg" />
             ) : (

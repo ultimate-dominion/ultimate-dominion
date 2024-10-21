@@ -379,7 +379,7 @@ export const Leaderboard = (): JSX.Element => {
           </HStack>
         </Stack>
         <Flex alignItems="center" justify="space-between" w="100%">
-          <Text pl={4} color="#565555" fontWeight={400} fontSize="14px">
+          <Text pl={4} color="#565555" fontWeight={400} size="sm">
             {characters.length} Players
           </Text>
           <HStack>
