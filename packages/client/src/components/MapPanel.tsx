@@ -50,6 +50,7 @@ export const MapPanel = (): JSX.Element => {
             </Heading>
           </HStack>
           <Box
+            aspectRatio="1/1"
             border="0.5px solid"
             borderColor="grey500"
             display="grid"
