@@ -158,6 +158,12 @@ export const MovementProvider = ({
     if (pathname !== GAME_BOARD_PATH) return;
 
     const listener = (event: KeyboardEvent) => {
+      if (isMovementDisabled) return;
+      if (isMoving) return;
+      if (!isSpawned) return;
+      if (currentBattle) return;
+      if (isMessageInputFocused) return;
+
       switch (event.key) {
         case 'ArrowUp':
           onMove('up');
@@ -191,7 +197,15 @@ export const MovementProvider = ({
     window.addEventListener('keydown', listener);
     // eslint-disable-next-line consistent-return
     return () => window.removeEventListener('keydown', listener);
-  }, [onMove, pathname]);
+  }, [
+    currentBattle,
+    isMessageInputFocused,
+    isMovementDisabled,
+    isMoving,
+    isSpawned,
+    onMove,
+    pathname,
+  ]);
 
   return (
     <MovementContext.Provider
