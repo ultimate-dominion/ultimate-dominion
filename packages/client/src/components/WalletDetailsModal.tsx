@@ -27,6 +27,7 @@ import { useToast } from '../hooks/useToast';
 import { shortenAddress } from '../utils/helpers';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { CopyText } from './CopyText';
+import { PolygonalCard } from './PolygonalCard';
 
 export const WalletDetailsModal = ({
   isOpen,
@@ -182,17 +183,36 @@ export const WalletDetailsModal = ({
     withdrawAmount,
   ]);
 
+  const onDownloadSessionPrivateKey = useCallback(() => {
+    try {
+      const element = document.createElement('a');
+      const sessionPrivateKey = localStorage.getItem('mud:burnerWallet');
+      if (!sessionPrivateKey) {
+        throw new Error('No session wallet found.');
+      }
+      const file = new Blob([sessionPrivateKey], { type: 'text/plain' });
+      element.href = URL.createObjectURL(file);
+      element.download = 'ultimate-dominion-session-wallet-pk.txt';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Error downloading private key.', e);
+    }
+  }, [renderError]);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>
           {isConnected ? 'Wallet Details' : 'Connect Wallet'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {address && externalWalletClient && isConnected ? (
-            <VStack p={4} spacing={10}>
+            <VStack spacing={10}>
               <VStack alignItems="start" spacing={4}>
                 {burnerBalance === '0' && (
                   <>
@@ -213,14 +233,33 @@ export const WalletDetailsModal = ({
                     ? formatEther(externalWalletBalance.value)
                     : '0'}
                 </Text>
-                <Button isLoading={isLoggingOut} onClick={onLogout} size="sm">
+                <Button
+                  isDisabled={character?.inBattle}
+                  isLoading={isLoggingOut}
+                  onClick={onLogout}
+                  size="sm"
+                >
                   Logout
                 </Button>
+                {character?.inBattle && (
+                  <Text color="orange" fontWeight={700} size="sm">
+                    You cannot logout while in battle.
+                  </Text>
+                )}
                 <Divider />
                 <Text>Session Account:</Text>
-                <CopyText text={burnerAddress}>
-                  <Text>{shortenAddress(burnerAddress)}</Text>
-                </CopyText>
+                <VStack alignItems="start" spacing={0}>
+                  <CopyText text={burnerAddress}>
+                    <Text>{shortenAddress(burnerAddress)}</Text>
+                  </CopyText>
+                  <Button
+                    onClick={onDownloadSessionPrivateKey}
+                    size="xs"
+                    variant="outline"
+                  >
+                    Export Private Key
+                  </Button>
+                </VStack>
                 <Text size="sm">Balance: {burnerBalance}</Text>
                 <Text fontWeight={700} size="sm">
                   Do not deposit any funds into this account that you are not
@@ -284,7 +323,7 @@ export const WalletDetailsModal = ({
               </VStack>
             </VStack>
           ) : (
-            <VStack p={4} spacing={10}>
+            <VStack spacing={10}>
               <Text textAlign="center">Connect your wallet to play.</Text>
               <ConnectWalletButton />
             </VStack>

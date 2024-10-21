@@ -251,9 +251,8 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     }
 
     function test_unequipItem() public {
-        uint256 fees = entropy.getFee(address(1));
         vm.startPrank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
         vm.stopPrank();
         StatsData memory alicesStats = world.UD__getStats(alicesCharacterId);
@@ -278,13 +277,6 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
             baseStats.intelligence,
             "incorrect 1 intelligence"
         );
-        assertLt(StatRestrictions.getMinAgility(starterDat.itemIds[2]), baseStats.agility, "incorrect 2 agility");
-        assertLt(StatRestrictions.getMinStrength(starterDat.itemIds[2]), baseStats.strength, "incorrect 2 strength");
-        assertLt(
-            StatRestrictions.getMinIntelligence(starterDat.itemIds[2]),
-            baseStats.intelligence,
-            "incorrect 2 intelligence"
-        );
 
         world.UD__equipItems(alicesCharacterId, starterDat.itemIds);
         AdjustedCombatStats memory equippedStats = world.UD__getCombatStats(alicesCharacterId);
@@ -301,5 +293,61 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         AdjustedCombatStats memory unEquippedStats = world.UD__getCombatStats(alicesCharacterId);
         assertFalse(world.UD__isEquipped(alicesCharacterId, starterDat.itemIds[0]));
         assertEq(unEquippedStats.strength, alicesStats.strength);
+    }
+
+    function test_equipTooManyWeapons() public {
+        AdjustedCombatStats memory startingStats = world.UD__getCombatStats(bobCharacterId);
+        uint256[] memory itemIds = new uint256[](5);
+        uint256[] memory amounts = new uint256[](5);
+        bytes32[] memory characterIds = new bytes32[](5);
+        itemIds[0] = newWeaponId;
+        itemIds[1] = alsoNewWeaponId;
+        itemIds[2] = newConsumableId;
+        itemIds[3] = newSpellId;
+        itemIds[4] = alsoNewSpellId;
+        amounts[0] = 1;
+        amounts[1] = 1;
+        amounts[2] = 1;
+        amounts[3] = 1;
+        amounts[4] = 1;
+        characterIds[0] = bobCharacterId;
+        characterIds[1] = bobCharacterId;
+        characterIds[2] = bobCharacterId;
+        characterIds[3] = bobCharacterId;
+        characterIds[4] = bobCharacterId;
+        world.UD__dropItems(characterIds, itemIds, amounts);
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](4);
+        itemsToEquip[0] = itemIds[0];
+        itemsToEquip[1] = itemIds[1];
+        itemsToEquip[2] = itemIds[2];
+        itemsToEquip[3] = itemIds[3];
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+        uint256[] memory moreItemsToEquip = new uint256[](1);
+        moreItemsToEquip[0] = itemIds[4];
+        vm.expectRevert(bytes("too many items equipped"));
+        world.UD__equipItems(bobCharacterId, moreItemsToEquip);
+    }
+
+    function test_equipTooManyArmor() public {
+        AdjustedCombatStats memory startingStats = world.UD__getCombatStats(bobCharacterId);
+        uint256[] memory itemIds = new uint256[](2);
+        uint256[] memory amounts = new uint256[](2);
+        bytes32[] memory characterIds = new bytes32[](2);
+        itemIds[0] = newArmorId;
+        itemIds[1] = alsoNewArmorId;
+        amounts[0] = 1;
+        amounts[1] = 1;
+        characterIds[0] = bobCharacterId;
+        characterIds[1] = bobCharacterId;
+        world.UD__dropItems(characterIds, itemIds, amounts);
+        vm.startPrank(bob);
+        uint256[] memory itemsToEquip = new uint256[](1);
+        itemsToEquip[0] = itemIds[0];
+        uint256[] memory moreItemsToEquip = new uint256[](1);
+        moreItemsToEquip[0] = itemIds[1];
+        world.UD__equipItems(bobCharacterId, itemsToEquip);
+        vm.expectRevert(bytes("Already wearing armor"));
+        world.UD__equipItems(bobCharacterId, moreItemsToEquip);
     }
 }

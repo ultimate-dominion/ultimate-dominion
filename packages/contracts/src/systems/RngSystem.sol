@@ -5,7 +5,6 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {
     RandomNumbers,
     RandomNumbersData,
-    Characters,
     Counters,
     Stats,
     UltimateDominionConfig,
@@ -14,36 +13,18 @@ import {
     RngLogsData,
     CombatEncounter
 } from "@codegen/index.sol";
-import {Math, WAD} from "@libraries/Math.sol";
+import {Math} from "@libraries/Math.sol";
 import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
-import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IWorld, IPvESystem, IPvPSystem, IWorldActionSystem} from "@world/IWorld.sol";
-import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import "forge-std/console.sol";
 
-contract RngSystem is System, IEntropyConsumer {
+contract RngSystem is System {
     using LibChunks for uint256;
 
     event RNGFulfilled(bytes32 randomNumber);
-
-    function _entropy() internal view returns (IEntropy entropy) {
-        entropy = IEntropy(UltimateDominionConfig.getEntropy());
-    }
-
-    function getEntropy() internal view override returns (address) {
-        return UltimateDominionConfig.getEntropy();
-    }
-
-    function getFee() public view returns (uint128) {
-        return _entropy().getFee(_provider());
-    }
-
-    function _provider() internal view returns (address provider) {
-        provider = UltimateDominionConfig.getPythProvider();
-    }
 
     function getRng(bytes32 userRandomNumber, RngRequestType requestType, bytes memory data)
         public
@@ -53,30 +34,12 @@ contract RngSystem is System, IEntropyConsumer {
         RandomNumbersData memory randomNumberData;
         randomNumberData.arbitraryData = data;
         randomNumberData.requestType = requestType;
-        // NOTE: required for testing, since callback is coming before data is stored
-        /////////////// TODO: remove for mainnet deployment //////
-        if (block.chainid == 31337) {
-            (, bytes memory returnData) = address(_entropy()).staticcall(
-                abi.encodeWithSelector(IEntropy.request.selector, _provider(), userRandomNumber, false)
-            );
-            uint64 _sequenceNumber = abi.decode(returnData, (uint64));
-
-            RandomNumbers.set(_sequenceNumber, randomNumberData);
-        }
-        /////////////////////////////////////////
-
-        // pay the fees and request a random number from entropy
-        // sequenceNumber = _entropy().requestWithCallback{value: requestFee}(_provider(), userRandomNumber);
 
         //prevrando entropy
         sequenceNumber = uint64(_incrementCounter(1));
 
         RngLogsData memory rngLog = RngLogsData({
             sequenceNumber: sequenceNumber,
-            provider: _provider(),
-            entropy: address(_entropy()),
-            // fee: requestFee,
-            fee: 0,
             requestType: requestType,
             randomNumber: 0,
             userRandomNumber: userRandomNumber,
@@ -95,18 +58,11 @@ contract RngSystem is System, IEntropyConsumer {
         }
 
         RandomNumbers.set(sequenceNumber, randomNumberData);
-
-        entropyCallback(sequenceNumber, address(0), bytes32(rng));
+        // this is included so that in the future we can add VRNG if it is needed
+        entropyCallback(sequenceNumber, bytes32(rng));
     }
 
-    function entropyCallback(
-        uint64 sequenceNumber,
-        // If your app uses multiple providers, you can use this argument
-        // to distinguish which one is calling the app back. This app only
-        // uses one provider so this argument is not used.
-        address, /*_providerAddress*/
-        bytes32 randomNumber
-    ) internal override {
+    function entropyCallback(uint64 sequenceNumber, bytes32 randomNumber) internal {
         _fullfillEntropy(sequenceNumber, uint256(randomNumber));
         emit RNGFulfilled(randomNumber);
     }

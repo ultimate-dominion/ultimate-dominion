@@ -19,7 +19,7 @@
   },
   {
     "type": "function",
-    "name": "UD__adminClearBattleState",
+    "name": "UD__adminClearEncounterState",
     "inputs": [
       {
         "name": "entityId",
@@ -168,6 +168,46 @@
           },
           {
             "name": "attackers",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminSetEncounterEntity",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "encounterEntityData",
+        "type": "tuple",
+        "internalType": "struct EncounterEntityData",
+        "components": [
+          {
+            "name": "encounterId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "died",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "pvpTimer",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "appliedStatusEffects",
             "type": "bytes32[]",
             "internalType": "bytes32[]"
           }
@@ -1703,6 +1743,19 @@
   },
   {
     "type": "function",
+    "name": "UD__fleePvp",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__fulfillOrder",
     "inputs": [
       {
@@ -2335,19 +2388,6 @@
         "name": "y",
         "type": "uint16",
         "internalType": "uint16"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__getEntropy",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "_entropy",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -3100,19 +3140,6 @@
   },
   {
     "type": "function",
-    "name": "UD__getPythProvider",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "_provider",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__getSpawnCounter",
     "inputs": [
       {
@@ -3420,6 +3447,30 @@
   },
   {
     "type": "function",
+    "name": "UD__increaseEscrowBalance",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "newBalance",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__incrementCounter",
     "inputs": [
       {
@@ -3460,6 +3511,54 @@
     "outputs": [
       {
         "name": "_isAtPosition",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isAttacker",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isAttacker",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isDefender",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isDefender",
         "type": "bool",
         "internalType": "bool"
       }
@@ -4151,6 +4250,19 @@
         "name": "approval",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setMaxPlayers",
+    "inputs": [
+      {
+        "name": "newMax",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],

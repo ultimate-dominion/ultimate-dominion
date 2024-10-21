@@ -3,22 +3,17 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {
-    RandomNumbers,
     EncounterEntity,
     EncounterEntityData,
     EffectsData,
     Effects,
     Stats,
     CombatEncounter,
-    CombatEncounterData,
-    CharacterEquipment,
     StatsData,
-    MobStats,
     PhysicalDamageStats,
     PhysicalDamageStatsData,
     MagicDamageStats,
     MagicDamageStatsData,
-    ConsumableStats,
     StatusEffectStats,
     StatusEffectStatsData,
     StatusEffectValidity,
@@ -28,13 +23,9 @@ import {
     DamageOverTimeAppliedData
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {RngRequestType, MobType, EncounterType, EffectType, Classes} from "@codegen/common.sol";
-import {Counters} from "@tables/Counters.sol";
-import {Mobs, MobsData} from "@tables/Mobs.sol";
-import {MonsterStats, AdjustedCombatStats, Action} from "@interfaces/Structs.sol";
+import {EffectType} from "@codegen/common.sol";
+import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
-import {DEFAULT_MAX_TURNS} from "../../constants.sol";
 import "forge-std/console.sol";
 
 contract EffectsSystem is System {
@@ -42,7 +33,7 @@ contract EffectsSystem is System {
         public
         returns (bytes32 effectStatsId)
     {
-        _requireOwner(address(this), _msgSender());
+        _requireAccess(address(this), _msgSender());
         effectStatsId = bytes32(bytes8(keccak256(abi.encode(name))));
 
         require(!Effects.getEffectExists(effectStatsId), "Effect already exists");
@@ -84,7 +75,18 @@ contract EffectsSystem is System {
                 bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
                 if (!isNotExpired(updatedEffectId)) {
                     WorldStatusEffects.updateAppliedStatusEffects(entityId, i, updatedEffectId);
-                    cullExpiredWorldEffect(entityId, updatedEffectId, i);
+                    numberOfExpiredEffects++;
+                }
+            }
+        }
+
+        // cull expired effects
+        for (uint256 i; i < numberOfExpiredEffects; i++) {
+            bytes32[] memory cullingEffects = WorldStatusEffects.get(entityId);
+            for (uint256 j; j < cullingEffects.length; j++) {
+                if (!isNotExpired(cullingEffects[j])) {
+                    cullExpiredWorldEffect(entityId, cullingEffects[j], j);
+                    break;
                 }
             }
         }
@@ -98,7 +100,6 @@ contract EffectsSystem is System {
     {
         checkWorldStatusEffects(entityId);
         StatusEffectStatsData memory statsData;
-
         bytes32 effectId;
 
         _adjustedStats = _incomingStats;
@@ -125,18 +126,22 @@ contract EffectsSystem is System {
 
     function calculateAllStatusEffects(bytes32 entityId) public returns (AdjustedCombatStats memory _adjustedStats) {
         checkWorldStatusEffects(entityId);
+
         _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
+
         _adjustedStats = calculateCombatStatusEffects(entityId, _adjustedStats);
     }
 
     function cullExpiredWorldEffect(bytes32 entityId, bytes32 effectId, uint256 index) public {
+        uint256 effectsLength = WorldStatusEffects.lengthAppliedStatusEffects(entityId);
+        require(effectsLength > index, "non existent index");
         bytes32 worldStatusEffect = WorldStatusEffects.getItem(entityId, index);
+        require(getEffectStatId(effectId) == getEffectStatId(worldStatusEffect), "invalid effectId");
         AdjustedCombatStats memory _statInput = IWorld(_world()).UD__getCombatStats(entityId);
 
         if (worldStatusEffect != bytes32(0)) {
             if (!isNotExpired(effectId) && worldStatusEffect == effectId) {
                 StatusEffectStatsData memory effectStats = getStatusEffectStats(effectId);
-                uint256 effectsLength = WorldStatusEffects.length(entityId);
                 if (effectsLength > 1) {
                     bytes32 lastEffectId = WorldStatusEffects.getItemAppliedStatusEffects(entityId, effectsLength - 1);
                     WorldStatusEffects.updateAppliedStatusEffects(entityId, index, lastEffectId);
@@ -189,19 +194,22 @@ contract EffectsSystem is System {
 
     function applyWorldEffects(bytes32 entityId) public returns (AdjustedCombatStats memory _adjustedStats) {
         _requireAccess(address(this), _msgSender());
-        bytes32[] memory worldEffects = WorldStatusEffects.get(entityId);
-        _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
-        StatusEffectStatsData memory effectStats;
         checkWorldStatusEffects(entityId);
-        for (uint256 i; i < worldEffects.length; i++) {
-            effectStats = getStatusEffectStats(worldEffects[i]);
-            _adjustedStats.agility += effectStats.agiModifier;
-            _adjustedStats.strength += effectStats.strModifier;
-            _adjustedStats.intelligence += effectStats.intModifier;
-            _adjustedStats.armor += effectStats.armorModifier;
-            _adjustedStats.maxHp += effectStats.hpModifier;
+        bytes32[] memory worldEffects = WorldStatusEffects.get(entityId);
+        if (worldEffects.length > 0) {
+            _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
+            StatusEffectStatsData memory effectStats;
+
+            for (uint256 i; i < worldEffects.length; i++) {
+                effectStats = getStatusEffectStats(worldEffects[i]);
+                _adjustedStats.agility += effectStats.agiModifier;
+                _adjustedStats.strength += effectStats.strModifier;
+                _adjustedStats.intelligence += effectStats.intModifier;
+                _adjustedStats.armor += effectStats.armorModifier;
+                _adjustedStats.maxHp += effectStats.hpModifier;
+            }
+            IWorld(_world()).UD__setStats(entityId, _adjustedStats);
         }
-        IWorld(_world()).UD__setStats(entityId, _adjustedStats);
     }
 
     function currentStacks(bytes32 entityId, bytes32 effectId) public returns (uint256 _appliedStack) {

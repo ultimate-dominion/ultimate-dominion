@@ -1,4 +1,5 @@
 import {
+  Entity,
   getComponentValue,
   getComponentValueStrict,
   HasValue,
@@ -17,7 +18,9 @@ import {
 import { hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
+import { STATUS_EFFECT_NAME_MAPPING } from '../utils/constants';
 import {
+  decodeAppliedStatusEffectId,
   decodeBaseStats,
   fetchMetadataFromUri,
   uriToHttp,
@@ -30,6 +33,7 @@ import type {
   EntityStats,
   Spell,
   Weapon,
+  WorldStatusEffect,
 } from '../utils/types';
 import { useItems } from './ItemsContext';
 import { useMUD } from './MUDContext';
@@ -79,6 +83,9 @@ export const CharacterProvider = ({
       GoldBalances,
       ItemsOwners,
       Stats,
+      StatusEffectStats,
+      StatusEffectValidity,
+      WorldStatusEffects,
     },
     delegatorAddress,
     isSynced,
@@ -127,45 +134,93 @@ export const CharacterProvider = ({
       const escrowGoldBalance =
         getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0);
 
-      const encounterId = getComponentValue(
+      const { encounterId, pvpTimer } = getComponentValue(
         EncounterEntity,
         entity,
-      )?.encounterId;
+      ) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) };
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
       let decodedBaseStats = {
-        agility: '0',
-        currentHp: '0',
+        agility: BigInt(0),
+        currentHp: BigInt(0),
         entityClass: 0,
-        experience: '0',
-        intelligence: '0',
-        level: '0',
-        maxHp: '0',
-        strength: '0',
+        experience: BigInt(0),
+        intelligence: BigInt(0),
+        level: BigInt(0),
+        maxHp: BigInt(0),
+        strength: BigInt(0),
       };
 
       if (characterData.baseStats !== '0x') {
         decodedBaseStats = decodeBaseStats(characterData.baseStats);
       }
 
+      const worldStatusEffectsComponent = getComponentValue(
+        WorldStatusEffects,
+        entity,
+      );
+
+      const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
+        appliedStatusEffects: [],
+      };
+
+      const decodedStatusEffects = appliedStatusEffects.map(
+        decodeAppliedStatusEffectId,
+      );
+
+      const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects.map(
+        effect => {
+          const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
+
+          const effectStats = getComponentValueStrict(
+            StatusEffectStats,
+            paddedEffectId,
+          );
+
+          const validity = getComponentValueStrict(
+            StatusEffectValidity,
+            paddedEffectId,
+          );
+
+          const timestampEnd = effect.timestamp + validity.validTime;
+          const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
+
+          const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+
+          return {
+            active: isActive,
+            agiModifier: effectStats.agiModifier,
+            effectId: paddedEffectId,
+            intModifier: effectStats.intModifier,
+            maxStacks: validity.maxStacks,
+            name,
+            strModifier: effectStats.strModifier,
+            timestampEnd,
+            timestampStart: effect.timestamp,
+          };
+        },
+      );
+
       return {
-        agility: characterStats?.agility.toString() ?? '0',
+        agility: characterStats?.agility ?? BigInt(0),
         baseStats: decodedBaseStats,
-        currentHp: characterStats?.currentHp.toString() ?? '0',
+        currentHp: characterStats?.currentHp ?? BigInt(0),
         entityClass: characterStats?.class ?? 0,
         escrowGoldBalance,
-        experience: characterStats?.experience.toString() ?? '0',
+        experience: characterStats?.experience ?? BigInt(0),
         externalGoldBalance,
         id: entity,
         inBattle,
-        intelligence: characterStats?.intelligence.toString() ?? '0',
-        level: characterStats?.level.toString() ?? '0',
+        intelligence: characterStats?.intelligence ?? BigInt(0),
+        level: characterStats?.level ?? BigInt(0),
         locked: characterData.locked,
-        maxHp: characterStats?.maxHp.toString() ?? '0',
+        maxHp: characterStats?.maxHp ?? BigInt(0),
         name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
         owner: characterData.owner,
-        strength: characterStats?.strength.toString() ?? '0',
+        pvpCooldownTimer: pvpTimer,
+        strength: characterStats?.strength ?? BigInt(0),
         tokenId: tokenId.toString(),
+        worldStatusEffects,
       };
     })[0];
 
@@ -199,7 +254,10 @@ export const CharacterProvider = ({
     GoldBalances,
     publicClient,
     Stats,
+    StatusEffectStats,
+    StatusEffectValidity,
     worldContract,
+    WorldStatusEffects,
   ]);
 
   const refreshCharacter = useCallback(async () => {
@@ -247,12 +305,12 @@ export const CharacterProvider = ({
 
             return {
               ...armor,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Armor;
           })
-          .filter(a => a.balance !== '0');
+          .filter(a => a.balance !== BigInt(0));
 
         const _consumables = consumableTemplates
           .map(consumable => {
@@ -268,12 +326,12 @@ export const CharacterProvider = ({
 
             return {
               ...consumable,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Consumable;
           })
-          .filter(c => c.balance !== '0');
+          .filter(c => c.balance !== BigInt(0));
 
         const _spells = spellTemplates
           .map(spell => {
@@ -289,12 +347,12 @@ export const CharacterProvider = ({
 
             return {
               ...spell,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Spell;
           })
-          .filter(s => s.balance !== '0');
+          .filter(s => s.balance !== BigInt(0));
 
         const _weapons = weaponTemplates
           .map(weapon => {
@@ -310,12 +368,12 @@ export const CharacterProvider = ({
 
             return {
               ...weapon,
-              balance: itemOwner ? itemOwner.balance.toString() : '0',
+              balance: itemOwner ? itemOwner.balance : BigInt(0),
               itemId: tokenOwnersEntity,
               owner: _character.owner,
             } as Weapon;
           })
-          .filter(w => w.balance !== '0');
+          .filter(w => w.balance !== BigInt(0));
 
         const _equippedArmor = _equippedArmorIds
           .map(id => _armor.find(a => a.tokenId === id.toString()))

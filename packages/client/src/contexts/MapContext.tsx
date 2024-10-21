@@ -19,13 +19,20 @@ import {
 import { hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
+import { STATUS_EFFECT_NAME_MAPPING } from '../utils/constants';
 import {
+  decodeAppliedStatusEffectId,
   decodeBaseStats,
   decodeMobInstanceId,
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
-import { type Character, type Monster, Shop } from '../utils/types';
+import {
+  type Character,
+  type Monster,
+  type Shop,
+  type WorldStatusEffect,
+} from '../utils/types';
 import { useCharacter } from './CharacterContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
@@ -42,6 +49,7 @@ type MapContextType = {
   onSpawn: () => void;
   otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
+  refreshEntities: () => void;
   shopsOnTile: Shop[];
 };
 
@@ -57,6 +65,7 @@ const MapContext = createContext<MapContextType>({
   onSpawn: () => {},
   otherCharactersOnTile: [],
   position: null,
+  refreshEntities: () => {},
   shopsOnTile: [],
 });
 
@@ -77,6 +86,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       Shops,
       Spawned,
       Stats,
+      StatusEffectStats,
+      StatusEffectValidity,
+      WorldStatusEffects,
     },
     delegatorAddress,
     isSynced,
@@ -97,8 +109,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [monstersOnTile, setMonstersOnTile] = useState<Monster[]>([]);
 
   const [allShops, setAllShops] = useState<Shop[]>([]);
-
   const [shopsOnTile, setShopsOnTile] = useState<Shop[]>([]);
+
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
   const position = useComponentValue(
     Position,
     encodeEntity(
@@ -182,53 +196,104 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               uriToHttp(`ipfs://${metadataURI}`)[0],
             );
 
-            const encounterId = getComponentValue(
+            const { encounterId, pvpTimer } = getComponentValue(
               EncounterEntity,
               entity,
-            )?.encounterId;
+            ) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) };
             const inBattle = !!encounterId && encounterId !== zeroHash;
 
             const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
             const _position = getComponentValueStrict(Position, entity);
 
             let decodedBaseStats = {
-              agility: '0',
-              currentHp: '0',
+              agility: BigInt(0),
+              currentHp: BigInt(0),
               entityClass: 0,
-              experience: '0',
-              intelligence: '0',
-              level: '0',
-              maxHp: '0',
-              strength: '0',
+              experience: BigInt(0),
+              intelligence: BigInt(0),
+              level: BigInt(0),
+              maxHp: BigInt(0),
+              strength: BigInt(0),
             };
 
             if (characterData.baseStats !== '0x') {
               decodedBaseStats = decodeBaseStats(characterData.baseStats);
             }
 
+            const worldStatusEffectsComponent = getComponentValue(
+              WorldStatusEffects,
+              entity,
+            );
+
+            const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
+              appliedStatusEffects: [],
+            };
+
+            const decodedStatusEffects = appliedStatusEffects.map(
+              decodeAppliedStatusEffectId,
+            );
+
+            const worldStatusEffects: WorldStatusEffect[] =
+              decodedStatusEffects.map(effect => {
+                const paddedEffectId = effect.effectId.padEnd(
+                  66,
+                  '0',
+                ) as Entity;
+                const effectStats = getComponentValueStrict(
+                  StatusEffectStats,
+                  paddedEffectId,
+                );
+
+                const validity = getComponentValueStrict(
+                  StatusEffectValidity,
+                  paddedEffectId,
+                );
+
+                const timestampEnd = effect.timestamp + validity.validTime;
+                const isActive =
+                  timestampEnd > BigInt(Date.now()) / BigInt(1000);
+
+                const name =
+                  STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+
+                return {
+                  active: isActive,
+                  agiModifier: effectStats.agiModifier,
+                  effectId: paddedEffectId,
+                  intModifier: effectStats.intModifier,
+                  maxStacks: validity.maxStacks,
+                  name,
+                  strModifier: effectStats.strModifier,
+                  timestampEnd,
+                  timestampStart: effect.timestamp,
+                };
+              });
+
             return {
               ...fetachedMetadata,
-              agility: characterStats.agility.toString(),
+              agility: characterStats.agility,
               baseStats: decodedBaseStats,
-              currentHp: characterStats.currentHp.toString(),
+              currentHp: characterStats.currentHp,
               entityClass: characterStats.class,
               escrowGoldBalance,
-              experience: characterStats.experience.toString(),
+              experience: characterStats.experience,
               externalGoldBalance,
               id: entity,
               inBattle,
-              intelligence: characterStats.intelligence.toString(),
+              intelligence: characterStats.intelligence,
               isSpawned,
-              level: characterStats.level.toString(),
+              level: characterStats.level,
               locked: characterData.locked,
-              maxHp: characterStats.maxHp.toString(),
+              maxHp: characterStats.maxHp,
               name: hexToString(characterData.name as `0x${string}`, {
                 size: 32,
               }),
               owner: characterData.owner,
               position: { x: _position.x, y: _position.y },
-              strength: characterStats.strength.toString(),
+              pvpCooldownTimer: pvpTimer,
+              strength: characterStats.strength,
               tokenId: tokenId.toString(),
+              worldStatusEffects,
             } as Character & {
               isSpawned: boolean;
               position: { x: number; y: number };
@@ -257,7 +322,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       renderError,
       Spawned,
       Stats,
+      StatusEffectStats,
+      StatusEffectValidity,
       worldContract,
+      WorldStatusEffects,
     ],
   );
 
@@ -271,10 +339,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             entity,
           )?.encounterId;
 
-          const currentHp = getComponentValueStrict(
-            Stats,
-            entity,
-          ).currentHp.toString();
+          const currentHp = getComponentValueStrict(Stats, entity).currentHp;
           const inBattle = !!encounterId && encounterId !== zeroHash;
           const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
           const _position = getComponentValueStrict(Position, entity);
@@ -285,7 +350,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
           return {
             ...monsterTemplate,
-            maxHp: monsterTemplate?.hitPoints.toString() ?? '0',
+            maxHp: monsterTemplate?.hitPoints ?? BigInt(0),
             currentHp,
             id: entity,
             inBattle,
@@ -317,10 +382,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             position: { x: _position.x, y: _position.y },
             priceMarkdown: shopData.priceMarkdown,
             priceMarkup: shopData.priceMarkup,
-            restock: shopData.stock.map(item => item.toString()),
+            restock: shopData.stock,
             sellableItems: shopData.sellableItems.map(item => item.toString()),
             shopId: entity,
-            stock: shopData.stock.map(item => item.toString()),
+            stock: shopData.stock,
           } as Shop;
         });
 
@@ -332,6 +397,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     },
     [Position, Shops, renderError],
   );
+
+  const refreshEntities = useCallback(() => {
+    setRefreshCounter(prev => prev + 1);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -354,67 +423,66 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     getMonsters,
     getShops,
     isSynced,
+    refreshCounter,
   ]);
 
   useEffect(() => {
-    (async (): Promise<void> => {
-      if (!position || (position.x === 0 && position.y === 0)) {
-        setOtherCharactersOnTile([]);
-        setMonstersOnTile([]);
-        setShopsOnTile([]);
-      }
+    if (!position || (position.x === 0 && position.y === 0)) {
+      setOtherCharactersOnTile([]);
+      setMonstersOnTile([]);
+      setShopsOnTile([]);
+    }
 
-      if (allMonsters.length > 0 && position) {
-        setMonstersOnTile(
-          (
-            allMonsters as (Monster & {
-              isSpawned: boolean;
-              position: { x: number; y: number };
-            })[]
-          ).filter(
-            m =>
-              Number(m.currentHp) > 0 &&
-              m.position.x === position.x &&
-              m.position.y === position.y,
-          ),
-        );
-      }
-      if (allShops.length > 0 && position) {
-        setShopsOnTile(
-          (
-            allShops as (Shop & {
-              isSpawned: boolean;
-              position: { x: number; y: number };
-            })[]
-          ).filter(
-            m => m.position.x === position.x && m.position.y === position.y,
-          ),
-        );
-      }
-
-      if (allCharacters.length > 0 && position) {
-        const _otherPlayersOnTile = (
-          allCharacters as (Character & {
+    if (allMonsters.length > 0 && position) {
+      setMonstersOnTile(
+        (
+          allMonsters as (Monster & {
             isSpawned: boolean;
             position: { x: number; y: number };
           })[]
         ).filter(
-          (
-            c: Character & {
-              isSpawned: boolean;
-              position: { x: number; y: number };
-            },
-          ) =>
-            c.position.x === position.x &&
-            c.position.y === position.y &&
-            c.owner !== delegatorAddress &&
-            c.isSpawned,
-        );
-        setOtherCharactersOnTile(_otherPlayersOnTile as Character[]);
-      }
+          m =>
+            Number(m.currentHp) > 0 &&
+            m.position.x === position.x &&
+            m.position.y === position.y,
+        ),
+      );
+    }
+    if (allShops.length > 0 && position) {
+      setShopsOnTile(
+        (
+          allShops as (Shop & {
+            isSpawned: boolean;
+            position: { x: number; y: number };
+          })[]
+        ).filter(
+          m => m.position.x === position.x && m.position.y === position.y,
+        ),
+      );
+    }
 
-      setIsFetchingEntities(false);
-    })();
+    if (allCharacters.length > 0 && position) {
+      const _otherPlayersOnTile = (
+        allCharacters as (Character & {
+          isSpawned: boolean;
+          position: { x: number; y: number };
+        })[]
+      ).filter(
+        (
+          c: Character & {
+            isSpawned: boolean;
+            position: { x: number; y: number };
+          },
+        ) =>
+          c.position.x === position.x &&
+          c.position.y === position.y &&
+          c.owner !== delegatorAddress &&
+          c.isSpawned,
+      );
+      setOtherCharactersOnTile(_otherPlayersOnTile as Character[]);
+    }
+
+    setIsFetchingEntities(false);
   }, [
     allCharacters,
     allMonsters,
@@ -472,6 +540,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         onSpawn,
         otherCharactersOnTile,
         position: position ? { x: position.x, y: position.y } : null,
+        refreshEntities,
         shopsOnTile,
       }}
     >

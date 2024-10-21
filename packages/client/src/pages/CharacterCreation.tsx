@@ -10,10 +10,10 @@ import {
   HStack,
   Input,
   Link,
-  SimpleGrid,
   Stack,
   Text,
   Textarea,
+  Tooltip,
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
@@ -24,7 +24,7 @@ import {
   Has,
   runQuery,
 } from '@latticexyz/recs';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
+import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -32,6 +32,8 @@ import { zeroAddress, zeroHash } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { ItemCardSmall } from '../components/ItemCard';
+import { PolygonalCard } from '../components/PolygonalCard';
+import { MageSvg, RogueSvg, WarriorSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -54,7 +56,7 @@ export const CharacterCreation = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { chainId, isConnected } = useAccount();
   const {
-    components: { Items, StarterItems, UltimateDominionConfig },
+    components: { Items, Levels, StarterItems, UltimateDominionConfig },
     delegatorAddress,
     isSynced,
     systemCalls: { enterGame, mintCharacter, rollStats },
@@ -122,7 +124,7 @@ export const CharacterCreation = (): JSX.Element => {
 
           return {
             ...item,
-            balance: '1',
+            balance: BigInt(1),
             itemId: zeroHash as Entity,
             owner: zeroAddress,
           };
@@ -284,7 +286,7 @@ export const CharacterCreation = (): JSX.Element => {
 
   const rolledOnce = useMemo(() => {
     if (!character) return false;
-    return character.maxHp !== '0';
+    return character.maxHp !== BigInt(0);
   }, [character]);
 
   const onEnterGame = useCallback(async () => {
@@ -358,9 +360,21 @@ export const CharacterCreation = (): JSX.Element => {
     rolledOnce,
   ]);
 
+  const nextLevelXpRequirement =
+    useComponentValue(
+      Levels,
+      encodeEntity({ level: 'uint256' }, { level: BigInt('1') }),
+    )?.experience ?? BigInt(0);
+
   const UploadedAvatar = useMemo(() => {
     return (
-      <Center>
+      <Center
+        border="4px solid"
+        borderColor="grey300"
+        borderRadius="50%"
+        boxShadow="-10px -10px 20px 0px #A2A9B0 inset, 10px 10px 20px 0px #54545440 inset, 5px 5px 10px 0px #88919980 inset, -5px -5px 10px 0px #54545440 inset"
+        p={1.5}
+      >
         <Avatar
           size={{ base: 'lg', sm: 'xl' }}
           src={
@@ -387,11 +401,15 @@ export const CharacterCreation = (): JSX.Element => {
       gap={{ base: 4, sm: 6 }}
       justifyContent="center"
       mx="auto"
-      my={4}
       w="100%"
     >
       {character && characterToken ? (
-        <Box border="2px solid" p={8} w={{ base: '100%', lg: '50%' }}>
+        <PolygonalCard
+          clipPath="none"
+          h="initial"
+          p={{ base: 4, sm: 6 }}
+          w={{ base: '100%', lg: '50%' }}
+        >
           <VStack h="100%" justifyContent="center" spacing={{ base: 4, md: 8 }}>
             <Center>
               <Avatar size={{ base: 'lg', sm: 'xl' }} src={character.image} />
@@ -424,11 +442,11 @@ export const CharacterCreation = (): JSX.Element => {
                     href={`${EXPLORER_URLS[chainId]}/token/${characterToken}/instance/${character.tokenId}`}
                     isExternal
                   >
-                    {character.tokenId}
+                    {character.tokenId.toString()}
                   </Link>
                 ) : (
                   <Text as="span" fontWeight={700}>
-                    {character.tokenId}
+                    {character.tokenId.toString()}
                   </Text>
                 )}
               </Text>
@@ -441,21 +459,23 @@ export const CharacterCreation = (): JSX.Element => {
               Class: {rolledOnce ? StatsClasses[character.entityClass] : 'None'}
             </Text>
           </VStack>
-        </Box>
+        </PolygonalCard>
       ) : (
-        <Box
+        <PolygonalCard
           as="form"
+          clipPath="none"
+          h="initial"
           onSubmit={onCreateCharacter}
           w={{ base: '100%', lg: '50%' }}
         >
           <Box
-            border="2px solid"
             h={{ base: 'auto', lg: '100%' }}
-            p={{ base: 4, sm: 10 }}
-            pos="relative"
+            position="relative"
+            px={{ base: 4, sm: 10 }}
+            py={{ base: 4, sm: 6 }}
           >
             <Heading mb={2} size="sm" textAlign="left">
-              Create Your Character
+              Who are you in this dark realm?
             </Heading>
             <Text fontSize="xs" mb={6}>
               Your name, avatar, and description should fit a character you
@@ -525,7 +545,7 @@ export const CharacterCreation = (): JSX.Element => {
               </FormControl>
             </VStack>
             {!isSmallScreen && (
-              <Box bottom={10} left={0} pos="absolute" px={10} right={0}>
+              <Box bottom={6} left={0} position="absolute" px={10} right={0}>
                 <Button
                   isLoading={isCreating}
                   loadingText="Creating..."
@@ -538,67 +558,135 @@ export const CharacterCreation = (): JSX.Element => {
             )}
           </Box>
           {isSmallScreen && (
-            <Button
-              isLoading={isCreating || isRefreshing}
-              loadingText="Creating..."
-              mt={2}
-              type="submit"
-              width="100%"
-            >
-              Create Character
-            </Button>
+            <Box px={4}>
+              <Button
+                isLoading={isCreating || isRefreshing}
+                loadingText="Creating..."
+                mb={4}
+                mt={2}
+                type="submit"
+                width="100%"
+              >
+                Create Character
+              </Button>
+            </Box>
           )}
-        </Box>
+        </PolygonalCard>
       )}
-      <Box
+      <PolygonalCard
         as="form"
+        clipPath="none"
+        h="initial"
         onSubmit={(e: React.FormEvent<HTMLDivElement>) => e.preventDefault()}
         w={{ base: '100%', lg: '50%' }}
       >
-        <Box
-          border="2px solid"
-          h={{ base: 'auto', lg: '100%' }}
-          p={{ base: 4, sm: 10 }}
-          pos="relative"
-        >
+        <Box position="relative" py={{ base: 4, sm: 6 }}>
           <VStack alignItems="left" spacing={4}>
-            <Heading size="sm" textAlign="left">
+            <Heading px={{ base: 4, sm: 10 }} size="sm" textAlign="left">
               Choose Your Class
             </Heading>
-            <ButtonGroup justifyContent="space-between">
-              <Button
-                isDisabled={isDisabled}
-                onClick={() => setCharacterClass(StatsClasses.Warrior)}
-                size="sm"
-                variant={characterClass === 0 ? 'solid' : 'outline'}
-                w="150px"
+            <ButtonGroup
+              px={{ base: 0, sm: 10 }}
+              justifyContent="space-between"
+            >
+              <Tooltip
+                bg="#070D2A"
+                label="The Warrior class grants your character 1 additional STR Ability Point per level."
+                placement="top"
               >
-                Warrior
-              </Button>
-              <Button
-                isDisabled={isDisabled}
-                onClick={() => setCharacterClass(StatsClasses.Rogue)}
-                size="sm"
-                variant={characterClass === 1 ? 'solid' : 'outline'}
-                w="150px"
+                <Button
+                  leftIcon={
+                    <WarriorSvg
+                      theme={
+                        characterClass === StatsClasses.Warrior
+                          ? 'light'
+                          : 'dark'
+                      }
+                    />
+                  }
+                  bgColor={
+                    characterClass === StatsClasses.Warrior
+                      ? 'grey500'
+                      : undefined
+                  }
+                  color={
+                    characterClass === StatsClasses.Warrior
+                      ? 'white'
+                      : undefined
+                  }
+                  isDisabled={isDisabled}
+                  onClick={() => setCharacterClass(StatsClasses.Warrior)}
+                  size="sm"
+                  variant="white"
+                  w="150px"
+                >
+                  Warrior
+                </Button>
+              </Tooltip>
+              <Tooltip
+                bg="#070D2A"
+                label="The Rogue class grants your character 1 additional AGI Ability Point per level."
+                placement="top"
               >
-                Rogue
-              </Button>
-              <Button
-                isDisabled={isDisabled}
-                onClick={() => setCharacterClass(StatsClasses.Mage)}
-                size="sm"
-                variant={characterClass === 2 ? 'solid' : 'outline'}
-                w="150px"
+                <Button
+                  leftIcon={
+                    <RogueSvg
+                      theme={
+                        characterClass === StatsClasses.Rogue ? 'light' : 'dark'
+                      }
+                    />
+                  }
+                  bgColor={
+                    characterClass === StatsClasses.Rogue
+                      ? 'grey500'
+                      : undefined
+                  }
+                  color={
+                    characterClass === StatsClasses.Rogue ? 'white' : undefined
+                  }
+                  isDisabled={isDisabled}
+                  onClick={() => setCharacterClass(StatsClasses.Rogue)}
+                  size="sm"
+                  variant="white"
+                  w="150px"
+                >
+                  Rogue
+                </Button>
+              </Tooltip>
+              <Tooltip
+                bg="#070D2A"
+                label="The Mage class grants your character 1 additional INT Ability Point per level."
+                placement="top"
               >
-                Mage
-              </Button>
+                <Button
+                  leftIcon={
+                    <MageSvg
+                      theme={
+                        characterClass === StatsClasses.Mage ? 'light' : 'dark'
+                      }
+                    />
+                  }
+                  bgColor={
+                    characterClass === StatsClasses.Mage ? 'grey500' : undefined
+                  }
+                  color={
+                    characterClass === StatsClasses.Mage ? 'white' : undefined
+                  }
+                  isDisabled={isDisabled}
+                  onClick={() => setCharacterClass(StatsClasses.Mage)}
+                  size="sm"
+                  variant="white"
+                  w="150px"
+                >
+                  Mage
+                </Button>
+              </Tooltip>
             </ButtonGroup>
           </VStack>
           {character &&
             rolledOnce &&
             characterClass !== character.entityClass && (
-              <Text color="red" fontSize="sm" mt={2}>
+              <Text color="red" fontSize="sm" mt={2} px={{ base: 4, sm: 10 }}>
                 Your current class is{' '}
                 <Text as="span" fontWeight={700}>
                   {StatsClasses[character.entityClass]}
@@ -606,86 +694,119 @@ export const CharacterCreation = (): JSX.Element => {
                 . Re-roll stats to change class.
               </Text>
             )}
-          <SimpleGrid
-            columns={{ base: 1, xl: 2 }}
-            mb={{ base: 0, lg: 24 }}
-            mt={{ base: 8, sm: 12 }}
-            spacing={{ base: 12, sm: 16 }}
-          >
-            <VStack spacing={8}>
-              <HStack justify="space-between" w="100%">
-                <VStack alignItems="left" spacing={4}>
-                  <Heading size="sm" textAlign="left">
-                    Roll Stats
-                  </Heading>
-                  <Button
-                    isDisabled={isDisabled}
-                    isLoading={isRollingStats}
-                    loadingText="Rolling..."
-                    onClick={onRollStats}
-                    size="sm"
-                  >
-                    {rolledOnce ? 'Re-roll' : 'Roll'}
-                  </Button>
-                </VStack>
-              </HStack>
-              <VStack w="100%">
-                <HStack justify="space-between" w="100%">
-                  <Text>HP - Hit Points</Text>
-                  <Text>{character?.maxHp ?? '0'}</Text>
-                </HStack>
-                <HStack justify="space-between" w="100%">
-                  <Text>STR - Strength</Text>
-                  <Text>{character?.strength ?? '0'}</Text>
-                </HStack>
-                <HStack justify="space-between" w="100%">
-                  <Text>AGI - Agility</Text>
-                  <Text>{character?.agility ?? '0'}</Text>
-                </HStack>
-                <HStack justify="space-between" w="100%">
-                  <Text>INT - Intelligence</Text>
-                  <Text>{character?.intelligence ?? '0'}</Text>
-                </HStack>
-              </VStack>
-            </VStack>
-            <VStack spacing={5}>
-              <HStack justify="space-between" w="100%">
-                <Heading size="sm">$Gold</Heading>
-                <Text>5</Text>
-              </HStack>
-              <HStack justify="space-between" w="100%">
-                <Heading size="sm">Items</Heading>
-                <Text>{starterItems[characterClass].length}</Text>
-              </HStack>
-              <VStack w="100%">
-                {starterItems[characterClass].map(item => (
-                  <ItemCardSmall
-                    key={`starter-item-${StatsClasses[characterClass]}-${item.tokenId}`}
-                    {...item}
-                  />
-                ))}
-              </VStack>
-            </VStack>
-          </SimpleGrid>
-          {!isSmallScreen && (
-            <Box bottom={10} left={0} mt={16} pos="absolute" px={10} right={0}>
-              {character && !rolledOnce && showError && (
-                <Text color="red" fontSize="sm" mb={2} textAlign="center">
-                  You must roll stats at least once before entering the game.
-                </Text>
-              )}
+          <VStack mt={{ base: 8, sm: 12 }} spacing={4}>
+            <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
+              <Heading size="sm" textAlign="left">
+                Stats
+              </Heading>
               <Button
                 isDisabled={isDisabled}
-                isLoading={isEnteringGame}
-                loadingText="Entering..."
-                onClick={onEnterGame}
-                type="button"
-                width="100%"
+                isLoading={isRollingStats}
+                loadingText="Rolling..."
+                onClick={onRollStats}
+                size="sm"
               >
-                Enter Game
+                {rolledOnce ? 'Re-roll' : 'Roll Stats'}
               </Button>
-            </Box>
-          )}
+            </HStack>
+            <VStack fontWeight={700} spacing={1.5} w="100%">
+              <Box
+                backgroundColor="#F5F5FA1F"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                h="6px"
+                w="100%"
+              />
+              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
+                <Text color="#121B45">HP - Hit Points</Text>
+                <Text color="grey500" size="lg">
+                  {character?.maxHp.toString() ?? '0'}
+                </Text>
+              </HStack>
+              <Box
+                backgroundColor="#F5F5FA1F"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                h="6px"
+                w="100%"
+              />
+              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
+                <Text color="#121B45">STR - Strength</Text>
+                <Text color="grey500" size="lg">
+                  {character?.strength.toString() ?? '0'}
+                </Text>
+              </HStack>
+              <Box
+                backgroundColor="#F5F5FA1F"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                h="6px"
+                w="100%"
+              />
+              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
+                <Text color="#121B45">AGI - Agility</Text>
+                <Text color="grey500" size="lg">
+                  {character?.agility.toString() ?? '0'}
+                </Text>
+              </HStack>
+              <Box
+                backgroundColor="#F5F5FA1F"
+                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                h="6px"
+                w="100%"
+              />
+              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
+                <Text color="#121B45">INT - Intelligence</Text>
+                <Text color="grey500" size="lg">
+                  {character?.intelligence.toString() ?? '0'}
+                </Text>
+              </HStack>
+            </VStack>
+          </VStack>
+          <VStack mt={4} spacing={2}>
+            <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
+              <Text color="yellow" fontWeight={700} size="lg">
+                5 $GOLD
+              </Text>
+              <Text color="grey500" fontWeight={500} size="lg">
+                0 / {nextLevelXpRequirement.toString()} XP
+              </Text>
+            </HStack>
+            <HStack
+              mt={4}
+              justify="space-between"
+              px={{ base: 4, sm: 10 }}
+              w="100%"
+            >
+              <Heading size="sm">Items</Heading>
+              <Text color="grey500" fontWeight={700} size="lg">
+                {starterItems[characterClass].length}
+              </Text>
+            </HStack>
+            <VStack spacing={0} w="100%">
+              {starterItems[characterClass].map(item => (
+                <ItemCardSmall
+                  key={`starter-item-${StatsClasses[characterClass]}-${item.tokenId}`}
+                  {...item}
+                />
+              ))}
+            </VStack>
+          </VStack>
+          <Box mt={4} px={{ base: 4, sm: 10 }}>
+            {character && !rolledOnce && showError && (
+              <Text color="red" fontSize="sm" mb={2} textAlign="center">
+                You must roll stats at least once before entering the game.
+              </Text>
+            )}
+            <Button
+              isDisabled={isDisabled}
+              isLoading={isEnteringGame}
+              loadingText="Entering..."
+              onClick={onEnterGame}
+              size="sm"
+              type="button"
+              width="100%"
+            >
+              Wake Up to the Dark Cave
+            </Button>
+          </Box>
           {!character && (
             <Box
               pos="absolute"
@@ -701,27 +822,7 @@ export const CharacterCreation = (): JSX.Element => {
             </Box>
           )}
         </Box>
-        {isSmallScreen && (
-          <>
-            <Button
-              isDisabled={isDisabled}
-              isLoading={isEnteringGame}
-              loadingText="Entering..."
-              onClick={onEnterGame}
-              mt={2}
-              type="button"
-              width="100%"
-            >
-              Enter Game
-            </Button>
-            {showError && !rolledOnce && (
-              <Text color="red" fontSize="sm" mt={2} textAlign="center">
-                You must roll stats at least once before entering the game.
-              </Text>
-            )}
-          </>
-        )}
-      </Box>
+      </PolygonalCard>
     </Stack>
   );
 };

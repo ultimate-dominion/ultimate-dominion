@@ -1,20 +1,20 @@
 import {
-  Button,
-  Center,
-  Divider,
+  Box,
+  Grid,
+  GridItem,
+  Heading,
   HStack,
   Spacer,
-  Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
-import { IoMdArrowRoundBack } from 'react-icons/io';
-import { useNavigate, useParams } from 'react-router-dom';
-// eslint-disable-next-line import/no-named-as-default
-import Typist from 'react-typist';
+import { IoNavigate } from 'react-icons/io5';
+import { useParams } from 'react-router-dom';
 
+import { PolygonalCard } from '../components/PolygonalCard';
 import { ShopHalf } from '../components/ShopHalf';
+import { ShopSvg } from '../components/SVGs/ShopSvg';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
@@ -28,7 +28,6 @@ import {
 } from '../utils/types';
 
 export const Shop = (): JSX.Element => {
-  const navigate = useNavigate();
   const { shopId } = useParams();
 
   const {
@@ -44,6 +43,9 @@ export const Shop = (): JSX.Element => {
     inventoryConsumables,
     inventorySpells,
     inventoryWeapons,
+    equippedArmor,
+    equippedSpells,
+    equippedWeapons,
   } = useCharacter();
   const { allShops } = useMap();
 
@@ -54,19 +56,21 @@ export const Shop = (): JSX.Element => {
 
   const [sellable, setSellable] = useState<
     Array<{
-      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
-      balance: string | null;
-      stock: string | null;
+      balance: bigint | null;
       index: string;
+      isEquipped: boolean;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      stock: bigint | null;
     }>
   >([]);
 
   const [buyable, setBuyable] = useState<
     Array<{
-      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
-      balance: string | null;
-      stock: string | null;
+      balance: bigint | null;
       index: string;
+      isEquipped: boolean;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      stock: bigint | null;
     }>
   >([]);
 
@@ -84,16 +88,26 @@ export const Shop = (): JSX.Element => {
     if (items.length === 0) return;
     if (!shop) return;
 
+    const equippedItems = [
+      ...equippedArmor,
+      ...equippedSpells,
+      ...equippedWeapons,
+    ];
+
     const sellableInventory = items
       // filter out the items this shop does not sell
       .filter(item => shop.sellableItems.includes(item.tokenId))
       // add back the balances of the item and itemIndexes
       .map(item => {
         const index = shop?.sellableItems.indexOf(item.tokenId).toString();
+        const isEquipped = equippedItems.some(
+          equippedItem => equippedItem.tokenId === item.tokenId,
+        );
         return {
-          index: index,
-          item: item,
           balance: item.balance,
+          index: index,
+          isEquipped,
+          item: item,
           stock: null,
         };
       });
@@ -109,10 +123,11 @@ export const Shop = (): JSX.Element => {
       .map(item => {
         const index = shop?.buyableItems.indexOf(item.tokenId).toString();
         return {
-          item: item,
-          stock: shop.stock[Number(index)],
           balance: null,
           index: index,
+          isEquipped: false,
+          item: item,
+          stock: shop.stock[Number(index)],
         };
       });
 
@@ -121,6 +136,9 @@ export const Shop = (): JSX.Element => {
   }, [
     armorTemplates,
     consumableTemplates,
+    equippedArmor,
+    equippedSpells,
+    equippedWeapons,
     isItemsLoading,
     items,
     shop,
@@ -131,16 +149,6 @@ export const Shop = (): JSX.Element => {
   if (!shop) {
     return (
       <VStack>
-        <Button
-          alignSelf="flex-start"
-          leftIcon={<IoMdArrowRoundBack />}
-          my={4}
-          onClick={() => navigate(-1)}
-          size="xs"
-          variant="outline"
-        >
-          Back
-        </Button>
         <Text>Shop not found</Text>
       </VStack>
     );
@@ -149,62 +157,87 @@ export const Shop = (): JSX.Element => {
   if (!userCharacter) {
     return (
       <VStack>
-        <Button
-          alignSelf="flex-start"
-          leftIcon={<IoMdArrowRoundBack />}
-          my={4}
-          onClick={() => navigate(-1)}
-          size="xs"
-          variant="outline"
-        >
-          Back
-        </Button>
         <Text>Character not found</Text>
       </VStack>
     );
   }
 
   return (
-    <VStack mt={16}>
-      <Typist avgTypingDelay={10} cursor={{ show: false }} stdTypingDelay={10}>
-        <Text textAlign="center" w="100%">
-          Hello, and welcome to my shop! Please have a look at my wares. Let me
-          know if you need any help.
+    <Box>
+      <HStack bgColor="#1A244E" color="white" h="68px" px={6}>
+        <ShopSvg />
+        <Heading size={{ base: 'sm', md: 'md' }}>Pawnshop</Heading>
+        <Spacer />
+        <IoNavigate size={20} />
+        <Text fontWeight={700} size={{ base: 'lg', md: 'xl' }}>
+          {shop.position.x},{shop.position.y}
         </Text>
-      </Typist>
-      <HStack border="2px solid" mt={8} p={8} w="100%">
-        <Spacer />
-        <Stack h="100%" w="100%">
-          {userCharacter && shopId && sellable && sellable.length ? (
-            <ShopHalf
-              characterId={userCharacter.id}
-              shop={shop}
-              items={sellable}
-              name={`Character’s Inventory - ${etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD`}
-              orderType={OrderType.Selling}
-            />
-          ) : (
-            <Center>
-              <Text>No Sellable Items</Text>
-            </Center>
-          )}
-        </Stack>
-        <Divider border="1px solid black" mx={8} orientation="vertical" />
-        <Stack h="100%" w="100%">
-          {userCharacter && shopId && buyable && buyable.length ? (
-            <ShopHalf
-              characterId={userCharacter.id}
-              items={buyable}
-              name={`Shopkeeper’s Inventory - ${etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD`}
-              shop={shop}
-              orderType={OrderType.Buying}
-            />
-          ) : (
-            <Text>No Buyable Items</Text>
-          )}
-        </Stack>
-        <Spacer />
       </HStack>
-    </VStack>
+
+      <Grid
+        gap={4}
+        mt={4}
+        templateColumns={{ base: 'repeat(1, 1fr)', xl: 'repeat(2, 1fr)' }}
+      >
+        <GridItem>
+          <HStack bgColor="#1A244E" h="68px" px={6}>
+            <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+              My Inventory
+            </Heading>
+            <Spacer />
+            <Text
+              color="yellow"
+              fontWeight={700}
+              size={{ base: 'lg', md: 'xl' }}
+            >
+              {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
+            </Text>
+          </HStack>
+          <PolygonalCard clipPath="none" h="calc(100% - 68px)">
+            {userCharacter && shopId && sellable && sellable.length ? (
+              <ShopHalf
+                characterId={userCharacter.id}
+                shop={shop}
+                items={sellable}
+                orderType={OrderType.Selling}
+              />
+            ) : (
+              <VStack p={6}>
+                <Text>No Sellable Items</Text>
+              </VStack>
+            )}
+          </PolygonalCard>
+        </GridItem>
+        <GridItem>
+          <HStack bgColor="#1A244E" h="68px" px={6}>
+            <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+              Shopkeeper&apos;s Inventory
+            </Heading>
+            <Spacer />
+            <Text
+              color="yellow"
+              fontWeight={700}
+              size={{ base: 'lg', md: 'xl' }}
+            >
+              {etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD
+            </Text>
+          </HStack>
+          <PolygonalCard clipPath="none" h="calc(100% - 68px)">
+            {userCharacter && shopId && buyable && buyable.length ? (
+              <ShopHalf
+                characterId={userCharacter.id}
+                items={buyable}
+                shop={shop}
+                orderType={OrderType.Buying}
+              />
+            ) : (
+              <VStack p={6}>
+                <Text>No Buyable Items</Text>
+              </VStack>
+            )}
+          </PolygonalCard>
+        </GridItem>
+      </Grid>
+    </Box>
   );
 };

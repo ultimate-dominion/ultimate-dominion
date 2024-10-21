@@ -30,9 +30,8 @@ contract Test_CharacterSystem is SetUp, GasReporter {
     function test_RollStats() public {
         startGasReport("rolls stats for a character");
 
-        uint256 fees = entropy.getFee(address(1));
         vm.prank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
         vm.warp(block.number + 1);
         StatsData memory alicesCharacter = world.UD__getStats(alicesCharacterId);
         assertEq(uint8(alicesCharacter.class), uint8(Classes.Rogue));
@@ -48,20 +47,18 @@ contract Test_CharacterSystem is SetUp, GasReporter {
     }
 
     function test_RollStats_Revert_GameStarted() public {
-        uint256 fees = entropy.getFee(address(1));
         vm.startPrank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
         vm.expectRevert();
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
     }
 
     function test_EnterGame() public {
         startGasReport("enters a character into the game");
 
-        uint256 fees = entropy.getFee(address(1));
         vm.startPrank(alice);
-        world.UD__rollStats{value: fees}(alicesRandomness, alicesCharacterId, Classes.Rogue);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
         world.UD__enterGame(alicesCharacterId);
         StarterItemsData memory starterItemsDat = world.UD__getStarterItems(Classes.Rogue);
         assertEq(erc1155System.balanceOf(alice, starterItemsDat.itemIds[0]), starterItemsDat.amounts[0]);
@@ -91,5 +88,45 @@ contract Test_CharacterSystem is SetUp, GasReporter {
         vm.prank(bob);
         world.UD__levelCharacter(bobCharacterId, bobStats);
         assertEq(world.UD__getBaseStats(bobCharacterId).strength, int256(startingStr + 2));
+    }
+
+    function test_LevelCap() public {
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+        vm.prank(userA);
+        world.UD__enterGame(userACharacterID);
+        for (uint256 i = 0; i < 10; ++i) {
+            // get the stats for userA
+            StatsData memory userAStats = world.UD__getBaseStats(userACharacterID);
+            // spend 2 points to userA's strenth
+            int256 startingStr = userAStats.strength;
+            userAStats.experience = 200_000_000_000;
+            world.UD__adminSetStats(userACharacterID, userAStats);
+            userAStats.strength += 2;
+            vm.prank(userA);
+            world.UD__levelCharacter(userACharacterID, userAStats);
+        }
+        assertEq(world.UD__getBaseStats(userACharacterID).level, 10);
+    }
+
+    function test_classLevelBonus() public {
+        // create userA
+
+        vm.prank(alice);
+        world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Mage);
+        vm.prank(alice);
+        world.UD__enterGame(alicesCharacterId);
+        // get the stats for userA
+        StatsData memory userAStats = world.UD__getBaseStats(alicesCharacterId);
+        // spend 2 points to userA's strenth
+        int256 startingStr = userAStats.strength;
+        userAStats.experience = 100_000;
+        world.UD__adminSetStats(alicesCharacterId, userAStats);
+        userAStats.strength += 2;
+        int256 intelligence = world.UD__getBaseStats(alicesCharacterId).intelligence;
+        vm.prank(alice);
+        world.UD__levelCharacter(alicesCharacterId, userAStats);
+        assertEq(world.UD__getBaseStats(alicesCharacterId).intelligence, intelligence + 1);
     }
 }

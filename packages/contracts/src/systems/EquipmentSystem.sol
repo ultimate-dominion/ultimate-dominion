@@ -9,7 +9,6 @@ import {IERC1155Receiver} from "@erc1155/IERC1155Receiver.sol";
 import {
     Items,
     ItemsData,
-    StarterItems,
     Characters,
     CharactersData,
     Stats,
@@ -21,32 +20,18 @@ import {
     ArmorStats,
     ArmorStatsData,
     SpellStats,
-    SpellStatsData,
     ConsumableStats,
     StatRestrictions,
     StatRestrictionsData,
-    ConsumableStats,
-    ConsumableStatsData,
-    WorldStatusEffects
+    ConsumableStats
 } from "@codegen/index.sol";
-import {ItemType, Classes} from "@codegen/common.sol";
-import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
-import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
-import {_erc1155SystemId, _characterSystemId, _requireOwner, _requireAccess} from "../utils.sol";
-import {ITEMS_NAMESPACE} from "../../constants.sol";
+import {ItemType} from "@codegen/common.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
 import {ERC1155MetadataURI} from "@erc1155/tables/ERC1155MetadataURI.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
-import {
-    _metadataTableId,
-    _erc1155URIStorageTableId,
-    _totalSupplyTableId,
-    _operatorApprovalTableId,
-    _ownersTableId
-} from "@erc1155/utils.sol";
-import {AdjustedCombatStats, MonsterStats} from "@interfaces/Structs.sol";
+import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 
 contract EquipmentSystem is System {
     modifier inGame(bytes32 characterId) {
@@ -169,23 +154,25 @@ contract EquipmentSystem is System {
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
         uint256 totalLength;
+        if (CharacterEquipment.lengthEquippedArmor(characterId) > 0 && itemType == ItemType.Armor) {
+            revert("Already wearing armor");
+        }
         totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);
-        totalLength += CharacterEquipment.lengthEquippedArmor(characterId);
         totalLength += CharacterEquipment.lengthEquippedSpells(characterId);
         totalLength += CharacterEquipment.lengthEquippedConsumables(characterId);
         require(totalLength < 4, "too many items equipped");
 
-        if (uint8(itemType) == 0) {
+        if (itemType == ItemType.Weapon) {
             CharacterEquipment.pushEquippedWeapons(characterId, itemId);
         }
-        if (uint8(itemType) == 1) {
+        if (itemType == ItemType.Armor) {
             CharacterEquipment.pushEquippedArmor(characterId, itemId);
         }
 
-        if (uint8(itemType) == 2) {
+        if (itemType == ItemType.Spell) {
             CharacterEquipment.pushEquippedSpells(characterId, itemId);
         }
-        if (uint8(itemType) == 4) {
+        if (itemType == ItemType.Consumable) {
             CharacterEquipment.pushEquippedConsumables(characterId, itemId);
         }
     }
@@ -287,7 +274,6 @@ contract EquipmentSystem is System {
     /// @dev returns the base stats + the equipment stats of a character
     function calculateEquipmentBonuses(bytes32 entityId) public view returns (AdjustedCombatStats memory) {
         AdjustedCombatStats memory combatStats = getCombatStats(entityId);
-        ////  REWORKING THIS TO NOT RE_APPLY STATS EVERY ACTION ONLY WHEN STATUS EFFECTS / ITEMS ARE EQUIPPED /  UNEQUIPPED
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             StatsData memory baseStats = abi.decode(Characters.getBaseStats(entityId), (StatsData));
             CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);

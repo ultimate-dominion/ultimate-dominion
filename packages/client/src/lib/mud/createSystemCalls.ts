@@ -101,14 +101,14 @@ export function createSystemCalls(
   }: ClientComponents,
 ) {
   const buy = async (
-    amount: string,
+    amount: bigint,
     shopId: string,
     itemIndex: string,
     characterId: string,
   ): SystemCallReturn => {
     try {
       const tx = await worldContract.write.UD__buy([
-        BigInt(amount),
+        amount,
         shopId as `0x${string}`,
         BigInt(itemIndex),
         characterId as `0x${string}`,
@@ -429,6 +429,37 @@ export function createSystemCalls(
     }
   };
 
+  const fleePvp = async (characterId: string): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId as `0x${string}`],
+        functionName: 'UD__fleePvp',
+      });
+
+      const tx = await worldContract.write.UD__fleePvp([
+        characterId as `0x${string}`,
+      ]);
+
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      const success = status === 'success';
+
+      return {
+        error: success ? undefined : 'Failed to flee from PvP.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
   const fulfillOrder = async (orderHash: string): SystemCallReturn => {
     try {
       await publicClient.simulateContract({
@@ -731,14 +762,14 @@ export function createSystemCalls(
   };
 
   const sell = async (
-    amount: string,
+    amount: bigint,
     shopId: string,
     itemIndex: string,
     characterId: string,
   ): SystemCallReturn => {
     try {
       const tx = await worldContract.write.UD__sell([
-        BigInt(amount),
+        amount,
         shopId as `0x${string}`,
         BigInt(itemIndex),
         characterId as `0x${string}`,
@@ -967,6 +998,7 @@ export function createSystemCalls(
     endTurn,
     enterGame,
     equipItems,
+    fleePvp,
     fulfillOrder,
     levelCharacter,
     mintCharacter,

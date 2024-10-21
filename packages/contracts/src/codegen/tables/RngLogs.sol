@@ -21,9 +21,6 @@ import { RngRequestType } from "./../common.sol";
 
 struct RngLogsData {
   uint64 sequenceNumber;
-  address provider;
-  address entropy;
-  uint256 fee;
   RngRequestType requestType;
   uint256 randomNumber;
   bytes32 userRandomNumber;
@@ -35,12 +32,12 @@ library RngLogs {
   ResourceId constant _tableId = ResourceId.wrap(0x6f745544000000000000000000000000526e674c6f6773000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0091070108141420012020000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0049040108012020000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (uint256)
   Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint64, address, address, uint256, uint8, uint256, bytes32, bytes)
-  Schema constant _valueSchema = Schema.wrap(0x009107010761611f001f5fc40000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint64, uint8, uint256, bytes32, bytes)
+  Schema constant _valueSchema = Schema.wrap(0x0049040107001f5fc40000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -56,15 +53,12 @@ library RngLogs {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](8);
+    fieldNames = new string[](5);
     fieldNames[0] = "sequenceNumber";
-    fieldNames[1] = "provider";
-    fieldNames[2] = "entropy";
-    fieldNames[3] = "fee";
-    fieldNames[4] = "requestType";
-    fieldNames[5] = "randomNumber";
-    fieldNames[6] = "userRandomNumber";
-    fieldNames[7] = "data";
+    fieldNames[1] = "requestType";
+    fieldNames[2] = "randomNumber";
+    fieldNames[3] = "userRandomNumber";
+    fieldNames[4] = "data";
   }
 
   /**
@@ -102,73 +96,13 @@ library RngLogs {
   }
 
   /**
-   * @notice Set provider.
-   */
-  function setProvider(uint256 requestId, address provider) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((provider)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set provider.
-   */
-  function _setProvider(uint256 requestId, address provider) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((provider)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set entropy.
-   */
-  function setEntropy(uint256 requestId, address entropy) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((entropy)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set entropy.
-   */
-  function _setEntropy(uint256 requestId, address entropy) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((entropy)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set fee.
-   */
-  function setFee(uint256 requestId, uint256 fee) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
-
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((fee)), _fieldLayout);
-  }
-
-  /**
-   * @notice Set fee.
-   */
-  function _setFee(uint256 requestId, uint256 fee) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = bytes32(uint256(requestId));
-
-    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((fee)), _fieldLayout);
-  }
-
-  /**
    * @notice Set requestType.
    */
   function setRequestType(uint256 requestId, RngRequestType requestType) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(requestId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked(uint8(requestType)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked(uint8(requestType)), _fieldLayout);
   }
 
   /**
@@ -178,7 +112,7 @@ library RngLogs {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(requestId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked(uint8(requestType)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked(uint8(requestType)), _fieldLayout);
   }
 
   /**
@@ -188,7 +122,7 @@ library RngLogs {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(requestId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((randomNumber)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((randomNumber)), _fieldLayout);
   }
 
   /**
@@ -198,7 +132,7 @@ library RngLogs {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(requestId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((randomNumber)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((randomNumber)), _fieldLayout);
   }
 
   /**
@@ -208,7 +142,7 @@ library RngLogs {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(requestId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((userRandomNumber)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((userRandomNumber)), _fieldLayout);
   }
 
   /**
@@ -218,7 +152,7 @@ library RngLogs {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(requestId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((userRandomNumber)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((userRandomNumber)), _fieldLayout);
   }
 
   /**
@@ -227,23 +161,12 @@ library RngLogs {
   function set(
     uint256 requestId,
     uint64 sequenceNumber,
-    address provider,
-    address entropy,
-    uint256 fee,
     RngRequestType requestType,
     uint256 randomNumber,
     bytes32 userRandomNumber,
     bytes memory data
   ) internal {
-    bytes memory _staticData = encodeStatic(
-      sequenceNumber,
-      provider,
-      entropy,
-      fee,
-      requestType,
-      randomNumber,
-      userRandomNumber
-    );
+    bytes memory _staticData = encodeStatic(sequenceNumber, requestType, randomNumber, userRandomNumber);
 
     EncodedLengths _encodedLengths = encodeLengths(data);
     bytes memory _dynamicData = encodeDynamic(data);
@@ -260,23 +183,12 @@ library RngLogs {
   function _set(
     uint256 requestId,
     uint64 sequenceNumber,
-    address provider,
-    address entropy,
-    uint256 fee,
     RngRequestType requestType,
     uint256 randomNumber,
     bytes32 userRandomNumber,
     bytes memory data
   ) internal {
-    bytes memory _staticData = encodeStatic(
-      sequenceNumber,
-      provider,
-      entropy,
-      fee,
-      requestType,
-      randomNumber,
-      userRandomNumber
-    );
+    bytes memory _staticData = encodeStatic(sequenceNumber, requestType, randomNumber, userRandomNumber);
 
     EncodedLengths _encodedLengths = encodeLengths(data);
     bytes memory _dynamicData = encodeDynamic(data);
@@ -293,9 +205,6 @@ library RngLogs {
   function set(uint256 requestId, RngLogsData memory _table) internal {
     bytes memory _staticData = encodeStatic(
       _table.sequenceNumber,
-      _table.provider,
-      _table.entropy,
-      _table.fee,
       _table.requestType,
       _table.randomNumber,
       _table.userRandomNumber
@@ -316,9 +225,6 @@ library RngLogs {
   function _set(uint256 requestId, RngLogsData memory _table) internal {
     bytes memory _staticData = encodeStatic(
       _table.sequenceNumber,
-      _table.provider,
-      _table.entropy,
-      _table.fee,
       _table.requestType,
       _table.randomNumber,
       _table.userRandomNumber
@@ -341,29 +247,15 @@ library RngLogs {
   )
     internal
     pure
-    returns (
-      uint64 sequenceNumber,
-      address provider,
-      address entropy,
-      uint256 fee,
-      RngRequestType requestType,
-      uint256 randomNumber,
-      bytes32 userRandomNumber
-    )
+    returns (uint64 sequenceNumber, RngRequestType requestType, uint256 randomNumber, bytes32 userRandomNumber)
   {
     sequenceNumber = (uint64(Bytes.getBytes8(_blob, 0)));
 
-    provider = (address(Bytes.getBytes20(_blob, 8)));
+    requestType = RngRequestType(uint8(Bytes.getBytes1(_blob, 8)));
 
-    entropy = (address(Bytes.getBytes20(_blob, 28)));
+    randomNumber = (uint256(Bytes.getBytes32(_blob, 9)));
 
-    fee = (uint256(Bytes.getBytes32(_blob, 48)));
-
-    requestType = RngRequestType(uint8(Bytes.getBytes1(_blob, 80)));
-
-    randomNumber = (uint256(Bytes.getBytes32(_blob, 81)));
-
-    userRandomNumber = (Bytes.getBytes32(_blob, 113));
+    userRandomNumber = (Bytes.getBytes32(_blob, 41));
   }
 
   /**
@@ -389,15 +281,9 @@ library RngLogs {
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (RngLogsData memory _table) {
-    (
-      _table.sequenceNumber,
-      _table.provider,
-      _table.entropy,
-      _table.fee,
-      _table.requestType,
-      _table.randomNumber,
-      _table.userRandomNumber
-    ) = decodeStatic(_staticData);
+    (_table.sequenceNumber, _table.requestType, _table.randomNumber, _table.userRandomNumber) = decodeStatic(
+      _staticData
+    );
 
     (_table.data) = decodeDynamic(_encodedLengths, _dynamicData);
   }
@@ -428,14 +314,11 @@ library RngLogs {
    */
   function encodeStatic(
     uint64 sequenceNumber,
-    address provider,
-    address entropy,
-    uint256 fee,
     RngRequestType requestType,
     uint256 randomNumber,
     bytes32 userRandomNumber
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(sequenceNumber, provider, entropy, fee, requestType, randomNumber, userRandomNumber);
+    return abi.encodePacked(sequenceNumber, requestType, randomNumber, userRandomNumber);
   }
 
   /**
@@ -465,23 +348,12 @@ library RngLogs {
    */
   function encode(
     uint64 sequenceNumber,
-    address provider,
-    address entropy,
-    uint256 fee,
     RngRequestType requestType,
     uint256 randomNumber,
     bytes32 userRandomNumber,
     bytes memory data
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(
-      sequenceNumber,
-      provider,
-      entropy,
-      fee,
-      requestType,
-      randomNumber,
-      userRandomNumber
-    );
+    bytes memory _staticData = encodeStatic(sequenceNumber, requestType, randomNumber, userRandomNumber);
 
     EncodedLengths _encodedLengths = encodeLengths(data);
     bytes memory _dynamicData = encodeDynamic(data);

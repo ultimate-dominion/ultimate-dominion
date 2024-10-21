@@ -19,6 +19,8 @@ import {
     UltimateDominionConfig,
     ArmorStatsData,
     WeaponStatsData,
+    ConsumableStatsData,
+    SpellStatsData,
     StatRestrictionsData,
     ShopsData
 } from "@codegen/index.sol";
@@ -38,6 +40,7 @@ contract SetUp is Test {
     uint256 public userNonce = 0;
     IWorld public world;
     address public worldAddress;
+    address public lootManagerAddress;
     IEntropy public entropy;
 
     IERC20Mintable public goldToken;
@@ -50,6 +53,13 @@ contract SetUp is Test {
     bytes32 public alicesRandomness = bytes32(keccak256(abi.encode("alicesRestaurant")));
     bytes32 basicActionIdStatsId;
     uint256 newArmorId;
+    uint256 alsoNewArmorId;
+    uint256 newWeaponId;
+    uint256 alsoNewWeaponId;
+    uint256 newSpellId;
+    uint256 alsoNewSpellId;
+    uint256 newConsumableId;
+
     bytes32 basicMagicDamageStatsId;
     StarterItems public starterItems;
     uint256 public startingArmorId;
@@ -65,10 +75,17 @@ contract SetUp is Test {
         worldAddress = json.readAddress(".worldAddress");
         vm.label(address(worldAddress), "World");
         StoreSwitch.setStoreAddress(worldAddress);
-
+        lootManagerAddress = Systems.getSystem(_lootManagerSystemId("UD"));
         string memory starterItemsJson = vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/items.json")));
         bytes memory parsedJson = vm.parseJson(starterItemsJson);
         StarterItems memory _starterItems = abi.decode(parsedJson, (StarterItems));
+
+        world = IWorld(worldAddress);
+        alice = getUser();
+        bob = getUser();
+        goldToken = IERC20Mintable(world.UD__getGoldToken());
+        characterToken = IERC721Mintable(world.UD__getCharacterToken());
+        erc1155System = IERC1155System(world.UD__getItemsContract());
 
         // this is to keep the correct item ids in tests without having to update manually
         // order the items are created in:
@@ -95,16 +112,12 @@ contract SetUp is Test {
         }
 
         startingWeaponId = starterItems.armor.length;
-        startingSpellId = starterItems.armor.length + starterItems.weapons.length;
+        startingSpellId = starterItems.armor.length + starterItems.weapons.length + 1;
+
+        assertGt(world.UD__getSpellStats(startingSpellId).effects.length, 0, "invalid spell effect");
         startingConsumableId = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length + 1;
+        assertGt(world.UD__getConsumableStats(startingConsumableId).effects.length, 0, "invalid consumable effect");
         totalItems = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length;
-        world = IWorld(worldAddress);
-        entropy = IEntropy(world.UD__getEntropy());
-        alice = getUser();
-        bob = getUser();
-        goldToken = IERC20Mintable(world.UD__getGoldToken());
-        characterToken = IERC721Mintable(world.UD__getCharacterToken());
-        erc1155System = IERC1155System(world.UD__getItemsContract());
 
         basicMagicDamageStatsId = bytes32(bytes8(keccak256(abi.encode("basic magic attack"))));
         basicActionIdStatsId = bytes32(bytes8(keccak256(abi.encode("basic weapon attack"))));
@@ -151,6 +164,21 @@ contract SetUp is Test {
             hpModifier: 4
         });
 
+        WeaponStatsData memory newWeapon = WeaponStatsData({
+            agiModifier: 2,
+            intModifier: 3,
+            hpModifier: 4,
+            maxDamage: 0,
+            minDamage: 0,
+            minLevel: 0,
+            strModifier: 1,
+            effects: new bytes32[](0)
+        });
+
+        ConsumableStatsData memory newConsumable =
+            ConsumableStatsData({minDamage: 0, maxDamage: 0, minLevel: 0, effects: new bytes32[](0)});
+        SpellStatsData memory newSpell =
+            SpellStatsData({minDamage: 0, maxDamage: 0, minLevel: 0, effects: new bytes32[](0)});
         vm.label(alice, "alice");
         vm.label(bob, "bob");
         vm.label(worldAddress, "world");
@@ -159,7 +187,29 @@ contract SetUp is Test {
         newArmorId = world.UD__createItem(
             ItemType.Armor, 10 ether, 100000000, 1 ether, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
         );
-
+        alsoNewArmorId = world.UD__createItem(
+            ItemType.Armor, 10 ether, 100000000, 1 ether, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
+        );
+        newWeaponId = world.UD__createItem(
+            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(newWeapon, statRestrictions), "setup_armor_uri"
+        );
+        alsoNewWeaponId = world.UD__createItem(
+            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(newWeapon, statRestrictions), "setup_armor_uri"
+        );
+        newConsumableId = world.UD__createItem(
+            ItemType.Consumable,
+            10 ether,
+            100000000,
+            1 ether,
+            abi.encode(newConsumable, statRestrictions),
+            "setup_armor_uri"
+        );
+        newSpellId = world.UD__createItem(
+            ItemType.Spell, 10 ether, 100000000, 1 ether, abi.encode(newSpell, statRestrictions), "setup_armor_uri"
+        );
+        alsoNewSpellId = world.UD__createItem(
+            ItemType.Spell, 10 ether, 100000000, 1 ether, abi.encode(newSpell, statRestrictions), "setup_armor_uri"
+        );
         world.grantAccess(_lootManagerSystemId("UD"), address(this));
         vm.stopPrank();
 
@@ -168,8 +218,8 @@ contract SetUp is Test {
 
         vm.startPrank(bob);
         bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
-        uint256 fees = entropy.getFee(address(1));
-        world.UD__rollStats{value: fees}(alicesRandomness, bobCharacterId, Classes.Mage);
+
+        world.UD__rollStats(alicesRandomness, bobCharacterId, Classes.Mage);
         world.UD__enterGame(bobCharacterId);
         vm.stopPrank();
     }

@@ -24,6 +24,14 @@ import { type Consumable, OrderType } from '../utils/types';
 import { HealthBar } from './HealthBar';
 import { ItemCard } from './ItemCard';
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
+import { PolygonalCard } from './PolygonalCard';
+
+const getMinutesAndSeconds = (seconds: bigint): string => {
+  const secondsNumber = Number(seconds);
+  const minutes = Math.floor(secondsNumber / 60);
+  const remainingSeconds = secondsNumber % 60;
+  return `${minutes}m ${remainingSeconds}s`;
+};
 
 type ItemConsumeModalProps = Consumable & {
   isOpen: boolean;
@@ -93,7 +101,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
       }
       await refreshCharacter();
       renderSuccess(`${item.name} was consumed!`);
-      setItemBalance((Number(itemBalance) - 1).toString());
+      setItemBalance(prev => prev - BigInt(1));
       setIsConsumed(true);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to consume item.', e);
@@ -104,7 +112,6 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     character,
     delegatorAddress,
     item,
-    itemBalance,
     itemsLootManagerAllowance,
     onOpenAllowanceModal,
     refreshCharacter,
@@ -114,7 +121,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   ]);
 
   const isHealthRestore = useMemo(
-    () => item.hpRestoreAmount !== '0',
+    () => item.hpRestoreAmount !== BigInt(0),
     [item.hpRestoreAmount],
   );
 
@@ -130,28 +137,63 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     return searchParams;
   }, []);
 
+  const maxStacksReached = useMemo(() => {
+    if (!isOwner) return false;
+    if (!character) return false;
+    if (!item) return false;
+
+    const effectsApplied = character.worldStatusEffects.filter(
+      effect => effect.active && item.effects.includes(effect.effectId),
+    );
+
+    const effectsCounter = effectsApplied.reduce(
+      (acc, effect) => {
+        if (acc[effect.effectId as string]) {
+          acc[effect.effectId as string] += 1;
+        } else {
+          acc[effect.effectId as string] = 1;
+        }
+        return acc;
+      },
+
+      {} as Record<string, number>,
+    );
+
+    const effectsAtMaxStacks = Object.values(effectsCounter).filter(
+      count => count >= item.maxStacks,
+    );
+
+    return effectsAtMaxStacks.length > 0;
+  }, [character, isOwner, item]);
+
   const isDisabled = useMemo(() => {
     if (!isOwner) return false;
     if (currentBattle) return true;
     if (isHealthFull) return true;
     if (!isSpawned) return true;
+    if (maxStacksReached) return true;
 
     return false;
-  }, [currentBattle, isHealthFull, isOwner, isSpawned]);
+  }, [currentBattle, isHealthFull, isOwner, isSpawned, maxStacksReached]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>{isOwner ? 'Consume Item' : 'Make an offer'}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4}>
+        <ModalBody px={{ base: 6, sm: 8 }}>
           {isOwner && character ? (
             <>
               {isConsumed ? (
                 <Text mb={6}>{item.name} was consumed!</Text>
               ) : (
-                <Text mb={6}>Do you want to consume this item?</Text>
+                <Text mb={6}>
+                  Do you want to consume this item?{' '}
+                  {item.validTime > BigInt(0) &&
+                    `Its effect will last for ${getMinutesAndSeconds(item.validTime)}.`}
+                </Text>
               )}
               {isHealthRestore && (
                 <HealthBar
@@ -176,9 +218,14 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
               You must be spawned to consume items.
             </Text>
           )}
-          {isHealthFull && isOwner && !isConsumed && (
+          {isHealthRestore && isHealthFull && isOwner && !isConsumed && (
             <Text color="orange" fontWeight="bold" mt={4} size="sm">
               Your health is full.
+            </Text>
+          )}
+          {maxStacksReached && isOwner && !isConsumed && (
+            <Text color="orange" fontWeight="bold" mt={4} size="sm">
+              You have reached the maximum of this item you can consume at once.
             </Text>
           )}
         </ModalBody>
@@ -194,7 +241,10 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
             </Button>
           </ModalFooter>
         ) : (
-          <ModalFooter>
+          <ModalFooter gap={3}>
+            <Button isDisabled={isConsuming} onClick={onClose} variant="ghost">
+              No
+            </Button>
             <Button
               isDisabled={isDisabled}
               isLoading={isConsuming}
@@ -204,14 +254,11 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
                 isOwner
                   ? onUseConsumable()
                   : navigate(
-                      `${ITEM_PATH}${item.tokenId}?${buyingSearchParams}`,
+                      `${ITEM_PATH}/${item.tokenId}?${buyingSearchParams}`,
                     )
               }
             >
               Yes
-            </Button>
-            <Button isDisabled={isConsuming} onClick={onClose} variant="ghost">
-              No
             </Button>
           </ModalFooter>
         )}

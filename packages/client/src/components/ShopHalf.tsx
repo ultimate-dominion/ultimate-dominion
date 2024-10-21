@@ -38,29 +38,29 @@ enum SortOptions {
 const PER_PAGE = 5;
 
 export const ShopHalf = ({
-  name,
-  items,
-  shop,
   characterId,
+  items,
   orderType,
+  shop,
 }: {
   characterId: Entity;
-  name: string;
   items: Array<{
-    balance: string | null;
-    item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
-    stock: string | null;
+    balance: bigint | null;
     index: string;
+    isEquipped: boolean;
+    item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+    stock: bigint | null;
   }>;
   shop: Shop;
   orderType: OrderType;
 }): JSX.Element => {
   const [entries, setEntries] = useState<
     Array<{
-      balance: string | null;
-      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
-      stock: string | null;
+      balance: bigint | null;
       index: string;
+      isEquipped: boolean;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      stock: bigint | null;
     }>
   >([]);
   const [page, setPage] = useState(1);
@@ -87,10 +87,11 @@ export const ShopHalf = ({
       return;
     }
     let entriesCopy: Array<{
-      balance: string | null;
-      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
-      stock: string | null;
+      balance: bigint | null;
       index: string;
+      isEquipped: boolean;
+      item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
+      stock: bigint | null;
     }> = [...items];
     const searcher = new FuzzySearch(
       [...entriesCopy],
@@ -150,17 +151,15 @@ export const ShopHalf = ({
 
   return (
     <VStack>
-      <Text fontWeight={700} fontSize={24} textAlign="left" w="100%">
-        {name}
-      </Text>
       <Stack
         alignItems="center"
         direction={{ base: 'column', md: 'row' }}
         mb={8}
+        p={2}
         spacing={{ base: 4, md: 8 }}
         w="100%"
       >
-        <InputGroup w="50%">
+        <InputGroup w={{ base: '100%', md: '50%' }}>
           <InputLeftElement pointerEvents="none">
             <FaSearch />
           </InputLeftElement>
@@ -174,7 +173,7 @@ export const ShopHalf = ({
           onChange={e => setItemTypeFilter(e.target.value as ItemFilterOptions)}
           size="md"
           value={itemTypeFilter}
-          w="50%"
+          w={{ base: '100%', md: '50%' }}
         >
           {Object.keys(ItemFilterOptions).map(k => {
             return (
@@ -190,7 +189,7 @@ export const ShopHalf = ({
           <HStack textAlign="right" w="100%">
             <Spacer />
             <Button
-              display={{ base: 'none', lg: 'flex' }}
+              color="#565555"
               fontWeight={sort.sorted === SortOptions.Stock ? 'bold' : 'normal'}
               onClick={() =>
                 setSort({
@@ -217,7 +216,7 @@ export const ShopHalf = ({
               )}
             </Button>
             <Button
-              display={{ base: 'none', lg: 'flex' }}
+              color="#565555"
               fontWeight={sort.sorted === SortOptions.Price ? 'bold' : 'normal'}
               onClick={() =>
                 setSort({
@@ -243,28 +242,30 @@ export const ShopHalf = ({
                 <FaSortAmountDown color="grey" />
               )}
             </Button>
-            <Box display={{ base: 'none', md: 'block' }} w="40px" />
+            <Box display={{ base: 'none', md: 'block' }} w="60px" />
           </HStack>
         </Flex>
       </HStack>
-      <VStack gap={3} maxW="100%" overflowX="auto" w="100%">
+      <VStack gap={0} maxW="100%" overflowX="auto" w="100%">
         {entries.length > 0 ? (
           entries.map((entry, i) => {
             return (
               <ShopItemRow
                 balance={entry.balance}
                 characterId={characterId}
+                isEquipped={entry.isEquipped}
                 item={entry.item}
                 itemIndex={entry.index}
                 key={`shop-row-${i}`}
                 orderType={orderType}
                 shop={shop}
                 stock={entry.stock}
+                theme="white"
               />
             );
           })
         ) : (
-          <Text mt={4}>No Data</Text>
+          <Text mt={4}>No Items</Text>
         )}
       </VStack>
       <Spacer />

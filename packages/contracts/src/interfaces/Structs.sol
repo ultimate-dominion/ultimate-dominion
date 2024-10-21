@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
-import {ItemType, Classes, Alignment, TokenType } from "@codegen/common.sol";
+import {ItemType, Classes, Alignment, TokenType} from "@codegen/common.sol";
 import {
     StatusEffectStatsData,
     WeaponStatsData,

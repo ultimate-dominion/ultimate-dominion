@@ -7,6 +7,7 @@
     "build": "mud build",
     "clean": "forge clean && rimraf src/codegen",
     "deploy:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337",
+    "update:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337 --worldAddress",
     "deploy:testnet-base": "DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000\" --profile=base-sepolia",
     "deploy:garnet": "DEBUG=mud:* mud deploy --profile=garnet --forgeScriptOptions=\"--slow\"",
     "deploy:redstone": "DEBUG=mud:* mud deploy --profile=redstone --forgeScriptOptions=\"--slow\"",
@@ -18,7 +19,7 @@
     "prettier": "prettier --write 'src/**/*.sol'",
     "solhint": "solhint --config ./.solhint.json 'src/**/*.sol' --fix",
     "test": "mud build && forge t -vvv --rpc-url http://127.0.0.1:8545",
-    "match-test": "forge t -vv --rpc-url http://127.0.0.1:8545 --match-test"
+    "match-test": "forge t -vvv --rpc-url http://127.0.0.1:8545 --match-test"
   },
   "dependencies": {
     "@latticexyz/cli": "2.0.11",

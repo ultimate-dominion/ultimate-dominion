@@ -6,51 +6,30 @@ import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20System.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
-import {IERC1155Receiver} from "@erc1155/IERC1155Receiver.sol";
 import {WorldContextConsumer} from "@latticexyz/world/src/WorldContext.sol";
 import {Math, WAD, RAD} from "@libraries/Math.sol";
 import {
     UltimateDominionConfig,
     Items,
     ItemsData,
-    Counters,
     StarterItems,
     StarterItemsData,
     Characters,
-    CharactersData,
     Stats,
+    Levels,
     StatsData,
     CharacterEquipment,
-    CharacterEquipmentData,
     CombatEncounter,
     CombatEncounterData,
     Mobs,
     EncounterEntity,
     AdventureEscrow
 } from "@codegen/index.sol";
-import {ItemType, Classes} from "@codegen/common.sol";
-import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
-import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
-import {
-    _erc1155SystemId,
-    _characterSystemId,
-    _requireOwner,
-    _requireAccess,
-    _combatSystemId,
-    _lootManagerSystemId
-} from "../utils.sol";
-import {
-    ITEMS_NAMESPACE, WORLD_NAMESPACE, BASE_GOLD_DROP, EXP_MODIFIER, PVP_GOLD_DENOMINATOR
-} from "../../constants.sol";
+import {_characterSystemId, _requireAccess, _lootManagerSystemId} from "../utils.sol";
+import {WORLD_NAMESPACE, BASE_GOLD_DROP, EXP_MODIFIER, PVP_GOLD_DENOMINATOR, MAX_LEVEL} from "../../constants.sol";
 import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
-import {
-    _metadataTableId,
-    _erc1155URIStorageTableId,
-    _totalSupplyTableId,
-    _operatorApprovalTableId,
-    _ownersTableId
-} from "@erc1155/utils.sol";
+
 import "forge-std/console.sol";
 
 contract LootManagerSystem is ERC1155Holder, System {
@@ -123,6 +102,11 @@ contract LootManagerSystem is ERC1155Holder, System {
         _addEscrowBalance(characterId, amount);
     }
 
+    function increaseEscrowBalance(bytes32 characterId, uint256 amount) public returns (uint256 newBalance) {
+        _requireAccess(address(this), _msgSender());
+        _addEscrowBalance(characterId, amount);
+    }
+
     function _addEscrowBalance(bytes32 characterId, uint256 amount) internal {
         uint256 currentBalance = getEscrowBalance(characterId);
         uint256 balance = currentBalance + amount;
@@ -136,7 +120,7 @@ contract LootManagerSystem is ERC1155Holder, System {
             _requireAccess(address(this), _msgSender());
         }
         _withdrawEscrowBalance(characterId, amount);
-        // transfer gold to loot manager
+        // transfer gold to player
         _goldToken().transfer(IWorld(_world()).UD__getOwner(characterId), amount);
     }
 
@@ -171,7 +155,7 @@ contract LootManagerSystem is ERC1155Holder, System {
         for (uint256 i; i < monsterStats.inventory.length; i++) {
             tempItemId = monsterStats.inventory[i];
             uint256 dropChance = Items.getDropChance(tempItemId);
-            if (randomNumber % 100_000_000 < dropChance) {
+            if (randomNumber % 100_000_000 < (dropChance * 1000000)) {
                 console.log("ITEM DROPPED", tempItemId);
                 IWorld(_world()).UD__dropItem(characterId, tempItemId, 1);
                 itemIdsDropped[i] = tempItemId;
@@ -259,7 +243,7 @@ contract LootManagerSystem is ERC1155Holder, System {
 
         // check dead attackers and defenders
         StatsData memory statsTemp;
-
+        uint256 _baseExp;
         if (encounterData.attackersAreMobs) {
             distTemps.monsters = encounterData.attackers;
             distTemps.players = encounterData.defenders;
@@ -285,7 +269,7 @@ contract LootManagerSystem is ERC1155Holder, System {
                 ? true
                 : (distTemps.cumulativePlayerLevels - distTemps.defenderLevelTemp) <= 5;
             if (EncounterEntity.getDied(distTemps.monsterTemp) && correctLevelSpread) {
-                _expAmount += Stats.getExperience(distTemps.monsterTemp);
+                _baseExp += Stats.getExperience(distTemps.monsterTemp);
                 _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
                 EncounterEntity.setEncounterId(distTemps.monsterTemp, bytes32(0));
 
@@ -311,10 +295,20 @@ contract LootManagerSystem is ERC1155Holder, System {
                     if (_goldAmount > uint256(0)) {
                         dropGoldToEscrow(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
                     }
-                    if (_expAmount > uint256(0) && distTemps.livingPlayers > uint256(0)) {
-                        statsTemp.experience += (
-                            (_expAmount / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)
-                        ) / WAD;
+                    uint256 _calculatedExp =
+                        ((_baseExp / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)) / WAD;
+                    if (
+                        Stats.getExperience(distTemps.entityIdTemp) >= Levels.get(MAX_LEVEL) || _baseExp == uint256(0)
+                            || distTemps.livingPlayers == uint256(0)
+                    ) {
+                        //do nothing
+                    } else if (_calculatedExp + Stats.getExperience(distTemps.entityIdTemp) <= Levels.get(MAX_LEVEL)) {
+                        statsTemp.experience += _calculatedExp;
+                        _expAmount += statsTemp.experience;
+                    } else if (_calculatedExp + Stats.getExperience(distTemps.entityIdTemp) > Levels.get(MAX_LEVEL)) {
+                        uint256 _expToGive = Levels.get(MAX_LEVEL) - Stats.getExperience(distTemps.entityIdTemp);
+                        statsTemp.experience += _expToGive;
+                        _expAmount += statsTemp.experience;
                     }
                 }
                 Stats.set(distTemps.entityIdTemp, statsTemp);
@@ -365,8 +359,9 @@ contract LootManagerSystem is ERC1155Holder, System {
         address playerAddr = IWorld(_world()).UD__getOwnerAddress(characterId);
         if (_msgSender() == playerAddr) {
             // consoom
+        } else {
+            _requireAccess(address(this), _msgSender());
         }
-        else _requireAccess(address(this), _msgSender());
 
         // address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
         //will require approval

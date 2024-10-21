@@ -3,6 +3,7 @@ import {
   formatEther,
   hexToBigInt,
   parseEther,
+  sliceHex,
 } from 'viem';
 
 import {
@@ -40,6 +41,27 @@ export const removeEmoji = (name: string): string => {
   return name ? name.replace(/[\p{Emoji}\u200d]+/gu, '') || '' : name || '';
 };
 
+export const decodeAppliedStatusEffectId = (
+  encodedId: string,
+): {
+  effectId: string;
+  timestamp: bigint;
+  turnApplied: bigint;
+} => {
+  const effectId = sliceHex(encodedId as `0x${string}`, 0, 8);
+  const timestampHex = sliceHex(encodedId as `0x${string}`, 8, 16);
+  const turnAppliedHex = sliceHex(encodedId as `0x${string}`, 24, 32);
+
+  const timestamp = hexToBigInt(timestampHex);
+  const turnApplied = hexToBigInt(turnAppliedHex);
+
+  return {
+    effectId,
+    timestamp,
+    turnApplied,
+  };
+};
+
 export const decodeBaseStats = (statsBytes: string): EntityStats => {
   const characterBaseStats = decodeAbiParameters(
     [
@@ -62,14 +84,14 @@ export const decodeBaseStats = (statsBytes: string): EntityStats => {
   )[0];
 
   return {
-    agility: characterBaseStats.agility.toString(),
+    agility: characterBaseStats.agility,
+    currentHp: characterBaseStats.currentHp,
     entityClass: characterBaseStats.class,
-    currentHp: characterBaseStats.currentHp.toString(),
-    experience: characterBaseStats.experience.toString(),
-    intelligence: characterBaseStats.intelligence.toString(),
-    level: characterBaseStats.level.toString(),
-    maxHp: characterBaseStats.maxHp.toString(),
-    strength: characterBaseStats.strength.toString(),
+    experience: characterBaseStats.experience,
+    intelligence: characterBaseStats.intelligence,
+    level: characterBaseStats.level,
+    maxHp: characterBaseStats.maxHp,
+    strength: characterBaseStats.strength,
   };
 };
 
@@ -123,15 +145,15 @@ export const decodeMonsterStats = (statsBytes: string): MonsterStats => {
   )[0];
 
   return {
-    agility: monsterTemplateStats.agility.toString(),
-    armor: monsterTemplateStats.armor.toString(),
+    agility: monsterTemplateStats.agility,
+    armor: monsterTemplateStats.armor,
     entityClass: monsterTemplateStats.class,
-    experience: monsterTemplateStats.experience.toString(),
-    hitPoints: monsterTemplateStats.hitPoints.toString(),
-    intelligence: monsterTemplateStats.intelligence.toString(),
+    experience: monsterTemplateStats.experience,
+    hitPoints: monsterTemplateStats.hitPoints,
+    intelligence: monsterTemplateStats.intelligence,
     inventory: monsterTemplateStats.inventory.map(i => i.toString()),
-    level: monsterTemplateStats.level.toString(),
-    strength: monsterTemplateStats.strength.toString(),
+    level: monsterTemplateStats.level,
+    strength: monsterTemplateStats.strength,
   };
 };
 

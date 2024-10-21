@@ -8,12 +8,14 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
+  Tooltip,
   VStack,
 } from '@chakra-ui/react';
-import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
+import { etherToFixedNumber } from '../utils/helpers';
 import { OrderType, SystemToAllow } from '../utils/types';
+import { PolygonalCard } from './PolygonalCard';
 
 export const MarketplaceAllowanceModal = ({
   completeMessage = 'Allowance was successful!',
@@ -31,7 +33,7 @@ export const MarketplaceAllowanceModal = ({
   itemName: string;
   onClose: () => void;
   onComplete: (e: React.FormEvent) => void;
-  orderPrice: string;
+  orderPrice: bigint;
   orderType: OrderType;
 }): JSX.Element => {
   const {
@@ -40,11 +42,12 @@ export const MarketplaceAllowanceModal = ({
     isApprovingItems,
     itemsMarketplaceAllowance,
     onApproveGoldAllowance,
+    onApproveMaxGoldAllowance,
     onSetApprovalForAllItems,
   } = useAllowance();
 
   if (
-    (goldMarketplaceAllowance >= parseEther(orderPrice) &&
+    (goldMarketplaceAllowance >= orderPrice &&
       orderType === OrderType.Buying) ||
     (itemsMarketplaceAllowance && orderType === OrderType.Selling)
   ) {
@@ -52,19 +55,18 @@ export const MarketplaceAllowanceModal = ({
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
+          <PolygonalCard isModal />
           <ModalHeader>Marketplace Allowances</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <VStack p={4} spacing={10}>
-              <Text textAlign="center">{completeMessage}</Text>
-              <Button isLoading={isCompleting} onClick={onComplete}>
-                Complete
-              </Button>
-            </VStack>
+          <ModalBody px={8}>
+            <Text textAlign="center">{completeMessage}</Text>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter gap={3}>
             <Button onClick={onClose} variant="ghost">
               Close
+            </Button>
+            <Button isLoading={isCompleting} onClick={onComplete}>
+              Complete
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -76,49 +78,79 @@ export const MarketplaceAllowanceModal = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>Marketplace Allowances</ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4}>
+        <ModalBody px={8}>
           {orderType === OrderType.Buying && (
-            <VStack spacing={10}>
-              <Text alignSelf="start">
-                In order to buy {itemName}, you must allow the marketplace to
-                use {orderPrice} of your $GOLD.
-              </Text>
-              <Button
-                isLoading={isApprovingGold}
-                onClick={() =>
-                  onApproveGoldAllowance(
-                    SystemToAllow.Marketplace,
-                    parseEther(orderPrice),
-                  )
-                }
-              >
-                Allow
-              </Button>
-            </VStack>
+            <Text alignSelf="start">
+              In order to buy {itemName}, you must allow the marketplace to use{' '}
+              {etherToFixedNumber(orderPrice)} of your $GOLD.
+            </Text>
           )}
           {orderType === OrderType.Selling && (
-            <VStack p={4} spacing={10}>
-              <Text>
-                In order to sell {itemName}, you must allow the marketplace to
-                manage your items.
-              </Text>
-              <Button
-                onClick={() =>
-                  onSetApprovalForAllItems(SystemToAllow.Marketplace)
-                }
-                isLoading={isApprovingItems}
-              >
-                Allow
-              </Button>
-            </VStack>
+            <Text>
+              In order to sell {itemName}, you must allow the marketplace to
+              manage your items.
+            </Text>
           )}
         </ModalBody>
-        <ModalFooter>
+        <ModalFooter alignItems="start" gap={3}>
           <Button onClick={onClose} variant="ghost">
             Close
           </Button>
+          {orderType === OrderType.Buying && (
+            <VStack spacing={1}>
+              <Button
+                isLoading={isApprovingGold}
+                onClick={() =>
+                  onApproveGoldAllowance(SystemToAllow.Marketplace, orderPrice)
+                }
+              >
+                Allow
+              </Button>
+              <Tooltip
+                bg="#070D2A"
+                hasArrow
+                label="This allows you to spend $GOLD on the Marketplace without having to approve each transaction. It is a faster and smoother experience, but is less secure. Only max allow if you trust the Marketplace."
+                placement="top"
+                shouldWrapChildren
+              >
+                <Button
+                  color="blue400"
+                  fontWeight={500}
+                  isLoading={isApprovingGold}
+                  onClick={() =>
+                    onApproveMaxGoldAllowance(
+                      SystemToAllow.Marketplace,
+                      orderPrice,
+                    )
+                  }
+                  p={1}
+                  size="xs"
+                  variant="ghost"
+                  _active={{
+                    textDecoration: 'underline',
+                  }}
+                  _hover={{
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Max Allow
+                </Button>
+              </Tooltip>
+            </VStack>
+          )}
+          {orderType === OrderType.Selling && (
+            <Button
+              onClick={() =>
+                onSetApprovalForAllItems(SystemToAllow.Marketplace)
+              }
+              isLoading={isApprovingItems}
+            >
+              Allow
+            </Button>
+          )}
         </ModalFooter>
       </ModalContent>
     </Modal>

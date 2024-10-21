@@ -1,36 +1,63 @@
-import '@fontsource/ibm-plex-mono';
+import '@fontsource/fira-code';
 
 import { extendTheme } from '@chakra-ui/react';
 import { css } from '@emotion/react';
 
 export const globalStyles = css`
   body {
-    background: #fff;
+    background: #a2a9b0;
     color: #000;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Fira Code', monospace;
     font-size: 1rem;
   }
 `;
 
 const Button = {
   baseStyle: {
-    borderRadius: 5,
+    borderRadius: '12px',
+    fontWeight: 500,
   },
   defaultProps: {
-    variant: 'solid',
+    variant: 'blue',
   },
   sizes: {
     sm: {
       p: 5,
     },
     md: {
-      px: 10,
-      py: 6,
+      px: 14,
+      py: 5,
     },
   },
   variants: {
+    dark: {
+      bg: 'grey500',
+      border: '2px solid',
+      borderColor: 'grey500',
+      borderRadius: '8px',
+      boxShadow: '-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480',
+      color: 'white',
+      _active: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _hover: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _loading: {
+        bg: 'rgba(0, 0, 0, 0.8)',
+        _hover: {
+          bg: 'rgba(0, 0, 0, 0.8)',
+        },
+      },
+    },
     gold: {
-      bg: 'gold',
+      bg: 'yellow',
       border: '2px solid',
       borderColor: 'black',
       color: 'black',
@@ -58,20 +85,24 @@ const Button = {
     outline: {
       border: '2px solid',
       borderColor: 'grey500',
+      bg: 'white',
     },
-    solid: {
-      bg: 'black',
+    blue: {
+      bg: 'blue400',
       border: '2px solid',
-      borderColor: 'black',
+      borderColor: 'blue400',
+      borderRadius: '8px',
+      boxShadow:
+        '2px 2px 5px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 0, 255, 0.5)',
       color: 'white',
       _active: {
-        bg: 'rgba(0, 0, 0, 1)',
+        bg: 'blue300',
         _disabled: {
           bg: 'rgba(0, 0, 0, 0.7)',
         },
       },
       _hover: {
-        bg: 'rgba(0, 0, 0, 0.8)',
+        bg: 'blue300',
         _disabled: {
           bg: 'rgba(0, 0, 0, 0.7)',
         },
@@ -80,6 +111,39 @@ const Button = {
         bg: 'rgba(0, 0, 0, 0.8)',
         _hover: {
           bg: 'rgba(0, 0, 0, 0.8)',
+        },
+      },
+    },
+    white: {
+      bg: 'white',
+      borderRadius: '8px',
+      boxShadow: '-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480',
+      color: 'black',
+      _active: {
+        bg: 'grey500',
+        color: 'white',
+        svg: {
+          fill: 'white',
+        },
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _hover: {
+        bg: 'grey500',
+        color: 'white',
+        svg: {
+          fill: 'white',
+        },
+        _disabled: {
+          bg: 'rgba(0, 0, 0, 0.7)',
+        },
+      },
+      _loading: {
+        bg: 'grey500',
+        color: 'white',
+        _hover: {
+          bg: 'grey500',
         },
       },
     },
@@ -97,6 +161,9 @@ const Heading = {
     md: {
       fontSize: '24px',
     },
+    lg: {
+      fontSize: '48px',
+    },
   },
 };
 
@@ -105,9 +172,17 @@ const Input = {
     outline: {
       field: {
         border: '2px solid',
-        borderColor: 'grey',
-        borderRadius: '5px',
+        borderColor: 'transparent',
+        borderRadius: '8px',
+        boxShadow:
+          '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
         py: 5,
+        _active: {
+          borderColor: 'blue400',
+        },
+        _focus: {
+          borderColor: 'blue400',
+        },
       },
     },
   },
@@ -118,21 +193,40 @@ const Modal = {
     scrollBehavior: 'inside',
   },
   baseStyle: {
+    closeButton: {
+      right: 5,
+      top: 4,
+    },
     dialogContainer: {
       overflow: 'hidden',
     },
     dialog: {
-      maxH: { base: '100%', md: 'calc(100% - 7.5rem)' },
+      bgColor: '#B3B9BE',
+      clipPath:
+        'polygon(40px 0%, 100% 0%, 100% calc(100% - 50px), calc(100% - 50px) 100%, 0% 100%, 0% 80px)',
+      maxH: 'calc(100% - 7.5rem)',
       minW: { base: '100%', md: '500px' },
       maxW: { base: '100%', md: '500px' },
+      position: 'absolute',
     },
     body: {
       overflow: 'auto',
+      pb: 8,
+      px: 8,
     },
     footer: {
-      borderTop: '1px solid',
+      borderTop: '1px #1A244E solid',
       display: 'flex',
       justifyContent: 'center',
+      pb: 6,
+      pt: 4,
+    },
+    header: {
+      color: '#283570',
+      fontWeight: 700,
+      px: 4,
+      py: 8,
+      textAlign: 'center',
     },
   },
 };
@@ -141,6 +235,9 @@ const Progress = {
   baseStyle: {
     track: {
       borderRadius: 5,
+      bg: '#6363634D',
+      boxShadow:
+        '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset',
     },
     filledTrack: {
       transition: 'width 0.5s',
@@ -152,12 +249,17 @@ const Progress = {
   variants: {
     filling: {
       filledTrack: {
-        bg: 'black',
+        bg: '#283570',
       },
     },
     filled: {
       filledTrack: {
         bg: 'green',
+      },
+    },
+    maxed: {
+      filledTrack: {
+        bg: 'purple',
       },
     },
     timer: {
@@ -176,8 +278,23 @@ const Select = {
     outline: {
       field: {
         border: '2px solid',
-        borderColor: 'grey',
+        borderColor: 'white',
         borderRadius: '5px',
+      },
+    },
+  },
+};
+
+const Tabs = {
+  defaultProps: {
+    variant: 'line',
+  },
+  variants: {
+    line: {
+      tab: {
+        _selected: {
+          color: 'blue400',
+        },
       },
     },
   },
@@ -219,16 +336,25 @@ const Textarea = {
   variants: {
     outline: {
       border: '2px solid',
-      borderColor: 'grey',
+      borderColor: 'transparent',
       borderRadius: '5px',
+      boxShadow:
+        '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
+      _active: {
+        borderColor: 'blue400',
+      },
+      _focus: {
+        borderColor: 'blue400',
+      },
     },
   },
 };
 
 const Tooltip = {
   baseStyle: {
-    bg: 'black',
+    bg: '#070D2A',
     borderRadius: 0,
+    clipPath: 'polygon(0% 0%, 93% 0%, 100% 18%, 100% 100%, 10% 100%, 0% 90%);',
     color: 'white',
     p: 4,
   },
@@ -237,19 +363,24 @@ const Tooltip = {
 export const theme = extendTheme({
   config: { initialColorMode: 'light', useSystemColorMode: false },
   fonts: {
-    body: `'IBM Plex Mono', monospace`,
-    heading: `'IBM Plex Mono', monospace`,
+    body: `'Fira Code', monospace`,
+    heading: `'Fira Code', monospace`,
   },
   colors: {
     black: '#000',
-    blue: '#0B5ED7',
-    green: '#0BA789',
-    grey300: '#E6E6E6',
-    grey400: '#D1D1D1',
-    grey500: '#808080',
-    red: '#F24725',
+    blue300: '#1633B6',
+    blue400: '#0A2187',
+    blue500: '#0C1539',
+    blue600: '#131832',
+    green: '#008F07',
+    grey100: '#D0D0D0',
+    grey200: '#A8ADB2',
+    grey300: '#A2A9B0',
+    grey400: '#7E848A',
+    grey500: '#3D4247',
+    red: '#AF0D08',
     white: '#fff',
-    yellow: '#F9C712',
+    yellow: '#EFD31C',
   },
   components: {
     Button,
@@ -258,6 +389,7 @@ export const theme = extendTheme({
     Modal,
     Progress,
     Select,
+    Tabs,
     Text,
     Textarea,
     Tooltip,

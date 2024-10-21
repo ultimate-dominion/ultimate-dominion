@@ -61,6 +61,7 @@ export const ItemsProvider = ({
       SpellStats,
       StatRestrictions,
       StatusEffectStats,
+      StatusEffectValidity,
       WeaponStats,
     },
     isSynced,
@@ -106,19 +107,19 @@ export const ItemsProvider = ({
 
           return {
             ...metadata,
-            agiModifier: armorStats.agiModifier.toString(),
-            armorModifier: armorStats.armorModifier.toString(),
-            hpModifier: armorStats.hpModifier.toString(),
-            intModifier: armorStats.intModifier.toString(),
+            agiModifier: armorStats.agiModifier,
+            armorModifier: armorStats.armorModifier,
+            hpModifier: armorStats.hpModifier,
+            intModifier: armorStats.intModifier,
             itemType: itemTemplate.itemType,
-            minLevel: armorStats.minLevel.toString(),
+            minLevel: armorStats.minLevel,
             price: itemTemplate.price,
             statRestrictions: {
-              minAgility: statRestrictions.minAgility.toString(),
-              minIntelligence: statRestrictions.minIntelligence.toString(),
-              minStrength: statRestrictions.minStrength.toString(),
+              minAgility: statRestrictions.minAgility,
+              minIntelligence: statRestrictions.minIntelligence,
+              minStrength: statRestrictions.minStrength,
             },
-            strModifier: armorStats.strModifier.toString(),
+            strModifier: armorStats.strModifier,
             tokenId: armorId.toString(),
           } as ArmorTemplate;
         }),
@@ -162,6 +163,21 @@ export const ItemsProvider = ({
             strModifier: bigint;
           }[];
 
+          const statusEffectValidities = consumableStats.effects
+            .map(effect => {
+              const effectEntity = encodeEntity(
+                { effectId: 'bytes32' },
+                { effectId: effect as `0x${string}` },
+              );
+              return getComponentValue(StatusEffectValidity, effectEntity);
+            })
+            .filter(Boolean) as {
+            cooldown: bigint;
+            maxStacks: bigint;
+            validTime: bigint;
+            validTurns: bigint;
+          }[];
+
           const hpRestoreAmount = BigInt(consumableStats.maxDamage) * -1n;
 
           const baseURI = getComponentValueStrict(
@@ -180,28 +196,37 @@ export const ItemsProvider = ({
 
           return {
             ...metadata,
-            agiModifier: statusEffectStats
-              .reduce((acc, curr) => acc + BigInt(curr.agiModifier), 0n)
-              .toString(),
-            hpModifier: statusEffectStats
-              .reduce((acc, curr) => acc + BigInt(curr.hpModifier), 0n)
-              .toString(),
-            hpRestoreAmount: hpRestoreAmount.toString(),
-            intModifier: statusEffectStats
-              .reduce((acc, curr) => acc + BigInt(curr.intModifier), 0n)
-              .toString(),
+            agiModifier: statusEffectStats.reduce(
+              (acc, curr) => acc + BigInt(curr.agiModifier),
+              0n,
+            ),
+            cooldown: statusEffectValidities[0]?.cooldown ?? 0n,
+            effects: consumableStats.effects,
+            hpModifier: statusEffectStats.reduce(
+              (acc, curr) => acc + BigInt(curr.hpModifier),
+              0n,
+            ),
+            hpRestoreAmount: hpRestoreAmount,
+            intModifier: statusEffectStats.reduce(
+              (acc, curr) => acc + BigInt(curr.intModifier),
+              0n,
+            ),
             itemType: itemTemplate.itemType,
-            minLevel: consumableStats.minLevel.toString(),
+            maxStacks: statusEffectValidities[0]?.maxStacks ?? 0n,
+            minLevel: consumableStats.minLevel,
             price: itemTemplate.price,
             tokenId: consumableId.toString(),
             statRestrictions: {
-              minAgility: statRestrictions.minAgility.toString(),
-              minIntelligence: statRestrictions.minIntelligence.toString(),
-              minStrength: statRestrictions.minStrength.toString(),
+              minAgility: statRestrictions.minAgility,
+              minIntelligence: statRestrictions.minIntelligence,
+              minStrength: statRestrictions.minStrength,
             },
-            strModifier: statusEffectStats
-              .reduce((acc, curr) => acc + BigInt(curr.strModifier), 0n)
-              .toString(),
+            strModifier: statusEffectStats.reduce(
+              (acc, curr) => acc + BigInt(curr.strModifier),
+              0n,
+            ),
+            validTime: statusEffectValidities[0]?.validTime ?? 0n,
+            validTurns: statusEffectValidities[0]?.validTurns ?? 0n,
           } as ConsumableTemplate;
         }),
       );
@@ -215,6 +240,7 @@ export const ItemsProvider = ({
       ItemsTokenURI,
       StatRestrictions,
       StatusEffectStats,
+      StatusEffectValidity,
     ],
   );
 
@@ -253,15 +279,15 @@ export const ItemsProvider = ({
             ...metadata,
             effects: spellStats.effects,
             itemType: itemTemplate.itemType,
-            minDamage: spellStats.minDamage.toString(),
-            maxDamage: spellStats.maxDamage.toString(),
-            minLevel: spellStats.minLevel.toString(),
+            maxDamage: spellStats.maxDamage,
+            minDamage: spellStats.minDamage,
+            minLevel: spellStats.minLevel,
             price: itemTemplate.price,
             tokenId: spellId.toString(),
             statRestrictions: {
-              minAgility: statRestrictions.minAgility.toString(),
-              minIntelligence: statRestrictions.minIntelligence.toString(),
-              minStrength: statRestrictions.minStrength.toString(),
+              minAgility: statRestrictions.minAgility,
+              minIntelligence: statRestrictions.minIntelligence,
+              minStrength: statRestrictions.minStrength,
             },
           } as SpellTemplate;
         }),
@@ -307,21 +333,21 @@ export const ItemsProvider = ({
 
           return {
             ...metadata,
-            agiModifier: weaponStats.agiModifier.toString(),
+            agiModifier: weaponStats.agiModifier,
             effects: weaponStats.effects,
-            hpModifier: weaponStats.hpModifier.toString(),
+            hpModifier: weaponStats.hpModifier,
             itemType: itemTemplate.itemType,
-            intModifier: weaponStats.intModifier.toString(),
-            maxDamage: weaponStats.maxDamage.toString(),
-            minDamage: weaponStats.minDamage.toString(),
-            minLevel: weaponStats.minLevel.toString(),
+            intModifier: weaponStats.intModifier,
+            maxDamage: weaponStats.maxDamage,
+            minDamage: weaponStats.minDamage,
+            minLevel: weaponStats.minLevel,
             price: itemTemplate.price,
             statRestrictions: {
-              minAgility: statRestrictions.minAgility.toString(),
-              minIntelligence: statRestrictions.minIntelligence.toString(),
-              minStrength: statRestrictions.minStrength.toString(),
+              minAgility: statRestrictions.minAgility,
+              minIntelligence: statRestrictions.minIntelligence,
+              minStrength: statRestrictions.minStrength,
             },
-            strModifier: weaponStats.strModifier.toString(),
+            strModifier: weaponStats.strModifier,
             tokenId: weaponId.toString(),
           } as WeaponTemplate;
         }),
