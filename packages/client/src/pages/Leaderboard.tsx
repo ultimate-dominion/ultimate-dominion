@@ -41,8 +41,12 @@ import {
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { HOME_PATH } from '../Routes';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
-import { Character, StatsClasses } from '../utils/types';
+import {
+  decodeBaseStats,
+  fetchMetadataFromUri,
+  uriToHttp,
+} from '../utils/helpers';
+import { Character, EntityStats, StatsClasses } from '../utils/types';
 
 const PLAYERS_PER_PAGE = 10;
 
@@ -58,7 +62,6 @@ export const Leaderboard = (): JSX.Element => {
       Characters,
       CharactersTokenURI,
       GoldBalances,
-      Stats,
     },
     delegatorAddress,
     network: { publicClient, worldContract },
@@ -91,7 +94,6 @@ export const Leaderboard = (): JSX.Element => {
   }, [page]);
 
   const allCharacterEntities = useEntityQuery([Has(Characters)]);
-
   const getAllCharacters = useCallback(
     async (entities: Entity[]): Promise<void> => {
       if (!(delegatorAddress && publicClient && worldContract)) return;
@@ -102,7 +104,22 @@ export const Leaderboard = (): JSX.Element => {
         const _characters: Character[] = await Promise.all(
           entities.map(async (entity: Entity) => {
             const characterData = getComponentValueStrict(Characters, entity);
-            const characterStats = getComponentValueStrict(Stats, entity);
+            let baseStats = {
+              agility: 0n,
+              currentHp: 0n,
+              entityClass: 0,
+              experience: 0n,
+              intelligence: 0n,
+              level: 0n,
+              maxHp: 0n,
+              strength: 0n,
+            } as EntityStats;
+            try {
+              baseStats = decodeBaseStats(characterData.baseStats);
+            } catch (err) {
+              /* empty */
+            }
+            const characterStats = baseStats;
             const { tokenId } = characterData;
 
             const ownerEntity = encodeEntity(
@@ -132,7 +149,7 @@ export const Leaderboard = (): JSX.Element => {
             return {
               ...fetachedMetadata,
               agility: characterStats.agility,
-              entityClass: characterStats.class,
+              entityClass: characterStats.entityClass,
               escrowGoldBalance,
               experience: characterStats.experience,
               externalGoldBalance,
@@ -169,7 +186,6 @@ export const Leaderboard = (): JSX.Element => {
       GoldBalances,
       publicClient,
       renderError,
-      Stats,
       worldContract,
     ],
   );
@@ -177,7 +193,6 @@ export const Leaderboard = (): JSX.Element => {
   useEffect(() => {
     (async (): Promise<void> => {
       if (!allCharacterEntities) return;
-
       await getAllCharacters(allCharacterEntities);
     })();
   }, [allCharacterEntities, getAllCharacters]);
