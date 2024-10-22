@@ -30,6 +30,7 @@ import { etherToFixedNumber } from '../utils/helpers';
 import {
   type Armor,
   type CombatOutcomeType,
+  EncounterType,
   type Spell,
   type Weapon,
 } from '../utils/types';
@@ -54,7 +55,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
   const { character, refreshCharacter } = useCharacter();
   const { refreshEntities } = useMap();
-  const { onContinueToBattleOutcome, opponent } = useBattle();
+  const { currentBattle, onContinueToBattleOutcome, opponent } = useBattle();
 
   const [armor, setArmor] = useState<Armor[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
@@ -219,6 +220,17 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 ? `You defeated ${opponent?.name}!`
                 : `You were killed by ${opponent?.name}.`}
             </Text>
+            {winner !== character.id &&
+              currentBattle &&
+              currentBattle.encounterType === EncounterType.PvP && (
+                <Text>
+                  You lost{' '}
+                  <Text as="span" color="gold" fontWeight="bold">
+                    {etherToFixedNumber(goldDropped)}
+                  </Text>{' '}
+                  $GOLD.
+                </Text>
+              )}
             {winner !== character.id && (
               <Text>
                 When you die, your health is restored, but you are forced to
