@@ -19,7 +19,7 @@ import { Header } from './components/Header';
 import { WalletDetailsModal } from './components/WalletDetailsModal';
 import { BattleProvider } from './contexts/BattleContext';
 import { ChatProvider, useChat } from './contexts/ChatContext';
-import { MapProvider } from './contexts/MapContext';
+import { MapProvider, useMap } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
 import { DEFAULT_CHAIN_ID } from './lib/web3';
@@ -59,6 +59,7 @@ const AppInner = (): JSX.Element => {
     onCloseWalletDetailsModal,
     onOpenWalletDetailsModal,
   } = useMUD();
+  const { isSpawned } = useMap();
   const { isOpen: isChatBoxOpen, onOpen: onOpenChatBox } = useChat();
 
   useEffect(() => {
@@ -117,13 +118,14 @@ const AppInner = (): JSX.Element => {
   useEffect(() => {
     const isChatBoxOpen = localStorage.getItem(IS_CHAT_BOX_OPEN_KEY);
 
+    if (!isSpawned) return;
     if (CHAT_NOT_ALLOWED_PATHS.includes(pathname)) return;
 
     if (!isChatBoxOpen || isChatBoxOpen === 'true') {
       localStorage.setItem(IS_CHAT_BOX_OPEN_KEY, 'true');
       onOpenChatBox();
     }
-  }, [pathname, onOpenChatBox]);
+  }, [isSpawned, onOpenChatBox, pathname]);
 
   return (
     <Grid

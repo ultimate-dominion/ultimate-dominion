@@ -1,5 +1,6 @@
-import { useDisclosure } from '@chakra-ui/react';
-import { transportObserver } from '@latticexyz/common';
+import { Text, useDisclosure } from '@chakra-ui/react';
+import { useEntityQuery } from '@latticexyz/react';
+import { getComponentValueStrict, Has } from '@latticexyz/recs';
 import {
   CONSTANTS,
   GroupDTO,
@@ -13,22 +14,27 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
-import { createWalletClient, fallback, Hex, http } from 'viem';
-import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import { useChains } from 'wagmi';
+import { zeroAddress } from 'viem';
+import { useWalletClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
+import { decodeMobInstanceId } from '../utils/helpers';
+import { Character, MonsterTemplate } from '../utils/types';
+import { useMap } from './MapContext';
+import { useMonsters } from './MonstersContext';
+import { useMUD } from './MUDContext';
 
-const USER_WALLET_KEY = 'ud-push-poc-user-wallet-key';
 const GROUP_CHAT_ID =
   '7699bfa8e5309b876a7b60e75074ecdf41d029575f3655a33f2b449e7730dfa4';
 
 type Message = {
   delivered: boolean;
   from: string;
+  jsx?: JSX.Element;
   message: string;
   timestamp: number;
 };
@@ -36,8 +42,9 @@ type Message = {
 type ChatContextType = {
   chatUser: PushAPI | null;
   isGroupMember: boolean;
-  isInitializing: boolean;
   isJoiningGroupChat: boolean;
+  isLoggedIn: boolean;
+  isLoggingIn: boolean;
   isMessageInputFocused: boolean;
   isOpen: boolean;
   isSending: boolean;
@@ -45,6 +52,7 @@ type ChatContextType = {
   newMessage: string;
   onClose: () => void;
   onJoinGroupChat: () => void;
+  onLogin: () => void;
   onOpen: () => void;
   onSendMessage: () => void;
   onSetNewMessage: (message: string) => void;
@@ -54,8 +62,9 @@ type ChatContextType = {
 const ChatContext = createContext<ChatContextType>({
   chatUser: null,
   isGroupMember: false,
-  isInitializing: true,
   isJoiningGroupChat: false,
+  isLoggedIn: false,
+  isLoggingIn: true,
   isMessageInputFocused: false,
   isOpen: false,
   isSending: false,
@@ -63,6 +72,7 @@ const ChatContext = createContext<ChatContextType>({
   newMessage: '',
   onClose: () => {},
   onJoinGroupChat: () => {},
+  onLogin: () => {},
   onOpen: () => {},
   onSendMessage: () => {},
   onSetNewMessage: () => {},
@@ -76,9 +86,14 @@ export type ChatProviderProps = {
 export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { renderError } = useToast();
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const chains = useChains();
+  const { data } = useWalletClient();
+  const {
+    components: { CombatEncounter, CombatOutcome },
+  } = useMUD();
+  const { monsterTemplates } = useMonsters();
+  const { allCharacters } = useMap();
 
-  const [isInitializing, setIsInitializing] = useState<boolean>(true);
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [user, setUser] = useState<PushAPI | null>(null);
 
   const [isGroupMember, setIsGroupMember] = useState<boolean>(false);
@@ -89,106 +104,173 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const [newMessage, setNewMessage] = useState<string>('');
   const [isSending, setIsSending] = useState<boolean>(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!isOpen) return;
-        if (user) return;
+  const allBattleOutcomes: Message[] = useEntityQuery([Has(CombatOutcome)]).map(
+    entity => {
+      const combatOutcome = getComponentValueStrict(CombatOutcome, entity);
+      const encounter = getComponentValueStrict(CombatEncounter, entity);
 
-        if (!GROUP_CHAT_ID) {
-          throw new Error('Group chat ID is missing');
-        }
+      const attackerId = encounter.attackers[0];
+      const defenderId = encounter.defenders[0];
 
-        let userPrivateKey = localStorage.getItem(USER_WALLET_KEY) ?? '';
+      let attacker: Character | MonsterTemplate | undefined =
+        allCharacters.find(character => character.id === attackerId);
 
-        if (!userPrivateKey) {
-          userPrivateKey = generatePrivateKey();
-          localStorage.setItem(USER_WALLET_KEY, userPrivateKey);
-        }
-
-        const userAccount = privateKeyToAccount(userPrivateKey as Hex);
-
-        const walletClient = createWalletClient({
-          account: userAccount,
-          chain: chains[0],
-          transport: transportObserver(fallback([http()])),
-        });
-
-        const _user = await PushAPI.initialize(walletClient, {
-          env: CONSTANTS.ENV.STAGING,
-        });
-
-        const groupChatInfo = (await _user.chat.group.info(
-          GROUP_CHAT_ID,
-        )) as GroupDTO;
-        const groupChatMembers = groupChatInfo.members.map(
-          member => member.wallet.split(':')[1],
+      if (!attacker) {
+        const decodedMonster = decodeMobInstanceId(attackerId as `0x${string}`);
+        attacker = monsterTemplates.find(
+          monster => monster.mobId === decodedMonster.mobId,
         );
-
-        if (!groupChatMembers.includes(_user.account)) {
-          setIsGroupMember(false);
-        } else {
-          setIsGroupMember(true);
-        }
-
-        const chatHistory = await _user.chat.history(GROUP_CHAT_ID);
-
-        const _userMessages = chatHistory.map(message => ({
-          delivered: true,
-          from: message.fromDID.split(':')[1],
-          message: message.messageContent,
-          timestamp: Number(message.timestamp),
-        }));
-
-        setMessages(_userMessages.reverse());
-        setUser(_user);
-
-        const stream = await _user.initStream([CONSTANTS.STREAM.CHAT], {
-          filter: {
-            chats: [GROUP_CHAT_ID],
-          },
-        });
-
-        stream.on(CONSTANTS.STREAM.CHAT, (message: MessageEvent) => {
-          if (message.event.split('.')[1] === MessageEventType.Message) {
-            // Update delivered status of the last message sent by the user
-            const from = message.from.split(':')[1];
-            if (from === _user.account) {
-              setMessages(prevMessages => {
-                const lastMessage = prevMessages[prevMessages.length - 1];
-                if (
-                  lastMessage &&
-                  lastMessage.from === _user.account &&
-                  !lastMessage.delivered
-                ) {
-                  return prevMessages.slice(0, -1).concat({
-                    ...lastMessage,
-                    delivered: true,
-                  });
-                }
-                return prevMessages;
-              });
-            } else {
-              setMessages(prevMessages => [
-                ...prevMessages,
-                {
-                  delivered: true,
-                  from,
-                  message: message.message.content,
-                  timestamp: Number(message.timestamp),
-                },
-              ]);
-            }
-          }
-        });
-
-        stream.connect();
-        setIsInitializing(false);
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to initialize chat.', e);
       }
-    })();
-  }, [chains, isOpen, renderError, user]);
+
+      let defender: Character | MonsterTemplate | undefined =
+        allCharacters.find(character => character.id === defenderId);
+
+      if (!defender) {
+        const decodedMonster = decodeMobInstanceId(defenderId as `0x${string}`);
+        defender = monsterTemplates.find(
+          monster => monster.mobId === decodedMonster.mobId,
+        );
+      }
+
+      const winner = combatOutcome.attackersWin ? attacker : defender;
+      const loser = combatOutcome.attackersWin ? defender : attacker;
+
+      return {
+        delivered: true,
+        from: zeroAddress,
+        jsx:
+          winner && loser ? (
+            <Text fontWeight={500} size="xs" textAlign="center">
+              {winner.name} defeated {loser.name}!
+            </Text>
+          ) : undefined,
+        message: 'Battle ended',
+        timestamp: Number(combatOutcome.endTime) * 1000,
+      };
+    },
+  );
+
+  const messagesAndEvents = useMemo(() => {
+    return [...messages, ...allBattleOutcomes].sort(
+      (a, b) => a.timestamp - b.timestamp,
+    );
+  }, [allBattleOutcomes, messages]);
+
+  const onLogin = useCallback(async () => {
+    try {
+      if (!isOpen) return;
+      if (user) return;
+      if (!data) return;
+
+      if (!GROUP_CHAT_ID) {
+        throw new Error('Group chat ID is missing');
+      }
+
+      setIsLoggingIn(true);
+
+      const _user = await PushAPI.initialize(data, {
+        env: CONSTANTS.ENV.STAGING,
+      });
+
+      const groupChatInfo = (await _user.chat.group.info(
+        GROUP_CHAT_ID,
+      )) as GroupDTO;
+      const groupChatMembers = groupChatInfo.members.map(
+        member => member.wallet.split(':')[1],
+      );
+
+      if (!groupChatMembers.includes(_user.account)) {
+        setIsGroupMember(false);
+      } else {
+        setIsGroupMember(true);
+      }
+
+      const chatHistory = await _user.chat.history(GROUP_CHAT_ID);
+
+      const _userMessages = chatHistory.map(message => ({
+        delivered: true,
+        from: message.fromDID.split(':')[1],
+        message: message.messageContent,
+        timestamp: Number(message.timestamp),
+      }));
+
+      setMessages(_userMessages.reverse());
+      setUser(_user);
+
+      const stream = await _user.initStream([CONSTANTS.STREAM.CHAT], {
+        filter: {
+          chats: [GROUP_CHAT_ID],
+        },
+      });
+
+      stream.on(CONSTANTS.STREAM.CHAT, (message: MessageEvent) => {
+        if (message.event.split('.')[1] === MessageEventType.Message) {
+          // Update delivered status of the last message sent by the user
+          const from = message.from.split(':')[1];
+          if (from === _user.account) {
+            setMessages(prevMessages => {
+              const lastMessage = prevMessages[prevMessages.length - 1];
+              if (
+                lastMessage &&
+                lastMessage.from === _user.account &&
+                !lastMessage.delivered
+              ) {
+                return prevMessages.slice(0, -1).concat({
+                  ...lastMessage,
+                  delivered: true,
+                });
+              }
+              return prevMessages;
+            });
+          } else {
+            setMessages(prevMessages => [
+              ...prevMessages,
+              {
+                delivered: true,
+                from,
+                message: message.message.content,
+                timestamp: Number(message.timestamp),
+              },
+            ]);
+          }
+        }
+      });
+
+      stream.connect();
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Failed to initialize chat.', e);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  }, [data, isOpen, renderError, user]);
+
+  const onJoinGroupChat = useCallback(async () => {
+    try {
+      setIsJoiningGroupChat(true);
+
+      if (!user) {
+        throw new Error('Failed to join group.');
+      }
+
+      const groupChatInfo = (await user.chat.group.info(
+        GROUP_CHAT_ID,
+      )) as GroupDTO;
+      const groupChatMembers = groupChatInfo.members.map(
+        member => member.wallet.split(':')[1],
+      );
+
+      if (groupChatMembers.includes(user.account)) {
+        throw new Error('User is already a member of the group chat.');
+      }
+
+      await user.chat.group.join(GROUP_CHAT_ID);
+      setIsGroupMember(true);
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Failed to join group chat.', e);
+    } finally {
+      setIsJoiningGroupChat(false);
+    }
+  }, [renderError, user]);
 
   const onSetMessageInputFocus = useCallback((isFocused: boolean) => {
     setIsMessageInputFocused(isFocused);
@@ -236,34 +318,6 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     }
   }, [newMessage, renderError, user]);
 
-  const onJoinGroupChat = useCallback(async () => {
-    try {
-      setIsJoiningGroupChat(true);
-
-      if (!user) {
-        throw new Error('Failed to initialize user');
-      }
-
-      const groupChatInfo = (await user.chat.group.info(
-        GROUP_CHAT_ID,
-      )) as GroupDTO;
-      const groupChatMembers = groupChatInfo.members.map(
-        member => member.wallet.split(':')[1],
-      );
-
-      if (groupChatMembers.includes(user.account)) {
-        throw new Error('User is already a member of the group chat.');
-      }
-
-      await user.chat.group.join(GROUP_CHAT_ID);
-      setIsGroupMember(true);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to join group chat.', e);
-    } finally {
-      setIsJoiningGroupChat(false);
-    }
-  }, [renderError, user]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
@@ -296,15 +350,17 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       value={{
         chatUser: user,
         isGroupMember,
-        isInitializing,
         isJoiningGroupChat,
+        isLoggedIn: !!user,
+        isLoggingIn,
         isMessageInputFocused,
         isOpen,
         isSending,
-        messages,
+        messages: messagesAndEvents,
         newMessage,
         onClose: onCloseAndClear,
         onJoinGroupChat,
+        onLogin,
         onOpen: onOpenAndSet,
         onSendMessage,
         onSetNewMessage,
