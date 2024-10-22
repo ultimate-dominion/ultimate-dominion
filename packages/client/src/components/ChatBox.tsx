@@ -5,25 +5,30 @@ import {
   Heading,
   HStack,
   ScaleFade,
-  Spinner,
   Text,
   Textarea,
   Tooltip,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CiCircleCheck } from 'react-icons/ci';
 import { IoIosSend, IoMdInformationCircleOutline } from 'react-icons/io';
+import { Link } from 'react-router-dom';
+import { createPublicClient, http } from 'viem';
+import { mainnet } from 'viem/chains';
 
 import { useChat } from '../contexts/ChatContext';
+import { useMap } from '../contexts/MapContext';
 import { shortenAddress } from '../utils/helpers';
 import { PolygonalCard } from './PolygonalCard';
 
 export const ChatBox: React.FC = () => {
+  const { allCharacters } = useMap();
   const {
     chatUser,
     isGroupMember,
-    isInitializing,
+    isLoggedIn,
+    isLoggingIn,
     isJoiningGroupChat,
     isSending,
     isOpen: isChatBoxOpen,
@@ -31,6 +36,7 @@ export const ChatBox: React.FC = () => {
     newMessage,
     onClose: onCloseChatBox,
     onJoinGroupChat,
+    onLogin,
     onSendMessage,
     onSetNewMessage,
     onSetMessageInputFocus,
@@ -38,6 +44,11 @@ export const ChatBox: React.FC = () => {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const [allCharacterOwners, setAllCharacterOwners] = useState<string>('');
+  const [ensNameByAddressMapping, setEnsNameByAddressMapping] = useState<
+    Record<string, string>
+  >({});
 
   const adjustTextareaHeight = useCallback(() => {
     if (textareaRef.current) {
@@ -60,6 +71,48 @@ export const ChatBox: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [scrollToBottom, messages]);
+
+  useEffect(() => {
+    (async () => {
+      if (!isLoggedIn) return;
+      if (!isGroupMember) return;
+      if (allCharacters.length === 0) return;
+
+      const newCharacterOwners = JSON.stringify(
+        allCharacters.map(character => character.owner).sort(),
+      );
+
+      if (newCharacterOwners === allCharacterOwners) return;
+      try {
+        const publicClient = createPublicClient({
+          chain: mainnet,
+          transport: http(),
+        });
+
+        const _ensNameByAddressMapping: Record<string, string> = {};
+
+        const promises = allCharacters.map(async character => {
+          if (!_ensNameByAddressMapping[character.owner]) {
+            const ensName = await publicClient.getEnsName({
+              address: character.owner as `0x${string}`,
+              universalResolverAddress:
+                mainnet.contracts.ensUniversalResolver.address,
+            });
+            _ensNameByAddressMapping[character.owner] =
+              ensName || shortenAddress(character.owner);
+          }
+        });
+
+        await Promise.all(promises);
+
+        setAllCharacterOwners(newCharacterOwners);
+        setEnsNameByAddressMapping(_ensNameByAddressMapping);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error fetching ENS names:', error);
+      }
+    })();
+  }, [allCharacters, allCharacterOwners, isGroupMember, isLoggedIn]);
 
   return (
     <ScaleFade initialScale={0.9} in={isChatBoxOpen}>
@@ -95,30 +148,39 @@ export const ChatBox: React.FC = () => {
           overflowY="auto"
           transition="height 0.3s ease"
         >
-          {isInitializing && (
-            <VStack h="100%" justifyContent="center">
-              <Spinner mb={12} size="lg" />
-            </VStack>
-          )}
-          {!isInitializing && !isGroupMember && (
+          {(isLoggingIn || !isGroupMember) && (
             <VStack justifyContent="center" mt={8} p={2} spacing={8}>
               <Text size="sm" textAlign="center">
                 Ultimate Dominion&apos;s chat is public and permanent. Do not
                 share personal information or sensitive data.
               </Text>
-              <Button
-                isLoading={isJoiningGroupChat}
-                onClick={onJoinGroupChat}
-                size="sm"
-              >
-                Join Chat
-              </Button>
+              {isLoggedIn ? (
+                <Button
+                  isLoading={isJoiningGroupChat}
+                  onClick={onJoinGroupChat}
+                  size="sm"
+                >
+                  Join Chat
+                </Button>
+              ) : (
+                <Button isLoading={isLoggingIn} onClick={onLogin} size="sm">
+                  Login
+                </Button>
+              )}
             </VStack>
           )}
-          {!isInitializing && isGroupMember && chatUser && (
+          {isLoggedIn && isGroupMember && chatUser && (
             <VStack bg="grey300" flex="1" overflowY="auto" p={2} spacing={2}>
               {messages.map((message, index) => {
                 const isUser = message.from === chatUser.account;
+                const messageCharacter = allCharacters.find(
+                  character =>
+                    character.owner.toLowerCase() ===
+                    message.from.toLowerCase(),
+                );
+
+                const characterAddressOrEns =
+                  ensNameByAddressMapping[message.from];
 
                 // Only show timestamp if it's been more than 30 minutes since the last message
                 const prevMessage = messages[index - 1];
@@ -144,8 +206,22 @@ export const ChatBox: React.FC = () => {
                         maxW="70%"
                         spacing={1}
                       >
-                        {!isUser && (
-                          <Text size="2xs">{shortenAddress(message.from)}</Text>
+                        {!isUser && messageCharacter && (
+                          <Text
+                            as={Link}
+                            size="2xs"
+                            to={`/characters/${messageCharacter.id}`}
+                            _hover={{
+                              color: 'blue',
+                              textDecoration: 'underline',
+                            }}
+                          >
+                            {`${messageCharacter.name} `}(
+                            {characterAddressOrEns})
+                          </Text>
+                        )}
+                        {!isUser && !messageCharacter && (
+                          <Text size="2xs">{characterAddressOrEns}</Text>
                         )}
                         <HStack spacing={1}>
                           {message.delivered && isUser && (
@@ -182,7 +258,7 @@ export const ChatBox: React.FC = () => {
             </VStack>
           )}
         </Box>
-        {!isInitializing && isGroupMember && chatUser && isChatBoxOpen && (
+        {isLoggedIn && isGroupMember && chatUser && isChatBoxOpen && (
           <HStack alignItems="center" pr={2}>
             <Textarea
               h="auto"
