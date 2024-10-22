@@ -434,6 +434,18 @@ export default defineWorld({
         amount: "uint256",
       },
     },
+    MarketplaceSale: {
+      key: ["orderHash"],
+      schema: {
+        orderHash: "bytes32",
+        buyer: "address",
+        itemId: "uint256",
+        price: "uint256",
+        seller: "address",
+        timestamp: "uint256",
+      },
+      type: "offchainTable",
+    },
     ///////////////////////////////////// SHOPS ///////////////////////////////////
     Shops: {
       key: ["entityId"],
@@ -449,6 +461,18 @@ export default defineWorld({
         restock: "uint256[]",
         stock: "uint256[]",
       },
+    },
+    ShopSale: {
+      key: ["shopId", "customerId", "itemId", "timestamp"],
+      schema: {
+        shopId: "bytes32",
+        customerId: "bytes32",
+        itemId: "uint256",
+        timestamp: "uint256",
+        buying: "bool",
+        price: "uint256",
+      },
+      type: "offchainTable",
     },
 
     ////////////////////////////////////////// OFFCHAIN TABLES////////////////////////////////////////

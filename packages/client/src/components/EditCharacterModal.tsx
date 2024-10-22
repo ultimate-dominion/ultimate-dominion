@@ -196,11 +196,11 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
+        <ModalHeader>
+          <Text>Edit Character</Text>
+        </ModalHeader>
+        <ModalCloseButton />
         <Box as="form" onSubmit={onEditCharacter}>
-          <ModalHeader>
-            <Text>Edit Character</Text>
-          </ModalHeader>
-          <ModalCloseButton />
           <ModalBody px={{ base: 6, sm: 8 }}>
             <VStack gap={5}>
               <HStack w="100%" gap={5}>

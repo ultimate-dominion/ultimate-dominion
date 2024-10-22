@@ -4,7 +4,7 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {
-    Orders, Considerations, ConsiderationsData, Offers, OffersData, UltimateDominionConfig
+    MarketplaceSale, MarketplaceSaleData, Orders, Considerations, ConsiderationsData, Offers, OffersData, UltimateDominionConfig
 } from "@codegen/index.sol";
 import {TokenType, OrderStatus} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
@@ -87,6 +87,16 @@ contract MarketplaceSystem is System, ReentrancyGuard {
 
         // set order status to fulfilled
         Orders.set(orderHash, _msgSender(), 0, OrderStatus.Fulfilled);
+
+        MarketplaceSaleData memory sale = MarketplaceSaleData({
+            buyer: o.tokenType == TokenType.ERC20 ? c.recipient : _msgSender(),
+            itemId: o.tokenType == TokenType.ERC20 ? c.identifier : o.identifier,
+            price: o.tokenType == TokenType.ERC20 ? o.amount : c.amount,
+            seller: o.tokenType == TokenType.ERC20 ? _msgSender() : c.recipient,
+            timestamp: block.timestamp
+        });
+
+        MarketplaceSale.set(orderHash, sale);
 
         // assert balances
         return true;

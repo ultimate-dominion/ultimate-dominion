@@ -3,6 +3,7 @@ import {
   Button,
   Center,
   Flex,
+  Heading,
   HStack,
   Input,
   InputGroup,
@@ -17,7 +18,6 @@ import {
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
-import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
@@ -26,6 +26,8 @@ import { CreateListingModal } from '../components/CreateListingModal';
 import { InfoModal } from '../components/InfoModal';
 import { MarketplaceRow } from '../components/MarketplaceRow';
 import { Pagination } from '../components/Pagination';
+import { PolygonalCard } from '../components/PolygonalCard';
+import { MarketplaceIconSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -284,234 +286,263 @@ export const Marketplace = (): JSX.Element => {
   if (!character) {
     return (
       <VStack w="100%">
-        <Button
-          alignSelf="start"
-          leftIcon={<IoMdArrowRoundBack />}
-          my={4}
-          onClick={() => navigate(-1)}
-          size="xs"
-          variant="outline"
-        >
-          Back
-        </Button>
         <Text mt={12}>An error occurred</Text>
       </VStack>
     );
   }
 
   return (
-    <VStack>
-      <Stack
-        direction={{ base: 'column', sm: 'row' }}
-        justify="space-between"
-        my={4}
-        w="100%"
-      >
-        <Button
-          alignSelf="start"
-          leftIcon={<IoMdArrowRoundBack />}
-          onClick={() => navigate(-1)}
-          size="xs"
-          variant="outline"
-        >
-          Back
-        </Button>
-        <Text size={{ base: '2xs', sm: 'sm' }}>
-          $GOLD Balance: {etherToFixedNumber(character.externalGoldBalance)}
-        </Text>
-      </Stack>
-      <Stack
-        direction={{ base: 'column', md: 'row' }}
-        mb={8}
-        spacing={{ base: 4, md: 8 }}
-        w="100%"
-      >
-        <InputGroup w="100%">
-          <InputLeftElement h="100%" pointerEvents="none">
-            <FaSearch />
-          </InputLeftElement>
-          <Input
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search"
-            value={query}
-          />
-        </InputGroup>
-        <HStack>
-          {Object.keys(MarketplaceFilter).map(k => {
-            return (
-              <Button
-                key={`marketplace-filter-${k}`}
-                onClick={() =>
-                  setMarketplaceFilter(
-                    MarketplaceFilter[k as keyof typeof MarketplaceFilter],
-                  )
-                }
-                size={{ base: 'xs', sm: 'sm' }}
-                variant={
-                  marketplaceFilter ===
-                  MarketplaceFilter[k as keyof typeof MarketplaceFilter]
-                    ? 'solid'
-                    : 'outline'
-                }
-              >
-                {MarketplaceFilter[k as keyof typeof MarketplaceFilter]}
-              </Button>
-            );
-          })}
-        </HStack>
-      </Stack>
-      <Stack
-        alignItems="center"
-        direction={{ base: 'column', md: 'row' }}
-        gap={{ base: 8, md: 0 }}
-        justify="space-between"
-        mb={8}
-        w="100%"
-      >
+    <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
+      <VStack>
         <HStack
-          alignItems="center"
-          justifyContent="space-between"
-          spacing={{ base: 4, md: 8 }}
-          w={{ base: '100%', md: '375px' }}
+          bgColor="blue500"
+          h={{ base: '100px', md: '66px' }}
+          px="20px"
+          width="100%"
         >
-          <Text size={{ base: 'sm', sm: 'md' }} w={{ base: '50%', sm: '40%' }}>
-            Filter by:
-          </Text>
-          <Select
-            onChange={e =>
-              setItemTypeFilter(e.target.value as ItemFilterOptions)
-            }
-            size="sm"
-            value={itemTypeFilter}
+          <Stack
+            alignItems="center"
+            direction={{ base: 'column', md: 'row' }}
+            spacing={{ base: 2, md: 4 }}
           >
-            {Object.keys(ItemFilterOptions).map(k => {
-              return (
-                <option key={`item-type-filter-${k}`} value={k}>
-                  {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
-                </option>
-              );
-            })}
-          </Select>
+            <HStack>
+              <MarketplaceIconSvg />
+              <Heading color="white">Marketplace</Heading>
+            </HStack>
+            <Text color="yellow">
+              <Text
+                as="span"
+                display={{ base: 'none', md: 'inline-block' }}
+                mr={2}
+              >
+                -{' '}
+              </Text>
+              $GOLD Balance: {etherToFixedNumber(character.externalGoldBalance)}
+            </Text>
+          </Stack>
         </HStack>
-        <Button bg="blue" onClick={onOpenCreateListingModal} size="sm">
-          Create Listing
-        </Button>
-      </Stack>
-      <Flex justify="space-between" w="100%">
-        <Text>Items {length}</Text>
-        <HStack>
-          <HStack w={{ base: '0px', sm: '300px', md: '350px', lg: '500px' }}>
-            {Array.from(Object.values(SortOptions)).map((s, i) => {
+
+        <Stack
+          direction={{ base: 'column', md: 'row' }}
+          mb={8}
+          my={4}
+          px={3}
+          spacing={{ base: 4, md: 8 }}
+          w="100%"
+        >
+          <InputGroup>
+            <InputLeftElement h="100%" pointerEvents="none">
+              <FaSearch />
+            </InputLeftElement>
+            <Input
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search"
+              value={query}
+            />
+          </InputGroup>
+          <HStack spacing={2}>
+            {Object.keys(MarketplaceFilter).map(k => {
               return (
                 <Button
-                  display={
-                    i === 0
-                      ? { base: 'none', md: 'flex' }
-                      : { base: 'none', sm: 'flex' }
+                  bgColor={
+                    marketplaceFilter ===
+                    MarketplaceFilter[k as keyof typeof MarketplaceFilter]
+                      ? 'grey500'
+                      : undefined
                   }
-                  fontWeight={sort.sorted == s ? 'bold' : 'normal'}
-                  key={`filter-${s}`}
-                  onClick={() => {
-                    setSort({
-                      sorted: s,
-                      reversed: !sort.reversed,
-                    });
-                    setPage(1);
-                  }}
-                  p={1}
-                  size={{ base: '2xs', lg: 'sm' }}
-                  variant="ghost"
-                  w="100%"
+                  color={
+                    marketplaceFilter ===
+                    MarketplaceFilter[k as keyof typeof MarketplaceFilter]
+                      ? 'white'
+                      : undefined
+                  }
+                  key={`marketplace-filter-${k}`}
+                  onClick={() =>
+                    setMarketplaceFilter(
+                      MarketplaceFilter[k as keyof typeof MarketplaceFilter],
+                    )
+                  }
+                  size={{ base: 'xs', sm: 'sm' }}
+                  variant="white"
                 >
-                  <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                    {s}
-                  </Text>
-                  {sort.sorted == s && sort.reversed && <FaSortAmountUp />}
-                  {sort.sorted == s && !sort.reversed && <FaSortAmountDown />}
-                  {sort.sorted != s && <FaSortAmountDown color="grey" />}
+                  {MarketplaceFilter[k as keyof typeof MarketplaceFilter]}
                 </Button>
               );
             })}
           </HStack>
-          <Box display={{ base: 'none', md: 'block' }} w="50px" />
-        </HStack>
-      </Flex>
-
-      <VStack gap={3} overflowX="auto" w="100%">
-        {items.length > 0 ? (
-          items.map((item, i) => {
-            return (
-              <MarketplaceRow
-                highestOffer={
-                  highestOffers[item.tokenId.toString()]
-                    ? formatEther(highestOffers[item.tokenId.toString()])
-                    : '0'
-                }
-                key={`marketplace-row-${i}`}
-                lowestPrice={
-                  lowestPrices[item.tokenId.toString()]
-                    ? formatEther(lowestPrices[item.tokenId.toString()])
-                    : '0'
-                }
-                orderType={
-                  marketplaceFilter === MarketplaceFilter.ForSale
-                    ? OrderType.Buying
-                    : OrderType.Selling
-                }
-                {...item}
-              />
-            );
-          })
-        ) : (
-          <Text mt={12}>No items</Text>
-        )}
-      </VStack>
-
-      <HStack
-        my={5}
-        visibility={unfilteredItems?.length > 0 ? 'visible' : 'hidden'}
-      >
-        <Pagination
-          length={length}
-          page={page}
-          pageLimit={pageLimit}
-          perPage={ITEMS_PER_PAGE}
-          setPage={setPage}
-          setPageLimit={setPageLimit}
-        />
-      </HStack>
-
-      <CreateListingModal
-        isOpen={isCreateListingModalOpen}
-        onClose={onCloseCreateListingModal}
-      />
-      <InfoModal
-        heading="Welcome to the Marketplace!"
-        isOpen={isMarketplaceInfoModalOpen}
-        onClose={onAcknowledgeMarketplaceInfo}
-      >
-        <VStack>
-          <Text alignSelf="center" fontSize="60px">
-            🤝
+        </Stack>
+        <Stack
+          alignItems="center"
+          direction={{ base: 'column', md: 'row' }}
+          gap={{ base: 8, md: 0 }}
+          justify="space-between"
+          mb={8}
+          px={3}
+          w="100%"
+        >
+          <HStack
+            alignItems="center"
+            justifyContent="space-between"
+            spacing={{ base: 4, md: 8 }}
+            w={{ base: '100%', md: '325px' }}
+          >
+            <Text
+              color="#565555"
+              fontWeight={400}
+              size="sm"
+              w={{ base: '50%', sm: '42%' }}
+            >
+              Filter by:
+            </Text>
+            <Select
+              onChange={e =>
+                setItemTypeFilter(e.target.value as ItemFilterOptions)
+              }
+              size="sm"
+              value={itemTypeFilter}
+            >
+              {Object.keys(ItemFilterOptions).map(k => {
+                return (
+                  <option key={`item-type-filter-${k}`} value={k}>
+                    {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
+                  </option>
+                );
+              })}
+            </Select>
+          </HStack>
+          <Button onClick={onOpenCreateListingModal} size="sm">
+            Create Listing
+          </Button>
+        </Stack>
+        <Flex alignItems="center" justify="space-between" w="100%">
+          <Text pl={4} color="#565555" fontWeight={400} size="sm">
+            Items {length}
           </Text>
-          <VStack spacing={4}>
-            <Text>
-              Here you can buy and sell armor, potions, spells, and weapons with
-              other players.
-            </Text>
-            <Text size="sm">
-              To start the process, either create a listing or select an item
-              based on which items are for sale or which items have a $GOLD
-              offer on them. If there are $GOLD offers on an item, anyone who
-              owns the item can accept any of the offers.
-            </Text>
-            <Text size="sm">
-              To coordinate a sale with another player, you can use the chat box
-              in the bottom-right.
-            </Text>
-          </VStack>
+          <HStack>
+            <HStack w={{ base: '0px', md: '350px', lg: '500px' }}>
+              {Array.from(Object.values(SortOptions)).map(s => {
+                return (
+                  <Button
+                    color="#565555"
+                    display={{ base: 'none', md: 'flex' }}
+                    fontWeight={sort.sorted == s ? 'bold' : 'normal'}
+                    key={`filter-${s}`}
+                    onClick={() => {
+                      setSort({
+                        sorted: s,
+                        reversed: !sort.reversed,
+                      });
+                      setPage(1);
+                    }}
+                    p={1}
+                    size={{ base: '2xs', lg: 'sm' }}
+                    variant="unstyled"
+                    w="100%"
+                  >
+                    <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
+                      {s}
+                    </Text>
+                    {sort.sorted == s && sort.reversed && <FaSortAmountUp />}
+                    {sort.sorted == s && !sort.reversed && <FaSortAmountDown />}
+                    {sort.sorted != s && <FaSortAmountDown color="grey" />}
+                  </Button>
+                );
+              })}
+            </HStack>
+            <Box display={{ base: 'none', md: 'block' }} w="80px" />
+          </HStack>
+        </Flex>
+
+        <VStack overflowX="auto" spacing={0} w="100%">
+          <Box
+            bgColor="#F5F5FA1F"
+            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+            h="5px"
+            w="100%"
+          />
+          {items.length > 0 ? (
+            items.map((item, i) => {
+              return (
+                <>
+                  <MarketplaceRow
+                    highestOffer={
+                      highestOffers[item.tokenId.toString()]
+                        ? formatEther(highestOffers[item.tokenId.toString()])
+                        : '0'
+                    }
+                    key={`marketplace-row-${i}`}
+                    lowestPrice={
+                      lowestPrices[item.tokenId.toString()]
+                        ? formatEther(lowestPrices[item.tokenId.toString()])
+                        : '0'
+                    }
+                    orderType={
+                      marketplaceFilter === MarketplaceFilter.ForSale
+                        ? OrderType.Buying
+                        : OrderType.Selling
+                    }
+                    {...item}
+                  />
+                  <Box
+                    bgColor="#F5F5FA1F"
+                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                    h="5px"
+                    w="100%"
+                  />
+                </>
+              );
+            })
+          ) : (
+            <Text mt={12}>No items</Text>
+          )}
         </VStack>
-      </InfoModal>
-    </VStack>
+
+        <HStack
+          my={5}
+          visibility={unfilteredItems?.length > 0 ? 'visible' : 'hidden'}
+        >
+          <Pagination
+            length={length}
+            page={page}
+            pageLimit={pageLimit}
+            perPage={ITEMS_PER_PAGE}
+            setPage={setPage}
+            setPageLimit={setPageLimit}
+          />
+        </HStack>
+
+        <CreateListingModal
+          isOpen={isCreateListingModalOpen}
+          onClose={onCloseCreateListingModal}
+        />
+        <InfoModal
+          heading="Welcome to the Marketplace!"
+          isOpen={isMarketplaceInfoModalOpen}
+          onClose={onAcknowledgeMarketplaceInfo}
+        >
+          <VStack>
+            <Text alignSelf="center" fontSize="60px">
+              🤝
+            </Text>
+            <VStack spacing={4}>
+              <Text>
+                Here you can buy and sell armor, potions, spells, and weapons
+                with other players.
+              </Text>
+              <Text size="sm">
+                To start the process, either create a listing or select an item
+                based on which items are for sale or which items have a $GOLD
+                offer on them. If there are $GOLD offers on an item, anyone who
+                owns the item can accept any of the offers.
+              </Text>
+              <Text size="sm">
+                To coordinate a sale with another player, you can use the chat
+                box in the bottom-right.
+              </Text>
+            </VStack>
+          </VStack>
+        </InfoModal>
+      </VStack>
+    </PolygonalCard>
   );
 };

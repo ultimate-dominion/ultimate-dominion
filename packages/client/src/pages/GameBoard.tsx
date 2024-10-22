@@ -19,6 +19,7 @@ import { ActionsPanel } from '../components/ActionsPanel';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
 import { InfoModal } from '../components/InfoModal';
 import { MapPanel } from '../components/MapPanel';
+import { PolygonalCard } from '../components/PolygonalCard';
 import { StatsPanel } from '../components/StatsPanel';
 import { TileDetailsPanel } from '../components/TileDetailsPanel';
 import { useBattle } from '../contexts/BattleContext';
@@ -149,50 +150,48 @@ export const GameBoard = (): JSX.Element => {
     }
   }, [continueToBattleOutcome, onOpenBattleOutcomeModal, lastestBattleOutcome]);
 
+  if (!character?.locked) return <Box />;
+
   return (
     <Grid
       gap={2}
-      h="calc(100vh - 100px)"
-      mt={4}
+      h="calc(100vh - 125px)"
       templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
       templateRows="repeat(12, 1fr)"
     >
       <GridItem
-        border="2px solid"
         colSpan={{ base: 1, lg: 4 }}
         display={{ base: 'none', lg: 'block' }}
-        overflowY="auto"
-        p={4}
         rowSpan={{ base: 12, lg: 12 }}
       >
-        <StatsPanel />
+        <PolygonalCard clipPath="none" overflowY="auto">
+          <StatsPanel />
+        </PolygonalCard>
       </GridItem>
       <GridItem
-        border="2px solid"
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
-        overflowY="auto"
-        p={{ base: 2, lg: 4 }}
-        pos="relative"
         rowSpan={{ base: 3, lg: 6 }}
         rowStart={{ base: 0, lg: 0 }}
       >
-        <TileDetailsPanel />
+        <PolygonalCard clipPath="none">
+          <TileDetailsPanel />
+        </PolygonalCard>
       </GridItem>
       <GridItem
-        border="2px solid"
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
-        position="relative"
         rowSpan={{ base: 4, lg: 6 }}
         rowStart={{ base: 4, lg: 7 }}
       >
-        <ActionsPanel />
+        <PolygonalCard clipPath="none" overflowY="auto">
+          <ActionsPanel />
+        </PolygonalCard>
       </GridItem>
       <GridItem
         colSpan={{ base: 1, lg: 4 }}
         colStart={{ base: 0, lg: 13 }}
-        rowSpan={{ base: 3, lg: 7 }}
+        rowSpan={{ base: 4, lg: 12 }}
         rowStart={{ base: 8, lg: 0 }}
       >
         <MapPanel />
@@ -214,8 +213,10 @@ export const GameBoard = (): JSX.Element => {
               </Button>
             </VStack>
           </PopoverTrigger>
-          <PopoverContent p={4}>
-            <StatsPanel />
+          <PopoverContent>
+            <PolygonalCard clipPath="none" overflowY="auto">
+              <StatsPanel />
+            </PolygonalCard>
           </PopoverContent>
         </Popover>
       </Box>

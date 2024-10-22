@@ -147,12 +147,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     Has(Position),
   ]);
 
-  const allCharacterEntities = useEntityQuery([
-    Has(Characters),
-    Has(Spawned),
-    Has(Stats),
-    Has(Position),
-  ]);
+  const allCharacterEntities = useEntityQuery([Has(Characters), Has(Stats)]);
 
   const getAllCharacters = useCallback(
     async (
@@ -182,8 +177,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             );
 
             const externalGoldBalance =
-              getComponentValueStrict(GoldBalances, ownerEntity)?.value ??
-              BigInt(0);
+              getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
             const escrowGoldBalance =
               getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0);
 
@@ -202,8 +196,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             ) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) };
             const inBattle = !!encounterId && encounterId !== zeroHash;
 
-            const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
-            const _position = getComponentValueStrict(Position, entity);
+            const isSpawned =
+              getComponentValue(Spawned, entity)?.spawned ?? false;
+            const _position = getComponentValue(Position, entity) ?? {
+              x: 0,
+              y: 0,
+            };
 
             let decodedBaseStats = {
               agility: BigInt(0),
@@ -301,7 +299,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           }),
         );
 
-        return characters;
+        return characters.filter(c => c.locked);
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Failed to fetch other players.',

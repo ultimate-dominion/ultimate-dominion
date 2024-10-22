@@ -30,10 +30,12 @@ import { etherToFixedNumber } from '../utils/helpers';
 import {
   type Armor,
   type CombatOutcomeType,
+  EncounterType,
   type Spell,
   type Weapon,
 } from '../utils/types';
 import { ItemCard } from './ItemCard';
+import { PolygonalCard } from './PolygonalCard';
 
 type BattleOutcomeModalProps = {
   isOpen: boolean;
@@ -53,7 +55,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
   const { character, refreshCharacter } = useCharacter();
   const { refreshEntities } = useMap();
-  const { onContinueToBattleOutcome, opponent } = useBattle();
+  const { currentBattle, onContinueToBattleOutcome, opponent } = useBattle();
 
   const [armor, setArmor] = useState<Armor[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
@@ -162,11 +164,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
       <Modal isOpen={isOpen} onClose={onAcknowledge}>
         <ModalOverlay />
         <ModalContent>
+          <PolygonalCard isModal />
           <ModalHeader textAlign="center">
             {winner === character.id ? 'Victory!' : 'Defeat...'}
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody p={4} textAlign="center">
+          <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
             <VStack alignItems="center" pb={8} spacing={4}>
               <Text>
                 {winner === character.id
@@ -205,17 +208,29 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     <Modal isOpen={isOpen} onClose={onAcknowledge}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader textAlign="center">
           {winner === character.id ? 'Victory!' : 'Defeat...'}
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4} textAlign="center">
+        <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
           <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
             <Text>
               {winner === character.id
                 ? `You defeated ${opponent?.name}!`
                 : `You were killed by ${opponent?.name}.`}
             </Text>
+            {winner !== character.id &&
+              currentBattle &&
+              currentBattle.encounterType === EncounterType.PvP && (
+                <Text>
+                  You lost{' '}
+                  <Text as="span" color="gold" fontWeight="bold">
+                    {etherToFixedNumber(goldDropped)}
+                  </Text>{' '}
+                  $GOLD.
+                </Text>
+              )}
             {winner !== character.id && (
               <Text>
                 When you die, your health is restored, but you are forced to

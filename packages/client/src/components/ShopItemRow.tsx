@@ -13,6 +13,7 @@ import {
   ModalBody,
   ModalCloseButton,
   ModalContent,
+  ModalFooter,
   ModalHeader,
   ModalOverlay,
   Text,
@@ -21,8 +22,7 @@ import {
 } from '@chakra-ui/react';
 import { Entity } from '@latticexyz/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IoIosArrowForward } from 'react-icons/io';
-import { IoAdd, IoRemove } from 'react-icons/io5';
+import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -43,24 +43,30 @@ import {
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
+import { PolygonalCard } from './PolygonalCard';
 import { ShopAllowanceModal } from './ShopAllowanceModal';
+import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const ShopItemRow = ({
   balance,
   characterId,
+  isEquipped,
   item,
   itemIndex,
   orderType,
   stock,
   shop,
+  theme,
 }: {
   balance: bigint | null;
   characterId: Entity;
+  isEquipped: boolean;
   item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;
   orderType: OrderType;
   shop: Shop;
   stock: bigint | null;
+  theme: string;
 }): JSX.Element => {
   const {
     systemCalls: { buy, sell },
@@ -109,10 +115,23 @@ export const ShopItemRow = ({
     return price > BigInt(userCharacter.externalGoldBalance);
   }, [orderType, price, userCharacter]);
 
+  const unsellableError = useMemo(() => {
+    if (!userCharacter) return false;
+    if (orderType === OrderType.Buying) return false;
+    if (!balance) return false;
+    if (Number(balance) - amount !== 0) return false;
+    return isEquipped;
+  }, [amount, balance, isEquipped, orderType, userCharacter]);
+
   const onBuyOrSell = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
+
       if (insufficientGold) {
+        setShowError(true);
+        return;
+      }
+      if (unsellableError) {
         setShowError(true);
         return;
       }
@@ -182,44 +201,50 @@ export const ShopItemRow = ({
       renderSuccess,
       sell,
       shop.shopId,
+      unsellableError,
     ],
   );
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
     setShowError(false);
-  }, [price]);
+  }, [isOpen, price]);
 
   return (
     <Flex
-      border="2px solid"
-      borderColor="grey400"
-      borderRadius={2}
+      borderBottom={`2px solid ${theme || 'white'}`}
+      boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset;"
       justify="space-between"
+      onClick={onOpen}
+      transition="all 0.3s"
       w="100%"
       _hover={{
+        borderBottom: '2px solid black',
         cursor: 'pointer',
         button: {
           bgColor: 'grey300',
         },
       }}
       _active={{
+        borderBottom: '2px solid black',
         button: {
           bgColor: 'grey400',
         },
       }}
-      onClick={onOpen}
     >
       <Flex>
-        <Avatar backgroundColor={'grey300'} borderRadius={0} name=" " size="lg">
+        <Avatar
+          backgroundColor="transparent"
+          borderRadius={0}
+          name=" "
+          size={{ base: 'md', sm: 'lg' }}
+        >
           {name ? getEmoji(name.toString()) : ''}
         </Avatar>
-        <VStack align="start" justify="center" ml={4}>
-          <HStack w="100%">
-            <Text size={{ base: '2xs', lg: 'sm' }}>
-              {name ? removeEmoji(name.toString()) : ''}
-            </Text>
-          </HStack>
+        <VStack justify="center" ml={{ base: 0, sm: 4 }}>
+          <Text fontWeight={700} size={{ base: 'xs', sm: 'md', lg: 'lg' }}>
+            {name ? removeEmoji(name.toString()) : ''}
+          </Text>
         </VStack>
       </Flex>
       <HStack>
@@ -228,18 +253,17 @@ export const ShopItemRow = ({
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
-            w="75px"
+            w={{ base: '50px', sm: '75px' }}
           />
           <Text
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
-            w="75px"
+            w={{ base: '50px', sm: '75px' }}
           >
             {balance?.toString() || stock?.toString()}
           </Text>
           <Text
-            display={{ base: 'none', lg: 'block' }}
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -248,278 +272,325 @@ export const ShopItemRow = ({
             {etherToFixedNumber(priceSingle)}
           </Text>
         </HStack>
-
-        <ShopAllowanceModal
-          completeMessage={
-            orderType === OrderType.Buying
-              ? `Allowance was successful! You can now buy ${name}`
-              : `Allowance was successful! You can now sell ${name}`
-          }
-          isCompleting={isTxPending}
-          isOpen={isAllowanceOpen}
-          itemName={name}
-          onClose={onAllowanceClose}
-          onComplete={onBuyOrSell}
-          orderPrice={price}
-          orderType={orderType}
-        />
-
-        <Modal isCentered isOpen={isOpen} onClose={onClose}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalCloseButton />
-            <ModalHeader>
-              <Text fontWeight={700} fontSize={24}>
-                Buy {name ? removeEmoji(name.toString()) : ''}
-              </Text>
-            </ModalHeader>
-            <ModalBody>
-              <Grid
-                gap={10}
-                p={5}
-                templateColumns="repeat(2,1fr)"
-                templateRows="2fr"
-              >
-                <GridItem>
-                  <Avatar
-                    backgroundColor={'grey300'}
-                    borderRadius={0}
-                    name={' '}
-                    size="lg"
-                  >
-                    {name ? getEmoji(name.toString()) : ''}
-                  </Avatar>
-
-                  <Text fontWeight={400} fontSize={14} mt={8}>
-                    {item?.description || ''}
-                  </Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontWeight={700} fontSize={14}>
-                    Stats
-                  </Text>
-                  {(item.itemType == ItemType.Armor ||
-                    (item.itemType == ItemType.Consumable &&
-                      (item as ConsumableTemplate).hpRestoreAmount ===
-                        BigInt(0)) ||
-                    item.itemType == ItemType.Weapon) && (
-                    <Text fontWeight={400} fontSize={14}>
-                      STR
-                      {getStatSymbol(
-                        (item as WeaponTemplate).strModifier.toString(),
-                      )}
-                      {(item as WeaponTemplate).strModifier.toString()} AGI
-                      {getStatSymbol(
-                        (item as WeaponTemplate).agiModifier.toString(),
-                      )}
-                      {(item as WeaponTemplate).agiModifier.toString()} INT
-                      {getStatSymbol(
-                        (item as WeaponTemplate).intModifier.toString(),
-                      )}
-                      {(item as WeaponTemplate).intModifier.toString()}{' '}
-                    </Text>
-                  )}
-                  {item.itemType == ItemType.Consumable &&
-                    (item as ConsumableTemplate).hpRestoreAmount !==
-                      BigInt(0) && (
-                      <Text fontWeight={400} fontSize={14}>
-                        Restores{' '}
-                        {(
-                          item as ConsumableTemplate
-                        ).hpRestoreAmount.toString()}{' '}
-                        HP
-                      </Text>
-                    )}
-                  {item.itemType == ItemType.Armor && (
-                    <Text fontWeight={400} fontSize={14}>
-                      {(item as ArmorTemplate).armorModifier
-                        ? `ARM${getStatSymbol((item as ArmorTemplate).armorModifier.toString())}${(item as ArmorTemplate).armorModifier}`
-                        : ''}
-                    </Text>
-                  )}
-
-                  <Text mt={8} fontWeight={700} fontSize={14}>
-                    Restrictions
-                  </Text>
-                  <Text fontWeight={400} fontSize={14}>
-                    - LVL {item?.minLevel.toString() || '0'}
-                  </Text>
-                  <Text fontWeight={400} fontSize={14}>
-                    -{' '}
-                    {statRestrictions['minIntelligence']
-                      ? statRestrictions.minIntelligence.toString()
-                      : 0}{' '}
-                    INT
-                  </Text>
-                  <Text fontWeight={400} fontSize={14}>
-                    -{' '}
-                    {statRestrictions['minStrength']
-                      ? statRestrictions.minIntelligence?.toString()
-                      : 0}{' '}
-                    STR
-                  </Text>
-                </GridItem>
-                <GridItem
-                  colSpan={2}
-                  textAlign="center"
-                  as="form"
-                  onSubmit={onBuyOrSell}
-                >
-                  <VStack spacing={4}>
-                    <VStack>
-                      <Text>
-                        AMOUNT (MAX {stock?.toString() || balance?.toString()})
-                      </Text>
-                      <HStack>
-                        <Button
-                          isDisabled={amount <= 1}
-                          onClick={() =>
-                            setAmount(
-                              amount > 1 && amount <= Number(stock)
-                                ? amount - 1
-                                : amount,
-                            )
-                          }
-                          size="xs"
-                        >
-                          <IoRemove />
-                        </Button>
-                        <Input
-                          max={stock?.toString() || balance?.toString() || 0}
-                          min={1}
-                          onChange={e => {
-                            const value = e.target.value;
-                            if (value === '') {
-                              setAmount(0);
-                              return;
-                            }
-                            if (isNaN(Number(value))) {
-                              return;
-                            }
-                            if (Number(value) < 1) {
-                              return;
-                            }
-                            if (
-                              Number(value) >
-                              Number(stock || balance?.toString())
-                            ) {
-                              setAmount(Number(stock || balance?.toString()));
-                              return;
-                            }
-                            setAmount(Number(value));
-                          }}
-                          p={2}
-                          size="sm"
-                          step={1}
-                          value={amount === 0 ? '' : amount}
-                          w={10}
-                        />
-                        <Button
-                          isDisabled={
-                            amount === Number(stock || balance?.toString())
-                          }
-                          onClick={() =>
-                            setAmount(
-                              amount > -1 &&
-                                amount < Number(stock || balance?.toString())
-                                ? amount + 1
-                                : amount,
-                            )
-                          }
-                          size="xs"
-                        >
-                          <IoAdd />
-                        </Button>
-                      </HStack>
-                    </VStack>
-                    <VStack>
-                      {orderType == OrderType.Buying ? (
-                        <Text>
-                          Total Cost: {etherToFixedNumber(price)} $GOLD
-                        </Text>
-                      ) : (
-                        <Text>
-                          Total to recieve: {etherToFixedNumber(price)} $GOLD
-                        </Text>
-                      )}
-                      <Text size="xs">
-                        Your $GOLD Balance:{' '}
-                        {etherToFixedNumber(
-                          userCharacter?.externalGoldBalance ?? '0',
-                        )}
-                      </Text>
-                      <FormControl isInvalid={showError && insufficientGold}>
-                        {showError && insufficientGold && (
-                          <FormHelperText color="red" m={3}>
-                            You don&apos;t have enough $GOLD to buy this.
-                          </FormHelperText>
-                        )}
-                        {orderType == OrderType.Buying &&
-                          goldShopAllowance < price && (
-                            <Button
-                              type="submit"
-                              isLoading={
-                                isApprovingGold ||
-                                isApprovingItems ||
-                                isTxPending
-                              }
-                            >
-                              Approve
-                            </Button>
-                          )}
-                        {orderType == OrderType.Selling &&
-                          !itemsShopAllowance && (
-                            <Button
-                              type="submit"
-                              isLoading={
-                                isApprovingGold ||
-                                isApprovingItems ||
-                                isTxPending
-                              }
-                            >
-                              Approve
-                            </Button>
-                          )}
-                        {orderType == OrderType.Buying &&
-                          goldShopAllowance >= price && (
-                            <Button
-                              type="submit"
-                              isLoading={
-                                isApprovingGold ||
-                                isApprovingItems ||
-                                isTxPending
-                              }
-                            >
-                              Buy
-                            </Button>
-                          )}
-                        {orderType == OrderType.Selling &&
-                          itemsShopAllowance && (
-                            <Button
-                              type="submit"
-                              isLoading={
-                                isApprovingGold ||
-                                isApprovingItems ||
-                                isTxPending
-                              }
-                            >
-                              Sell
-                            </Button>
-                          )}
-                      </FormControl>
-                    </VStack>
-                  </VStack>
-                </GridItem>
-              </Grid>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-        <Box display={{ base: 'none', md: 'block' }} w="30px">
-          <Button onClick={onOpen} p={3} variant="ghost">
-            <IoIosArrowForward />
+        <Box display={{ base: 'none', md: 'block' }} mr={2} w="40px">
+          <Button onClick={onOpen} p={1} variant="ghost">
+            <ForwardCaretSvg />
           </Button>
         </Box>
       </HStack>
+
+      <ShopAllowanceModal
+        completeMessage={
+          orderType === OrderType.Buying
+            ? `Allowance was successful! You can now buy ${name}`
+            : `Allowance was successful! You can now sell ${name}`
+        }
+        isCompleting={isTxPending}
+        isOpen={isAllowanceOpen}
+        itemName={name}
+        onClose={onAllowanceClose}
+        onComplete={onBuyOrSell}
+        orderPrice={price}
+        orderType={orderType}
+      />
+
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent as="form" onSubmit={onBuyOrSell}>
+          <PolygonalCard isModal />
+          <ModalCloseButton />
+          <ModalHeader>
+            <Text fontWeight={700} fontSize={24}>
+              {orderType == OrderType.Buying ? 'Buy' : 'Sell'}{' '}
+              {name ? removeEmoji(name.toString()) : ''}
+            </Text>
+          </ModalHeader>
+          <ModalBody>
+            <Grid
+              gap={{ base: 4, sm: 10 }}
+              px={6}
+              templateColumns="repeat(2, 1fr)"
+              templateRows="2fr"
+            >
+              <GridItem colSpan={{ base: 2, sm: 1 }}>
+                <Avatar
+                  backgroundColor="grey300"
+                  borderRadius={0}
+                  name={' '}
+                  size="lg"
+                >
+                  {name ? getEmoji(name.toString()) : ''}
+                </Avatar>
+
+                <Text mt={{ base: 4, sm: 8 }} size="sm">
+                  {item?.description || ''}
+                </Text>
+              </GridItem>
+              <GridItem colSpan={{ base: 2, sm: 1 }}>
+                <Text fontWeight={700} size="sm">
+                  Stats
+                </Text>
+                {(item.itemType === ItemType.Armor ||
+                  (item.itemType === ItemType.Consumable &&
+                    (item as ConsumableTemplate).hpRestoreAmount ===
+                      BigInt(0)) ||
+                  item.itemType === ItemType.Weapon) && (
+                  <Text size="sm">
+                    - STR
+                    {getStatSymbol(
+                      (item as WeaponTemplate).strModifier.toString(),
+                    )}
+                    {(item as WeaponTemplate).strModifier.toString()} AGI
+                    {getStatSymbol(
+                      (item as WeaponTemplate).agiModifier.toString(),
+                    )}
+                    {(item as WeaponTemplate).agiModifier.toString()} INT
+                    {getStatSymbol(
+                      (item as WeaponTemplate).intModifier.toString(),
+                    )}
+                    {(item as WeaponTemplate).intModifier.toString()}{' '}
+                  </Text>
+                )}
+                {(item.itemType === ItemType.Spell ||
+                  item.itemType === ItemType.Weapon) && (
+                  <>
+                    <Text size="sm">
+                      - Min Damage:{' '}
+                      {(
+                        item as SpellTemplate | WeaponTemplate
+                      ).minDamage.toString()}
+                    </Text>
+                    <Text size="sm">
+                      - Max Damage:{' '}
+                      {(
+                        item as SpellTemplate | WeaponTemplate
+                      ).maxDamage.toString()}
+                    </Text>
+                  </>
+                )}
+                {item.itemType == ItemType.Consumable &&
+                  (item as ConsumableTemplate).hpRestoreAmount !==
+                    BigInt(0) && (
+                    <Text size="sm">
+                      Restores{' '}
+                      {(item as ConsumableTemplate).hpRestoreAmount.toString()}{' '}
+                      HP
+                    </Text>
+                  )}
+                {item.itemType == ItemType.Armor && (
+                  <Text size="sm">
+                    {(item as ArmorTemplate).armorModifier
+                      ? `ARM${getStatSymbol((item as ArmorTemplate).armorModifier.toString())}${(item as ArmorTemplate).armorModifier}`
+                      : ''}
+                  </Text>
+                )}
+
+                <Text fontWeight={700} mt={8} size="sm">
+                  Restrictions
+                </Text>
+                <Text size="sm">- LVL {item?.minLevel.toString() || '0'}</Text>
+                <Text size="sm">
+                  -{' '}
+                  {statRestrictions['minIntelligence']
+                    ? statRestrictions.minIntelligence.toString()
+                    : 0}{' '}
+                  INT
+                </Text>
+                <Text size="sm">
+                  -{' '}
+                  {statRestrictions['minStrength']
+                    ? statRestrictions.minIntelligence?.toString()
+                    : 0}{' '}
+                  STR
+                </Text>
+              </GridItem>
+              <GridItem colSpan={2} textAlign="center" onSubmit={onBuyOrSell}>
+                <VStack spacing={4}>
+                  <VStack>
+                    <Text fontSize={{ base: 'sm' }} fontWeight={500}>
+                      max {stock?.toString() || balance?.toString()} items
+                    </Text>
+                    <HStack>
+                      <Button
+                        aspectRatio="1 / 1"
+                        background="#D0D0D0"
+                        boxShadow="1.5px 1.5px 3px 0px #54545466, -1px -1px 3px 0px #545454B2"
+                        borderRadius="5px"
+                        color="#1633B6"
+                        minW="24px"
+                        minH="24px"
+                        isDisabled={amount <= 1}
+                        onClick={() =>
+                          setAmount(
+                            amount > 1 &&
+                              amount <= Number(stock || balance?.toString())
+                              ? amount - 1
+                              : amount,
+                          )
+                        }
+                        size="xs"
+                        variant="ghost"
+                      >
+                        <IoIosArrowBack />
+                      </Button>
+                      <Input
+                        aspectRatio="1 / 1"
+                        background="#B3B9BE"
+                        boxShadow="-5px -5px 10px 0px #54545440 inset, 5px 5px 2px 0px #A6A6A680 inset, 2px 2px 2px 0px #18161640 inset, -2px -2px 2px 0px #A2A9B080 inset"
+                        fontSize="lg"
+                        fontWeight={500}
+                        max={stock?.toString() || balance?.toString() || 0}
+                        min={1}
+                        minW="45px"
+                        minH="45px"
+                        onChange={e => {
+                          const value = e.target.value;
+                          if (value === '') {
+                            setAmount(0);
+                            return;
+                          }
+                          if (isNaN(Number(value))) {
+                            return;
+                          }
+                          if (Number(value) < 1) {
+                            return;
+                          }
+                          if (
+                            Number(value) > Number(stock || balance?.toString())
+                          ) {
+                            setAmount(Number(stock || balance?.toString()));
+                            return;
+                          }
+                          setAmount(Number(value));
+                        }}
+                        p={4}
+                        size="sm"
+                        step={1}
+                        value={amount === 0 ? '' : amount}
+                        w={10}
+                      />
+                      <Button
+                        aspectRatio="1 / 1"
+                        background="#D0D0D0"
+                        boxShadow="1.5px 1.5px 3px 0px #54545466, -1px -1px 3px 0px #545454B2"
+                        borderRadius="5px"
+                        color="#1633B6"
+                        minW="24px"
+                        minH="24px"
+                        isDisabled={
+                          amount === Number(stock || balance?.toString())
+                        }
+                        onClick={() =>
+                          setAmount(
+                            amount > -1 &&
+                              amount < Number(stock || balance?.toString())
+                              ? amount + 1
+                              : amount,
+                          )
+                        }
+                        size="xs"
+                        variant="ghost"
+                      >
+                        <IoIosArrowForward />
+                      </Button>
+                    </HStack>
+                  </VStack>
+                  <Box
+                    backgroundColor="#F5F5FA1F"
+                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset"
+                    h="7px"
+                    w="100%"
+                  />
+                  <VStack>
+                    {orderType == OrderType.Buying ? (
+                      <Text fontSize={{ base: 'sm' }} fontWeight={700}>
+                        Total Cost: {etherToFixedNumber(price)} $GOLD
+                      </Text>
+                    ) : (
+                      <Text fontSize={{ base: 'sm' }} fontWeight={700}>
+                        Total to recieve: {etherToFixedNumber(price)} $GOLD
+                      </Text>
+                    )}
+                    <Text color="#3D4247" size="xs">
+                      Current Balance{' '}
+                      {etherToFixedNumber(
+                        userCharacter?.externalGoldBalance ?? '0',
+                      )}{' '}
+                      $GOLD
+                    </Text>
+                  </VStack>
+                </VStack>
+              </GridItem>
+            </Grid>
+          </ModalBody>
+
+          <ModalFooter>
+            <FormControl
+              alignItems="center"
+              display="flex"
+              flexDirection="column"
+              isInvalid={showError && (insufficientGold || unsellableError)}
+            >
+              {showError && insufficientGold && (
+                <FormHelperText color="red" m={3}>
+                  You don&apos;t have enough $GOLD to buy this.
+                </FormHelperText>
+              )}
+              {showError && unsellableError && (
+                <FormHelperText color="red" m={3}>
+                  You can&apos;t sell the last of an equipped item.
+                </FormHelperText>
+              )}
+              <HStack gap={3}>
+                <Button onClick={onClose} variant="ghost">
+                  Cancel
+                </Button>
+                {orderType == OrderType.Buying && goldShopAllowance < price && (
+                  <Button
+                    type="submit"
+                    isLoading={
+                      isApprovingGold || isApprovingItems || isTxPending
+                    }
+                  >
+                    Approve
+                  </Button>
+                )}
+                {orderType == OrderType.Selling && !itemsShopAllowance && (
+                  <Button
+                    type="submit"
+                    isLoading={
+                      isApprovingGold || isApprovingItems || isTxPending
+                    }
+                  >
+                    Approve
+                  </Button>
+                )}
+                {orderType == OrderType.Buying &&
+                  goldShopAllowance >= price && (
+                    <Button
+                      type="submit"
+                      isLoading={
+                        isApprovingGold || isApprovingItems || isTxPending
+                      }
+                    >
+                      Buy
+                    </Button>
+                  )}
+                {orderType == OrderType.Selling && itemsShopAllowance && (
+                  <Button
+                    type="submit"
+                    isLoading={
+                      isApprovingGold || isApprovingItems || isTxPending
+                    }
+                  >
+                    Sell
+                  </Button>
+                )}
+              </HStack>
+            </FormControl>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 };

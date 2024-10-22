@@ -57,7 +57,7 @@ const Button = {
       },
     },
     gold: {
-      bg: 'gold',
+      bg: 'yellow',
       border: '2px solid',
       borderColor: 'black',
       color: 'black',
@@ -278,8 +278,23 @@ const Select = {
     outline: {
       field: {
         border: '2px solid',
-        borderColor: 'grey',
+        borderColor: 'white',
         borderRadius: '5px',
+      },
+    },
+  },
+};
+
+const Tabs = {
+  defaultProps: {
+    variant: 'line',
+  },
+  variants: {
+    line: {
+      tab: {
+        _selected: {
+          color: 'blue400',
+        },
       },
     },
   },
@@ -374,6 +389,7 @@ export const theme = extendTheme({
     Modal,
     Progress,
     Select,
+    Tabs,
     Text,
     Textarea,
     Tooltip,

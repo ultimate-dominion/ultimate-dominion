@@ -17,16 +17,14 @@ import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const LeaderboardRow = ({
   character: {
-    agility,
+    baseStats: { agility, intelligence, strength },
     entityClass,
     externalGoldBalance,
     id,
     image,
-    intelligence,
     level,
     maxHp,
     name,
-    strength,
   },
   index,
   top3,
@@ -111,7 +109,6 @@ export const LeaderboardRow = ({
       <HStack>
         <HStack w={{ base: '120px', sm: '185px', md: '300px', lg: '450px' }}>
           <Text
-            color="#121B45"
             display={{ base: 'none', lg: 'block' }}
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
@@ -121,7 +118,6 @@ export const LeaderboardRow = ({
             {totalStats}
           </Text>
           <Text
-            color="black"
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"
@@ -130,7 +126,7 @@ export const LeaderboardRow = ({
             {level.toString()}
           </Text>
           <Text
-            color="#EFD31C"
+            color="yellow"
             fontWeight={500}
             size={{ base: 'xs', lg: 'md' }}
             textAlign="center"

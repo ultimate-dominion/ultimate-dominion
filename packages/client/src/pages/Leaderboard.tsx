@@ -14,19 +14,11 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useEntityQuery } from '@latticexyz/react';
-import {
-  Entity,
-  getComponentValue,
-  getComponentValueStrict,
-  Has,
-} from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
 import FuzzySearch from 'fuzzy-search';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { formatEther, hexToString } from 'viem';
+import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { LeaderboardRow } from '../components/LeaderboardRow';
@@ -38,34 +30,17 @@ import {
   RogueSvg,
   WarriorSvg,
 } from '../components/SVGs';
-import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
+import { useMap } from '../contexts/MapContext';
 import { HOME_PATH } from '../Routes';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
 import { Character, StatsClasses } from '../utils/types';
 
 const PLAYERS_PER_PAGE = 10;
 
 export const Leaderboard = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
-  const { renderError } = useToast();
   const navigate = useNavigate();
   const { isConnected } = useAccount();
-
-  const {
-    components: {
-      AdventureEscrow,
-      Characters,
-      CharactersTokenURI,
-      GoldBalances,
-      Stats,
-    },
-    delegatorAddress,
-    network: { publicClient, worldContract },
-  } = useMUD();
-
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [isFetchingCharacters, setIsFetchingCharacters] = useState(true);
+  const { allCharacters, isFetchingEntities } = useMap();
 
   const [entries, setEntries] = useState<Character[]>([]);
   const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
@@ -90,112 +65,20 @@ export const Leaderboard = (): JSX.Element => {
     return Number(page);
   }, [page]);
 
-  const allCharacterEntities = useEntityQuery([Has(Characters), Has(Stats)]);
-
-  const getAllCharacters = useCallback(
-    async (entities: Entity[]): Promise<void> => {
-      if (!(delegatorAddress && publicClient && worldContract)) return;
-
-      try {
-        setIsFetchingCharacters(true);
-
-        const _characters: Character[] = await Promise.all(
-          entities.map(async (entity: Entity) => {
-            const characterData = getComponentValueStrict(Characters, entity);
-            const characterStats = getComponentValueStrict(Stats, entity);
-            const { tokenId } = characterData;
-
-            const ownerEntity = encodeEntity(
-              { address: 'address' },
-              { address: characterData.owner as `0x${string}` },
-            );
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId: BigInt(tokenId) },
-            );
-
-            const externalGoldBalance =
-              getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
-            const escrowGoldBalance =
-              getComponentValue(AdventureEscrow, ownerEntity)?.balance ??
-              BigInt(0);
-
-            const metadataURI = getComponentValueStrict(
-              CharactersTokenURI,
-              tokenIdEntity,
-            ).tokenURI;
-
-            const fetachedMetadata = await fetchMetadataFromUri(
-              uriToHttp(`ipfs://${metadataURI}`)[0],
-            );
-
-            return {
-              ...fetachedMetadata,
-              agility: characterStats.agility,
-              entityClass: characterStats.class,
-              escrowGoldBalance,
-              experience: characterStats.experience,
-              externalGoldBalance,
-              id: entity,
-              intelligence: characterStats.intelligence,
-              level: characterStats.level,
-              locked: characterData.locked,
-              maxHp: characterStats.maxHp,
-              name: hexToString(characterData.name as `0x${string}`, {
-                size: 32,
-              }),
-              owner: characterData.owner,
-              strength: characterStats.strength,
-              tokenId: tokenId.toString(),
-            } as Character;
-          }),
-        );
-
-        setCharacters(_characters);
-      } catch (e) {
-        renderError(
-          (e as Error)?.message ?? 'Failed to fetch other players.',
-          e,
-        );
-      } finally {
-        setIsFetchingCharacters(false);
-      }
-    },
-    [
-      AdventureEscrow,
-      Characters,
-      CharactersTokenURI,
-      delegatorAddress,
-      GoldBalances,
-      publicClient,
-      renderError,
-      Stats,
-      worldContract,
-    ],
-  );
-
-  useEffect(() => {
-    (async (): Promise<void> => {
-      if (!allCharacterEntities) return;
-
-      await getAllCharacters(allCharacterEntities);
-    })();
-  }, [allCharacterEntities, getAllCharacters]);
-
   useEffect(() => {
     if (pageNumber < 1) {
       return;
     }
-    let entriesCopy: Character[] = characters;
+    let entriesCopy: Character[] = allCharacters;
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
       const totalStatsA =
-        Number(entryA.agility) +
-        Number(entryA.strength) +
-        Number(entryA.intelligence);
+        Number(entryA.baseStats.agility) +
+        Number(entryA.baseStats.strength) +
+        Number(entryA.baseStats.intelligence);
       const totalStatsB =
-        Number(entryB.agility) +
-        Number(entryB.strength) +
-        Number(entryB.intelligence);
+        Number(entryB.baseStats.agility) +
+        Number(entryB.baseStats.strength) +
+        Number(entryB.baseStats.intelligence);
 
       switch (sort.sorted) {
         case 'byGold':
@@ -257,7 +140,7 @@ export const Leaderboard = (): JSX.Element => {
       setPage(pageLimit);
     }
   }, [
-    characters,
+    allCharacters,
     filter,
     pageLimit,
     pageNumber,
@@ -266,7 +149,7 @@ export const Leaderboard = (): JSX.Element => {
     sort.sorted,
   ]);
 
-  if (isFetchingCharacters) {
+  if (isFetchingEntities) {
     return (
       <Center h="100%">
         <Spinner size="lg" />
@@ -379,8 +262,8 @@ export const Leaderboard = (): JSX.Element => {
           </HStack>
         </Stack>
         <Flex alignItems="center" justify="space-between" w="100%">
-          <Text pl={4} color="#565555" fontWeight={400} fontSize="14px">
-            {characters.length} Players
+          <Text pl={4} color="#565555" fontWeight={400} size="sm">
+            {allCharacters.length} Players
           </Text>
           <HStack>
             <HStack
@@ -477,9 +360,8 @@ export const Leaderboard = (): JSX.Element => {
           {entries.length > 0 ? (
             [...entries].map(function (entry, i) {
               return (
-                <>
+                <Box key={`leaderboard-row-${i}`} w="100%">
                   <LeaderboardRow
-                    key={`leaderboard-row-${i}`}
                     top3={i == 0 || i == 1 || i == 2}
                     index={i}
                     character={entry}
@@ -490,7 +372,7 @@ export const Leaderboard = (): JSX.Element => {
                     h="5px"
                     w="100%"
                   />
-                </>
+                </Box>
               );
             })
           ) : (

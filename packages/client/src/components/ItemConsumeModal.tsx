@@ -24,6 +24,7 @@ import { type Consumable, OrderType } from '../utils/types';
 import { HealthBar } from './HealthBar';
 import { ItemCard } from './ItemCard';
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
+import { PolygonalCard } from './PolygonalCard';
 
 const getMinutesAndSeconds = (seconds: bigint): string => {
   const secondsNumber = Number(seconds);
@@ -179,9 +180,10 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>{isOwner ? 'Consume Item' : 'Make an offer'}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4}>
+        <ModalBody px={{ base: 6, sm: 8 }}>
           {isOwner && character ? (
             <>
               {isConsumed ? (
@@ -239,7 +241,10 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
             </Button>
           </ModalFooter>
         ) : (
-          <ModalFooter>
+          <ModalFooter gap={3}>
+            <Button isDisabled={isConsuming} onClick={onClose} variant="ghost">
+              No
+            </Button>
             <Button
               isDisabled={isDisabled}
               isLoading={isConsuming}
@@ -249,14 +254,11 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
                 isOwner
                   ? onUseConsumable()
                   : navigate(
-                      `${ITEM_PATH}${item.tokenId}?${buyingSearchParams}`,
+                      `${ITEM_PATH}/${item.tokenId}?${buyingSearchParams}`,
                     )
               }
             >
               Yes
-            </Button>
-            <Button isDisabled={isConsuming} onClick={onClose} variant="ghost">
-              No
             </Button>
           </ModalFooter>
         )}

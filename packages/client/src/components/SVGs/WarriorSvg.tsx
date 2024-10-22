@@ -1,12 +1,13 @@
-import { Icon } from '@chakra-ui/react';
+import { Icon, IconProps } from '@chakra-ui/react';
 
 export const WarriorSvg = ({
   size = 5,
   theme = 'light',
+  ...props
 }: {
   size?: number;
   theme?: 'light' | 'dark';
-}): JSX.Element => {
+} & IconProps): JSX.Element => {
   const color = theme === 'light' ? 'white' : 'black';
 
   return (
@@ -16,6 +17,7 @@ export const WarriorSvg = ({
       viewBox="0 0 14 16"
       width={size}
       xmlns="http://www.w3.org/2000/svg"
+      {...props}
     >
       <path d="M12.2153 2.63245L9.19798 4.20493L11.6951 2.26809C10.6026 1.59691 9.27601 1.25173 8.28757 1.05996L7 0.5L5.68642 1.05996C4.72399 1.25173 3.3974 1.61608 2.2789 2.28727L4.77601 4.22411L1.75867 2.65162C0.874277 3.32281 0.25 4.26246 0.25 5.52812C0.25 9.68946 0.25 11.6455 0.25 11.6455C0.25 11.6455 1.75867 14.4261 4.64595 15.5V9.61276L1.70665 8.02109V6.1226L5.68642 7.56085V9.88123L7.013 10.8592L8.3396 9.88123V7.54168L12.3194 6.10343V8.00192L9.38006 9.59358V15.4808C12.2413 14.4069 13.75 11.6455 13.75 11.6455C13.75 11.6455 13.75 9.67029 13.75 5.52812C13.75 4.24329 13.0997 3.30363 12.2153 2.63245Z" />
     </Icon>

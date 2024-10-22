@@ -8,12 +8,14 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
+  Tooltip,
   VStack,
 } from '@chakra-ui/react';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { etherToFixedNumber } from '../utils/helpers';
 import { OrderType, SystemToAllow } from '../utils/types';
+import { PolygonalCard } from './PolygonalCard';
 
 export const ShopAllowanceModal = ({
   completeMessage = 'Allowance was successful!',
@@ -40,6 +42,7 @@ export const ShopAllowanceModal = ({
     isApprovingItems,
     itemsShopAllowance,
     onApproveGoldAllowance,
+    onApproveMaxGoldAllowance,
     onSetApprovalForAllItems,
   } = useAllowance();
 
@@ -51,19 +54,18 @@ export const ShopAllowanceModal = ({
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
+          <PolygonalCard isModal />
           <ModalHeader>Shop Allowances</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <VStack p={4} spacing={10}>
-              <Text textAlign="center">{completeMessage}</Text>
-              <Button isLoading={isCompleting} onClick={onComplete}>
-                Complete
-              </Button>
-            </VStack>
+          <ModalBody p={8}>
+            <Text textAlign="center">{completeMessage}</Text>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter gap={3}>
             <Button onClick={onClose} variant="ghost">
               Close
+            </Button>
+            <Button isLoading={isCompleting} onClick={onComplete}>
+              Complete
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -75,15 +77,29 @@ export const ShopAllowanceModal = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
+        <PolygonalCard isModal />
         <ModalHeader>Shop Allowances</ModalHeader>
         <ModalCloseButton />
-        <ModalBody p={4}>
+        <ModalBody p={8}>
           {orderType === OrderType.Buying && (
-            <VStack spacing={10}>
-              <Text alignSelf="start">
-                In order to buy {itemName}, you must allow the shop to use{' '}
-                {etherToFixedNumber(orderPrice)} of your $GOLD.
-              </Text>
+            <Text alignSelf="start">
+              In order to buy {itemName}, you must allow the shop to use{' '}
+              {etherToFixedNumber(orderPrice)} of your $GOLD.
+            </Text>
+          )}
+          {orderType === OrderType.Selling && (
+            <Text>
+              In order to sell {itemName}, you must allow the shop to manage
+              your items.
+            </Text>
+          )}
+        </ModalBody>
+        <ModalFooter alignItems="start" gap={3}>
+          <Button onClick={onClose} variant="ghost">
+            Close
+          </Button>
+          {orderType === OrderType.Buying && (
+            <VStack spacing={1}>
               <Button
                 isLoading={isApprovingGold}
                 onClick={() =>
@@ -92,27 +108,43 @@ export const ShopAllowanceModal = ({
               >
                 Allow
               </Button>
+              <Tooltip
+                bg="#070D2A"
+                hasArrow
+                label="This allows you to spend $GOLD on Shops without having to approve each transaction. It is a faster and smoother experience, but is less secure. Only max allow if you trust the Shops."
+                placement="top"
+                shouldWrapChildren
+              >
+                <Button
+                  color="blue400"
+                  fontWeight={500}
+                  isLoading={isApprovingGold}
+                  onClick={() =>
+                    onApproveMaxGoldAllowance(SystemToAllow.Shop, orderPrice)
+                  }
+                  p={1}
+                  size="xs"
+                  variant="ghost"
+                  _active={{
+                    textDecoration: 'underline',
+                  }}
+                  _hover={{
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Max Allow
+                </Button>
+              </Tooltip>
             </VStack>
           )}
           {orderType === OrderType.Selling && (
-            <VStack p={4} spacing={10}>
-              <Text>
-                In order to sell {itemName}, you must allow the shop to manage
-                your items.
-              </Text>
-              <Button
-                onClick={() => onSetApprovalForAllItems(SystemToAllow.Shop)}
-                isLoading={isApprovingItems}
-              >
-                Allow
-              </Button>
-            </VStack>
+            <Button
+              isLoading={isApprovingItems}
+              onClick={() => onSetApprovalForAllItems(SystemToAllow.Shop)}
+            >
+              Allow
+            </Button>
           )}
-        </ModalBody>
-        <ModalFooter>
-          <Button onClick={onClose} variant="ghost">
-            Close
-          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

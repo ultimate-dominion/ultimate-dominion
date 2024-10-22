@@ -167,13 +167,7 @@ export const OrderRow = ({
   const { consideration, offer } = order;
 
   return (
-    <Flex
-      border="2px solid"
-      borderColor="grey400"
-      borderRadius={2}
-      justify="space-between"
-      w="100%"
-    >
+    <Flex bgColor="#F5F5FA1F" justify="space-between" w="100%">
       <Flex>
         <Avatar
           borderRadius={0}
@@ -215,7 +209,7 @@ export const OrderRow = ({
             aria-label={
               offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
             }
-            bg="black"
+            bg="#070D2A"
             hasArrow
             label={
               offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
@@ -236,7 +230,7 @@ export const OrderRow = ({
         {isOfferer && (
           <Tooltip
             aria-label="Remove listing"
-            bg="black"
+            bg="#070D2A"
             hasArrow
             label="Remove listing"
             placement="top"
@@ -248,12 +242,16 @@ export const OrderRow = ({
               onClick={onCancelOrder}
               p={2}
               size="sm"
+              variant="solid"
+              _active={{ bgColor: 'darkred' }}
+              _hover={{ bgColor: 'darkred' }}
             >
               <FaTimes />
             </Button>
           </Tooltip>
         )}
       </HStack>
+
       <MarketplaceAllowanceModal
         completeMessage="Allowance was successful! You can now complete the order."
         isCompleting={isFilling}
