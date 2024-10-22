@@ -17,16 +17,14 @@ import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const LeaderboardRow = ({
   character: {
-    agility,
+    baseStats: { agility, intelligence, strength },
     entityClass,
     externalGoldBalance,
     id,
     image,
-    intelligence,
     level,
     maxHp,
     name,
-    strength,
   },
   index,
   top3,
