@@ -193,29 +193,18 @@ export const ChatBox: React.FC = () => {
                 if (message.jsx) {
                   return (
                     <VStack key={`message-${index}`} mt={1} w="100%">
-                      {showTimestamp && (
-                        <Text size="2xs">
-                          {new Date(message.timestamp).toLocaleString()}
-                        </Text>
-                      )}
-                      <Tooltip
-                        bg="#070D2A"
-                        hasArrow
-                        key={`message-${index}`}
-                        label={`Sent: ${new Date(message.timestamp).toLocaleString()}`}
-                        placement={isUser ? 'left' : 'right'}
-                        fontSize="xs"
+                      <Text size="2xs">
+                        {new Date(message.timestamp).toLocaleString()}
+                      </Text>
+                      <Box
+                        bgColor="blue500"
+                        boxShadow="-10px -10px 8px 0px #A2A9B0, 10px 10px 8px 0px #54545480, 5px 5px 10px 0px #54545440, -5px -5px 4px 0px #5454547D"
+                        color="white"
+                        p={1}
+                        w="100%"
                       >
-                        <Box
-                          bgColor="blue500"
-                          boxShadow="-10px -10px 8px 0px #A2A9B0, 10px 10px 8px 0px #54545480, 5px 5px 10px 0px #54545440, -5px -5px 4px 0px #5454547D"
-                          color="white"
-                          p={1}
-                          w="100%"
-                        >
-                          {message.jsx}
-                        </Box>
-                      </Tooltip>
+                        {message.jsx}
+                      </Box>
                     </VStack>
                   );
                 }
