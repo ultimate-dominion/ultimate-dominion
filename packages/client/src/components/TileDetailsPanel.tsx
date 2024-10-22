@@ -763,15 +763,15 @@ export const TileDetailsPanel = (): JSX.Element => {
               w="100%"
             />
             {shopsOnTile.map((shop, i) => (
-              <>
-                <ShopRow key={`tile-shop-${i}`} shopId={shop.shopId} />
+              <Box key={`tile-shop-${i}`}>
+                <ShopRow shopId={shop.shopId} />
                 <Box
                   backgroundColor="#F5F5FA1F"
                   boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
                   h="6px"
                   w="100%"
                 />
-              </>
+              </Box>
             ))}
           </GridItem>
         )}
@@ -786,10 +786,9 @@ export const TileDetailsPanel = (): JSX.Element => {
             />
             {monstersOnTile.length > 0 &&
               monstersOnTile.map((monster, i) => (
-                <>
+                <Box key={`tile-monster-${i}-${monster.name}`}>
                   <OpponentRow
                     encounterType={EncounterType.PvE}
-                    key={`tile-monster-${i}-${monster.name}`}
                     onClick={() =>
                       isMoveEquipped
                         ? onInitiateCombat(monster, EncounterType.PvE)
@@ -803,7 +802,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     h="6px"
                     w="100%"
                   />
-                </>
+                </Box>
               ))}
             {monstersOnTile.length === 0 && (
               <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
@@ -833,10 +832,9 @@ export const TileDetailsPanel = (): JSX.Element => {
           />
           {otherCharactersOnTile.length > 0 &&
             otherCharactersOnTile.map((player, i) => (
-              <>
+              <Box key={`tile-player-${i}-${player.name}`}>
                 <OpponentRow
                   encounterType={EncounterType.PvP}
-                  key={`tile-player-${i}-${player.name}`}
                   onClick={() =>
                     inSafetyZone
                       ? onOpenSafetyZoneInfoModal()
@@ -850,7 +848,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                   h="6px"
                   w="100%"
                 />
-              </>
+              </Box>
             ))}
           {otherCharactersOnTile.length === 0 && (
             <Text p={2} size={{ base: '2xs', lg: 'sm' }}>

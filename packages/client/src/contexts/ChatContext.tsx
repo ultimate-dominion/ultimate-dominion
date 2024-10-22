@@ -1,4 +1,6 @@
-import { useDisclosure } from '@chakra-ui/react';
+import { Text, useDisclosure } from '@chakra-ui/react';
+import { useEntityQuery } from '@latticexyz/react';
+import { getComponentValueStrict, Has } from '@latticexyz/recs';
 import {
   CONSTANTS,
   GroupDTO,
@@ -12,12 +14,19 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
+import { zeroAddress } from 'viem';
 import { useWalletClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
+import { decodeMobInstanceId } from '../utils/helpers';
+import { Character, MonsterTemplate } from '../utils/types';
+import { useMap } from './MapContext';
+import { useMonsters } from './MonstersContext';
+import { useMUD } from './MUDContext';
 
 const GROUP_CHAT_ID =
   '7699bfa8e5309b876a7b60e75074ecdf41d029575f3655a33f2b449e7730dfa4';
@@ -25,6 +34,7 @@ const GROUP_CHAT_ID =
 type Message = {
   delivered: boolean;
   from: string;
+  jsx?: JSX.Element;
   message: string;
   timestamp: number;
 };
@@ -77,6 +87,11 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { renderError } = useToast();
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { data } = useWalletClient();
+  const {
+    components: { CombatEncounter, CombatOutcome },
+  } = useMUD();
+  const { monsterTemplates } = useMonsters();
+  const { allCharacters } = useMap();
 
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [user, setUser] = useState<PushAPI | null>(null);
@@ -88,6 +103,58 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
   const [isSending, setIsSending] = useState<boolean>(false);
+
+  const allBattleOutcomes: Message[] = useEntityQuery([Has(CombatOutcome)]).map(
+    entity => {
+      const combatOutcome = getComponentValueStrict(CombatOutcome, entity);
+      const encounter = getComponentValueStrict(CombatEncounter, entity);
+
+      const attackerId = encounter.attackers[0];
+      const defenderId = encounter.defenders[0];
+
+      let attacker: Character | MonsterTemplate | undefined =
+        allCharacters.find(character => character.id === attackerId);
+
+      if (!attacker) {
+        const decodedMonster = decodeMobInstanceId(attackerId as `0x${string}`);
+        attacker = monsterTemplates.find(
+          monster => monster.mobId === decodedMonster.mobId,
+        );
+      }
+
+      let defender: Character | MonsterTemplate | undefined =
+        allCharacters.find(character => character.id === defenderId);
+
+      if (!defender) {
+        const decodedMonster = decodeMobInstanceId(defenderId as `0x${string}`);
+        defender = monsterTemplates.find(
+          monster => monster.mobId === decodedMonster.mobId,
+        );
+      }
+
+      const winner = combatOutcome.attackersWin ? attacker : defender;
+      const loser = combatOutcome.attackersWin ? defender : attacker;
+
+      return {
+        delivered: true,
+        from: zeroAddress,
+        jsx:
+          winner && loser ? (
+            <Text fontWeight={500} size="xs" textAlign="center">
+              {winner.name} defeated {loser.name}!
+            </Text>
+          ) : undefined,
+        message: 'Battle ended',
+        timestamp: Number(combatOutcome.endTime) * 1000,
+      };
+    },
+  );
+
+  const messagesAndEvents = useMemo(() => {
+    return [...messages, ...allBattleOutcomes].sort(
+      (a, b) => a.timestamp - b.timestamp,
+    );
+  }, [allBattleOutcomes, messages]);
 
   const onLogin = useCallback(async () => {
     try {
@@ -289,7 +356,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         isMessageInputFocused,
         isOpen,
         isSending,
-        messages,
+        messages: messagesAndEvents,
         newMessage,
         onClose: onCloseAndClear,
         onJoinGroupChat,
