@@ -57,6 +57,9 @@ export const MapPanel = (): JSX.Element => {
             gridTemplateColumns="repeat(10, 1fr)"
             gridTemplateRows="repeat(10, 1fr)"
             h={{ base: 'calc(100% - 75px)', md: 'calc(100% - 120px)' }}
+            maxW="100%"
+            m="0 auto"
+            mt={2}
           >
             {[...Array(100)].map((_, i) => {
               const row = 9 - Math.floor(i / 10); // Reverse the row
