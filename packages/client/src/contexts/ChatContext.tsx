@@ -90,7 +90,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { data } = useWalletClient();
   const {
-    components: { CombatEncounter, CombatOutcome, ShopSale },
+    components: { CombatEncounter, CombatOutcome, MarketplaceSale, ShopSale },
   } = useMUD();
   const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
   const { monsterTemplates } = useMonsters();
@@ -205,7 +205,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         jsx:
           customerName && itemName ? (
             <Text fontWeight={500} size="xs" textAlign="center">
-              {customerName} {buying ? 'bought' : 'sold'} {article} {itemName}!
+              {customerName} {buying ? 'bought' : 'sold'} {article} {itemName}{' '}
+              in a shop!
             </Text>
           ) : undefined,
         message: '',
@@ -214,11 +215,45 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     },
   );
 
+  const allMarketplaceSales: Message[] = useEntityQuery([
+    Has(MarketplaceSale),
+  ]).map(entity => {
+    const marketplaceSale = getComponentValueStrict(MarketplaceSale, entity);
+
+    const { buyer, itemId, timestamp } = marketplaceSale;
+
+    const allItems = [...armorTemplates, ...spellTemplates, ...weaponTemplates];
+
+    const customerName =
+      allCharacters.find(character => character.owner === buyer)?.name ?? null;
+
+    const itemName =
+      allItems.find(item => item.tokenId === itemId.toString())?.name ?? null;
+
+    const article = startsWithVowel(itemName ?? '') ? 'an' : 'a';
+
+    return {
+      delivered: true,
+      from: zeroAddress,
+      jsx:
+        customerName && itemName ? (
+          <Text fontWeight={500} size="xs" textAlign="center">
+            {customerName} bought {article} {itemName} in the Marketplace!
+          </Text>
+        ) : undefined,
+      message: '',
+      timestamp: Number(timestamp) * 1000,
+    };
+  });
+
   const messagesAndEvents = useMemo(() => {
-    return [...messages, ...allBattleOutcomes, ...allShopSales].sort(
-      (a, b) => a.timestamp - b.timestamp,
-    );
-  }, [allBattleOutcomes, allShopSales, messages]);
+    return [
+      ...messages,
+      ...allBattleOutcomes,
+      ...allMarketplaceSales,
+      ...allShopSales,
+    ].sort((a, b) => a.timestamp - b.timestamp);
+  }, [allBattleOutcomes, allMarketplaceSales, allShopSales, messages]);
 
   const onLogin = useCallback(async () => {
     try {
