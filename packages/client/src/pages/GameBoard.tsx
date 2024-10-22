@@ -150,6 +150,8 @@ export const GameBoard = (): JSX.Element => {
     }
   }, [continueToBattleOutcome, onOpenBattleOutcomeModal, lastestBattleOutcome]);
 
+  if (!character?.locked) return <Box />;
+
   return (
     <Grid
       gap={2}

@@ -299,7 +299,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           }),
         );
 
-        return characters;
+        return characters.filter(c => c.locked);
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Failed to fetch other players.',
