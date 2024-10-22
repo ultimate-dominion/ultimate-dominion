@@ -1,6 +1,7 @@
 import { Text, useDisclosure } from '@chakra-ui/react';
 import { useEntityQuery } from '@latticexyz/react';
 import { getComponentValueStrict, Has } from '@latticexyz/recs';
+import { decodeEntity } from '@latticexyz/store-sync/recs';
 import {
   CONSTANTS,
   GroupDTO,
@@ -22,7 +23,7 @@ import { useWalletClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
-import { decodeMobInstanceId } from '../utils/helpers';
+import { decodeMobInstanceId, startsWithVowel } from '../utils/helpers';
 import { Character, MonsterTemplate } from '../utils/types';
 import { useItems } from './ItemsContext';
 import { useMap } from './MapContext';
@@ -89,9 +90,9 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { data } = useWalletClient();
   const {
-    components: { CombatEncounter, CombatOutcome },
+    components: { CombatEncounter, CombatOutcome, ShopSale },
   } = useMUD();
-  const { spellTemplates, weaponTemplates } = useItems();
+  const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
   const { monsterTemplates } = useMonsters();
   const { allCharacters } = useMap();
 
@@ -146,31 +147,78 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         return item ? item.name : null;
       })[0];
 
+      const article = startsWithVowel(firstDroppedItemName ?? '') ? 'an' : 'a';
+
       return {
         delivered: true,
         from: zeroAddress,
-        jsx:
-          winner && loser ? (
-            <Text fontWeight={500} size="xs" textAlign="center">
-              {winner.name} defeated {loser.name}!{' '}
-              {firstDroppedItemName && (
-                <Text as="span" color="green.500">
-                  {winner.name} gained {firstDroppedItemName}!
-                </Text>
-              )}
-            </Text>
-          ) : undefined,
-        message: 'Battle ended',
+        jsx: winner && loser && (
+          <Text fontWeight={500} size="xs" textAlign="center">
+            {winner.name} defeated {loser.name}!{' '}
+            {firstDroppedItemName && (
+              <Text as="span" color="green.500">
+                {winner.name} gained {article} {firstDroppedItemName}!
+              </Text>
+            )}
+          </Text>
+        ),
+        message: '',
         timestamp: Number(combatOutcome.endTime) * 1000,
       };
     },
   );
 
+  const allShopSales: Message[] = useEntityQuery([Has(ShopSale)]).map(
+    entity => {
+      const shopSale = getComponentValueStrict(ShopSale, entity);
+
+      const { buying } = shopSale;
+
+      const { customerId, itemId, timestamp } = decodeEntity(
+        {
+          shopId: 'bytes32',
+          customerId: 'bytes32',
+          itemId: 'uint256',
+          timestamp: 'uint256',
+        },
+        entity,
+      );
+
+      const allItems = [
+        ...armorTemplates,
+        ...spellTemplates,
+        ...weaponTemplates,
+      ];
+
+      const customerName =
+        allCharacters.find(character => character.id === customerId)?.name ??
+        null;
+
+      const itemName =
+        allItems.find(item => item.tokenId === itemId.toString())?.name ?? null;
+
+      const article = startsWithVowel(itemName ?? '') ? 'an' : 'a';
+
+      return {
+        delivered: true,
+        from: zeroAddress,
+        jsx:
+          customerName && itemName ? (
+            <Text fontWeight={500} size="xs" textAlign="center">
+              {customerName} {buying ? 'bought' : 'sold'} {article} {itemName}!
+            </Text>
+          ) : undefined,
+        message: '',
+        timestamp: Number(timestamp) * 1000,
+      };
+    },
+  );
+
   const messagesAndEvents = useMemo(() => {
-    return [...messages, ...allBattleOutcomes].sort(
+    return [...messages, ...allBattleOutcomes, ...allShopSales].sort(
       (a, b) => a.timestamp - b.timestamp,
     );
-  }, [allBattleOutcomes, messages]);
+  }, [allBattleOutcomes, allShopSales, messages]);
 
   const onLogin = useCallback(async () => {
     try {
