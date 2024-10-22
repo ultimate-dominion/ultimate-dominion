@@ -24,6 +24,7 @@ import { useToast } from '../hooks/useToast';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
 import { decodeMobInstanceId } from '../utils/helpers';
 import { Character, MonsterTemplate } from '../utils/types';
+import { useItems } from './ItemsContext';
 import { useMap } from './MapContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
@@ -90,6 +91,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const {
     components: { CombatEncounter, CombatOutcome },
   } = useMUD();
+  const { spellTemplates, weaponTemplates } = useItems();
   const { monsterTemplates } = useMonsters();
   const { allCharacters } = useMap();
 
@@ -135,13 +137,27 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       const winner = combatOutcome.attackersWin ? attacker : defender;
       const loser = combatOutcome.attackersWin ? defender : attacker;
 
+      const { itemsDropped } = combatOutcome;
+
+      const allItems = [...spellTemplates, ...weaponTemplates];
+
+      const firstDroppedItemName = itemsDropped.map(itemId => {
+        const item = allItems.find(item => item.tokenId === itemId.toString());
+        return item ? item.name : null;
+      })[0];
+
       return {
         delivered: true,
         from: zeroAddress,
         jsx:
           winner && loser ? (
             <Text fontWeight={500} size="xs" textAlign="center">
-              {winner.name} defeated {loser.name}!
+              {winner.name} defeated {loser.name}!{' '}
+              {firstDroppedItemName && (
+                <Text as="span" color="green.500">
+                  {winner.name} gained {firstDroppedItemName}!
+                </Text>
+              )}
             </Text>
           ) : undefined,
         message: 'Battle ended',
