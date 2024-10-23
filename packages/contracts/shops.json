@@ -1,0 +1,52 @@
+{
+  "shops": [
+    {
+      "buyableItems": [1, 7, 11, 12, 16, 17, 21, 25],
+      "gold": 10000000000000000000,
+      "maxGold": 10000000000000000000,
+      "location": [0, 0],
+      "priceMarkdown": 5000,
+      "priceMarkup": 2000,
+      "restock": [10, 3, 5, 5, 5, 3, 20, 20],
+      "restockTimestamp": 1725962400,
+      "sellableItems": [1, 7, 11, 12, 16, 17, 21, 25],
+      "stock": [10, 3, 5, 5, 5, 3, 20, 20]
+    },
+    {
+      "buyableItems": [2, 5, 9, 10, 22, 26],
+      "gold": 40000000000000000000,
+      "maxGold": 40000000000000000000,
+      "location": [2, 8],
+      "priceMarkdown": 7500,
+      "priceMarkup": 2000,
+      "restock": [2, 1, 3, 1, 10, 20],
+      "restockTimestamp": 1725962400,
+      "sellableItems": [2, 5, 9, 10, 22, 26],
+      "stock": [2, 1, 3, 1, 10, 20]
+    },
+    {
+      "buyableItems": [4, 8, 18, 19, 20, 24, 26],
+      "gold": 40000000000000000000,
+      "maxGold": 40000000000000000000,
+      "location": [7, 7],
+      "priceMarkdown": 7500,
+      "priceMarkup": 2000,
+      "restock": [3, 3, 3, 3, 1, 10, 20],
+      "restockTimestamp": 1725962400,
+      "sellableItems": [4, 8, 18, 19, 20, 24, 26],
+      "stock": [3, 3, 3, 3, 1, 10, 20]
+    },
+    {
+      "buyableItems": [3, 13, 14, 15, 23, 26],
+      "gold": 40000000000000000000,
+      "maxGold": 40000000000000000000,
+      "location": [7, 3],
+      "priceMarkdown": 7500,
+      "priceMarkup": 2000,
+      "restock": [2, 5, 3, 1, 10, 20],
+      "restockTimestamp": 1725962400,
+      "sellableItems": [3, 13, 14, 15, 23, 26],
+      "stock": [2, 5, 3, 1, 10, 20]
+    }
+  ]
+}
