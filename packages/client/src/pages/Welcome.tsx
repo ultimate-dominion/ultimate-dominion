@@ -68,7 +68,7 @@ export const Welcome = (): JSX.Element => {
             </Text>
             <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
               Confusion clouds your mind; the cold, hard ground beneath you
-              offers no comfort.Glimpses of blood and bruises on your body only
+              offers no comfort. Glimpses of blood and bruises on your body only
               deepen the mystery, painting a silent story of unseen struggles.
             </Text>
             <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
