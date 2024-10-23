@@ -241,7 +241,7 @@ contract CombatSystem is System {
             int256 _unroundedDamage = baseDifference + baseDamage;
 
             _totalDamage = Math.roundInt(_unroundedDamage, int256(WAD)) / int256(WAD);
-        } else if (baseDifference < 0 && Math.absolute(baseDifference) >= uint256(attackerStat)) {
+        } else if (baseDifference < 0 && Math.absolute(baseDifference / int256(WAD)) >= uint256(attackerStat)) {
             // if the stat difference is equal to or greater than the attackers base stat subtract difference from damage
             if (baseDamage + baseDifference > 0) {
                 _totalDamage = (baseDamage + baseDifference) / int256(WAD);
