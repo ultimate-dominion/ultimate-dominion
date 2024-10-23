@@ -149,13 +149,13 @@ contract RngSystem is System {
         // Class-based adjustments; should total to 21
         if (characterClass == Classes.Warrior) {
             stats.strength += 2;
-            stats.maxHp = int256(10);
+            stats.maxHp = int256(20);
         } else if (characterClass == Classes.Rogue) {
             stats.agility += 2;
-            stats.maxHp = int256(8);
+            stats.maxHp = int256(18);
         } else if (characterClass == Classes.Mage) {
             stats.intelligence += 2;
-            stats.maxHp = int256(9);
+            stats.maxHp = int256(16);
         }
 
         Stats.set(characterId, stats);
