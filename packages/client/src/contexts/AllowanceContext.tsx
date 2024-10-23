@@ -8,7 +8,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { Address, erc20Abi } from 'viem';
+import { Address, erc20Abi, maxUint256 } from 'viem';
 import { useWalletClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
@@ -30,6 +30,10 @@ type AllowanceContextType = {
     systemToAllow: SystemToAllow,
     allowanceAmount: bigint,
   ) => void;
+  onApproveMaxGoldAllowance: (
+    SystemToAllow: SystemToAllow,
+    allowanceAmount: bigint,
+  ) => void;
   onSetApprovalForAllItems: (systemToAllow: SystemToAllow) => void;
   refreshAllowances: () => void;
 };
@@ -44,6 +48,7 @@ const AllowanceContext = createContext<AllowanceContextType>({
   itemsMarketplaceAllowance: false,
   itemsShopAllowance: false,
   onApproveGoldAllowance: () => {},
+  onApproveMaxGoldAllowance: () => {},
   onSetApprovalForAllItems: () => {},
   refreshAllowances: () => {},
 });
@@ -235,6 +240,12 @@ export const AllowanceProvider = ({
     ],
   );
 
+  const onApproveMaxGoldAllowance = useCallback(
+    async (systemToAllow: SystemToAllow) => {
+      onApproveGoldAllowance(systemToAllow, maxUint256);
+    },
+    [onApproveGoldAllowance],
+  );
   const onSetApprovalForAllItems = useCallback(
     async (systemToAllow: SystemToAllow) => {
       try {
@@ -300,6 +311,7 @@ export const AllowanceProvider = ({
         itemsMarketplaceAllowance,
         itemsShopAllowance,
         onApproveGoldAllowance,
+        onApproveMaxGoldAllowance,
         onSetApprovalForAllItems,
         refreshAllowances: fetchAllowances,
       }}

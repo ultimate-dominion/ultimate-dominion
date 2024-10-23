@@ -10,6 +10,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { BiSolidNavigation } from 'react-icons/bi';
+import { FaStoreAlt } from 'react-icons/fa';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
@@ -26,6 +27,7 @@ const SAFE_ZONE_AREA = {
 
 export const MapPanel = (): JSX.Element => {
   const { allCharacters, isSpawned, isSpawning, onSpawn, position } = useMap();
+  const { allShops } = useMap();
   const { currentBattle } = useBattle();
   const { isRefreshing, onMove } = useMovement();
 
@@ -50,12 +52,16 @@ export const MapPanel = (): JSX.Element => {
             </Heading>
           </HStack>
           <Box
+            aspectRatio="1/1"
             border="0.5px solid"
             borderColor="grey500"
             display="grid"
             gridTemplateColumns="repeat(10, 1fr)"
             gridTemplateRows="repeat(10, 1fr)"
             h={{ base: 'calc(100% - 75px)', md: 'calc(100% - 120px)' }}
+            maxW="100%"
+            m="0 auto"
+            mt={2}
           >
             {[...Array(100)].map((_, i) => {
               const row = 9 - Math.floor(i / 10); // Reverse the row
@@ -125,6 +131,27 @@ export const MapPanel = (): JSX.Element => {
                       transform="translateX(-30%)"
                     />
                   )}
+
+                  {allShops.map((shop, index) => {
+                    const isHomeTile = 0 === col && 0 === row;
+                    const isShopHere =
+                      shop.position.x === col &&
+                      shop.position.y === row &&
+                      !isHomeTile;
+
+                    return (
+                      isShopHere && (
+                        <VStack
+                          key={`shop-${index}`}
+                          left="50%"
+                          position="absolute"
+                          transform="translateX(-50%)"
+                        >
+                          <FaStoreAlt size={14} />
+                        </VStack>
+                      )
+                    );
+                  })}
                 </VStack>
               );
             })}

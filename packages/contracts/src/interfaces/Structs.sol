@@ -130,6 +130,21 @@ struct AdjustedCombatStats {
     int256 currentHp;
 }
 
+/////////////////////////////////// SHOPS /////////////////////////////////////
+
+struct ShopTemplate {
+    uint256[] buyableItems;
+    uint256 gold;
+    uint256[] location;
+    uint256 maxGold;
+    uint256 priceMarkdown;
+    uint256 priceMarkup;
+    uint256[] restock;
+    uint256 restockTimestamp;
+    uint256[] sellableItems;
+    uint256[] stock;
+}
+
 /////////////////////////////////// MONSTERS /////////////////////////////////////
 
 struct MonsterStats {

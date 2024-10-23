@@ -120,8 +120,8 @@ export const ShopHalf = ({
       switch (sort.sorted) {
         case SortOptions.Price:
           return sort.reversed
-            ? Number(BigInt(entryA.item.price) - BigInt(entryB.item.price))
-            : Number(BigInt(entryB.item.price) - BigInt(entryA.item.price));
+            ? Number(BigInt(entryB.item.price) - BigInt(entryA.item.price))
+            : Number(BigInt(entryA.item.price) - BigInt(entryB.item.price));
         case SortOptions.Stock:
           return sort.reversed
             ? Number(entryA.stock ? entryA.stock : entryA.balance) -

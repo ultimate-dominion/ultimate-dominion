@@ -391,6 +391,13 @@ export const ShopItemRow = ({
                 <Text size="sm">- LVL {item?.minLevel.toString() || '0'}</Text>
                 <Text size="sm">
                   -{' '}
+                  {statRestrictions['minAgility']
+                    ? statRestrictions.minAgility.toString()
+                    : 0}{' '}
+                  AGI
+                </Text>
+                <Text size="sm">
+                  -{' '}
                   {statRestrictions['minIntelligence']
                     ? statRestrictions.minIntelligence.toString()
                     : 0}{' '}

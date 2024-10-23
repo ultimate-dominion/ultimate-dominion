@@ -304,11 +304,11 @@ contract LootManagerSystem is ERC1155Holder, System {
                         //do nothing
                     } else if (_calculatedExp + Stats.getExperience(distTemps.entityIdTemp) <= Levels.get(MAX_LEVEL)) {
                         statsTemp.experience += _calculatedExp;
-                        _expAmount += statsTemp.experience;
+                        _expAmount += _calculatedExp;
                     } else if (_calculatedExp + Stats.getExperience(distTemps.entityIdTemp) > Levels.get(MAX_LEVEL)) {
                         uint256 _expToGive = Levels.get(MAX_LEVEL) - Stats.getExperience(distTemps.entityIdTemp);
                         statsTemp.experience += _expToGive;
-                        _expAmount += statsTemp.experience;
+                        _expAmount += _expToGive;
                     }
                 }
                 Stats.set(distTemps.entityIdTemp, statsTemp);

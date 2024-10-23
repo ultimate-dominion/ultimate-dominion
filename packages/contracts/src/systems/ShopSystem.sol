@@ -4,7 +4,7 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 
-import {Shops, Items, UltimateDominionConfig} from "@codegen/index.sol";
+import {Shops, ShopSale, ShopSaleData, Items, UltimateDominionConfig} from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
 import {_lootManagerSystemId} from "../utils.sol";
@@ -46,16 +46,27 @@ contract ShopSystem is System, ReentrancyGuard {
         stock[itemIndex] = stock[itemIndex] - amount;
         Shops.setStock(shopId, stock);
 
+        uint256 price = amount * itemMarkup(shopId, buyable[itemIndex]);
+
         // increase gold by [amount*price]
-        Shops.setGold(shopId, Shops.getGold(shopId) + (amount * itemMarkup(shopId, buyable[itemIndex])));
+        Shops.setGold(shopId, Shops.getGold(shopId) + price);
 
         // take [amount*price] of the users' gold
         IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(
-            _msgSender(), lootManagerAddress(), amount * itemMarkup(shopId, buyable[itemIndex])
+            _msgSender(), lootManagerAddress(), price
         );
 
         // give [amount] items
         IWorld(_world()).UD__dropItem(characterId, buyable[itemIndex], amount);
+
+        ShopSale.set(
+            shopId,
+            characterId, // customerId
+            buyable[itemIndex], // itemId
+            block.timestamp, // timestamp
+            true, // buyer
+            price
+        );
     }
 
     /**
@@ -86,7 +97,9 @@ contract ShopSystem is System, ReentrancyGuard {
         // decrease gold by [amount * price]
         stock[itemIndex] = stock[itemIndex] + amount;
         Shops.setStock(shopId, stock);
-        Shops.setGold(shopId, Shops.getGold(shopId) - (amount * itemMarkdown(shopId, sellable[itemIndex])));
+
+        uint256 price = amount * itemMarkdown(shopId, sellable[itemIndex]);
+        Shops.setGold(shopId, Shops.getGold(shopId) - price);
 
         // take [amount] of the users' item
         uint256[] memory sellableItems = Shops.getSellableItems(shopId);
@@ -95,7 +108,16 @@ contract ShopSystem is System, ReentrancyGuard {
         );
 
         // give [amount*price] gold
-        IWorld(_world()).UD__dropGoldToPlayer(characterId, amount * itemMarkdown(shopId, sellable[itemIndex]));
+        IWorld(_world()).UD__dropGoldToPlayer(characterId, price);
+
+        ShopSale.set(
+            shopId,
+            characterId, // customerId
+            sellable[itemIndex], // itemId
+            block.timestamp, // timestamp
+            false, // buyer
+            price
+        );
     }
 
     function canRestock(bytes32 shopId) public view returns (bool) {

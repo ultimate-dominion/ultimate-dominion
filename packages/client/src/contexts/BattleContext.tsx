@@ -123,7 +123,6 @@ export const BattleProvider = ({
 
   const currentBattle = useMemo(() => {
     const latestBattle = allBattles[allBattles.length - 1];
-
     if (!latestBattle) return null;
 
     const latestCompletedBattle = allBattles

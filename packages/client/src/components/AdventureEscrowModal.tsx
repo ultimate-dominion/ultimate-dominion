@@ -246,7 +246,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
           </Text>
           <HStack mt={8}>
             <FormControl isInvalid={!!depositErrorMessage}>
-              <FormLabel fontSize="xs">Deposit to session wallet</FormLabel>
+              <FormLabel fontSize="xs">Deposit to Adventure Escrow</FormLabel>
               {!!depositErrorMessage && (
                 <FormHelperText
                   color="red"
@@ -293,7 +293,9 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
           </HStack>
           <HStack mt={4}>
             <FormControl isInvalid={!!withdrawErrorMessage}>
-              <FormLabel fontSize="xs">Withdraw from session wallet</FormLabel>
+              <FormLabel fontSize="xs">
+                Withdraw from Adventure Escrow
+              </FormLabel>
               {!!withdrawErrorMessage && (
                 <FormHelperText
                   color="red"
