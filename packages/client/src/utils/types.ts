@@ -278,6 +278,7 @@ export type Shop = {
   buyableItems: string[];
   gold: bigint;
   maxGold: bigint;
+  name: string;
   position: { x: number; y: number };
   priceMarkdown: bigint;
   priceMarkup: bigint;

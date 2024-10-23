@@ -7,7 +7,13 @@ import { useToast } from '../hooks/useToast';
 
 const ROW_HEIGHT = { base: 5, md: 8 };
 
-export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
+export const ShopRow = ({
+  shopId,
+  shopName,
+}: {
+  shopId: string;
+  shopName: string;
+}): JSX.Element => {
   const navigate = useNavigate();
   const { renderError } = useToast();
   const {
@@ -73,7 +79,7 @@ export const ShopRow = ({ shopId }: { shopId: string }): JSX.Element => {
     >
       <HStack justifyContent="start" spacing={4}>
         <Text size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}>
-          Pawnshop 🏪
+          {shopName} 🏪
         </Text>
         {isRestocking && <Spinner size="sm" />}
       </HStack>
