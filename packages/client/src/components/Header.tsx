@@ -177,10 +177,15 @@ export const Header = ({
                 direction={{ base: 'column' }}
                 spacing={{ base: 4, md: 10 }}
               >
-                <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
+                <Link
+                  alignSelf="start"
+                  fontSize={{ base: 'xs', sm: 'sm' }}
+                  href="https://www.ultimatedominion.com/"
+                  isExternal
+                >
                   About
                 </Link>
-                <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
+                {/* <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
                   Guild Info
                 </Link>
                 <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
@@ -188,7 +193,7 @@ export const Header = ({
                 </Link>
                 <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
                   Create Map
-                </Link>
+                </Link> */}
               </Stack>
             </DrawerBody>
 
@@ -198,12 +203,12 @@ export const Header = ({
                 direction={{ base: 'column', sm: 'row' }}
                 spacing={{ base: 3, md: 8 }}
               >
-                <Link bgColor="black" borderRadius="50%" p={1.5}>
+                {/* <Link bgColor="black" borderRadius="50%" p={1.5}>
                   <FaDiscord color="white" />
                 </Link>
                 <Link bgColor="black" borderRadius="50%" p={1.5}>
                   <FaXTwitter color="white" />
-                </Link>
+                </Link> */}
               </Stack>
             </DrawerFooter>
           </DrawerContent>
