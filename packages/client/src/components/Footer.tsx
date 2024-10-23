@@ -1,6 +1,6 @@
 import { Grid, GridItem, HStack, Link, Stack, VStack } from '@chakra-ui/react';
-import { FaDiscord } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
+// import { FaDiscord } from 'react-icons/fa';
+// import { FaXTwitter } from 'react-icons/fa6';
 
 export const Footer = (): JSX.Element => {
   return (
