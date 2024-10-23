@@ -63,6 +63,9 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const [isLoadingItems, setIsLoadingItems] = useState(true);
 
   const onAcknowledge = useCallback(async () => {
+    setArmor([]);
+    setSpells([]);
+    setWeapons([]);
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
     onContinueToBattleOutcome(false);
     await refreshCharacter();
@@ -254,18 +257,18 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
               <Spinner />
             ) : (
               <>
-                {armor.length > 0 && (
+                {armor.length > 0 && winner == character.id && (
                   <Text fontWeight="bold">Looted Armor:</Text>
                 )}
-                {armor.map(item => (
-                  <ItemCard key={item.tokenId} {...item} />
-                ))}
-                {spellsAndWeapons.length > 0 && (
+                {winner == character.id &&
+                  armor.map(item => <ItemCard key={item.tokenId} {...item} />)}
+                {spellsAndWeapons.length > 0 && winner == character.id && (
                   <Text fontWeight="bold">Looted Weapons:</Text>
                 )}
-                {spellsAndWeapons.map(item => (
-                  <ItemCard key={item.tokenId} {...item} />
-                ))}
+                {winner == character.id &&
+                  spellsAndWeapons.map(item => (
+                    <ItemCard key={item.tokenId} {...item} />
+                  ))}
               </>
             )}
           </VStack>
