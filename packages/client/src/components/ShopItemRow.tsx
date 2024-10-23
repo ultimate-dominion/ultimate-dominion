@@ -448,8 +448,8 @@ export const ShopItemRow = ({
                         fontWeight={500}
                         max={stock?.toString() || balance?.toString() || 0}
                         min={1}
-                        minW="45px"
-                        minH="45px"
+                        minW="55px"
+                        minH="55px"
                         onChange={e => {
                           const value = e.target.value;
                           if (value === '') {
