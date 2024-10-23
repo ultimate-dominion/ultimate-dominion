@@ -244,13 +244,13 @@ contract CombatSystem is System {
         } else if (baseDifference < 0 && Math.absolute(baseDifference) >= uint256(attackerStat)) {
             // if the stat difference is equal to or greater than the attackers base stat subtract difference from damage
             if (baseDamage + baseDifference > 0) {
-                _totalDamage = baseDamage + baseDifference;
+                _totalDamage = (baseDamage + baseDifference) / int256(WAD);
             } else {
                 // if damage is negative damage is 0
                 _totalDamage = 0;
             }
         } else {
-            _totalDamage = baseDamage;
+            _totalDamage = baseDamage / int256(WAD);
         }
     }
 
