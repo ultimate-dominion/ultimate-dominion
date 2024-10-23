@@ -5,7 +5,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "1_leather_vest.json",
       "name": "Leather Vest",
-      "price": 1000000000000000000,
+      "price": 50000000000000000000,
       "stats": {
         "agiModifier": -1,
         "armorModifier": 1,
@@ -25,7 +25,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "2_steel_breastplate.json",
       "name": "Steel Breastplate",
-      "price": 2000000000000000000,
+      "price": 200000000000000000000,
       "stats": {
         "agiModifier": -3,
         "armorModifier": 3,
@@ -45,7 +45,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "3_light_chainmail.json",
       "name": "Light Chainmail",
-      "price": 3000000000000000000,
+      "price": 200000000000000000000,
       "stats": {
         "agiModifier": -1,
         "armorModifier": 2,
@@ -65,7 +65,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "4_apprentice_robe.json",
       "name": "Apprentice Robe",
-      "price": 4000000000000000000,
+      "price": 200000000000000000000,
       "stats": {
         "agiModifier": 0,
         "armorModifier": 1,
@@ -85,7 +85,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "5_enchanted_armor.json",
       "name": "Enchanted Armor",
-      "price": 1000000000000000000,
+      "price": 500000000000000000000,
       "stats": {
         "agiModifier": -2,
         "armorModifier": 4,
@@ -107,7 +107,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "21_health_potion.json",
       "name": "healing potion",
-      "price": 2000000000000000000,
+      "price": 20000000000000000000,
       "stats": {
         "effects": [
           "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
@@ -127,7 +127,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "22_fortifying_stew.json",
       "name": "fortifying stew",
-      "price": 2000000000000000000,
+      "price": 60000000000000000000,
       "stats": {
         "effects": [
           "0x5b73694f86a16512000000000000000000000000000000000000000000000000"
@@ -147,7 +147,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "23_quickening_berries.json",
       "name": "quickening berries",
-      "price": 2000000000000000000,
+      "price": 60000000000000000000,
       "stats": {
         "effects": [
           "0x940c7cad73f61cb6000000000000000000000000000000000000000000000000"
@@ -167,7 +167,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "24_focusing_tea.json",
       "name": "focusing tea",
-      "price": 2000000000000000000,
+      "price": 60000000000000000000,
       "stats": {
         "effects": [
           "0x54d076d5607dc751000000000000000000000000000000000000000000000000"
@@ -187,7 +187,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "25_beer.json",
       "name": "beer",
-      "price": 2000000000000000000,
+      "price": 14000000000000000000,
       "stats": {
         "effects": [
           "0xe4d5d6c80f689bee000000000000000000000000000000000000000000000000"
@@ -207,7 +207,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "26_strong_health_potion.json",
       "name": "strong health potion",
-      "price": 2000000000000000000,
+      "price": 50000000000000000000,
       "stats": {
         "effects": [
           "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
@@ -230,7 +230,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "16_thunderwave.json",
       "name": "Thunderwave",
-      "price": 3000000000000000000,
+      "price": 50000000000000000000,
       "stats": {
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
@@ -250,7 +250,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "17_fireball.json",
       "name": "Fireball",
-      "price": 4000000000000000000,
+      "price": 100000000000000000000,
       "stats": {
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
@@ -270,7 +270,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "18_wall_of_force.json",
       "name": "Wall of Force",
-      "price": 1000000000000000000,
+      "price": 100000000000000000000,
       "stats": {
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
@@ -290,7 +290,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "19_ice_lance.json",
       "name": "Ice Lance",
-      "price": 2000000000000000000,
+      "price": 100000000000000000000,
       "stats": {
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
@@ -310,7 +310,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "20_meteor_swarm.json",
       "name": "Meteor Swarm",
-      "price": 3000000000000000000,
+      "price": 500000000000000000000,
       "stats": {
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
@@ -332,7 +332,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "6_rusty_axe.json",
       "name": "Rusty Axe",
-      "price": 4000000000000000000,
+      "price": 50000000000000000000,
       "stats": {
         "agiModifier": 0,
         "effects": [
@@ -356,7 +356,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "7_iron_sword.json",
       "name": "Iron Sword",
-      "price": 1000000000000000000,
+      "price": 100000000000000000000,
       "stats": {
         "agiModifier": 0,
         "effects": [
@@ -380,7 +380,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "8_novice_staff.json",
       "name": "Novice Staff",
-      "price": 2000000000000000000,
+      "price": 100000000000000000000,
       "stats": {
         "agiModifier": 0,
         "effects": [
@@ -404,7 +404,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "9_throwing_dagger.json",
       "name": "Throwing Dagger",
-      "price": 3000000000000000000,
+      "price": 100000000000000000000,
       "stats": {
         "agiModifier": 5,
         "effects": [
@@ -428,7 +428,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "10_steel_sword.json",
       "name": "Steel Sword",
-      "price": 4000000000000000000,
+      "price": 500000000000000000000,
       "stats": {
         "agiModifier": 0,
         "effects": [
@@ -452,7 +452,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "11_flash_bomb.json",
       "name": "Flash Bomb",
-      "price": 1000000000000000000,
+      "price": 50000000000000000000,
       "stats": {
         "agiModifier": 0,
         "effects": [
@@ -476,7 +476,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "12_weakening_fumes.json",
       "name": "Weakening Fumes",
-      "price": 2000000000000000000,
+      "price": 50000000000000000000,
       "stats": {
         "agiModifier": 0,
         "effects": [
@@ -500,7 +500,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "13_glimmerstone.json",
       "name": "Glimmerstone",
-      "price": 3000000000000000000,
+      "price": 50000000000000000000,
       "stats": {
         "agiModifier": 0,
         "effects": [
@@ -524,7 +524,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "14_poison_dart.json",
       "name": "Poison Dart",
-      "price": 4000000000000000000,
+      "price": 200000000000000000000,
       "stats": {
         "agiModifier": 0,
         "effects": [
@@ -549,7 +549,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "15_crossbow.json",
       "name": "Crossbow",
-      "price": 1000000000000000000,
+      "price": 500000000000000000000,
       "stats": {
         "agiModifier": 5,
         "effects": [
