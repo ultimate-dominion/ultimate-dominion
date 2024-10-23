@@ -246,8 +246,8 @@ contract CombatSystem is System {
             if (baseDamage + baseDifference > 0) {
                 _totalDamage = (baseDamage + baseDifference) / int256(WAD);
             } else {
-                // if damage is negative damage is 0
-                _totalDamage = 0;
+                // if damage is negative minimu damage is 1
+                _totalDamage = 1;
             }
         } else {
             _totalDamage = baseDamage / int256(WAD);
