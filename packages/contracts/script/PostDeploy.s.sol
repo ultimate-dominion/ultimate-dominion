@@ -58,6 +58,7 @@ import {
     MonsterTemplateDetails,
     WeaponTemplateDetails,
     ArmorTemplateDetails,
+    ShopTemplate,
     StarterItems,
     StarterEffects,
     PhysicalDamageTemplate,
@@ -424,30 +425,30 @@ contract PostDeploy is Script {
     }
 
     function _createShops() internal {
-        uint256[] memory sellableItems = new uint256[](26);
-        uint256[] memory buyableItems = new uint256[](26);
-        uint256[] memory stock = new uint256[](26);
-        for (uint256 i = 0; i < 26; ++i) {
-            sellableItems[i] = i + 1;
-            buyableItems[i] = i + 1;
-            stock[i] = 10;
+        string memory json = vm.readFile("shops.json");
+        bytes memory shopTemplatesBytes = vm.parseJson(json, ".shops");
+
+        ShopTemplate[] memory shopTemplates = abi.decode(shopTemplatesBytes, (ShopTemplate[]));
+
+        for (uint256 i = 0; i < shopTemplates.length; i++) {
+            ShopTemplate memory shopTemplate = shopTemplates[i];
+
+            ShopsData memory newShop = ShopsData({
+                gold: shopTemplate.gold,
+                maxGold: shopTemplate.maxGold,
+                priceMarkup: shopTemplate.priceMarkup,
+                priceMarkdown: shopTemplate.priceMarkdown,
+                restockTimestamp: shopTemplate.restockTimestamp,
+                sellableItems: shopTemplate.sellableItems,
+                buyableItems: shopTemplate.buyableItems,
+                restock: shopTemplate.restock,
+                stock: shopTemplate.stock
+            });
+
+            uint256 shopMobId =
+                world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
+            world.UD__spawnMob(shopMobId, uint16(shopTemplate.location[0]), uint16(shopTemplate.location[1]));
         }
-
-        ShopsData memory newShop = ShopsData({
-            gold: 100 ether,
-            maxGold: 100 ether,
-            priceMarkup: 2000, // 20%
-            priceMarkdown: 5000, // 50%
-            restockTimestamp: 1725962400,
-            sellableItems: sellableItems,
-            buyableItems: buyableItems,
-            restock: stock,
-            stock: stock
-        });
-
-        uint256 shopMobId =
-            world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
-        world.UD__spawnMob(shopMobId, 0, 0);
     }
 
     function _createMonsters() internal {

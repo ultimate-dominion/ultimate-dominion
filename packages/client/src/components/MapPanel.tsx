@@ -10,6 +10,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { BiSolidNavigation } from 'react-icons/bi';
+import { FaStoreAlt } from 'react-icons/fa';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
@@ -26,6 +27,7 @@ const SAFE_ZONE_AREA = {
 
 export const MapPanel = (): JSX.Element => {
   const { allCharacters, isSpawned, isSpawning, onSpawn, position } = useMap();
+  const { allShops } = useMap();
   const { currentBattle } = useBattle();
   const { isRefreshing, onMove } = useMovement();
 
@@ -129,6 +131,27 @@ export const MapPanel = (): JSX.Element => {
                       transform="translateX(-30%)"
                     />
                   )}
+
+                  {allShops.map((shop, index) => {
+                    const isHomeTile = 0 === col && 0 === row;
+                    const isShopHere =
+                      shop.position.x === col &&
+                      shop.position.y === row &&
+                      !isHomeTile;
+
+                    return (
+                      isShopHere && (
+                        <VStack
+                          key={`shop-${index}`}
+                          left="50%"
+                          position="absolute"
+                          transform="translateX(-50%)"
+                        >
+                          <FaStoreAlt size={14} />
+                        </VStack>
+                      )
+                    );
+                  })}
                 </VStack>
               );
             })}
