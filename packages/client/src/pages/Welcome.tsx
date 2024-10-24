@@ -61,7 +61,7 @@ export const Welcome = (): JSX.Element => {
           >
             Welcome to Ultimate Dominion
           </Heading>
-          <VStack fontWeight={500} maxW="800px" spacing={6} textAlign="center">
+          <VStack fontWeight={500} maxW="850px" spacing={6} textAlign="center">
             <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
               As you awaken, your eyes flutter open to the stark, eerie ambiance
               of a dimly lit cave.
