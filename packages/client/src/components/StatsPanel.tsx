@@ -161,7 +161,7 @@ export const StatsPanel = (): JSX.Element => {
   const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
 
   return (
-    <>
+    <VStack spacing={0}>
       <HStack
         bgColor="blue500"
         minH={{ base: '100px', md: '66px' }}
@@ -436,6 +436,6 @@ export const StatsPanel = (): JSX.Element => {
           </Link>
         </HStack>
       )}
-    </>
+    </VStack>
   );
 };
