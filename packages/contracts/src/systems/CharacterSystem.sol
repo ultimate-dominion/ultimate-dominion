@@ -194,9 +194,9 @@ contract CharacterSystem is System {
             }
         }
         if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
-            stats.maxHp += 1;
+            stats.maxHp += 3;
         }
-        stats.maxHp += 1;
+        stats.maxHp += 3;
         stats.strength = desiredStats.strength;
         stats.agility = desiredStats.agility;
         stats.intelligence = desiredStats.intelligence;
