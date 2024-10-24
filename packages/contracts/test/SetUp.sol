@@ -133,8 +133,8 @@ contract SetUp is Test {
         }
 
         ShopsData memory newShop = ShopsData({
-            gold: 100 ether,
-            maxGold: 100 ether,
+            gold: 1000 ether,
+            maxGold: 1000 ether,
             priceMarkup: 2000, // 20%
             priceMarkdown: 5000, // 50%
             restockTimestamp: 1725962400,
