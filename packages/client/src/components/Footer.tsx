@@ -1,6 +1,6 @@
 import { Grid, GridItem, HStack, Link, Stack, VStack } from '@chakra-ui/react';
-import { FaDiscord } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
+// import { FaDiscord } from 'react-icons/fa';
+// import { FaXTwitter } from 'react-icons/fa6';
 
 export const Footer = (): JSX.Element => {
   return (
@@ -22,10 +22,12 @@ export const Footer = (): JSX.Element => {
                 alignSelf="start"
                 borderColor="grey400"
                 fontSize={{ base: 'xs', sm: 'sm' }}
+                href="https://www.ultimatedominion.com/"
+                isExternal
               >
                 About
               </Link>
-              <Link
+              {/* <Link
                 alignSelf="start"
                 borderColor="grey400"
                 fontSize={{ base: 'xs', sm: 'sm' }}
@@ -50,7 +52,7 @@ export const Footer = (): JSX.Element => {
                 fontSize={{ base: 'xs', sm: 'sm' }}
               >
                 Create Map
-              </Link>
+              </Link> */}
             </Stack>
           </HStack>
         </GridItem>
@@ -65,12 +67,12 @@ export const Footer = (): JSX.Element => {
               direction={{ base: 'column', sm: 'row' }}
               spacing={{ base: 3, md: 8 }}
             >
-              <Link bgColor="black" borderRadius="50%" p={1.5}>
+              {/* <Link bgColor="black" borderRadius="50%" p={1.5}>
                 <FaDiscord color="white" />
               </Link>
               <Link bgColor="black" borderRadius="50%" p={1.5}>
                 <FaXTwitter color="white" />
-              </Link>
+              </Link> */}
             </Stack>
           </VStack>
         </GridItem>
