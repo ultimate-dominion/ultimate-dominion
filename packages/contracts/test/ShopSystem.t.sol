@@ -73,19 +73,20 @@ contract Test_ShopSystem is SetUp, GasReporter {
         uint256 item = 1;
         uint256 price = world.UD__itemBase(item);
         uint256 markup = world.UD__itemMarkup(shopId, item);
-        assertEq(price, 1 ether, "expecting item 1 to have a price of 1 ether");
-        assertEq(markup, price + 0.2 ether);
+        assertEq(price, 50 ether, "expecting item 1 to have a price of 1 ether");
+        assertEq(markup, 60 ether);
     }
 
     function test_itemMarkdown() public {
         uint256 item = 1;
         uint256 price = world.UD__itemBase(item);
         uint256 markdown = world.UD__itemMarkdown(shopId, item);
-        assertEq(price, 1 ether, "expecting item 1 to have a price of 1 ether");
-        assertEq(markdown, 0.5 ether);
+        assertEq(price, 50 ether, "expecting item 1 to have a price of 1 ether");
+        assertEq(markdown, price / 2);
     }
 
     function test_Buy() public {
+        world.UD__dropGoldToPlayer(bobCharacterId, 100 ether);
         startGasReport("purchase an item from the shop");
         uint256 balance = goldToken.balanceOf(bob);
         uint256 amount = 1;
@@ -128,7 +129,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
     function test_BuyWrongPerson() public {
         startGasReport("purchase an item from the shop for another person");
-        uint256 balance = 9 ether;
+        uint256 balance = 100 ether;
         uint256 amount = 1;
         uint256 itemIndex = 1;
         uint256[] memory buyable = Shops.getBuyableItems(shopId);

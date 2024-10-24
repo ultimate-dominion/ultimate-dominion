@@ -218,6 +218,7 @@ export const ShopItemRow = ({
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
+    setAmount(1);
     setShowError(false);
   }, [isOpen, price]);
 
