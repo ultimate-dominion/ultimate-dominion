@@ -37,6 +37,13 @@ import { useCharacter } from './CharacterContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
 
+const SHOP_MOB_ID_TO_NAME: Record<string, string> = {
+  '1': `General Store`,
+  '2': `Traveler's Armory`,
+  '3': `Traveler's Spells`,
+  '4': `Traveler's Wares`,
+};
+
 type MapContextType = {
   allCharacters: Character[];
   allMonsters: Monster[];
@@ -373,10 +380,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           const _position = getComponentValueStrict(Position, entity);
           const shopData = getComponentValueStrict(Shops, entity);
 
+          const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
+          const name = SHOP_MOB_ID_TO_NAME[mobId.toString()];
+
           return {
             buyableItems: shopData.buyableItems.map(item => item.toString()),
             gold: shopData.gold,
             maxGold: shopData.maxGold,
+            name: name ?? 'Unknown Shop',
             position: { x: _position.x, y: _position.y },
             priceMarkdown: shopData.priceMarkdown,
             priceMarkup: shopData.priceMarkup,

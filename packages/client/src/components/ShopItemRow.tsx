@@ -112,7 +112,7 @@ export const ShopItemRow = ({
   const insufficientStock = useMemo(() => {
     if (!userCharacter) return false;
     if (orderType === OrderType.Selling) return false;
-    if (!stock) return true
+    if (!stock) return true;
     return stock < 1;
   }, [orderType, stock, userCharacter]);
 

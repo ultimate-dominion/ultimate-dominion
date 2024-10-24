@@ -689,18 +689,22 @@ export const TileDetailsPanel = (): JSX.Element => {
           templateColumns="repeat(4, 1fr)"
           w="100%"
         >
-          {shopsOnTile.length > 0 && (
+          {isHomeTile && shopsOnTile.length > 0 && (
             <GridItem colSpan={2}>
-              <Heading size={{ base: 'sm', md: 'md' }}>Shops</Heading>
+              <Heading size={{ base: 'xs', sm: 'sm', md: 'md' }}>Shops</Heading>
             </GridItem>
           )}
           {!isHomeTile && (
             <GridItem colSpan={2}>
-              <Heading size={{ base: 'sm', md: 'md' }}>Monsters</Heading>
+              <Heading size={{ base: 'xs', sm: 'sm', md: 'md' }}>
+                Monsters
+              </Heading>
             </GridItem>
           )}
           <GridItem colSpan={2}>
-            <Heading size={{ base: 'sm', md: 'md' }}>Players</Heading>
+            <Heading size={{ base: 'xs', sm: 'sm', md: 'md' }}>
+              {shopsOnTile.length > 0 && !isHomeTile && 'Shops & '}Players
+            </Heading>
           </GridItem>
         </Grid>
       </HStack>
@@ -764,7 +768,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             />
             {shopsOnTile.map((shop, i) => (
               <Box key={`tile-shop-${i}`}>
-                <ShopRow shopId={shop.shopId} />
+                <ShopRow shopId={shop.shopId} shopName={shop.name} />
                 <Box
                   backgroundColor="#F5F5FA1F"
                   boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
@@ -830,6 +834,18 @@ export const TileDetailsPanel = (): JSX.Element => {
             h="6px"
             w="100%"
           />
+          {!isHomeTile &&
+            shopsOnTile.map((shop, i) => (
+              <Box key={`tile-shop-${i}`}>
+                <ShopRow shopId={shop.shopId} shopName={shop.name} />
+                <Box
+                  backgroundColor="#F5F5FA1F"
+                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                  h="6px"
+                  w="100%"
+                />
+              </Box>
+            ))}
           {otherCharactersOnTile.length > 0 &&
             otherCharactersOnTile.map((player, i) => (
               <Box key={`tile-player-${i}-${player.name}`}>
