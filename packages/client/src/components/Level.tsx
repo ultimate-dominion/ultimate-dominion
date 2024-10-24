@@ -6,6 +6,7 @@ import {
   Spacer,
   Text,
 } from '@chakra-ui/react';
+import { useMemo } from 'react';
 
 export const Level = ({
   currentLevel,
@@ -17,6 +18,11 @@ export const Level = ({
   levelPercent: number;
   maxed: boolean;
 } & BoxProps): JSX.Element => {
+  const percentageRightPosition = useMemo(() => {
+    // If it is less than 50%, nudge position to the right more, if it is more than 50%, nudge to the left
+    return levelPercent < 50 ? 95 - levelPercent - 8 : 95 - levelPercent + 8;
+  }, [levelPercent]);
+
   return (
     <Box fontSize="10px" mt={8} position="relative" w="100%" {...props}>
       {maxed ? (
@@ -45,7 +51,7 @@ export const Level = ({
             color={levelPercent === 100 ? 'green' : 'grey500'}
             fontWeight={levelPercent === 100 ? 'bold' : 'normal'}
             position="absolute"
-            right={95 - levelPercent - 2 + '%'}
+            right={percentageRightPosition + '%'}
             top="-15px"
           >
             {levelPercent.toFixed(2)}%

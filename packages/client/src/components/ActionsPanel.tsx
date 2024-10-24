@@ -235,7 +235,7 @@ export const ActionsPanel = (): JSX.Element => {
   }
 
   return (
-    <Box maxH="100%" ref={parentDivRef} fontWeight={500}>
+    <Box fontWeight={500} maxH="100%" overflowY="auto" ref={parentDivRef}>
       {currentBattle && equippedSpellsAndWeapons.length === 0 && (
         <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
           You have no equipped items. In order to attack, you must go to your{' '}
@@ -254,12 +254,21 @@ export const ActionsPanel = (): JSX.Element => {
         currentBattle &&
         equippedSpellsAndWeapons.length !== 0 &&
         opponent && (
-          <VStack position="sticky" spacing={0} top={0} w="100%">
+          <VStack
+            bgColor="#B3B9BE"
+            position="sticky"
+            spacing={0}
+            top={0}
+            w="100%"
+          >
             {currentBattle.encounterType === EncounterType.PvE && (
-              <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
-                <Text as="span" fontWeight="bold">
-                  Choose your move!
-                </Text>
+              <Text
+                fontWeight="bold"
+                p={{ base: 2, lg: 4 }}
+                size="xs"
+                textAlign="center"
+              >
+                Choose your move!
               </Text>
             )}
 

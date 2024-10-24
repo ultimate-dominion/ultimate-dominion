@@ -40,6 +40,7 @@ import { LevelingPanel } from '../components/LevelingPanel';
 import { PolygonalCard } from '../components/PolygonalCard';
 import { LeaderboardIconSvg, MarketplaceIconSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useChat } from '../contexts/ChatContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -89,6 +90,7 @@ export const CharacterPage = (): JSX.Element => {
     network: { publicClient, worldContract },
   } = useMUD();
   const { character: userCharacter } = useCharacter();
+  const { onOpen: onOpenChat } = useChat();
 
   const {
     isOpen: isEditModalOpen,
@@ -419,24 +421,25 @@ export const CharacterPage = (): JSX.Element => {
                 spacing={3}
                 w="100%"
               >
-                <Button
-                  leftIcon={
-                    isOwner ? (
-                      <MarketplaceIconSvg theme="dark" />
-                    ) : (
-                      <IoChatbubble />
-                    )
-                  }
-                  onClick={() => {
-                    if (isOwner) {
-                      navigate(MARKETPLACE_PATH);
-                    }
-                  }}
-                  variant="white"
-                  w="100%"
-                >
-                  {isOwner ? <Text>{} Marketplace</Text> : <Text>Chat</Text>}
-                </Button>
+                {isOwner ? (
+                  <Button
+                    leftIcon={<MarketplaceIconSvg theme="dark" />}
+                    onClick={() => navigate(MARKETPLACE_PATH)}
+                    variant="white"
+                    w="100%"
+                  >
+                    Marketplace
+                  </Button>
+                ) : (
+                  <Button
+                    leftIcon={<IoChatbubble />}
+                    onClick={onOpenChat}
+                    variant="white"
+                    w="100%"
+                  >
+                    Chat
+                  </Button>
+                )}
                 <Button
                   leftIcon={<LeaderboardIconSvg theme="dark" />}
                   onClick={() => navigate(LEADERBOARD_PATH)}
