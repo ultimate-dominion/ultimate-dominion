@@ -154,9 +154,13 @@ contract EquipmentSystem is System {
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
         uint256 totalLength;
-        if (CharacterEquipment.lengthEquippedArmor(characterId) > 0 && itemType == ItemType.Armor) {
+        // check and equip armor
+        if (CharacterEquipment.lengthEquippedArmor(characterId) < 1 && itemType == ItemType.Armor) {
+            CharacterEquipment.pushEquippedArmor(characterId, itemId);
+        } else if (itemType == ItemType.Armor && CharacterEquipment.lengthEquippedArmor(characterId) > 0) {
             revert("Already wearing armor");
         }
+        // check and equip items
         totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);
         totalLength += CharacterEquipment.lengthEquippedSpells(characterId);
         totalLength += CharacterEquipment.lengthEquippedConsumables(characterId);
@@ -165,10 +169,6 @@ contract EquipmentSystem is System {
         if (itemType == ItemType.Weapon) {
             CharacterEquipment.pushEquippedWeapons(characterId, itemId);
         }
-        if (itemType == ItemType.Armor) {
-            CharacterEquipment.pushEquippedArmor(characterId, itemId);
-        }
-
         if (itemType == ItemType.Spell) {
             CharacterEquipment.pushEquippedSpells(characterId, itemId);
         }
