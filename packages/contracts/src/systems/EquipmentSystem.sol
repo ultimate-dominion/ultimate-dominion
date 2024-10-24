@@ -158,7 +158,6 @@ contract EquipmentSystem is System {
         if (itemType == ItemType.Armor) {
             if (CharacterEquipment.lengthEquippedArmor(characterId) < 1) {
                 CharacterEquipment.pushEquippedArmor(characterId, itemId);
-                return;
             } else if (CharacterEquipment.lengthEquippedArmor(characterId) > 0) {
                 revert("Already wearing armor");
             }
