@@ -210,7 +210,6 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                     <Input
                       isDisabled={isUpdating}
                       onChange={e => setNewName(e.target.value)}
-                      pattern="([A-Za-z0-9\-\_]+)"
                       placeholder={'Name'}
                       type="text"
                       value={newName}
