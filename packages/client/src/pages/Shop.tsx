@@ -83,9 +83,9 @@ export const Shop = (): JSX.Element => {
     ],
     [inventoryArmor, inventoryConsumables, inventorySpells, inventoryWeapons],
   );
+
   useEffect(() => {
     if (isItemsLoading) return;
-    if (items.length === 0) return;
     if (!shop) return;
 
     const equippedItems = [

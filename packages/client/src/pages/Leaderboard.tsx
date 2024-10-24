@@ -255,7 +255,7 @@ export const Leaderboard = (): JSX.Element => {
                 'Mage'
               ) : (
                 <MageSvg
-                  theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
+                  theme={filter === StatsClasses.Mage ? 'light' : 'dark'}
                 />
               )}
             </Button>
