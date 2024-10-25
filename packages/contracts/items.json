@@ -112,8 +112,8 @@
         "effects": [
           "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
         ],
-        "maxDamage": -5,
-        "minDamage": -5,
+        "maxDamage": -20,
+        "minDamage": -20,
         "minLevel": 0
       },
       "statRestrictions": {
@@ -127,7 +127,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "22_fortifying_stew.json",
       "name": "fortifying stew",
-      "price": 60000000000000000000,
+      "price": 40000000000000000000,
       "stats": {
         "effects": [
           "0x5b73694f86a16512000000000000000000000000000000000000000000000000"
@@ -147,7 +147,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "23_quickening_berries.json",
       "name": "quickening berries",
-      "price": 60000000000000000000,
+      "price": 40000000000000000000,
       "stats": {
         "effects": [
           "0x940c7cad73f61cb6000000000000000000000000000000000000000000000000"
@@ -167,7 +167,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "24_focusing_tea.json",
       "name": "focusing tea",
-      "price": 60000000000000000000,
+      "price": 40000000000000000000,
       "stats": {
         "effects": [
           "0x54d076d5607dc751000000000000000000000000000000000000000000000000"
@@ -207,13 +207,13 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "26_strong_health_potion.json",
       "name": "strong health potion",
-      "price": 50000000000000000000,
+      "price": 35000000000000000000,
       "stats": {
         "effects": [
           "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
         ],
-        "maxDamage": -15,
-        "minDamage": -15,
+        "maxDamage": -40,
+        "minDamage": -40,
         "minLevel": 0
       },
       "statRestrictions": {
