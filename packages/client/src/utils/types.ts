@@ -123,8 +123,10 @@ export type CharacterData = {
   externalGoldBalance: bigint;
   id: Entity;
   inBattle: boolean;
+  isSpawned: boolean;
   locked: boolean;
   owner: string;
+  position: { x: number; y: number };
   pvpCooldownTimer: bigint;
   tokenId: string;
   worldStatusEffects: WorldStatusEffect[];

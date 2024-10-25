@@ -299,9 +299,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               strength: characterStats.strength,
               tokenId: tokenId.toString(),
               worldStatusEffects,
-            } as Character & {
-              isSpawned: boolean;
-              position: { x: number; y: number };
             };
           }),
         );
