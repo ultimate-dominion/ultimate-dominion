@@ -41,7 +41,6 @@ export const ConnectWalletButton: React.FC = () => {
                   </Button>
                 );
               }
-
               return (
                 <Button onClick={openAccountModal} type="button">
                   <HStack>

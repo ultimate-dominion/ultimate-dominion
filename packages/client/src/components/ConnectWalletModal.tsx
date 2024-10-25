@@ -1,4 +1,6 @@
 import {
+  Alert,
+  AlertIcon,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -27,7 +29,7 @@ export const ConnectWalletModal = ({
   onClose: () => void;
 }): JSX.Element => {
   const { data: externalWalletClient } = useWalletClient();
-  const { isConnected, address } = useAccount();
+  const { isConnected, address, chainId } = useAccount();
   const { burnerAddress, delegatorAddress } = useMUD();
 
   useEffect(() => {
@@ -41,6 +43,16 @@ export const ConnectWalletModal = ({
       return (
         <VStack spacing={10}>
           <VStack fontWeight={500} spacing={4}>
+            {chainId == 17069 && (
+              <Alert status="info">
+                <AlertIcon />
+                <Text size="xs">
+                  If you don&apos;t have Garnet Holesky native tokens, you will
+                  be automatically sent some from a faucet to make this
+                  transaction
+                </Text>
+              </Alert>
+            )}
             <Text size="sm" textAlign="center">
               Connected account:
             </Text>
@@ -82,10 +94,18 @@ export const ConnectWalletModal = ({
     return (
       <VStack spacing={10}>
         <Text textAlign="center">Connect your wallet to play.</Text>
+
         <ConnectWalletButton />
       </VStack>
     );
-  }, [address, burnerAddress, externalWalletClient, isConnected, onClose]);
+  }, [
+    address,
+    burnerAddress,
+    chainId,
+    externalWalletClient,
+    isConnected,
+    onClose,
+  ]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
