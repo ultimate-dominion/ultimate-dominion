@@ -10,9 +10,6 @@ import {
   Entity,
   getComponentValue,
   getComponentValueStrict,
-  Has,
-  HasValue,
-  runQuery,
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { uuid } from '@latticexyz/utils';
@@ -93,7 +90,6 @@ export function createSystemCalls(
     CharacterEquipment,
     Characters,
     CharactersTokenURI,
-    CombatEncounter,
     Orders,
     Position,
     Spawned,
@@ -167,8 +163,8 @@ export function createSystemCalls(
 
   const createEncounter = async (
     encounterType: EncounterType,
-    attackers: string[],
-    defenders: string[],
+    group1: string[],
+    group2: string[],
   ): SystemCallReturn => {
     try {
       await publicClient.simulateContract({
@@ -177,39 +173,22 @@ export function createSystemCalls(
         address: worldContract.address,
         args: [
           encounterType,
-          attackers as `0x${string}`[],
-          defenders as `0x${string}`[],
+          group1 as `0x${string}`[],
+          group2 as `0x${string}`[],
         ],
         functionName: 'UD__createEncounter',
       });
 
       const tx = await worldContract.write.UD__createEncounter([
         encounterType,
-        attackers as `0x${string}`[],
-        defenders as `0x${string}`[],
+        group1 as `0x${string}`[],
+        group2 as `0x${string}`[],
       ]);
 
-      await waitForTransaction(tx);
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
 
-      const success = !!Array.from(
-        runQuery([
-          Has(CombatEncounter),
-          HasValue(CombatEncounter, { encounterType }),
-        ]),
-      ).filter(entity => {
-        const encounter = getComponentValue(CombatEncounter, entity);
-
-        if (!encounter) return false;
-        const encounterParticipants = encounter.attackers.concat(
-          encounter.defenders,
-        );
-        return (
-          encounterParticipants.some(attacker =>
-            attackers.includes(attacker),
-          ) &&
-          encounterParticipants.some(defender => defenders.includes(defender))
-        );
-      })[0];
+      const success = status === 'success';
 
       return {
         error: success ? undefined : 'Failed to create encounter.',
@@ -286,6 +265,29 @@ export function createSystemCalls(
 
       return {
         error: success ? undefined : 'Failed to deposit to escrow.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e as BaseError),
+        success: false,
+      };
+    }
+  };
+
+  const endShopEncounter = async (encounterId: Entity): SystemCallReturn => {
+    try {
+      const tx = await worldContract.write.UD__endShopEncounter([
+        encounterId.toString() as `0x${string}`,
+      ]);
+
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      const success = status === 'success';
+
+      return {
+        error: success ? undefined : 'Failed to end shop encounter.',
         success,
       };
     } catch (e) {
@@ -995,6 +997,7 @@ export function createSystemCalls(
     createEncounter,
     createOrder,
     depositToEscrow,
+    endShopEncounter,
     endTurn,
     enterGame,
     equipItems,

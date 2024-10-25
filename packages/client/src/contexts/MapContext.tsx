@@ -4,7 +4,9 @@ import {
   getComponentValue,
   getComponentValueStrict,
   Has,
+  HasValue,
   Not,
+  runQuery,
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import {
@@ -95,6 +97,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       Stats,
       StatusEffectStats,
       StatusEffectValidity,
+      WorldEncounter,
       WorldStatusEffects,
     },
     delegatorAddress,
@@ -274,6 +277,16 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
                 };
               });
 
+            const worldEncounter = Array.from(
+              runQuery([
+                Has(WorldEncounter),
+                HasValue(WorldEncounter, { character: entity, end: BigInt(0) }),
+              ]),
+            ).map(worldEncounterEntity => ({
+              encounterId: worldEncounterEntity,
+              ...getComponentValueStrict(WorldEncounter, worldEncounterEntity),
+            }))[0];
+
             return {
               ...fetachedMetadata,
               agility: characterStats.agility,
@@ -298,10 +311,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               pvpCooldownTimer: pvpTimer,
               strength: characterStats.strength,
               tokenId: tokenId.toString(),
+              worldEncounter: worldEncounter
+                ? {
+                    characterId: worldEncounter.character as Entity,
+                    encounterId: worldEncounter.encounterId as Entity,
+                    shopId: worldEncounter.entity as Entity,
+                  }
+                : undefined,
               worldStatusEffects,
-            } as Character & {
-              isSpawned: boolean;
-              position: { x: number; y: number };
             };
           }),
         );
@@ -330,6 +347,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       StatusEffectStats,
       StatusEffectValidity,
       worldContract,
+      WorldEncounter,
       WorldStatusEffects,
     ],
   );
