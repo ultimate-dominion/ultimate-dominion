@@ -298,7 +298,7 @@ contract EncounterSystem is System {
 
     function _endWorldEncounter(bytes32 encounterId) internal {
         WorldEncounterData memory encounterData = WorldEncounter.get(encounterId);
-        require(encounterData.end == 0, "Encounter System: encounter already over");
+        require(encounterData.end == 0 && encounterData.start != 0, "Encounter System: Invalid Encounter");
 
         encounterData.end = block.timestamp;
         EncounterEntity.setEncounterId(encounterData.character, bytes32(0));

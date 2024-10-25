@@ -172,6 +172,17 @@ contract ShopSystem is System, ReentrancyGuard {
         return false;
     }
 
+    function exitShop(bytes32 encounterId) public {
+        bytes32 characterId = WorldEncounter.getCharacter(encounterId);
+        require(
+            IWorld(_world()).UD__isValidCharacterId(characterId)
+                && IWorld(_world()).UD__isValidOwner(characterId, _msgSender()),
+            "can only exit your own shop"
+        );
+
+        IWorld(_world()).UD__endEncounter(encounterId, 0, false);
+    }
+
     function itemStock(bytes32 shopId, uint256 itemIndex) external view returns (uint256) {
         return Shops.getStock(shopId)[itemIndex];
     }

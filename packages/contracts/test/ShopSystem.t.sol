@@ -53,12 +53,12 @@ contract Test_ShopSystem is SetUp, GasReporter {
     address shopSystemAddress;
     IERC1155 itemsToken;
 
-    function createShopEncounter(bytes32 characterId, bytes32 shopId) public {
+    function createShopEncounter(bytes32 characterId, bytes32 shopId) public returns (bytes32) {
         bytes32[] memory group1 = new bytes32[](1);
         bytes32[] memory group2 = new bytes32[](1);
         group1[0] = characterId;
         group2[0] = shopId;
-        world.UD__createEncounter(EncounterType.World, group1, group2);
+        return world.UD__createEncounter(EncounterType.World, group1, group2);
     }
 
     function setUp() public virtual override {
@@ -483,6 +483,61 @@ contract Test_ShopSystem is SetUp, GasReporter {
         vm.expectRevert(bytes("invalid shop encounter"));
         world.UD__sell(amount, shopId, itemIndex, userACharacterID);
 
+        endGasReport();
+    }
+
+    function test_multipleCharactersCreatingShopEncounters() public {
+        startGasReport("sell an item from the shop for another person");
+        uint256 balance = 9 ether;
+        uint256 amount = 1;
+        uint256 itemIndex = 1;
+        uint256[] memory sellable = Shops.getSellableItems(shopId);
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+
+        // create userB
+        address userB = makeAddr("userB");
+        bytes32 userBCharacterID = world.UD__mintCharacter(userB, bytes32("NotAlan"), "test_Character_URI");
+
+        // give userA gold and items
+        world.UD__dropGoldToPlayer(userACharacterID, balance);
+        world.UD__dropItem(userACharacterID, itemIndex, amount);
+        // give userB gold and items
+        world.UD__dropGoldToPlayer(userBCharacterID, balance);
+        world.UD__dropItem(userBCharacterID, itemIndex, amount);
+        vm.startPrank(userA);
+        world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
+        world.UD__enterGame(userACharacterID);
+        // spawn and move to 0,0
+        world.UD__spawn(userACharacterID);
+        bytes32 encounterA = createShopEncounter(userACharacterID, shopId);
+
+        // have userA set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userA set max allowance for their gold
+        goldToken.approve(shopSystemAddress, MAX_INT);
+
+        vm.startPrank(userB);
+        world.UD__rollStats(bytes32("Alan"), userBCharacterID, Classes.Warrior);
+        world.UD__enterGame(userBCharacterID);
+        // spawn and move to 0,0
+        world.UD__spawn(userBCharacterID);
+
+        // have userB set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userB set max allowance for their gold
+        goldToken.approve(shopSystemAddress, MAX_INT);
+        bytes32 encounterB = createShopEncounter(userBCharacterID, shopId);
+        // have userA buy from the shop for user B
+        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+
+        world.UD__sell(amount, shopId, itemIndex, userBCharacterID);
+        world.UD__exitShop(encounterB);
+        vm.stopPrank();
+
+        vm.prank(userA);
+        world.UD__exitShop(encounterA);
         endGasReport();
     }
 }

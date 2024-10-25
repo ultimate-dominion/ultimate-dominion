@@ -1719,6 +1719,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__exitShop",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__expireIfInvalid",
     "inputs": [
       {
