@@ -52,7 +52,7 @@ export const ShopRow = ({
         throw new Error(encounterError);
       }
 
-      refreshCharacter();
+      await refreshCharacter();
       navigate(`/shops/${shopId}`);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Restock failed.', e);
