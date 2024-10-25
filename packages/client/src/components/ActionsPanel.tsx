@@ -18,7 +18,20 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
-import { EncounterType } from '../utils/types';
+import { EncounterType, Monster } from '../utils/types';
+
+export const MONSTER_MOVE_MAPPING: Record<string, string> = {
+  '5': 'Bite',
+  '6': 'Acid Spray',
+  '7': 'Swift Stab',
+  '8': 'Sludge Ball',
+  '9': 'Rusty Axe',
+  '10': 'Bite',
+  '11': 'Iron Sword',
+  '12': 'Venom Bite',
+  '13': 'Ember',
+  '14': 'Iron Sword',
+};
 
 export const ActionsPanel = (): JSX.Element => {
   const { character, equippedSpells, equippedWeapons } = useCharacter();
@@ -425,12 +438,17 @@ export const ActionsPanel = (): JSX.Element => {
             </Typist>
           )}
 
-        {opponent?.name &&
+        {opponent &&
           attackOutcomes.map((attack, i) => {
             const attackItem = spellAndWeaponTemplates.find(
               item => item.tokenId === attack.itemId,
             );
-            const itemName = attackItem?.name ?? 'an item';
+            const itemName =
+              currentBattle?.encounterType === EncounterType.PvE &&
+              attack.attackerId !== character?.id
+                ? MONSTER_MOVE_MAPPING[(opponent as Monster).mobId]
+                : attackItem?.name ?? 'an item';
+
             const possibleStatusEffectAttack = statusEffectActions.find(
               statusEffectAction =>
                 Number(statusEffectAction.turnStart) - 1 === i,
@@ -484,7 +502,7 @@ export const ActionsPanel = (): JSX.Element => {
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       {critText}You attacked{' '}
                       <Text as="span" color="green">
-                        {opponent?.name}
+                        {opponent.name}
                       </Text>{' '}
                       with {itemName}. You inflicted{' '}
                       <Text as="span" color="red">
@@ -512,7 +530,7 @@ export const ActionsPanel = (): JSX.Element => {
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       {critText}You attacked{' '}
                       <Text as="span" color="green">
-                        {opponent?.name}
+                        {opponent.name}
                       </Text>{' '}
                       with {itemName} for{' '}
                       <Text as="span" color="red">
@@ -526,7 +544,7 @@ export const ActionsPanel = (): JSX.Element => {
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       {critText}
                       <Text as="span" color="green">
-                        {opponent?.name}
+                        {opponent.name}
                       </Text>{' '}
                       attacked you with {itemName} for{' '}
                       <Text as="span" color="red">
