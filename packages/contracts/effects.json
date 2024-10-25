@@ -60,14 +60,14 @@
         "damagePerTick": 0,
         "hpModifier": 0,
         "intModifier": 0,
-        "resistanceStat": 1,
+        "resistanceStat": 0,
         "strModifier": 0
       },
       "validity": {
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
-        "validTurns": 6
+        "validTurns": 8
       }
     },
     {
@@ -117,14 +117,14 @@
         "damagePerTick": 3,
         "hpModifier": 0,
         "intModifier": 0,
-        "resistanceStat": 2,
+        "resistanceStat": 0,
         "strModifier": 0
       },
       "validity": {
         "cooldown": 2,
         "maxStacks": 2,
         "validTime": 0,
-        "validTurns": 6
+        "validTurns": 8
       }
     },
     {
@@ -155,14 +155,14 @@
         "damagePerTick": 0,
         "hpModifier": 0,
         "intModifier": -8,
-        "resistanceStat": 1,
+        "resistanceStat": 0,
         "strModifier": 0
       },
       "validity": {
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
-        "validTurns": 6
+        "validTurns": 8
       }
     },
     {
@@ -174,14 +174,14 @@
         "damagePerTick": 0,
         "hpModifier": 0,
         "intModifier": 0,
-        "resistanceStat": 1,
+        "resistanceStat": 0,
         "strModifier": -8
       },
       "validity": {
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
-        "validTurns": 6
+        "validTurns": 8
       }
     }
   ]

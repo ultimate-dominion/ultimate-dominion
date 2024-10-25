@@ -164,7 +164,7 @@ export const StatsPanel = (): JSX.Element => {
     <VStack spacing={0}>
       <HStack
         bgColor="blue500"
-        minH={{ base: '100px', md: '66px' }}
+        minH={{ base: '40px', md: '66px' }}
         px="20px"
         width="100%"
       >
@@ -218,24 +218,6 @@ export const StatsPanel = (): JSX.Element => {
           py={1}
           w="100%"
         >
-          <Text size="lg">STR</Text>
-          <Text color="grey500" size="lg">
-            {(strength - expiredEffectModifications.strModifier).toString()}
-          </Text>
-        </HStack>
-        <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-          h="6px"
-          w="100%"
-        />
-        <HStack
-          fontWeight={700}
-          justifyContent="space-between"
-          px={2}
-          py={1}
-          w="100%"
-        >
           <Text size="lg">AGI</Text>
           <Text color="grey500" size="lg">
             {(agility - expiredEffectModifications.agiModifier).toString()}
@@ -257,6 +239,24 @@ export const StatsPanel = (): JSX.Element => {
           <Text size="lg">INT</Text>
           <Text color="grey500" size="lg">
             {(intelligence - expiredEffectModifications.intModifier).toString()}
+          </Text>
+        </HStack>
+        <Box
+          backgroundColor="#F5F5FA1F"
+          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+          h="6px"
+          w="100%"
+        />
+        <HStack
+          fontWeight={700}
+          justifyContent="space-between"
+          px={2}
+          py={1}
+          w="100%"
+        >
+          <Text size="lg">STR</Text>
+          <Text color="grey500" size="lg">
+            {(strength - expiredEffectModifications.strModifier).toString()}
           </Text>
         </HStack>
         <Box

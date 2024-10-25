@@ -431,7 +431,101 @@ export const TileDetailsPanel = (): JSX.Element => {
           overflowY="auto"
         >
           <HStack alignItems="start" spacing={0} w="100%">
-            <VStack borderColor="blue500" w="50%">
+            <VStack w="50%">
+              <Stack
+                alignItems="center"
+                direction={{ base: 'row', lg: 'column' }}
+                justify={{ base: 'center', lg: 'start' }}
+                mt={{ base: 2, lg: 6 }}
+                spacing={{ base: 2, lg: 0 }}
+              >
+                <Avatar
+                  animation={isUserHit ? 'flicker .7s infinite' : 'none'}
+                  mb={{ base: 0, lg: 2 }}
+                  opacity={isUserHit ? 0 : 1}
+                  size={{ base: '2xs', lg: 'md' }}
+                  src={userCharacterForBattleRendering.image}
+                />
+                <HStack>
+                  <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
+                    {userCharacterForBattleRendering.name}
+                  </Text>
+                  <ClassSymbol
+                    entityClass={userCharacterForBattleRendering.entityClass}
+                    mb={1}
+                    theme="dark"
+                  />
+                </HStack>
+              </Stack>
+              <VStack spacing={{ base: 0, lg: 2 }} w="100%">
+                {userCharacterForBattleRendering.maxHp > BigInt(0) && (
+                  <HealthBar
+                    maxHp={userCharacterForBattleRendering.maxHp}
+                    currentHp={userCharacterForBattleRendering.currentHp}
+                    level={userCharacterForBattleRendering.level}
+                    px={8}
+                    statusEffects={userCharacterStatusEffects}
+                    w="100%"
+                  />
+                )}
+
+                <Box mt={4} w="100%">
+                  <Box
+                    backgroundColor="#F5F5FA1F"
+                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    h="6px"
+                    w="100%"
+                  />
+                  <HStack justifyContent="space-between" px={8} w="100%">
+                    <Text size={{ base: '2xs', lg: 'sm' }}>AGI</Text>
+                    <Text size={{ base: '2xs', lg: 'sm' }}>
+                      {(
+                        userCharacterForBattleRendering.agility -
+                        expiredUserEffectModifications.agiModifier
+                      ).toString()}
+                    </Text>
+                  </HStack>
+                  <Box
+                    backgroundColor="#F5F5FA1F"
+                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    h="6px"
+                    w="100%"
+                  />
+                  <HStack justifyContent="space-between" px={8} w="100%">
+                    <Text size={{ base: '2xs', lg: 'sm' }}>INT</Text>
+                    <Text size={{ base: '2xs', lg: 'sm' }}>
+                      {(
+                        userCharacterForBattleRendering.intelligence -
+                        expiredUserEffectModifications.intModifier
+                      ).toString()}
+                    </Text>
+                  </HStack>
+                  <Box
+                    backgroundColor="#F5F5FA1F"
+                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    h="6px"
+                    w="100%"
+                  />
+                  <HStack justifyContent="space-between" px={8} w="100%">
+                    <Text size={{ base: '2xs', lg: 'sm' }}>STR</Text>
+                    <Text size={{ base: '2xs', lg: 'sm' }}>
+                      {(
+                        userCharacterForBattleRendering.strength -
+                        expiredUserEffectModifications.strModifier
+                      ).toString()}
+                    </Text>
+                  </HStack>
+                  <Box
+                    backgroundColor="#F5F5FA1F"
+                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    h="6px"
+                    w="100%"
+                  />
+                </Box>
+              </VStack>
+            </VStack>
+
+            <VStack w="50%">
               {currentBattle.encounterType === EncounterType.PvE ? (
                 <VStack mt={{ base: 2, lg: 6 }} spacing={0}>
                   {isDesktop && (
@@ -555,100 +649,6 @@ export const TileDetailsPanel = (): JSX.Element => {
                         ).toString()}
                       </Text>
                     )}
-                  </HStack>
-                  <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-                    h="6px"
-                    w="100%"
-                  />
-                </Box>
-              </VStack>
-            </VStack>
-
-            <VStack h="100%" w="50%">
-              <Stack
-                alignItems="center"
-                direction={{ base: 'row', lg: 'column' }}
-                justify={{ base: 'center', lg: 'start' }}
-                mt={{ base: 2, lg: 6 }}
-                spacing={{ base: 2, lg: 0 }}
-              >
-                <Avatar
-                  animation={isUserHit ? 'flicker .7s infinite' : 'none'}
-                  mb={{ base: 0, lg: 2 }}
-                  opacity={isUserHit ? 0 : 1}
-                  size={{ base: '2xs', lg: 'md' }}
-                  src={userCharacterForBattleRendering.image}
-                />
-                <HStack>
-                  <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
-                    {userCharacterForBattleRendering.name}
-                  </Text>
-                  <ClassSymbol
-                    entityClass={userCharacterForBattleRendering.entityClass}
-                    mb={1}
-                    theme="dark"
-                  />
-                </HStack>
-              </Stack>
-              <VStack spacing={{ base: 0, lg: 2 }} w="100%">
-                {userCharacterForBattleRendering.maxHp > BigInt(0) && (
-                  <HealthBar
-                    maxHp={userCharacterForBattleRendering.maxHp}
-                    currentHp={userCharacterForBattleRendering.currentHp}
-                    level={userCharacterForBattleRendering.level}
-                    px={8}
-                    statusEffects={userCharacterStatusEffects}
-                    w="100%"
-                  />
-                )}
-
-                <Box mt={4} w="100%">
-                  <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-                    h="6px"
-                    w="100%"
-                  />
-                  <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text size={{ base: '2xs', lg: 'sm' }}>AGI</Text>
-                    <Text size={{ base: '2xs', lg: 'sm' }}>
-                      {(
-                        userCharacterForBattleRendering.agility -
-                        expiredUserEffectModifications.agiModifier
-                      ).toString()}
-                    </Text>
-                  </HStack>
-                  <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-                    h="6px"
-                    w="100%"
-                  />
-                  <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text size={{ base: '2xs', lg: 'sm' }}>INT</Text>
-                    <Text size={{ base: '2xs', lg: 'sm' }}>
-                      {(
-                        userCharacterForBattleRendering.intelligence -
-                        expiredUserEffectModifications.intModifier
-                      ).toString()}
-                    </Text>
-                  </HStack>
-                  <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-                    h="6px"
-                    w="100%"
-                  />
-                  <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text size={{ base: '2xs', lg: 'sm' }}>STR</Text>
-                    <Text size={{ base: '2xs', lg: 'sm' }}>
-                      {(
-                        userCharacterForBattleRendering.strength -
-                        expiredUserEffectModifications.strModifier
-                      ).toString()}
-                    </Text>
                   </HStack>
                   <Box
                     backgroundColor="#F5F5FA1F"
