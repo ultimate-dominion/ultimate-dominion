@@ -54,9 +54,14 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const {
     components: { Levels },
   } = useMUD();
-  const { equippedArmor, equippedSpells, equippedWeapons } = useCharacter();
+  const {
+    character,
+    equippedArmor,
+    equippedSpells,
+    equippedWeapons,
+    refreshCharacter,
+  } = useCharacter();
   const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
-  const { character, refreshCharacter } = useCharacter();
   const { refreshEntities } = useMap();
   const { currentBattle, onContinueToBattleOutcome, opponent } = useBattle();
 
@@ -64,16 +69,14 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const [spells, setSpells] = useState<Spell[]>([]);
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<
+    Armor | Spell | Weapon | null
+  >(null);
 
   const {
-    isOpen: isArmorItemModalOpen,
-    onClose: onCloseArmorItemModal,
-    onOpen: onOpenArmorItemModal,
-  } = useDisclosure();
-  const {
-    isOpen: isSpellsWeaponItemModalOpen,
-    onClose: onCloseSpellsWeaponItemModal,
-    onOpen: onOpenSpellsWeaponItemModal,
+    isOpen: isItemModalOpen,
+    onClose: onCloseItemModal,
+    onOpen: onOpenItemModal,
   } = useDisclosure();
 
   const onAcknowledge = useCallback(async () => {
@@ -274,24 +277,30 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 {armor.length > 0 && winner == character.id && (
                   <Text fontWeight="bold">Looted Armor:</Text>
                 )}
-
+                {selectedItem && (
+                  <ItemEquipModal
+                    isEquipped={[
+                      ...equippedArmor,
+                      ...equippedSpells,
+                      ...equippedWeapons,
+                    ].some(item => item.name == selectedItem.name)}
+                    isOpen={isItemModalOpen}
+                    onClose={() => {
+                      refreshCharacter();
+                      onCloseItemModal();
+                    }}
+                    {...{ ...selectedItem, owner: character.owner }}
+                  ></ItemEquipModal>
+                )}
                 {winner == character.id &&
                   armor.map(item => (
                     <Box key={`armorbox-${item.tokenId}`}>
-                      <Text>Yes {equippedArmor.includes(item)}</Text>
-                      <ItemEquipModal
-                        isEquipped={equippedArmor.includes(item)}
-                        isOpen={isArmorItemModalOpen}
-                        onClose={() => {
-                          onCloseArmorItemModal();
-                        }}
-                        {...item}
-                      ></ItemEquipModal>
                       <ItemCard
                         key={item.tokenId}
                         {...item}
                         onClick={() => {
-                          onOpenArmorItemModal();
+                          setSelectedItem(item);
+                          onOpenItemModal();
                         }}
                       />
                     </Box>
@@ -302,22 +311,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 {winner == character.id &&
                   spellsAndWeapons.map(item => (
                     <Box key={`spellweaponbox-${item.tokenId}`}>
-                      <ItemEquipModal
-                        isEquipped={[
-                          ...equippedSpells,
-                          ...equippedWeapons,
-                        ].includes(item)}
-                        isOpen={isSpellsWeaponItemModalOpen}
-                        onClose={() => {
-                          onCloseSpellsWeaponItemModal();
-                        }}
-                        {...{ ...item, owner: character.owner }}
-                      ></ItemEquipModal>
                       <ItemCard
                         key={item.tokenId}
                         {...{ ...item, owner: character.owner }}
                         onClick={() => {
-                          onOpenSpellsWeaponItemModal();
+                          setSelectedItem(item);
+                          onOpenItemModal();
                         }}
                       />
                     </Box>

@@ -177,7 +177,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             )}
             <ItemCard {...item} />
 
-            {!!currentBattle && isOwner && (
+            {!!currentBattle && isNotGameBoard && isOwner && (
               <Text color="red" fontWeight="bold" mt={4} size="sm">
                 You cannot unequip items during a battle.
               </Text>
@@ -194,7 +194,11 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               No
             </Button>
             <Button
-              isDisabled={(!!currentBattle || isOneMoveEquipped) && isOwner}
+              isDisabled={
+                (!!currentBattle || isOneMoveEquipped) &&
+                isNotGameBoard &&
+                isOwner
+              }
               isLoading={isEquipping}
               loadingText="Unequipping..."
               mr={3}
