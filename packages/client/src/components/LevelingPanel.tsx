@@ -327,87 +327,6 @@ export const LevelingPanel = ({
             size={{ base: 'xs', md: 'sm', lg: 'md', xl: 'lg' }}
             w="50%"
           >
-            STR -{' '}
-            <Text
-              as="span"
-              color="black"
-              fontWeight={500}
-              size={{ base: '2xs', sm: 'xs' }}
-            >
-              Strength
-            </Text>
-          </Text>
-          <HStack justifyContent="end" textAlign="end" w="50%">
-            {strengthIncreased && (
-              <Box w="33%">
-                <Button
-                  borderRadius="8px"
-                  borderWidth="1.5px"
-                  onClick={() => onDecrementStat('str')}
-                  size="xs"
-                  variant="outline"
-                >
-                  <Text>-</Text>
-                </Button>
-              </Box>
-            )}
-            <Text
-              color={strengthIncreased ? 'green' : 'black'}
-              fontWeight={strengthIncreased ? 'bold' : 'normal'}
-              size={{ base: 'xs', sm: 'sm', md: 'lg' }}
-              w="33%"
-            >
-              {newStrength.toString()}
-            </Text>
-            {canLevel && (
-              <Box w="33%">
-                <Button
-                  borderRadius="8px"
-                  borderWidth="1.5px"
-                  isDisabled={abilityPoints <= 0}
-                  onClick={() => onIncrementStat('str')}
-                  size="xs"
-                  variant="outline"
-                >
-                  <Text>+</Text>
-                </Button>
-              </Box>
-            )}
-            {!canLevel && (
-              <Text size={{ base: 'xs', sm: 'sm', md: 'lg' }} w="33%">
-                {getStatWithSymbol(
-                  BigInt(character.strength) -
-                    expiredEffectModifications.strModifier -
-                    BigInt(newStrength),
-                )}
-              </Text>
-            )}
-            {!canLevel && (
-              <Text
-                fontWeight="600"
-                size={{ base: 'xs', sm: 'sm', md: 'lg' }}
-                w="33%"
-              >
-                {(
-                  character.strength - expiredEffectModifications.strModifier
-                ).toString()}
-              </Text>
-            )}
-          </HStack>
-        </HStack>
-        <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-          h="6px"
-          w="100%"
-        />
-        <HStack px={6} w="100%">
-          <Text
-            color="blue400"
-            fontWeight={700}
-            size={{ base: 'xs', md: 'sm', lg: 'md', xl: 'lg' }}
-            w="50%"
-          >
             AGI -{' '}
             <Text
               as="span"
@@ -553,6 +472,87 @@ export const LevelingPanel = ({
                 {(
                   character.intelligence -
                   expiredEffectModifications.intModifier
+                ).toString()}
+              </Text>
+            )}
+          </HStack>
+        </HStack>
+        <Box
+          backgroundColor="#F5F5FA1F"
+          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+          h="6px"
+          w="100%"
+        />
+        <HStack px={6} w="100%">
+          <Text
+            color="blue400"
+            fontWeight={700}
+            size={{ base: 'xs', md: 'sm', lg: 'md', xl: 'lg' }}
+            w="50%"
+          >
+            STR -{' '}
+            <Text
+              as="span"
+              color="black"
+              fontWeight={500}
+              size={{ base: '2xs', sm: 'xs' }}
+            >
+              Strength
+            </Text>
+          </Text>
+          <HStack justifyContent="end" textAlign="end" w="50%">
+            {strengthIncreased && (
+              <Box w="33%">
+                <Button
+                  borderRadius="8px"
+                  borderWidth="1.5px"
+                  onClick={() => onDecrementStat('str')}
+                  size="xs"
+                  variant="outline"
+                >
+                  <Text>-</Text>
+                </Button>
+              </Box>
+            )}
+            <Text
+              color={strengthIncreased ? 'green' : 'black'}
+              fontWeight={strengthIncreased ? 'bold' : 'normal'}
+              size={{ base: 'xs', sm: 'sm', md: 'lg' }}
+              w="33%"
+            >
+              {newStrength.toString()}
+            </Text>
+            {canLevel && (
+              <Box w="33%">
+                <Button
+                  borderRadius="8px"
+                  borderWidth="1.5px"
+                  isDisabled={abilityPoints <= 0}
+                  onClick={() => onIncrementStat('str')}
+                  size="xs"
+                  variant="outline"
+                >
+                  <Text>+</Text>
+                </Button>
+              </Box>
+            )}
+            {!canLevel && (
+              <Text size={{ base: 'xs', sm: 'sm', md: 'lg' }} w="33%">
+                {getStatWithSymbol(
+                  BigInt(character.strength) -
+                    expiredEffectModifications.strModifier -
+                    BigInt(newStrength),
+                )}
+              </Text>
+            )}
+            {!canLevel && (
+              <Text
+                fontWeight="600"
+                size={{ base: 'xs', sm: 'sm', md: 'lg' }}
+                w="33%"
+              >
+                {(
+                  character.strength - expiredEffectModifications.strModifier
                 ).toString()}
               </Text>
             )}
