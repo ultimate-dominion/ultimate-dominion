@@ -3,7 +3,14 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
-import {UltimateDominionConfig} from "../codegen/index.sol";
+import {
+    UltimateDominionConfig,
+    CombatEncounter,
+    WorldEncounter,
+    CombatEncounterData,
+    EncounterEntity
+} from "../codegen/index.sol";
+import {EncounterType} from "../codegen/common.sol";
 import {_lootManagerSystemId} from "../utils.sol";
 import {WORLD_NAMESPACE} from "../../constants.sol";
 

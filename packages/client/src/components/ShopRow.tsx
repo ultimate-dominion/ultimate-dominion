@@ -2,8 +2,10 @@ import { HStack, Spinner, Text } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { EncounterType } from '../utils/types';
 
 const ROW_HEIGHT = { base: 5, md: 8 };
 
@@ -18,8 +20,9 @@ export const ShopRow = ({
   const { renderError } = useToast();
   const {
     delegatorAddress,
-    systemCalls: { restock },
+    systemCalls: { createEncounter, restock },
   } = useMUD();
+  const { character, refreshCharacter } = useCharacter();
 
   const [isRestocking, setIsRestocking] = useState(false);
 
@@ -31,18 +34,41 @@ export const ShopRow = ({
         throw new Error('Missing delegation.');
       }
 
-      const { error, success } = await restock(shopId);
-
-      if (error && !success) {
-        throw new Error(error);
+      if (!character) {
+        throw new Error('Character not found.');
       }
+
+      const { error: restockError, success: restockSuccess } =
+        await restock(shopId);
+
+      if (restockError && !restockSuccess) {
+        throw new Error(restockError);
+      }
+
+      const { error: encounterError, success: encounterSuccess } =
+        await createEncounter(EncounterType.World, [character.id], [shopId]);
+
+      if (encounterError && !encounterSuccess) {
+        throw new Error(encounterError);
+      }
+
+      await refreshCharacter();
       navigate(`/shops/${shopId}`);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Restock failed.', e);
     } finally {
       setIsRestocking(false);
     }
-  }, [delegatorAddress, navigate, renderError, restock, shopId]);
+  }, [
+    character,
+    createEncounter,
+    delegatorAddress,
+    navigate,
+    refreshCharacter,
+    renderError,
+    restock,
+    shopId,
+  ]);
 
   return (
     <HStack

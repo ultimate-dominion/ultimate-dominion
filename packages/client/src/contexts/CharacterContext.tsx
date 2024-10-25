@@ -2,6 +2,7 @@ import {
   Entity,
   getComponentValue,
   getComponentValueStrict,
+  Has,
   HasValue,
   runQuery,
 } from '@latticexyz/recs';
@@ -85,6 +86,7 @@ export const CharacterProvider = ({
       Stats,
       StatusEffectStats,
       StatusEffectValidity,
+      WorldEncounter,
       WorldStatusEffects,
     },
     delegatorAddress,
@@ -201,6 +203,16 @@ export const CharacterProvider = ({
         },
       );
 
+      const worldEncounter = Array.from(
+        runQuery([
+          Has(WorldEncounter),
+          HasValue(WorldEncounter, { character: entity, end: BigInt(0) }),
+        ]),
+      ).map(worldEncounterEntity => ({
+        encounterId: worldEncounterEntity,
+        ...getComponentValueStrict(WorldEncounter, worldEncounterEntity),
+      }))[0];
+
       return {
         agility: characterStats?.agility ?? BigInt(0),
         baseStats: decodedBaseStats,
@@ -220,6 +232,13 @@ export const CharacterProvider = ({
         pvpCooldownTimer: pvpTimer,
         strength: characterStats?.strength ?? BigInt(0),
         tokenId: tokenId.toString(),
+        worldEncounter: worldEncounter
+          ? {
+              characterId: worldEncounter.character as Entity,
+              encounterId: worldEncounter.encounterId as Entity,
+              shopId: worldEncounter.entity as Entity,
+            }
+          : undefined,
         worldStatusEffects,
       };
     })[0];
@@ -257,6 +276,7 @@ export const CharacterProvider = ({
     StatusEffectStats,
     StatusEffectValidity,
     worldContract,
+    WorldEncounter,
     WorldStatusEffects,
   ]);
 

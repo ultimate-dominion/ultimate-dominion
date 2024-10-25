@@ -11,6 +11,7 @@ export enum AttackType {
 export enum EncounterType {
   PvP,
   PvE,
+  World,
 }
 
 export enum ItemFilterOptions {
@@ -129,6 +130,7 @@ export type CharacterData = {
   position: { x: number; y: number };
   pvpCooldownTimer: bigint;
   tokenId: string;
+  worldEncounter?: WorldEncounter;
   worldStatusEffects: WorldStatusEffect[];
 };
 
@@ -350,6 +352,12 @@ export type WeaponTemplate = WeaponStats &
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
+
+export type WorldEncounter = {
+  characterId: Entity;
+  encounterId: Entity;
+  shopId: Entity;
+};
 
 export type WorldStatusEffect = {
   agiModifier: bigint;

@@ -1006,9 +1006,14 @@ const OpponentRow = ({
             Level {level.toString()}
           </Text>
         )}
-        {inBattle && (
+        {!(opponent as Character).worldEncounter && inBattle && (
           <Text color="red" fontWeight={700} size={{ base: '3xs', sm: '2xs' }}>
             (In battle...)
+          </Text>
+        )}
+        {(opponent as Character).worldEncounter && (
+          <Text color="red" fontWeight={700} size={{ base: '3xs', sm: '2xs' }}>
+            (In shop...)
           </Text>
         )}
         {inCooldown && (

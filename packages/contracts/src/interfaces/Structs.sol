@@ -145,6 +145,13 @@ struct ShopTemplate {
     uint256[] stock;
 }
 
+struct ShopSellTemps {
+    uint256[] stock;
+    uint256[] sellable;
+    uint256[] sellableItems;
+    uint256 price;
+}
+
 /////////////////////////////////// MONSTERS /////////////////////////////////////
 
 struct MonsterStats {
