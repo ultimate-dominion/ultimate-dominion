@@ -11,6 +11,7 @@ import {
   ModalOverlay,
   Spinner,
   Text,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
@@ -35,6 +36,7 @@ import {
   type Weapon,
 } from '../utils/types';
 import { ItemCard } from './ItemCard';
+import { ItemEquipModal } from './ItemEquipModal';
 import { PolygonalCard } from './PolygonalCard';
 
 type BattleOutcomeModalProps = {
@@ -52,6 +54,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const {
     components: { Levels },
   } = useMUD();
+  const { equippedArmor, equippedSpells, equippedWeapons } = useCharacter();
   const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
   const { character, refreshCharacter } = useCharacter();
   const { refreshEntities } = useMap();
@@ -61,6 +64,17 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const [spells, setSpells] = useState<Spell[]>([]);
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
+
+  const {
+    isOpen: isArmorItemModalOpen,
+    onClose: onCloseArmorItemModal,
+    onOpen: onOpenArmorItemModal,
+  } = useDisclosure();
+  const {
+    isOpen: isSpellsWeaponItemModalOpen,
+    onClose: onCloseSpellsWeaponItemModal,
+    onOpen: onOpenSpellsWeaponItemModal,
+  } = useDisclosure();
 
   const onAcknowledge = useCallback(async () => {
     setArmor([]);
@@ -260,14 +274,53 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 {armor.length > 0 && winner == character.id && (
                   <Text fontWeight="bold">Looted Armor:</Text>
                 )}
+
                 {winner == character.id &&
-                  armor.map(item => <ItemCard key={item.tokenId} {...item} />)}
+                  armor.map(item => (
+                    <Box key={`armorbox-${item.tokenId}`}>
+                      <Text>Yes {equippedArmor.includes(item)}</Text>
+                      <ItemEquipModal
+                        isEquipped={equippedArmor.includes(item)}
+                        isOpen={isArmorItemModalOpen}
+                        onClose={() => {
+                          onCloseArmorItemModal();
+                        }}
+                        {...item}
+                      ></ItemEquipModal>
+                      <ItemCard
+                        key={item.tokenId}
+                        {...item}
+                        onClick={() => {
+                          onOpenArmorItemModal();
+                        }}
+                      />
+                    </Box>
+                  ))}
                 {spellsAndWeapons.length > 0 && winner == character.id && (
                   <Text fontWeight="bold">Looted Weapons:</Text>
                 )}
                 {winner == character.id &&
                   spellsAndWeapons.map(item => (
-                    <ItemCard key={item.tokenId} {...item} />
+                    <Box key={`spellweaponbox-${item.tokenId}`}>
+                      <ItemEquipModal
+                        isEquipped={[
+                          ...equippedSpells,
+                          ...equippedWeapons,
+                        ].includes(item)}
+                        isOpen={isSpellsWeaponItemModalOpen}
+                        onClose={() => {
+                          onCloseSpellsWeaponItemModal();
+                        }}
+                        {...{ ...item, owner: character.owner }}
+                      ></ItemEquipModal>
+                      <ItemCard
+                        key={item.tokenId}
+                        {...{ ...item, owner: character.owner }}
+                        onClick={() => {
+                          onOpenSpellsWeaponItemModal();
+                        }}
+                      />
+                    </Box>
                   ))}
               </>
             )}

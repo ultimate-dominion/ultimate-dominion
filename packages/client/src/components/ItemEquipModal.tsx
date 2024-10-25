@@ -17,7 +17,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { ITEM_PATH } from '../Routes';
+import { GAME_BOARD_PATH, ITEM_PATH } from '../Routes';
 import { type Armor, OrderType, type Spell, type Weapon } from '../utils/types';
 import { ItemCard } from './ItemCard';
 import { PolygonalCard } from './PolygonalCard';
@@ -47,10 +47,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
   const [isEquipping, setIsEquipping] = useState(false);
 
-  const isOwner = useMemo(
-    () => character?.owner === item.owner,
-    [character, item.owner],
-  );
+  const isOwner = useMemo(() => {
+    return character?.owner === item.owner;
+  }, [character, item.owner]);
 
   const onEquipItem = useCallback(async () => {
     try {
@@ -125,6 +124,10 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     renderSuccess,
     unequipItem,
   ]);
+
+  const isNotGameBoard = useMemo(() => {
+    return !window.location.pathname.includes(GAME_BOARD_PATH);
+  }, []);
 
   const isMissingRequirements = useMemo(() => {
     if (!character) return false;
@@ -230,7 +233,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               You do not meet the requirements to equip this item.
             </Text>
           )}
-          {!!currentBattle && isOwner && (
+          {!!currentBattle && isNotGameBoard && isOwner && (
             <Text color="red" fontWeight="bold" mt={4} size="sm">
               You cannot equip items during a battle.
             </Text>
@@ -241,7 +244,11 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             No
           </Button>
           <Button
-            isDisabled={isOwner && (isMissingRequirements || !!currentBattle)}
+            isDisabled={
+              isOwner &&
+              isNotGameBoard &&
+              (isMissingRequirements || !!currentBattle)
+            }
             isLoading={isEquipping}
             loadingText="Equipping..."
             onClick={() =>
