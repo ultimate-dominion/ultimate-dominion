@@ -533,6 +533,10 @@ contract Test_ShopSystem is SetUp, GasReporter {
         // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
 
         world.UD__sell(amount, shopId, itemIndex, userBCharacterID);
+        // check that you can't exit someone else's shop
+        vm.expectRevert();
+        world.UD__exitShop(encounterA);
+
         world.UD__exitShop(encounterB);
         vm.stopPrank();
 
