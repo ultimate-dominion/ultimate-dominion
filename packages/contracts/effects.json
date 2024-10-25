@@ -60,7 +60,7 @@
         "damagePerTick": 0,
         "hpModifier": 0,
         "intModifier": 0,
-        "resistanceStat": 1,
+        "resistanceStat": 0,
         "strModifier": 0
       },
       "validity": {
@@ -117,7 +117,7 @@
         "damagePerTick": 3,
         "hpModifier": 0,
         "intModifier": 0,
-        "resistanceStat": 2,
+        "resistanceStat": 0,
         "strModifier": 0
       },
       "validity": {
@@ -155,7 +155,7 @@
         "damagePerTick": 0,
         "hpModifier": 0,
         "intModifier": -8,
-        "resistanceStat": 1,
+        "resistanceStat": 0,
         "strModifier": 0
       },
       "validity": {
@@ -174,7 +174,7 @@
         "damagePerTick": 0,
         "hpModifier": 0,
         "intModifier": 0,
-        "resistanceStat": 1,
+        "resistanceStat": 0,
         "strModifier": -8
       },
       "validity": {

@@ -156,6 +156,10 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     return spells.concat(weapons);
   }, [spells, weapons]);
 
+  const battleDraw = useMemo(() => {
+    return currentBattle?.maxTurns === currentBattle?.currentTurn;
+  }, [currentBattle]);
+
   if (!character) {
     return <Box />;
   }
@@ -213,65 +217,79 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader textAlign="center">
-          {winner === character.id ? 'Victory!' : 'Defeat...'}
+          {battleDraw
+            ? 'Draw...'
+            : winner === character.id
+              ? 'Victory!'
+              : 'Defeat...'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
-          <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
-            <Text>
-              {winner === character.id
-                ? `You defeated ${opponent?.name}!`
-                : `You were killed by ${opponent?.name}.`}
-            </Text>
-            {winner !== character.id &&
-              currentBattle &&
-              currentBattle.encounterType === EncounterType.PvP && (
+          {battleDraw ? (
+            <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
+              <Text>
+                The battle ended in a draw! You both fled the battlefield.
+              </Text>
+            </VStack>
+          ) : (
+            <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
+              <Text>
+                {winner === character.id
+                  ? `You defeated ${opponent?.name}!`
+                  : `You were killed by ${opponent?.name}.`}
+              </Text>
+              {winner !== character.id &&
+                currentBattle &&
+                currentBattle.encounterType === EncounterType.PvP && (
+                  <Text>
+                    You lost{' '}
+                    <Text as="span" color="gold" fontWeight="bold">
+                      {etherToFixedNumber(goldDropped)}
+                    </Text>{' '}
+                    $GOLD from your Adventure Escrow.
+                  </Text>
+                )}
+              {winner !== character.id && (
                 <Text>
-                  You lost{' '}
+                  When you die, your health is restored, but you are forced to
+                  respawn at the Town Square.
+                </Text>
+              )}
+              {winner === character.id && (
+                <Text>
+                  You earned{' '}
+                  <Text as="span" color="green" fontWeight="bold">
+                    {expDropped.toString()}
+                  </Text>{' '}
+                  experience and your Adventure Escrow gained{' '}
                   <Text as="span" color="gold" fontWeight="bold">
                     {etherToFixedNumber(goldDropped)}
                   </Text>{' '}
-                  $GOLD from your Adventure Escrow.
+                  $GOLD.
                 </Text>
               )}
-            {winner !== character.id && (
-              <Text>
-                When you die, your health is restored, but you are forced to
-                respawn at the Town Square.
-              </Text>
-            )}
-            {winner === character.id && (
-              <Text>
-                You earned{' '}
-                <Text as="span" color="green" fontWeight="bold">
-                  {expDropped.toString()}
-                </Text>{' '}
-                experience and your Adventure Escrow gained{' '}
-                <Text as="span" color="gold" fontWeight="bold">
-                  {etherToFixedNumber(goldDropped)}
-                </Text>{' '}
-                $GOLD.
-              </Text>
-            )}
-            {isLoadingItems ? (
-              <Spinner />
-            ) : (
-              <>
-                {armor.length > 0 && winner == character.id && (
-                  <Text fontWeight="bold">Looted Armor:</Text>
-                )}
-                {winner == character.id &&
-                  armor.map(item => <ItemCard key={item.tokenId} {...item} />)}
-                {spellsAndWeapons.length > 0 && winner == character.id && (
-                  <Text fontWeight="bold">Looted Weapons:</Text>
-                )}
-                {winner == character.id &&
-                  spellsAndWeapons.map(item => (
-                    <ItemCard key={item.tokenId} {...item} />
-                  ))}
-              </>
-            )}
-          </VStack>
+              {isLoadingItems ? (
+                <Spinner />
+              ) : (
+                <>
+                  {armor.length > 0 && winner == character.id && (
+                    <Text fontWeight="bold">Looted Armor:</Text>
+                  )}
+                  {winner == character.id &&
+                    armor.map(item => (
+                      <ItemCard key={item.tokenId} {...item} />
+                    ))}
+                  {spellsAndWeapons.length > 0 && winner == character.id && (
+                    <Text fontWeight="bold">Looted Weapons:</Text>
+                  )}
+                  {winner == character.id &&
+                    spellsAndWeapons.map(item => (
+                      <ItemCard key={item.tokenId} {...item} />
+                    ))}
+                </>
+              )}
+            </VStack>
+          )}
           {canLevel && (
             <VStack alignItems="center" pb={8} spacing={4}>
               <Divider />
