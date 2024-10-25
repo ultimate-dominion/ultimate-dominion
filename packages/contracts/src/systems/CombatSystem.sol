@@ -224,9 +224,9 @@ contract CombatSystem is System {
             int256 baseDamage = (
                 attackStats.bonusDamage
                     + int256(
-                        randomness % (weapon.maxDamage + 1) <= weapon.minDamage
+                        (randomness % weapon.maxDamage) + 1 <= weapon.minDamage
                             ? weapon.minDamage
-                            : randomness % (weapon.maxDamage + 1)
+                            : (randomness % weapon.maxDamage) + 1
                     )
             ) * int256(ATTACK_MODIFIER);
             _damage = _addStatBonus(attackerStrength, defenderStrength, baseDamage);
@@ -372,12 +372,7 @@ contract CombatSystem is System {
                     + int256(
                         uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
                             ? equippedSpell.minDamage
-                            : int256(
-                                uint256(rnChunk)
-                                    % uint256(
-                                        equippedSpell.maxDamage < 0 ? equippedSpell.maxDamage - 1 : equippedSpell.maxDamage + 1
-                                    )
-                            )
+                            : int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
                     )
             ) * int256(ATTACK_MODIFIER);
         } else {
