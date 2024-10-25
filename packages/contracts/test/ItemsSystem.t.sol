@@ -97,7 +97,12 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         vm.startPrank(alice);
         vm.expectRevert();
         world.UD__createItem(
-            ItemType.Weapon, 100 ether, 100000000, 1 ether, abi.encode(weaponStats), "test_Weapon_uri1/"
+            ItemType.Weapon,
+            100 ether,
+            100000000,
+            1 ether,
+            abi.encode(weaponStats, statRestrictions),
+            "test_Weapon_uri1/"
         );
     }
 
@@ -139,7 +144,12 @@ contract Test_ItemsSystem is SetUp, GasReporter {
         });
         vm.startPrank(deployer);
         uint256 id = world.UD__createItem(
-            ItemType.Weapon, 100 ether, 100000000, 1 ether, abi.encode(weaponStats), "test_Weapon_uri/"
+            ItemType.Weapon,
+            100 ether,
+            100000000,
+            1 ether,
+            abi.encode(weaponStats, statRestrictions),
+            "test_Weapon_uri/"
         );
         assertEq(world.UD__getTotalSupply(id), 100 ether);
     }

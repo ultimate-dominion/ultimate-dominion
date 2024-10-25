@@ -40,82 +40,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "checkForEncounterEnd",
-    "inputs": [
-      {
-        "name": "encounterData",
-        "type": "tuple",
-        "internalType": "struct CombatEncounterData",
-        "components": [
-          {
-            "name": "encounterType",
-            "type": "uint8",
-            "internalType": "enum EncounterType"
-          },
-          {
-            "name": "start",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "end",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "rewardsDistributed",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "currentTurn",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "currentTurnTimer",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "maxTurns",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "attackersAreMobs",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "defenders",
-            "type": "bytes32[]",
-            "internalType": "bytes32[]"
-          },
-          {
-            "name": "attackers",
-            "type": "bytes32[]",
-            "internalType": "bytes32[]"
-          }
-        ]
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_encounterEnded",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "_attackersWin",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "createEncounter",
     "inputs": [
       {
@@ -205,54 +129,6 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "payable"
-  },
-  {
-    "type": "function",
-    "name": "isParticipant",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "participants",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_isParticipant",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "isParticipant",
-    "inputs": [
-      {
-        "name": "playerId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "encounterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_isParticipant",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
