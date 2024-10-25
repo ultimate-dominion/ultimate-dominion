@@ -7,6 +7,7 @@ import {
 } from '@chakra-ui/react';
 import { garnet } from '@latticexyz/common/chains';
 import { createClient as createFaucetClient } from '@latticexyz/faucet';
+import { Analytics } from '@vercel/analytics/react';
 import { useEffect } from 'react';
 import { IoChatbubble } from 'react-icons/io5';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
@@ -33,6 +34,7 @@ export const App = (): JSX.Element => {
         <BattleProvider>
           <ChatProvider>
             <MovementProvider>
+              <Analytics />
               <AppInner />
             </MovementProvider>
           </ChatProvider>
