@@ -58,7 +58,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       );
     }
 
-    if (item.itemType === ItemType.Spell) {
+    if (item.itemType === ItemType.Spell || item.itemType === ItemType.Weapon) {
       const { minDamage, minLevel, maxDamage, statRestrictions } =
         item as Spell;
 
@@ -70,7 +70,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             spacing={{ base: 0, lg: 2 }}
           >
             <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
-              Damage:
+              Damage Range:
             </Text>
             <Text size="2xs">
               {minDamage.toString()} - {maxDamage.toString()}
@@ -101,7 +101,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       strModifier,
       agiModifier,
       intModifier,
-    } = item as Armor | Weapon;
+    } = item as Armor;
 
     return (
       <VStack alignItems="start" spacing={0}>
