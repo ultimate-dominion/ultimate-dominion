@@ -31,6 +31,7 @@ import { MagicDamageStats, MagicDamageStatsData } from "./tables/MagicDamageStat
 import { StatusEffectStats, StatusEffectStatsData } from "./tables/StatusEffectStats.sol";
 import { StatusEffectValidity, StatusEffectValidityData } from "./tables/StatusEffectValidity.sol";
 import { CombatEncounter, CombatEncounterData } from "./tables/CombatEncounter.sol";
+import { WorldEncounter, WorldEncounterData } from "./tables/WorldEncounter.sol";
 import { EncounterEntity, EncounterEntityData } from "./tables/EncounterEntity.sol";
 import { WorldStatusEffects } from "./tables/WorldStatusEffects.sol";
 import { MapConfig } from "./tables/MapConfig.sol";

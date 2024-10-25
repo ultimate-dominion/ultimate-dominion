@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
-import {Classes, ItemType, TokenType, MobType} from "@codegen/common.sol";
+import {Classes, ItemType, TokenType, MobType, EncounterType} from "@codegen/common.sol";
 
 import {
     StatsData,
@@ -53,6 +53,14 @@ contract Test_ShopSystem is SetUp, GasReporter {
     address shopSystemAddress;
     IERC1155 itemsToken;
 
+    function createShopEncounter(bytes32 characterId, bytes32 shopId) public {
+        bytes32[] memory group1 = new bytes32[](1);
+        bytes32[] memory group2 = new bytes32[](1);
+        group1[0] = characterId;
+        group2[0] = shopId;
+        world.UD__createEncounter(EncounterType.World, group1, group2);
+    }
+
     function setUp() public virtual override {
         super.setUp();
         vm.startPrank(deployer);
@@ -101,6 +109,8 @@ contract Test_ShopSystem is SetUp, GasReporter {
         itemsToken.setApprovalForAll(shopSystemAddress, true);
         // have userA set max allowance for their gold
         goldToken.approve(shopSystemAddress, MAX_INT);
+
+        createShopEncounter(bobCharacterId, shopId);
         // have userA buy from the shop
         // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
         world.UD__buy(amount, shopId, itemIndex, bobCharacterId);
@@ -149,7 +159,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__enterGame(userACharacterID);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
-
+        createShopEncounter(userACharacterID, shopId);
         // have userA set an allowance for their items
         itemsToken.setApprovalForAll(shopSystemAddress, true);
         // have userA set max allowance for their gold
@@ -195,7 +205,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__enterGame(userACharacterID);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
-
+        createShopEncounter(userACharacterID, shopId);
         // have userA set an allowance for their items
         itemsToken.setApprovalForAll(shopSystemAddress, true);
         // have userA set max allowance for their gold
@@ -225,14 +235,16 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__enterGame(userACharacterID);
         world.UD__spawn(userACharacterID);
         world.UD__move(userACharacterID, 0, 1);
-        // have userA set an allowance for their items
-        itemsToken.setApprovalForAll(shopSystemAddress, true);
-        // have userA set max allowance for their gold
-        goldToken.approve(shopSystemAddress, MAX_INT);
-        // have userA buy from the shop
-        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
-        vm.expectRevert(bytes("Cannot buy from a shop at a distance"));
-        world.UD__buy(amount, shopId, itemIndex, userACharacterID);
+        vm.expectRevert(bytes("Invalid World Location"));
+        createShopEncounter(userACharacterID, shopId);
+        // // have userA set an allowance for their items
+        // itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // // have userA set max allowance for their gold
+        // goldToken.approve(shopSystemAddress, MAX_INT);
+        // // have userA buy from the shop
+        // // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        // vm.expectRevert(bytes("Cannot buy from a shop at a distance"));
+        // world.UD__buy(amount, shopId, itemIndex, userACharacterID);
         endGasReport();
     }
 
@@ -254,6 +266,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__enterGame(userACharacterID);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
+        createShopEncounter(userACharacterID, shopId);
         // have userA set an allowance for their items
         itemsToken.setApprovalForAll(shopSystemAddress, true);
         // have userA set max allowance for their gold
@@ -313,6 +326,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__enterGame(userACharacterID);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
+        createShopEncounter(userACharacterID, shopId);
 
         // have userA set an allowance for their items
         itemsToken.setApprovalForAll(shopSystemAddress, true);
@@ -356,7 +370,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__enterGame(userACharacterID);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
-
+        createShopEncounter(userACharacterID, shopId);
         // have userA set an allowance for their items
         itemsToken.setApprovalForAll(shopSystemAddress, true);
         // have userA set max allowance for their gold
@@ -389,14 +403,16 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__spawn(userACharacterID);
         world.UD__move(userACharacterID, 0, 1);
 
-        // have userA set an allowance for their items
-        itemsToken.setApprovalForAll(shopSystemAddress, true);
-        // have userA set max allowance for their gold
-        goldToken.approve(shops, MAX_INT);
-        // have userA sell to the shop
-        vm.expectRevert(bytes("Cannot sell to a shop at a distance"));
-        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
-        world.UD__sell(amount, shopId, itemIndex, userACharacterID);
+        vm.expectRevert(bytes("Invalid World Location"));
+        createShopEncounter(userACharacterID, shopId);
+        // // have userA set an allowance for their items
+        // itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // // have userA set max allowance for their gold
+        // goldToken.approve(shops, MAX_INT);
+        // // have userA sell to the shop
+
+        // // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        // world.UD__sell(amount, shopId, itemIndex, userACharacterID);
         endGasReport();
     }
 
@@ -437,5 +453,36 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__restock(shopId);
         assertEq(Shops.getStock(shopId)[item], 0);
         // the stock should equal
+    }
+
+    function test_sellRevert_InvalidEncounter() public {
+        startGasReport("sell an item to the shop");
+        uint256 balance = 9 ether;
+        uint256 amount = 1;
+        uint256 itemIndex = 5;
+        address shops = world.UD__shopSystemAddress();
+        // create userA
+        address userA = makeAddr("userA");
+        bytes32 userACharacterID = world.UD__mintCharacter(userA, bytes32("Alan"), "test_Character_URI");
+
+        // give userA an item
+        world.UD__dropItem(userACharacterID, itemIndex, amount);
+        world.UD__dropGoldToPlayer(userACharacterID, balance);
+        vm.startPrank(userA);
+        world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
+        world.UD__enterGame(userACharacterID);
+        // spawn and move to 0,0
+        world.UD__spawn(userACharacterID);
+
+        // have userA set an allowance for their items
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        // have userA set max allowance for their gold
+        goldToken.approve(shops, MAX_INT);
+        // have userA sell to the shop
+        // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
+        vm.expectRevert(bytes("invalid shop encounter"));
+        world.UD__sell(amount, shopId, itemIndex, userACharacterID);
+
+        endGasReport();
     }
 }

@@ -320,6 +320,16 @@ export default defineWorld({
       },
       key: ["encounterId"],
     },
+    WorldEncounter: {
+      key: ["encounterId"],
+      schema: {
+        encounterId: "bytes32",
+        character: "bytes32",
+        entity: "bytes32",
+        start: "uint256",
+        end: "uint256",
+      },
+    },
     // when an entity starts combat it creates a "encounter entity" for that encounter.
     //when combat ends, the encounterId is set to zero
     EncounterEntity: {

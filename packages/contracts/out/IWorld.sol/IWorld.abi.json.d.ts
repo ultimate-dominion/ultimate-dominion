@@ -2346,6 +2346,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getEncounterType",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_encounterType",
+        "type": "uint8",
+        "internalType": "enum EncounterType"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getEntitiesAtPosition",
     "inputs": [
       {
@@ -3693,6 +3712,25 @@ declare const abi: [
     "outputs": [
       {
         "name": "_isParticipant",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isShop",
+    "inputs": [
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
         "type": "bool",
         "internalType": "bool"
       }

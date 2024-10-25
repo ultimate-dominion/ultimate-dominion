@@ -87,6 +87,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "isShop",
+    "inputs": [
+      {
+        "name": "shopId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "itemBase",
     "inputs": [
       {
