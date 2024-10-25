@@ -19,16 +19,7 @@ import { useChat } from './ChatContext';
 import { useMap } from './MapContext';
 import { useMUD } from './MUDContext';
 
-const PREVENT_DEFAULT_KEYS = [
-  'ArrowUp',
-  'ArrowDown',
-  'ArrowLeft',
-  'ArrowRight',
-  'w',
-  's',
-  'a',
-  'd',
-];
+const PREVENT_DEFAULT_KEYS = ['ArrowUp', 'ArrowDown'];
 
 type MovementContextType = {
   isRefreshing: boolean;
