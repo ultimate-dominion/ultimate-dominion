@@ -1,7 +1,7 @@
 {
   "monsters": [
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/1_giant_rat.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/1_giant_rat.json",
       "name": "Giant Rat",
       "stats": {
         "agility": 8,
@@ -16,7 +16,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/2_green_slime.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/2_green_slime.json",
       "name": "Green Slime",
       "stats": {
         "agility": 2,
@@ -31,7 +31,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/3_kobold_scout.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/3_kobold_scout.json",
       "name": "Kobold Scout",
       "stats": {
         "agility": 11,
@@ -46,7 +46,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/4_gray_ooze.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/4_gray_ooze.json",
       "name": "Gray Ooze",
       "stats": {
         "agility": 4,
@@ -61,7 +61,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/5_cave_goblin.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/5_cave_goblin.json",
       "name": "Cave Goblin",
       "stats": {
         "agility": 6,
@@ -76,7 +76,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/6_giant_bat.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/6_giant_bat.json",
       "name": "Giant Bat",
       "stats": {
         "agility": 12,
@@ -91,7 +91,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/7_skeleton.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/7_skeleton.json",
       "name": "Skeleton",
       "stats": {
         "agility": 8,
@@ -106,7 +106,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/8_giant_spider.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/8_giant_spider.json",
       "name": "Giant Spider",
       "stats": {
         "agility": 13,
@@ -121,7 +121,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/9_fire_beetle.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/9_fire_beetle.json",
       "name": "Fire Beetle",
       "stats": {
         "agility": 10,
@@ -136,7 +136,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/10_orc_grunt.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/10_orc_grunt.json",
       "name": "Orc Grunt",
       "stats": {
         "agility": 9,
@@ -151,7 +151,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/11_cave_wraith.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/11_cave_wraith.json",
       "name": "Cave Wraith",
       "stats": {
         "agility": 15,
@@ -166,7 +166,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/12_giant_centipede.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/12_giant_centipede.json",
       "name": "Giant Centipede",
       "stats": {
         "agility": 16,
@@ -181,7 +181,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/13_cave_bear.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/13_cave_bear.json",
       "name": "Cave Bear",
       "stats": {
         "agility": 18,
@@ -196,7 +196,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/14_specter.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/14_specter.json",
       "name": "Specter",
       "stats": {
         "agility": 16,
@@ -211,7 +211,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/15_giant_worm.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/15_giant_worm.json",
       "name": "Giant Worm",
       "stats": {
         "agility": 22,
@@ -226,7 +226,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/16_troll.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/16_troll.json",
       "name": "Troll",
       "stats": {
         "agility": 17,
@@ -241,7 +241,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/17_magma_mephit.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/17_magma_mephit.json",
       "name": "Magma Mephit",
       "stats": {
         "agility": 20,
@@ -256,7 +256,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/18_spirit_naga.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/18_spirit_naga.json",
       "name": "Spirit Naga",
       "stats": {
         "agility": 25,
@@ -271,7 +271,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/19_werewolf.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/19_werewolf.json",
       "name": "Werewolf",
       "stats": {
         "agility": 35,
@@ -286,7 +286,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/20_umber_hulk.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/20_umber_hulk.json",
       "name": "Umber Hulk",
       "stats": {
         "agility": 26,
@@ -301,7 +301,7 @@
       }
     },
     {
-      "metadataUri": "ipfs://QmRgpt3s57xQqrmS42PDAnt6BvxnoEdsmX1zF3qGpKGysp/21_shadow_dragon.json",
+      "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/21_shadow_dragon.json",
       "name": "Shadow Dragon",
       "stats": {
         "agility": 32,

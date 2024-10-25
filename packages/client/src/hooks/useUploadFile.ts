@@ -35,6 +35,7 @@ export const useUploadFile = ({
 
     try {
       setIsUploading(true);
+
       if (file.size > 1048576) {
         throw new Error('Max file size exceeded');
       }

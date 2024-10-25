@@ -42,7 +42,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   } = useMUD();
   const { character, equippedSpells, equippedWeapons, refreshCharacter } =
     useCharacter();
-  const { inSafetyZone } = useMap();
+  const { inSafetyZone, isSpawned } = useMap();
   const { currentBattle } = useBattle();
 
   const [isEquipping, setIsEquipping] = useState(false);
@@ -145,9 +145,10 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   }, [character, item]);
 
   const isOneMoveEquipped = useMemo(() => {
+    if (!isSpawned) return false;
     if (inSafetyZone) return false;
     return equippedWeapons.length + equippedSpells.length === 1;
-  }, [equippedSpells.length, equippedWeapons.length, inSafetyZone]);
+  }, [equippedSpells.length, equippedWeapons.length, inSafetyZone, isSpawned]);
 
   const buyingSearchParams = useMemo(() => {
     const searchParams = new URLSearchParams();
@@ -186,6 +187,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             )}
           </ModalBody>
           <ModalFooter>
+            <Button isDisabled={isEquipping} onClick={onClose} variant="ghost">
+              No
+            </Button>
             <Button
               isDisabled={(!!currentBattle || isOneMoveEquipped) && isOwner}
               isLoading={isEquipping}
@@ -200,9 +204,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               }
             >
               Yes
-            </Button>
-            <Button isDisabled={isEquipping} onClick={onClose} variant="ghost">
-              No
             </Button>
           </ModalFooter>
         </ModalContent>
