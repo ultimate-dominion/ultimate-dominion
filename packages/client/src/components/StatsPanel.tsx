@@ -164,7 +164,7 @@ export const StatsPanel = (): JSX.Element => {
     <VStack spacing={0}>
       <HStack
         bgColor="blue500"
-        minH={{ base: '100px', md: '66px' }}
+        minH={{ base: '40px', md: '66px' }}
         px="20px"
         width="100%"
       >
