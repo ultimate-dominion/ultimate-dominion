@@ -38,7 +38,8 @@ contract EncounterSystem is System {
         returns (bytes32 encounterId)
     {
         require(
-            isParticipant(_msgSender(), group1) || isParticipant(_msgSender(), group2),
+            IWorld(_world()).UD__isParticipant(_msgSender(), group1)
+                || IWorld(_world()).UD__isParticipant(_msgSender(), group2),
             "ENCOUNTER SYSTEM: INVALID SENDER"
         );
         (uint16 x, uint16 y) = Position.get(group1[0]);
@@ -91,12 +92,11 @@ contract EncounterSystem is System {
             CombatEncounter.set(encounterId, combatData);
         } else if (encounterType == EncounterType.World) {
             (uint16 group1X, uint16 group1Y) = IWorld(_world()).UD__getEntityPosition(group1[0]);
-            (uint16 group2X, uint16 group2Y) = IWorld(_world()).UD__getEntityPosition(group2[0]);
 
-            require(group1X == group2X && group1Y == group2Y, "Invalid World Location");
-
+            require(IWorld(_world()).UD__isAtPosition(group2[0], group1X, group1Y), "Invalid World Location");
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(group1, group2, startTime));
+
             bytes32 shopId;
             bytes32 characterId;
 
@@ -109,6 +109,8 @@ contract EncounterSystem is System {
             } else {
                 revert("invalid shop encounter");
             }
+
+            require(EncounterEntity.getEncounterId(characterId) == bytes32(0), "cannot start a new encounter");
 
             WorldEncounterData memory worldData =
                 WorldEncounterData({character: characterId, entity: shopId, start: startTime, end: 0});
@@ -148,33 +150,6 @@ contract EncounterSystem is System {
         }
     }
 
-    function checkForEncounterEnd(CombatEncounterData memory encounterData)
-        public
-        view
-        returns (bool _encounterEnded, bool _attackersWin)
-    {
-        uint256 deadDefenderCounter;
-        uint256 deadAttackerCounter;
-        for (uint256 i; i < encounterData.defenders.length; i++) {
-            if (IWorld(_world()).UD__getDied(encounterData.defenders[i])) {
-                deadDefenderCounter++;
-            }
-        }
-        for (uint256 i; i < encounterData.attackers.length; i++) {
-            if (IWorld(_world()).UD__getDied(encounterData.attackers[i])) {
-                deadAttackerCounter++;
-            }
-        }
-
-        _encounterEnded = (
-            deadAttackerCounter == encounterData.attackers.length
-                || deadDefenderCounter == encounterData.defenders.length
-                || encounterData.currentTurn == encounterData.maxTurns
-        );
-
-        _attackersWin = deadDefenderCounter == encounterData.defenders.length;
-    }
-
     /**
      * @param encounterId the bytes32 id of the encounter
      * @param attacks : for a pve the entity with the highest agi has their attacks calculated first
@@ -189,7 +164,8 @@ contract EncounterSystem is System {
         require(encounterData.start != 0 && encounterData.end == 0, "ENCOUNTER SYSTEM: INVALID ENCOUNTER");
         require(encounterData.currentTurn < encounterData.maxTurns, "ENCOUNTER SYSTEM: EXPIRED ENCOUNTER");
         require(
-            playerAddress == _msgSender() && isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: NON-COMBATANT"
+            playerAddress == _msgSender() && IWorld(_world()).UD__isParticipant(playerId, encounterId),
+            "ENCOUNTER SYSTEM: NON-COMBATANT"
         );
 
         // is pvp
@@ -198,29 +174,39 @@ contract EncounterSystem is System {
             if (encounterData.currentTurn % 2 == 0) {
                 // if timestamp is less than timeout
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
-                    require(isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER");
+                    require(
+                        IWorld(_world()).UD__isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER"
+                    );
                     // if player is attacker add +1 to current turn
-                    if (isParticipant(playerAddress, encounterData.attackers)) {
+                    if (IWorld(_world()).UD__isParticipant(playerAddress, encounterData.attackers)) {
                         encounterData.currentTurn += 1;
                         CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
                     }
                 } else {
-                    require(isParticipant(playerAddress, encounterData.defenders), "Cannot end defenders turn");
+                    require(
+                        IWorld(_world()).UD__isParticipant(playerAddress, encounterData.defenders),
+                        "Cannot end defenders turn"
+                    );
                 }
             } else {
                 // should be attacker turn unless defender has timed out
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
                     // allow either player to end the turn.
-                    require(isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER");
+                    require(
+                        IWorld(_world()).UD__isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER"
+                    );
                     // if playerId is of a defender added 1 to current turn
                     // if player is attacker add +1 to current turn
-                    if (isParticipant(playerAddress, encounterData.defenders)) {
+                    if (IWorld(_world()).UD__isParticipant(playerAddress, encounterData.defenders)) {
                         encounterData.currentTurn += 1;
                         CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
                     }
                 } else {
                     // check that player action is for attacker
-                    require(isParticipant(playerAddress, encounterData.attackers), "Cannot end attackers turn");
+                    require(
+                        IWorld(_world()).UD__isParticipant(playerAddress, encounterData.attackers),
+                        "Cannot end attackers turn"
+                    );
                 }
             }
         }
@@ -312,42 +298,6 @@ contract EncounterSystem is System {
             _endCombatEncounter(encounterId, randomNumber, attackersWin);
         } else if (encounterType == EncounterType.World) {
             _endWorldEncounter(encounterId);
-        }
-    }
-
-    function isParticipant(bytes32 playerId, bytes32 encounterId) public view returns (bool _isParticipant) {
-        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        for (uint256 i; i < encounterData.attackers.length;) {
-            if (playerId == encounterData.attackers[i]) {
-                _isParticipant = true;
-                break;
-            }
-            {
-                i++;
-            }
-        }
-        if (!_isParticipant) {
-            for (uint256 i; i < encounterData.defenders.length;) {
-                if (playerId == encounterData.defenders[i]) {
-                    _isParticipant = true;
-                    break;
-                }
-                {
-                    i++;
-                }
-            }
-        }
-    }
-
-    function isParticipant(address account, bytes32[] memory participants) public view returns (bool _isParticipant) {
-        for (uint256 i; i < participants.length;) {
-            if (account == IWorld(_world()).UD__getOwnerAddress(participants[i])) {
-                _isParticipant = true;
-                break;
-            }
-            {
-                i++;
-            }
         }
     }
 
