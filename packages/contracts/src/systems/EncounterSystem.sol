@@ -66,9 +66,7 @@ contract EncounterSystem is System {
             });
 
             CombatEncounter.set(encounterId, combatData);
-        }
-
-        if (encounterType == EncounterType.PvP) {
+        } else if (encounterType == EncounterType.PvP) {
             // higher agi attacks first
             (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
 
@@ -91,9 +89,7 @@ contract EncounterSystem is System {
             });
 
             CombatEncounter.set(encounterId, combatData);
-        }
-
-        if (encounterType == EncounterType.World) {
+        } else if (encounterType == EncounterType.World) {
             (uint16 group1X, uint16 group1Y) = IWorld(_world()).UD__getEntityPosition(group1[0]);
             (uint16 group2X, uint16 group2Y) = IWorld(_world()).UD__getEntityPosition(group2[0]);
 
@@ -121,6 +117,8 @@ contract EncounterSystem is System {
             EncounterEntity.setEncounterId(characterId, encounterId);
             // exit function
             return encounterId;
+        } else {
+            revert("unrecognized encounter type");
         }
 
         EncounterEntityData memory tempEncounterEntityData;
