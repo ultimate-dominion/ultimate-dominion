@@ -27,9 +27,9 @@ export const ChatBox: React.FC = () => {
   const {
     chatUser,
     isGroupMember,
+    isJoiningGroupChat,
     isLoggedIn,
     isLoggingIn,
-    isJoiningGroupChat,
     isSending,
     isOpen: isChatBoxOpen,
     messages,
@@ -69,8 +69,10 @@ export const ChatBox: React.FC = () => {
   }, [adjustTextareaHeight, newMessage]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [scrollToBottom, messages]);
+    if (isLoggedIn && isGroupMember && chatUser) {
+      scrollToBottom();
+    }
+  }, [chatUser, isGroupMember, isLoggedIn, scrollToBottom]);
 
   useEffect(() => {
     (async () => {

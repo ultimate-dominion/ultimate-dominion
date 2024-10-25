@@ -18,7 +18,13 @@ import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { GAME_BOARD_PATH, ITEM_PATH } from '../Routes';
-import { type Armor, OrderType, type Spell, type Weapon } from '../utils/types';
+import {
+  type Armor,
+  ItemType,
+  OrderType,
+  type Spell,
+  type Weapon,
+} from '../utils/types';
 import { ItemCard } from './ItemCard';
 import { PolygonalCard } from './PolygonalCard';
 
@@ -150,8 +156,16 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   const isOneMoveEquipped = useMemo(() => {
     if (!isSpawned) return false;
     if (inSafetyZone) return false;
+    if (item.itemType !== ItemType.Weapon && item.itemType !== ItemType.Spell)
+      return false;
     return equippedWeapons.length + equippedSpells.length === 1;
-  }, [equippedSpells.length, equippedWeapons.length, inSafetyZone, isSpawned]);
+  }, [
+    equippedSpells.length,
+    equippedWeapons.length,
+    inSafetyZone,
+    isSpawned,
+    item,
+  ]);
 
   const buyingSearchParams = useMemo(() => {
     const searchParams = new URLSearchParams();

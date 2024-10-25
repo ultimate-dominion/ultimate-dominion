@@ -54,6 +54,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const {
     components: { Levels },
   } = useMUD();
+  const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
   const {
     character,
     equippedArmor,
@@ -61,7 +62,6 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     equippedWeapons,
     refreshCharacter,
   } = useCharacter();
-  const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
   const { refreshEntities } = useMap();
   const { currentBattle, onContinueToBattleOutcome, opponent } = useBattle();
 
@@ -173,6 +173,10 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     return spells.concat(weapons);
   }, [spells, weapons]);
 
+  const battleDraw = useMemo(() => {
+    return currentBattle?.maxTurns === currentBattle?.currentTurn;
+  }, [currentBattle]);
+
   if (!character) {
     return <Box />;
   }
@@ -225,140 +229,168 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onAcknowledge}>
-      <ModalOverlay />
-      <ModalContent>
-        <PolygonalCard isModal />
-        <ModalHeader textAlign="center">
-          {winner === character.id ? 'Victory!' : 'Defeat...'}
-        </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
-          <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
-            <Text>
-              {winner === character.id
-                ? `You defeated ${opponent?.name}!`
-                : `You were killed by ${opponent?.name}.`}
-            </Text>
-            {winner !== character.id &&
-              currentBattle &&
-              currentBattle.encounterType === EncounterType.PvP && (
+    <>
+      <Modal isOpen={isOpen} onClose={onAcknowledge}>
+        <ModalOverlay />
+        <ModalContent>
+          <PolygonalCard isModal />
+          <ModalHeader textAlign="center">
+            {battleDraw
+              ? 'Draw...'
+              : winner === character.id
+                ? 'Victory!'
+                : 'Defeat...'}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
+            {battleDraw ? (
+              <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
                 <Text>
-                  You lost{' '}
-                  <Text as="span" color="gold" fontWeight="bold">
-                    {etherToFixedNumber(goldDropped)}
-                  </Text>{' '}
-                  $GOLD.
+                  The battle ended in a draw! You both fled the battlefield.
                 </Text>
-              )}
-            {winner !== character.id && (
-              <Text>
-                When you die, your health is restored, but you are forced to
-                respawn at the Town Square.
-              </Text>
-            )}
-            {winner === character.id && (
-              <Text>
-                You earned{' '}
-                <Text as="span" color="green" fontWeight="bold">
-                  {expDropped.toString()}
-                </Text>{' '}
-                experience and{' '}
-                <Text as="span" color="gold" fontWeight="bold">
-                  {etherToFixedNumber(goldDropped)}
-                </Text>{' '}
-                $GOLD.
-              </Text>
-            )}
-            {isLoadingItems ? (
-              <Spinner />
+              </VStack>
             ) : (
-              <>
-                {armor.length > 0 && winner == character.id && (
-                  <Text fontWeight="bold">Looted Armor:</Text>
-                )}
-                {selectedItem && (
-                  <ItemEquipModal
-                    isEquipped={[
-                      ...equippedArmor,
-                      ...equippedSpells,
-                      ...equippedWeapons,
-                    ].some(item => item.name == selectedItem.name)}
-                    isOpen={isItemModalOpen}
-                    onClose={() => {
-                      refreshCharacter();
-                      onCloseItemModal();
-                    }}
-                    {...{ ...selectedItem, owner: character.owner }}
-                  ></ItemEquipModal>
-                )}
-                {winner == character.id &&
-                  armor.map(item => (
-                    <Box key={`armorbox-${item.tokenId}`}>
-                      <ItemCard
-                        key={item.tokenId}
-                        {...item}
-                        onClick={() => {
-                          setSelectedItem(item);
-                          onOpenItemModal();
-                        }}
-                      />
-                    </Box>
-                  ))}
-                {spellsAndWeapons.length > 0 && winner == character.id && (
-                  <Text fontWeight="bold">Looted Weapons:</Text>
-                )}
-                {winner == character.id &&
-                  spellsAndWeapons.map(item => (
-                    <Box key={`spellweaponbox-${item.tokenId}`}>
-                      <ItemCard
-                        key={item.tokenId}
-                        {...{ ...item, owner: character.owner }}
-                        onClick={() => {
-                          setSelectedItem(item);
-                          onOpenItemModal();
-                        }}
-                      />
-                    </Box>
-                  ))}
-              </>
-            )}
-          </VStack>
-          {canLevel && (
-            <VStack alignItems="center" pb={8} spacing={4}>
-              <Divider />
-              <Text fontWeight="bold">
-                You have enough experience to level up!
-              </Text>
-              <Text>
-                Leveling involves spending{' '}
-                <Text as="span" fontWeight="bold">
-                  2 ability points
-                </Text>{' '}
-                on your character&apos;s stats.
-              </Text>
-              <Text>
-                To level up, visit your{' '}
-                <Text
-                  as={Link}
-                  color="blue"
-                  to={`/characters/${character?.id}`}
-                  onClick={onAcknowledge}
-                  _hover={{
-                    textDecoration: 'underline',
-                  }}
-                >
-                  character page
+              <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
+                <Text>
+                  {winner === character.id
+                    ? `You defeated ${opponent?.name}!`
+                    : `You were killed by ${opponent?.name}.`}
                 </Text>
-                .
-              </Text>
-            </VStack>
-          )}
-        </ModalBody>
-        <ModalFooter>
-          <Button onClick={onAcknowledge}>Continue</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+                {winner !== character.id &&
+                  currentBattle &&
+                  currentBattle.encounterType === EncounterType.PvP && (
+                    <Text>
+                      You lost{' '}
+                      <Text as="span" color="gold" fontWeight="bold">
+                        {etherToFixedNumber(goldDropped)}
+                      </Text>{' '}
+                      $GOLD from your Adventure Escrow.
+                    </Text>
+                  )}
+                {winner !== character.id && (
+                  <Text>
+                    When you die, your health is restored, but you are forced to
+                    respawn at the Town Square.
+                  </Text>
+                )}
+                {winner === character.id && (
+                  <Text>
+                    You earned{' '}
+                    <Text as="span" color="green" fontWeight="bold">
+                      {expDropped.toString()}
+                    </Text>{' '}
+                    experience and your Adventure Escrow gained{' '}
+                    <Text as="span" color="gold" fontWeight="bold">
+                      {etherToFixedNumber(goldDropped)}
+                    </Text>{' '}
+                    $GOLD.
+                  </Text>
+                )}
+                {isLoadingItems ? (
+                  <Spinner />
+                ) : (
+                  <>
+                    {armor.length > 0 && winner == character.id && (
+                      <Text fontWeight="bold">Looted Armor:</Text>
+                    )}
+                    {winner == character.id &&
+                      armor.map(item => (
+                        <Box key={`armor-box-${item.tokenId}`}>
+                          <ItemCard
+                            key={item.tokenId}
+                            onClick={
+                              equippedArmor.some(
+                                equippedItem =>
+                                  equippedItem.tokenId === item.tokenId,
+                              )
+                                ? undefined
+                                : () => {
+                                    setSelectedItem(item);
+                                    onOpenItemModal();
+                                  }
+                            }
+                            {...item}
+                          />
+                        </Box>
+                      ))}
+                    {spellsAndWeapons.length > 0 && winner == character.id && (
+                      <Text fontWeight="bold">Looted Weapons:</Text>
+                    )}
+                    {winner == character.id &&
+                      spellsAndWeapons.map(item => (
+                        <Box key={`spell-weapon-box-${item.tokenId}`}>
+                          <ItemCard
+                            key={item.tokenId}
+                            onClick={
+                              [...equippedSpells, ...equippedWeapons].some(
+                                equippedItem =>
+                                  equippedItem.tokenId === item.tokenId,
+                              )
+                                ? undefined
+                                : () => {
+                                    setSelectedItem(item);
+                                    onOpenItemModal();
+                                  }
+                            }
+                            {...item}
+                          />
+                        </Box>
+                      ))}
+                  </>
+                )}
+              </VStack>
+            )}
+            {canLevel && (
+              <VStack alignItems="center" pb={8} spacing={4}>
+                <Divider />
+                <Text fontWeight="bold">
+                  You have enough experience to level up!
+                </Text>
+                <Text>
+                  Leveling involves spending{' '}
+                  <Text as="span" fontWeight="bold">
+                    2 ability points
+                  </Text>{' '}
+                  on your character&apos;s stats.
+                </Text>
+                <Text>
+                  To level up, visit your{' '}
+                  <Text
+                    as={Link}
+                    color="blue"
+                    to={`/characters/${character?.id}`}
+                    onClick={onAcknowledge}
+                    _hover={{
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    character page
+                  </Text>
+                  .
+                </Text>
+              </VStack>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onAcknowledge}>Continue</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      {selectedItem && (
+        <ItemEquipModal
+          isEquipped={[
+            ...equippedArmor,
+            ...equippedSpells,
+            ...equippedWeapons,
+          ].some(item => item.name == selectedItem.name)}
+          isOpen={isItemModalOpen}
+          onClose={() => {
+            refreshCharacter();
+            onCloseItemModal();
+          }}
+          {...{ ...selectedItem, owner: character.owner }}
+        />
+      )}
+    </>
   );
 };

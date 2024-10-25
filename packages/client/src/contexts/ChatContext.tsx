@@ -382,15 +382,15 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const onSendMessage = useCallback(async () => {
     const oldMessage = newMessage;
 
+    if (!newMessage) {
+      return;
+    }
+
     try {
       setIsSending(true);
 
       if (!user) {
         throw new Error('Failed to initialize user');
-      }
-
-      if (!newMessage) {
-        throw new Error('Message input is empty');
       }
 
       // Optimistically add the message to the chat
