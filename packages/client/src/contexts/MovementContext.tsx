@@ -19,6 +19,17 @@ import { useChat } from './ChatContext';
 import { useMap } from './MapContext';
 import { useMUD } from './MUDContext';
 
+const PREVENT_DEFAULT_KEYS = [
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'w',
+  's',
+  'a',
+  'd',
+];
+
 type MovementContextType = {
   isRefreshing: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
@@ -158,6 +169,10 @@ export const MovementProvider = ({
     if (pathname !== GAME_BOARD_PATH) return;
 
     const listener = (event: KeyboardEvent) => {
+      if (PREVENT_DEFAULT_KEYS.includes(event.key)) {
+        event.preventDefault();
+      }
+
       if (isMovementDisabled) return;
       if (isMoving) return;
       if (!isSpawned) return;
