@@ -46,8 +46,11 @@ export const ConnectWalletModal = ({
             {chainId == 17069 && (
               <Alert status="info">
                 <AlertIcon />
-                You will receive Garnet Holesky native tokens once you connect
-                your wallet
+                <Text size="xs">
+                  If you don&apos;t have Garnet Holesky native tokens, you will
+                  be automatically sent some from a faucet to make this
+                  transaction
+                </Text>
               </Alert>
             )}
             <Text size="sm" textAlign="center">
