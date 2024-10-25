@@ -93,11 +93,9 @@ export const ShopHalf = ({
       item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
       stock: bigint | null;
     }> = [...items];
-    const searcher = new FuzzySearch(
-      [...entriesCopy],
-      ['item.name', 'item.characterId', 'item.description'],
-      { caseSensitive: false },
-    );
+    const searcher = new FuzzySearch([...entriesCopy], ['item.name'], {
+      caseSensitive: false,
+    });
     entriesCopy = searcher.search(query);
 
     entriesCopy = [...entriesCopy].filter(entry => {
