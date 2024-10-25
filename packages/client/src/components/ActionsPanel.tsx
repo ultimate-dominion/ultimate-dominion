@@ -124,6 +124,38 @@ export const ActionsPanel = (): JSX.Element => {
             setAttackButtonFocus(3);
           }
           break;
+        case '1':
+          attackButton1Ref.current?.focus();
+          setAttackButtonFocus(1);
+          if (attackButton1Ref.current?.disabled) {
+            break;
+          }
+          attackButton1Ref.current?.click();
+          break;
+        case '2':
+          attackButton2Ref.current?.focus();
+          setAttackButtonFocus(2);
+          if (attackButton2Ref.current?.disabled) {
+            break;
+          }
+          attackButton2Ref.current?.click();
+          break;
+        case '3':
+          attackButton3Ref.current?.focus();
+          setAttackButtonFocus(3);
+          if (attackButton3Ref.current?.disabled) {
+            break;
+          }
+          attackButton3Ref.current?.click();
+          break;
+        case '4':
+          attackButton4Ref.current?.focus();
+          setAttackButtonFocus(4);
+          if (attackButton4Ref.current?.disabled) {
+            break;
+          }
+          attackButton4Ref.current?.click();
+          break;
         default:
           break;
       }
@@ -359,34 +391,36 @@ export const ActionsPanel = (): JSX.Element => {
                     </Button>
                   ))}
                 </HStack>
-                <HStack spacing={0} w="100%">
-                  {equippedSpellsAndWeapons.slice(2).map((item, index) => (
-                    <Button
-                      borderLeft={index === 0 ? 'none' : '2px'}
-                      borderRadius={0}
-                      borderRight="none"
-                      borderTop={
-                        equippedSpellsAndWeapons.length > 2 ? 'none' : '2px'
-                      }
-                      isDisabled={
-                        attackingItemId !== null || !canAttack || isFleeing
-                      }
-                      isLoading={attackingItemId === item.tokenId}
-                      key={`equipped-item-${index + 2}`}
-                      loadingText="Attacking..."
-                      onClick={() => onAttack(item.tokenId)}
-                      ref={getButtonRef(index + 2)}
-                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                      fontSize={
-                        equippedSpellsAndWeapons.length > 3 ? 'xs' : 'md'
-                      }
-                      variant="outline"
-                      w="100%"
-                    >
-                      {item.name}
-                    </Button>
-                  ))}
-                </HStack>
+                {equippedSpellsAndWeapons.length > 2 && (
+                  <HStack spacing={0} w="100%">
+                    {equippedSpellsAndWeapons.slice(2).map((item, index) => (
+                      <Button
+                        borderLeft={index === 0 ? 'none' : '2px'}
+                        borderRadius={0}
+                        borderRight="none"
+                        borderTop={
+                          equippedSpellsAndWeapons.length > 2 ? 'none' : '2px'
+                        }
+                        isDisabled={
+                          attackingItemId !== null || !canAttack || isFleeing
+                        }
+                        isLoading={attackingItemId === item.tokenId}
+                        key={`equipped-item-${index + 2}`}
+                        loadingText="Attacking..."
+                        onClick={() => onAttack(item.tokenId)}
+                        ref={getButtonRef(index + 2)}
+                        size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                        fontSize={
+                          equippedSpellsAndWeapons.length > 3 ? 'xs' : 'md'
+                        }
+                        variant="outline"
+                        w="100%"
+                      >
+                        {item.name}
+                      </Button>
+                    ))}
+                  </HStack>
+                )}
               </Stack>
             </HStack>
             {canFlee && (
