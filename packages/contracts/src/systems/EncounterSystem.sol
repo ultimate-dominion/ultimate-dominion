@@ -69,10 +69,11 @@ contract EncounterSystem is System {
         }
 
         if (encounterType == EncounterType.PvP) {
+            // higher agi attacks first
             (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
 
             require(IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y), "ENCOUNTER SYSTEM: INVALID PVP");
-            // higher agi attacks first
+
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
 
