@@ -127,21 +127,33 @@ export const ActionsPanel = (): JSX.Element => {
         case '1':
           attackButton1Ref.current?.focus();
           setAttackButtonFocus(1);
+          if (attackButton1Ref.current?.disabled) {
+            break;
+          }
           attackButton1Ref.current?.click();
           break;
         case '2':
           attackButton2Ref.current?.focus();
           setAttackButtonFocus(2);
+          if (attackButton2Ref.current?.disabled) {
+            break;
+          }
           attackButton2Ref.current?.click();
           break;
         case '3':
           attackButton3Ref.current?.focus();
           setAttackButtonFocus(3);
+          if (attackButton3Ref.current?.disabled) {
+            break;
+          }
           attackButton3Ref.current?.click();
           break;
         case '4':
           attackButton4Ref.current?.focus();
           setAttackButtonFocus(4);
+          if (attackButton4Ref.current?.disabled) {
+            break;
+          }
           attackButton4Ref.current?.click();
           break;
         default:
