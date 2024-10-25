@@ -174,11 +174,11 @@ contract ShopSystem is System, ReentrancyGuard {
 
     /**
      * @dev this is a function to end the encounter with the shop, this is sent by the player when they exit the shop.
-     * @dev there is no enterShop function.  to enter the shop use the createEncounter function in the
+     * @dev there is no createShopEncounter function.  to start the encounter use the createEncounter function in the
      * encounter system.
      * @param encounterId the encounter ID you wish to end (must be an encounter with the shop)
      */
-    function exitShop(bytes32 encounterId) public {
+    function endShopEncounter(bytes32 encounterId) public {
         bytes32 characterId = WorldEncounter.getCharacter(encounterId);
         require(
             IWorld(_world()).UD__isValidCharacterId(characterId)

@@ -87,7 +87,7 @@
   },
   {
     "type": "function",
-    "name": "exitShop",
+    "name": "endShopEncounter",
     "inputs": [
       {
         "name": "encounterId",

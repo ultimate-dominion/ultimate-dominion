@@ -1719,7 +1719,7 @@
   },
   {
     "type": "function",
-    "name": "UD__exitShop",
+    "name": "UD__endShopEncounter",
     "inputs": [
       {
         "name": "encounterId",
