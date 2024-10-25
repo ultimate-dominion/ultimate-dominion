@@ -17,7 +17,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { ITEM_PATH } from '../Routes';
+import { GAME_BOARD_PATH, ITEM_PATH } from '../Routes';
 import {
   type Armor,
   ItemType,
@@ -53,10 +53,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
   const [isEquipping, setIsEquipping] = useState(false);
 
-  const isOwner = useMemo(
-    () => character?.owner === item.owner,
-    [character, item.owner],
-  );
+  const isOwner = useMemo(() => {
+    return character?.owner === item.owner;
+  }, [character, item.owner]);
 
   const onEquipItem = useCallback(async () => {
     try {
@@ -132,6 +131,10 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     unequipItem,
   ]);
 
+  const isNotGameBoard = useMemo(() => {
+    return !window.location.pathname.includes(GAME_BOARD_PATH);
+  }, []);
+
   const isMissingRequirements = useMemo(() => {
     if (!character) return false;
     if (BigInt(character.level) < BigInt(item.minLevel)) return true;
@@ -188,7 +191,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             )}
             <ItemCard {...item} />
 
-            {!!currentBattle && isOwner && (
+            {!!currentBattle && isNotGameBoard && isOwner && (
               <Text color="red" fontWeight="bold" mt={4} size="sm">
                 You cannot unequip items during a battle.
               </Text>
@@ -205,7 +208,11 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               No
             </Button>
             <Button
-              isDisabled={(!!currentBattle || isOneMoveEquipped) && isOwner}
+              isDisabled={
+                (!!currentBattle || isOneMoveEquipped) &&
+                isNotGameBoard &&
+                isOwner
+              }
               isLoading={isEquipping}
               loadingText="Unequipping..."
               mr={3}
@@ -244,7 +251,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               You do not meet the requirements to equip this item.
             </Text>
           )}
-          {!!currentBattle && isOwner && (
+          {!!currentBattle && isNotGameBoard && isOwner && (
             <Text color="red" fontWeight="bold" mt={4} size="sm">
               You cannot equip items during a battle.
             </Text>
@@ -255,7 +262,11 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             No
           </Button>
           <Button
-            isDisabled={isOwner && (isMissingRequirements || !!currentBattle)}
+            isDisabled={
+              isOwner &&
+              isNotGameBoard &&
+              (isMissingRequirements || !!currentBattle)
+            }
             isLoading={isEquipping}
             loadingText="Equipping..."
             onClick={() =>
