@@ -206,7 +206,7 @@ export const Shop = (): JSX.Element => {
     <Box>
       <HStack bgColor="#1A244E" color="white" h="68px" px={6}>
         <ShopSvg />
-        <Heading size={{ base: 'sm', md: 'md' }}>Pawnshop</Heading>
+        <Heading size={{ base: 'sm', md: 'md' }}>{shop.name}</Heading>
         <Spacer />
         <IoNavigate size={20} />
         <Text fontWeight={700} size={{ base: 'lg', md: 'xl' }}>
