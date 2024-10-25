@@ -76,6 +76,10 @@ export const GameBoard = (): JSX.Element => {
       navigate(CHARACTER_CREATION_PATH);
       return;
     }
+
+    if (character?.worldEncounter) {
+      navigate(`/shops/${character.worldEncounter.shopId}`);
+    }
   }, [
     character,
     delegatorAddress,

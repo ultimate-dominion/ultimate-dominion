@@ -104,14 +104,14 @@ export const Header = ({
     renderError,
   ]);
 
-  const onBack = useCallback(() => {
+  const onBack = useCallback(async () => {
     if (pathname.includes(ITEM_PATH)) {
       navigate(MARKETPLACE_PATH);
       return;
     }
 
     if (character?.worldEncounter) {
-      onEndShopEncounter();
+      await onEndShopEncounter();
     }
 
     navigate(-1);

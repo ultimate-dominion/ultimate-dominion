@@ -280,11 +280,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             const worldEncounter = Array.from(
               runQuery([
                 Has(WorldEncounter),
-                HasValue(WorldEncounter, { end: BigInt(0) }),
+                HasValue(WorldEncounter, { character: entity, end: BigInt(0) }),
               ]),
-            ).map(entity => ({
-              encounterId: entity,
-              ...getComponentValueStrict(WorldEncounter, entity),
+            ).map(worldEncounterEntity => ({
+              encounterId: worldEncounterEntity,
+              ...getComponentValueStrict(WorldEncounter, worldEncounterEntity),
             }))[0];
 
             return {
