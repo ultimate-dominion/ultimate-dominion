@@ -109,36 +109,38 @@ export const MarketplaceAllowanceModal = ({
               >
                 Allow
               </Button>
-              <Tooltip
-                bg="#070D2A"
-                hasArrow
-                label="This allows you to spend $GOLD on the Marketplace without having to approve each transaction. It is a faster and smoother experience, but is less secure. Only max allow if you trust the Marketplace."
-                placement="top"
-                shouldWrapChildren
-              >
-                <Button
-                  color="blue400"
-                  fontWeight={500}
-                  isLoading={isApprovingGold}
-                  onClick={() =>
-                    onApproveMaxGoldAllowance(
-                      SystemToAllow.Marketplace,
-                      orderPrice,
-                    )
-                  }
-                  p={1}
-                  size="xs"
-                  variant="ghost"
-                  _active={{
-                    textDecoration: 'underline',
-                  }}
-                  _hover={{
-                    textDecoration: 'underline',
-                  }}
+              {!isApprovingGold && (
+                <Tooltip
+                  bg="#070D2A"
+                  hasArrow
+                  label="This allows you to spend $GOLD on the Marketplace without having to approve each transaction. It is a faster and smoother experience, but is less secure."
+                  placement="top"
+                  shouldWrapChildren
                 >
-                  Max Allow
-                </Button>
-              </Tooltip>
+                  <Button
+                    color="blue400"
+                    fontWeight={500}
+                    isLoading={isApprovingGold}
+                    onClick={() =>
+                      onApproveMaxGoldAllowance(
+                        SystemToAllow.Marketplace,
+                        orderPrice,
+                      )
+                    }
+                    p={1}
+                    size="xs"
+                    variant="ghost"
+                    _active={{
+                      textDecoration: 'underline',
+                    }}
+                    _hover={{
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Max Allow
+                  </Button>
+                </Tooltip>
+              )}
             </VStack>
           )}
           {orderType === OrderType.Selling && (

@@ -231,7 +231,7 @@ export const Marketplace = (): JSX.Element => {
       }
     });
 
-    const searcher = new FuzzySearch([...itemsCopy], ['name', 'description']);
+    const searcher = new FuzzySearch([...itemsCopy], ['name']);
     itemsCopy = searcher.search(query);
 
     setLength(itemsCopy.length);

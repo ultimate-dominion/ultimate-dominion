@@ -50,12 +50,8 @@ export const MapPanel = (): JSX.Element => {
   ) ?? { maxPlayers: BigInt(0) };
 
   return (
-    <Stack
-      alignItems="center"
-      direction={{ base: 'row', lg: 'column' }}
-      h="100%"
-    >
-      <Box w={{ base: '50%', lg: '100%' }} h={{ base: '100%', lg: '400px' }}>
+    <Stack alignItems="center" h="100%">
+      <Box w="100%" h={{ base: '250px', lg: '400px' }}>
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
@@ -149,11 +145,8 @@ export const MapPanel = (): JSX.Element => {
                   )}
 
                   {allShops.map((shop, index) => {
-                    const isHomeTile = 0 === col && 0 === row;
                     const isShopHere =
-                      shop.position.x === col &&
-                      shop.position.y === row &&
-                      !isHomeTile;
+                      shop.position.x === col && shop.position.y === row;
 
                     return (
                       isShopHere && (
@@ -196,10 +189,12 @@ export const MapPanel = (): JSX.Element => {
         </PolygonalCard>
       </Box>
       {isSpawned ? (
-        <NavigationCompass
-          isDisabled={!!currentBattle || isRefreshing}
-          onMove={onMove}
-        />
+        <Box>
+          <NavigationCompass
+            isDisabled={!!currentBattle || isRefreshing}
+            onMove={onMove}
+          />
+        </Box>
       ) : (
         <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
           {currentPlayersSpawned >= Number(maxPlayers) && (

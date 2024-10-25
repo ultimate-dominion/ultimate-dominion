@@ -404,25 +404,13 @@ export const ShopItemRow = ({
                 </Text>
                 <Text size="sm">- LVL {item?.minLevel.toString() || '0'}</Text>
                 <Text size="sm">
-                  -{' '}
-                  {statRestrictions['minAgility']
-                    ? statRestrictions.minAgility.toString()
-                    : 0}{' '}
-                  AGI
+                  - {statRestrictions.minAgility.toString()} AGI
                 </Text>
                 <Text size="sm">
-                  -{' '}
-                  {statRestrictions['minIntelligence']
-                    ? statRestrictions.minIntelligence.toString()
-                    : 0}{' '}
-                  INT
+                  - {statRestrictions.minIntelligence.toString()} INT
                 </Text>
                 <Text size="sm">
-                  -{' '}
-                  {statRestrictions['minStrength']
-                    ? statRestrictions.minIntelligence?.toString()
-                    : 0}{' '}
-                  STR
+                  - {statRestrictions.minStrength.toString()} STR
                 </Text>
               </GridItem>
               <GridItem colSpan={2} textAlign="center" onSubmit={onBuyOrSell}>

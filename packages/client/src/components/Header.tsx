@@ -21,7 +21,7 @@ import { useCallback, useMemo, useState } from 'react';
 // import { FaDiscord } from 'react-icons/fa';
 // import { FaXTwitter } from 'react-icons/fa6';
 import { IoMdMenu } from 'react-icons/io';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -243,6 +243,24 @@ export const Header = ({
                   isExternal
                 >
                   About
+                </Link>
+                <Link
+                  alignSelf="start"
+                  as={RouterLink}
+                  fontSize={{ base: 'xs', sm: 'sm' }}
+                  onClick={onClose}
+                  to={MARKETPLACE_PATH}
+                >
+                  Marketplace
+                </Link>
+                <Link
+                  alignSelf="start"
+                  as={RouterLink}
+                  fontSize={{ base: 'xs', sm: 'sm' }}
+                  onClick={onClose}
+                  to={LEADERBOARD_PATH}
+                >
+                  Leaderboard
                 </Link>
                 {/* <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
                   Guild Info

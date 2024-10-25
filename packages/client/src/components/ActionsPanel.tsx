@@ -271,6 +271,10 @@ export const ActionsPanel = (): JSX.Element => {
     return false;
   }, [character, currentBattle]);
 
+  const battleDraw = useMemo(() => {
+    return currentBattle?.maxTurns === currentBattle?.currentTurn;
+  }, [currentBattle]);
+
   if (isItemTemplatesLoading) {
     return (
       <VStack mt={12}>
@@ -355,25 +359,67 @@ export const ActionsPanel = (): JSX.Element => {
                   w="100%"
                 />
               )}
-              {equippedSpellsAndWeapons.map((item, index) => (
-                <Button
-                  borderLeft={index === 0 ? 'none' : '2px'}
-                  borderRadius={0}
-                  borderRight="none"
-                  isDisabled={
-                    attackingItemId !== null || !canAttack || isFleeing
-                  }
-                  isLoading={attackingItemId === item.tokenId}
-                  key={`equipped-item-${index}`}
-                  loadingText="Attacking..."
-                  onClick={() => onAttack(item.tokenId)}
-                  ref={getButtonRef(index)}
-                  variant="outline"
-                  w="100%"
-                >
-                  {item.name}
-                </Button>
-              ))}
+              <Stack
+                direction={
+                  equippedSpellsAndWeapons.length > 2 ? 'column' : 'row'
+                }
+                spacing={0}
+                w="100%"
+              >
+                <HStack spacing={0} w="100%">
+                  {equippedSpellsAndWeapons.slice(0, 2).map((item, index) => (
+                    <Button
+                      borderLeft={index === 0 ? 'none' : '2px'}
+                      borderRadius={0}
+                      borderRight="none"
+                      isDisabled={
+                        attackingItemId !== null || !canAttack || isFleeing
+                      }
+                      isLoading={attackingItemId === item.tokenId}
+                      key={`equipped-item-${index}`}
+                      loadingText="Attacking..."
+                      onClick={() => onAttack(item.tokenId)}
+                      ref={getButtonRef(index)}
+                      fontSize={
+                        equippedSpellsAndWeapons.length > 3 ? 'xs' : 'md'
+                      }
+                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                      variant="outline"
+                      w="100%"
+                    >
+                      {item.name}
+                    </Button>
+                  ))}
+                </HStack>
+                <HStack spacing={0} w="100%">
+                  {equippedSpellsAndWeapons.slice(2).map((item, index) => (
+                    <Button
+                      borderLeft={index === 0 ? 'none' : '2px'}
+                      borderRadius={0}
+                      borderRight="none"
+                      borderTop={
+                        equippedSpellsAndWeapons.length > 2 ? 'none' : '2px'
+                      }
+                      isDisabled={
+                        attackingItemId !== null || !canAttack || isFleeing
+                      }
+                      isLoading={attackingItemId === item.tokenId}
+                      key={`equipped-item-${index + 2}`}
+                      loadingText="Attacking..."
+                      onClick={() => onAttack(item.tokenId)}
+                      ref={getButtonRef(index + 2)}
+                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                      fontSize={
+                        equippedSpellsAndWeapons.length > 3 ? 'xs' : 'md'
+                      }
+                      variant="outline"
+                      w="100%"
+                    >
+                      {item.name}
+                    </Button>
+                  ))}
+                </HStack>
+              </Stack>
             </HStack>
             {canFlee && (
               <VStack>
@@ -486,6 +532,12 @@ export const ActionsPanel = (): JSX.Element => {
                 Number(statusEffectAction.turnStart) - 1 === i,
             );
 
+            const alreadyAffected = attack.effectIds.some(effectId =>
+              statusEffectActions.some(
+                statusEffectAction => statusEffectAction.effectId === effectId,
+              ),
+            );
+
             if (attack.miss[0]) {
               return (
                 <Typist
@@ -558,7 +610,8 @@ export const ActionsPanel = (): JSX.Element => {
                     </Text>
                   )}
                 {attack.attackerId === character?.id &&
-                  !possibleStatusEffectAttack && (
+                  !possibleStatusEffectAttack &&
+                  !alreadyAffected && (
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       {critText}You attacked{' '}
                       <Text as="span" color="green">
@@ -572,7 +625,8 @@ export const ActionsPanel = (): JSX.Element => {
                     </Text>
                   )}
                 {attack.attackerId !== character?.id &&
-                  !possibleStatusEffectAttack && (
+                  !possibleStatusEffectAttack &&
+                  !alreadyAffected && (
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       {critText}
                       <Text as="span" color="green">
@@ -583,6 +637,18 @@ export const ActionsPanel = (): JSX.Element => {
                         {attack.attackerDamageDelt.toString()}
                       </Text>{' '}
                       damage.
+                    </Text>
+                  )}
+
+                {attack.attackerId === character?.id &&
+                  alreadyAffected &&
+                  !possibleStatusEffectAttack && (
+                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                      {critText}You attacked{' '}
+                      <Text as="span" color="green">
+                        {opponent.name}
+                      </Text>{' '}
+                      with {itemName}. It had no effect.
                     </Text>
                   )}
               </Typist>
@@ -603,28 +669,38 @@ export const ActionsPanel = (): JSX.Element => {
               cursor={{ show: false }}
               stdTypingDelay={10}
             >
-              <Text
-                fontWeight="bold"
-                size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                textAlign="center"
-              >
-                {lastestBattleOutcome?.winner === character?.id &&
-                lastestBattleOutcome?.playerFled
-                  ? `${opponent?.name} fled!`
-                  : ''}
-                {lastestBattleOutcome?.winner !== character?.id &&
-                lastestBattleOutcome?.playerFled
-                  ? 'You fled!'
-                  : ''}
-                {lastestBattleOutcome?.winner === character?.id &&
-                !lastestBattleOutcome?.playerFled
-                  ? 'You won!'
-                  : ''}
-                {lastestBattleOutcome?.winner !== character?.id &&
-                !lastestBattleOutcome?.playerFled
-                  ? 'You died...'
-                  : ''}
-              </Text>
+              {battleDraw ? (
+                <Text
+                  fontWeight="bold"
+                  size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                  textAlign="center"
+                >
+                  The battle ended in a draw.
+                </Text>
+              ) : (
+                <Text
+                  fontWeight="bold"
+                  size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                  textAlign="center"
+                >
+                  {lastestBattleOutcome?.winner === character?.id &&
+                  lastestBattleOutcome?.playerFled
+                    ? `${opponent?.name} fled!`
+                    : ''}
+                  {lastestBattleOutcome?.winner !== character?.id &&
+                  lastestBattleOutcome?.playerFled
+                    ? 'You fled!'
+                    : ''}
+                  {lastestBattleOutcome?.winner === character?.id &&
+                  !lastestBattleOutcome?.playerFled
+                    ? 'You won!'
+                    : ''}
+                  {lastestBattleOutcome?.winner !== character?.id &&
+                  !lastestBattleOutcome?.playerFled
+                    ? 'You died...'
+                    : ''}
+                </Text>
+              )}
             </Typist>
             <HStack justifyContent="center">
               <Button

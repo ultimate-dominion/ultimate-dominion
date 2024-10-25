@@ -8,6 +8,7 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
+  Tooltip,
   VStack,
 } from '@chakra-ui/react';
 import { parseEther } from 'viem';
@@ -38,6 +39,7 @@ export const LootManagerAllowanceModal = ({
     isApprovingItems,
     itemsLootManagerAllowance,
     onApproveGoldAllowance,
+    onApproveMaxGoldAllowance,
     onSetApprovalForAllItems,
   } = useAllowance();
 
@@ -85,21 +87,55 @@ export const LootManagerAllowanceModal = ({
               {message && <Text>{message}</Text>}
             </VStack>
           </ModalBody>
-          <ModalFooter gap={3}>
+          <ModalFooter alignItems="start" gap={3}>
             <Button onClick={onClose} size="sm" variant="ghost">
               Close
             </Button>
-            <Button
-              isLoading={isApprovingGold}
-              onClick={() =>
-                onApproveGoldAllowance(
-                  SystemToAllow.LootManager,
-                  parseEther(amount),
-                )
-              }
-            >
-              Allow
-            </Button>
+            <VStack spacing={1}>
+              <Button
+                isLoading={isApprovingGold}
+                onClick={() =>
+                  onApproveGoldAllowance(
+                    SystemToAllow.LootManager,
+                    parseEther(amount),
+                  )
+                }
+              >
+                Allow
+              </Button>
+              {!isApprovingGold && (
+                <Tooltip
+                  bg="#070D2A"
+                  hasArrow
+                  label="This allows you to deposit $GOLD into your Adventure Escrow without having to approve each transaction. It is a faster and smoother experience, but is less secure."
+                  placement="top"
+                  shouldWrapChildren
+                >
+                  <Button
+                    color="blue400"
+                    fontWeight={500}
+                    isLoading={isApprovingGold}
+                    onClick={() =>
+                      onApproveMaxGoldAllowance(
+                        SystemToAllow.LootManager,
+                        parseEther(amount),
+                      )
+                    }
+                    p={1}
+                    size="xs"
+                    variant="ghost"
+                    _active={{
+                      textDecoration: 'underline',
+                    }}
+                    _hover={{
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Max Allow
+                  </Button>
+                </Tooltip>
+              )}
+            </VStack>
           </ModalFooter>
         </ModalContent>
       </Modal>
