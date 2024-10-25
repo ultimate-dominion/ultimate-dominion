@@ -145,11 +145,8 @@ export const MapPanel = (): JSX.Element => {
                   )}
 
                   {allShops.map((shop, index) => {
-                    const isHomeTile = 0 === col && 0 === row;
                     const isShopHere =
-                      shop.position.x === col &&
-                      shop.position.y === row &&
-                      !isHomeTile;
+                      shop.position.x === col && shop.position.y === row;
 
                     return (
                       isShopHere && (
