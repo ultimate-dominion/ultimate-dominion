@@ -48,9 +48,9 @@ contract EquipmentSystem is System {
         for (uint256 i; i < itemIds.length; i++) {
             itemId = itemIds[i];
             require(IWorld(_world()).UD__isItemOwner(itemId, _msgSender()), "EQUIPMENT: Not Item Owner");
-            ItemsData memory itemData = Items.get(itemId);
+            ItemType itemType = Items.getItemType(itemId);
             require(checkRequirements(characterId, itemId), "EQUIPMENT: Requirements not met");
-            _equipItem(characterId, itemId, itemData.itemType);
+            _equipItem(characterId, itemId, itemType);
         }
         _setEquipmentBonuses(characterId);
 
@@ -154,26 +154,29 @@ contract EquipmentSystem is System {
     function _equipItem(bytes32 characterId, uint256 itemId, ItemType itemType) internal {
         require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
         uint256 totalLength;
-        if (CharacterEquipment.lengthEquippedArmor(characterId) > 0 && itemType == ItemType.Armor) {
-            revert("Already wearing armor");
-        }
-        totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);
-        totalLength += CharacterEquipment.lengthEquippedSpells(characterId);
-        totalLength += CharacterEquipment.lengthEquippedConsumables(characterId);
-        require(totalLength < 4, "too many items equipped");
-
-        if (itemType == ItemType.Weapon) {
-            CharacterEquipment.pushEquippedWeapons(characterId, itemId);
-        }
+        // check and equip armor
         if (itemType == ItemType.Armor) {
-            CharacterEquipment.pushEquippedArmor(characterId, itemId);
-        }
+            if (CharacterEquipment.lengthEquippedArmor(characterId) < 1) {
+                CharacterEquipment.pushEquippedArmor(characterId, itemId);
+            } else if (CharacterEquipment.lengthEquippedArmor(characterId) > 0) {
+                revert("Already wearing armor");
+            }
+        } else {
+            // check and equip items
+            totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);
+            totalLength += CharacterEquipment.lengthEquippedSpells(characterId);
+            totalLength += CharacterEquipment.lengthEquippedConsumables(characterId);
+            require(totalLength < 4, "too many items equipped");
 
-        if (itemType == ItemType.Spell) {
-            CharacterEquipment.pushEquippedSpells(characterId, itemId);
-        }
-        if (itemType == ItemType.Consumable) {
-            CharacterEquipment.pushEquippedConsumables(characterId, itemId);
+            if (itemType == ItemType.Weapon) {
+                CharacterEquipment.pushEquippedWeapons(characterId, itemId);
+            }
+            if (itemType == ItemType.Spell) {
+                CharacterEquipment.pushEquippedSpells(characterId, itemId);
+            }
+            if (itemType == ItemType.Consumable) {
+                CharacterEquipment.pushEquippedConsumables(characterId, itemId);
+            }
         }
     }
 

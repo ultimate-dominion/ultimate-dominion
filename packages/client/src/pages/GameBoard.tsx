@@ -76,6 +76,10 @@ export const GameBoard = (): JSX.Element => {
       navigate(CHARACTER_CREATION_PATH);
       return;
     }
+
+    if (character?.worldEncounter) {
+      navigate(`/shops/${character.worldEncounter.shopId}`);
+    }
   }, [
     character,
     delegatorAddress,
@@ -155,7 +159,7 @@ export const GameBoard = (): JSX.Element => {
   return (
     <Grid
       gap={2}
-      h="calc(100vh - 125px)"
+      h={{ base: '1000px', md: 'calc(100vh - 125px)' }}
       templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
       templateRows="repeat(12, 1fr)"
     >
@@ -181,18 +185,18 @@ export const GameBoard = (): JSX.Element => {
       <GridItem
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
-        rowSpan={{ base: 4, lg: 6 }}
+        rowSpan={{ base: 3, lg: 6 }}
         rowStart={{ base: 4, lg: 7 }}
       >
-        <PolygonalCard clipPath="none" overflowY="auto">
+        <PolygonalCard clipPath="none">
           <ActionsPanel />
         </PolygonalCard>
       </GridItem>
       <GridItem
         colSpan={{ base: 1, lg: 4 }}
         colStart={{ base: 0, lg: 13 }}
-        rowSpan={{ base: 4, lg: 12 }}
-        rowStart={{ base: 8, lg: 0 }}
+        rowSpan={{ base: 5, lg: 12 }}
+        rowStart={{ base: 7, lg: 0 }}
       >
         <MapPanel />
       </GridItem>
@@ -214,7 +218,7 @@ export const GameBoard = (): JSX.Element => {
             </VStack>
           </PopoverTrigger>
           <PopoverContent>
-            <PolygonalCard clipPath="none" overflowY="auto">
+            <PolygonalCard clipPath="none" h="500px" overflowY="auto">
               <StatsPanel />
             </PolygonalCard>
           </PopoverContent>

@@ -17,13 +17,15 @@ import {
   Tooltip,
   useDisclosure,
 } from '@chakra-ui/react';
-import { useMemo } from 'react';
-import { FaDiscord } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
+import { useCallback, useMemo, useState } from 'react';
+// import { FaDiscord } from 'react-icons/fa';
+// import { FaXTwitter } from 'react-icons/fa6';
 import { IoMdMenu } from 'react-icons/io';
-import { To, useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 import {
   CHARACTER_CREATION_PATH,
   CHARACTERS_PATH,
@@ -50,8 +52,70 @@ export const Header = ({
 }): JSX.Element => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { burnerBalance } = useMUD();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { renderError } = useToast();
+
+  const {
+    burnerBalance,
+    delegatorAddress,
+    systemCalls: { endShopEncounter },
+  } = useMUD();
+  const { character, refreshCharacter } = useCharacter();
+
+  const [isExiting, setIsExiting] = useState(false);
+
+  const onEndShopEncounter = useCallback(async () => {
+    try {
+      setIsExiting(true);
+
+      if (!character) {
+        throw new Error('Character not found.');
+      }
+
+      if (!character.worldEncounter) {
+        throw new Error('Not in a shop.');
+      }
+
+      if (!delegatorAddress) {
+        throw new Error('Missing delegation.');
+      }
+
+      const { error, success } = await endShopEncounter(
+        character.worldEncounter.encounterId,
+      );
+
+      if (error && !success) {
+        throw new Error(error);
+      }
+
+      await refreshCharacter();
+      onClose();
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Failed to exit shop.', e);
+    } finally {
+      setIsExiting(false);
+    }
+  }, [
+    character,
+    delegatorAddress,
+    endShopEncounter,
+    onClose,
+    refreshCharacter,
+    renderError,
+  ]);
+
+  const onBack = useCallback(async () => {
+    if (pathname.includes(ITEM_PATH)) {
+      navigate(MARKETPLACE_PATH);
+      return;
+    }
+
+    if (character?.worldEncounter) {
+      await onEndShopEncounter();
+    }
+
+    navigate(-1);
+  }, [character, navigate, onEndShopEncounter, pathname]);
 
   const logoLink = useMemo(() => {
     if (pathname === HOME_PATH) {
@@ -110,18 +174,13 @@ export const Header = ({
             {showBackButton && (
               <Button
                 fontSize="xs"
+                isLoading={isExiting}
                 leftIcon={<BackCaretSvg />}
-                onClick={() =>
-                  navigate(
-                    (pathname.includes(ITEM_PATH)
-                      ? MARKETPLACE_PATH
-                      : -1) as To,
-                  )
-                }
+                onClick={onBack}
                 p={4}
                 size="sm"
               >
-                Back
+                {character?.worldEncounter ? 'Exit Shop' : 'Back'}
               </Button>
             )}
             {pathname !== HOME_PATH && (
@@ -177,10 +236,33 @@ export const Header = ({
                 direction={{ base: 'column' }}
                 spacing={{ base: 4, md: 10 }}
               >
-                <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
+                <Link
+                  alignSelf="start"
+                  fontSize={{ base: 'xs', sm: 'sm' }}
+                  href="https://www.ultimatedominion.com/"
+                  isExternal
+                >
                   About
                 </Link>
-                <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
+                <Link
+                  alignSelf="start"
+                  as={RouterLink}
+                  fontSize={{ base: 'xs', sm: 'sm' }}
+                  onClick={onClose}
+                  to={MARKETPLACE_PATH}
+                >
+                  Marketplace
+                </Link>
+                <Link
+                  alignSelf="start"
+                  as={RouterLink}
+                  fontSize={{ base: 'xs', sm: 'sm' }}
+                  onClick={onClose}
+                  to={LEADERBOARD_PATH}
+                >
+                  Leaderboard
+                </Link>
+                {/* <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
                   Guild Info
                 </Link>
                 <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
@@ -188,7 +270,7 @@ export const Header = ({
                 </Link>
                 <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
                   Create Map
-                </Link>
+                </Link> */}
               </Stack>
             </DrawerBody>
 
@@ -198,12 +280,12 @@ export const Header = ({
                 direction={{ base: 'column', sm: 'row' }}
                 spacing={{ base: 3, md: 8 }}
               >
-                <Link bgColor="black" borderRadius="50%" p={1.5}>
+                {/* <Link bgColor="black" borderRadius="50%" p={1.5}>
                   <FaDiscord color="white" />
                 </Link>
                 <Link bgColor="black" borderRadius="50%" p={1.5}>
                   <FaXTwitter color="white" />
-                </Link>
+                </Link> */}
               </Stack>
             </DrawerFooter>
           </DrawerContent>

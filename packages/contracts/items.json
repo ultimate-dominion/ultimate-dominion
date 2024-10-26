@@ -8,7 +8,7 @@
       "price": 50000000000000000000,
       "stats": {
         "agiModifier": -1,
-        "armorModifier": 1,
+        "armorModifier": 2,
         "hpModifier": 0,
         "intModifier": 0,
         "minLevel": 0,
@@ -28,7 +28,7 @@
       "price": 200000000000000000000,
       "stats": {
         "agiModifier": -3,
-        "armorModifier": 3,
+        "armorModifier": 4,
         "hpModifier": 0,
         "intModifier": 0,
         "minLevel": 3,
@@ -48,7 +48,7 @@
       "price": 200000000000000000000,
       "stats": {
         "agiModifier": -1,
-        "armorModifier": 2,
+        "armorModifier": 4,
         "hpModifier": 0,
         "intModifier": 0,
         "minLevel": 3,
@@ -112,8 +112,8 @@
         "effects": [
           "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
         ],
-        "maxDamage": -5,
-        "minDamage": -5,
+        "maxDamage": -20,
+        "minDamage": -20,
         "minLevel": 0
       },
       "statRestrictions": {
@@ -127,7 +127,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "22_fortifying_stew.json",
       "name": "fortifying stew",
-      "price": 60000000000000000000,
+      "price": 40000000000000000000,
       "stats": {
         "effects": [
           "0x5b73694f86a16512000000000000000000000000000000000000000000000000"
@@ -147,7 +147,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "23_quickening_berries.json",
       "name": "quickening berries",
-      "price": 60000000000000000000,
+      "price": 40000000000000000000,
       "stats": {
         "effects": [
           "0x940c7cad73f61cb6000000000000000000000000000000000000000000000000"
@@ -167,7 +167,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "24_focusing_tea.json",
       "name": "focusing tea",
-      "price": 60000000000000000000,
+      "price": 40000000000000000000,
       "stats": {
         "effects": [
           "0x54d076d5607dc751000000000000000000000000000000000000000000000000"
@@ -207,13 +207,13 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "26_strong_health_potion.json",
       "name": "strong health potion",
-      "price": 50000000000000000000,
+      "price": 35000000000000000000,
       "stats": {
         "effects": [
           "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
         ],
-        "maxDamage": -15,
-        "minDamage": -15,
+        "maxDamage": -40,
+        "minDamage": -40,
         "minLevel": 0
       },
       "statRestrictions": {
@@ -223,7 +223,7 @@
       }
     }
   ],
-  "metadataUriPrefix": "ipfs://Qmf5xsBThvwSLcdGXHgnSKg6bGDsD953qm5F4H4tj6WiVR/",
+  "metadataUriPrefix": "ipfs://QmWdFWGYkUkJyqqMi4XyHceazsr9vrK4rawqrFXufeNG9K/",
   "spells": [
     {
       "dropChance": 20,
@@ -343,7 +343,7 @@
         "maxDamage": 5,
         "minDamage": 1,
         "minLevel": 0,
-        "strModifier": 2
+        "strModifier": 0
       },
       "statRestrictions": {
         "minAgility": 0,
@@ -367,7 +367,7 @@
         "maxDamage": 8,
         "minDamage": 4,
         "minLevel": 3,
-        "strModifier": 5
+        "strModifier": 0
       },
       "statRestrictions": {
         "minAgility": 0,
@@ -387,7 +387,7 @@
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
         "hpModifier": 0,
-        "intModifier": 5,
+        "intModifier": 2,
         "maxDamage": 8,
         "minDamage": 4,
         "minLevel": 3,
@@ -406,7 +406,7 @@
       "name": "Throwing Dagger",
       "price": 100000000000000000000,
       "stats": {
-        "agiModifier": 5,
+        "agiModifier": 2,
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
@@ -439,7 +439,7 @@
         "maxDamage": 15,
         "minDamage": 10,
         "minLevel": 5,
-        "strModifier": 9
+        "strModifier": 4
       },
       "statRestrictions": {
         "minAgility": 0,
@@ -551,7 +551,7 @@
       "name": "Crossbow",
       "price": 500000000000000000000,
       "stats": {
-        "agiModifier": 5,
+        "agiModifier": 4,
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],

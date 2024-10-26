@@ -35,8 +35,10 @@ contract Test_EffectsSystem is SetUp, GasReporter {
     bytes32[] public pvpDefenders;
     bytes32 entityId;
     bytes32 entityId2;
+    uint256 spawnedMobId;
 
     function setUp() public virtual override {
+        spawnedMobId = 5;
         super.setUp();
         vm.prank(deployer);
         world.UD__setAdmin(address(this), true);
@@ -44,8 +46,8 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         vm.prank(deployer);
         world.grantAccess(_mobSystemId("UD"), address(this));
 
-        entityId = world.UD__spawnMob(1, 0, 1);
-        entityId2 = world.UD__spawnMob(1, 0, 1);
+        entityId = world.UD__spawnMob(spawnedMobId, 0, 1);
+        entityId2 = world.UD__spawnMob(spawnedMobId, 0, 1);
 
         vm.startPrank(alice);
         world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
@@ -107,7 +109,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
     }
 
     function test_applyStatusEffect() public {
-        entityId = world.UD__spawnMob(1, 0, 1);
+        entityId = world.UD__spawnMob(spawnedMobId, 0, 1);
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         CombatEncounterData memory encounterData = world.UD__getEncounter(encounterId);
@@ -183,7 +185,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         assertEq(erc1155System.balanceOf(bob, strBuffId), 1);
 
         vm.prank(deployer);
-        bytes32 entityId = world.UD__spawnMob(2, 0, 1);
+        bytes32 entityId = world.UD__spawnMob(spawnedMobId, 0, 1);
 
         vm.startPrank(bob);
         erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
@@ -218,7 +220,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         assertEq(erc1155System.balanceOf(bob, strBuffId), 1);
 
         vm.prank(deployer);
-        bytes32 entityId = world.UD__spawnMob(2, 0, 1);
+        bytes32 entityId = world.UD__spawnMob(spawnedMobId, 0, 1);
 
         vm.startPrank(bob);
         erc1155System.setApprovalForAll(Systems.getSystem(_lootManagerSystemId("UD")), true);
@@ -253,7 +255,7 @@ contract Test_EffectsSystem is SetUp, GasReporter {
         uint256 poisonDartId = startingWeaponId + 9;
 
         vm.prank(deployer);
-        bytes32 entityId = world.UD__spawnMob(2, 0, 1);
+        bytes32 entityId = world.UD__spawnMob(spawnedMobId, 0, 1);
         StatsData memory mobStats = world.UD__getStats(entityId);
 
         bytes32[] memory defenders = new bytes32[](1);

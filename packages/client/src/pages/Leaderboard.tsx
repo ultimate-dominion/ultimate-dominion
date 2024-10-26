@@ -121,11 +121,9 @@ export const Leaderboard = (): JSX.Element => {
           return true;
       }
     });
-    const searcher = new FuzzySearch(
-      [...entriesCopy],
-      ['name', 'characterId', 'description'],
-      { caseSensitive: false },
-    );
+    const searcher = new FuzzySearch([...entriesCopy], ['name'], {
+      caseSensitive: false,
+    });
     entriesCopy = searcher.search(query);
 
     setLength(entriesCopy.length);
@@ -255,7 +253,7 @@ export const Leaderboard = (): JSX.Element => {
                 'Mage'
               ) : (
                 <MageSvg
-                  theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
+                  theme={filter === StatsClasses.Mage ? 'light' : 'dark'}
                 />
               )}
             </Button>

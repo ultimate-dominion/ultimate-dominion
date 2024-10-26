@@ -18,7 +18,20 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
-import { EncounterType } from '../utils/types';
+import { EncounterType, Monster } from '../utils/types';
+
+export const MONSTER_MOVE_MAPPING: Record<string, string> = {
+  '5': 'Bite',
+  '6': 'Acid Spray',
+  '7': 'Swift Stab',
+  '8': 'Sludge Ball',
+  '9': 'Rusty Axe',
+  '10': 'Bite',
+  '11': 'Iron Sword',
+  '12': 'Venom Bite',
+  '13': 'Ember',
+  '14': 'Iron Sword',
+};
 
 export const ActionsPanel = (): JSX.Element => {
   const { character, equippedSpells, equippedWeapons } = useCharacter();
@@ -110,6 +123,38 @@ export const ActionsPanel = (): JSX.Element => {
             attackButton4Ref.current?.focus();
             setAttackButtonFocus(3);
           }
+          break;
+        case '1':
+          attackButton1Ref.current?.focus();
+          setAttackButtonFocus(1);
+          if (attackButton1Ref.current?.disabled) {
+            break;
+          }
+          attackButton1Ref.current?.click();
+          break;
+        case '2':
+          attackButton2Ref.current?.focus();
+          setAttackButtonFocus(2);
+          if (attackButton2Ref.current?.disabled) {
+            break;
+          }
+          attackButton2Ref.current?.click();
+          break;
+        case '3':
+          attackButton3Ref.current?.focus();
+          setAttackButtonFocus(3);
+          if (attackButton3Ref.current?.disabled) {
+            break;
+          }
+          attackButton3Ref.current?.click();
+          break;
+        case '4':
+          attackButton4Ref.current?.focus();
+          setAttackButtonFocus(4);
+          if (attackButton4Ref.current?.disabled) {
+            break;
+          }
+          attackButton4Ref.current?.click();
           break;
         default:
           break;
@@ -226,6 +271,10 @@ export const ActionsPanel = (): JSX.Element => {
     return false;
   }, [character, currentBattle]);
 
+  const battleDraw = useMemo(() => {
+    return currentBattle?.maxTurns === currentBattle?.currentTurn;
+  }, [currentBattle]);
+
   if (isItemTemplatesLoading) {
     return (
       <VStack mt={12}>
@@ -235,7 +284,7 @@ export const ActionsPanel = (): JSX.Element => {
   }
 
   return (
-    <Box maxH="100%" ref={parentDivRef} fontWeight={500}>
+    <Box fontWeight={500} maxH="100%" overflowY="auto" ref={parentDivRef}>
       {currentBattle && equippedSpellsAndWeapons.length === 0 && (
         <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
           You have no equipped items. In order to attack, you must go to your{' '}
@@ -254,12 +303,21 @@ export const ActionsPanel = (): JSX.Element => {
         currentBattle &&
         equippedSpellsAndWeapons.length !== 0 &&
         opponent && (
-          <VStack position="sticky" spacing={0} top={0} w="100%">
+          <VStack
+            bgColor="#B3B9BE"
+            position="sticky"
+            spacing={0}
+            top={0}
+            w="100%"
+          >
             {currentBattle.encounterType === EncounterType.PvE && (
-              <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
-                <Text as="span" fontWeight="bold">
-                  Choose your move!
-                </Text>
+              <Text
+                fontWeight="bold"
+                p={{ base: 2, lg: 4 }}
+                size="xs"
+                textAlign="center"
+              >
+                Choose your move!
               </Text>
             )}
 
@@ -301,25 +359,69 @@ export const ActionsPanel = (): JSX.Element => {
                   w="100%"
                 />
               )}
-              {equippedSpellsAndWeapons.map((item, index) => (
-                <Button
-                  borderLeft={index === 0 ? 'none' : '2px'}
-                  borderRadius={0}
-                  borderRight="none"
-                  isDisabled={
-                    attackingItemId !== null || !canAttack || isFleeing
-                  }
-                  isLoading={attackingItemId === item.tokenId}
-                  key={`equipped-item-${index}`}
-                  loadingText="Attacking..."
-                  onClick={() => onAttack(item.tokenId)}
-                  ref={getButtonRef(index)}
-                  variant="outline"
-                  w="100%"
-                >
-                  {item.name}
-                </Button>
-              ))}
+              <Stack
+                direction={
+                  equippedSpellsAndWeapons.length > 2 ? 'column' : 'row'
+                }
+                spacing={0}
+                w="100%"
+              >
+                <HStack spacing={0} w="100%">
+                  {equippedSpellsAndWeapons.slice(0, 2).map((item, index) => (
+                    <Button
+                      borderLeft={index === 0 ? 'none' : '2px'}
+                      borderRadius={0}
+                      borderRight="none"
+                      isDisabled={
+                        attackingItemId !== null || !canAttack || isFleeing
+                      }
+                      isLoading={attackingItemId === item.tokenId}
+                      key={`equipped-item-${index}`}
+                      loadingText="Attacking..."
+                      onClick={() => onAttack(item.tokenId)}
+                      ref={getButtonRef(index)}
+                      fontSize={
+                        equippedSpellsAndWeapons.length > 3 ? 'xs' : 'md'
+                      }
+                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                      variant="outline"
+                      w="100%"
+                    >
+                      {item.name}
+                    </Button>
+                  ))}
+                </HStack>
+                {equippedSpellsAndWeapons.length > 2 && (
+                  <HStack spacing={0} w="100%">
+                    {equippedSpellsAndWeapons.slice(2).map((item, index) => (
+                      <Button
+                        borderLeft={index === 0 ? 'none' : '2px'}
+                        borderRadius={0}
+                        borderRight="none"
+                        borderTop={
+                          equippedSpellsAndWeapons.length > 2 ? 'none' : '2px'
+                        }
+                        isDisabled={
+                          attackingItemId !== null || !canAttack || isFleeing
+                        }
+                        isLoading={attackingItemId === item.tokenId}
+                        key={`equipped-item-${index + 2}`}
+                        loadingText="Attacking..."
+                        onClick={() => onAttack(item.tokenId)}
+                        ref={getButtonRef(index + 2)}
+                        size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                        fontSize={
+                          equippedSpellsAndWeapons.length > 3 ? 'xs' : 'md'
+                        }
+                        variant="outline"
+                        w="100%"
+                      >
+                        {item.name}
+                      </Button>
+                    ))}
+                  </HStack>
+                )}
+              </Stack>
             </HStack>
             {canFlee && (
               <VStack>
@@ -416,15 +518,26 @@ export const ActionsPanel = (): JSX.Element => {
             </Typist>
           )}
 
-        {opponent?.name &&
+        {opponent &&
           attackOutcomes.map((attack, i) => {
             const attackItem = spellAndWeaponTemplates.find(
               item => item.tokenId === attack.itemId,
             );
-            const itemName = attackItem?.name ?? 'an item';
+            const itemName =
+              currentBattle?.encounterType === EncounterType.PvE &&
+              attack.attackerId !== character?.id
+                ? MONSTER_MOVE_MAPPING[(opponent as Monster).mobId]
+                : attackItem?.name ?? 'an item';
+
             const possibleStatusEffectAttack = statusEffectActions.find(
               statusEffectAction =>
                 Number(statusEffectAction.turnStart) - 1 === i,
+            );
+
+            const alreadyAffected = attack.effectIds.some(effectId =>
+              statusEffectActions.some(
+                statusEffectAction => statusEffectAction.effectId === effectId,
+              ),
             );
 
             if (attack.miss[0]) {
@@ -475,7 +588,7 @@ export const ActionsPanel = (): JSX.Element => {
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       {critText}You attacked{' '}
                       <Text as="span" color="green">
-                        {opponent?.name}
+                        {opponent.name}
                       </Text>{' '}
                       with {itemName}. You inflicted{' '}
                       <Text as="span" color="red">
@@ -499,11 +612,12 @@ export const ActionsPanel = (): JSX.Element => {
                     </Text>
                   )}
                 {attack.attackerId === character?.id &&
-                  !possibleStatusEffectAttack && (
+                  !possibleStatusEffectAttack &&
+                  !alreadyAffected && (
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       {critText}You attacked{' '}
                       <Text as="span" color="green">
-                        {opponent?.name}
+                        {opponent.name}
                       </Text>{' '}
                       with {itemName} for{' '}
                       <Text as="span" color="red">
@@ -513,17 +627,30 @@ export const ActionsPanel = (): JSX.Element => {
                     </Text>
                   )}
                 {attack.attackerId !== character?.id &&
-                  !possibleStatusEffectAttack && (
+                  !possibleStatusEffectAttack &&
+                  !alreadyAffected && (
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       {critText}
                       <Text as="span" color="green">
-                        {opponent?.name}
+                        {opponent.name}
                       </Text>{' '}
                       attacked you with {itemName} for{' '}
                       <Text as="span" color="red">
                         {attack.attackerDamageDelt.toString()}
                       </Text>{' '}
                       damage.
+                    </Text>
+                  )}
+
+                {attack.attackerId === character?.id &&
+                  alreadyAffected &&
+                  !possibleStatusEffectAttack && (
+                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                      {critText}You attacked{' '}
+                      <Text as="span" color="green">
+                        {opponent.name}
+                      </Text>{' '}
+                      with {itemName}. It had no effect.
                     </Text>
                   )}
               </Typist>
@@ -544,28 +671,38 @@ export const ActionsPanel = (): JSX.Element => {
               cursor={{ show: false }}
               stdTypingDelay={10}
             >
-              <Text
-                fontWeight="bold"
-                size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                textAlign="center"
-              >
-                {lastestBattleOutcome?.winner === character?.id &&
-                lastestBattleOutcome?.playerFled
-                  ? `${opponent?.name} fled!`
-                  : ''}
-                {lastestBattleOutcome?.winner !== character?.id &&
-                lastestBattleOutcome?.playerFled
-                  ? 'You fled!'
-                  : ''}
-                {lastestBattleOutcome?.winner === character?.id &&
-                !lastestBattleOutcome?.playerFled
-                  ? 'You won!'
-                  : ''}
-                {lastestBattleOutcome?.winner !== character?.id &&
-                !lastestBattleOutcome?.playerFled
-                  ? 'You died...'
-                  : ''}
-              </Text>
+              {battleDraw ? (
+                <Text
+                  fontWeight="bold"
+                  size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                  textAlign="center"
+                >
+                  The battle ended in a draw.
+                </Text>
+              ) : (
+                <Text
+                  fontWeight="bold"
+                  size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                  textAlign="center"
+                >
+                  {lastestBattleOutcome?.winner === character?.id &&
+                  lastestBattleOutcome?.playerFled
+                    ? `${opponent?.name} fled!`
+                    : ''}
+                  {lastestBattleOutcome?.winner !== character?.id &&
+                  lastestBattleOutcome?.playerFled
+                    ? 'You fled!'
+                    : ''}
+                  {lastestBattleOutcome?.winner === character?.id &&
+                  !lastestBattleOutcome?.playerFled
+                    ? 'You won!'
+                    : ''}
+                  {lastestBattleOutcome?.winner !== character?.id &&
+                  !lastestBattleOutcome?.playerFled
+                    ? 'You died...'
+                    : ''}
+                </Text>
+              )}
             </Typist>
             <HStack justifyContent="center">
               <Button

@@ -109,6 +109,13 @@ export const ShopItemRow = ({
     return item.price + (item.price * shop.priceMarkup) / 10_000n;
   }, [item.price, orderType, shop.priceMarkdown, shop.priceMarkup]);
 
+  const insufficientStock = useMemo(() => {
+    if (!userCharacter) return false;
+    if (orderType === OrderType.Selling) return false;
+    if (!stock) return true;
+    return stock < 1;
+  }, [orderType, stock, userCharacter]);
+
   const insufficientGold = useMemo(() => {
     if (!userCharacter) return false;
     if (orderType === OrderType.Selling) return false;
@@ -126,8 +133,11 @@ export const ShopItemRow = ({
   const onBuyOrSell = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-
       if (insufficientGold) {
+        setShowError(true);
+        return;
+      }
+      if (insufficientStock) {
         setShowError(true);
         return;
       }
@@ -189,6 +199,7 @@ export const ShopItemRow = ({
       characterId,
       goldShopAllowance,
       insufficientGold,
+      insufficientStock,
       itemIndex,
       itemsShopAllowance,
       onAllowanceClose,
@@ -207,6 +218,9 @@ export const ShopItemRow = ({
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
+    if (!isOpen) {
+      setAmount(1);
+    }
     setShowError(false);
   }, [isOpen, price]);
 
@@ -390,25 +404,13 @@ export const ShopItemRow = ({
                 </Text>
                 <Text size="sm">- LVL {item?.minLevel.toString() || '0'}</Text>
                 <Text size="sm">
-                  -{' '}
-                  {statRestrictions['minAgility']
-                    ? statRestrictions.minAgility.toString()
-                    : 0}{' '}
-                  AGI
+                  - {statRestrictions.minAgility.toString()} AGI
                 </Text>
                 <Text size="sm">
-                  -{' '}
-                  {statRestrictions['minIntelligence']
-                    ? statRestrictions.minIntelligence.toString()
-                    : 0}{' '}
-                  INT
+                  - {statRestrictions.minIntelligence.toString()} INT
                 </Text>
                 <Text size="sm">
-                  -{' '}
-                  {statRestrictions['minStrength']
-                    ? statRestrictions.minIntelligence?.toString()
-                    : 0}{' '}
-                  STR
+                  - {statRestrictions.minStrength.toString()} STR
                 </Text>
               </GridItem>
               <GridItem colSpan={2} textAlign="center" onSubmit={onBuyOrSell}>
@@ -448,10 +450,10 @@ export const ShopItemRow = ({
                         fontWeight={500}
                         max={stock?.toString() || balance?.toString() || 0}
                         min={1}
-                        minW="45px"
-                        minH="45px"
+                        minW="55px"
+                        minH="55px"
                         onChange={e => {
-                          const value = e.target.value;
+                          const { value } = e.target;
                           if (value === '') {
                             setAmount(0);
                             return;
@@ -536,8 +538,16 @@ export const ShopItemRow = ({
               alignItems="center"
               display="flex"
               flexDirection="column"
-              isInvalid={showError && (insufficientGold || unsellableError)}
+              isInvalid={
+                showError &&
+                (insufficientGold || unsellableError || insufficientStock)
+              }
             >
+              {showError && insufficientStock && (
+                <FormHelperText color="red" m={3}>
+                  Insufficient stock.
+                </FormHelperText>
+              )}
               {showError && insufficientGold && (
                 <FormHelperText color="red" m={3}>
                   You don&apos;t have enough $GOLD to buy this.

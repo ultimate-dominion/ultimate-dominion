@@ -9,12 +9,16 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
+import { useComponentValue } from '@latticexyz/react';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
+import { useMemo } from 'react';
 import { BiSolidNavigation } from 'react-icons/bi';
 import { FaStoreAlt } from 'react-icons/fa';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
+import { useMUD } from '../contexts/MUDContext';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
 import { CompassSvg } from './SVGs/CompassSvg';
@@ -26,6 +30,9 @@ const SAFE_ZONE_AREA = {
 };
 
 export const MapPanel = (): JSX.Element => {
+  const {
+    components: { UltimateDominionConfig },
+  } = useMUD();
   const { allCharacters, isSpawned, isSpawning, onSpawn, position } = useMap();
   const { allShops } = useMap();
   const { currentBattle } = useBattle();
@@ -33,13 +40,18 @@ export const MapPanel = (): JSX.Element => {
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
+  const currentPlayersSpawned = useMemo(() => {
+    return allCharacters.filter(character => character.isSpawned).length;
+  }, [allCharacters]);
+
+  const { maxPlayers } = useComponentValue(
+    UltimateDominionConfig,
+    singletonEntity,
+  ) ?? { maxPlayers: BigInt(0) };
+
   return (
-    <Stack
-      alignItems="center"
-      direction={{ base: 'row', lg: 'column' }}
-      h="100%"
-    >
-      <Box w={{ base: '50%', lg: '100%' }} h={{ base: '100%', lg: '400px' }}>
+    <Stack alignItems="center" h="100%">
+      <Box w="100%" h={{ base: '250px', lg: '400px' }}>
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
@@ -133,11 +145,8 @@ export const MapPanel = (): JSX.Element => {
                   )}
 
                   {allShops.map((shop, index) => {
-                    const isHomeTile = 0 === col && 0 === row;
                     const isShopHere =
-                      shop.position.x === col &&
-                      shop.position.y === row &&
-                      !isHomeTile;
+                      shop.position.x === col && shop.position.y === row;
 
                     return (
                       isShopHere && (
@@ -156,7 +165,11 @@ export const MapPanel = (): JSX.Element => {
               );
             })}
           </Box>
-          <HStack justifyContent="space-between" mt={2} px={{ base: 1, sm: 2 }}>
+          <HStack
+            justifyContent={isSpawned && position ? 'space-between' : 'end'}
+            mt={2}
+            px={{ base: 1, sm: 2 }}
+          >
             {isSpawned && position && (
               <HStack>
                 <BiSolidNavigation size={isDesktop ? 20 : 10} />
@@ -169,28 +182,38 @@ export const MapPanel = (): JSX.Element => {
               </HStack>
             )}
             <Text fontWeight={500} size={{ base: '2xs', sm: 'sm', md: 'md' }}>
-              {allCharacters.length} Player
-              {allCharacters.length === 1 ? '' : 's'}
+              {currentPlayersSpawned} Player
+              {currentPlayersSpawned === 1 ? '' : 's'}
             </Text>
           </HStack>
         </PolygonalCard>
       </Box>
       {isSpawned ? (
-        <NavigationCompass
-          isDisabled={!!currentBattle || isRefreshing}
-          onMove={onMove}
-        />
+        <Box>
+          <NavigationCompass
+            isDisabled={!!currentBattle || isRefreshing}
+            onMove={onMove}
+          />
+        </Box>
       ) : (
-        <Button
-          isDisabled={!!currentBattle}
-          isLoading={isSpawning}
-          loadingText="Spawning..."
-          mt={{ base: 0, lg: 8 }}
-          onClick={onSpawn}
-          size="sm"
-        >
-          Spawn
-        </Button>
+        <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
+          {currentPlayersSpawned >= Number(maxPlayers) && (
+            <Text color="red" fontWeight={500} size="sm">
+              Max players reached
+            </Text>
+          )}
+          <Button
+            isDisabled={
+              !!currentBattle || currentPlayersSpawned >= Number(maxPlayers)
+            }
+            isLoading={isSpawning}
+            loadingText="Spawning..."
+            onClick={onSpawn}
+            size="sm"
+          >
+            Spawn
+          </Button>
+        </VStack>
       )}
     </Stack>
   );

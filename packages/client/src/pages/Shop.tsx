@@ -10,7 +10,8 @@ import {
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import { IoNavigate } from 'react-icons/io5';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 
 import { PolygonalCard } from '../components/PolygonalCard';
 import { ShopHalf } from '../components/ShopHalf';
@@ -18,6 +19,8 @@ import { ShopSvg } from '../components/SVGs/ShopSvg';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
+import { useMUD } from '../contexts/MUDContext';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -29,7 +32,10 @@ import {
 
 export const Shop = (): JSX.Element => {
   const { shopId } = useParams();
+  const navigate = useNavigate();
+  const { isConnected } = useAccount();
 
+  const { delegatorAddress, isSynced } = useMUD();
   const {
     armorTemplates,
     consumableTemplates,
@@ -39,13 +45,14 @@ export const Shop = (): JSX.Element => {
   } = useItems();
   const {
     character: userCharacter,
+    equippedArmor,
+    equippedSpells,
+    equippedWeapons,
     inventoryArmor,
     inventoryConsumables,
     inventorySpells,
     inventoryWeapons,
-    equippedArmor,
-    equippedSpells,
-    equippedWeapons,
+    isRefreshing,
   } = useCharacter();
   const { allShops } = useMap();
 
@@ -83,9 +90,42 @@ export const Shop = (): JSX.Element => {
     ],
     [inventoryArmor, inventoryConsumables, inventorySpells, inventoryWeapons],
   );
+
+  // Redirect to home if synced, but missing other requirements
+  // Redirect to game board if character is not in the shop
+  useEffect(() => {
+    if (!isConnected) {
+      navigate(HOME_PATH);
+      window.location.reload();
+      return;
+    }
+
+    if (!isSynced) return;
+
+    if (!delegatorAddress) {
+      navigate(HOME_PATH);
+      return;
+    }
+
+    if (!userCharacter?.locked && !isRefreshing) {
+      navigate(CHARACTER_CREATION_PATH);
+      return;
+    }
+
+    if (!userCharacter?.worldEncounter) {
+      navigate(GAME_BOARD_PATH);
+    }
+  }, [
+    delegatorAddress,
+    isConnected,
+    isRefreshing,
+    isSynced,
+    navigate,
+    userCharacter,
+  ]);
+
   useEffect(() => {
     if (isItemsLoading) return;
-    if (items.length === 0) return;
     if (!shop) return;
 
     const equippedItems = [
@@ -166,7 +206,7 @@ export const Shop = (): JSX.Element => {
     <Box>
       <HStack bgColor="#1A244E" color="white" h="68px" px={6}>
         <ShopSvg />
-        <Heading size={{ base: 'sm', md: 'md' }}>Pawnshop</Heading>
+        <Heading size={{ base: 'sm', md: 'md' }}>{shop.name}</Heading>
         <Spacer />
         <IoNavigate size={20} />
         <Text fontWeight={700} size={{ base: 'lg', md: 'xl' }}>

@@ -90,7 +90,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
         }
       });
 
-      const searcher = new FuzzySearch(filteredItems, ['name', 'description']);
+      const searcher = new FuzzySearch(filteredItems, ['name']);
       return searcher.search(query);
     },
     [itemTypeFilter, query],
