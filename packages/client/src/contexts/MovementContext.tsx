@@ -238,6 +238,7 @@ export const MovementProvider = ({
             <Text
               as={Link}
               color="blue"
+              onClick={onCloseNoMoveEquippedModal}
               to={`/characters/${character?.id}`}
               _hover={{
                 textDecoration: 'underline',
