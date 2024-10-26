@@ -138,6 +138,14 @@ export const StatsPanel = (): JSX.Element => {
     };
   }, [character]);
 
+  const consumablesInInventory = useMemo(() => {
+    return inventoryConsumables
+      .reduce((acc, item) => {
+        return acc + item.balance;
+      }, BigInt(0))
+      .toString();
+  }, [inventoryConsumables]);
+
   if (!character) {
     return (
       <VStack h="100%" justify="center">
@@ -412,7 +420,7 @@ export const StatsPanel = (): JSX.Element => {
         >
           <Text fontWeight={500}>Consumables</Text>
           <HStack h={6}>
-            <Text fontWeight={700}>{inventoryConsumables.length}</Text>
+            <Text fontWeight={700}>{consumablesInInventory}</Text>
             <PotionSvg mb={0.5} theme="dark" />
           </HStack>
         </HStack>
