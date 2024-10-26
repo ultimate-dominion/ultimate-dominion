@@ -4,15 +4,15 @@
       "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/1_giant_rat.json",
       "name": "Giant Rat",
       "stats": {
-        "agility": 8,
+        "agility": 6,
         "armor": 0,
         "class": 0,
-        "experience": 35,
+        "experience": 70,
         "hitPoints": 20,
-        "intelligence": 4,
+        "intelligence": 3,
         "inventory": [6],
         "level": 1,
-        "strength": 10
+        "strength": 8
       }
     },
     {
@@ -22,7 +22,7 @@
         "agility": 2,
         "armor": 0,
         "class": 2,
-        "experience": 30,
+        "experience": 60,
         "hitPoints": 18,
         "intelligence": 8,
         "inventory": [16],
@@ -34,15 +34,15 @@
       "metadataUri": "ipfs://QmPQyMFrVnog95sPBWVVyfAWjS1HGkFGUiT3HKHU5LDroL/3_kobold_scout.json",
       "name": "Kobold Scout",
       "stats": {
-        "agility": 11,
+        "agility": 10,
         "armor": 0,
         "class": 1,
-        "experience": 60,
+        "experience": 80,
         "hitPoints": 22,
         "intelligence": 6,
         "inventory": [6, 11],
         "level": 2,
-        "strength": 8
+        "strength": 5
       }
     },
     {
@@ -52,12 +52,12 @@
         "agility": 4,
         "armor": 0,
         "class": 2,
-        "experience": 55,
+        "experience": 100,
         "hitPoints": 21,
         "intelligence": 8,
         "inventory": [16],
         "level": 2,
-        "strength": 2
+        "strength": 4
       }
     },
     {
@@ -67,12 +67,12 @@
         "agility": 6,
         "armor": 0,
         "class": 0,
-        "experience": 90,
+        "experience": 120,
         "hitPoints": 26,
         "intelligence": 6,
         "inventory": [6],
         "level": 3,
-        "strength": 13
+        "strength": 12
       }
     },
     {
@@ -82,7 +82,7 @@
         "agility": 12,
         "armor": 0,
         "class": 1,
-        "experience": 85,
+        "experience": 135,
         "hitPoints": 25,
         "intelligence": 6,
         "inventory": [6, 12],
@@ -97,7 +97,7 @@
         "agility": 8,
         "armor": 0,
         "class": 0,
-        "experience": 135,
+        "experience": 150,
         "hitPoints": 29,
         "intelligence": 7,
         "inventory": [7],
