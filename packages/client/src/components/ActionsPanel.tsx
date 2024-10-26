@@ -31,6 +31,17 @@ export const MONSTER_MOVE_MAPPING: Record<string, string> = {
   '12': 'Venom Bite',
   '13': 'Ember',
   '14': 'Iron Sword',
+  '15': 'Wall of Force',
+  '16': 'Venom Bite',
+  '17': 'Claw',
+  '18': 'Wall of Force',
+  '19': 'Burrow Strike',
+  '20': 'Steel Sword',
+  '21': 'Fire Lance',
+  '22': 'Spectral Bite',
+  '23': 'Maul',
+  '24': 'Steel Sword',
+  '25': 'Dragon Breath',
 };
 
 export const ActionsPanel = (): JSX.Element => {
@@ -526,7 +537,7 @@ export const ActionsPanel = (): JSX.Element => {
             const itemName =
               currentBattle?.encounterType === EncounterType.PvE &&
               attack.attackerId !== character?.id
-                ? MONSTER_MOVE_MAPPING[(opponent as Monster).mobId]
+                ? MONSTER_MOVE_MAPPING[(opponent as Monster).mobId] ?? 'an item'
                 : attackItem?.name ?? 'an item';
 
             const possibleStatusEffectAttack = statusEffectActions.find(
