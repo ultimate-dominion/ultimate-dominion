@@ -378,10 +378,7 @@ contract CombatSystem is System {
         } else {
             baseDamage = (equippedSpell.maxDamage + attackStats.bonusDamage) * int256(ATTACK_MODIFIER);
         }
-        _damage = (
-            _addStatBonus(attackerIntelligence, defenderIntelligence, baseDamage)
-                - int256(_addStatBonus(defenderIntelligence, defenderIntelligence, int256(DEFENSE_MODIFIER)))
-        );
+        _damage = _addStatBonus(attackerIntelligence, defenderIntelligence, baseDamage);
 
         if (_damage < int256(0) && equippedSpell.maxDamage > int256(0)) {
             _damage = int256(0);
