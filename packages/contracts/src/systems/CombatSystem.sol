@@ -246,9 +246,12 @@ contract CombatSystem is System {
             int256 _unroundedDamage = baseDifference + baseDamage;
 
             _totalDamage = Math.roundInt(_unroundedDamage, int256(WAD)) / int256(WAD);
-        } else if (baseDifference < 0 && Math.absolute(baseDifference / int256(WAD)) >= uint256(attackerStat)) {
+        } else if (
+            baseDamage > int256(0) && baseDifference < int256(0)
+                && Math.absolute(baseDifference / int256(WAD)) >= uint256(attackerStat)
+        ) {
             // if the stat difference is equal to or greater than the attackers base stat subtract difference from damage
-            if (baseDamage + baseDifference > 0) {
+            if (baseDamage + baseDifference > int256(0)) {
                 _totalDamage = (baseDamage + baseDifference) / int256(WAD);
             } else {
                 // if damage is negative minimu damage is 1
@@ -370,9 +373,9 @@ contract CombatSystem is System {
             baseDamage = (
                 attackStats.bonusDamage
                     + int256(
-                        uint256(rnChunk) % uint256(equippedSpell.maxDamage) <= uint256(equippedSpell.minDamage)
+                        uint256(rnChunk) % uint256(equippedSpell.maxDamage) + 1 <= uint256(equippedSpell.minDamage)
                             ? equippedSpell.minDamage
-                            : int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage))
+                            : int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage) + 1)
                     )
             ) * int256(ATTACK_MODIFIER);
         } else {
