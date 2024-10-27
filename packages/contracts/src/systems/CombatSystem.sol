@@ -382,6 +382,10 @@ contract CombatSystem is System {
             _addStatBonus(attackerIntelligence, defenderIntelligence, baseDamage)
                 - int256(_addStatBonus(defenderIntelligence, defenderIntelligence, int256(DEFENSE_MODIFIER)))
         );
+
+        if (_damage < int256(0) && equippedSpell.maxDamage > int256(0)) {
+            _damage = int256(0);
+        }
     }
 
     function _calculateStatusEffect(
