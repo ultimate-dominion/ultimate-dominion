@@ -25,7 +25,7 @@ import {
     TOKEN_URI,
     ITEMS_NAMESPACE
 } from "../constants.sol";
-import {CombatEncounterData, StarterItemsData} from "@codegen/index.sol";
+import {CombatEncounterData, StarterItemsData, SpellStatsData, SpellStats} from "@codegen/index.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
 import "forge-std/console.sol";
 
@@ -189,26 +189,45 @@ contract Test_CombatSystem is SetUp, GasReporter {
         world.UD__endEncounter(encounterId, 1000000000, true);
     }
 
-    function test_MagicDamage() public {
+    function test_MagicDamage(uint256 attackerInt, uint256 defenderInt) public {
+        attackerInt = bound(attackerInt, 6, 100);
+        defenderInt = bound(defenderInt, 0, 100);
         // bob has higher agi and int to go first
-        StatsData memory BobStats = world.UD__getStats(bobCharacterId);
-        BobStats.intelligence = 10;
-        BobStats.agility = 10;
-        world.UD__adminSetStats(bobCharacterId, BobStats);
+        StatsData memory bobStats = world.UD__getStats(bobCharacterId);
+        bobStats.intelligence = int256(attackerInt);
+        bobStats.agility = 10;
+        world.UD__adminSetStats(bobCharacterId, bobStats);
 
-        world.UD__adminDropItem(bobCharacterId, 11, 1);
-        uint256[] memory itemIds = new uint256[](1);
-        itemIds[0] = 11;
-        vm.prank(bob);
-        world.UD__equipItems(bobCharacterId, itemIds);
+        // assert that spell is correct
+        SpellStatsData memory spellStats = SpellStats.get(startingSpellId);
+        assert(spellStats.maxDamage == 5);
+        assert(spellStats.minDamage == 1);
+
+        // set defender stats
+        StatsData memory entityStats = world.UD__getStats(entityId);
+        entityStats.intelligence = int256(defenderInt);
+        entityStats.agility = 9;
+        world.UD__adminSetStats(entityId, entityStats);
+
+        // world.UD__adminDropItem(bobCharacterId, startingSpellId, 1);
+        // uint256[] memory itemIds = new uint256[](1);
+        // itemIds[0] = startingSpellId;
+        // vm.prank(bob);
+        // world.UD__equipItems(bobCharacterId, itemIds);
 
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
-        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: 11});
-        uint256 fees = 0; // entropy.getFee(address(1));
+        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingSpellId});
+
         vm.prank(bob);
         world.UD__endTurn(encounterId, bobCharacterId, actions);
+
+        StatsData memory bobAfterTurn = world.UD__getStats(bobCharacterId);
+        StatsData memory entAfterTurn = world.UD__getStats(entityId);
+
+        assertTrue(bobAfterTurn.currentHp <= bobStats.currentHp);
+        assertTrue(entAfterTurn.currentHp <= entityStats.currentHp);
     }
 
     // function test_MagicHeals() public {
