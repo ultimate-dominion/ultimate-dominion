@@ -138,6 +138,14 @@ export const StatsPanel = (): JSX.Element => {
     };
   }, [character]);
 
+  const consumablesInInventory = useMemo(() => {
+    return inventoryConsumables
+      .reduce((acc, item) => {
+        return acc + item.balance;
+      }, BigInt(0))
+      .toString();
+  }, [inventoryConsumables]);
+
   if (!character) {
     return (
       <VStack h="100%" justify="center">
@@ -306,6 +314,23 @@ export const StatsPanel = (): JSX.Element => {
           /{nextLevelXpRequirement.toString()} XP
         </Text>
       </HStack>
+      <HStack mt={1} px={2}>
+        <Text color="#3D4247" size="xs" fontWeight="bold" textAlign="start">
+          Adventure Escrow balance:{' '}
+          {etherToFixedNumber(character.escrowGoldBalance)} $GOLD{' '}
+          <Text as="span">
+            <Tooltip
+              bg="#070D2A"
+              hasArrow
+              label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+              placement="top"
+              shouldWrapChildren
+            >
+              <IoMdInformationCircleOutline />
+            </Tooltip>
+          </Text>
+        </Text>
+      </HStack>
 
       {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
         <Button
@@ -395,7 +420,7 @@ export const StatsPanel = (): JSX.Element => {
         >
           <Text fontWeight={500}>Consumables</Text>
           <HStack h={6}>
-            <Text fontWeight={700}>{inventoryConsumables.length}</Text>
+            <Text fontWeight={700}>{consumablesInInventory}</Text>
             <PotionSvg mb={0.5} theme="dark" />
           </HStack>
         </HStack>

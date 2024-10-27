@@ -206,6 +206,7 @@ export const CharacterPage = (): JSX.Element => {
         id: id as Entity,
         inBattle,
         intelligence: characterStats.intelligence,
+        isSpawned: false,
         level: characterStats.level,
         locked: characterData.locked,
         maxHp: characterStats.maxHp,
@@ -213,6 +214,7 @@ export const CharacterPage = (): JSX.Element => {
           size: 32,
         }),
         owner: characterData.owner,
+        position: { x: 0, y: 0 },
         pvpCooldownTimer: pvpTimer,
         strength: characterStats.strength,
         tokenId: characterData.tokenId.toString(),
@@ -748,6 +750,30 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const maxWeaponsEquipped =
     equippedSpellsAndWeaponsIds.length === MAX_EQUIPPED_WEAPONS;
 
+  const armorInInventory = useMemo(() => {
+    return inventoryArmor
+      .reduce((acc, item) => {
+        return acc + item.balance;
+      }, BigInt(0))
+      .toString();
+  }, [inventoryArmor]);
+
+  const spellsAndWeaponsInInventory = useMemo(() => {
+    return spellsAndWeapons
+      .reduce((acc, item) => {
+        return acc + item.balance;
+      }, BigInt(0))
+      .toString();
+  }, [spellsAndWeapons]);
+
+  const consumablesInInventory = useMemo(() => {
+    return inventoryConsumables
+      .reduce((acc, item) => {
+        return acc + item.balance;
+      }, BigInt(0))
+      .toString();
+  }, [inventoryConsumables]);
+
   if (isLoadingItemTemplates) {
     return (
       <Center h="100%">
@@ -777,7 +803,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       </HStack>
       <PolygonalCard clipPath="none" p={6}>
         <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
-          Armor ({inventoryArmor.length}) - {equippedArmor.length}/
+          Armor ({armorInInventory}) - {equippedArmor.length}/
           {MAX_EQUIPPED_ARMOR} equipped{' '}
         </Text>
         {maxArmorEquipped && <Text fontSize="sm">(Max armor equipped)</Text>}
@@ -813,7 +839,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           })}
         </Grid>
         <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
-          Weapons & Spells ({spellsAndWeapons.length}) -{' '}
+          Weapons & Spells ({spellsAndWeaponsInInventory}) -{' '}
           {equippedSpellsAndWeaponsIds.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
         </Text>
         {maxWeaponsEquipped && (
@@ -854,7 +880,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           })}
         </Grid>
         <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
-          Consumables ({inventoryConsumables.length})
+          Consumables ({consumablesInInventory})
         </Text>
         <Grid
           templateColumns={{
