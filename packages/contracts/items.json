@@ -270,7 +270,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "18_wall_of_force.json",
       "name": "Wall of Force",
-      "price": 100000000000000000000,
+      "price": 150000000000000000000,
       "stats": {
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
@@ -290,7 +290,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "19_ice_lance.json",
       "name": "Ice Lance",
-      "price": 100000000000000000000,
+      "price": 200000000000000000000,
       "stats": {
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"

@@ -92,7 +92,12 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const {
     components: { CombatEncounter, CombatOutcome, MarketplaceSale, ShopSale },
   } = useMUD();
-  const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
+  const {
+    armorTemplates,
+    consumableTemplates,
+    spellTemplates,
+    weaponTemplates,
+  } = useItems();
   const { monsterTemplates } = useMonsters();
   const { allCharacters } = useMap();
 
@@ -186,6 +191,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
       const allItems = [
         ...armorTemplates,
+        ...consumableTemplates,
         ...spellTemplates,
         ...weaponTemplates,
       ];
@@ -222,7 +228,12 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
     const { buyer, itemId, timestamp } = marketplaceSale;
 
-    const allItems = [...armorTemplates, ...spellTemplates, ...weaponTemplates];
+    const allItems = [
+      ...armorTemplates,
+      ...consumableTemplates,
+      ...spellTemplates,
+      ...weaponTemplates,
+    ];
 
     const customerName =
       allCharacters.find(character => character.owner === buyer)?.name ?? null;
@@ -380,9 +391,9 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   }, []);
 
   const onSendMessage = useCallback(async () => {
-    const oldMessage = newMessage;
+    const oldMessage = newMessage.trim();
 
-    if (!newMessage) {
+    if (!oldMessage) {
       return;
     }
 
@@ -399,7 +410,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         {
           delivered: false,
           from: user.account,
-          message: newMessage,
+          message: oldMessage,
           timestamp: Date.now(),
         },
       ]);
@@ -408,7 +419,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       setIsSending(false);
 
       await user.chat.send(GROUP_CHAT_ID, {
-        content: newMessage,
+        content: oldMessage,
         type: 'Text',
       });
     } catch (e) {
