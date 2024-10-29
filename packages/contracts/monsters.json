@@ -54,7 +54,7 @@
         "class": 2,
         "experience": 100,
         "hitPoints": 21,
-        "intelligence": 8,
+        "intelligence": 12,
         "inventory": [16],
         "level": 2,
         "strength": 4
@@ -129,10 +129,10 @@
         "class": 2,
         "experience": 205,
         "hitPoints": 30,
-        "intelligence": 12,
+        "intelligence": 15,
         "inventory": [17],
         "level": 5,
-        "strength": 14
+        "strength": 9
       }
     },
     {

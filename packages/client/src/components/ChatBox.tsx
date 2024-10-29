@@ -50,6 +50,8 @@ export const ChatBox: React.FC = () => {
     Record<string, string>
   >({});
 
+  const [chatScrolledOnce, setChatScrolledOnce] = useState(false);
+
   const adjustTextareaHeight = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -59,10 +61,15 @@ export const ChatBox: React.FC = () => {
   }, []);
 
   const scrollToBottom = useCallback(() => {
-    if (messagesEndRef.current) {
+    const isInView = messagesEndRef.current
+      ? messagesEndRef.current.getBoundingClientRect().top < window.innerHeight
+      : false;
+
+    if ((!chatScrolledOnce || isInView) && messagesEndRef.current) {
+      setChatScrolledOnce(true);
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, []);
+  }, [chatScrolledOnce]);
 
   useEffect(() => {
     adjustTextareaHeight();
@@ -72,7 +79,7 @@ export const ChatBox: React.FC = () => {
     if (isLoggedIn && isGroupMember && chatUser) {
       scrollToBottom();
     }
-  }, [chatUser, isGroupMember, isLoggedIn, scrollToBottom]);
+  }, [chatUser, isGroupMember, isLoggedIn, messages, scrollToBottom]);
 
   useEffect(() => {
     (async () => {
