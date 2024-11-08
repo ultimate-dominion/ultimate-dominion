@@ -72,6 +72,7 @@ export const Marketplace = (): JSX.Element => {
     highestOffers,
     isLoading: isLoadingOrders,
     lowestPrices,
+    refreshOrders,
   } = useOrders();
   const { character, isRefreshing } = useCharacter();
 
@@ -125,6 +126,8 @@ export const Marketplace = (): JSX.Element => {
       navigate(CHARACTER_CREATION_PATH);
       return;
     }
+
+    refreshOrders();
   }, [
     character,
     delegatorAddress,
@@ -132,6 +135,7 @@ export const Marketplace = (): JSX.Element => {
     isRefreshing,
     isSynced,
     navigate,
+    refreshOrders,
   ]);
 
   const unfilteredItems = useMemo(

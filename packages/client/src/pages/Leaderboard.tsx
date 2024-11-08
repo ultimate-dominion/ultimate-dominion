@@ -40,7 +40,7 @@ export const Leaderboard = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const navigate = useNavigate();
   const { isConnected } = useAccount();
-  const { allCharacters, isFetchingEntities } = useMap();
+  const { allCharacters, isFetchingEntities, refreshEntities } = useMap();
 
   const [entries, setEntries] = useState<Character[]>([]);
   const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
@@ -55,8 +55,10 @@ export const Leaderboard = (): JSX.Element => {
     if (!isConnected) {
       navigate(HOME_PATH);
       window.location.reload();
+    } else {
+      refreshEntities();
     }
-  }, [isConnected, navigate]);
+  }, [isConnected, navigate, refreshEntities]);
 
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {

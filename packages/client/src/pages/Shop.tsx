@@ -54,7 +54,7 @@ export const Shop = (): JSX.Element => {
     inventoryWeapons,
     isRefreshing,
   } = useCharacter();
-  const { allShops } = useMap();
+  const { allShops, refreshEntities } = useMap();
 
   const shop = useMemo(() => {
     if (!(shopId && allShops)) return null;
@@ -115,12 +115,15 @@ export const Shop = (): JSX.Element => {
     if (!userCharacter?.worldEncounter) {
       navigate(GAME_BOARD_PATH);
     }
+
+    refreshEntities();
   }, [
     delegatorAddress,
     isConnected,
     isRefreshing,
     isSynced,
     navigate,
+    refreshEntities,
     userCharacter,
   ]);
 
