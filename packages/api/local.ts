@@ -1,32 +1,29 @@
 import express from "express";
-import uploadFile from "./api/uploadFile.js";
-import uploadMetadata from "./api/uploadMetadata.js";
-import sessionBooting from "./api/sessionBooting.js";
-import { VercelRequest, VercelResponse } from "@vercel/node";
-import "dotenv/config";
+import { config } from "dotenv";
+import { uploadMetadata } from "./api/uploadMetadata.js";
 
-const PORT = 8080;
+config();
 
-if (process.env.NODE_ENV !== "production") {
-  const app = express();
+const app = express();
+const port = process.env.PORT || 8080;
 
-  app.use(express.json());
+// CORS middleware
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
-  app.use("/api/uploadFile", (req: unknown, res: unknown) => {
-    uploadFile(req as VercelRequest, res as VercelResponse);
-  });
+// Body parser middleware
+app.use(express.json());
 
-  app.use("/api/uploadMetadata", (req: unknown, res: unknown) => {
-    uploadMetadata(req as VercelRequest, res as VercelResponse);
-  });
+// Routes
+app.post("/api/upload", uploadMetadata);
 
-  app.use("/api/sessionBooting", (req: unknown, res: unknown) => {
-    sessionBooting(req as VercelRequest, res as VercelResponse);
-  });
-
-  app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-  });
-} else {
-  throw new Error("local.js should not be used in production");
-}
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});

@@ -87,6 +87,32 @@ WORLD_ADDRESS=
 INITIAL_BLOCK_NUMBER=
 ```
 
+## Deployment
+
+### API Deployment (Render)
+
+The API is configured to deploy on Render using the `render.yaml` configuration file. To deploy:
+
+1. Create a new Web Service on Render
+2. Connect your GitHub repository
+3. Render will automatically detect the `render.yaml` configuration
+4. Set up the following environment variables in Render:
+   - `NODE_ENV`: Set to `production`
+   - `PINATA_JWT`: Your Pinata JWT token (keep this secret!)
+
+The build process will:
+1. Install dependencies using pnpm
+2. Build the TypeScript files
+3. Start the server using the production entry point
+
+### Environment Variables
+
+Required environment variables for the API:
+- `PINATA_JWT`: JWT token for Pinata IPFS service
+- `PORT`: (Optional) Port number for the server (defaults to 8080)
+
+Make sure to set these variables in your deployment environment.
+
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
