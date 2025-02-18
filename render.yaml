@@ -9,4 +9,12 @@ services:
         value: production
       - key: PINATA_JWT
         sync: false
+      - key: PRIVATE_KEY
+        sync: false
+      - key: WORLD_ADDRESS
+        sync: false
+      - key: INITIAL_BLOCK_NUMBER
+        sync: false
+      - key: PORT
+        value: 8080
     autoDeploy: true

@@ -108,10 +108,19 @@ The build process will:
 ### Environment Variables
 
 Required environment variables for the API:
+- `NODE_ENV`: Set to `production` for deployment
 - `PINATA_JWT`: JWT token for Pinata IPFS service
-- `PORT`: (Optional) Port number for the server (defaults to 8080)
+- `PRIVATE_KEY`: Ethereum private key for blockchain interactions
+- `WORLD_ADDRESS`: Address of the deployed World contract
+- `INITIAL_BLOCK_NUMBER`: Block number where the World contract was deployed
 
-Make sure to set these variables in your deployment environment.
+Optional environment variables:
+- `PORT`: Port number for the server (defaults to 8080)
+
+Make sure to set these variables in your deployment environment. For Render deployment:
+1. All sensitive variables (PINATA_JWT, PRIVATE_KEY, etc.) should be marked as "Secret"
+2. Variables are configured in the Render dashboard under Environment
+3. Changes to environment variables will trigger a redeploy
 
 ## Contributing
 
