@@ -1,80 +1,114 @@
 # Ultimate Dominion
 
-Ultimate Dominion is a text-based MMORPG built on the MUD engine.
+Ultimate Dominion is an open-source blockchain-based text MMORPG built on the MUD framework. Players can create characters, explore a vast world, engage in combat, trade items, and interact with other players in a decentralized gaming environment.
 
-## Getting Started
+## Features
 
-### Requirements
+- ⚔️ Character Creation & Customization
+- 🌍 Vast World Exploration
+- ⚔️ PvE & PvP Combat Systems
+- 🏪 Trading & Marketplace
+- 💎 NFT-Based Items & Equipment
+- 🤝 Player Interactions
+- 🌐 Decentralized Infrastructure
 
-- [Node.js v18](https://nodejs.org/en/download/package-manager) Note that version 18 is required. We do not support older or newer versions at the moment.
-- [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-- [Foundry](https://book.getfoundry.sh/getting-started/installation)
-- [pnpm, at least version 8](https://pnpm.io/)
+## Tech Stack
 
-### Required API Keys
+- Frontend: React + Vite
+- Backend: Node.js + Express
+- Blockchain: Solidity + MUD Framework
+- Storage: IPFS (Pinata)
+- Development Chain: Anvil
+- Testnet: Sepolia
+- Production: Ethereum Mainnet
 
-1. **WalletConnect Project ID**
-   - Go to [WalletConnect Cloud](https://cloud.walletconnect.com/)
-   - Create a new project
-   - Copy the Project ID
+## Prerequisites
 
-2. **Pinata JWT**
-   - Go to [Pinata Cloud](https://app.pinata.cloud/)
-   - Create an account
-   - Generate a new API Key with upload permissions
-   - Copy the JWT token
+- Node.js v18.x
+- pnpm 8+
+- Foundry
+- MetaMask or other Web3 wallet
 
-### Local Setup Steps
+## Local Development
 
-1. Install dependencies:
+1. Clone the repository:
+```bash
+git clone https://github.com/ultimate-dominion/ultimate-dominion.git
+cd ultimate-dominion
+```
+
+2. Install dependencies:
 ```bash
 pnpm install
 ```
 
-2. Set up client environment:
+3. Set up environment variables:
 ```bash
-cd packages/client
+# In packages/client
+cp .env.sample .env
+# In packages/api
 cp .env.sample .env
 ```
-Edit `.env` and add your WalletConnect Project ID
 
-3. Set up API environment:
+4. Start the local blockchain:
 ```bash
-cd ../api
-cp .env.sample .env
-```
-Edit `.env` and add your Pinata JWT
-
-4. Return to root and start local blockchain:
-```bash
-cd ../..
-pnpm foundry:up  # Only needed first time
-anvil
+pnpm anvil
 ```
 
-5. In a new terminal, deploy contracts:
+5. Deploy contracts:
 ```bash
-cd packages/contracts
 pnpm deploy:local
 ```
-Note the World Contract address and Initial Block Number
 
-6. Update API environment:
-Edit `packages/api/.env` and update:
-- WORLD_ADDRESS with the deployed contract address
-- INITIAL_BLOCK_NUMBER with the deployment block number
-
-7. Start the development server:
+6. Start the development servers:
 ```bash
-cd ../..
 pnpm dev
 ```
 
-The game should now be running at:
-- Frontend: http://localhost:3000
-- API: http://localhost:8080
-- Local Blockchain: http://localhost:8545
+The game will be available at `http://localhost:3000`
 
-## MUD
+## Environment Setup
 
-This game is built off of the MUD engine. Check their docs [here](https://mud.dev/introduction).
+### Client (.env)
+```
+VITE_WALLET_CONNECT_PROJECT_ID=
+VITE_CHAIN_ID=31337 # Local
+VITE_INDEXER_URL=
+VITE_HTTPS_RPC_URL=
+VITE_WS_RPC_URL=
+VITE_API_URL=
+```
+
+### API (.env)
+```
+PINATA_JWT=
+PRIVATE_KEY=
+WORLD_ADDRESS=
+INITIAL_BLOCK_NUMBER=
+```
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+- Discord: [Join our community](https://discord.gg/ultimate-dominion)
+- Twitter: [@UltimateDominion](https://twitter.com/UltimateDominion)
+- Email: team@ultimatedominion.game
+
+## Acknowledgments
+
+- [MUD Framework](https://mud.dev/)
+- [Ethereum Foundation](https://ethereum.org/)
+- [All Contributors](CONTRIBUTORS.md)
