@@ -2,7 +2,7 @@ services:
   - type: web
     name: ultimate-dominion-api
     env: node
-    buildCommand: chmod +x build.sh && ./build.sh
+    buildCommand: cd packages/api && pnpm install --no-frozen-lockfile && pnpm build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
