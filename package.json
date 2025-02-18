@@ -12,7 +12,7 @@
     "format:client": "pnpm --filter 'client' run format",
     "lint:client": "pnpm --filter 'client' run lint",
     "test": "pnpm --filter client run lint",
-    "prepare": "[ \"$NODE_ENV\" != \"production\" ] && ((forge --version || pnpm foundry:up) && husky) || exit 0"
+    "prepare": "pnpm foundry:up"
   },
   "devDependencies": {
     "@latticexyz/cli": "2.0.11",
