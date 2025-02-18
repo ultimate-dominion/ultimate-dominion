@@ -2,8 +2,8 @@ services:
   - type: web
     name: ultimate-dominion-api
     env: node
-    buildCommand: cd packages/api && ./scripts/build.sh
-    startCommand: cd packages/api && npm start
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
