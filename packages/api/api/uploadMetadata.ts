@@ -19,6 +19,7 @@ const uploadMetadata = async (req: VercelRequest, res: VercelResponse) => {
     const fileName = req.query.name as string;
     const metadata = req.body;
 
+    // eslint-disable-next-line no-console
     console.log(metadata);
 
     const fileContents = Buffer.from(JSON.stringify(metadata));
@@ -26,7 +27,8 @@ const uploadMetadata = async (req: VercelRequest, res: VercelResponse) => {
     if (!cid) {
       return res.status(500).json({ error: "Error uploading file" });
     }
-    return res.status(200).json({ cid });
+    const gatewayUrl = `https://violet-magnetic-tick-248.mypinata.cloud/ipfs/${cid}`;
+    return res.status(200).json({ url: gatewayUrl });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Something went wrong" });

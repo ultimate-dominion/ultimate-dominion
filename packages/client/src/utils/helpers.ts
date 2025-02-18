@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import {
   decodeAbiParameters,
   formatEther,
@@ -161,19 +162,40 @@ export const getStatSymbol = (stat: string): string =>
   Number(stat) >= 0 ? '+' : '';
 
 export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
-  const res = await fetch(uri);
-  if (!res.ok) throw new Error('Failed to fetch');
-  const metadata = await res.json();
-  metadata.name = metadata.name || '';
-  metadata.description = metadata.description || '';
-  metadata.image = uriToHttp(metadata.image)[0] || '';
-  return metadata;
+  const urls = uriToHttp(uri);
+  let lastError: Error | null = null;
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        lastError = new Error(`Failed to fetch from ${url}`);
+        console.error(`Failed to fetch from ${url}`);
+        continue;
+      }
+
+      const metadata = await res.json();
+      metadata.name = metadata.name || '';
+      metadata.description = metadata.description || '';
+      metadata.image = uriToHttp(metadata.image)[0] || '';
+
+      return metadata;
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`Failed to fetch from ${url}:`, error);
+      continue;
+    }
+  }
+
+  throw lastError || new Error('Failed to fetch from all URLs');
 };
 
 const IPFS_GATEWAYS = [
-  'https://black-bright-cuckoo-327.mypinata.cloud',
-  // 'https://cloudflare-ipfs.com',
-  // 'https://ipfs.io',
+  'https://ipfs.io',
+  'https://cloudflare-ipfs.com',
+  'https://gateway.pinata.cloud',
+  'https://dweb.link',
+  'https://ipfs.fleek.co',
 ];
 
 /**
@@ -192,11 +214,11 @@ export const uriToHttp = (uri: string): string[] => {
         return ['https' + uri.substring(4), uri];
       case 'ipfs': {
         const hash = uri.match(/^ipfs:(\/\/)?(.*)$/i)?.[2];
-        return IPFS_GATEWAYS.map(g => `${g}/ipfs/${hash}`);
+        return IPFS_GATEWAYS.map(gateway => `${gateway}/ipfs/${hash}`);
       }
       case 'ipns': {
         const name = uri.match(/^ipns:(\/\/)?(.*)$/i)?.[2];
-        return IPFS_GATEWAYS.map(g => `${g}/ipns/${name}`);
+        return IPFS_GATEWAYS.map(gateway => `${gateway}/ipns/${name}`);
       }
       case 'ar': {
         const tx = uri.match(/^ar:(\/\/)?(.*)$/i)?.[2];
@@ -206,7 +228,6 @@ export const uriToHttp = (uri: string): string[] => {
         return [''];
     }
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error(e);
     return [''];
   }
