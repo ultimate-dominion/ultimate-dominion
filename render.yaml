@@ -2,7 +2,7 @@ services:
   - type: web
     name: ultimate-dominion-api
     env: node
-    buildCommand: cd packages/api && pnpm install --no-frozen-lockfile && pnpm build
+    buildCommand: cd packages/api && HUSKY=0 pnpm install --no-frozen-lockfile --ignore-scripts && pnpm build
     startCommand: cd packages/api && node dist/server.js
     envVars:
       - key: NODE_ENV
