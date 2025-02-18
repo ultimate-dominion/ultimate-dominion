@@ -3,8 +3,11 @@
 # Exit on error
 set -e
 
-# Install dependencies without running scripts
-HUSKY=0 pnpm install --no-frozen-lockfile --ignore-scripts
+# Copy production package.json
+cp package.prod.json package.json
+
+# Clean install dependencies
+npm install --production
 
 # Build TypeScript
-pnpm build
+npm run build
