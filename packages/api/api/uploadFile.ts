@@ -1,6 +1,6 @@
 import formidable from "formidable";
 import sharp from "sharp";
-import { VercelRequest, VercelResponse } from "@vercel/node";
+import { Request, Response } from "express";
 
 import { uploadToPinata } from "../lib/fileStorage.js";
 
@@ -11,8 +11,8 @@ type FormFile = {
 };
 
 export default async function uploadFile(
-  req: VercelRequest,
-  res: VercelResponse
+  req: Request,
+  res: Response
 ) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");

@@ -1,4 +1,4 @@
-import { VercelRequest, VercelResponse } from "@vercel/node";
+import { Request, Response } from "express";
 import {
   Has,
   HasValue,
@@ -45,8 +45,8 @@ function createViemClientConfig(chain: MUDChain): {
 }
 
 export default async function sessionBooting(
-  req: VercelRequest,
-  res: VercelResponse
+  req: Request,
+  res: Response
 ) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET");
