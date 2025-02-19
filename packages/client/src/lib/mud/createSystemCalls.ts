@@ -750,10 +750,12 @@ export function createSystemCalls(
         currentBlockNumber = await publicClient.getBlockNumber();
       }
 
-      const success = !!getComponentValue(Stats, characterEntity);
+      const stats = getComponentValue(Stats, characterEntity);
+      const success = stats && stats.maxHp > BigInt(0);
+
       return {
         error: success ? undefined : 'Failed to roll stats.',
-        success,
+        success: !!success,
       };
     } catch (e) {
       return {

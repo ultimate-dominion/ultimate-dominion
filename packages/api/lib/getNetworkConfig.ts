@@ -29,7 +29,7 @@ export async function getNetworkConfig(): Promise<{
   worldAddress: string;
   initialBlockNumber: number | bigint;
 }> {
-  const chainId = Number(garnet.id);
+  const chainId = process.env.NODE_ENV === "production" ? Number(garnet.id) : Number(mudFoundry.id);
 
   const chainIndex = SUPPORTED_CHAINS.findIndex((c) => c.id === chainId);
   const chain = SUPPORTED_CHAINS[chainIndex];
