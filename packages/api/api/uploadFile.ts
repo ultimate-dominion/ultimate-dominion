@@ -4,12 +4,6 @@ import { Request, Response } from "express";
 
 import { uploadFileToPinata } from "../lib/fileStorage.js";
 
-type FormFile = {
-  _writeStream: {
-    path: string;
-  };
-};
-
 export default async function uploadFile(
   req: Request,
   res: Response
@@ -29,16 +23,24 @@ export default async function uploadFile(
   const form = formidable({});
 
   try {
-    const [, files] = await form.parse(req);
-    const file = files[fileName];
-    const filePath = (file as unknown as FormFile)._writeStream.path;
-
-    if (!file) {
+    const [fields, files] = await form.parse(req);
+    console.log('Received files:', Object.keys(files));
+    
+    // Get the first file from the files object
+    const fileArray = Object.values(files)[0];
+    if (!fileArray || !fileArray[0]) {
       return res.status(400).json({ error: "No file provided" });
     }
 
+    const file = fileArray[0];
+    console.log('File details:', {
+      filepath: file.filepath,
+      originalFilename: file.originalFilename,
+      mimetype: file.mimetype
+    });
+
     // Process image with sharp
-    const processedImageBuffer = await sharp(filePath)
+    const processedImageBuffer = await sharp(file.filepath)
       .resize(800, 800, { fit: 'inside' })
       .toBuffer();
 
