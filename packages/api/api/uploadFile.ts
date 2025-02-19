@@ -1,6 +1,9 @@
 import formidable from "formidable";
 import sharp from "sharp";
 import { Request, Response } from "express";
+import { join } from "path";
+import { mkdtemp, writeFile } from "fs/promises";
+import { tmpdir } from "os";
 
 import { uploadFileToPinata } from "../lib/fileStorage.js";
 
@@ -44,7 +47,15 @@ export default async function uploadFile(
       .resize(800, 800, { fit: 'inside' })
       .toBuffer();
 
-    const cid = await uploadFileToPinata(processedImageBuffer, fileName);
+    // Create temporary directory
+    const tempDir = await mkdtemp(join(tmpdir(), 'ultimate-dominion-'));
+    const tempFilePath = join(tempDir, fileName);
+    
+    // Write processed image to temp file
+    await writeFile(tempFilePath, processedImageBuffer);
+
+    // Upload to Pinata
+    const cid = await uploadFileToPinata(tempFilePath, fileName);
     if (!cid) {
       return res.status(500).json({ error: "Error uploading file" });
     }

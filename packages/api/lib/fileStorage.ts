@@ -1,5 +1,6 @@
 import pinataSDK from '@pinata/sdk';
 import "dotenv/config";
+import { createReadStream } from "fs";
 
 const PINATA_JWT = process.env.PINATA_JWT || '';
 
@@ -13,16 +14,12 @@ const pinata = new pinataSDK({ pinataJWTKey: PINATA_JWT });
 
 /**
  * Upload JSON metadata to Pinata
- * @param fileContents Buffer containing JSON data
+ * @param jsonData JSON data
  * @param fileName Name to store the file as
  * @returns IPFS hash or null if upload fails
  */
-export async function uploadJsonToPinata(fileContents: Buffer, fileName: string): Promise<string | null> {
+export async function uploadJsonToPinata(jsonData: Record<string, unknown>, fileName: string): Promise<string | null> {
   try {
-    console.log('Parsing JSON data...');
-    const jsonData = JSON.parse(fileContents.toString());
-    console.log('JSON data:', jsonData);
-    
     console.log('Uploading JSON to Pinata...');
     const result = await pinata.pinJSONToIPFS(jsonData, {
       pinataMetadata: {
@@ -44,14 +41,15 @@ export async function uploadJsonToPinata(fileContents: Buffer, fileName: string)
 
 /**
  * Upload binary file to Pinata
- * @param fileContents Buffer containing file data
+ * @param filePath Path to the file
  * @param fileName Name to store the file as
  * @returns IPFS hash or null if upload fails
  */
-export async function uploadFileToPinata(fileContents: Buffer, fileName: string): Promise<string | null> {
+export async function uploadFileToPinata(filePath: string, fileName: string): Promise<string | null> {
   try {
     console.log('Uploading file to Pinata...');
-    const result = await pinata.pinFileToIPFS(fileContents, {
+    const readStream = createReadStream(filePath);
+    const result = await pinata.pinFileToIPFS(readStream, {
       pinataMetadata: {
         name: fileName
       }
