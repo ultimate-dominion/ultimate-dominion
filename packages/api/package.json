@@ -31,5 +31,9 @@
   "devDependencies": {
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
   }
 }
