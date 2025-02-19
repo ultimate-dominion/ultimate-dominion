@@ -12,7 +12,8 @@ export async function uploadToPinata(fileContents: Buffer, fileName: string): Pr
     // @ts-expect-error - Pinata SDK initialization type mismatch
     const pinata = pinataSDK({ pinataJWTKey: PINATA_JWT });
     
-    const result = await pinata.pinFileToIPFS(fileContents, {
+    const jsonData = JSON.parse(fileContents.toString());
+    const result = await pinata.pinJSONToIPFS(jsonData, {
       pinataMetadata: {
         name: fileName
       }
