@@ -2,7 +2,7 @@ import formidable from "formidable";
 import sharp from "sharp";
 import { Request, Response } from "express";
 
-import { uploadToPinata } from "../lib/fileStorage.js";
+import { uploadFileToPinata } from "../lib/fileStorage.js";
 
 type FormFile = {
   _writeStream: {
@@ -30,25 +30,27 @@ export default async function uploadFile(
 
   try {
     const [, files] = await form.parse(req);
-    const formFile = files[fileName] as [FormFile] | undefined;
+    const file = files[fileName];
+    const filePath = (file as unknown as FormFile)._writeStream.path;
 
-    if (!formFile) {
+    if (!file) {
       return res.status(400).json({ error: "No file provided" });
     }
 
-    const fileContents = await sharp(formFile[0]._writeStream.path)
-      .resize(700)
-      .png()
+    // Process image with sharp
+    const processedImageBuffer = await sharp(filePath)
+      .resize(800, 800, { fit: 'inside' })
       .toBuffer();
 
-    const cid = await uploadToPinata(fileContents, `${fileName}.png`);
+    const cid = await uploadFileToPinata(processedImageBuffer, fileName);
     if (!cid) {
       return res.status(500).json({ error: "Error uploading file" });
     }
 
-    return res.status(200).json({ cid });
+    const gatewayUrl = `https://violet-magnetic-tick-248.mypinata.cloud/ipfs/${cid}`;
+    return res.status(200).json({ url: gatewayUrl });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Something went wrong" });
+    console.error('Error in uploadFile:', error);
+    return res.status(500).json({ error: "Error uploading file" });
   }
 }

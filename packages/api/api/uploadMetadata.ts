@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { uploadToPinata } from '../lib/fileStorage.js';
+import { uploadJsonToPinata } from '../lib/fileStorage.js';
 
 export async function uploadMetadata(req: Request, res: Response) {
   try {
@@ -22,14 +22,14 @@ export async function uploadMetadata(req: Request, res: Response) {
     console.log(metadata);
 
     const fileContents = Buffer.from(JSON.stringify(metadata));
-    const cid = await uploadToPinata(fileContents, fileName);
+    const cid = await uploadJsonToPinata(fileContents, fileName);
     if (!cid) {
       return res.status(500).json({ error: "Error uploading file" });
     }
     const gatewayUrl = `https://violet-magnetic-tick-248.mypinata.cloud/ipfs/${cid}`;
     return res.status(200).json({ url: gatewayUrl });
   } catch (error) {
-    console.error('Error in uploadMetadata:', error);
+    console.error(error);
     return res.status(500).json({ error: "Internal server error" });
   }
 }
