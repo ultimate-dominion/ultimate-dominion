@@ -11,7 +11,7 @@ export async function uploadToPinata(fileContents: Buffer, fileName: string): Pr
   try {
     console.log('Initializing Pinata with JWT length:', PINATA_JWT.length);
     // @ts-expect-error - Pinata SDK initialization type mismatch
-    const pinata = pinataSDK({ pinataJWTKey: PINATA_JWT });
+    const pinata = new pinataSDK({ pinataJWTKey: PINATA_JWT });
     
     console.log('Parsing JSON data...');
     const jsonData = JSON.parse(fileContents.toString());
