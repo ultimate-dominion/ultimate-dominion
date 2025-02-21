@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "format": "prettier --write \"{*,**/*}.{ts,tsx,js,jsx,json,yml,yaml,md}\"",
     "lint": "eslint --ext .ts,.tsx src",
+    "lint:fix": "eslint --ext .ts,.tsx src --fix",
     "test": "tsc --noEmit"
   },
   "dependencies": {
