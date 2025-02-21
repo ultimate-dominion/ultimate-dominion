@@ -36,6 +36,7 @@ import {
 } from '../utils/constants';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { type Character, EncounterType, type Monster } from '../utils/types';
+
 import { AdventureEscrowModal } from './AdventureEscrowModal';
 import { ClassSymbol } from './ClassSymbol';
 import { HealthBar } from './HealthBar';

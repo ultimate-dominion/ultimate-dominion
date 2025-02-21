@@ -15,6 +15,7 @@ import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { SystemToAllow } from '../utils/types';
+
 import { PolygonalCard } from './PolygonalCard';
 
 export const LootManagerAllowanceModal = ({

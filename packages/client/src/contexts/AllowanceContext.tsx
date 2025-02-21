@@ -14,6 +14,7 @@ import { useWalletClient } from 'wagmi';
 import { useToast } from '../hooks/useToast';
 import { ERC_1155_ABI } from '../utils/constants';
 import { SystemToAllow } from '../utils/types';
+
 import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 

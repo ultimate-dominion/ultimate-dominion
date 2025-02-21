@@ -26,6 +26,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { etherToFixedNumber } from '../utils/helpers';
+
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
 import { PolygonalCard } from './PolygonalCard';
 

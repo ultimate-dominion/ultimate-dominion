@@ -20,6 +20,7 @@ import { mainnet } from 'viem/chains';
 import { useChat } from '../contexts/ChatContext';
 import { useMap } from '../contexts/MapContext';
 import { shortenAddress } from '../utils/helpers';
+
 import { PolygonalCard } from './PolygonalCard';
 
 export const ChatBox: React.FC = () => {

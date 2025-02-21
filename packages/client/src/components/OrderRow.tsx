@@ -34,6 +34,7 @@ import {
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
+
 import { MarketplaceAllowanceModal } from './MarketplaceAllowanceModal';
 
 type OrderRowProps = {

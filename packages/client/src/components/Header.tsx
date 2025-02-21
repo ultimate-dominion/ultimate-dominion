@@ -36,6 +36,7 @@ import {
   MARKETPLACE_PATH,
   SHOP_PATH,
 } from '../Routes';
+
 import { BackCaretSvg } from './SVGs';
 
 const PAGES_WITH_BACK_BUTTON = [

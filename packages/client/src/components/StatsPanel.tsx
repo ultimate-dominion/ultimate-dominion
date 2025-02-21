@@ -28,6 +28,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
+
 import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
 import { LeaderboardIconSvg, MarketplaceIconSvg } from './SVGs';

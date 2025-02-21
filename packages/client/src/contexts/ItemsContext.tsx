@@ -27,6 +27,7 @@ import {
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
+
 import { useMUD } from './MUDContext';
 
 type ItemsContextType = {

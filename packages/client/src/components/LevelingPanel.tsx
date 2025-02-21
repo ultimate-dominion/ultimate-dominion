@@ -6,6 +6,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { getStatSymbol } from '../utils/helpers';
 import { type Character } from '../utils/types';
+
 import { HealthBar } from './HealthBar';
 import { PolygonalCard } from './PolygonalCard';
 

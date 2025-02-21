@@ -1,6 +1,7 @@
 import { Box, IconProps, Tooltip, useBreakpointValue } from '@chakra-ui/react';
 
 import { StatsClasses } from '../utils/types';
+
 import { MageSvg, RogueSvg, WarriorSvg } from './SVGs';
 
 const ICON_SIZE = {

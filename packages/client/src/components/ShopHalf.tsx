@@ -27,6 +27,7 @@ import {
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
+
 import { Pagination } from './Pagination';
 import { ShopItemRow } from './ShopItemRow';
 

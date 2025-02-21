@@ -18,6 +18,7 @@ import {
 import { createSystemCalls } from '../mud/createSystemCalls';
 import { type SetupNetworkResult } from '../mud/setupNetwork';
 import { DEFAULT_CHAIN_ID } from '../web3';
+
 import { createViemClientConfig } from './createViemClientConfig';
 import { getBurnerAccount } from './getBurnerAccount';
 

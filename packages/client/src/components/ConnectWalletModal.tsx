@@ -16,6 +16,7 @@ import { useAccount, useWalletClient } from 'wagmi';
 
 import { useMUD } from '../contexts/MUDContext';
 import { shortenAddress } from '../utils/helpers';
+
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { CopyText } from './CopyText';
 import { DelegationButton } from './DelegationButton';

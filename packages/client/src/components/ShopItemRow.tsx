@@ -43,6 +43,7 @@ import {
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
+
 import { PolygonalCard } from './PolygonalCard';
 import { ShopAllowanceModal } from './ShopAllowanceModal';
 import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';

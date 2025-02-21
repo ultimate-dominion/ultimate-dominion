@@ -25,6 +25,7 @@ import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { shortenAddress } from '../utils/helpers';
+
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { CopyText } from './CopyText';
 import { PolygonalCard } from './PolygonalCard';

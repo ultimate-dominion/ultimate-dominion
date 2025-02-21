@@ -21,6 +21,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { ITEM_PATH } from '../Routes';
 import { type Consumable, OrderType } from '../utils/types';
+
 import { HealthBar } from './HealthBar';
 import { ItemCard } from './ItemCard';
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';

@@ -15,6 +15,7 @@ import {
 import { useAllowance } from '../contexts/AllowanceContext';
 import { etherToFixedNumber } from '../utils/helpers';
 import { OrderType, SystemToAllow } from '../utils/types';
+
 import { PolygonalCard } from './PolygonalCard';
 
 export const ShopAllowanceModal = ({
