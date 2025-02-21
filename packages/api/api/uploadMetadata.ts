@@ -35,7 +35,7 @@ export default async function uploadMetadata(
 
     const gatewayUrl = `https://violet-magnetic-tick-248.mypinata.cloud/ipfs/${cid}`;
     return res.status(200).json({ url: gatewayUrl });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in uploadMetadata:', error);
     if (error instanceof Error) {
       console.error('Error details:', {

@@ -14,7 +14,7 @@ const pinata = new pinataSDK({ pinataJWTKey: PINATA_JWT });
 // Test Pinata connection on startup
 pinata.testAuthentication().then(() => {
   console.log('Successfully connected to Pinata');
-}).catch((error) => {
+}).catch((error: unknown) => {
   console.error('Failed to connect to Pinata:', error);
   if (error instanceof Error) {
     console.error('Error details:', {
@@ -42,7 +42,7 @@ export async function uploadJsonToPinata(jsonData: Record<string, unknown>, file
     console.log('Pinata result:', result);
 
     return result.IpfsHash;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error uploading JSON to Pinata:', error);
     if (error instanceof Error) {
       console.error('Error details:', {
@@ -73,7 +73,7 @@ export async function uploadFileToPinata(filePath: string, fileName: string): Pr
     console.log('Pinata result:', result);
 
     return result.IpfsHash;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error uploading file to Pinata:', error);
     if (error instanceof Error) {
       console.error('Error details:', {
