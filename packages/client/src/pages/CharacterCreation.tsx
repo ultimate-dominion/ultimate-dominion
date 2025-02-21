@@ -197,7 +197,7 @@ export const CharacterCreation = (): JSX.Element => {
         };
 
         const res = await fetch(
-          `${API_URL}/api/upload?name=characterMetadata.json`,
+          `${API_URL}/api/uploadMetadata?name=characterMetadata.json`,
           {
             method: 'POST',
             body: JSON.stringify(characterMetadata),
@@ -211,16 +211,22 @@ export const CharacterCreation = (): JSX.Element => {
             'Something went wrong uploading your character metadata.',
           );
 
-        const { cid: characterMetadataCid } = await res.json();
-        if (!characterMetadataCid)
+        const { url } = await res.json();
+        if (!url)
           throw new Error(
             'Something went wrong uploading your character metadata.',
           );
 
+        // Extract CID from the IPFS gateway URL
+        const cid = url.split('/').pop();
+        if (!cid) {
+          throw new Error('Invalid metadata URL returned from the server.');
+        }
+
         const { error, success } = await mintCharacter(
           delegatorAddress,
           name,
-          characterMetadataCid,
+          cid,
         );
 
         if (error && !success) {
