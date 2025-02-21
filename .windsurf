@@ -1,0 +1,354 @@
+# Ultimate Dominion Windsurf Configuration
+# Version: 1.0.0
+
+# Project Information
+project:
+  name: "Ultimate Dominion"
+  description: "Blockchain-based Text MMORPG"
+  version: "0.1.0"
+  repository: "https://github.com/your-org/ultimate-dominion"
+
+# Code Style Rules
+style:
+  typescript:
+    indent: 2
+    quotes: "single"
+    semicolons: true
+    maxLineLength: 100
+    
+  solidity:
+    indent: 4
+    maxLineLength: 120
+    orderImports: true
+    
+  markdown:
+    maxLineLength: 80
+    codeBlockStyle: "fenced"
+
+# Auto-formatting Rules
+formatting:
+  onSave: true
+  formatTypes:
+    - "*.ts"
+    - "*.tsx"
+    - "*.sol"
+    - "*.md"
+    - "*.json"
+  ignorePatterns:
+    - "node_modules"
+    - "dist"
+    - ".next"
+    - "coverage"
+
+# Command Auto-running
+commands:
+  safe:
+    - "pnpm test"
+    - "pnpm lint"
+    - "pnpm build"
+  
+  # Commands that require confirmation
+  confirm:
+    - "pnpm deploy:*"
+    - "git push"
+
+# File Templates
+templates:
+  component:
+    path: "packages/client/src/components"
+    extension: ".tsx"
+    content: |
+      import React from 'react';
+      
+      interface {{NAME}}Props {
+        // Add props here
+      }
+      
+      export const {{NAME}}: React.FC<{{NAME}}Props> = () => {
+        return (
+          <div>
+            {/* Add component content */}
+          </div>
+        );
+      };
+
+  contract:
+    path: "packages/contracts/src/systems"
+    extension: ".sol"
+    content: |
+      // SPDX-License-Identifier: MIT
+      pragma solidity ^0.8.17;
+      
+      import { System } from "@latticexyz/world/src/System.sol";
+      
+      contract {{NAME}} is System {
+          // Add contract code here
+      }
+
+  service:
+    path: "packages/api/src/services"
+    extension: ".ts"
+    content: |
+      export class {{NAME}}Service {
+          constructor() {
+              // Add constructor
+          }
+          
+          // Add service methods
+      }
+
+# Git Hooks
+hooks:
+  pre-commit:
+    - "pnpm lint"
+    - "pnpm test"
+  pre-push:
+    - "pnpm build"
+
+# Environment Variables Template
+environment:
+  required:
+    - "GARNET_RPC_URL"
+    - "WALLET_PRIVATE_KEY"
+    - "MONGODB_URI"
+    - "REDIS_URL"
+    - "JWT_SECRET"
+  optional:
+    - "LOG_LEVEL"
+    - "API_PORT"
+
+# Documentation Rules
+documentation:
+  required:
+    - "README.md"
+    - "CONTRIBUTING.md"
+    - "CHANGELOG.md"
+  components:
+    requireJSDoc: true
+    requireProps: true
+  contracts:
+    requireNatSpec: true
+  dependencyGraphs:
+    enabled: true
+    updateOnChange: true
+    types:
+      - "component"
+      - "contract"
+      - "service"
+    outputFormat: "mermaid"
+
+# Documentation Synchronization Rules
+documentationSync:
+  enabled: true
+  trackFiles:
+    - "tech_stack.md"
+    - "prd.md"
+    - "frontend_guidelines.md"
+    - "backend_structure.md"
+    - "app_flow.md"
+    - "smart_contracts_architecture.md"
+    - "implementation_plan.md"
+  
+  updateTriggers:
+    contracts:
+      files: ["packages/contracts/src/**/*.sol"]
+      docs: ["smart_contracts_architecture.md", "implementation_plan.md", "tech_stack.md"]
+    
+    frontend:
+      files: ["packages/client/src/**/*.{ts,tsx}"]
+      docs: ["frontend_guidelines.md", "app_flow.md", "tech_stack.md"]
+    
+    backend:
+      files: ["packages/api/src/**/*.ts"]
+      docs: ["backend_structure.md", "implementation_plan.md", "tech_stack.md"]
+    
+    gameDesign:
+      files: ["packages/client/src/game/**/*"]
+      docs: ["prd.md", "app_flow.md"]
+
+  changeRequirements:
+    major:
+      - updateArchitectureDiagrams: true
+      - updateFlowDiagrams: true
+      - updateImplementationSteps: true
+      - requireChangelogUpdate: true
+    
+    minor:
+      - updateAffectedDocs: true
+      - updateImplementationSteps: true
+    
+    patch:
+      - updateAffectedDocs: true
+
+  reviewChecks:
+    - checkDocSync: true
+    - validateDiagrams: true
+    - checkDeadLinks: true
+    - ensureConsistency: true
+
+  automation:
+    - type: "diagram"
+      trigger: "onArchitectureChange"
+      action: "updateAsciiDiagrams"
+      files: ["*.md"]
+    
+    - type: "dependency"
+      trigger: "onDependencyChange"
+      action: "updateTechStack"
+      files: ["tech_stack.md"]
+    
+    - type: "api"
+      trigger: "onEndpointChange"
+      action: "updateBackendDocs"
+      files: ["backend_structure.md"]
+
+  notifications:
+    docOutOfSync:
+      channels:
+        - "slack"
+        - "github"
+      message: "Documentation update required for recent changes"
+    
+    missingUpdates:
+      checkFrequency: "daily"
+      alertThreshold: 3
+      notifyTeam: true
+
+# Security Rules
+security:
+  requireTests: true
+  minTestCoverage: 80
+  requireAudit: true
+  requireTypeChecking: true
+
+# Performance Rules
+performance:
+  maxBundleSize: "500kb"
+  enableTreeShaking: true
+  enableCodeSplitting: true
+
+# Dependency Analysis Rules
+dependencies:
+  analysis:
+    enabled: true
+    checkOnEdit: true
+    checkOnPush: true
+    tools:
+      - "madge"      # Checks circular dependencies
+      - "depcheck"   # Checks unused dependencies
+      - "npm-check"  # Checks outdated dependencies
+    
+  impactAssessment:
+    enabled: true
+    requireReview: true
+    checkLevels:
+      - "direct"     # Direct dependencies
+      - "indirect"   # Indirect dependencies
+      - "circular"   # Circular dependencies
+    
+  crossPackageChecks:
+    enabled: true
+    packages:
+      - "contracts"
+      - "client"
+      - "api"
+    relationships:
+      - from: "contracts"
+        to: ["client", "api"]
+        requireSync: true
+      - from: "api"
+        to: ["client"]
+        requireSync: true
+
+# Change Impact Rules
+changeImpact:
+  requireAnalysis: true
+  analysisTypes:
+    contract:
+      - checkAffectedComponents: true
+      - checkStateChanges: true
+      - checkEventConsumers: true
+      - generateImpactReport: true
+    
+    api:
+      - checkConsumers: true
+      - checkDataModels: true
+      - checkEndpoints: true
+      - generateImpactReport: true
+    
+    frontend:
+      - checkPropChanges: true
+      - checkStateConsumers: true
+      - checkRouteImpact: true
+      - generateImpactReport: true
+  
+  preChangeChecks:
+    - type: "typescript"
+      command: "pnpm typecheck"
+      scope: ["client", "api"]
+    
+    - type: "contract"
+      command: "pnpm test:contracts"
+      scope: ["contracts"]
+    
+    - type: "integration"
+      command: "pnpm test:integration"
+      scope: ["all"]
+
+# Code Review Rules
+review:
+  requireImpactAssessment: true
+  requireDependencyCheck: true
+  requireTestCoverage: true
+  requireDocumentation: true
+  
+  impactThresholds:
+    minor:
+      maxFiles: 5
+      maxDependencies: 3
+    major:
+      maxFiles: 10
+      maxDependencies: 5
+    breaking:
+      requireRFC: true
+      requireTeamReview: true
+
+# Monitoring and Alerts
+monitoring:
+  dependencyHealth:
+    checkFrequency: "daily"
+    alertOn:
+      - "circular"
+      - "unused"
+      - "outdated"
+    notifyChannels:
+      - "slack"
+      - "email"
+
+# Example Usage:
+# To create a new component:
+# windsurf create component MyNewComponent
+#
+# To create a new contract:
+# windsurf create contract MyNewSystem
+#
+# To create a new service:
+# windsurf create service MyNewService
+#
+# To check impact of changes:
+# windsurf check-impact path/to/file
+#
+# To generate dependency graph:
+# windsurf graph-deps [package-name]
+#
+# To run full impact analysis:
+# windsurf analyze-impact
+#
+# To check documentation sync status:
+# windsurf check-docs
+#
+# To update affected documentation:
+# windsurf update-docs
+#
+# To validate documentation consistency:
+# windsurf validate-docs
