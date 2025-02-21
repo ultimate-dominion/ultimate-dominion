@@ -197,6 +197,7 @@ export const CharacterCreation = (): JSX.Element => {
           image,
         };
 
+        debug.log('=== VERCEL TEST 2025-02-21 12:37 ===');
         debug.log('Using API URL', API_URL);
         debug.log('Uploading character metadata', characterMetadata);
 
