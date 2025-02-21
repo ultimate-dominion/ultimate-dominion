@@ -42,6 +42,7 @@ import { useUploadFile } from '../hooks/useUploadFile';
 import { EXPLORER_URLS } from '../lib/web3';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
+import { debug } from '../utils/debug';
 import { shortenAddress } from '../utils/helpers';
 import {
   type Armor,
@@ -196,22 +197,35 @@ export const CharacterCreation = (): JSX.Element => {
           image,
         };
 
-        const res = await fetch(
-          `${API_URL}/api/upload?name=characterMetadata.json`,
-          {
-            method: 'POST',
-            body: JSON.stringify(characterMetadata),
-            headers: {
-              'Content-Type': 'application/json',
-            },
+        debug.log('Using API URL', API_URL);
+        debug.log('Uploading character metadata', characterMetadata);
+
+        const uploadUrl = `${API_URL}/api/upload?name=characterMetadata.json`;
+        debug.log('Full upload URL', uploadUrl);
+
+        const res = await fetch(uploadUrl, {
+          method: 'POST',
+          body: JSON.stringify(characterMetadata),
+          headers: {
+            'Content-Type': 'application/json',
           },
-        );
-        if (!res.ok)
+        });
+
+        debug.log('Response status', res.status);
+        debug.log('Response ok', res.ok);
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          debug.error('Error response', errorText);
           throw new Error(
             'Something went wrong uploading your character metadata.',
           );
+        }
 
-        const { url } = await res.json();
+        const responseData = await res.json();
+        debug.log('Response data', responseData);
+
+        const { url } = responseData;
         if (!url)
           throw new Error(
             'Something went wrong uploading your character metadata.',
