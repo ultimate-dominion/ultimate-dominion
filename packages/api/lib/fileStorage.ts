@@ -36,7 +36,11 @@ export async function uploadJsonToPinata(jsonData: Record<string, unknown>, file
     console.log('Uploading JSON to Pinata...');
     const result = await pinata.pinJSONToIPFS(jsonData, {
       pinataMetadata: {
-        name: fileName
+        name: fileName || 'character-metadata.json',
+        keyvalues: {
+          type: 'character-metadata',
+          timestamp: new Date().toISOString()
+        }
       }
     });
     console.log('Pinata result:', result);

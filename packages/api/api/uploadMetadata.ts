@@ -17,13 +17,16 @@ export default async function uploadMetadata(
     return res.status(200).end();
   }
 
-  const fileName = req.query.name as string;
-
   try {
     const jsonData = req.body;
     console.log('Received metadata:', jsonData);
     console.log('Environment:', process.env.NODE_ENV);
     console.log('Using PINATA_JWT:', process.env.PINATA_JWT ? 'Yes (length: ' + process.env.PINATA_JWT.length + ')' : 'No');
+
+    // Generate a filename based on character name or timestamp
+    const fileName = jsonData.name ? 
+      `character-${jsonData.name}-${Date.now()}.json` : 
+      `character-${Date.now()}.json`;
 
     const cid = await uploadJsonToPinata(jsonData, fileName);
     console.log('Upload result CID:', cid);
