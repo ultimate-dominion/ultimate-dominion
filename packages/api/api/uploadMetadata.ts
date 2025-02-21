@@ -22,9 +22,14 @@ export default async function uploadMetadata(
   try {
     const jsonData = req.body;
     console.log('Received metadata:', jsonData);
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Using PINATA_JWT:', process.env.PINATA_JWT ? 'Yes (length: ' + process.env.PINATA_JWT.length + ')' : 'No');
 
     const cid = await uploadJsonToPinata(jsonData, fileName);
+    console.log('Upload result CID:', cid);
+    
     if (!cid) {
+      console.error('Failed to get CID from Pinata');
       return res.status(500).json({ error: "Error uploading metadata" });
     }
 
@@ -32,6 +37,13 @@ export default async function uploadMetadata(
     return res.status(200).json({ url: gatewayUrl });
   } catch (error) {
     console.error('Error in uploadMetadata:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
     return res.status(500).json({ error: "Error uploading metadata" });
   }
 }

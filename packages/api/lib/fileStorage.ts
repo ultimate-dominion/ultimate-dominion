@@ -1,5 +1,4 @@
 import pinataSDK from '@pinata/sdk';
-import "dotenv/config";
 import { createReadStream } from "fs";
 
 const PINATA_JWT = process.env.PINATA_JWT || '';
@@ -11,6 +10,20 @@ if (!PINATA_JWT) {
 // Initialize Pinata once
 // @ts-expect-error - Pinata SDK initialization type mismatch
 const pinata = new pinataSDK({ pinataJWTKey: PINATA_JWT });
+
+// Test Pinata connection on startup
+pinata.testAuthentication().then(() => {
+  console.log('Successfully connected to Pinata');
+}).catch((error) => {
+  console.error('Failed to connect to Pinata:', error);
+  if (error instanceof Error) {
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+  }
+});
 
 /**
  * Upload JSON metadata to Pinata
@@ -32,8 +45,11 @@ export async function uploadJsonToPinata(jsonData: Record<string, unknown>, file
   } catch (error) {
     console.error('Error uploading JSON to Pinata:', error);
     if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
     }
     return null;
   }
@@ -60,8 +76,11 @@ export async function uploadFileToPinata(filePath: string, fileName: string): Pr
   } catch (error) {
     console.error('Error uploading file to Pinata:', error);
     if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
     }
     return null;
   }

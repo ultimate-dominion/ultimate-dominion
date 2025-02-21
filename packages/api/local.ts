@@ -5,7 +5,7 @@ import uploadMetadata from "./api/uploadMetadata.js";
 import uploadFile from "./api/uploadFile.js";
 import sessionBooting from "./api/sessionBooting.js";
 
-config();
+config({ path: '.env.staging' });
 
 const app = express();
 app.use(cors());
