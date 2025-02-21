@@ -197,7 +197,7 @@ export const CharacterCreation = (): JSX.Element => {
         };
 
         const res = await fetch(
-          `${API_URL}/api/uploadMetadata?name=characterMetadata.json`,
+          `${API_URL}/api/upload?name=characterMetadata.json`,
           {
             method: 'POST',
             body: JSON.stringify(characterMetadata),
