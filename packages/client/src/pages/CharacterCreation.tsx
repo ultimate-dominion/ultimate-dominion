@@ -203,52 +203,68 @@ export const CharacterCreation = (): JSX.Element => {
         const uploadUrl = `${API_URL}/api/upload?name=characterMetadata.json`;
         debug.log('Full upload URL', uploadUrl);
 
-        const res = await fetch(uploadUrl, {
-          method: 'POST',
-          body: JSON.stringify(characterMetadata),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        try {
+          const res = await fetch(uploadUrl, {
+            method: 'POST',
+            body: JSON.stringify(characterMetadata),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
 
-        debug.log('Response status', res.status);
-        debug.log('Response ok', res.ok);
+          debug.log('Response status', res.status);
+          debug.log('Response ok', res.ok);
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          debug.error('Error response', errorText);
-          throw new Error(
-            'Something went wrong uploading your character metadata.',
+          const contentType = res.headers.get('content-type');
+          debug.log('Response content type', contentType);
+
+          const responseText = await res.text();
+          debug.log('Raw response', responseText);
+
+          if (!res.ok) {
+            debug.error('Error response', responseText);
+            throw new Error(
+              `Failed to upload metadata: ${res.status} ${res.statusText} - ${responseText}`,
+            );
+          }
+
+          let responseData;
+          try {
+            responseData = JSON.parse(responseText);
+          } catch (parseError) {
+            debug.error('Failed to parse response as JSON', parseError);
+            throw new Error('Invalid JSON response from server');
+          }
+
+          debug.log('Response data', responseData);
+
+          const { url } = responseData;
+          if (!url) {
+            throw new Error('No URL in response from server');
+          }
+
+          // Extract CID from the IPFS gateway URL
+          const cid = url.split('/').pop();
+          if (!cid) {
+            throw new Error('Invalid metadata URL returned from the server.');
+          }
+
+          const { error, success } = await mintCharacter(
+            delegatorAddress,
+            name,
+            cid,
           );
+
+          if (error && !success) {
+            throw new Error(error);
+          }
+
+          await refreshCharacter();
+          renderSuccess('Character created!');
+        } catch (error) {
+          debug.error('Error creating character', error);
+          throw error;
         }
-
-        const responseData = await res.json();
-        debug.log('Response data', responseData);
-
-        const { url } = responseData;
-        if (!url)
-          throw new Error(
-            'Something went wrong uploading your character metadata.',
-          );
-
-        // Extract CID from the IPFS gateway URL
-        const cid = url.split('/').pop();
-        if (!cid) {
-          throw new Error('Invalid metadata URL returned from the server.');
-        }
-
-        const { error, success } = await mintCharacter(
-          delegatorAddress,
-          name,
-          cid,
-        );
-
-        if (error && !success) {
-          throw new Error(error);
-        }
-
-        await refreshCharacter();
-        renderSuccess('Character created!');
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to create character.', e);
       } finally {
