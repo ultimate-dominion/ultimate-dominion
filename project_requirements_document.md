@@ -1,10 +1,103 @@
 # Ultimate Dominion - Project Requirements Document
 
+## System Overview
+
+```mermaid
+graph TD
+    A[Player] -->|Connects Wallet| B[Web Client]
+    B -->|Interacts| C[Frontend/UI]
+    C -->|API Calls| D[Backend Server]
+    C -->|Blockchain Txs| E[MUD Engine]
+    D -->|Game State| E
+    E -->|Updates| F[Blockchain]
+    D -->|Stores| G[Database]
+    
+    style A fill:#f9f,stroke:#333,stroke-width:4px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#dfd,stroke:#333,stroke-width:2px
+    style D fill:#fdd,stroke:#333,stroke-width:2px
+    style E fill:#ddf,stroke:#333,stroke-width:2px
+    style F fill:#ffd,stroke:#333,stroke-width:2px
+    style G fill:#dff,stroke:#333,stroke-width:2px
+```
+
+## Game Architecture
+```ascii
++-------------------+
+|     Web Client    |
+|  +-----------+   |
+|  |   React   |   |
+|  |  Frontend |   |
+|  +-----------+   |
++--------+--------+
+         |
+         v
++-------------------+
+|   Backend API     |
+| +-------------+   |
+| |  Node.js   |   |
+| |  Express   |   |
+| +-------------+   |
++--------+--------+
+         |
+    +----+----+
+    |         |
+    v         v
++-------+ +--------+
+|  MUD  | |MongoDB |
+|Engine | |Database|
++-------+ +--------+
+```
+
 ## What is Ultimate Dominion?
 
 Ultimate Dominion is a text-based game where many players can play together online. Think of old-school text adventures, but modernized with blockchain technology. Instead of just reading and typing commands, players can own their items for real using blockchain, just like owning digital art or collectibles.
 
-Our goal is simple: we want to create a game that feels like the classic text adventures many of us grew up with, but with modern features that let players truly own their in-game stuff and trade with each other fairly.
+## Player Journey Map
+
+```mermaid
+journey
+    title Player's Journey in Ultimate Dominion
+    section Onboarding
+      Connect Wallet: 5: Player
+      Create Character: 3: Player
+      Complete Tutorial: 4: Player
+    section Early Game
+      Basic Combat: 4: Player
+      Collect Items: 3: Player
+      Meet Players: 4: Player
+    section Mid Game
+      Join Guild: 5: Player
+      Trade Items: 4: Player
+      Complete Quests: 3: Player
+    section End Game
+      Territory Control: 5: Player
+      Guild Wars: 4: Player
+      Economy Master: 5: Player
+```
+
+## Game Flow
+```ascii
+    [Start]
+       |
+       v
++-------------+     +--------------+     +----------------+
+|   Connect   |---->|   Create     |---->|    Tutorial    |
+|   Wallet    |     |  Character   |     |    Section     |
++-------------+     +--------------+     +----------------+
+                                               |
+                                               v
++----------------+     +--------------+     +----------------+
+|    Advanced    |<----|    Social    |<----|     Basic      |
+|    Features    |     |  Activities  |     |   Gameplay     |
++----------------+     +--------------+     +----------------+
+       ^                                          |
+       |                                          v
++----------------+     +--------------+     +----------------+
+|    Endgame     |<----|    Player    |<----|    Character   |
+|   Activities   |     | Progression  |     |  Development   |
++----------------+     +--------------+     +----------------+
+```
 
 ## How Will Players Experience the Game?
 
@@ -21,6 +114,37 @@ We're building Ultimate Dominion with some powerful tools. The game's front end 
 The game's brain lives on the blockchain using something called the MUD engine. Think of MUD as a special game engine that lets us store game data securely and make sure everything is fair. When players trade items or fight monsters, MUD helps make sure everything happens correctly and fairly.
 
 We also have a regular server (using Node.js) that handles things that don't need to be on the blockchain, like chat messages or temporary game data. This helps keep the game fast and cheap to play, since not everything needs to be stored on the blockchain.
+
+## Tech Stack Overview
+```ascii
++------------------------------------------+
+|              PRESENTATION                 |
+|  +----------------------------------+    |
+|  |          React + TypeScript      |    |
+|  |  +-------------+ +-----------+   |    |
+|  |  | Chakra UI   | |   Vite    |   |    |
+|  |  +-------------+ +-----------+   |    |
+|  +----------------------------------+    |
++------------------------------------------+
+                    |
++------------------------------------------+
+|            GAME LOGIC LAYER              |
+|  +----------------------------------+    |
+|  |           MUD Engine            |    |
+|  |  +-------------+ +-----------+   |    |
+|  |  |Smart Contract| |Game State |   |    |
+|  |  +-------------+ +-----------+   |    |
+|  +----------------------------------+    |
++------------------------------------------+
+                    |
++------------------------------------------+
+|              DATA LAYER                  |
+|  +------------------+ +---------------+  |
+|  |     Blockchain   | |   MongoDB    |  |
+|  | (Game Assets)    | |(Player Data) |  |
+|  +------------------+ +---------------+  |
++------------------------------------------+
+```
 
 ## What Can Players Do in the Game?
 
