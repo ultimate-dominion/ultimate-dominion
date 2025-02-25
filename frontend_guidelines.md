@@ -1,245 +1,398 @@
-# Ultimate Dominion Frontend Guidelines
+# Ultimate Dominion - Frontend Guidelines
 
 ## Design Philosophy
 
-Ultimate Dominion's visual design embodies a dark fantasy aesthetic while maintaining modern usability principles. The interface draws inspiration from classic RPGs while incorporating contemporary design elements to create an immersive yet intuitive experience. Every visual element serves to enhance the game's mysterious atmosphere while ensuring clear information hierarchy and user feedback.
+Ultimate Dominion's design focuses on creating an immersive medieval fantasy experience while keeping the interface clean and intuitive. We use a dark theme with accent colors to create a mystical atmosphere, and maintain consistent spacing and typography to ensure everything is easy to read and use.
 
 ## Color Palette
 
 ### Primary Colors
-Our primary color palette centers around deep, rich blues that form the foundation of our interface. The primary blue (#1a237e) serves as our main action color, while darker shades (#0d1117) create depth in our backgrounds. This creates a sense of depth while maintaining readability.
+```
++------------------+----------------------+------------------+
+|    Navy Blue     |     Royal Blue      |    Steel Blue   |
+|    #0A0F2D      |      #1A237E        |     #4A5568     |
+| Main Background  |    Primary Actions  | Secondary Text   |
++------------------+----------------------+------------------+
+```
 
 ### Secondary Colors
-Accent colors are carefully chosen to provide clear visual feedback and hierarchy:
-- Success Green (#4CAF50): Used for positive actions, successful transactions, and health bars
-- Warning Amber (#FFA000): Highlights important information and intermediate states
-- Error Red (#D32F2F): Indicates critical errors and dangerous actions
-- Info Blue (#2196F3): Used for informational messages and subtle highlights
+```
++------------------+----------------------+------------------+
+|    Gold          |     Bronze          |    Silver       |
+|    #FFD700      |      #CD7F32        |     #C0C0C0     |
+| Special Actions  |    Achievements     |  Disabled State  |
++------------------+----------------------+------------------+
+```
 
-### Neutral Colors
-A sophisticated grayscale palette provides structure and readability:
-- Background Dark (#121212): Main application background
-- Surface Dark (#1E1E1E): Card and modal backgrounds
-- Border Gray (#323232): Subtle divisions and containers
-- Text Light (#E0E0E0): Primary text color
-- Text Muted (#9E9E9E): Secondary and inactive text
+### Status Colors
+```
++------------------+----------------------+------------------+
+|    Success       |     Warning         |     Danger      |
+|    #48BB78      |      #F6AD55        |     #E53E3E     |
+|  Positive Events | Caution Required    | Critical Actions |
++------------------+----------------------+------------------+
+```
 
-### Special Effect Colors
-Magical and special effects utilize a unique palette:
-- Arcane Purple (#9C27B0): Magical abilities and effects
-- Divine Gold (#FFD700): Rare items and special achievements
-- Poison Green (#00FF00): Status effects and environmental hazards
-- Fire Orange (#FF5722): Fire-based abilities and effects
+### UI Element Colors
+```
++------------------+----------------------+------------------+
+|    Background    |     Surface         |    Border       |
+|    #1A1F3D      |      #2D3748        |     #4A5568     |
+| Card Background  |    Input Fields     |  Separators     |
++------------------+----------------------+------------------+
+```
 
 ## Typography
 
-### Primary Font: "MedievalSharp"
-Our primary display font embodies the fantasy theme while maintaining readability. It's used for:
-- Main headings
-- Character names
-- Location titles
-- Important statistics
+### Main Fonts
+```
+Primary Font: 'MedievalSharp'
+Used for: Headings, Important Labels
+Example: "Ultimate Dominion"
 
-### Secondary Font: "Roboto Mono"
-A monospace font that provides clarity for:
-- Combat numbers
-- Coordinate displays
-- Resource counts
-- System messages
+Secondary Font: 'Roboto'
+Used for: Body Text, UI Elements
+Example: "Health Points: 100/100"
 
-### Body Font: "Inter"
-Our main text font ensures optimal readability while maintaining the game's aesthetic:
-- Interface text
-- Descriptions
-- Chat messages
-- Menu items
+Monospace Font: 'Fira Code'
+Used for: Statistics, Numerical Values
+Example: "DMG: 15-20"
+```
 
-Font sizes follow a consistent scale:
-- Headings: 24px/1.5
-- Subheadings: 18px/1.4
-- Body text: 16px/1.5
-- Small text: 14px/1.4
-- Micro text: 12px/1.3
+### Font Sizes
+```
+Headings:
+H1: 2.5rem (40px)  - Main Titles
+H2: 2rem   (32px)  - Section Headers
+H3: 1.5rem (24px)  - Subsection Headers
+H4: 1.25rem (20px) - Card Titles
+
+Body Text:
+Large: 1.125rem (18px) - Important Information
+Regular: 1rem (16px)   - Standard Text
+Small: 0.875rem (14px) - Secondary Information
+Tiny: 0.75rem (12px)   - Tooltips
+```
 
 ## Icons and Visual Elements
 
-### Game Icons
-Character and item icons follow a consistent 32x32 pixel art style, maintaining clarity even at small sizes. Each icon type has specific characteristics:
+### Game-Specific Icons
+```
+Combat Actions
+Defense/Armor
+Currency/Gold
+Inventory Items
+Movement/Speed
+Weapons
+Magic/Spells
+Health/Life
+Energy/Mana
+```
 
-Character Classes:
-- Warrior: Bold, angular shapes with metallic elements
-- Rogue: Sharp, asymmetrical designs with dark elements
-- Mage: Flowing, magical patterns with glowing effects
+### UI Icons
+```
+Back/Previous
+Next/Forward
+Add/Create
+Confirm/Success
+Close/Cancel
+Settings
+Search
+Refresh
+More Options
+```
 
-Equipment Categories:
-- Weapons: Distinctive silhouettes for easy recognition
-- Armor: Layered designs showing protection level
-- Consumables: Simple, clear shapes with color coding
+### Status Icons
+```
+New Item/Feature
+Favorite/Special
+Warning
+Error
+Success
+Locked
+Unlocked
+```
 
-### Interface Icons
-UI elements use a custom icon set based on geometric shapes:
-- Navigation: Simple arrows and directional indicators
-- Actions: Clear, symbolic representations
-- Status Effects: Color-coded with distinctive shapes
-- System Icons: Minimal, modern design for clarity
-
-## Layout Principles
-
-The interface follows a consistent grid system based on 8px units. The three-panel layout provides clear separation of concerns:
-
-Left Panel (Character Information):
-- Fixed width of 320px
-- Vertical organization of stats and equipment
-- Collapsible sections for additional information
-
-Center Panel (Main Action Area):
-- Flexible width with minimum 640px
-- Clear action space for combat and interaction
-- Prominent feedback area for system messages
-
-Right Panel (World Map):
-- Fixed width of 320px
-- Grid-based coordinate system
-- Minimal, clear representation of game world
-
-## Interactive Elements
+## Component Design
 
 ### Buttons
-Buttons follow a consistent hierarchy:
-- Primary: Solid blue background with white text
-- Secondary: Outlined style with blue border
-- Danger: Red background for destructive actions
-- Disabled: Reduced opacity with gray background
+```
++------------------+
+|    Primary       |    Background: #1A237E
+|    Button        |    Text: White
++------------------+    Hover: Lighten 10%
+
++------------------+
+|    Secondary     |    Background: #4A5568
+|    Button        |    Text: White
++------------------+    Hover: Lighten 10%
+
++------------------+
+|    Danger        |    Background: #E53E3E
+|    Button        |    Text: White
++------------------+    Hover: Lighten 10%
+```
 
 ### Input Fields
-Form elements maintain consistency:
-- Dark backgrounds with light text
-- Subtle borders that highlight on focus
-- Clear error states with red outlines
-- Helper text in muted colors
+```
++------------------+
+|  Input Field     |    Background: #2D3748
+|                  |    Border: #4A5568
++------------------+    Focus: #1A237E
 
-### Cards and Containers
-Information containers use consistent styling:
-- Subtle background gradient for depth
-- Soft edge glow for emphasis
-- Consistent padding (16px)
-- Rounded corners (4px)
++------------------+
+|  Search Field    |    Background: #2D3748
+|  |    Icon Color: #4A5568
++------------------+    
+```
 
-## Animation and Transitions
+### Cards
+```
++------------------+
+|    Card Title    |    Background: #1A1F3D
+|                  |    Border: #4A5568
+|    Content       |    Shadow: 0 2px 4px rgba(0,0,0,0.1)
+|                  |
++------------------+
+```
 
-Animations serve to enhance user feedback without causing distraction:
-- Button hover: Subtle glow effect (0.2s ease)
-- Panel transitions: Smooth slide (0.3s ease-in-out)
-- Combat effects: Quick, impactful movements (0.15s ease)
-- Status changes: Fade transitions (0.2s ease)
+## Layout Guidelines
+
+### Grid System
+```
+Desktop Layout (1200px+)
++--------+--------+--------+
+|   1/3  |   1/3  |   1/3  |
++--------+--------+--------+
+
+Tablet Layout (768px - 1199px)
++--------+--------+
+|   1/2  |   1/2  |
++--------+--------+
+
+Mobile Layout (<768px)
++----------------+
+|      Full      |
++----------------+
+```
+
+### Spacing Scale
+```
+4px  - Minimal spacing
+8px  - Default spacing
+16px - Component spacing
+24px - Section spacing
+32px - Large section spacing
+48px - Page spacing
+```
+
+## Animation Guidelines
+
+### Transitions
+- Duration: 200ms
+- Timing: ease-in-out
+- Use for: Hover states, expanding/collapsing elements
+
+### Loading States
+```
++------------------+
+|    Loading...    |
+|    |      |
++------------------+
+```
+
+## Accessibility Guidelines
+
+### Color Contrast
+- Minimum contrast ratio: 4.5:1
+- Large text contrast ratio: 3:1
+- Use color blind safe palette
+
+### Focus States
+```
++------------------+
+|    Focused       |    Border: 2px solid #1A237E
+|    Element       |    Outline: none
++------------------+    Ring: 0 0 0 3px rgba(26,35,126,0.5)
+```
 
 ## Responsive Design
 
-The interface adapts to different screen sizes while maintaining functionality:
-- Desktop (1920px+): Full three-panel layout
-- Laptop (1366px): Compressed panels with maintained functionality
-- Tablet (1024px): Collapsible panels with touch-friendly targets
-- Mobile: Not supported in initial release
-
-## Accessibility
-
-Design considerations ensure broad usability:
-- Minimum contrast ratio of 4.5:1 for text
-- Clear focus indicators for keyboard navigation
-- Alternative text for all icons and images
-- Scalable text sizes for readability
-- Color-blind friendly status indicators
-
-## Loading States and Feedback
-
-User feedback is clear and consistent:
-- Loading spinners: Animated blue circular indicator
-- Progress bars: Green fill with percentage
-- Success states: Green checkmark with fade
-- Error states: Red X with shake animation
-- Network states: Yellow pulse for processing
-
-## Frontend Architecture Overview
-
-```ascii
-Frontend Architecture
-┌──────────────────────────────────────────────────┐
-│                  App Shell                        │
-├──────────────────────────────────────────────────┤
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │   Header    │ │   Router    │ │   Footer    │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ │
-├──────────────────────────────────────────────────┤
-│                  Core Features                    │
-├──────────────────────────────────────────────────┤
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │   Wallet    │ │   Game UI   │ │   Market    │ │
-│ │ Connection  │ │             │ │    Place    │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ │
-├──────────────────────────────────────────────────┤
-│                Shared Components                  │
-├──────────────────────────────────────────────────┤
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │   Buttons   │ │   Modals    │ │   Forms     │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ │
-└──────────────────────────────────────────────────┘
+### Breakpoints
+```
+Mobile: < 768px
+Tablet: 768px - 1199px
+Desktop: >= 1200px
 ```
 
-## Component Architecture
+### Mobile-First Approach
+- Design for mobile first
+- Progressively enhance for larger screens
+- Keep touch targets at least 44x44px
 
-```ascii
-Component Structure
-┌──────────────────────────────────────────┐
-│              Smart Components            │
-├──────────┬────────────┬─────────────────┤
-│ Pages    │ Features   │ Layout          │
-│ - Home   │ - Wallet   │ - MainLayout    │
-│ - Game   │ - Combat   │ - GameLayout    │
-│ - Market │ - Trade    │ - AuthLayout    │
-└──────────┴────────────┴─────────────────┘
-           │
-           ▼
-┌──────────────────────────────────────────┐
-│           Shared Components              │
-├──────────┬────────────┬─────────────────┤
-│   UI     │ Forms      │ Feedback        │
-│Elements  │Components  │Components       │
-└──────────┴────────────┴─────────────────┘
-           │
-           ▼
-┌──────────────────────────────────────────┐
-│              Base Components             │
-├──────────┬────────────┬─────────────────┤
-│Typography │  Buttons   │     Icons       │
-└──────────┴────────────┴─────────────────┘
+## Performance Guidelines
+
+### Image Optimization
+- Use WebP format with PNG fallback
+- Lazy load images below the fold
+- Implement responsive images
+
+### Loading States
+- Show skeleton screens for content
+- Implement progressive loading
+- Cache frequently used assets
+
+## API Integration Guidelines
+
+### Edge API Integration
+
+When integrating with our Vercel Edge Functions:
+
+1. **Base URL Configuration**
+```typescript
+// Use relative path in production
+const apiBase = import.meta.env.PROD ? '/api' : import.meta.env.VITE_API_URL;
 ```
 
-## State Management
-
-```ascii
-State Flow
-┌─────────────────────────────────────────┐
-│            Blockchain State             │
-├──────────┬────────────┬────────────────┤
-│  MUD     │  Wagmi     │ Contract Data  │
-│  Store   │  Hooks     │                │
-└──────────┴────────────┴────────────────┘
-           │
-           ▼
-┌─────────────────────────────────────────┐
-│             Local State                 │
-├──────────┬────────────┬────────────────┤
-│  React   │  Context   │    Storage     │
-│  Query   │           │                │
-└──────────┴────────────┴────────────────┘
-           │
-           ▼
-┌─────────────────────────────────────────┐
-│            UI State                     │
-├──────────┬────────────┬────────────────┤
-│Component │   Forms    │   Navigation   │
-│  State   │   State    │     State     │
-└──────────┴────────────┴────────────────┘
+2. **Error Handling**
+```typescript
+try {
+  const response = await fetch(`${apiBase}/endpoint`);
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+  const data = await response.json();
+} catch (error) {
+  // Handle network/API errors
+}
 ```
 
-This comprehensive guide ensures consistency across all aspects of the Ultimate Dominion interface, creating a cohesive and immersive player experience while maintaining modern usability standards.
+3. **Request Headers**
+```typescript
+const headers = {
+  'Content-Type': 'application/json',
+  // Add any auth headers here
+};
+```
+
+4. **Response Types**
+- Define TypeScript interfaces for all API responses
+- Use zod for runtime type validation
+- Handle edge cases and loading states
+
+5. **Performance Best Practices**
+- Implement request caching where appropriate
+- Use SWR or React Query for data fetching
+- Add retry logic for failed requests
+- Monitor response times and errors
+
+## Best Practices
+
+### Component Structure
+- Keep components small and focused
+- Use composition over inheritance
+- Implement proper error boundaries
+
+### State Management
+- Use Zustand for global state
+- Keep local state in components
+- Implement proper state updates
+- Handle side effects in useEffect
+
+### Code Style
+- Use TypeScript for type safety
+- Follow ESLint configuration
+- Implement proper error handling
+
+## Common Patterns
+
+### 1. Modal Pattern
+```typescript
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+  if (!isOpen) return null
+  
+  return (
+    <div className="modal">
+      {children}
+      <button onClick={onClose}>Close</button>
+    </div>
+  )
+}
+```
+
+### 2. Form Pattern
+```typescript
+const Form: React.FC<FormProps> = ({ onSubmit }) => {
+  const [formData, setFormData] = useState({})
+  
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    onSubmit(formData)
+  }
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form fields */}
+    </form>
+  )
+}
+```
+
+### 3. List Pattern
+```typescript
+const List: React.FC<ListProps> = ({ items }) => {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>
+          {/* Item content */}
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+## Deployment Checklist
+
+### Pre-deployment
+- Run all tests
+- Check bundle size
+- Verify environment variables
+- Test in staging environment
+
+### Post-deployment
+- Verify routes work
+- Check performance metrics
+- Monitor error rates
+- Test critical flows
+
+## Version Control
+
+### Branch Naming
+- feature/feature-name
+- bugfix/bug-description
+- hotfix/issue-description
+
+### Commit Messages
+```
+feat: add new game component
+fix: resolve inventory display issue
+docs: update component documentation
+```
+
+## Resources
+
+### Official Documentation
+- [React Documentation](https://reactjs.org/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [TailwindCSS Documentation](https://tailwindcss.com/docs)
+- [MUD Documentation](https://mud.dev/)
+
+### Tools
+- VS Code Extensions
+- Chrome DevTools
+- React Developer Tools
+- Performance Monitoring Tools
+
+Remember to update these guidelines as new patterns and best practices emerge in the project.

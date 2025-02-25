@@ -1,304 +1,169 @@
-# Ultimate Dominion Implementation Plan
+# Ultimate Dominion - Implementation Plan
 
-## Overview
+This guide walks through everything needed to run Ultimate Dominion, from local development to production deployment.
 
-This document provides a detailed implementation guide for Ultimate Dominion, covering development setup, feature implementation, testing, and deployment processes.
+## Prerequisites
 
-```ascii
-Implementation Phases
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Setup Phase    │────►│   Development   │────►│   Deployment    │
-│  Environment    │     │     Phase       │     │     Phase       │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-        │                       │                       │
-        ▼                       ▼                       ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Dependencies   │     │    Feature      │     │   Production    │
-│  Installation   │     │ Implementation  │     │   Release       │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
+- [Node.js v18](https://nodejs.org/en/download/package-manager) (required, no other versions supported)
+- [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+- [Foundry](https://book.getfoundry.sh/getting-started/installation)
+- [pnpm](https://pnpm.io/) (v8 or higher)
 
-## 1. Development Environment Setup
+## Local Development
 
-### 1.1 Prerequisites
-- Node.js (v18+)
-- pnpm (v8+)
-- Git
-- MongoDB (v6+)
-- Redis (v7+)
-- Code editor (VSCode recommended)
+1. **Clone and Install**
+   ```bash
+   git clone https://github.com/ultimate-dominion/ultimate-dominion.git
+   cd ultimate-dominion
+   pnpm install
+   ```
 
-### 1.2 Installation Steps
+2. **Environment Setup**
+   ```bash
+   # Client environment
+   cd packages/client
+   cp .env.sample .env
+
+   # API environment
+   cd ../api
+   cp .env.sample .env
+
+   # Contract environment
+   cd ../contracts
+   cp .env.sample .env
+   ```
+
+3. **Start Development**
+   ```bash
+   pnpm dev
+   ```
+
+## Testing
+
+Run tests for all packages:
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/ultimate-dominion.git
-cd ultimate-dominion
-
-# 2. Install dependencies
-pnpm install
-
-# 3. Set up environment variables
-cp .env.example .env
-# Edit .env with your local configuration
-
-# 4. Start development services
-pnpm dev
+pnpm test
 ```
 
-### 1.3 Environment Configuration
-Required environment variables:
+Or test specific packages:
+```bash
+pnpm --filter client test
+pnpm --filter contracts test
 ```
-# Blockchain
-GARNET_RPC_URL=
-WALLET_PRIVATE_KEY=
 
-# Database
-MONGODB_URI=
-REDIS_URL=
+## Deployment
+
+### 1. Environment Configuration
+
+Create environment files for each stage:
+
+```bash
+# Client
+cd packages/client
+cp .env.sample .env.staging
+cp .env.sample .env.production
 
 # API
-JWT_SECRET=
-RATE_LIMIT_WINDOW=
-RATE_LIMIT_MAX=
+cd ../api
+cp .env.sample .env.staging
+cp .env.sample .env.production
 
-# IPFS
-IPFS_PROJECT_ID=
-IPFS_PROJECT_SECRET=
+# Contracts
+cd ../contracts
+cp .env.sample .env.staging
+cp .env.sample .env.production
 ```
 
-## 2. Feature Implementation Guide
+Configure variables for each environment:
 
-### 2.1 Smart Contract Development
+```ini
+# Client (.env.staging, .env.production)
+VITE_WALLET_CONNECT_PROJECT_ID=
+VITE_CHAIN_ID=
+VITE_INDEXER_URL=
+VITE_HTTPS_RPC_URL=
+VITE_WS_RPC_URL=
+VITE_API_URL=
 
-```ascii
-Contract Development Flow
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Write     │────►│   Test      │────►│   Deploy    │
-│  Contract   │     │  Contract   │     │  Contract   │
-└─────────────┘     └─────────────┘     └─────────────┘
+# API (.env.staging, .env.production)
+PINATA_JWT=
+PRIVATE_KEY=
+WORLD_ADDRESS=
+INITIAL_BLOCK_NUMBER=
 ```
 
-1. Create new contract in `packages/contracts/src`
-2. Implement required interfaces and inheritance
-3. Add events for important state changes
-4. Write unit tests in `packages/contracts/test`
-5. Deploy using hardhat scripts
+### 2. Contract Deployment
 
-Example contract implementation:
-```solidity
-// packages/contracts/src/systems/CombatSystem.sol
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
-
-import { System } from "@latticexyz/world/src/System.sol";
-import { Combat } from "../codegen/tables/Combat.sol";
-
-contract CombatSystem is System {
-    function initiateCombat(bytes32 player, bytes32 opponent) public returns (bytes32) {
-        // Implementation
-    }
-}
-```
-
-### 2.2 Backend Service Development
-
-1. Create service class in `packages/api/src/services`
-2. Implement data models in `packages/api/src/models`
-3. Add route handlers in `packages/api/src/routes`
-4. Write service tests
-5. Document API endpoints
-
-Example service implementation:
-```typescript
-// packages/api/src/services/CombatService.ts
-export class CombatService {
-    async initiateCombat(playerId: string, opponentId: string): Promise<Combat> {
-        // Implementation
-    }
-}
-```
-
-### 2.3 Frontend Feature Development
-
-1. Create new component in appropriate directory
-2. Implement required hooks and state management
-3. Add styling using TailwindCSS
-4. Write component tests
-5. Add to main application flow
-
-Example component implementation:
-```typescript
-// packages/client/src/components/Combat/CombatArena.tsx
-export const CombatArena: React.FC<CombatArenaProps> = ({ playerId, opponentId }) => {
-    // Implementation
-}
-```
-
-## 3. Testing Strategy
-
-### 3.1 Smart Contract Testing
+Deploy contracts to production network:
 ```bash
-# Run contract tests
 cd packages/contracts
-pnpm test
+pnpm deploy:production
 ```
 
-### 3.2 Backend Testing
-```bash
-# Run API tests
-cd packages/api
-pnpm test
-```
+Save the deployed contract addresses for environment variables.
 
-### 3.3 Frontend Testing
-```bash
-# Run component tests
-cd packages/client
-pnpm test
-```
+### 3. Vercel Deployment
 
-### 3.4 Integration Testing
-```bash
-# Run E2E tests
-pnpm test:e2e
-```
+#### Frontend Deployment
+1. Connect your GitHub repository to Vercel
+2. Configure build settings:
+   ```
+   Build Command: pnpm build
+   Output Directory: packages/client/dist
+   Install Command: pnpm install
+   ```
+3. Add environment variables from client .env
+4. Deploy and verify frontend is accessible
 
-## 4. Deployment Process
+#### API Deployment (Edge Functions)
+1. In the same Vercel project, enable Edge Functions
+2. Configure API settings:
+   ```
+   API Directory: packages/api
+   Edge Function Region: Auto (recommended)
+   ```
+3. Add environment variables from api .env
+4. Deploy and verify API endpoints are accessible
 
-### 4.1 Smart Contract Deployment
-```bash
-# Deploy to Garnet testnet
-cd packages/contracts
-pnpm deploy:garnet
-```
+#### Deployment Verification
+1. Test frontend connectivity
+2. Verify API endpoints using health check
+3. Confirm Edge Function distribution
+4. Monitor performance metrics in Vercel dashboard
 
-### 4.2 Backend Deployment
-```bash
-# Deploy API to Render
-git push render main
-```
+## Monitoring
 
-### 4.3 Frontend Deployment
-```bash
-# Deploy to Vercel
-git push vercel main
-```
+### Health Checks
+- Frontend: `/health`
+- API: `/api/health`
+- Contracts: Check latest block number
 
-## 5. Monitoring and Maintenance
+### Logging
+- Frontend: Vercel Analytics
+- API: Vercel Edge Logs
+- Contracts: Network Explorer
 
-### 5.1 Health Checks
-- Monitor contract events using TheGraph
-- Check API health endpoints
-- Monitor frontend performance metrics
+### Alerts
+Configure alerts in Vercel for:
+- Build failures
+- API errors
+- High latency
+- Resource limits
 
-### 5.2 Backup Procedures
-- Database backups (daily)
-- Contract state snapshots
-- Configuration backups
+## Maintenance
 
-## 6. Common Development Tasks
+### Updates
+1. Dependencies: Weekly security updates
+2. Contracts: Monthly audits
+3. Documentation: Update with changes
 
-### 6.1 Adding a New Feature
-1. Create feature branch
-2. Implement contracts (if needed)
-3. Add backend services
-4. Create frontend components
-5. Write tests
-6. Submit PR
+### Backups
+1. Database: Daily snapshots
+2. Contracts: Keep deployment history
+3. Environment: Secure backup of all .env files
 
-### 6.2 Updating Existing Features
-1. Identify affected components
-2. Make required changes
-3. Update tests
-4. Deploy changes
-
-### 6.3 Debugging
-1. Check logs in appropriate system
-2. Use development tools
-3. Test in isolation
-4. Fix and verify
-
-## 7. Best Practices
-
-### 7.1 Code Style
-- Follow ESLint configuration
-- Use TypeScript strictly
-- Document public interfaces
-- Write meaningful commit messages
-
-### 7.2 Security
-- Validate all inputs
-- Use access control
-- Handle errors appropriately
-- Follow security checklist
-
-### 7.3 Performance
-- Optimize contract gas usage
-- Cache API responses
-- Lazy load components
-- Monitor metrics
-
-## 8. Troubleshooting Guide
-
-### 8.1 Common Issues
-1. Contract deployment failures
-   - Check network configuration
-   - Verify account balance
-   - Review gas settings
-
-2. API connection issues
-   - Check environment variables
-   - Verify database connection
-   - Review logs
-
-3. Frontend build problems
-   - Clear cache
-   - Update dependencies
-   - Check build logs
-
-### 8.2 Support Resources
-- GitHub Issues
-- Documentation
-- Community Discord
-- Development Team Contacts
-
-## 9. Continuous Integration
-
-```ascii
-CI/CD Pipeline
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Commit    │────►│    Build    │────►│    Test     │
-│    Code     │     │             │     │             │
-└─────────────┘     └─────────────┘     └─────────────┘
-                                              │
-┌─────────────┐     ┌─────────────┐          │
-│  Production │◄────│   Deploy    │◄─────────┘
-│             │     │             │
-└─────────────┘     └─────────────┘
-```
-
-### 9.1 GitHub Actions Workflow
-1. Code push triggers workflow
-2. Run tests and linting
-3. Build packages
-4. Deploy if on main branch
-
-### 9.2 Quality Gates
-- Test coverage > 80%
-- No linting errors
-- Build success
-- Security scan pass
-
-## 10. Documentation
-
-### 10.1 Required Documentation
-- API documentation (OpenAPI)
-- Component documentation
-- Contract documentation
-- Architecture diagrams
-
-### 10.2 Keeping Updated
-- Update with each feature
-- Review quarterly
-- Version control docs
-- Automate where possible
+### Security
+1. Regular security audits
+2. Dependency vulnerability checks
+3. Access control review
+4. API rate limiting

@@ -1,342 +1,438 @@
-# Ultimate Dominion Backend Structure
+# Ultimate Dominion - Backend Structure
 
-## Overview
+## How Our Game Works Behind the Scenes
 
-The Ultimate Dominion backend is designed as a robust, scalable system that handles game state management, player interactions, and blockchain integration. Our backend combines traditional web services with blockchain technology, creating a hybrid architecture that leverages the best of both worlds. This document outlines the complete backend structure, from architecture to deployment.
+When you play Ultimate Dominion, a lot happens behind the scenes to make everything work smoothly. Our game uses three main systems:
 
-## System Architecture
+1. **Blockchain (MUD Framework)** - This is like the game's brain, storing all important game data
+2. **IPFS (Pinata)** - This is like a giant filing cabinet where we store images and other files
+3. **Serverless Functions (Vercel)** - These are like helpful assistants that handle specific tasks when needed
 
-Our backend follows a microservices-inspired architecture while maintaining the simplicity of a monolithic deployment for initial launch. The main server is built with Node.js and Express, chosen for their excellent performance with real-time applications and strong ecosystem support. The server handles both REST API endpoints and WebSocket connections, allowing for both traditional request-response patterns and real-time game state updates.
-
-The architecture is divided into several logical layers:
-- API Layer: Handles incoming requests and response formatting
-- Service Layer: Contains core business logic
-- Data Access Layer: Manages database interactions
-- Blockchain Integration Layer: Handles all Web3 interactions
-- WebSocket Layer: Manages real-time communications
-
-## Backend Architecture Overview
+## How The Pieces Fit Together
 
 ```ascii
-Backend Architecture
-┌──────────────────────────────────────────────────┐
-│                  API Gateway                      │
-├──────────────────────────────────────────────────┤
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │   Auth      │ │   Rate      │ │   Input     │ │
-│ │ Middleware  │ │  Limiting   │ │ Validation  │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ │
-├──────────────────────────────────────────────────┤
-│                 Service Layer                     │
-├──────────────────────────────────────────────────┤
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │   Game      │ │   Player    │ │   Market    │ │
-│ │ Services    │ │  Services   │ │  Services   │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ │
-├──────────────────────────────────────────────────┤
-│                  Data Layer                       │
-├──────────────────────────────────────────────────┤
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │  MongoDB    │ │   Redis     │ │   IPFS      │ │
-│ │             │ │             │ │             │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ │
-└──────────────────────────────────────────────────┘
++-------------------+        +----------------------+
+|   Vercel Edge     |        |   Serverless API     |
+|   Functions       |        |   Functions          |
+|                   |        |                      |
+|   - API Routes    | <----> |   - Game Logic      |
+|   - Caching      |        |   - State Updates    |
+|   - Auth         |        |   - Event Handling   |
++-------------------+        +----------------------+
+         ↑                            ↑
+         |                            |
+         v                            v
++-------------------+        +----------------------+
+|   MUD Framework   |        |   Pinata (IPFS)     |
+|                   |        |                      |
+|   - Game State    |        |   - File Storage    |
+|   - Player Data   |        |   - Image Assets    |
+|   - Transactions  |        |   - Metadata        |
++-------------------+        +----------------------+
 ```
 
-## Data Flow Architecture
+## Data Storage
+
+### Game State (MUD Framework)
+All critical game data lives on the blockchain through MUD:
+- Player information
+- Item ownership
+- Game mechanics
+- Market transactions
+- Combat results
+
+### File Storage (IPFS via Pinata)
+Large files and media are stored on IPFS:
+- Item images
+- Character avatars
+- Game assets
+- Metadata files
+
+### Temporary State (Memory)
+Some data is kept temporarily in memory:
+- Active game sessions
+- Current player actions
+- Temporary calculations
+- Cache for quick access
+
+## API Routes Structure
+
+Our API routes handle specific game actions:
 
 ```ascii
-Request Flow
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Client    │────►│ API Gateway │────►│  Service    │
-│  Request    │     │             │     │   Layer     │
-└─────────────┘     └─────────────┘     └─────────────┘
-                           │                    │
-                           ▼                    ▼
-                    ┌─────────────┐     ┌─────────────┐
-                    │  Security   │     │   Data      │
-                    │   Layer    │     │   Access    │
-                    └─────────────┘     └─────────────┘
-                           │                    │
-                           ▼                    ▼
-                    ┌─────────────┐     ┌─────────────┐
-                    │   Cache     │     │ Persistence │
-                    │   Layer    │     │   Layer     │
-                    └─────────────┘     └─────────────┘
+/api
+  /game
+    - state          # Current game state
+    - actions        # Player actions
+    - events         # Game events
+  /player
+    - profile        # Player info
+    - inventory      # Player items
+    - stats         # Player statistics
+  /market
+    - listings      # Market items
+    - trades        # Trade actions
+    - history       # Past transactions
+  /combat
+    - initiate      # Start combat
+    - actions       # Combat moves
+    - results       # Battle outcomes
+  /assets
+    - upload        # File uploads to IPFS
+    - metadata      # Item metadata
 ```
 
-## Service Architecture
+## How We Handle Game Actions
+
+When you play the game, you might do things like:
+- Move your character
+- Fight monsters
+- Buy items
+- Trade with other players
+
+For each of these actions, we have a special helper ready to handle it. These helpers live at different web addresses (we call them "routes") that look like this:
 
 ```ascii
-Service Layer
-┌─────────────────────────────────────────┐
-│            Game Services                │
-├──────────┬────────────┬────────────────┤
-│ Combat   │ Character  │    World       │
-│ Service  │  Service   │   Service      │
-└──────────┴────────────┴────────────────┘
-           │
-           ▼
-┌─────────────────────────────────────────┐
-│            Player Services              │
-├──────────┬────────────┬────────────────┤
-│ Account  │ Inventory  │  Achievement   │
-│ Service  │  Service   │   Service      │
-└──────────┴────────────┴────────────────┘
-           │
-           ▼
-┌─────────────────────────────────────────┐
-│           Market Services               │
-├──────────┬────────────┬────────────────┤
-│ Trading  │  Auction   │    Guild       │
-│ Service  │  Service   │   Service      │
-└──────────┴────────────┴────────────────┘
+/api
+  /auth
+    - connect-wallet    # Handle wallet connections
+    - verify-session    # Check session validity
+    - delegate         # Handle delegation setup
+  
+  /player
+    - profile          # Get/update player info
+    - inventory        # Manage player items
+    - stats           # Handle player statistics
+    
+  /game
+    - state           # Current game state
+    - combat          # Handle battle actions
+    - movement        # Process player movement
+    
+  /market
+    - listings        # Market item listings
+    - trades          # Handle item trades
+    - offers          # Manage trade offers
 ```
 
-## Data Model
+Think of these routes like different counters in a store - one for buying items, one for trading, and so on. Each counter knows exactly how to handle its specific job.
 
+## Data Flow
+
+### Player Action Flow
 ```ascii
-Data Relationships
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Player    │────►│  Character  │────►│  Inventory  │
-└─────────────┘     └─────────────┘     └─────────────┘
-      │                    │                    │
-      │                    │                    │
-      ▼                    ▼                    ▼
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│    Guild    │     │   Combat    │     │   Market    │
-│             │     │   Record    │     │   Listing   │
-└─────────────┘     └─────────────┘     └─────────────┘
-      │                    │                    │
-      │                    │                    │
-      ▼                    ▼                    ▼
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│Achievement  │     │    Quest    │     │   Trade     │
-│  Record    │     │   Progress  │     │   History   │
-└─────────────┘     └─────────────┘     └─────────────┘
+[Client Action] --> [Edge Function] --> [API Route] --> [MUD Framework]
+      ↑                   |               |                    |
+      +-------------------+---------------+--------------------+
+                         Response Flow
 ```
 
-## Database Management
+Example of a player attacking a monster:
+1. Client sends attack action
+2. Edge function validates request
+3. API route processes combat
+4. Updates stored in MUD Framework tables
+5. Response sent back to client
 
-We use MongoDB as our primary database, with Redis handling caching and session management. This combination provides us with the flexibility of a document database for complex game data while maintaining high-speed access to frequently used information.
+## MUD Framework Tables
 
-### MongoDB Structure
+Our game state is organized in MUD Framework tables, which store all persistent game data:
 
-Our MongoDB collections are organized as follows:
+1. Players Table
+   - Player wallet addresses
+   - Account information
+   - Game preferences
 
-1. Players
-   - Basic profile information
-   - Game statistics
-   - Inventory references
-   - Achievement tracking
+2. Characters Table
+   - Character stats
+   - Equipment loadouts
+   - Progress tracking
 
-2. GameState
-   - Current world state
-   - Active missions
-   - World events
-   - Environmental conditions
+3. Items Table
+   - Item properties
+   - Ownership records
+   - Market status
 
-3. Marketplace
-   - Active listings
-   - Transaction history
-   - Price tracking
-   - Trade statistics
+4. Combat Table
+   - Battle records
+   - Rewards distribution
+   - Experience gains
 
-4. Guilds
-   - Guild information
-   - Member lists
-   - Guild achievements
-   - Guild treasury data
+## Serverless Functions
 
-### Redis Implementation
+### Authentication Function
+```javascript
+// Example structure of auth function
+export default async function handler(req, res) {
+  // Validate request
+  if (!isValidRequest(req)) {
+    return res.status(400).json({ error: 'Invalid request' })
+  }
 
-Redis handles several critical functions:
-- Session management
-- Real-time game state caching
-- Leaderboard tracking
-- Rate limiting
-- WebSocket session data
+  // Process authentication
+  try {
+    const authResult = await processAuth(req.body)
+    return res.status(200).json(authResult)
+  } catch (error) {
+    return res.status(500).json({ error: 'Auth failed' })
+  }
+}
+```
 
-## API Design
+### State Management
+```ascii
++-------------------+
+|   State Layers    |
++-------------------+
+       |
+    Cache Layer
+       |
+    Game State
+       |
+  MUD Framework
+```
 
-Our API follows RESTful principles with additional WebSocket endpoints for real-time features. All endpoints are versioned (v1) and follow a consistent structure.
+## Caching Strategy
 
-### Core API Endpoints
-
-Authentication:
-- POST /api/v1/auth/login
-- POST /api/v1/auth/register
-- POST /api/v1/auth/refresh-token
-- POST /api/v1/auth/logout
-
-Player Management:
-- GET /api/v1/players/profile
-- PUT /api/v1/players/profile
-- GET /api/v1/players/inventory
-- GET /api/v1/players/statistics
-
-Game Mechanics:
-- POST /api/v1/game/action
-- GET /api/v1/game/state
-- POST /api/v1/game/combat
-- GET /api/v1/game/leaderboard
-
-Marketplace:
-- GET /api/v1/market/listings
-- POST /api/v1/market/create-listing
-- PUT /api/v1/market/update-listing
-- DELETE /api/v1/market/cancel-listing
-
-Social Features:
-- GET /api/v1/social/guilds
-- POST /api/v1/social/guild/create
-- GET /api/v1/social/chat-history
-- POST /api/v1/social/message
-
-### WebSocket Events
-
-- player:update - Real-time player state updates
-- world:update - World state changes
-- combat:update - Combat event updates
-- market:update - Marketplace changes
-- chat:message - Real-time chat messages
-
-## Security Implementation
-
-Security is implemented through multiple layers:
-
-1. Authentication
-   - JWT-based authentication
-   - Refresh token rotation
-   - Wallet signature verification
-   - Rate limiting per endpoint
-
-2. Data Protection
-   - Input validation using Joi
-   - XSS protection
-   - SQL injection prevention
-   - CORS configuration
-
-3. Monitoring
-   - Request logging
-   - Error tracking
-   - Performance monitoring
-   - Security audit logging
+### Multi-Level Caching
+```ascii
++------------------+
+|   Edge Cache     |  TTL: 1-5 minutes
+|   (Vercel)      |  - Static Assets
++------------------+  - API Responses
+         ↓
++------------------+
+|   Redis Cache    |  TTL: 5-30 minutes
+|   (Upstash)     |  - Game State
++------------------+  - Player Sessions
+         ↓
++------------------+
+|   MUD Framework  |  Persistent Storage
+|   (Blockchain)  |  - All Game Data
++------------------+
+```
 
 ## Error Handling
 
-We implement a comprehensive error handling system:
-- Custom error classes for different types of errors
-- Consistent error response format
-- Detailed logging for debugging
-- Graceful fallback mechanisms
+### Error Flow
+```ascii
+[Error Occurs] --> [Log Error] --> [Format Response] --> [Send to Client]
+       |              |                  |                     |
+       v              v                  v                     v
+   Capture Stack   Store in DB    Add Error Code     Show User Message
+```
 
-## Hosting and Deployment
+## Rate Limiting
 
-The backend is hosted on Render with the following configuration:
+### Request Limits
+```ascii
++-------------------+----------------------+
+| Endpoint Type     | Rate Limit          |
++-------------------+----------------------+
+| Public API       | 100 requests/minute  |
+| Auth Required    | 300 requests/minute  |
+| Game Actions     | 60 requests/minute   |
+| Market Actions   | 30 requests/minute   |
++-------------------+----------------------+
+```
 
-- Production Environment: Premium instance with auto-scaling
-- Staging Environment: Standard instance for testing
-- Development Environment: Basic instance for development
+## Monitoring and Logging
 
-Our deployment process includes:
-1. Automated testing
-2. Docker container building
-3. Database migration checks
-4. Zero-downtime deployment
-5. Post-deployment health checks
+### Logging Structure
+```ascii
++------------------+
+|   Log Levels     |
++------------------+
+    ERROR: Critical failures
+    WARN:  Potential issues
+    INFO:  Normal operations
+    DEBUG: Detailed info
+```
 
-## Monitoring and Maintenance
+## Security Measures
 
-We use several tools for monitoring and maintaining the backend:
+### Security Layers
+```ascii
++------------------------+
+|   Request Validation   |
+|   - Input Sanitization|
+|   - Schema Validation |
++------------------------+
+           ↓
++------------------------+
+|   Authentication      |
+|   - Wallet Signature  |
+|   - Session Token     |
++------------------------+
+           ↓
++------------------------+
+|   Authorization       |
+|   - Role Checking     |
+|   - Action Validation |
++------------------------+
+```
 
-1. Performance Monitoring
-   - DataDog for system metrics
-   - New Relic for application performance
-   - Custom dashboard for game metrics
+## Deployment Process
 
-2. Error Tracking
-   - Sentry for error reporting
-   - Custom logging solution
-   - Alert system for critical issues
+### CI/CD Pipeline
+```ascii
+[Code Push] --> [Tests] --> [Build] --> [Deploy]
+     |            |          |           |
+     v            v          v           v
+  GitHub      Jest Tests   Vercel     Production
+  Actions                  Build      Environment
+```
 
-3. Database Maintenance
-   - Automated backups every 6 hours
-   - Regular performance optimization
-   - Index management
-   - Data archival strategy
+## Environment Configuration
+
+### Environment Setup
+```ascii
++-------------------+----------------------+----------------------+
+| Environment       | Frontend            | Backend              |
++-------------------+----------------------+----------------------+
+| LOCAL            | http://localhost:5173| http://localhost:8080|
+| STAGING          | ultimate-dominion-   | ultimate-dominion-   |
+|                  | staging.vercel.app   | staging.vercel.app/api|
+| PRODUCTION       | ultimate-dominion.   | ultimate-dominion.   |
+|                  | vercel.app          | vercel.app/api       |
++-------------------+----------------------+----------------------+
+```
+
+### Environment Variables
+```ascii
+# Frontend (.env.local, .env.staging, .env.production)
+VITE_API_URL=http://localhost:8080
+VITE_ENVIRONMENT=local
+VITE_BLOCKCHAIN_RPC=http://localhost:8545
+
+# Backend (.env, .env.staging, .env.production)
+WORLD_ADDRESS=0x...
+PRIVATE_KEY=...
+```
+
+## Performance Optimization
+
+### Response Time Targets
+```ascii
++-------------------+----------------------+
+| Action Type       | Target Response     |
++-------------------+----------------------+
+| Edge Functions    | < 50ms              |
+| API Routes        | < 200ms             |
+| MUD Framework     | < 100ms             |
+| Blockchain Calls  | < 2000ms            |
++-------------------+----------------------+
+```
 
 ## Scaling Strategy
 
-Our scaling strategy focuses on three key areas:
-
-1. Horizontal Scaling
-   - Auto-scaling based on load
-   - Load balancing across instances
-   - Regional deployment options
-
-2. Database Scaling
-   - Read replicas for heavy read operations
-   - Sharding strategy for future growth
-   - Caching optimization
-
-3. Real-time Scaling
-   - WebSocket connection pooling
-   - Message queue implementation
-   - Event processing optimization
-
-## Development Workflow
-
-The backend development follows these practices:
-
-1. Code Organization
-   - Feature-based directory structure
-   - Clear separation of concerns
-   - Consistent naming conventions
-   - Comprehensive documentation
-
-2. Testing Strategy
-   - Unit tests for business logic
-   - Integration tests for API endpoints
-   - Load testing for performance
-   - Security testing
-
-3. Code Quality
-   - ESLint for code style
-   - TypeScript for type safety
-   - Automated code review
-   - Regular security audits
-
-## Blockchain Integration
-
-The backend serves as a bridge between traditional web services and blockchain operations:
-
-1. Transaction Management
-   - Transaction queueing
-   - Gas price optimization
-   - Retry mechanisms
-   - Event listening
-
-2. State Synchronization
-   - Block confirmation tracking
-   - State verification
-   - Conflict resolution
-   - Data consistency checks
+### Auto-Scaling Rules
+```ascii
++-------------------+----------------------+
+| Component         | Scaling Trigger     |
++-------------------+----------------------+
+| Edge Functions    | Request Volume      |
+| API Functions     | CPU Usage           |
+| MUD Framework    | Connection Count    |
+| Cache            | Memory Usage        |
++-------------------+----------------------+
+```
 
 ## Backup and Recovery
 
-Our backup strategy ensures data safety:
+### Backup Schedule
+```ascii
++-------------------+----------------------+
+| Data Type         | Backup Frequency    |
++-------------------+----------------------+
+| Game State        | Every 10 minutes    |
+| Player Data       | Every hour          |
+| Market Data       | Every 30 minutes    |
+| Full Blockchain  | Daily               |
++-------------------+----------------------+
+```
 
-1. Database Backups
-   - Full backups every 24 hours
-   - Incremental backups every 6 hours
-   - Point-in-time recovery capability
-   - Geographic redundancy
+## Development Guidelines
 
-2. System State Backups
-   - Configuration backups
-   - System state snapshots
-   - Recovery procedures
-   - Disaster recovery plan
+When working on the backend, follow these principles:
+1. Write stateless functions that can run anywhere
+2. Use TypeScript for type safety
+3. Keep functions small and focused
+4. Cache aggressively but carefully
+5. Log everything important
+6. Handle errors gracefully
+7. Test thoroughly before deployment
 
-This backend structure provides a solid foundation for Ultimate Dominion's gaming experience while ensuring scalability, security, and maintainability. The system is designed to grow with the game's community while maintaining consistent performance and reliability.
+Remember that in a serverless environment:
+- Functions should be quick to start
+- Cold starts can affect performance
+- State must be stored externally
+- Each function runs in isolation
+- Resources are automatically managed
+
+## Different Places the Game Lives
+
+Our game has three different homes:
+
+### Your Computer (Local Development)
+This is where we build and test new features. It's like a workshop where we can try things out without affecting the real game. Everything runs on your own computer, so it's fast and easy to fix problems.
+
+### Testing World (Staging)
+Before we add new things to the real game, we test them here. It's like a dress rehearsal for a play - everything works just like the real game, but it's okay if something goes wrong because real players aren't using it yet.
+
+### The Real Game (Production)
+This is where everyone plays. It's like opening night at the theater - everything needs to work perfectly. We have extra security and backup systems to make sure nothing goes wrong.
+
+## Keeping Track of Everything
+
+We use different tools to watch how the game is running:
+
+### Health Checks
+Just like a doctor checks your health, we have tools that check if every part of the game is working properly. They look for things like:
+- Is the game responding quickly?
+- Can players log in?
+- Is the item shop working?
+- Are the monsters behaving correctly?
+
+### Saving Your Progress
+
+We keep your game progress safe in several places:
+- Quick storage for things that change often (like your current health)
+- Permanent storage for important things (like your items and gold)
+- Special blockchain storage for things that need to be extra secure
+
+## Making the Game Better
+
+We're always working to make the game better. Here's how we do it:
+
+### Testing New Features
+Before adding anything new to the game, we:
+1. Build it in our workshop (local development)
+2. Test it in our practice world (staging)
+3. Make sure it works perfectly
+4. Add it to the real game
+
+### Keeping the Game Fast
+We use several tricks to keep the game running smoothly:
+- Store frequently used information close by
+- Load only what's needed when it's needed
+- Use multiple helpers to handle lots of players at once
+
+## Backup Plans
+
+Just like you might save your game progress, we keep backups of everything important:
+- Your character information
+- All items in the game
+- Player trades and marketplace data
+- Game world state
+
+We make copies of this information regularly, so if something goes wrong, we can quickly fix it without losing anyone's progress.
+
+## Growing Bigger
+
+As more people play Ultimate Dominion, we need to make sure the game can handle everyone playing at once. Our system is built to grow automatically:
+- Add more helpers when lots of people are playing
+- Use bigger storage when we need it
+- Keep everything running smoothly no matter how many players join
+
+Remember, all of this happens automatically behind the scenes. You don't need to worry about any of it - just enjoy playing the game!

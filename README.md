@@ -1,8 +1,39 @@
 # Ultimate Dominion
 
-Ultimate Dominion is an open-source blockchain-based text MMORPG built on the MUD framework. Players can create characters, explore a vast world, engage in combat, trade items, and interact with other players in a decentralized gaming environment.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://github.com/ultimate-dominion/ultimate-dominion/workflows/CI/badge.svg)](https://github.com/ultimate-dominion/ultimate-dominion/actions)
+[![Discord](https://img.shields.io/discord/1234567890?color=7289da&label=Discord&logo=discord&logoColor=ffffff)](https://discord.gg/ultimate-dominion)
+
+Ultimate Dominion is a text-based MMORPG built on the [MUD engine](https://mud.dev/), combining classic text adventure gameplay with modern blockchain technology. Players can own their items, trade with others, and participate in a dynamic player-driven economy.
+
+![Game Screenshot](docs/assets/game-screenshot.png)
 
 ## Features
+
+- **Rich Text-Based World**: Explore dungeons, cities, and wilderness through immersive text descriptions
+- **Blockchain Integration**: True ownership of items and characters
+- **Player Economy**: Trade items and resources in a player-driven marketplace
+- **Guild System**: Form alliances and compete for territory
+- **Combat System**: Strategic turn-based combat with various character classes
+- **Crafting**: Create unique items using gathered resources
+
+## Documentation
+
+Our documentation is organized into several key areas:
+
+- [Technical Architecture](technical_architecture.md) - System design and components
+- [Implementation Plan](implementation_plan.md) - Setup and deployment guides
+- [Frontend Guidelines](frontend_guidelines.md) - UI/UX standards and patterns
+- [Backend Structure](backend_structure.md) - API and server architecture
+- [Smart Contracts](smart_contracts.md) - Blockchain integration
+- [Project Requirements](project_requirements_document.md) - Game features and scope
+- [App Flow](app_flow_document.md) - User journey and game flow
+
+For contributors:
+- [Documentation Review Checklist](documentation_review_checklist.md) - Ensuring doc quality
+- [Changelog](CHANGELOG.md) - Version history and updates
+
+## Quick Start
 
 - ⚔️ Character Creation & Customization
 - 🌍 Vast World Exploration

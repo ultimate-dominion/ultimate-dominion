@@ -1,49 +1,97 @@
 # Contributing to Ultimate Dominion
 
-We love your input! We want to make contributing to Ultimate Dominion as easy and transparent as possible, whether it's:
+Thank you for your interest in contributing to Ultimate Dominion! This document provides guidelines and instructions for contributing to the project.
 
-- Reporting a bug
-- Discussing the current state of the code
-- Submitting a fix
-- Proposing new features
-- Becoming a maintainer
+## Table of Contents
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Process](#development-process)
+- [Pull Request Process](#pull-request-process)
+- [Documentation Guidelines](#documentation-guidelines)
+- [Community](#community)
 
-## We Develop with Github
-We use GitHub to host code, to track issues and feature requests, as well as accept pull requests.
+## Code of Conduct
 
-## We Use [Github Flow](https://guides.github.com/introduction/flow/index.html)
-Pull requests are the best way to propose changes to the codebase. We actively welcome your pull requests:
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing. We expect all contributors to adhere to these guidelines to maintain a welcoming and inclusive community.
 
-1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests.
-3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes.
-5. Make sure your code lints.
-6. Issue that pull request!
+## Getting Started
 
-## Any contributions you make will be under the MIT Software License
-In short, when you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.
+1. **Fork the Repository**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/ultimate-dominion.git
+   cd ultimate-dominion
+   pnpm install
+   ```
 
-## Report bugs using Github's [issue tracker](https://github.com/ultimate-dominion/ultimate-dominion/issues)
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/ultimate-dominion/ultimate-dominion/issues/new); it's that easy!
+2. **Set Up Development Environment**
+   - Follow the setup instructions in our [Implementation Plan](implementation_plan.md)
+   - Copy `.env.sample` files and configure your environment
+   - Ensure all tests pass before making changes
 
-## Write bug reports with detail, background, and sample code
+3. **Create a Branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
 
-**Great Bug Reports** tend to have:
+## Development Process
 
-- A quick summary and/or background
-- Steps to reproduce
-  - Be specific!
-  - Give sample code if you can.
-- What you expected would happen
-- What actually happens
-- Notes (possibly including why you think this might be happening, or stuff you tried that didn't work)
+1. **Code Style**
+   - Follow TypeScript best practices
+   - Use ESLint and Prettier configurations
+   - Maintain consistent naming conventions
+   - Write clear, self-documenting code
 
-## Use a Consistent Coding Style
+2. **Testing**
+   - Write unit tests for new features
+   - Ensure all tests pass locally
+   - Add integration tests where necessary
+   - Test across different environments
 
-* Use TypeScript for type safety
-* 2 spaces for indentation rather than tabs
-* You can try running `pnpm lint` for style unification
+3. **Documentation**
+   - Follow our [documentation guidelines](documentation_review_checklist.md)
+   - Update relevant documentation
+   - Add JSDoc comments for new functions
+   - Include examples where helpful
 
-## License
-By contributing, you agree that your contributions will be licensed under its MIT License.
+## Pull Request Process
+
+1. **Before Submitting**
+   - Update documentation following our checklist
+   - Ensure all tests pass
+   - Update relevant examples
+   - Add changelog entry
+
+2. **PR Requirements**
+   - Clear description of changes
+   - Link to related issues
+   - Screenshots/videos for UI changes
+   - Test coverage for new features
+
+3. **Review Process**
+   - Two approvals required
+   - All CI checks must pass
+   - Documentation must be updated
+   - No merge conflicts
+
+## Documentation Guidelines
+
+Follow our documentation style:
+- Use simple, clear language
+- Include real-world analogies
+- Provide code examples
+- Add ASCII diagrams where helpful
+- Cross-reference related docs
+
+## Community
+
+- Join our Discord server for discussions
+- Check our GitHub Issues for ways to contribute
+- Attend our community calls
+- Follow our blog for updates
+
+## Getting Help
+
+- Check our [FAQ](docs/FAQ.md)
+- Ask in Discord
+- Open a GitHub Discussion
+- Email: support@ultimate-dominion.com
