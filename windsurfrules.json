@@ -1,0 +1,169 @@
+{
+  "project": {
+    "name": "Ultimate Dominion",
+    "description": "A medieval fantasy trading card game with blockchain integration",
+    "repository": "ultimate-dominion/ultimate-dominion"
+  },
+  "documentation": {
+    "style": {
+      "language": "simple and narrative",
+      "technical_terms": "must be explained with real-world analogies",
+      "format": "markdown with ASCII diagrams where helpful",
+      "required_sections": [
+        "overview",
+        "how it works",
+        "examples",
+        "technical details"
+      ]
+    },
+    "required_files": [
+      {
+        "name": "frontend_guidelines.md",
+        "contents": [
+          "design philosophy",
+          "color palette",
+          "typography",
+          "icons",
+          "component design",
+          "layout guidelines",
+          "animations",
+          "accessibility",
+          "performance"
+        ]
+      },
+      {
+        "name": "backend_structure.md",
+        "contents": [
+          "system architecture",
+          "api routes",
+          "data flow",
+          "environments",
+          "deployment",
+          "monitoring",
+          "performance",
+          "security"
+        ]
+      },
+      {
+        "name": "technical_architecture.md",
+        "contents": [
+          "system overview",
+          "component interactions",
+          "data models",
+          "security measures",
+          "scalability approach"
+        ]
+      },
+      {
+        "name": "app_flow_document.md",
+        "contents": [
+          "user journeys",
+          "game mechanics",
+          "screen flows",
+          "interaction patterns"
+        ]
+      }
+    ]
+  },
+  "development": {
+    "environments": {
+      "local": {
+        "frontend": "http://localhost:5173",
+        "api": "http://localhost:8080",
+        "purpose": "development and testing"
+      },
+      "staging": {
+        "frontend": "ultimate-dominion-staging.vercel.app",
+        "api": "ultimate-dominion-api.onrender.com",
+        "purpose": "pre-production testing"
+      },
+      "production": {
+        "frontend": "ultimate-dominion.vercel.app",
+        "api": "ultimate-dominion-api.onrender.com",
+        "purpose": "live deployment"
+      }
+    },
+    "code_style": {
+      "frontend": {
+        "framework": "React with TypeScript",
+        "state_management": "Zustand",
+        "styling": "Tailwind CSS",
+        "component_structure": "atomic design"
+      },
+      "backend": {
+        "framework": "Express.js",
+        "database": "MongoDB",
+        "deployment": "Vercel Serverless",
+        "blockchain": "MUD framework"
+      }
+    },
+    "deployment_rules": {
+      "pre_deploy_checks": [
+        "run all tests",
+        "check environment variables",
+        "verify database migrations",
+        "test API endpoints",
+        "check frontend builds",
+        "verify blockchain connections"
+      ],
+      "post_deploy_checks": [
+        "monitor error rates",
+        "check response times",
+        "verify database connections",
+        "test critical user flows",
+        "monitor resource usage"
+      ]
+    },
+    "security_rules": {
+      "required": [
+        "validate all requests",
+        "authenticate users",
+        "authorize actions",
+        "sanitize inputs",
+        "rate limit requests",
+        "encrypt sensitive data"
+      ],
+      "environment_variables": {
+        "required": [
+          "DATABASE_URL",
+          "REDIS_URL",
+          "BLOCKCHAIN_RPC",
+          "JWT_SECRET"
+        ],
+        "optional": [
+          "DEBUG_MODE",
+          "RATE_LIMIT_WINDOW",
+          "CACHE_TTL"
+        ]
+      }
+    },
+    "performance_targets": {
+      "api_response_time": "< 200ms",
+      "page_load_time": "< 2s",
+      "time_to_interactive": "< 3s",
+      "cache_hit_ratio": "> 80%"
+    }
+  },
+  "git": {
+    "branch_naming": {
+      "feature": "feature/*",
+      "bugfix": "bugfix/*",
+      "hotfix": "hotfix/*",
+      "release": "release/*"
+    },
+    "commit_message_format": {
+      "type": ["feat", "fix", "docs", "style", "refactor", "test", "chore"],
+      "scope": "optional",
+      "template": "<type>(<scope>): <description>"
+    },
+    "review_requirements": {
+      "required_approvals": 1,
+      "checks": [
+        "lint",
+        "test",
+        "build",
+        "type-check"
+      ]
+    }
+  }
+}
