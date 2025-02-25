@@ -28,17 +28,23 @@ The top floor is what players actually see and interact with. We built this usin
 +------------------------------------------------+
 |               MIDDLEWARE/API                     |
 |  +--------------------+  +------------------+    |
-|  |    Express API     |  |   MUD Indexer   |    |
+|  |  Vercel Edge API   |  |   Game Logic    |    |
 |  | +----------------+ |  | +--------------+ |    |
-|  | |  Controllers   | |  | | Query Layer  | |    |
+|  | |  API Routes    | |  | | State Mgmt   | |    |
 |  | +----------------+ |  | +--------------+ |    |
-|  | |  Services      | |  | | Cache Layer  | |    |
+|  | |  Middleware    | |  | | Game Rules   | |    |
 |  | +----------------+ |  | +--------------+ |    |
 |  +--------------------+  +------------------+    |
 +------------------------------------------------+
 ```
 
-The middle floor is like the brain of the game. When you do something like attack a monster or buy an item, this layer figures out what should happen next. We use Express to handle these decisions quickly. There's also a special part called the MUD Indexer that keeps track of everything that happens in the game world, making sure everyone sees the same thing.
+The middle floor uses Vercel Edge Functions to handle game actions quickly and efficiently. These serverless functions run close to where players are located, making the game feel responsive no matter where you're playing from. When you take actions like moving your character or using an item, these functions process your request and update the game state accordingly.
+
+Key Features of our Edge API:
+- Global distribution for low latency
+- Automatic scaling based on player load
+- Stateless design for reliability
+- Built-in caching for performance
 
 ### Bottom Floor: Where Everything is Stored
 ```ascii
@@ -68,7 +74,7 @@ When you play Ultimate Dominion, here's how all these parts work together:
 [UI Update] <-- [State Management] <-- [MUD Indexer] <-- [Blockchain]
 ```
 
-Let's say you want to buy a sword from another player. First, the game screen (React) shows you the marketplace. When you click "Buy", the middle layer (Express) checks if you have enough gold. If you do, it tells the blockchain to transfer the sword to you. Once that's done, the MUD Indexer sees the change and tells React to update your screen to show your new sword.
+Let's say you want to buy a sword from another player. First, the game screen (React) shows you the marketplace. When you click "Buy", the middle layer (Vercel Edge API) checks if you have enough gold. If you do, it tells the blockchain to transfer the sword to you. Once that's done, the MUD Indexer sees the change and tells React to update your screen to show your new sword.
 
 ## Different Places the Game Lives
 
@@ -92,19 +98,27 @@ When we're building new features, everything runs on the developer's computer. T
 ### When Players Are Actually Playing
 ```ascii
 +----------------------+
-|  Vercel (Frontend)   |
-|  ultimate-dominion-* |
+|  Vercel Platform    |
+|                     |
+| +----------------+  |
+| |   Frontend     |  |
+| |  (Static App)  |  |
+| +----------------+  |
+|         |          |
+|         v          |
+| +----------------+ |
+| | Edge Functions | |
+| |    (API)      | |
+| +----------------+ |
 +----------------------+
            |
-      +----+----+
-      v         v
-+---------+ +---------+
-| Render  | |  MUD    |
-|  API    | |Indexer  |
-+---------+ +---------+
+           v
+    +--------------+
+    | MUD Indexer  |
+    +--------------+
 ```
 
-When the game is live, we use special services to make sure it runs smoothly for everyone. Vercel handles showing the game to players, while Render runs our brain layer, and MUD Indexer keeps track of everything happening in the game world.
+When the game is live, we use Vercel's platform to make sure everything runs smoothly for everyone. The frontend is served as a static application, while our API runs as Edge Functions on Vercel's global network. The MUD Indexer keeps track of everything happening in the game world.
 
 ## Keeping Players Safe
 

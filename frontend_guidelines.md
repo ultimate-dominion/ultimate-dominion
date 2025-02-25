@@ -242,6 +242,50 @@ Desktop: >= 1200px
 - Implement progressive loading
 - Cache frequently used assets
 
+## API Integration Guidelines
+
+### Edge API Integration
+
+When integrating with our Vercel Edge Functions:
+
+1. **Base URL Configuration**
+```typescript
+// Use relative path in production
+const apiBase = import.meta.env.PROD ? '/api' : import.meta.env.VITE_API_URL;
+```
+
+2. **Error Handling**
+```typescript
+try {
+  const response = await fetch(`${apiBase}/endpoint`);
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+  const data = await response.json();
+} catch (error) {
+  // Handle network/API errors
+}
+```
+
+3. **Request Headers**
+```typescript
+const headers = {
+  'Content-Type': 'application/json',
+  // Add any auth headers here
+};
+```
+
+4. **Response Types**
+- Define TypeScript interfaces for all API responses
+- Use zod for runtime type validation
+- Handle edge cases and loading states
+
+5. **Performance Best Practices**
+- Implement request caching where appropriate
+- Use SWR or React Query for data fetching
+- Add retry logic for failed requests
+- Monitor response times and errors
+
 ## Best Practices
 
 ### Component Structure
