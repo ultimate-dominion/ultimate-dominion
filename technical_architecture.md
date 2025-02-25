@@ -45,17 +45,17 @@ The middle floor is like the brain of the game. When you do something like attac
 +------------------------------------------------+
 |                DATA LAYER                        |
 |  +--------------------+  +------------------+    |
-|  |     MongoDB        |  |   Blockchain    |    |
+|  |   MUD Framework    |  |   Game State    |    |
 |  | +----------------+ |  | +--------------+ |    |
-|  | | Player Data    | |  | | Smart        | |    |
-|  | +----------------+ |  | | Contracts    | |    |
-|  | | Game State    | |  | +--------------+ |    |
-|  | +----------------+ |  | | World State  | |    |
+|  | | Player Data    | |  | | World State  | |    |
+|  | +----------------+ |  | +--------------+ |    |
+|  | | Game Tables   | |  | | Contracts    | |    |
+|  | +----------------+ |  | +--------------+ |    |
 |  +--------------------+  +------------------+    |
 +------------------------------------------------+
 ```
 
-The bottom floor is where we keep all the important information. We use MongoDB to store things that change often, like where players are in the game or what's in their inventory. For really important things like who owns what items or how much gold someone has, we use blockchain technology to make sure everything is safe and fair.
+The bottom floor is where we keep all the important information. The MUD Framework stores everything from player data to game state in secure, efficient tables. When you do something in the game - like moving your character or trading items - MUD makes sure it happens correctly and keeps track of all the changes. This gives us the best of both worlds: the security of blockchain with the speed of modern gaming.
 
 ## How Players Move Through the Game
 
@@ -191,3 +191,74 @@ Base System   Performance      Feature         Platform
 ```
 
 We've built Ultimate Dominion to grow over time. We start with the basics, then make things run better, add new features, and eventually make the game bigger and better for more players to enjoy.
+
+## System Overview
+
+Ultimate Dominion uses a modern web3 architecture combining serverless computing with blockchain technology:
+
+1. **Frontend Layer**
+   - React with TypeScript
+   - Zustand for state management
+   - Tailwind CSS for styling
+
+2. **Backend Layer**
+   - Vercel Edge Functions
+   - Serverless API endpoints
+   - Event-driven architecture
+
+3. **Blockchain Layer (MUD Framework)**
+   - Smart contracts for game logic
+   - On-chain state management
+   - Transaction processing
+
+4. **Storage Layer (IPFS/Pinata)**
+   - Decentralized file storage
+   - Asset management
+   - Metadata hosting
+
+## Data Architecture
+
+```ascii
++----------------+     +----------------+     +----------------+
+|   Frontend     |     |   Backend     |     |   Blockchain   |
+|                |     |               |     |                |
+|  - UI State    |     | - API Routes  |     | - Game State  |
+|  - User Input  | --> | - Processing  | --> | - Contracts   |
+|  - Rendering   |     | - Validation  |     | - Transactions|
++----------------+     +----------------+     +----------------+
+        ↑                     ↑                     ↑
+        |                     |                     |
+        v                     v                     v
++----------------+     +----------------+     +----------------+
+|  Local Cache   |     |  Edge Cache   |     |    IPFS       |
+|                |     |               |     |                |
+|  - Session    |     | - API Results |     | - Assets      |
+|  - UI State   |     | - Responses   |     | - Metadata    |
++----------------+     +----------------+     +----------------+
+```
+
+## State Management
+
+### Blockchain State (MUD)
+- Player data
+- Item ownership
+- Game mechanics
+- Market transactions
+- Combat results
+
+### File Storage (IPFS)
+- Game assets
+- Character images
+- Item artwork
+- Metadata files
+
+### Local State (Frontend)
+- UI interactions
+- Form data
+- Temporary calculations
+- Session information
+
+### Edge Cache
+- API responses
+- Frequently accessed data
+- Short-term state
