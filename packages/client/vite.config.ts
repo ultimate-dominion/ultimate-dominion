@@ -26,6 +26,31 @@ export default defineConfig(({ command }) => {
       target: 'es2022',
       minify: true,
       sourcemap: true,
+      rollupOptions: {
+        // Ensure Chakra UI components are properly bundled
+        output: {
+          manualChunks: {
+            chakra: ['@chakra-ui/react'],
+          },
+        },
+      },
+      commonjsOptions: {
+        // Handle 'use client' directives
+        transformMixedEsModules: true,
+      },
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        // Handle 'use client' directives
+        supported: {
+          'top-level-await': true,
+        },
+        target: 'es2022',
+        // Suppress 'use client' directive warnings
+        banner: {
+          js: '// @ts-nocheck\n"use client";',
+        },
+      },
     },
     define: {
       // By default, Vite doesn't include shims for NodeJS/
