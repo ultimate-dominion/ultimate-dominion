@@ -25,6 +25,110 @@
         "technical details"
       ]
     },
+    "maintenance_rules": {
+      "code_changes": {
+        "description": "Rules for updating documentation when code changes",
+        "rules": [
+          {
+            "trigger": "API Changes",
+            "required_updates": [
+              "backend_structure.md: Update API endpoints and examples",
+              "technical_architecture.md: Update API flow diagrams if needed",
+              "implementation_plan.md: Update deployment steps if needed",
+              "frontend_guidelines.md: Update API integration examples"
+            ]
+          },
+          {
+            "trigger": "Frontend Changes",
+            "required_updates": [
+              "frontend_guidelines.md: Update component documentation",
+              "app_flow_document.md: Update user journey if changed",
+              "technical_architecture.md: Update frontend architecture if needed"
+            ]
+          },
+          {
+            "trigger": "Smart Contract Changes",
+            "required_updates": [
+              "smart_contracts.md: Update contract documentation",
+              "technical_architecture.md: Update blockchain integration if needed",
+              "implementation_plan.md: Update deployment steps"
+            ]
+          },
+          {
+            "trigger": "Infrastructure Changes",
+            "required_updates": [
+              "technical_architecture.md: Update architecture diagrams",
+              "implementation_plan.md: Update deployment process",
+              "backend_structure.md: Update environment configurations"
+            ]
+          }
+        ]
+      },
+      "review_process": {
+        "description": "Documentation review requirements",
+        "steps": [
+          {
+            "when": "Before PR",
+            "actions": [
+              "Use documentation_review_checklist.md",
+              "Update all affected documents",
+              "Cross-reference related documents",
+              "Verify diagrams and examples"
+            ]
+          },
+          {
+            "when": "During PR Review",
+            "actions": [
+              "Reviewer must verify documentation updates",
+              "Check cross-document consistency",
+              "Validate technical accuracy",
+              "Ensure style guidelines followed"
+            ]
+          },
+          {
+            "when": "After Merge",
+            "actions": [
+              "Verify documentation deployed correctly",
+              "Update version numbers if needed",
+              "Check all links still work",
+              "Update change logs"
+            ]
+          }
+        ]
+      },
+      "verification_checklist": {
+        "description": "Required checks for documentation updates",
+        "checks": [
+          {
+            "category": "Content",
+            "items": [
+              "Technical accuracy",
+              "Cross-document consistency",
+              "Style guideline compliance",
+              "Diagram accuracy"
+            ]
+          },
+          {
+            "category": "Completeness",
+            "items": [
+              "All affected documents updated",
+              "Cross-references maintained",
+              "Examples updated",
+              "Version numbers updated"
+            ]
+          },
+          {
+            "category": "Quality",
+            "items": [
+              "Narrative style maintained",
+              "Real-world analogies used",
+              "Clear and accessible language",
+              "Proper formatting"
+            ]
+          }
+        ]
+      }
+    },
     "required_files": [
       {
         "name": "frontend_guidelines.md",
@@ -154,6 +258,79 @@
       "blockchain_confirmation": "< 5s"
     }
   },
+  "architecture": {
+    "verification_rules": [
+      {
+        "name": "architectural_consistency",
+        "description": "Before making any architectural decisions or documentation updates",
+        "checks": [
+          "Review technical_architecture.md as the source of truth",
+          "Cross-reference with existing implementation",
+          "Question any inconsistencies with current architecture",
+          "Validate assumptions about deployment platforms",
+          "Verify technology stack matches documentation"
+        ]
+      },
+      {
+        "name": "implementation_validation",
+        "description": "Before implementing new features or making changes",
+        "checks": [
+          "Confirm deployment strategy matches Vercel Edge Functions architecture",
+          "Verify all API endpoints are designed for serverless execution",
+          "Ensure changes align with MUD Framework patterns",
+          "Check that environment configurations match deployment platform"
+        ]
+      }
+    ],
+    "deployment_rules": {
+      "frontend": {
+        "platform": "Vercel",
+        "type": "Static Application",
+        "build_output": "packages/client/dist"
+      },
+      "backend": {
+        "platform": "Vercel",
+        "type": "Edge Functions",
+        "location": "packages/api/src/functions"
+      },
+      "blockchain": {
+        "framework": "MUD",
+        "indexer": "MUD Indexer",
+        "deployment": "packages/contracts"
+      }
+    }
+  },
+  "implementation": {
+    "verification_steps": [
+      {
+        "name": "pre_implementation",
+        "required_checks": [
+          "Review technical_architecture.md",
+          "Verify deployment platform requirements",
+          "Check existing patterns in codebase",
+          "Validate against architecture rules"
+        ]
+      },
+      {
+        "name": "during_implementation",
+        "required_checks": [
+          "Follow established patterns",
+          "Maintain serverless design principles",
+          "Keep deployment platform constraints in mind",
+          "Document any architectural decisions"
+        ]
+      },
+      {
+        "name": "post_implementation",
+        "required_checks": [
+          "Verify changes match architecture",
+          "Update documentation if needed",
+          "Test in proper deployment environment",
+          "Validate serverless execution"
+        ]
+      }
+    ]
+  },
   "git": {
     "branch_naming": {
       "feature": "feature/*",
@@ -173,6 +350,33 @@
         "test",
         "build",
         "type-check"
+      ]
+    }
+  },
+  "code_modification": {
+    "file_handling": {
+      "verification_rules": [
+        {
+          "name": "file_existence_check",
+          "description": "Before assuming or modifying files",
+          "steps": [
+            "List and verify all files that will be affected",
+            "Check if referenced files actually exist",
+            "Never assume existence of files not shown by tools",
+            "Document any missing files before proceeding"
+          ]
+        },
+        {
+          "name": "minimal_changes",
+          "description": "Maintain existing code structure",
+          "rules": [
+            "Work within existing file structure whenever possible",
+            "Create new files only when absolutely necessary",
+            "Modify only what is required to complete the task",
+            "Preserve existing naming conventions and patterns",
+            "Document why new files are necessary when created"
+          ]
+        }
       ]
     }
   }
