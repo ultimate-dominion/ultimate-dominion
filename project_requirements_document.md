@@ -8,18 +8,13 @@
                                              |
                                              v
 +---------------+    +--------------+    +----------+    +-----------+
-|   Web Client  |<-->|  Frontend/UI |<-->| Backend  |<-->| Database  |
+|   Web Client  |<-->|  Frontend/UI |<-->| Backend  |<-->| MUD Engine |
 +---------------+    +--------------+    +----------+    +-----------+
         |                   |               |
         |                   v               |
         |            +-----------+          |
-        +----------->| MUD Engine |<--------+
+        +----------->| MUD Framework |<--------+
                     +-----------+
-                          |
-                          v
-                    +----------+
-                    |Blockchain|
-                    +----------+
 ```
 
 ## Game Architecture
@@ -41,13 +36,12 @@
 | +-------------+   |
 +--------+--------+
          |
-    +----+----+
-    |         |
-    v         v
-+-------+ +--------+
-|  MUD  | |MongoDB |
-|Engine | |Database|
-+-------+ +--------+
+         v
++-------------------+
+|    MUD Engine    |
+|  Game State &    |
+|    Database      |
++-------------------+
 ```
 
 ## What is Ultimate Dominion?
@@ -105,7 +99,7 @@ Once players know the basics, they can start their adventure. They'll explore di
 
 We're building Ultimate Dominion with some powerful tools. The game's front end - what players see and interact with - uses React, which helps us make smooth, responsive interfaces. We're using Chakra UI to make everything look good and work well on different screen sizes.
 
-The game's brain lives on the blockchain using something called the MUD engine. Think of MUD as a special game engine that lets us store game data securely and make sure everything is fair. When players trade items or fight monsters, MUD helps make sure everything happens correctly and fairly.
+The game's brain lives on the MUD Engine using the MUD Framework. Think of MUD as a special game engine that lets us store game data securely and make sure everything is fair. When players trade items or fight monsters, MUD helps make sure everything happens correctly and fairly.
 
 We also have a regular server (using Node.js) that handles things that don't need to be on the blockchain, like chat messages or temporary game data. This helps keep the game fast and cheap to play, since not everything needs to be stored on the blockchain.
 
@@ -126,17 +120,17 @@ We also have a regular server (using Node.js) that handles things that don't nee
 |  +----------------------------------+    |
 |  |           MUD Engine            |    |
 |  |  +-------------+ +-----------+   |    |
-|  |  |Smart Contract| |Game State |   |    |
+|  |  | MUD Framework| |Game State |   |    |
 |  |  +-------------+ +-----------+   |    |
 |  +----------------------------------+    |
 +------------------------------------------+
                     |
 +------------------------------------------+
 |              DATA LAYER                  |
-|  +------------------+ +---------------+  |
-|  |     Blockchain   | |   MongoDB    |  |
-|  | (Game Assets)    | |(Player Data) |  |
-|  +------------------+ +---------------+  |
+|  +----------------------------------+    |
+|  |          MUD Framework           |    |
+|  |     (Game State & Assets)        |    |
+|  +----------------------------------+    |
 +------------------------------------------+
 ```
 

@@ -2,41 +2,85 @@
 
 ## How Our Game Works Behind the Scenes
 
-When you play Ultimate Dominion, a lot happens behind the scenes to make everything work smoothly. Think of it like a restaurant - you only see the dining room, but there's a whole kitchen working to make your meal. In our case, we use something called "serverless" technology. This means instead of having one big computer running everything, we have many small helpers that wake up when needed and go to sleep when they're done. This makes our game faster and more reliable.
+When you play Ultimate Dominion, a lot happens behind the scenes to make everything work smoothly. Our game uses three main systems:
+
+1. **Blockchain (MUD Framework)** - This is like the game's brain, storing all important game data
+2. **IPFS (Pinata)** - This is like a giant filing cabinet where we store images and other files
+3. **Serverless Functions (Vercel)** - These are like helpful assistants that handle specific tasks when needed
 
 ## How The Pieces Fit Together
 
-Our game has three main parts working together:
-
-1. The front room (what you see in your browser)
-2. The kitchen (where we process all the game actions)
-3. The storage room (where we keep all the game data)
-
 ```ascii
-+---------------------+        +----------------------+
-|   Vercel Edge      |        |   Serverless API     |
-|   Functions        |        |   Functions          |
++-------------------+        +----------------------+
+|   Vercel Edge     |        |   Serverless API     |
+|   Functions       |        |   Functions          |
 |                   |        |                      |
-| - Auth Checks     |  --->  | - Game Logic         |
-| - Rate Limiting   |        | - Data Processing    |
-| - Caching         |        | - State Management   |
-+---------------------+        +----------------------+
-           |                            |
-           v                            v
-+---------------------+        +----------------------+
-|   MongoDB Atlas     |        |   MUD Framework      |
-|   (Game State)     |        |   (Blockchain)       |
+|   - API Routes    | <----> |   - Game Logic      |
+|   - Caching      |        |   - State Updates    |
+|   - Auth         |        |   - Event Handling   |
++-------------------+        +----------------------+
+         ↑                            ↑
+         |                            |
+         v                            v
++-------------------+        +----------------------+
+|   MUD Framework   |        |   Pinata (IPFS)     |
 |                   |        |                      |
-| - Player Data     |        | - Smart Contracts    |
-| - Game Progress   |        | - World State        |
-+---------------------+        +----------------------+
+|   - Game State    |        |   - File Storage    |
+|   - Player Data   |        |   - Image Assets    |
+|   - Transactions  |        |   - Metadata        |
++-------------------+        +----------------------+
 ```
 
-When you do something in the game, like attack a monster, your action goes through these steps:
-1. You click the attack button in your browser
-2. Our kitchen helper wakes up and figures out what should happen
-3. The results are saved in our storage room
-4. You see what happened on your screen
+## Data Storage
+
+### Game State (MUD Framework)
+All critical game data lives on the blockchain through MUD:
+- Player information
+- Item ownership
+- Game mechanics
+- Market transactions
+- Combat results
+
+### File Storage (IPFS via Pinata)
+Large files and media are stored on IPFS:
+- Item images
+- Character avatars
+- Game assets
+- Metadata files
+
+### Temporary State (Memory)
+Some data is kept temporarily in memory:
+- Active game sessions
+- Current player actions
+- Temporary calculations
+- Cache for quick access
+
+## API Routes Structure
+
+Our API routes handle specific game actions:
+
+```ascii
+/api
+  /game
+    - state          # Current game state
+    - actions        # Player actions
+    - events         # Game events
+  /player
+    - profile        # Player info
+    - inventory      # Player items
+    - stats         # Player statistics
+  /market
+    - listings      # Market items
+    - trades        # Trade actions
+    - history       # Past transactions
+  /combat
+    - initiate      # Start combat
+    - actions       # Combat moves
+    - results       # Battle outcomes
+  /assets
+    - upload        # File uploads to IPFS
+    - metadata      # Item metadata
+```
 
 ## How We Handle Game Actions
 
@@ -77,7 +121,7 @@ Think of these routes like different counters in a store - one for buying items,
 
 ### Player Action Flow
 ```ascii
-[Client Action] --> [Edge Function] --> [API Route] --> [Database/Blockchain]
+[Client Action] --> [Edge Function] --> [API Route] --> [MUD Framework]
       ↑                   |               |                    |
       +-------------------+---------------+--------------------+
                          Response Flow
@@ -87,9 +131,32 @@ Example of a player attacking a monster:
 1. Client sends attack action
 2. Edge function validates request
 3. API route processes combat
-4. Updates stored in MongoDB
-5. Blockchain state updated if needed
-6. Response sent back to client
+4. Updates stored in MUD Framework tables
+5. Response sent back to client
+
+## MUD Framework Tables
+
+Our game state is organized in MUD Framework tables, which store all persistent game data:
+
+1. Players Table
+   - Player wallet addresses
+   - Account information
+   - Game preferences
+
+2. Characters Table
+   - Character stats
+   - Equipment loadouts
+   - Progress tracking
+
+3. Items Table
+   - Item properties
+   - Ownership records
+   - Market status
+
+4. Combat Table
+   - Battle records
+   - Rewards distribution
+   - Experience gains
 
 ## Serverless Functions
 
@@ -122,62 +189,7 @@ export default async function handler(req, res) {
        |
     Game State
        |
-  Persistent Store
-```
-
-## Database Structure
-
-### MongoDB Collections
-```ascii
-Players
-{
-  _id: ObjectId,
-  walletAddress: String,
-  sessionAccount: String,
-  profile: {
-    name: String,
-    class: String,
-    level: Number,
-    experience: Number
-  },
-  stats: {
-    health: Number,
-    strength: Number,
-    agility: Number,
-    intelligence: Number
-  },
-  inventory: [{
-    itemId: String,
-    quantity: Number,
-    equipped: Boolean
-  }]
-}
-
-Items
-{
-  _id: ObjectId,
-  name: String,
-  type: String,
-  stats: {
-    damage: Number,
-    armor: Number,
-    effects: [String]
-  },
-  requirements: {
-    level: Number,
-    class: [String]
-  }
-}
-
-Market
-{
-  _id: ObjectId,
-  sellerId: String,
-  itemId: String,
-  price: Number,
-  listed: Date,
-  status: String
-}
+  MUD Framework
 ```
 
 ## Caching Strategy
@@ -195,8 +207,8 @@ Market
 +------------------+  - Player Sessions
          ↓
 +------------------+
-|   MongoDB        |  Persistent Storage
-|   (Atlas)       |  - All Game Data
+|   MUD Framework  |  Persistent Storage
+|   (Blockchain)  |  - All Game Data
 +------------------+
 ```
 
@@ -294,49 +306,8 @@ VITE_ENVIRONMENT=local
 VITE_BLOCKCHAIN_RPC=http://localhost:8545
 
 # Backend (.env, .env.staging, .env.production)
-DATABASE_URL=mongodb+srv://...
-REDIS_URL=redis://...
-BLOCKCHAIN_RPC=https://...
-JWT_SECRET=...
-CORS_ORIGIN=http://localhost:5173
-NODE_ENV=development
-```
-
-### Deployment Configuration
-
-#### Vercel (Frontend)
-```json
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "packages/client/package.json",
-      "use": "@vercel/static-build",
-      "config": { "zeroConfig": true }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/packages/client/$1"
-    }
-  ]
-}
-```
-
-#### Render (Backend)
-```yaml
-services:
-  - type: web
-    name: ultimate-dominion-api
-    env: node
-    buildCommand: pnpm install && pnpm build
-    startCommand: pnpm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false
+WORLD_ADDRESS=0x...
+PRIVATE_KEY=...
 ```
 
 ## Performance Optimization
@@ -348,7 +319,7 @@ services:
 +-------------------+----------------------+
 | Edge Functions    | < 50ms              |
 | API Routes        | < 200ms             |
-| Database Queries  | < 100ms             |
+| MUD Framework     | < 100ms             |
 | Blockchain Calls  | < 2000ms            |
 +-------------------+----------------------+
 ```
@@ -362,7 +333,7 @@ services:
 +-------------------+----------------------+
 | Edge Functions    | Request Volume      |
 | API Functions     | CPU Usage           |
-| Database         | Connection Count    |
+| MUD Framework    | Connection Count    |
 | Cache            | Memory Usage        |
 +-------------------+----------------------+
 ```
@@ -377,7 +348,7 @@ services:
 | Game State        | Every 10 minutes    |
 | Player Data       | Every hour          |
 | Market Data       | Every 30 minutes    |
-| Full Database     | Daily               |
+| Full Blockchain  | Daily               |
 +-------------------+----------------------+
 ```
 
