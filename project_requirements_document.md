@@ -31,8 +31,9 @@
 +-------------------+
 |   Backend API     |
 | +-------------+   |
-| |  Node.js   |   |
-| |  Express   |   |
+| |   Vercel    |   |
+| |    Edge     |   |
+| | Functions   |   |
 | +-------------+   |
 +--------+--------+
          |
@@ -103,36 +104,49 @@ The game's brain lives on the MUD Engine using the MUD Framework. Think of MUD a
 
 We also use Vercel Edge Functions to handle things that don't need to be on the blockchain, like chat messages or temporary game data. These serverless functions run close to our players around the world, helping keep the game fast and responsive while being cost-effective.
 
-## Tech Stack Overview
-```ascii
-+------------------------------------------+
-|              PRESENTATION                 |
-|  +----------------------------------+    |
-|  |          React + TypeScript      |    |
-|  |  +-------------+ +-----------+   |    |
-|  |  | Chakra UI   | |   Vite    |   |    |
-|  |  +-------------+ +-----------+   |    |
-|  +----------------------------------+    |
-+------------------------------------------+
-                    |
-+------------------------------------------+
-|            GAME LOGIC LAYER              |
-|  +----------------------------------+    |
-|  |           MUD Engine            |    |
-|  |  +-------------+ +-----------+   |    |
-|  |  | MUD Framework| |Game State |   |    |
-|  |  +-------------+ +-----------+   |    |
-|  +----------------------------------+    |
-+------------------------------------------+
-                    |
-+------------------------------------------+
-|              DATA LAYER                  |
-|  +----------------------------------+    |
-|  |          MUD Framework           |    |
-|  |     (Game State & Assets)        |    |
-|  +----------------------------------+    |
-+------------------------------------------+
-```
+## Technical Implementation
+
+### Frontend (Client)
+- React with TypeScript for type safety
+- Chakra UI for consistent, accessible design
+- Zustand for state management
+- Web3.js for blockchain interactions
+
+### Backend (API)
+- Vercel Edge Functions for serverless API
+- Global distribution for low latency
+- Automatic scaling based on player load
+- Built-in caching and performance optimization
+
+### Game Engine
+- MUD Framework for game state
+- Smart contracts for ownership and trading
+- IPFS (via Pinata) for asset storage
+- TypeScript for type safety
+
+### Key Technical Features
+1. **Responsive Design**
+   - Mobile-friendly interface
+   - Adaptive layout for all screen sizes
+   - Touch-optimized controls
+
+2. **Performance**
+   - Edge-optimized API responses
+   - Client-side caching
+   - Optimized asset loading
+   - Progressive web app capabilities
+
+3. **Security**
+   - Secure wallet connections
+   - Rate limiting on API
+   - DDoS protection via Vercel
+   - Input validation and sanitization
+
+4. **Scalability**
+   - Serverless architecture
+   - Automatic horizontal scaling
+   - Global edge function distribution
+   - Load balancing built-in
 
 ## What Can Players Do in the Game?
 
@@ -180,3 +194,33 @@ We're handling these challenges by:
 While we're starting with core features like character creation, basic combat, and trading, we have big plans for the future. We want to add things like player housing, more complex guild features, and maybe even a mobile version of the game. But we're taking it one step at a time to make sure everything works well and is fun to play.
 
 Our main focus is on making a game that's fun, fair, and gives players real ownership of their gaming experience. We believe that by combining classic game elements with modern blockchain technology, we can create something special that players will enjoy for years to come.
+
+## Tech Stack Overview
+```ascii
++------------------------------------------+
+|              PRESENTATION                 |
+|  +----------------------------------+    |
+|  |          React + TypeScript      |    |
+|  |  +-------------+ +-----------+   |    |
+|  |  | Chakra UI   | |   Vite    |   |    |
+|  |  +-------------+ +-----------+   |    |
+|  +----------------------------------+    |
++------------------------------------------+
+                    |
++------------------------------------------+
+|            GAME LOGIC LAYER              |
+|  +----------------------------------+    |
+|  |           MUD Engine            |    |
+|  |  +-------------+ +-----------+   |    |
+|  |  | MUD Framework| |Game State |   |    |
+|  |  +-------------+ +-----------+   |    |
+|  +----------------------------------+    |
++------------------------------------------+
+                    |
++------------------------------------------+
+|              DATA LAYER                  |
+|  +----------------------------------+    |
+|  |          MUD Framework           |    |
+|  |     (Game State & Assets)        |    |
+|  +----------------------------------+    |
++------------------------------------------+
