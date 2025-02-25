@@ -6,6 +6,19 @@
 import { ContractWrite, createBurnerAccount } from '@latticexyz/common';
 import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
 import { encodeEntity, syncToRecs } from '@latticexyz/store-sync/recs';
+import mudConfig from 'contracts/mud.config';
+import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
+import { share, Subject } from 'rxjs';
+import { createPublicClient, createWalletClient, getContract, Hex } from 'viem';
+
+import { debug } from '../../utils/debug';
+
+import { createViemClientConfig } from './createViemClientConfig';
+import { externalTables } from './externalTables';
+import { getNetworkConfig } from './getNetworkConfig';
+import { handleIndexerError } from './indexerFallback';
+import { world } from './world';
+
 /*
  * Import our MUD config, which includes strong types for
  * our tables and other config options. We use this to generate
@@ -14,21 +27,13 @@ import { encodeEntity, syncToRecs } from '@latticexyz/store-sync/recs';
  * See https://mud.dev/templates/typescript/contracts#mudconfigts
  * for the source of this information.
  */
-import mudConfig from 'contracts/mud.config';
-import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
-import { share, Subject } from 'rxjs';
-import { createPublicClient, createWalletClient, getContract, Hex } from 'viem';
-
-import { createViemClientConfig } from './createViemClientConfig';
-import { externalTables } from './externalTables';
-import { getNetworkConfig } from './getNetworkConfig';
-import { world } from './world';
 
 export type SetupNetworkResult = Awaited<ReturnType<typeof setupNetwork>>;
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export async function setupNetwork() {
   const networkConfig = await getNetworkConfig();
+  debug.log('Setting up network with config', networkConfig);
 
   const clientOptions = createViemClientConfig(networkConfig.chain);
   const publicClient = createPublicClient(clientOptions);
@@ -60,6 +65,9 @@ export async function setupNetwork() {
     client: { public: publicClient, wallet: burnerWalletClient },
   });
 
+  const indexerUrl = (import.meta.env.VITE_INDEXER_URL as string) ?? undefined;
+  debug.log('Using indexer URL', indexerUrl);
+
   /*
    * Sync on-chain state into RECS and keeps our client in sync.
    * Uses the MUD indexer if available, otherwise falls back
@@ -74,7 +82,16 @@ export async function setupNetwork() {
       publicClient,
       startBlock: BigInt(networkConfig.initialBlockNumber),
       tables: externalTables,
-      indexerUrl: (import.meta.env.VITE_INDEXER_URL as string) ?? undefined,
+      indexerUrl,
+      async fetchJson(url, opts) {
+        if (!url.toString().includes(indexerUrl ?? '')) {
+          return fetch(url, opts).then(r => r.json());
+        }
+        return handleIndexerError(url.toString(), async () => {
+          debug.log('Using RPC fallback for indexer');
+          return null;
+        });
+      },
     });
 
   return {
