@@ -69,22 +69,25 @@ export async function setupNetwork() {
   const isDev = import.meta.env.DEV;
   const rawIndexerUrl =
     (import.meta.env.VITE_INDEXER_URL as string) ?? undefined;
-  const indexerUrl =
-    isDev && rawIndexerUrl
-      ? rawIndexerUrl.replace(
-          'https://indexer.mud.garnetchain.com',
-          '/mud-indexer',
-        )
-      : rawIndexerUrl;
+  const indexerUrl = isDev
+    ? rawIndexerUrl?.replace(
+        'https://indexer.mud.garnetchain.com',
+        '/mud-indexer',
+      )
+    : rawIndexerUrl;
 
   debug.log('Using indexer URL', { isDev, rawIndexerUrl, indexerUrl });
 
-  /*
-   * Sync on-chain state into RECS and keeps our client in sync.
-   * Uses the MUD indexer if available, otherwise falls back
-   * to the viem publicClient to make RPC calls to fetch MUD
-   * events from the chain.
-   */
+  const fallbackFn = async (url: string, opts: RequestInit) => {
+    if (!url.toString().includes(indexerUrl ?? '')) {
+      return fetch(url, opts).then(r => r.json());
+    }
+    return handleIndexerError(url.toString(), async () => {
+      debug.log('Using RPC fallback for indexer');
+      return null;
+    });
+  };
+
   const { components, latestBlock$, storedBlockLogs$, waitForTransaction } =
     await syncToRecs({
       world,
@@ -94,14 +97,37 @@ export async function setupNetwork() {
       startBlock: BigInt(networkConfig.initialBlockNumber),
       tables: externalTables,
       indexerUrl,
-      async fetchJson(url, opts) {
-        if (!url.toString().includes(indexerUrl ?? '')) {
-          return fetch(url, opts).then(r => r.json());
-        }
-        return handleIndexerError(url.toString(), async () => {
-          debug.log('Using RPC fallback for indexer');
-          return null;
+      fetchJson: async (url: string, opts?: RequestInit) => {
+        const proxyUrl = isDev
+          ? url.toString()
+          : `/api/proxy?url=${encodeURIComponent(url.toString())}`;
+
+        debug.log('Fetching through proxy', {
+          url: url.toString(),
+          proxyUrl,
         });
+
+        try {
+          const response = await fetch(proxyUrl, {
+            ...opts,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!response.ok) {
+            debug.log('Proxy request failed, falling back to RPC', {
+              status: response.status,
+              statusText: response.statusText,
+            });
+            return fallbackFn(url, opts ?? {});
+          }
+
+          return response.json();
+        } catch (error) {
+          debug.log('Error fetching through proxy, falling back to RPC', error);
+          return fallbackFn(url, opts ?? {});
+        }
       },
     });
 
