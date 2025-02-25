@@ -8,7 +8,16 @@
     "style": {
       "language": "simple and narrative",
       "technical_terms": "must be explained with real-world analogies",
-      "format": "markdown with ASCII diagrams where helpful",
+      "format": {
+        "primary": "markdown with ASCII diagrams",
+        "rules": [
+          "Use paragraph form for all explanations",
+          "No bullet points or numbered lists allowed",
+          "Every diagram must be explained in narrative form",
+          "Use real-world analogies to explain technical concepts",
+          "Keep language simple and accessible"
+        ]
+      },
       "required_sections": [
         "overview",
         "how it works",
@@ -92,24 +101,24 @@
       },
       "backend": {
         "framework": "Express.js",
-        "database": "MongoDB",
         "deployment": "Vercel Serverless",
-        "blockchain": "MUD framework"
+        "blockchain": "MUD framework",
+        "storage": "IPFS via Pinata"
       }
     },
     "deployment_rules": {
       "pre_deploy_checks": [
         "run all tests",
         "check environment variables",
-        "verify database migrations",
+        "verify smart contracts",
         "test API endpoints",
         "check frontend builds",
-        "verify blockchain connections"
+        "verify IPFS connections"
       ],
       "post_deploy_checks": [
         "monitor error rates",
         "check response times",
-        "verify database connections",
+        "verify blockchain state",
         "test critical user flows",
         "monitor resource usage"
       ]
@@ -117,18 +126,19 @@
     "security_rules": {
       "required": [
         "validate all requests",
-        "authenticate users",
+        "authenticate users via wallet",
         "authorize actions",
         "sanitize inputs",
         "rate limit requests",
-        "encrypt sensitive data"
+        "verify blockchain transactions"
       ],
       "environment_variables": {
         "required": [
-          "DATABASE_URL",
-          "REDIS_URL",
-          "BLOCKCHAIN_RPC",
-          "JWT_SECRET"
+          "PINATA_JWT",
+          "PRIVATE_KEY",
+          "WORLD_ADDRESS",
+          "INITIAL_BLOCK_NUMBER",
+          "RPC_URL"
         ],
         "optional": [
           "DEBUG_MODE",
@@ -141,7 +151,7 @@
       "api_response_time": "< 200ms",
       "page_load_time": "< 2s",
       "time_to_interactive": "< 3s",
-      "cache_hit_ratio": "> 80%"
+      "blockchain_confirmation": "< 5s"
     }
   },
   "git": {
