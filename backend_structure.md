@@ -254,19 +254,174 @@ Market
 
 ## Environment Configuration
 
+### Environment Setup
+```ascii
++-------------------+----------------------+----------------------+
+| Environment       | Frontend            | Backend              |
++-------------------+----------------------+----------------------+
+| LOCAL            | http://localhost:5173| http://localhost:8080|
+| STAGING          | ultimate-dominion-   | ultimate-dominion-   |
+|                  | staging.vercel.app   | api.onrender.com     |
+| PRODUCTION       | ultimate-dominion.   | ultimate-dominion-   |
+|                  | vercel.app          | api.onrender.com     |
++-------------------+----------------------+----------------------+
+```
+
 ### Environment Variables
 ```ascii
-# Required Variables
+# Frontend (.env.local, .env.staging, .env.production)
+VITE_API_URL=http://localhost:8080
+VITE_ENVIRONMENT=local
+VITE_BLOCKCHAIN_RPC=http://localhost:8545
+
+# Backend (.env, .env.staging, .env.production)
 DATABASE_URL=mongodb+srv://...
 REDIS_URL=redis://...
 BLOCKCHAIN_RPC=https://...
 JWT_SECRET=...
-
-# Optional Variables
-DEBUG_MODE=false
-RATE_LIMIT_WINDOW=60000
-CACHE_TTL=300
+CORS_ORIGIN=http://localhost:5173
+NODE_ENV=development
 ```
+
+### Deployment Configuration
+
+#### Vercel (Frontend)
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "packages/client/package.json",
+      "use": "@vercel/static-build",
+      "config": { "zeroConfig": true }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/packages/client/$1"
+    }
+  ]
+}
+```
+
+#### Render (Backend)
+```yaml
+services:
+  - type: web
+    name: ultimate-dominion-api
+    env: node
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+```
+
+### Deployment Process
+
+#### Local Development
+1. Start the development server:
+```bash
+# Start frontend
+cd packages/client
+pnpm dev
+
+# Start backend
+cd packages/api
+pnpm dev
+```
+
+#### Staging Deployment
+```ascii
+[Code Push] --> [GitHub] --> [CI/CD] --> [Deploy]
+     |            |           |            |
+     v            v           v            v
+  Feature     Actions      Build      Staging Env
+  Branch      Run Tests    Assets     Verification
+```
+
+#### Production Deployment
+```ascii
+[Staging] --> [QA Tests] --> [Main Branch] --> [Deploy]
+     |            |              |               |
+     v            v              v               v
+  Verify      Run E2E       Merge PR        Production
+  Changes     Tests         Review          Release
+```
+
+### Monitoring Setup
+
+#### Health Checks
+```ascii
++-------------------+----------------------+
+| Component         | Health Check URL     |
++-------------------+----------------------+
+| Frontend          | /api/health         |
+| Backend API       | /health             |
+| Database          | /api/health/db      |
+| Blockchain        | /api/health/chain   |
++-------------------+----------------------+
+```
+
+#### Logging Configuration
+```javascript
+// Winston logger setup
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' })
+  ]
+});
+```
+
+### Deployment Checklist
+
+Before deploying to any environment:
+1. Run all tests
+2. Check environment variables
+3. Verify database migrations
+4. Test API endpoints
+5. Check frontend builds
+6. Verify blockchain connections
+
+After deployment:
+1. Monitor error rates
+2. Check response times
+3. Verify database connections
+4. Test critical user flows
+5. Monitor resource usage
+
+### Environment-Specific Configurations
+
+#### Local Development
+- Hot reloading enabled
+- Debug logging active
+- Mock blockchain available
+- Local MongoDB instance
+- Redis optional
+
+#### Staging Environment
+- Production-like setup
+- Separate database instance
+- Full monitoring enabled
+- Test blockchain network
+- Reduced rate limits
+
+#### Production Environment
+- Maximum security
+- Full caching enabled
+- Live blockchain network
+- Production database cluster
+- Strict rate limiting
 
 ## Performance Optimization
 
