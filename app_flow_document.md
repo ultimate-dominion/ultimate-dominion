@@ -31,10 +31,7 @@ This document details the complete user journey through Ultimate Dominion, from 
 ```
 
 **Description:**
-- Atmospheric introduction text setting the scene
-- Simple, focused interface with a single call to action
-- Narrative establishes the dark fantasy setting
-- Play button initiates the wallet connection process
+Ultimate Dominion is a game where you explore dungeons, fight monsters, and trade with other players. You start by making a character and choosing a class like Warrior, Rogue, Mage, or Druid. As you play, you'll get better equipment, learn new skills, and become stronger.
 
 ## 2. Wallet Connection (Delegation Screen)
 ```ascii
@@ -237,6 +234,30 @@ This document details the complete user journey through Ultimate Dominion, from 
 | [Close]                                          |
 +--------------------------------------------------+
 ```
+
+### Combat System
+```ascii
++--------------------------------------------------+
+|  Combat Screen                                  |
++--------------------------------------------------+
+| [Character Info]  |  [Battlefield]  |  [Map]     |
+| HP: 20/20        |                  |            |
+| AGI: 4           |                  |            |
+| INT: 10          |                  |            |
+| STR: 7           |                  |            |
+|                  |  [Monster Info]  |            |
+|                  |  HP: 10/10      |            |
+|                  |  AGI: 2         |            |
+|                  |  INT: 5         |            |
+|                  |  STR: 3         |            |
+| [Action Buttons] |                  |            |
++--------------------------------------------------+
+```
+
+**Combat System Description:**
+The combat screen is split into three parts. On the left is your character info, showing your health and stats. In the middle is the battlefield where you can see yourself and the monster you're fighting. Both you and the monster have health bars and stats shown. Below that is where you pick what to do - like using your Rusty Axe to attack. The right side shows a map of where you are in the dungeon.
+
+Before a fight starts, you'll see a list of monsters in the area. Each monster shows its level so you know how tough it will be. You can start a fight by clicking on any monster. During the fight, you and the monster take turns attacking. The game tells you how much damage each attack does, and your health bar goes down when you get hit.
 
 ## User Interaction Flows
 
