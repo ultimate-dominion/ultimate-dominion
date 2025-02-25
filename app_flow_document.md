@@ -122,6 +122,145 @@ This document details the complete user journey through Ultimate Dominion, from 
 - Inventory management
 - Action buttons
 
+## Game Interface Screens
+
+### Character Dashboard
+```ascii
++------------------+------------------+------------------+
+|    XP/Level      |    Stats Panel   |  Character Info  |
+| [=====] 0/300 XP | AGI: 4 (+0)     | +------------+   |
+| Level 1 → 2      | INT: 10 (+0)    | |  Avatar    |   |
+|                  | STR: 7 (+0)     | |            |   |
+| $GOLD: 5.00      |                 | |  Class:    |   |
+|                  | AP: 0           | |  Druid     |   |
+|                  |                 | +------------+   |
+| [Marketplace]    | HP: 20/20       | [Edit Character] |
+| [Leaderboard]    |                 |                 |
++------------------+------------------+------------------+
+```
+
+### Inventory System
+```ascii
++--------------------------------------------------+
+|  Items Inventory                         Total: 2  |
++--------------------------------------------------+
+| Armor (1) - 0/1 equipped                          |
+| +----------------+                                 |
+| |  Leather Vest  | x1                             |
+| |  Mods: STR +0 AGI -1 INT +0 ARM +2             |
+| |  Req: LVL 0 STR 0 AGI 0 INT 0                  |
+| +----------------+                                 |
+|                                                   |
+| Weapons & Spells (1) - 0/4 equipped               |
+| +----------------+                                 |
+| |  Rusty Axe    | x1                             |
+| |  Damage: 1-5                                    |
+| +----------------+                                 |
++--------------------------------------------------+
+```
+
+### Marketplace
+```ascii
++--------------------------------------------------+
+|  Marketplace - $GOLD Balance: 5.00                |
++--------------------------------------------------+
+| [Search Bar]     [Filter: All ▼]    [Create List] |
+|                                                   |
+| Items: 2                 Level ▼  Price ▼  Offers |
+| +----------------+        -----   -------  ------- |
+| | Iron Sword    |          3     50 $GOLD   N/A   |
+| | HP 0•STR 0•AGI 0•INT 0                          |
+| +----------------+                                 |
+| | Steel Breastplate |      3    100 $GOLD   N/A   |
+| | HP 0•STR 0•AGI -3•INT 0                         |
+| +----------------+                                 |
+|           Page 1 of 1                             |
++--------------------------------------------------+
+```
+
+### General Store
+```ascii
++--------------------------------------------------+
+|  General Store                           🗡 0,0    |
++--------------------------------------------------+
+| My Inventory         |    Shopkeeper's Inventory  |
+| $GOLD: 5.00         |    $GOLD: 100.00           |
+|                     |                             |
+| [Search] [All ▼]    |    [Search] [All ▼]        |
+|                     |                             |
+| Leather Vest (1)    |    Beer (20)               |
+| 25.00 $GOLD         |    16.80 $GOLD             |
+|                     |                             |
+| Rusty Axe (1)       |    Health Potion (20)      |
+| 25.00 $GOLD         |    24.00 $GOLD             |
+|                     |                             |
+|                     |    Leather Vest (10)        |
+|                     |    60.00 $GOLD             |
+|                     |                             |
+|     Page 1 of 1     |    Page 1 of 2  [>] [»]    |
++--------------------------------------------------+
+```
+
+### Leaderboard
+```ascii
++--------------------------------------------------+
+|  Leaderboard                                      |
++--------------------------------------------------+
+| [Search]  [All] [Warrior] [Rogue] [Mage]         |
+|                                                   |
+| 16 Players    Total Stats ▼   Level ▼   $GOLD ▼  |
+| +------------------------------------------------|
+| 1. Just a guy 🦹                                  |
+|    HP 27•STR 12•AGI 13•INT 5     30      4       |
+| 2. ECWireless 🦹                                  |
+|    HP 45•STR 24•AGI 21•INT 3     48     10       |
+| 3. Pupcakes 🧙                                    |
+|    HP 16•STR 7•AGI 9•INT 5       21      1       |
+| +------------------------------------------------|
+```
+
+### Create Listing Modal
+```ascii
++--------------------------------------------------+
+|  Create Listing                              [X]  |
++--------------------------------------------------+
+| [All Items] [Inventory]      Items: 26           |
+|                                                  |
+| [Search Bar]    [Filter: All ▼]                  |
+|                                                  |
+| +----------------+                               |
+| | Leather Vest                                  |
+| | Mods: STR +0 AGI -1 INT +0 ARM +2            |
+| | Req: LVL 0 STR 0 AGI 0 INT 0                 |
+| +----------------+                               |
+|                                                  |
+| [Close]                                          |
++--------------------------------------------------+
+```
+
+## User Interaction Flows
+
+### Trading Flow
+1. Player accesses Marketplace
+2. Can view items for sale with filters and sorting
+3. Can create new listings from inventory
+4. Can make offers on items
+5. Can accept/reject offers on their listings
+
+### Character Progression
+1. Gain XP through activities (0/300 shown)
+2. Level up unlocks ability points
+3. Distribute points across AGI/INT/STR
+4. Equipment provides stat modifiers
+5. Class selection affects base stats
+
+### Economy System
+1. Players earn $GOLD through activities
+2. Can trade items in Marketplace
+3. Can purchase from General Store
+4. Dynamic pricing based on supply/demand
+5. Transaction fees and market mechanics
+
 ## Game Flow Sequence
 
 1. **Initial Launch**
