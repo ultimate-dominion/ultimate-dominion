@@ -65,8 +65,19 @@ export async function setupNetwork() {
     client: { public: publicClient, wallet: burnerWalletClient },
   });
 
-  const indexerUrl = (import.meta.env.VITE_INDEXER_URL as string) ?? undefined;
-  debug.log('Using indexer URL', indexerUrl);
+  // Use proxy URL in development, direct URL in production
+  const isDev = import.meta.env.DEV;
+  const rawIndexerUrl =
+    (import.meta.env.VITE_INDEXER_URL as string) ?? undefined;
+  const indexerUrl =
+    isDev && rawIndexerUrl
+      ? rawIndexerUrl.replace(
+          'https://indexer.mud.garnetchain.com',
+          '/mud-indexer',
+        )
+      : rawIndexerUrl;
+
+  debug.log('Using indexer URL', { isDev, rawIndexerUrl, indexerUrl });
 
   /*
    * Sync on-chain state into RECS and keeps our client in sync.
