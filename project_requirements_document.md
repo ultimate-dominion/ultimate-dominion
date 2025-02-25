@@ -101,7 +101,7 @@ We're building Ultimate Dominion with some powerful tools. The game's front end 
 
 The game's brain lives on the MUD Engine using the MUD Framework. Think of MUD as a special game engine that lets us store game data securely and make sure everything is fair. When players trade items or fight monsters, MUD helps make sure everything happens correctly and fairly.
 
-We also have a regular server (using Node.js) that handles things that don't need to be on the blockchain, like chat messages or temporary game data. This helps keep the game fast and cheap to play, since not everything needs to be stored on the blockchain.
+We also use Vercel Edge Functions to handle things that don't need to be on the blockchain, like chat messages or temporary game data. These serverless functions run close to our players around the world, helping keep the game fast and responsive while being cost-effective.
 
 ## Tech Stack Overview
 ```ascii

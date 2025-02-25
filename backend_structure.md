@@ -292,9 +292,9 @@ export default async function handler(req, res) {
 +-------------------+----------------------+----------------------+
 | LOCAL            | http://localhost:5173| http://localhost:8080|
 | STAGING          | ultimate-dominion-   | ultimate-dominion-   |
-|                  | staging.vercel.app   | api.onrender.com     |
-| PRODUCTION       | ultimate-dominion.   | ultimate-dominion-   |
-|                  | vercel.app          | api.onrender.com     |
+|                  | staging.vercel.app   | staging.vercel.app/api|
+| PRODUCTION       | ultimate-dominion.   | ultimate-dominion.   |
+|                  | vercel.app          | vercel.app/api       |
 +-------------------+----------------------+----------------------+
 ```
 
