@@ -1,24 +1,25 @@
 # Ultimate Dominion - Project Requirements Document
 
 ## System Overview
-
-```mermaid
-graph TD
-    A[Player] -->|Connects Wallet| B[Web Client]
-    B -->|Interacts| C[Frontend/UI]
-    C -->|API Calls| D[Backend Server]
-    C -->|Blockchain Txs| E[MUD Engine]
-    D -->|Game State| E
-    E -->|Updates| F[Blockchain]
-    D -->|Stores| G[Database]
-    
-    style A fill:#f9f,stroke:#333,stroke-width:4px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#dfd,stroke:#333,stroke-width:2px
-    style D fill:#fdd,stroke:#333,stroke-width:2px
-    style E fill:#ddf,stroke:#333,stroke-width:2px
-    style F fill:#ffd,stroke:#333,stroke-width:2px
-    style G fill:#dff,stroke:#333,stroke-width:2px
+```ascii
+                                     +---------------+
+                                     |    Player     |
+                                     +-------+-------+
+                                             |
+                                             v
++---------------+    +--------------+    +----------+    +-----------+
+|   Web Client  |<-->|  Frontend/UI |<-->| Backend  |<-->| Database  |
++---------------+    +--------------+    +----------+    +-----------+
+        |                   |               |
+        |                   v               |
+        |            +-----------+          |
+        +----------->| MUD Engine |<--------+
+                    +-----------+
+                          |
+                          v
+                    +----------+
+                    |Blockchain|
+                    +----------+
 ```
 
 ## Game Architecture
@@ -54,26 +55,19 @@ graph TD
 Ultimate Dominion is a text-based game where many players can play together online. Think of old-school text adventures, but modernized with blockchain technology. Instead of just reading and typing commands, players can own their items for real using blockchain, just like owning digital art or collectibles.
 
 ## Player Journey Map
-
-```mermaid
-journey
-    title Player's Journey in Ultimate Dominion
-    section Onboarding
-      Connect Wallet: 5: Player
-      Create Character: 3: Player
-      Complete Tutorial: 4: Player
-    section Early Game
-      Basic Combat: 4: Player
-      Collect Items: 3: Player
-      Meet Players: 4: Player
-    section Mid Game
-      Join Guild: 5: Player
-      Trade Items: 4: Player
-      Complete Quests: 3: Player
-    section End Game
-      Territory Control: 5: Player
-      Guild Wars: 4: Player
-      Economy Master: 5: Player
+```ascii
+                                    Character Growth
+                                          ^
+                                          |
+[New Player] --> [Tutorial] --> [Basic Combat] --> [Join Guild]
+     |              |              |                   |
+     v              v              v                   v
+  Connect       Learn         Collect         Trade Items
+   Wallet      Controls       Items          with Players
+     |              |              |                   |
+     v              v              v                   v
+  Create        Practice      Complete          Guild Wars
+ Character     Mechanics      Quests         & Territory
 ```
 
 ## Game Flow
