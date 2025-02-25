@@ -30,7 +30,6 @@ This document details the complete user journey through Ultimate Dominion, from 
 +------------------------------------------+
 ```
 
-**Description:**
 Ultimate Dominion is a game where you explore dungeons, fight monsters, and trade with other players. You start by making a character and choosing a class like Warrior, Rogue, Mage, or Druid. As you play, you'll get better equipment, learn new skills, and become stronger.
 
 ## 2. Wallet Connection (Delegation Screen)
@@ -54,12 +53,7 @@ Ultimate Dominion is a game where you explore dungeons, fight monsters, and trad
 +------------------------------------------+
 ```
 
-**Key Features:**
-- Clear display of connected wallet address
-- Session account generation for gameplay
-- Security warnings and information
-- Automatic token distribution system
-- Delegation process explanation
+The wallet connection screen is where you connect your wallet to the game. You'll see your connected account address and a session account address that's generated for gameplay. There's also information about the delegation process and a button to complete it.
 
 ## 3. Character Creation
 ```ascii
@@ -81,13 +75,7 @@ Ultimate Dominion is a game where you explore dungeons, fight monsters, and trad
                                                 +----------------------------------+
 ```
 
-**Features:**
-- Character customization options
-- Class selection system
-- Randomized starting stats
-- Basic equipment loadout
-- Character biography
-- Avatar upload capability
+When you create your character, you'll choose a class, customize your appearance, set your character's name and bio, and review your starting stats and items. You'll also upload an avatar and confirm your character creation.
 
 ## 4. Game Interface
 ```ascii
@@ -110,14 +98,7 @@ Ultimate Dominion is a game where you explore dungeons, fight monsters, and trad
 +------------------------+----------------------+------------------------+
 ```
 
-**Interface Elements:**
-- Character stats display
-- Equipment management
-- Game world view
-- Mini-map system
-- Player status indicators
-- Inventory management
-- Action buttons
+The game interface is where you'll spend most of your time playing the game. You'll see your character's stats, equipment, and consumables, as well as the game world and a map display.
 
 ## Game Interface Screens
 
@@ -135,6 +116,8 @@ Ultimate Dominion is a game where you explore dungeons, fight monsters, and trad
 | [Leaderboard]    |                 |                 |
 +------------------+------------------+------------------+
 ```
+
+The character dashboard shows your character's progress, including their XP, level, and stats. You'll also see your character's info, including their avatar, class, and equipment.
 
 ### Inventory System
 ```ascii
@@ -156,6 +139,8 @@ Ultimate Dominion is a game where you explore dungeons, fight monsters, and trad
 +--------------------------------------------------+
 ```
 
+The inventory system shows all the items you have, including armor, weapons, and spells. You'll see the item's name, mods, and requirements.
+
 ### Marketplace
 ```ascii
 +--------------------------------------------------+
@@ -174,6 +159,8 @@ Ultimate Dominion is a game where you explore dungeons, fight monsters, and trad
 |           Page 1 of 1                             |
 +--------------------------------------------------+
 ```
+
+The marketplace is where you can buy and sell items with other players. You'll see a list of items, including their level, price, and offers.
 
 ### General Store
 ```ascii
@@ -198,6 +185,8 @@ Ultimate Dominion is a game where you explore dungeons, fight monsters, and trad
 +--------------------------------------------------+
 ```
 
+The general store is where you can buy items from the shopkeeper. You'll see a list of items, including their price and quantity.
+
 ### Leaderboard
 ```ascii
 +--------------------------------------------------+
@@ -215,6 +204,8 @@ Ultimate Dominion is a game where you explore dungeons, fight monsters, and trad
 |    HP 16•STR 7•AGI 9•INT 5       21      1       |
 | +------------------------------------------------|
 ```
+
+The leaderboard shows how players are doing compared to each other. You'll see a list of players, including their total stats, level, and gold.
 
 ### Create Listing Modal
 ```ascii
@@ -235,6 +226,8 @@ Ultimate Dominion is a game where you explore dungeons, fight monsters, and trad
 +--------------------------------------------------+
 ```
 
+The create listing modal is where you can create a new listing for an item. You'll see a list of items, including their mods and requirements.
+
 ### Combat System
 ```ascii
 +--------------------------------------------------+
@@ -254,107 +247,64 @@ Ultimate Dominion is a game where you explore dungeons, fight monsters, and trad
 +--------------------------------------------------+
 ```
 
-**Combat System Description:**
-The combat screen is split into three parts. On the left is your character info, showing your health and stats. In the middle is the battlefield where you can see yourself and the monster you're fighting. Both you and the monster have health bars and stats shown. Below that is where you pick what to do - like using your Rusty Axe to attack. The right side shows a map of where you are in the dungeon.
-
-Before a fight starts, you'll see a list of monsters in the area. Each monster shows its level so you know how tough it will be. You can start a fight by clicking on any monster. During the fight, you and the monster take turns attacking. The game tells you how much damage each attack does, and your health bar goes down when you get hit.
+The combat system is where you'll fight monsters. You'll see your character's info, the battlefield, and a map of the area.
 
 ## User Interaction Flows
 
 ### Trading Flow
-1. Player accesses Marketplace
-2. Can view items for sale with filters and sorting
-3. Can create new listings from inventory
-4. Can make offers on items
-5. Can accept/reject offers on their listings
+
+The trading flow is where you can buy and sell items with other players. You'll start by accessing the marketplace, where you can view items for sale and create new listings from your inventory. You can make offers on items and accept or reject offers on your listings.
 
 ### Character Progression
-1. Gain XP through activities (0/300 shown)
-2. Level up unlocks ability points
-3. Distribute points across AGI/INT/STR
-4. Equipment provides stat modifiers
-5. Class selection affects base stats
+
+Character progression is where you'll gain experience points and level up. You'll start by gaining XP through activities, and when you reach a certain amount, you'll level up and unlock ability points. You can distribute these points across your stats, and equipment will provide stat modifiers.
 
 ### Economy System
-1. Players earn $GOLD through activities
-2. Can trade items in Marketplace
-3. Can purchase from General Store
-4. Dynamic pricing based on supply/demand
-5. Transaction fees and market mechanics
+
+The economy system is where you'll earn gold through activities. You can trade items in the marketplace, purchase from the general store, and participate in dynamic pricing based on supply and demand. There are also transaction fees and market mechanics.
 
 ## Game Flow Sequence
 
 1. **Initial Launch**
-   - Player lands on welcome screen
-   - Atmospheric text sets the scene
-   - Play button prompts wallet connection
+
+The game starts with the initial launch, where you'll land on the welcome screen. You'll see atmospheric text that sets the scene, and a play button that prompts wallet connection.
 
 2. **Wallet Connection**
-   - Connect wallet (MetaMask or compatible)
-   - Generate session account
-   - Receive initial tokens if needed
-   - Complete delegation process
+
+Next, you'll connect your wallet to the game. You'll see your connected account address and a session account address that's generated for gameplay. There's also information about the delegation process and a button to complete it.
 
 3. **Character Creation**
-   - Choose character class
-   - Customize appearance
-   - Set character name and bio
-   - Review starting stats and items
-   - Confirm character creation
+
+After wallet connection, you'll create your character. You'll choose a class, customize your appearance, set your character's name and bio, and review your starting stats and items.
 
 4. **Game Entry**
-   - Load into game world
-   - Display tutorial messages
-   - Equip starting items
-   - Enable character spawning
-   - Begin gameplay
+
+Finally, you'll enter the game world. You'll load into the game, see tutorial messages, equip your starting items, and begin gameplay.
 
 ## User Interaction Points
 
 ### Critical Path
-```ascii
-[Start] --> [Connect Wallet] --> [Create Character] --> [Enter Game]
-   |             |                      |                    |
-   v             v                      v                    v
-Tutorial     Security            Class Selection        Equipment
-Messages     Warnings           & Customization        Tutorial
-```
+
+The critical path is where you'll start the game, connect your wallet, create your character, and enter the game world.
 
 ### Key Decision Points
-1. Wallet Connection
-   - Accept delegation
-   - Understand security implications
-   - Receive initial tokens
 
-2. Character Creation
-   - Class selection impacts gameplay
-   - Stat distribution affects abilities
-   - Equipment loadout choices
-
-3. Game Entry
-   - Equipment setup required
-   - Character spawning process
-   - Initial movement tutorial
+There are several key decision points in the game. The first is wallet connection, where you'll accept delegation and understand the security implications. The second is character creation, where you'll choose a class and customize your appearance. The third is game entry, where you'll equip your starting items and begin gameplay.
 
 ## Technical Considerations
 
-1. **Wallet Integration**
-   - Secure delegation process
-   - Token distribution system
-   - Session management
+### Wallet Integration
 
-2. **Character Data**
-   - Blockchain storage of character data
-   - Local storage for preferences
-   - Real-time stat updates
+Wallet integration is where you'll connect your wallet to the game. You'll need to secure the delegation process, distribute tokens, and manage sessions.
 
-3. **Game State**
-   - Synchronization with blockchain
-   - Real-time player positions
-   - Equipment management
+### Character Data
 
-4. **User Experience**
-   - Clear tutorial messages
-   - Intuitive UI layout
-   - Responsive controls
-   - Error handling and recovery
+Character data is where you'll store your character's info, including their stats, equipment, and inventory. You'll need to store this data on the blockchain and locally.
+
+### Game State
+
+Game state is where you'll synchronize the game state with the blockchain. You'll need to update the game state in real-time and manage player positions.
+
+### User Experience
+
+User experience is where you'll create a clear and intuitive UI layout. You'll need to provide responsive controls, error handling, and recovery.
