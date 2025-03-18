@@ -4,6 +4,7 @@
   "scripts": {
     "build": "pnpm recursive run build",
     "build:client": "pnpm --filter 'client' run build",
+    "start:client": "pnpm --filter 'client' run preview",
     "dev": "mprocs",
     "dev:client": "pnpm --filter 'client' run dev",
     "dev:contracts": "pnpm --filter 'contracts' dev",

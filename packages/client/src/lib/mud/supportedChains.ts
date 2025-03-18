@@ -37,7 +37,37 @@ export const baseSepolia = {
   },
 };
 
-const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, garnet, mudFoundry];
+export const pyrope = {
+  name: 'Pyrope',
+  id: 695569,
+  nativeCurrency: { decimals: 18, name: 'Ether', symbol: 'ETH' },
+  rpcUrls: {
+    default: {
+      http: [
+        import.meta.env.VITE_HTTPS_RPC_URL || 'https://rpc.pyropechain.com',
+      ],
+      webSocket: [
+        import.meta.env.VITE_WS_RPC_URL || 'wss://rpc.pyropechain.com',
+      ],
+    },
+    public: {
+      http: [
+        import.meta.env.VITE_HTTPS_RPC_URL || 'https://rpc.pyropechain.com',
+      ],
+      webSocket: [
+        import.meta.env.VITE_WS_RPC_URL || 'wss://rpc.pyropechain.com',
+      ],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Pyrope Explorer',
+      url: 'https://explorer.pyropechain.com',
+    },
+  },
+};
+
+const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, garnet, mudFoundry, pyrope];
 
 const getSupportedChains = () => {
   if (import.meta.env.DEV) {
@@ -46,7 +76,9 @@ const getSupportedChains = () => {
     );
   }
 
-  return [garnet];
+  return [
+    Number(import.meta.env.VITE_CHAIN_ID) === pyrope.id ? pyrope : garnet,
+  ];
 };
 
 /*

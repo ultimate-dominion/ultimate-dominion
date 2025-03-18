@@ -171,7 +171,7 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
 };
 
 const IPFS_GATEWAYS = [
-  'https://black-bright-cuckoo-327.mypinata.cloud',
+  'https://violet-magnetic-tick-248.mypinata.cloud',
   // 'https://cloudflare-ipfs.com',
   // 'https://ipfs.io',
 ];
