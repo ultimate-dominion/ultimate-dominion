@@ -20,7 +20,30 @@ if (!INITIAL_BLOCK_NUMBER) {
   );
 }
 
-const SUPPORTED_CHAINS = [garnet, mudFoundry];
+// Define Pyrope chain
+const pyrope: MUDChain = {
+  name: "Pyrope",
+  id: 695569,
+  nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
+  rpcUrls: {
+    default: {
+      http: [(process.env.RPC_HTTP_URL || "https://rpc.pyropechain.com") as string],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : undefined,
+    },
+    public: {
+      http: [(process.env.RPC_HTTP_URL || "https://rpc.pyropechain.com") as string],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : undefined,
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Pyrope Explorer",
+      url: "https://explorer.pyropechain.com",
+    },
+  },
+};
+
+const SUPPORTED_CHAINS = [garnet, mudFoundry, pyrope];
 
 export async function getNetworkConfig(): Promise<{
   privateKey: `0x${string}`;
@@ -29,7 +52,13 @@ export async function getNetworkConfig(): Promise<{
   worldAddress: string;
   initialBlockNumber: number | bigint;
 }> {
-  const chainId = process.env.NODE_ENV === "production" ? Number(garnet.id) : Number(mudFoundry.id);
+  // Default to Pyrope chain ID if CHAIN_ID environment variable is not set,
+  // or use Garnet chain ID in production, or Foundry for local development
+  const chainId = process.env.CHAIN_ID
+    ? Number(process.env.CHAIN_ID)
+    : process.env.NODE_ENV === "production"
+    ? Number(garnet.id)
+    : Number(mudFoundry.id);
 
   const chainIndex = SUPPORTED_CHAINS.findIndex((c) => c.id === chainId);
   const chain = SUPPORTED_CHAINS[chainIndex];
