@@ -155,7 +155,7 @@ Core contract dependencies include:
 
 ## Infrastructure and Deployment
 
-The infrastructure utilizes a modern, distributed approach with Vercel hosting the client application, Render managing the API server, and IPFS/Pinata handling decentralized storage needs. Database services are provided by MongoDB Atlas, with Redis Labs managing caching requirements. This distributed architecture ensures high availability and scalability.
+The infrastructure utilizes a modern, distributed approach with Vercel hosting the client application, Vercel managing the API server, and IPFS/Pinata handling decentralized storage needs. Database services are provided by MongoDB Atlas, with Redis Labs managing caching requirements. This distributed architecture ensures high availability and scalability.
 
 ```ascii
 Deployment Architecture
@@ -178,7 +178,7 @@ Deployment Architecture
 ┌───────────────────────────────────────────┐
 │              Production                    │
 ├────────────────┬────────────┬─────────────┤
-│    Vercel      │   Render   │    IPFS     │
+│    Vercel      │   Vercel   │    IPFS     │
 │   (Frontend)   │   (API)    │  (Storage)  │
 └────────────────┴────────────┴─────────────┘
 ```
@@ -193,7 +193,7 @@ VITE_CHAIN_ID=17069
 VITE_WALLET_CONNECT_PROJECT_ID=xxxxx
 VITE_HTTPS_RPC_URL=https://rpc.garnetchain.com
 VITE_WS_RPC_URL=wss://rpc.garnetchain.com
-VITE_API_URL=https://ultimate-dominion-api.onrender.com
+VITE_API_URL=https://ud-api.vercel.app
 VITE_INDEXER_URL=https://indexer.mud.garnetchain.com
 ```
 

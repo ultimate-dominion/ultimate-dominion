@@ -262,14 +262,14 @@ Without both components deployed correctly and connected, character creation and
 - **Install Command**: pnpm install --ignore-scripts
 - **Development Command**: vite
 - **Node.js Version**: 18.x
-- **Root Directory**: Leave blank (or specify packages/api if deploying from root)
+- **Root Directory**: Leave blank (or specify packages/client if deploying from root)
 
 #### API Project (ud-api) - Must be deployed separately
 
 - **Framework Preset**: Other
 - **Build Command**: npm run vercel-build or npm run build
 - **Output Directory**: public (if it exists, or '')
-- **Install Command**: yarn install, pnpm install, npm install, or bun install
+- **Install Command**: pnpm install
 - **Node.js Version**: 20.x
 - **Root Directory**: Leave blank (or specify packages/api if deploying from root)
 
@@ -289,22 +289,6 @@ Ensure these environment variables are set in your Vercel project settings:
 - INITIAL_BLOCK_NUMBER
 - RPC_HTTP_URL
 - RPC_WS_URL
-
-### API Deployment (Render)
-
-The API can also be configured to deploy on Render using the `render.yaml` configuration file. To deploy:
-
-1. Create a new Web Service on Render
-2. Connect your GitHub repository
-3. Render will automatically detect the `render.yaml` configuration
-4. Set up the following environment variables in Render:
-   - `NODE_ENV`: Set to `production`
-   - `PINATA_JWT`: Your Pinata JWT token (keep this secret!)
-
-The build process will:
-1. Install dependencies using pnpm
-2. Build the TypeScript files
-3. Start the server using the production entry point
 
 ## Supported Chains
 

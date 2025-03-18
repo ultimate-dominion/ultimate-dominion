@@ -28,7 +28,7 @@ The top floor is what players actually see and interact with. We built this usin
 +------------------------------------------------+
 |               MIDDLEWARE/API                     |
 |  +--------------------+  +------------------+    |
-|  |  Vercel Edge API   |  |   Game Logic    |    |
+|  |  Vercel API        |  |   Game Logic    |    |
 |  | +----------------+ |  | +--------------+ |    |
 |  | |  API Routes    | |  | | State Mgmt   | |    |
 |  | +----------------+ |  | +--------------+ |    |
@@ -38,13 +38,13 @@ The top floor is what players actually see and interact with. We built this usin
 +------------------------------------------------+
 ```
 
-The middle floor uses Vercel Edge Functions to handle game actions quickly and efficiently. These serverless functions run close to where players are located, making the game feel responsive no matter where you're playing from. When you take actions like moving your character or using an item, these functions process your request and update the game state accordingly.
+The middle floor uses Vercel API services to handle game actions quickly and efficiently. These services process requests and interact with the blockchain layer when needed. When you take actions like moving your character or using an item, the API processes your request and updates the game state accordingly.
 
-Key Features of our Edge API:
-- Global distribution for low latency
-- Automatic scaling based on player load
+Key Features of our Vercel API:
+- Separate deployment from the client for better scalability
 - Stateless design for reliability
-- Built-in caching for performance
+- Secure endpoints for game interactions
+- Direct integration with blockchain and storage layers
 
 ### Bottom Floor: Where Everything is Stored
 ```ascii
@@ -74,7 +74,7 @@ When you play Ultimate Dominion, here's how all these parts work together:
 [UI Update] <-- [State Management] <-- [MUD Indexer] <-- [Blockchain]
 ```
 
-Let's say you want to buy a sword from another player. First, the game screen (React) shows you the marketplace. When you click "Buy", the middle layer (Vercel Edge API) checks if you have enough gold. If you do, it tells the blockchain to transfer the sword to you. Once that's done, the MUD Indexer sees the change and tells React to update your screen to show your new sword.
+Let's say you want to buy a sword from another player. First, the game screen (React) shows you the marketplace. When you click "Buy", the middle layer (Vercel API) checks if you have enough gold. If you do, it tells the blockchain to transfer the sword to you. Once that's done, the MUD Indexer sees the change and tells React to update your screen to show your new sword.
 
 ## Different Places the Game Lives
 
@@ -216,7 +216,7 @@ Ultimate Dominion uses a modern web3 architecture combining serverless computing
    - Tailwind CSS for styling
 
 2. **Backend Layer**
-   - Vercel Edge Functions
+   - Vercel API
    - Serverless API endpoints
    - Event-driven architecture
 

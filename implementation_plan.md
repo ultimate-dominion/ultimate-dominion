@@ -104,32 +104,43 @@ Save the deployed contract addresses for environment variables.
 
 ### 3. Vercel Deployment
 
-#### Frontend Deployment
+#### Frontend and API Deployment
 1. Connect your GitHub repository to Vercel
-2. Configure build settings:
-   ```
-   Build Command: pnpm build
-   Output Directory: packages/client/dist
-   Install Command: pnpm install
-   ```
-3. Add environment variables from client .env
-4. Deploy and verify frontend is accessible
+2. Create two separate projects in Vercel:
+   - **Client Project**: For the frontend web application
+   - **API Project**: For the server-side code that handles IPFS/Pinata and blockchain interactions
 
-#### API Deployment (Edge Functions)
-1. In the same Vercel project, enable Edge Functions
-2. Configure API settings:
+3. For the Client Project, configure:
    ```
-   API Directory: packages/api
-   Edge Function Region: Auto (recommended)
+   Build Command: pnpm build:client
+   Output Directory: packages/client/dist
+   Install Command: pnpm install --ignore-scripts
+   Node.js Version: 18.x
+   Root Directory: . (or packages/client if deploying from root)
    ```
-3. Add environment variables from api .env
-4. Deploy and verify API endpoints are accessible
+
+4. For the API Project, configure:
+   ```
+   Framework Preset: Other
+   Build Command: npm run vercel-build or npm run build
+   Output Directory: public (if it exists, or '')
+   Install Command: pnpm install
+   Node.js Version: 20.x
+   Root Directory: . (or packages/api if deploying from root)
+   ```
+
+5. Add environment variables:
+   - For Client: VITE_WALLET_CONNECT_PROJECT_ID, VITE_CHAIN_ID, VITE_API_URL
+   - For API: PINATA_JWT, PRIVATE_KEY, WORLD_ADDRESS, INITIAL_BLOCK_NUMBER, RPC_HTTP_URL, RPC_WS_URL
+
+6. Deploy both projects
+7. After deployment, update the Client's VITE_API_URL to point to your API deployment URL
+8. Redeploy the client for the changes to take effect
 
 #### Deployment Verification
 1. Test frontend connectivity
 2. Verify API endpoints using health check
-3. Confirm Edge Function distribution
-4. Monitor performance metrics in Vercel dashboard
+3. Monitor performance metrics in Vercel dashboard
 
 ## Monitoring
 
@@ -139,8 +150,8 @@ Save the deployed contract addresses for environment variables.
 - Contracts: Check latest block number
 
 ### Logging
-- Frontend: Vercel Analytics
-- API: Vercel Edge Logs
+- Frontend: Vercel Analytics Dashboard
+- API: Vercel Logs Dashboard
 - Contracts: Network Explorer
 
 ### Alerts

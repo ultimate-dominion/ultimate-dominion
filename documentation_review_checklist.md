@@ -10,7 +10,7 @@
 ### Text Content
 - [ ] Check for outdated technology references
 - [ ] Verify environment URLs and endpoints
-- [ ] Review deployment platform references
+- [ ] Review deployment platform references (ensure all Render references are removed)
 - [ ] Confirm API descriptions match current implementation
 - [ ] Validate environment variable names and usage
 - [ ] Check package versions and dependencies
@@ -53,17 +53,18 @@
 - [ ] Confirm middleware descriptions
 
 ### Infrastructure
-- [ ] Check deployment platform details
-- [ ] Verify scaling descriptions
+- [ ] Check deployment platform details (Vercel client and API projects)
+- [ ] Verify Vercel-specific configuration and build settings
 - [ ] Review security measures
-- [ ] Validate monitoring setup
+- [ ] Validate monitoring setup using Vercel Analytics and Logs
 - [ ] Check backup procedures
 
 ## 5. Environment-Specific Details
 - [ ] Local development setup
-- [ ] Staging environment configuration
-- [ ] Production deployment steps
-- [ ] Environment variables per stage
+- [ ] Vercel project configuration for client
+- [ ] Vercel project configuration for API
+- [ ] Production deployment steps for both client and API
+- [ ] Environment variables per Vercel project
 - [ ] Infrastructure requirements
 
 ## 6. Security and Compliance

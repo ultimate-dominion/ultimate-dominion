@@ -12,11 +12,11 @@ When you play Ultimate Dominion, a lot happens behind the scenes to make everyth
 
 ```ascii
 +-------------------+        +----------------------+
-|   Vercel Edge     |        |   Serverless API     |
-|   Functions       |        |   Functions          |
+|   Vercel Client   |        |   Vercel API         |
+|   Project         |        |   Project            |
 |                   |        |                      |
-|   - API Routes    | <----> |   - Game Logic      |
-|   - Caching      |        |   - State Updates    |
+|   - React UI      | <----> |   - Game Logic      |
+|   - Web3 Connect  |        |   - State Updates    |
 |   - Auth         |        |   - Event Handling   |
 +-------------------+        +----------------------+
          ↑                            ↑

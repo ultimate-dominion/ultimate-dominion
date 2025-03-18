@@ -15,17 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Backend structure documentation
   - Smart contract documentation
   - Documentation review checklist
-- Vercel Edge Functions integration
-  - Global API distribution
-  - Automatic scaling
-  - Built-in caching
-- Documentation maintenance rules in windsurfrules.json
+- Vercel deployment setup for both client and API projects
+  - Detailed configuration parameters
+  - Environment variables guide
+  - Deployment verification checklist
 
 ### Changed
-- Migrated from Render to Vercel Edge Functions
+- Clarified deployment architecture with emphasis on separate Vercel projects for client and API
 - Updated all architecture diagrams
 - Enhanced API documentation
 - Improved development setup instructions
+- Standardized deployment terminology across all documentation
 
 ### Removed
 - Render.com deployment configurations

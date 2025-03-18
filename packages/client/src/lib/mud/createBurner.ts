@@ -90,7 +90,7 @@ export function createBurner(
       console.info('[Dev Faucet]: Player address -> ', address);
 
       const faucetClient = createFaucetClient({
-        url: 'https://ultimate-dominion-faucet.onrender.com/trpc',
+        url: 'https://ultimate-dominion-faucet.vercel.app/trpc',
       });
 
       const requestDrip = async () => {
