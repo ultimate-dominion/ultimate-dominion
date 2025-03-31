@@ -4,7 +4,7 @@ import sessionBooting from './sessionBooting.js';
 import uploadFile from './uploadFile.js';
 
 // Create Express-compatible wrappers for Vercel handlers
-const wrapVercelHandler = (handler: any) => async (req: Request, res: Response) => {
+const wrapVercelHandler = (handler: (req: Request, res: Response) => Promise<void | unknown> | void | unknown) => async (req: Request, res: Response) => {
   return handler(req, res);
 };
 
