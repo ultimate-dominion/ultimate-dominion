@@ -12,8 +12,6 @@
 
 import { garnet, MUDChain, mudFoundry } from '@latticexyz/common/chains';
 
-import { DEFAULT_CHAIN_ID } from '../web3';
-
 export const baseSepolia = {
   name: 'Base Sepolia',
   id: 84532,
@@ -70,10 +68,13 @@ export const pyrope = {
 const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, garnet, mudFoundry, pyrope];
 
 const getSupportedChains = () => {
+  // Get the chain ID from environment or use 31337 (Anvil) as default for development
+  const chainId = import.meta.env.VITE_CHAIN_ID
+    ? Number(import.meta.env.VITE_CHAIN_ID)
+    : 31337;
+
   if (import.meta.env.DEV) {
-    return POSSIBLE_SUPPORTED_CHAINS.filter(
-      chain => chain.id === DEFAULT_CHAIN_ID,
-    );
+    return POSSIBLE_SUPPORTED_CHAINS.filter(chain => chain.id === chainId);
   }
 
   return [

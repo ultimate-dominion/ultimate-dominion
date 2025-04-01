@@ -5,7 +5,7 @@ export default defineConfig(({ command }) => {
   return {
     plugins: [react()],
     server: {
-      port: 3000,
+      port: 3000, // Use port 3000 for client to avoid conflict with API on 3001
       fs: {
         strict: false,
       },

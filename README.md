@@ -226,21 +226,19 @@ Ultimate Dominion consists of two separate deployments on Vercel:
 
 #### 1. Deploying the Client
 
-From the root directory:
+**RECOMMENDED METHOD:** Deploy from the project root to correctly handle workspace dependencies:
 
 ```bash
-vercel deploy --prod
+# From the project root directory
+vercel --prod
 ```
 
-OR specifically from the client directory:
-
-```bash
-cd packages/client && vercel --prod
-```
+> **NOTE:** Deploying from the client directory directly often fails due to workspace dependencies. The root deployment method ensures that all workspace dependencies (like the contracts package) are properly included.
 
 #### 2. Deploying the API (Required Separate Deployment)
 
 ```bash
+# From the project root directory
 cd packages/api && vercel --prod
 ```
 

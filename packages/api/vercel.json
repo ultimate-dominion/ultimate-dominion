@@ -1,13 +1,18 @@
 {
+  "version": 2,
   "functions": {
     "api/**/*.ts": {
-      "runtime": "@vercel/node@3.1.7"
+      "runtime": "@vercel/node@3.1.7",
+      "maxDuration": 60
     }
   },
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    }
+    { "src": "/api/upload", "dest": "/api/uploadMetadata.ts" },
+    { "src": "/api/upload-file", "dest": "/api/uploadFile.ts" },
+    { "src": "/api/session", "dest": "/api/sessionBooting.ts" },
+    { "src": "/api/session_lite", "dest": "/api/session_lite.ts" },
+    { "src": "/files/(.*)", "dest": "/api/index.ts?file=$1" },
+    { "src": "/health", "dest": "/api/health.ts" },
+    { "src": "/api/(.*)", "dest": "/api/$1.ts" }
   ]
 }

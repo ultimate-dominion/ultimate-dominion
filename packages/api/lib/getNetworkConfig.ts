@@ -1,4 +1,4 @@
-import { garnet, MUDChain } from "@latticexyz/common/chains";
+import type { MUDChain } from "@latticexyz/common/chains";
 import { mudFoundry } from "@latticexyz/common/chains";
 import "dotenv/config";
 
@@ -28,11 +28,11 @@ const pyrope: MUDChain = {
   rpcUrls: {
     default: {
       http: [(process.env.RPC_HTTP_URL || "https://rpc.pyropechain.com") as string],
-      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : undefined,
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://ws.pyropechain.com"],
     },
     public: {
       http: [(process.env.RPC_HTTP_URL || "https://rpc.pyropechain.com") as string],
-      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : undefined,
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://ws.pyropechain.com"],
     },
   },
   blockExplorers: {
@@ -41,9 +41,11 @@ const pyrope: MUDChain = {
       url: "https://explorer.pyropechain.com",
     },
   },
+  // Add indexer URL for MUD sync
+  indexerUrl: process.env.INDEXER_URL || "https://indexer.mud.pyropechain.com",
 };
 
-const SUPPORTED_CHAINS = [garnet, mudFoundry, pyrope];
+const SUPPORTED_CHAINS = [mudFoundry, pyrope];
 
 export async function getNetworkConfig(): Promise<{
   privateKey: `0x${string}`;
@@ -52,13 +54,16 @@ export async function getNetworkConfig(): Promise<{
   worldAddress: string;
   initialBlockNumber: number | bigint;
 }> {
-  // Default to Pyrope chain ID if CHAIN_ID environment variable is not set,
-  // or use Garnet chain ID in production, or Foundry for local development
-  const chainId = process.env.CHAIN_ID
-    ? Number(process.env.CHAIN_ID)
-    : process.env.NODE_ENV === "production"
-    ? Number(garnet.id)
-    : Number(mudFoundry.id);
+  // Always use Pyrope in production, regardless of CHAIN_ID
+  // In development, use CHAIN_ID if set, otherwise use local Foundry chain
+  let chainId: number;
+  if (process.env.NODE_ENV === "production") {
+    chainId = Number(pyrope.id);
+    console.log("[getNetworkConfig] Using Pyrope chain in production");
+  } else {
+    chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : Number(mudFoundry.id);
+    console.log(`[getNetworkConfig] Using chain ID: ${chainId}`);
+  }
 
   const chainIndex = SUPPORTED_CHAINS.findIndex((c) => c.id === chainId);
   const chain = SUPPORTED_CHAINS[chainIndex];

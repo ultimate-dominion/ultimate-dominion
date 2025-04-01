@@ -162,6 +162,40 @@ export const getStatSymbol = (stat: string): string =>
   Number(stat) >= 0 ? '+' : '';
 
 export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
+  // Check if it's a local development URI
+  if (import.meta.env.DEV && uri.includes('local-')) {
+    try {
+      // For local URIs, we need to extract just the filename part
+      // It might be a full URI like ipfs://local-1234-file.json or just local-1234-file.json
+      const segments = uri.split('/');
+      const filename = segments[segments.length - 1];
+      const localUrl = `http://localhost:3001/files/${filename}`;
+      console.log(`Development mode: Fetching from local API at ${localUrl}`);
+
+      const res = await fetch(localUrl);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch from local API: ${localUrl}`);
+      }
+      const metadata = await res.json();
+      metadata.name = metadata.name || '';
+      metadata.description = metadata.description || '';
+
+      // If image is local, properly format it for local access
+      if (metadata.image && metadata.image.includes('local-')) {
+        const imgFilename = metadata.image.split('/').pop();
+        metadata.image = `http://localhost:3001/files/${imgFilename}`;
+      } else {
+        metadata.image = uriToHttp(metadata.image)[0] || '';
+      }
+
+      return metadata;
+    } catch (error) {
+      console.error('Error fetching from local API:', error);
+      throw error;
+    }
+  }
+
+  // Standard IPFS/HTTP handling for non-local URIs
   const urls = uriToHttp(uri);
   let lastError: Error | null = null;
 
