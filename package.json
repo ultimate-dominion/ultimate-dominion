@@ -9,11 +9,14 @@
     "dev:client": "pnpm --filter 'client' run dev",
     "dev:contracts": "pnpm --filter 'contracts' dev",
     "foundry:up": "curl -L https://foundry.paradigm.xyz | bash && bash $HOME/.foundry/bin/foundryup",
+    "foundry:install": "foundryup --install v0.3.0",
     "mud:up": "pnpm mud set-version --tag main && pnpm install",
     "format:client": "pnpm --filter 'client' run format",
     "lint:client": "pnpm --filter 'client' run lint",
-    "test": "pnpm --filter client run lint",
-    "prepare": "pnpm foundry:up"
+    "test": "pnpm --filter client run lint"
+  },
+  "foundry": {
+    "version": "0.3.0"
   },
   "devDependencies": {
     "@latticexyz/cli": "2.0.11",

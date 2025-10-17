@@ -17,6 +17,13 @@ Ultimate Dominion is a text-based MMORPG built on the [MUD engine](https://mud.d
 - **Combat System**: Strategic turn-based combat with various character classes
 - **Crafting**: Create unique items using gathered resources
 
+## Requirements
+
+- **Node.js**: >=18.0.0
+- **pnpm**: >=8.0.0
+- **Foundry**: v0.3.0 (required for contract deployment)
+- **Git**: For version control
+
 ## Quick Start
 
 - ⚔️ Character Creation & Customization
@@ -26,6 +33,29 @@ Ultimate Dominion is a text-based MMORPG built on the [MUD engine](https://mud.d
 - 💎 NFT-Based Items & Equipment
 - 🤝 Player Interactions
 - 🌐 Decentralized Infrastructure
+
+### Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/ultimate-dominion/ultimate-dominion.git
+   cd ultimate-dominion
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   pnpm install
+   ```
+
+3. **Setup Foundry (v0.3.0)**:
+   ```bash
+   ./setup.sh
+   ```
+
+4. **Start development**:
+   ```bash
+   pnpm dev
+   ```
 
 ## Tech Stack
 
