@@ -4,6 +4,14 @@ export default defineWorld({
   namespace: "UD",
   deploy: {
     upgradeableWorldImplementation: true,
+    customWorld: false,
+    modules: [
+      {
+        name: "StandardDelegationsModule",
+        root: true,
+        args: [],
+      },
+    ],
   },
   userTypes: {
     ResourceId: {

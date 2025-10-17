@@ -7,6 +7,7 @@ import {console} from "forge-std/console.sol";
 import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {StoreCore, EncodedLengths} from "@latticexyz/store/src/StoreCore.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
+import {StandardDelegationsModule} from "@latticexyz/world-modules/src/modules/std-delegations/StandardDelegationsModule.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";

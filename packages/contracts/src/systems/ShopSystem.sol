@@ -21,9 +21,9 @@ import {_lootManagerSystemId} from "../utils.sol";
 import {WORLD_NAMESPACE} from "../../constants.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import "forge-std/console.sol";
 
