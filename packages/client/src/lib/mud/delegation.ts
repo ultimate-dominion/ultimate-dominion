@@ -21,16 +21,29 @@ export async function setupDelegation(
   externalWalletClient: WalletClient<Transport, Chain, Account>,
   delegateeAddress: Hex,
 ): Promise<void> {
-  const { request } = await network.publicClient.simulateContract({
-    account: externalWalletClient.account,
-    address: network.worldContract.address,
-    abi: IWorldAbi,
-    functionName: 'registerDelegation',
-    args: [delegateeAddress, UNLIMITED_DELEGATION, '0x0'],
+  console.log('Setting up delegation with:', {
+    delegateeAddress,
+    worldAddress: network.worldContract.address,
+    unlimitedDelegation: UNLIMITED_DELEGATION,
   });
 
-  const delegationTx = await externalWalletClient.writeContract(request);
-  await network.waitForTransaction(delegationTx);
+  try {
+    const delegationTx = await externalWalletClient.writeContract({
+      account: externalWalletClient.account,
+      address: network.worldContract.address,
+      abi: IWorldAbi,
+      functionName: 'registerDelegation',
+      args: [delegateeAddress, UNLIMITED_DELEGATION, '0x00'],
+      gas: 100000n, // Set explicit gas limit to avoid gas estimation issues
+    });
+
+    console.log('Delegation transaction sent:', delegationTx);
+    await network.waitForTransaction(delegationTx);
+    console.log('Delegation transaction confirmed');
+  } catch (error) {
+    console.error('Delegation failed with error:', error);
+    throw error;
+  }
 }
 
 export function isDelegated(

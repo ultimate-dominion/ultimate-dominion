@@ -129,6 +129,9 @@ export const WalletDetailsModal = ({
       await externalWalletClient.sendTransaction({
         to: burnerAddress,
         value: parseEther(depositAmount),
+        gas: 21000n, // Standard gas limit for ETH transfers
+        maxFeePerGas: 2000000000n, // 2 gwei max fee
+        maxPriorityFeePerGas: 1000000000n, // 1 gwei priority fee
       });
 
       setDepositAmount('0');
@@ -166,6 +169,9 @@ export const WalletDetailsModal = ({
       await walletClient.sendTransaction({
         to: address,
         value: parseEther(withdrawAmount),
+        gas: 21000n, // Standard gas limit for ETH transfers
+        maxFeePerGas: 2000000000n, // 2 gwei max fee
+        maxPriorityFeePerGas: 1000000000n, // 1 gwei priority fee
       });
 
       setWithdrawAmount('0');
