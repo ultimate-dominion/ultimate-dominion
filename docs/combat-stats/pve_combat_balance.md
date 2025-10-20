@@ -76,20 +76,81 @@ The current combat system diverges from these goals in several ways:
 
 ## Proposed PvE-Specific Changes
 
-### 1. PvE-Specific Constants
+### 1. Universal Multi-Stat Scaling
+
+All items and abilities scale with multiple stats to prevent single-stat dominance:
 
 ```solidity
-// Current combat constants
-uint256 constant DEFENSE_MODIFIER = 1 ether;
-uint256 constant ATTACK_MODIFIER = 1.2 ether;
-uint256 constant CRIT_MULTIPLIER = 2;
+// Physical weapon damage calculation
+function calculatePhysicalDamage(StatsData memory stats, uint256 weaponId) internal pure returns (int256) {
+    WeaponData memory weapon = getWeaponData(weaponId);
+    
+    int256 primaryDamage = stats.strength * weapon.strengthMultiplier;     // Primary: 2.0
+    int256 secondaryBonus = stats.agility * weapon.agilityMultiplier;      // Secondary: 0.5
+    int256 tertiaryBonus = stats.intelligence * weapon.intelligenceMultiplier; // Tertiary: 0.3
+    
+    return primaryDamage + secondaryBonus + tertiaryBonus;
+}
 
-// Proposed PvE-specific constants
-uint256 constant PVE_PLAYER_ATTACK_MODIFIER = 1.2 ether;   // Maintain player damage
-uint256 constant PVE_MOB_ATTACK_MODIFIER = 1.0 ether;      // Reduce mob damage
-uint256 constant PVE_PLAYER_DEFENSE_MODIFIER = 1.1 ether;  // Improve player defense
-uint256 constant PVE_MOB_DEFENSE_MODIFIER = 1.0 ether;     // Standard mob defense
-uint256 constant PVE_CRIT_MULTIPLIER = 1.75;               // Reduce spike damage
+// Magical weapon damage calculation
+function calculateMagicalDamage(StatsData memory stats, uint256 spellId) internal pure returns (int256) {
+    SpellData memory spell = getSpellData(spellId);
+    
+    int256 primaryDamage = stats.intelligence * spell.intelligenceMultiplier; // Primary: 2.0
+    int256 secondaryBonus = stats.strength * spell.strengthMultiplier;        // Secondary: 0.4
+    int256 tertiaryBonus = stats.agility * spell.agilityMultiplier;          // Tertiary: 0.6
+    
+    return primaryDamage + secondaryBonus + tertiaryBonus;
+}
+```
+
+### 2. Small Stat Bonuses for Hit/Crit Chance
+
+```solidity
+// Hit chance calculation with minimal stat bonuses
+function calculateHitChance(StatsData memory stats, AttackType attackType) internal pure returns (int256) {
+    int256 baseChance = 85; // 85% base hit chance
+    
+    if (attackType == AttackType.PHYSICAL) {
+        return baseChance + (stats.strength / 50); // +1% per 50 STR
+    } else if (attackType == AttackType.MAGICAL) {
+        return baseChance + (stats.intelligence / 50); // +1% per 50 INT
+    } else if (attackType == AttackType.RANGED) {
+        return baseChance + (stats.agility / 50); // +1% per 50 AGI
+    }
+}
+
+// Critical hit chance calculation with minimal stat bonuses
+function calculateCritChance(StatsData memory stats, AttackType attackType) internal pure returns (int256) {
+    int256 baseCrit = 5; // 5% base crit chance
+    
+    if (attackType == AttackType.PHYSICAL) {
+        return baseCrit + (stats.strength / 100); // +1% per 100 STR
+    } else if (attackType == AttackType.MAGICAL) {
+        return baseCrit + (stats.intelligence / 100); // +1% per 100 INT
+    } else if (attackType == AttackType.RANGED) {
+        return baseCrit + (stats.agility / 100); // +1% per 100 AGI
+    }
+}
+```
+
+### 3. Item-Based Build Solutions
+
+```solidity
+// Item bonuses to fill build gaps
+struct ItemBonuses {
+    uint256 hitChanceBonus;    // +5% to +15%
+    uint256 critChanceBonus;   // +3% to +10%
+    uint256 damageBonus;       // +1 to +5
+    uint256 statRequirements; // Required stats to use
+}
+
+// Final hit chance calculation including item bonuses
+function calculateFinalHitChance(StatsData memory stats, AttackType attackType, ItemBonuses memory item) internal pure returns (int256) {
+    int256 baseChance = calculateHitChance(stats, attackType);
+    int256 totalChance = baseChance + int256(item.hitChanceBonus);
+    return totalChance > 98 ? 98 : totalChance; // Cap at 98%
+}
 ```
 
 Implementing entity-type specific modifiers would require function changes:
@@ -125,50 +186,56 @@ function _calculatePhysicalDamage(
 }
 ```
 
-### 2. Mob Damage Output Adjustments
+### 4. Mob Damage Output Adjustments
 
 To achieve the goal of multiple mob encounters before healing:
 
 ```solidity
-// Pseudocode for mob damage scaling based on mob type
+// Mob damage scaling based on mob type and level
 function getMobDamageMultiplier(bytes32 mobEntityId) internal view returns (uint256) {
     uint8 mobType = MobType.get(mobEntityId);
+    uint256 mobLevel = getMobLevel(mobEntityId);
+    
+    // Base damage multiplier by level
+    uint256 levelMultiplier = 0.8 ether + (mobLevel * 0.05 ether); // 0.8 to 1.3
     
     if (mobType == MOB_TYPE_NORMAL) {
-        return NORMAL_MOB_DAMAGE_MULTIPLIER; // e.g., 0.85 ether
+        return levelMultiplier * 0.9 ether; // 10% reduction for normal mobs
     } else if (mobType == MOB_TYPE_ELITE) {
-        return ELITE_MOB_DAMAGE_MULTIPLIER;  // e.g., 1.1 ether
+        return levelMultiplier * 1.1 ether; // 10% increase for elite mobs
     } else if (mobType == MOB_TYPE_BOSS) {
-        return BOSS_DAMAGE_MULTIPLIER;       // e.g., 1.3 ether
+        return levelMultiplier * 1.3 ether; // 30% increase for boss mobs
     }
     
-    return WAD; // Default 1.0
+    return levelMultiplier; // Default
 }
 ```
 
-### 3. Critical Hit Refinements for PvE
+### 5. Critical Hit Refinements for PvE
 
 ```solidity
-// Current critical hit implementation
-crit = ((int256(attackRoll % 100) - critChanceBonus) + 1) < 5;
-
-// Proposed PvE critical implementation
+// Critical hit calculation with stat-specific bonuses
 function _calculateCritical(
     bytes32 attackerEntityId,
     bytes32 defenderEntityId,
     uint256 attackRoll,
-    int256 critChanceBonus
+    AttackType attackType
 ) internal view returns (bool crit) {
-    int256 baseCritChance = 5; // 5% base (1/20)
+    StatsData memory attackerStats = Stats.get(attackerEntityId);
     
-    // Small bonus based on agility, capped
-    int256 agilityBonus = 0;
-    if (isPlayer(attackerEntityId)) {
-        int256 agility = Stats.getAgility(attackerEntityId);
-        agilityBonus = Math.min(MAX_AGILITY_CRIT_BONUS, agility / AGILITY_CRIT_DIVISOR);
+    int256 baseCritChance = 5; // 5% base (1/20)
+    int256 statBonus = 0;
+    
+    // Stat-specific critical hit bonuses
+    if (attackType == AttackType.PHYSICAL) {
+        statBonus = attackerStats.strength / 100; // +1% per 100 STR
+    } else if (attackType == AttackType.MAGICAL) {
+        statBonus = attackerStats.intelligence / 100; // +1% per 100 INT
+    } else if (attackType == AttackType.RANGED) {
+        statBonus = attackerStats.agility / 100; // +1% per 100 AGI
     }
     
-    int256 finalCritChance = baseCritChance + agilityBonus + critChanceBonus;
+    int256 finalCritChance = baseCritChance + statBonus;
     finalCritChance = Math.min(MAX_CRIT_CHANCE, finalCritChance); // Cap at reasonable maximum
     
     crit = ((int256(attackRoll % 100)) + 1) <= finalCritChance;
@@ -370,7 +437,7 @@ function calculateMobStats(uint256 mobLevel, uint8 mobType) internal pure return
     }
     
     // HP scales with level and mob type
-    stats.maxHp = 50 + (mobLevel * 10); // +10 HP per level
+    stats.maxHp = 8 + (mobLevel * 2); // +2 HP per level
     if (mobType == MOB_TYPE_ELITE) {
         stats.maxHp = stats.maxHp * 15 / 10; // Elite mobs have 50% more HP
     }
@@ -437,12 +504,12 @@ This naturally creates the desired challenge progression without making higher-l
 
 #### Level 10 Balanced Mob
 - **All Stats**: ~25 (lower than player's specialized stat, higher than secondary stats)
-- **HP**: ~150 (enough to survive 3-4 hits from specialized player)
+- **HP**: ~25 (enough to survive 5-8 hits from specialized player)
 - **Armor**: ~10 (provides meaningful but not excessive protection)
 
 #### Combat Outcome
-- Player should defeat mob in 3-4 hits
-- Mob should defeat player in 5-6 hits
+- Player should defeat mob in 5-8 hits
+- Mob should defeat player in 5-8 hits
 - Critical hits occur ~1 in 20 attacks, reducing time-to-kill by ~20%
 - Player should defeat 3-5 such mobs before needing to heal
 
@@ -501,6 +568,85 @@ With these PvE-focused changes, we anticipate:
 
 These changes focus specifically on improving the PvE experience before addressing PvP balance, which may require different approaches and considerations.
 
+## Build Diversity and Item Solutions
+
+### Universal Multi-Stat Scaling Benefits
+
+The proposed universal multi-stat scaling system ensures that all builds remain viable:
+
+**Physical Weapons (Swords, Axes, Clubs):**
+- Primary scaling: STR × 2.0 (main damage)
+- Secondary scaling: AGI × 0.5 (accuracy bonus)
+- Tertiary scaling: INT × 0.3 (technique bonus)
+
+**Magical Weapons (Staves, Wands, Orbs):**
+- Primary scaling: INT × 2.0 (magical power)
+- Secondary scaling: STR × 0.4 (force behind spell)
+- Tertiary scaling: AGI × 0.6 (casting speed/accuracy)
+
+**Ranged Weapons (Bows, Crossbows, Throwing):**
+- Primary scaling: AGI × 2.0 (accuracy and draw strength)
+- Secondary scaling: STR × 0.6 (draw strength)
+- Tertiary scaling: INT × 0.4 (aiming technique)
+
+### Item-Based Build Solutions
+
+Items fill major gaps in specialized builds, making any build viable with appropriate equipment:
+
+**Hit Chance Items by Rarity:**
+- Common: +5% hit chance
+- Uncommon: +8% hit chance
+- Rare: +12% hit chance
+- Legendary: +15% hit chance
+
+**Critical Hit Items by Rarity:**
+- Common: +3% crit chance
+- Uncommon: +5% crit chance
+- Rare: +8% crit chance
+- Legendary: +10% crit chance
+
+### Build Viability Examples
+
+**Slow Heavy HP Mage (High INT, Low AGI):**
+- Base hit chance: 85% + (INT/50) = ~86%
+- With hit chance items: +33% = 98% (capped)
+- Base crit chance: 5% + (INT/100) = ~5.5%
+- With crit chance items: +23% = ~28.5%
+- **Result**: Viable build with high spell damage and survivability
+
+**Pure STR Warrior (High STR, Low AGI):**
+- Base hit chance: 85% + (STR/50) = ~86%
+- With hit chance items: +33% = 98% (capped)
+- Base crit chance: 5% + (STR/100) = ~5.5%
+- With crit chance items: +23% = ~28.5%
+- **Result**: Viable build with high physical damage and tankiness
+
+**Balanced Build (Moderate All Stats):**
+- Can use any weapon type effectively
+- Moderate hit/crit chance from stats
+- Flexible item choices for specialization
+- Versatile against different opponent types
+- **Result**: Most flexible build with tactical options
+
+### Combat Triangle Implementation
+
+**STR > AGI (Warrior > Rogue):**
+- STR builds have higher HP and armor penetration
+- Physical damage overwhelms AGI's evasion
+- STR builds can interrupt AGI builds' actions
+
+**AGI > INT (Rogue > Mage):**
+- AGI builds have speed and precision advantages
+- Ranged attacks overwhelm INT builds' magical defenses
+- AGI builds can interrupt INT builds' spell casting
+
+**INT > STR (Mage > Warrior):**
+- INT builds use magical damage that bypasses physical armor
+- Magical attacks exploit STR builds' magical weakness
+- INT builds can apply status effects that STR builds struggle with
+
+This creates a balanced rock-paper-scissors system where each build type has advantages and disadvantages against others, while items ensure that any build can be viable with appropriate equipment choices.
+
 ## Player Stat Progression and Mob Scaling Analysis
 
 The analysis of player and mob stat progression from level 1 to 10 reveals the following:
@@ -513,9 +659,9 @@ The analysis of player and mob stat progression from level 1 to 10 reveals the f
 - Warriors can get bonus strength, while mages get bonus intelligence at certain levels
 
 ### Mob Stats
-- Level 1 mobs (e.g., Giant Rat): STR=8, AGI=6, INT=3, HP=20
-- Level 5 mobs (e.g., Dire Wolf): STR=18, AGI=9, INT=10, HP=32
-- Level 10 mobs (e.g., Shadow Dragon): STR=30, AGI=32, INT=36, HP=45
+- Level 1 mobs (e.g., Giant Rat): STR=8, AGI=6, INT=3, HP=10
+- Level 5 mobs (e.g., Dire Wolf): STR=18, AGI=9, INT=10, HP=18
+- Level 10 mobs (e.g., Shadow Dragon): STR=30, AGI=32, INT=36, HP=28
 
 This progression creates the following issues:
 - Mob stats scale linearly while player stat specialization creates wider gaps

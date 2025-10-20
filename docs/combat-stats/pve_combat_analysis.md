@@ -74,118 +74,195 @@ This section provides a detailed analysis of how character stats progress from l
 ### Level 1 Character (Starting Stats)
 
 **Base Stats:**
-- HP: 100
+- HP: 10
 - Strength: 10-15 (depending on class)
 - Agility: 8-12 (depending on class)
 - Intelligence: 8-15 (depending on class)
 - Armor: 0-5 (depending on starting equipment)
 
 **Combat Effectiveness:**
-- Average Damage Per Hit: 10-15
+- Average Damage Per Hit: 1-2
 - Hit Chance: 70-80%
 - Critical Hit Chance: 5-7%
-- Survival Time vs. Equal Level Mob: 4-5 hits
+- Survival Time vs. Equal Level Mob: 5-10 hits
 
 ### Level 5 Character (Mid-Tier)
 
 **Base Stats:**
-- HP: 150-175
+- HP: 15-20
 - Strength: 20-30 (depending on class and build)
 - Agility: 15-25 (depending on class and build)
 - Intelligence: 15-30 (depending on class and build)
 - Armor: 10-20 (depending on equipment)
 
 **Combat Effectiveness:**
-- Average Damage Per Hit: 20-30
+- Average Damage Per Hit: 2-3
 - Hit Chance: 80-85%
 - Critical Hit Chance: 8-12%
-- Survival Time vs. Equal Level Mob: 5-7 hits
+- Survival Time vs. Equal Level Mob: 5-10 hits
 
 ### Level 10 Character (Current Cap)
 
 **Base Stats:**
-- HP: 225-275
+- HP: 25-35
 - Strength: 35-50 (depending on class and build)
 - Agility: 30-45 (depending on class and build)
 - Intelligence: 30-50 (depending on class and build)
 - Armor: 25-40 (depending on equipment)
 
 **Combat Effectiveness:**
-- Average Damage Per Hit: 35-55
+- Average Damage Per Hit: 3-5
 - Hit Chance: 85-90%
 - Critical Hit Chance: 12-20%
-- Survival Time vs. Equal Level Mob: 6-8 hits
+- Survival Time vs. Equal Level Mob: 5-12 hits
 
 ## Mob Scaling Analysis
 
 ### Level 1 Mob
 
 **Base Stats:**
-- HP: 75-100
+- HP: 8-12
 - Strength: 8-12
 - Agility: 7-10
 - Intelligence: 5-10
 - Armor: 0-3
 
 **Combat Effectiveness:**
-- Average Damage Per Hit: 8-12
+- Average Damage Per Hit: 1-2
 - Hit Chance: 65-75%
 - Critical Hit Chance: 5%
-- Time to Defeat Equal Level Player: 6-8 hits
+- Time to Defeat Equal Level Player: 5-10 hits
 
 ### Level 5 Mob
 
 **Base Stats:**
-- HP: 125-150
+- HP: 12-18
 - Strength: 18-25
 - Agility: 14-20
 - Intelligence: 12-22
 - Armor: 5-15
 
 **Combat Effectiveness:**
-- Average Damage Per Hit: 16-25
+- Average Damage Per Hit: 2-3
 - Hit Chance: 75-80%
 - Critical Hit Chance: 7-10%
-- Time to Defeat Equal Level Player: 7-9 hits
+- Time to Defeat Equal Level Player: 5-9 hits
 
 ### Level 10 Mob
 
 **Base Stats:**
-- HP: 200-250
+- HP: 20-30
 - Strength: 30-45
 - Agility: 25-40
 - Intelligence: 25-45
 - Armor: 15-30
 
 **Combat Effectiveness:**
-- Average Damage Per Hit: 28-45
+- Average Damage Per Hit: 3-5
 - Hit Chance: 80-85%
 - Critical Hit Chance: 10-15%
-- Time to Defeat Equal Level Player: 8-10 hits
+- Time to Defeat Equal Level Player: 5-12 hits
 
 ## Recommended Balance Adjustments
 
 Based on the analysis of the current system, here are the key balance adjustments needed:
 
-1. **Damage Calculation**
-   - Implement diminishing returns on stat-based damage bonuses
-   - Reduce the critical hit multiplier from 2.0 to 1.75
-   - Increase the effectiveness of armor at higher levels
+1. **Universal Multi-Stat Scaling**
+   - All items and abilities scale with multiple stats (primary + secondary bonuses)
+   - Prevent single-stat dominance while maintaining specialization benefits
+   - Create meaningful choices between specialized and balanced builds
 
-2. **Hit Probability**
-   - Increase the impact of level differences on hit chances
-   - Improve the scaling of agility's effect on hit chance
-   - Add a small baseline hit chance so low-agility characters aren't completely ineffective
+2. **Small Stat Bonuses for Hit/Crit Chance**
+   - Hit chance: +1% per 50 points in relevant stat (STR for physical, INT for magical, AGI for ranged)
+   - Crit chance: +1% per 100 points in relevant stat
+   - Prevent AGI dominance while allowing stat investment to matter
 
-3. **Stat Scaling**
-   - Reduce overall mob damage output by 15-20%
-   - Increase mob HP slightly to extend combat length
-   - Adjust stat gains per level to ensure proper scaling
-   - Implement more meaningful armor values on mobs
+3. **Item-Based Build Solutions**
+   - Hit chance items: +5% to +15% hit chance bonuses
+   - Crit chance items: +3% to +10% crit chance bonuses
+   - Allow any build to be viable with appropriate equipment choices
 
-4. **Combat Mechanics**
-   - Consider adding "glancing blows" for hits against higher-level opponents
-   - Implement recovery mechanics that scale appropriately with level
-   - Add mob type variations (normal, elite, boss) with different stat distributions
+4. **Combat Triangle Implementation**
+   - STR > AGI: Physical damage and armor penetration advantages
+   - AGI > INT: Speed, evasion, and precision advantages
+   - INT > STR: Magical damage that bypasses physical armor
 
-These adjustments should create a more balanced and enjoyable PvE combat experience that adheres to our core design goals.
+5. **Diminishing Returns**
+   - Implement stat scaling caps to prevent extreme advantages
+   - Ensure balanced builds remain competitive at higher levels
+   - Create tactical depth beyond pure stat stacking
+
+These adjustments should create a more balanced and enjoyable PvE combat experience that supports diverse build strategies while adhering to our core design goals.
+
+## Build Diversity and Item Solutions
+
+### Universal Multi-Stat Scaling
+
+All items and abilities will scale with multiple stats to prevent single-stat dominance:
+
+**Physical Weapons (Swords, Axes):**
+- Primary: STR × 2.0 (main damage)
+- Secondary: AGI × 0.5 (accuracy bonus)
+- Tertiary: INT × 0.3 (technique bonus)
+
+**Magical Weapons (Staves, Wands):**
+- Primary: INT × 2.0 (magical power)
+- Secondary: STR × 0.4 (force behind spell)
+- Tertiary: AGI × 0.6 (casting speed/accuracy)
+
+**Ranged Weapons (Bows, Crossbows):**
+- Primary: AGI × 2.0 (accuracy and draw strength)
+- Secondary: STR × 0.6 (draw strength)
+- Tertiary: INT × 0.4 (aiming technique)
+
+### Small Stat Bonuses
+
+Hit and critical hit chances receive minimal stat bonuses to prevent AGI dominance:
+
+**Hit Chance Bonuses:**
+- Physical attacks: +1% per 50 STR
+- Magical attacks: +1% per 50 INT
+- Ranged attacks: +1% per 50 AGI
+
+**Critical Hit Bonuses:**
+- Physical attacks: +1% per 100 STR
+- Magical attacks: +1% per 100 INT
+- Ranged attacks: +1% per 100 AGI
+
+### Item-Based Build Solutions
+
+Items fill major gaps in specialized builds, making any build viable:
+
+**Hit Chance Items:**
+- Common: +5% hit chance
+- Uncommon: +8% hit chance
+- Rare: +12% hit chance
+- Legendary: +15% hit chance
+
+**Critical Hit Items:**
+- Common: +3% crit chance
+- Uncommon: +5% crit chance
+- Rare: +8% crit chance
+- Legendary: +10% crit chance
+
+### Build Examples
+
+**Slow Heavy HP Mage (High INT, Low AGI):**
+- Base hit chance: 85% + (INT/50) = ~86%
+- With hit chance items: +33% = 98% (capped)
+- Base crit chance: 5% + (INT/100) = ~5.5%
+- With crit chance items: +23% = ~28.5%
+
+**Pure STR Warrior (High STR, Low AGI):**
+- Base hit chance: 85% + (STR/50) = ~86%
+- With hit chance items: +33% = 98% (capped)
+- Base crit chance: 5% + (STR/100) = ~5.5%
+- With crit chance items: +23% = ~28.5%
+
+**Balanced Build (Moderate All Stats):**
+- Can use any weapon type effectively
+- Moderate hit/crit chance from stats
+- Flexible item choices for specialization
+- Versatile against different opponent types
+
+This approach ensures that any build can be viable with appropriate equipment choices while maintaining meaningful stat investment and build diversity.
