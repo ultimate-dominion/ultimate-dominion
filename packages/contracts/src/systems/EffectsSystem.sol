@@ -114,11 +114,7 @@ contract EffectsSystem is System {
                 statsData = getStatusEffectStats(getEffectStatId(effectId));
                 bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
                 if (isNotExpired(updatedEffectId)) {
-                    _adjustedStats.agility += statsData.agiModifier;
-                    _adjustedStats.intelligence += statsData.agiModifier;
-                    _adjustedStats.strength += statsData.strModifier;
-                    _adjustedStats.maxHp += statsData.hpModifier;
-                    _adjustedStats.armor += statsData.armorModifier;
+                    _adjustedStats = EffectProcessor.applyStatusEffectModifiers(_adjustedStats, statsData);
                 } else {
                     EncounterEntity.updateAppliedStatusEffects(entityId, i, updatedEffectId);
                 }
@@ -174,17 +170,13 @@ contract EffectsSystem is System {
         StatusEffectValidityData memory effectValidity = StatusEffectValidity.get(effectId);
         StatusEffectStatsData memory effectStats = getStatusEffectStats(effectId);
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
-        uint256 currentStacks = currentStacks(entityId, effectId);
-        if (currentStacks < effectValidity.maxStacks) {
+        uint256 currentStacksCount = currentStacks(entityId, effectId);
+        if (currentStacksCount < effectValidity.maxStacks) {
             if (effectValidity.validTurns != 0 && encounterId != bytes32(0)) {
                 EncounterEntity.pushAppliedStatusEffects(entityId, appliedEffectId);
                 checkWorldStatusEffects(entityId);
             } else if (effectValidity.validTime != 0 && encounterId == bytes32(0)) {
-                _adjustedStats.agility += effectStats.agiModifier;
-                _adjustedStats.strength += effectStats.strModifier;
-                _adjustedStats.intelligence += effectStats.intModifier;
-                _adjustedStats.armor += effectStats.armorModifier;
-                _adjustedStats.maxHp += effectStats.hpModifier;
+                _adjustedStats = EffectProcessor.applyStatusEffectModifiers(_adjustedStats, effectStats);
                 checkWorldStatusEffects(entityId);
                 IWorld(_world()).UD__setStats(entityId, _adjustedStats);
                 WorldStatusEffects.pushAppliedStatusEffects(entityId, appliedEffectId);
@@ -283,15 +275,18 @@ contract EffectsSystem is System {
 
         if (appliedStatusEffects.length > 0) {
             for (uint256 i; i < appliedStatusEffects.length; i++) {
-                int256 damageToApply = StatusEffectStats.getDamagePerTick(getEffectStatId(appliedStatusEffects[i]));
+                StatusEffectStatsData memory effectStats = getStatusEffectStats(getEffectStatId(appliedStatusEffects[i]));
+                uint256 stacks = EffectProcessor.calculateEffectStacks(getEffectStatId(appliedStatusEffects[i]), appliedStatusEffects);
+                int256 damageToApply = EffectProcessor.calculateDamageOverTime(effectStats, stacks);
                 damages[i] = damageToApply;
                 totalDamage += damageToApply;
-                int256 currentHp = Stats.getCurrentHp(entityId) - damageToApply;
-                if (damageToApply != 0) Stats.setCurrentHp(entityId, currentHp);
             }
         }
 
         if (totalDamage != 0) {
+            int256 currentHp = Stats.getCurrentHp(entityId) - totalDamage;
+            Stats.setCurrentHp(entityId, currentHp);
+            
             DamageOverTimeAppliedData memory dotDamage =
                 DamageOverTimeAppliedData({entityId: entityId, totalDamage: totalDamage, individualDamages: damages});
             DamageOverTimeApplied.set(encounterId, currentTurn, dotDamage);
