@@ -26,9 +26,11 @@ import {IWorld} from "@world/IWorld.sol";
 import {EffectType} from "@codegen/common.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireOwner, _requireAccess} from "../utils.sol";
+import {EffectProcessor} from "@libraries/EffectProcessor.sol";
 import "forge-std/console.sol";
 
 contract EffectsSystem is System {
+    using EffectProcessor for *;
     function createEffect(EffectType effectType, string memory name, bytes memory effectStats)
         public
         returns (bytes32 effectStatsId)
@@ -234,7 +236,7 @@ contract EffectsSystem is System {
     }
 
     function isNotExpired(bytes32 appliedEffectId) public pure returns (bool) {
-        return getEffectExpired(appliedEffectId) == 0;
+        return EffectProcessor.isNotExpired(appliedEffectId);
     }
 
     function expireIfInvalid(bytes32 entityId, bytes32 appliedEffectId) public view returns (bytes32) {
@@ -339,63 +341,42 @@ contract EffectsSystem is System {
         pure
         returns (bytes32 _effectStatsId, uint256 _timestampApplied, uint256 _effectExpiredTime, uint256 _turnApplied)
     {
-        _effectStatsId = getEffectStatId(appliedEffectId);
-        _timestampApplied = getEffectTimestamp(appliedEffectId);
-        _effectExpiredTime = getEffectExpired(appliedEffectId);
-        _turnApplied = getEffectTurnApplied(appliedEffectId);
+        return EffectProcessor.getAppliedEffectInfo(appliedEffectId);
     }
 
     /**
      * @dev returns the base stat id stripped of extra info
      */
     function getEffectStatId(bytes32 effectId) public pure returns (bytes32 _effectStatsId) {
-        return bytes32(bytes8(effectId));
+        return EffectProcessor.getEffectStatId(effectId);
     }
 
     /**
      * @dev takes the applied statId and gets the block it was applied
      */
     function getEffectTimestamp(bytes32 appliedEffectId) public pure returns (uint256 _timestampApplied) {
-        _timestampApplied = uint256(uint64(bytes8(appliedEffectId << 64)));
+        return EffectProcessor.getEffectTimestamp(appliedEffectId);
     }
 
     /**
      * @dev takes the applied statId and gets the timestamp it was applied
      */
     function getEffectExpired(bytes32 appliedEffectId) public pure returns (uint256 _effectExpiredTimestamp) {
-        _effectExpiredTimestamp = uint256(uint64(bytes8(appliedEffectId << 128)));
+        return EffectProcessor.getEffectExpired(appliedEffectId);
     }
 
     /**
      * @dev takes the applied statId and gets the turn it was applied
      */
     function getEffectTurnApplied(bytes32 appliedEffectId) public pure returns (uint256 _turnApplied) {
-        _turnApplied = uint256(uint64(bytes8(appliedEffectId << 192)));
+        return EffectProcessor.getEffectTurnApplied(appliedEffectId);
     }
 
     function _getAppliedEffectId(bytes32 effectId, uint256 turnApplied) internal view returns (bytes32) {
-        return bytes32(
-            abi.encodePacked(
-                bytes8(effectId), bytes8(uint64(block.timestamp)), bytes8(uint64(0)), bytes8(uint64(turnApplied))
-            )
-        );
+        return EffectProcessor.createAppliedEffectId(effectId, block.timestamp, turnApplied);
     }
 
     function _expireStatusEffect(bytes32 appliedEffectId) internal view returns (bytes32) {
-        (bytes32 effectStatId, uint256 timestampApplied, uint256 expiredTime, uint256 turnApplied) =
-            getAppliedEffectInfo(appliedEffectId);
-        if (expiredTime == 0) {
-            expiredTime = block.timestamp;
-            return bytes32(
-                abi.encodePacked(
-                    bytes8(effectStatId),
-                    bytes8(uint64(timestampApplied)),
-                    bytes8(uint64(expiredTime)),
-                    bytes8(uint64(turnApplied))
-                )
-            );
-        } else {
-            return appliedEffectId;
-        }
+        return EffectProcessor.markEffectAsExpired(appliedEffectId, block.timestamp);
     }
 }
