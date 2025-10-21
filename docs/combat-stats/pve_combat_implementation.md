@@ -23,6 +23,206 @@ STR > AGI > INT > STR rock-paper-scissors system with proper stat-specific advan
 ### 5. HP Baseline
 All characters start with 10 HP at level 1, scaling to 25-35 HP at level 10.
 
+## Systematic Testing Strategy
+
+### Critical Testing Protocol
+
+**EVERY change must be validated with a full deployment cycle before proceeding to the next change.**
+
+#### Phase 1: Pre-Change Validation
+1. **Baseline Verification**
+   - Ensure all services are running cleanly (Anvil, API, Client)
+   - Verify PostDeploy script runs successfully with current codebase
+   - Confirm manual delegation works via `cast send`
+   - Test basic character creation flow
+
+2. **Change Isolation**
+   - Make ONE small, atomic change
+   - Document exactly what was changed
+   - Commit the change with descriptive message
+
+#### Phase 2: Full Deployment Test
+1. **Clean Environment**
+   ```bash
+   # Kill all processes
+   pkill -f "anvil\|pnpm dev\|node.*local.ts"
+   
+   # Start fresh
+   cd packages/contracts && anvil
+   # In new terminal: deploy contracts
+   # In new terminal: run PostDeploy script
+   # In new terminal: start API
+   # In new terminal: start Client
+   ```
+
+2. **Validation Checklist**
+   - [ ] Anvil running on port 8545
+   - [ ] World contract deployed successfully
+   - [ ] PostDeploy script runs without errors
+   - [ ] API responding on port 3001
+   - [ ] Client loading on port 3000
+   - [ ] Manual delegation works via `cast send`
+   - [ ] Character creation flow works end-to-end
+
+3. **Failure Protocol**
+   - If ANY step fails, immediately revert the change
+   - Document the failure reason
+   - Investigate root cause before attempting next change
+   - Do not proceed until current change is fully working
+
+#### Phase 3: Incremental Progression
+1. **Change Size Guidelines**
+   - **Micro changes**: Single enum value, small constant adjustment
+   - **Small changes**: Single function modification, one struct field
+   - **Medium changes**: Multiple related functions, new struct
+   - **Large changes**: New system, major refactoring
+
+2. **Testing Frequency**
+   - **Micro/Small**: Test after each change
+   - **Medium**: Test after each logical group
+   - **Large**: Test after each major component
+
+#### Phase 4: Documentation
+1. **Change Log**
+   - Record each successful change
+   - Note any issues encountered
+   - Document workarounds or solutions
+
+2. **Rollback Plan**
+   - Maintain clean git commits for each working state
+   - Tag stable checkpoints
+   - Keep detailed notes on what each change accomplishes
+
+### Common Failure Points
+
+1. **PostDeploy Script Failures**
+   - "number expected" errors → JSON parsing issues
+   - "Stack too deep" errors → Too many local variables
+   - "address(this)" errors → Foundry version compatibility
+
+2. **Deployment Issues**
+   - Port conflicts → Kill all processes, restart cleanly
+   - Contract size limits → Split large contracts
+   - Missing dependencies → Check imports and remappings
+
+3. **Client Connection Issues**
+   - MetaMask connection failures → Check chain ID configuration
+   - Delegation errors → Verify StandardDelegationsModule installation
+   - API 404 errors → Confirm API is running on correct port
+
+### Emergency Procedures
+
+1. **Complete Reset**
+   ```bash
+   git stash
+   git checkout dev
+   git pull origin dev
+   # Start fresh deployment cycle
+   ```
+
+2. **Partial Rollback**
+   ```bash
+   git log --oneline -10  # Find last working commit
+   git reset --hard <commit-hash>
+   # Test deployment
+   ```
+
+3. **Debug Mode**
+   - Add extensive logging to PostDeploy script
+   - Use `cast call` to test individual functions
+   - Check Anvil logs for detailed error information
+
+### Step-by-Step Testing Workflow
+
+#### Example: Adding AttackType Enum
+
+1. **Pre-Change Validation**
+   ```bash
+   # Verify current state works
+   cd packages/contracts
+   pnpm mud tablegen
+   pnpm foundry:deploy
+   forge script script/PostDeploy.s.sol --rpc-url http://localhost:8545 --broadcast
+   ```
+
+2. **Make Small Change**
+   ```solidity
+   // In mud.config.ts, add:
+   enums: {
+     AttackType: ["PHYSICAL", "MAGICAL", "RANGED"],
+     // ... existing enums
+   }
+   ```
+
+3. **Full Deployment Test**
+   ```bash
+   # Kill all processes
+   pkill -f "anvil\|pnpm dev\|node.*local.ts"
+   
+   # Start Anvil
+   cd packages/contracts && anvil
+   
+   # In new terminal: Deploy
+   cd packages/contracts
+   pnpm mud tablegen  # Regenerate codegen
+   pnpm foundry:deploy
+   
+   # In new terminal: Run PostDeploy
+   forge script script/PostDeploy.s.sol --rpc-url http://localhost:8545 --broadcast
+   
+   # In new terminal: Start API
+   cd packages/api && pnpm dev
+   
+   # In new terminal: Start Client
+   cd packages/client && pnpm dev
+   ```
+
+4. **Validation**
+   - Check all services are running
+   - Test manual delegation: `cast send 0x... "registerDelegation(...)" ...`
+   - Test character creation in browser
+   - If ANY step fails, revert and investigate
+
+5. **Success Criteria**
+   - All services running without errors
+   - PostDeploy script completes successfully
+   - Manual delegation works
+   - Client loads and connects properly
+   - Character creation flow works
+
+#### Example: Modifying Damage Calculation
+
+1. **Pre-Change**: Follow validation steps above
+2. **Change**: Modify single function in CombatSystem.sol
+3. **Test**: Full deployment cycle
+4. **Validate**: All systems working
+5. **Commit**: Only if everything works
+
+### Change Categories and Testing Requirements
+
+| Change Type | Example | Test Required | Rollback Risk |
+|-------------|---------|---------------|---------------|
+| **Micro** | Enum value, constant | Full deployment | Low |
+| **Small** | Single function, struct field | Full deployment | Low |
+| **Medium** | Multiple functions, new struct | Full deployment + manual testing | Medium |
+| **Large** | New system, major refactor | Full deployment + extensive testing | High |
+
+### Quality Gates
+
+**Before proceeding to next change:**
+1. ✅ All services running cleanly
+2. ✅ PostDeploy script successful
+3. ✅ Manual delegation working
+4. ✅ Client loading without errors
+5. ✅ Basic game flow functional
+6. ✅ Change committed with clear message
+
+**If any gate fails:**
+- Stop immediately
+- Revert the change
+- Investigate root cause
+- Fix the issue before proceeding
+
 ## Implementation Specifications
 
 ### Universal Multi-Stat Scaling System
