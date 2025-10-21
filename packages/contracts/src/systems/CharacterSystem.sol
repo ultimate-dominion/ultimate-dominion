@@ -38,8 +38,11 @@ import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_erc721SystemId, _requireAccess} from "../utils.sol";
 import {CHARACTERS_NAMESPACE, ABILITY_POINTS_PER_LEVEL, MAX_LEVEL, BONUS_POINT_LEVEL} from "../../constants.sol";
+import {StatCalculator} from "@libraries/StatCalculator.sol";
 
 contract CharacterSystem is System {
+    using StatCalculator for *;
+    
     modifier onlyOwner(bytes32 characterId) {
         require(isValidOwner(characterId, _msgSender()), "CHARACTER SYSTEM: INVALID OPERATOR");
         _;
@@ -151,19 +154,11 @@ contract CharacterSystem is System {
     }
 
     function getCurrentAvailableLevel(uint256 experience) public view returns (uint256 currentAvailableLevel) {
-        if (experience >= Levels.get(MAX_LEVEL - 1)) {
-            currentAvailableLevel = MAX_LEVEL;
-        } else {
-            for (uint256 i; i < MAX_LEVEL;) {
-                if (Levels.get(i) <= experience && Levels.get(i + 1) > experience) {
-                    currentAvailableLevel = i + 1;
-                    break;
-                }
-                {
-                    i++;
-                }
-            }
+        uint256[] memory levelsTable = new uint256[](MAX_LEVEL);
+        for (uint256 i = 0; i < MAX_LEVEL; i++) {
+            levelsTable[i] = Levels.get(i);
         }
+        return StatCalculator.calculateLevelFromExperience(experience, levelsTable);
     }
 
     function levelCharacter(bytes32 characterId, StatsData memory desiredStats) public onlyOwner(characterId) {
@@ -174,29 +169,26 @@ contract CharacterSystem is System {
         if (stats.level == MAX_LEVEL) {
             return;
         }
-        int256 strChange = desiredStats.strength - stats.strength;
-        int256 agiChange = desiredStats.agility - stats.agility;
-        int256 intChange = desiredStats.intelligence - stats.intelligence;
-        // int256 hpChange = desiredStats.maxHp - stats.maxHp;
-
-        require(
-            (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
-        );
-        // add an extra point for class stat
-        if (availableLevel % BONUS_POINT_LEVEL == 0) {
-            Classes characterClass = getClass(characterId);
-            if (characterClass == Classes.Warrior) {
-                ++desiredStats.strength;
-            } else if (characterClass == Classes.Rogue) {
-                ++desiredStats.agility;
-            } else if (characterClass == Classes.Mage) {
-                ++desiredStats.intelligence;
-            }
+        // Validate stat changes using StatCalculator
+        require(StatCalculator.validateStatChanges(stats, desiredStats), "CHARACTER SYSTEM: INVALID STAT CHANGE");
+        
+        // Calculate class bonus using StatCalculator
+        (int256 strBonus, int256 agiBonus, int256 intBonus) = StatCalculator.calculateClassBonus(getClass(characterId), availableLevel);
+        if (strBonus > 0) {
+            ++desiredStats.strength;
         }
-        if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
-            stats.maxHp += 3;
+        if (agiBonus > 0) {
+            ++desiredStats.agility;
         }
-        stats.maxHp += 3;
+        if (intBonus > 0) {
+            ++desiredStats.intelligence;
+        }
+        
+        // Calculate HP bonus using StatCalculator
+        int256 hpBonus = StatCalculator.calculateHpBonus(stats.class, stats.level);
+        if (hpBonus > 0) {
+            stats.maxHp += hpBonus;
+        }
         stats.strength = desiredStats.strength;
         stats.agility = desiredStats.agility;
         stats.intelligence = desiredStats.intelligence;

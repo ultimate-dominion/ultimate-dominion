@@ -28,6 +28,7 @@ import {
 import {ItemType} from "@codegen/common.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
+import {StatCalculator} from "@libraries/StatCalculator.sol";
 import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
 import {ERC1155MetadataURI} from "@erc1155/tables/ERC1155MetadataURI.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
@@ -281,12 +282,7 @@ contract EquipmentSystem is System {
             StatsData memory baseStats = abi.decode(Characters.getBaseStats(entityId), (StatsData));
             CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
 
-            combatStats.strength = baseStats.strength + equipmentStats.strBonus;
-            combatStats.agility = baseStats.agility + equipmentStats.agiBonus;
-            combatStats.intelligence = baseStats.intelligence + equipmentStats.intBonus;
-            combatStats.maxHp = baseStats.maxHp + equipmentStats.hpBonus;
-            combatStats.armor = equipmentStats.armor;
-            // add armor bonus to base hp?
+            return StatCalculator.calculateEquipmentBonuses(baseStats, equipmentStats);
         }
 
         return combatStats;
