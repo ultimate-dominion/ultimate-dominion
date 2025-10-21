@@ -19,10 +19,12 @@ import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IWorld, IPvESystem, IPvPSystem, IWorldActionSystem} from "@world/IWorld.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
+import {StatCalculator} from "@libraries/StatCalculator.sol";
 import "forge-std/console.sol";
 
 contract RngSystem is System {
     using LibChunks for uint256;
+    using StatCalculator for *;
 
     event RNGFulfilled(bytes32 randomNumber);
 
@@ -111,53 +113,11 @@ contract RngSystem is System {
     }
 
     function _storeStats(uint256 randomNumber, bytes32 characterId) internal {
-        uint64[] memory chunks = randomNumber.get4Chunks();
-
         Classes characterClass = Stats.getClass(characterId);
-
-        StatsData memory stats;
-
-        stats.class = characterClass;
-
-        stats.strength = int256(Math.absolute(int256(int64(chunks[0]))) % 8 + 3); // Range [3, 10]
-        stats.agility = int256(Math.absolute(int256(int64(chunks[1]))) % 8 + 3); // Range [3, 10]
-
-        // Calculate intelligence to ensure total is 19
-        stats.intelligence = int256(19 - stats.strength - stats.agility);
-
-        // Ensure intelligence is within the range [3, 10]
-        if (stats.intelligence < 3) {
-            int256 deficit = int256(3 - stats.intelligence);
-            stats.intelligence = int256(3);
-
-            if (stats.strength > stats.agility) {
-                stats.strength -= deficit;
-            } else {
-                stats.agility -= deficit;
-            }
-        } else if (stats.intelligence > 10) {
-            int256 excess = int256(stats.intelligence - 10);
-            stats.intelligence = int256(10);
-
-            if (stats.strength < stats.agility) {
-                stats.strength += int256(excess);
-            } else {
-                stats.agility += int256(excess);
-            }
-        }
-
-        // Class-based adjustments; should total to 21
-        if (characterClass == Classes.Warrior) {
-            stats.strength += 2;
-            stats.maxHp = int256(20);
-        } else if (characterClass == Classes.Rogue) {
-            stats.agility += 2;
-            stats.maxHp = int256(18);
-        } else if (characterClass == Classes.Mage) {
-            stats.intelligence += 2;
-            stats.maxHp = int256(16);
-        }
-
+        
+        // Use StatCalculator to generate random stats
+        StatsData memory stats = StatCalculator.generateRandomStats(randomNumber, characterClass);
+        
         Stats.set(characterId, stats);
     }
 
