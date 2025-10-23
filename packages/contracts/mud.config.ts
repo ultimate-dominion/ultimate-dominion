@@ -19,7 +19,26 @@ export default defineWorld({
       type: "bytes32",
     },
   },
-  systems: {},
+  systems: {
+    // Character Systems (modular) - using existing contract names
+    CharacterCore: {
+      name: "CharacterCore",
+      openAccess: true,
+    },
+    StatSystem: {
+      name: "StatSystem", 
+      openAccess: true,
+    },
+    LevelSystem: {
+      name: "LevelSystem",
+      openAccess: true,
+    },
+    // Equipment Systems
+    WeaponSystem: {
+      name: "WeaponSystem",
+      openAccess: true,
+    },
+  },
   enums: {
     Classes: [
       "Warrior", // 0
