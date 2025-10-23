@@ -38,6 +38,10 @@ export default defineWorld({
       name: "WeaponSystem",
       openAccess: true,
     },
+    ArmorSystem: {
+      name: "ArmorSystem",
+      openAccess: true,
+    },
   },
   enums: {
     Classes: [
