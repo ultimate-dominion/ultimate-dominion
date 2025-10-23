@@ -6,7 +6,8 @@ import {
     Characters,
     CharactersData,
     NameExists,
-    Counters
+    Counters,
+    CharacterOwner
 } from "@codegen/index.sol";
 import {Classes} from "@codegen/common.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
@@ -17,6 +18,7 @@ import {IWorld} from "@world/IWorld.sol";
 import {_erc721SystemId, _requireAccess} from "../../utils.sol";
 import {CHARACTERS_NAMESPACE} from "../../../constants.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
+import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import "forge-std/console.sol";
 
 contract CharacterCore is System {
@@ -28,6 +30,10 @@ contract CharacterCore is System {
     modifier validCharacter(bytes32 characterId) {
         require(isValidCharacterId(characterId), "CHARACTER CORE: INVALID CHARACTER");
         _;
+    }
+
+    function _characterToken() internal view returns (IERC721Mintable characterToken) {
+        characterToken = IERC721Mintable(UltimateDominionConfig.getCharacterToken());
     }
 
     /**
@@ -121,15 +127,6 @@ contract CharacterCore is System {
         return isValidCharacterId(characterId);
     }
 
-    /**
-     * @dev Check if character ID is valid
-     * @param characterId The character ID to check
-     * @return True if character exists
-     */
-    function isValidCharacterId(bytes32 characterId) public view returns (bool) {
-        CharactersData memory charData = Characters.get(characterId);
-        return charData.tokenId != 0;
-    }
 
     /**
      * @dev Check if address is valid owner of character
@@ -178,5 +175,40 @@ contract CharacterCore is System {
     function isCharacterLocked(bytes32 characterId) public view returns (bool) {
         CharactersData memory charData = Characters.get(characterId);
         return charData.locked;
+    }
+
+    /**
+     * @dev Get character ID from owner address
+     * @param ownerAddress The owner's address
+     * @return characterId The character ID
+     */
+    function getCharacterIdFromOwnerAddress(address ownerAddress) public view returns (bytes32 characterId) {
+        return CharacterOwner.getCharacterId(ownerAddress);
+    }
+
+    /**
+     * @dev Extract the character NFT owner address from the character ID
+     * @param characterId The character ID
+     * @return The owner address
+     */
+    function getOwnerAddress(bytes32 characterId) public pure returns (address) {
+        return address(uint160(uint256(characterId) >> 96));
+    }
+
+    /**
+     * @dev Validate if a character ID is valid
+     * @param characterId The character ID to validate
+     * @return True if the character ID is valid
+     */
+    function isValidCharacterId(bytes32 characterId) public view returns (bool) {
+        address ownerAddress = getOwnerAddress(characterId);
+        uint256 tokenId = getCharacterTokenId(characterId);
+        address ownerOf;
+        try _characterToken().ownerOf(tokenId) returns (address) {
+            ownerOf = _characterToken().ownerOf(tokenId);
+        } catch {
+            return false;
+        }
+        return ownerOf == ownerAddress;
     }
 }

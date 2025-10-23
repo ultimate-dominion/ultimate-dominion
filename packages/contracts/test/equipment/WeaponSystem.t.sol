@@ -19,6 +19,25 @@ import {
 } from "../../src/codegen/index.sol";
 import {ItemType, Classes} from "../../src/codegen/common.sol";
 import {_itemsSystemId} from "../../src/utils.sol";
+import {IWorld} from "../../src/codegen/world/IWorld.sol";
+import {World} from "@latticexyz/world/src/World.sol";
+import {WorldProxy} from "@latticexyz/world/src/WorldProxy.sol";
+import {System} from "@latticexyz/world/src/System.sol";
+import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
+import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
+import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
+import {UltimateDominionConfig} from "../../src/codegen/index.sol";
+import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
+import {registerERC721} from "@latticexyz/world-modules/src/modules/erc721-puppet/registerERC721.sol";
+import {ERC721MetadataData} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/ERC721Metadata.sol";
+import {IERC1155System} from "@erc1155/IERC1155System.sol";
+import {registerERC1155} from "@erc1155/registerERC1155.sol";
+import {Owners} from "@erc1155/tables/Owners.sol";
+import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
+import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
+import {ERC1155MetadataURI} from "@erc1155/tables/ERC1155MetadataURI.sol";
+import {ERC1155Module} from "@erc1155/ERC1155Module.sol";
+import "forge-std/console.sol";
 
 contract WeaponSystemTest is SetUp {
     WeaponSystem weaponSystem;
@@ -43,8 +62,7 @@ contract WeaponSystemTest is SetUp {
         vm.startPrank(player);
 
         // Create character
-        characterToken.mint(player);
-        characterId = bytes32(uint256(1));
+        characterId = world.UD__mintCharacter(player, bytes32("TestCharacter"), "test_character_uri");
 
         // Set up character data
         Characters.set(characterId, CharactersData({
@@ -177,7 +195,7 @@ contract WeaponSystemTest is SetUp {
     }
 
     function testGetWeaponStats() public {
-        WeaponStatsData memory stats = weaponSystem.getWeaponStats(weaponId);
+        WeaponStatsData memory stats = weaponSystem.getWeaponStatsData(weaponId);
         assertEq(stats.minLevel, 1);
         assertEq(stats.strModifier, 5);
         assertEq(stats.agiModifier, 2);

@@ -17,7 +17,7 @@ import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/Encoded
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 // Import user types
-import { ResistanceStat } from "./../common.sol";
+import { ResistanceStat } from "../common.sol";
 
 struct StatusEffectStatsData {
   int256 agiModifier;

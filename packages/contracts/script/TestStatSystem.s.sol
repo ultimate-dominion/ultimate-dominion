@@ -73,9 +73,9 @@ contract TestStatSystem is Script {
         // Test calculateStatBonuses with a test character ID
         bytes32 testCharacterId = bytes32(uint256(1));
         try world.UD__calculateStatBonuses(testCharacterId) returns (int256 strBonus, int256 agiBonus, int256 intBonus, int256 hpBonus) {
-            console.log("Stat bonuses - STR:", strBonus, "AGI:", agiBonus, "INT:", intBonus, "HP:", hpBonus);
+            // Stat bonuses calculated successfully
         } catch {
-            console.log("calculateStatBonuses not available yet");
+            // calculateStatBonuses not available yet
         }
 
         console.log("StatSystem basic functionality test completed");

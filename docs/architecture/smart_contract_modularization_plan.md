@@ -4,9 +4,10 @@
 
 **Purpose**: Source of truth for smart contract architectural changes to address EIP-170 size limits and enable future scalability.
 
-**Status**: Planning Phase  
-**Last Updated**: October 21, 2025  
-**Version**: 1.0  
+**Status**: Implementation Phase  
+**Last Updated**: January 2025  
+**Version**: 2.0  
+**Includes**: PostDeploy Modularization Strategy  
 
 ---
 
@@ -17,12 +18,16 @@
 - Monolithic systems prevent incremental updates
 - Contract size issues block new feature development
 - High risk of deployment failures
+- **PostDeploy.s.sol exceeds EVM stack depth limit (16 slots)**
+- **Cannot deploy all systems in single script due to complexity**
 
 ### **Proposed Solution**
 - Modular architecture with specialized contracts
 - Library-based shared logic
 - Incremental deployment capabilities
 - Future-proof design for continuous development
+- **3-Tier Hybrid Deployment Strategy for PostDeploy**
+- **Modular deployment scripts to avoid stack limits**
 
 ---
 
@@ -125,6 +130,52 @@ The MobSystem manages all non-player entities including monsters, NPCs, and envi
 2. **Complex Logic**: Heavy calculations embedded in system contracts
 3. **Large Imports**: Extensive MUD library dependencies
 4. **No Abstraction**: Repeated code across systems
+
+### **PostDeploy Script Issues**
+
+#### **Current PostDeploy.s.sol Analysis**
+- **Lines**: 529
+- **Stack Usage**: 16+ slots (exceeds EVM limit)
+- **Risk**: High (compilation fails with "stack too deep" errors)
+- **Systems Registered**: 6 core systems
+- **Modules Installed**: 5 essential modules
+- **Data Seeding**: Complete game state initialization
+
+#### **Stack Limit Problem**
+The PostDeploy script has grown too complex for the EVM's 16-slot stack limit. When attempting to add new modular systems (CharacterCore, StatSystem), the script fails to compile due to excessive stack usage.
+
+#### **Deployment Complexity**
+```solidity
+// Current PostDeploy.s.sol structure (simplified)
+function run(address _worldAddress) external {
+    // 1. Basic configuration (2-3 slots)
+    MapConfig.set(10, 10);
+    Admin.set(deployer, true);
+    
+    // 2. Module installations (3-4 slots)
+    world.installModule(new PuppetModule(), "");
+    registerERC721(world, CHARACTERS_NAMESPACE, metadata);
+    registerERC20(world, GOLD_NAMESPACE, metadata);
+    
+    // 3. System registrations (4-5 slots)
+    world.registerSystem(characterSystemId, characterSystem, true);
+    world.registerSystem(rngSystemId, rngSystem, true);
+    world.registerSystem(combatSystemId, combatSystem, true);
+    
+    // 4. Function selector registrations (2-3 slots)
+    world.registerRootFunctionSelector(characterSystemId, "mintCharacter", "mintCharacter");
+    world.registerRootFunctionSelector(characterSystemId, "enterGame", "enterGame");
+    // ... many more selectors
+    
+    // 5. Data seeding (3-4 slots)
+    _createItems();
+    _createMonsters();
+    _createShops();
+    _createEffects();
+    
+    // Total: 16+ slots - EXCEEDS EVM LIMIT
+}
+```
 
 ---
 
@@ -250,6 +301,368 @@ The modular character system separates core character management from complex ca
 #### **Effect Processing Flow**
 The modular effect system provides efficient status effect management through specialized systems and shared libraries. When effects are applied, the StatusEffects system handles effect validation and state management. The EffectProcessor library processes complex effect calculations and interactions, while the StatCalculator library handles effect-based stat modifications. The system integrates with combat systems to process combat-related effects and with character systems to apply stat modifications. This modular approach ensures efficient effect processing while maintaining clear separation of concerns and consistent effect mechanics across all systems.
 
+### **PostDeploy Modularization Strategy**
+
+#### **3-Tier Hybrid Deployment Architecture**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    DEPLOYMENT STRATEGY                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────┐    ┌─────────────────┐               │
+│  │   Tier 1: Core  │    │   Tier 2:       │               │
+│  │   PostDeploy    │    │   Feature       │               │
+│  │                 │    │   Scripts       │               │
+│  │ • Essential     │    │                 │               │
+│  │ • Foundation    │    │ • Equipment     │               │
+│  │ • No Stack      │    │ • Characters   │               │
+│  │   Issues        │    │ • Combat        │               │
+│  │                 │    │ • Items         │               │
+│  └─────────────────┘    │ • Monsters      │               │
+│           │              └─────────────────┘               │
+│           │                       │                        │
+│           └───────────────────────┼────────────────────────┘
+│                                   │
+│  ┌─────────────────────────────────▼─────────────────────────┐
+│  │              Tier 3: Full PostDeploy                     │
+│  │                                                         │
+│  │  • Orchestrates all tiers                               │
+│  │  • Complete game state                                  │
+│  │  • Production ready                                     │
+│  │  • Atomic deployment                                    │
+│  └─────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### **Tier 1: Core PostDeploy (Essential Foundation)**
+
+**Purpose**: Establishes the absolute minimum foundation needed for the game to function.
+
+**Scope**: `MinimalPostDeploy.s.sol` - ~200 lines, no stack issues
+
+**Systems Included**:
+- ✅ **Basic Configuration**: MapConfig, Admin
+- ✅ **Essential Modules**: PuppetModule, ERC721, ERC20
+- ✅ **Core Systems**: RngSystem, CharacterSystem
+- ✅ **Essential Items**: Basic weapons, armor, consumables
+- ✅ **Essential Monsters**: Basic encounters (goblin, orc, skeleton)
+
+**Stack Usage**: 8-10 slots (well under 16 limit)
+**Risk Level**: Low
+
+#### **Tier 2: Feature Scripts (Modular Additions)**
+
+**Purpose**: Add specific feature sets incrementally for development and testing.
+
+**Script Architecture**:
+```solidity
+contract Deploy[Feature] is Script {
+    function run(address _worldAddress) external {
+        _checkPrerequisites();    // Verify dependencies
+        _deploySystems();         // Deploy systems
+        _registerSelectors();     // Register function selectors
+        _createContent();         // Create related content
+        _verifyDeployment();      // Verify deployment
+    }
+}
+```
+
+**Feature Script Inventory**:
+
+1. **DeployEquipment.s.sol**
+   - Systems: WeaponSystem, ArmorSystem, SpellSystem
+   - Items: All weapons, armor, spells
+   - Dependencies: Core PostDeploy
+   - Stack Usage: ~6-8 slots
+
+2. **DeployCharacters.s.sol**
+   - Systems: CharacterCore, StatSystem
+   - Items: Character-related items
+   - Dependencies: Core PostDeploy
+   - Stack Usage: ~6-8 slots
+
+3. **DeployCombat.s.sol**
+   - Systems: CombatSystem, EffectsSystem
+   - Items: Combat-related items
+   - Monsters: Combat encounters
+   - Dependencies: Core PostDeploy, Equipment
+   - Stack Usage: ~8-10 slots
+
+4. **DeployItems.s.sol**
+   - Systems: ItemsSystem
+   - Items: Complete item catalog
+   - Dependencies: Core PostDeploy
+   - Stack Usage: ~4-6 slots
+
+5. **DeployMonsters.s.sol**
+   - Systems: MobSystem, EncounterSystem
+   - Monsters: Complete monster roster
+   - Dependencies: Core PostDeploy, Items
+   - Stack Usage: ~6-8 slots
+
+6. **DeployEconomy.s.sol**
+   - Systems: ShopSystem, MarketplaceSystem, LootManagerSystem
+   - Items: Economic items
+   - Dependencies: Core PostDeploy, Items
+   - Stack Usage: ~6-8 slots
+
+7. **DeployWorld.s.sol**
+   - Systems: MapSystem, PvESystem, PvPSystem
+   - Items: World-related items
+   - Dependencies: Core PostDeploy, Monsters
+   - Stack Usage: ~6-8 slots
+
+#### **Tier 3: Full PostDeploy (Complete Orchestration)**
+
+**Purpose**: Creates complete, production-ready game state through orchestration.
+
+**Architecture**:
+```solidity
+contract FullPostDeploy is Script {
+    function run(address _worldAddress) external {
+        console.log("Starting full game deployment...");
+        
+        // Tier 1: Core foundation
+        _deployCore();
+        
+        // Tier 2: Feature sets
+        _deployEquipment();
+        _deployCharacters();
+        _deployCombat();
+        _deployItems();
+        _deployMonsters();
+        _deployEconomy();
+        _deployWorld();
+        
+        // Verification
+        _verifyCompleteDeployment();
+        
+        console.log("Full game deployment completed successfully!");
+    }
+}
+```
+
+**Complete State Verification**:
+```solidity
+function _verifyCompleteDeployment() internal {
+    // Verify all systems are deployed
+    require(UltimateDominionConfig.getCharacterToken() != address(0), "Character token missing");
+    require(UltimateDominionConfig.getGoldToken() != address(0), "Gold token missing");
+    
+    // Verify all modular systems
+    require(_isSystemDeployed("WeaponSystem"), "WeaponSystem missing");
+    require(_isSystemDeployed("CharacterCore"), "CharacterCore missing");
+    require(_isSystemDeployed("CombatSystem"), "CombatSystem missing");
+    
+    // Verify item counts
+    require(_getItemCount() > 50, "Insufficient items deployed");
+    require(_getMonsterCount() > 20, "Insufficient monsters deployed");
+    
+    console.log("Complete deployment verification passed");
+}
+```
+
+#### **Testing Capabilities During Modularization**
+
+| Week | Minimal PostDeploy | Feature Scripts | Full PostDeploy | Testing Capability |
+|------|-------------------|-----------------|-----------------|-------------------|
+| 1 | ✅ | ❌ | ❌ | **60%** - Basic game functionality |
+| 2 | ✅ | ✅ | ❌ | **80%** - Equipment + basic systems |
+| 3 | ✅ | ✅ | ❌ | **90%** - Combat + equipment + basic |
+| 4 | ✅ | ✅ | ✅ | **100%** - Complete end-to-end |
+
+#### **Deployment Workflow**
+
+**Development Phase**:
+```bash
+# Quick testing
+forge script MinimalPostDeploy.s.sol --rpc-url localhost:8545
+
+# Feature development  
+forge script DeployEquipment.s.sol --rpc-url localhost:8545
+
+# Full testing
+forge script FullPostDeploy.s.sol --rpc-url localhost:8545
+```
+
+**Production Phase**:
+```bash
+# Always use FullPostDeploy for production
+forge script FullPostDeploy.s.sol --rpc-url mainnet --broadcast
+```
+
+#### **Risk Mitigation**
+
+**Stack Limit Risks**:
+- **Mitigation**: Modular scripts, each under 16 slots
+- **Monitoring**: Stack usage analysis in CI/CD
+- **Fallback**: Further modularization if needed
+
+**State Consistency Risks**:
+- **Mitigation**: Comprehensive verification systems
+- **Monitoring**: Deployment state tracking
+- **Fallback**: Manual state verification scripts
+
+**Dependency Risks**:
+- **Mitigation**: Prerequisite checking in each script
+- **Monitoring**: Dependency graph validation
+- **Fallback**: Manual dependency resolution
+
+### **Parallel Development Strategy**
+
+#### **Critical Sync Points**
+
+**Every New System Must Include**:
+1. **Smart Contract** - Create the modular system
+2. **MUD Configuration** - Add system to mud.config.ts
+3. **Codegen Regeneration** - Run `pnpm mud tablegen && pnpm mud codegen`
+4. **Client Integration** - Update client calls to use new system
+5. **API Integration** - Update API endpoints to use new system
+6. **PostDeploy Integration** - Register system in PostDeploy script
+7. **End-to-End Testing** - Test complete integration
+
+#### **Parallel Development Workflow**
+
+**For Each New System**:
+```bash
+# 1. Create Smart Contract
+# 2. Update mud.config.ts
+pnpm mud tablegen
+pnpm mud codegen
+
+# 3. Update Client Calls
+# 4. Update API Endpoints
+# 5. Update PostDeploy Script
+
+# 6. Test Integration
+forge script PostDeploy-[SystemType]Systems.s.sol --rpc-url localhost:8545
+pnpm test:integration:[system-type]
+```
+
+#### **Sync Checklist for Each System**
+
+**When Creating Any New System**:
+- [ ] **Smart Contract Created** - System contract implemented
+- [ ] **MUD Config Updated** - System added to mud.config.ts
+- [ ] **Codegen Regenerated** - `pnpm mud tablegen && pnpm mud codegen`
+- [ ] **Client Calls Updated** - Client uses new system functions
+- [ ] **API Endpoints Updated** - API uses new system interfaces
+- [ ] **PostDeploy Updated** - System registered in PostDeploy script
+- [ ] **Integration Tested** - End-to-end functionality verified
+- [ ] **Documentation Updated** - System documented and committed
+
+### **Incremental PostDeploy Testing Strategy**
+
+#### **Critical Testing Milestones**
+
+**Every Phase Must Include**:
+1. **Individual System Testing** - Unit tests for new systems
+2. **PostDeploy Integration** - Test with existing deployed systems
+3. **End-to-End Validation** - Verify complete game functionality
+4. **Rollback Testing** - Ensure we can revert if issues arise
+
+#### **Phase-by-Phase Testing Requirements**
+
+**Phase 2: Character System Modularization**
+```bash
+# After Step 12: CharacterCore + StatSystem
+forge script PostDeploy-CharacterSystems.s.sol --rpc-url localhost:8545
+# Test: Character creation → Stat generation → Equipment → Combat
+```
+
+**Phase 3: Equipment System Modularization**
+```bash
+# After Step 18: EquipmentCore + WeaponSystem
+forge script PostDeploy-EquipmentSystems.s.sol --rpc-url localhost:8545
+# Test: Character creation → Equipment → Combat with new weapons
+```
+
+**Phase 4: Combat System Modularization**
+```bash
+# After Step 24: PhysicalCombat + MagicCombat
+forge script PostDeploy-CombatSystems.s.sol --rpc-url localhost:8545
+# Test: Complete combat flow with modular systems
+```
+
+**Phase 5: Effects System Modularization**
+```bash
+# After Step 30: EffectsCore + EffectProcessor
+forge script PostDeploy-EffectsSystems.s.sol --rpc-url localhost:8545
+# Test: Combat → Effects → Character stats integration
+```
+
+#### **Testing Validation Checklist**
+
+**After Each Phase**:
+- [ ] **System Registration**: All new systems registered in PostDeploy
+- [ ] **Function Selectors**: All function selectors registered
+- [ ] **Data Seeding**: Required data created for new systems
+- [ ] **Integration Testing**: New systems work with existing systems
+- [ ] **Client Testing**: Client can interact with new systems
+- [ ] **API Testing**: API endpoints work with new systems
+- [ ] **Rollback Testing**: Can revert to previous state if needed
+
+#### **Incremental Deployment Scripts**
+
+**Create Intermediate PostDeploy Scripts**:
+
+1. **PostDeploy-CharacterSystems.s.sol** (After Character Systems)
+   - Core systems + CharacterCore + StatSystem
+   - Test character creation and stat mechanics
+
+2. **PostDeploy-EquipmentSystems.s.sol** (After Equipment Systems)
+   - Core systems + Character + Equipment systems
+   - Test character + equipment integration
+
+3. **PostDeploy-CombatSystems.s.sol** (After Combat Systems)
+   - Core systems + Character + Equipment + Combat
+   - Test complete combat flow
+
+4. **PostDeploy-EffectsSystems.s.sol** (After Effects Systems)
+   - Core systems + Character + Equipment + Combat + Effects
+   - Test complete game mechanics
+
+#### **Testing Workflow**
+
+**Development Testing**:
+```bash
+# Character Systems Testing
+forge script PostDeploy-CharacterSystems.s.sol --rpc-url localhost:8545
+pnpm test:integration:character-systems
+
+# Equipment Systems Testing  
+forge script PostDeploy-EquipmentSystems.s.sol --rpc-url localhost:8545
+pnpm test:integration:equipment-systems
+
+# Combat Systems Testing
+forge script PostDeploy-CombatSystems.s.sol --rpc-url localhost:8545
+pnpm test:integration:combat-systems
+
+# Effects Systems Testing
+forge script PostDeploy-EffectsSystems.s.sol --rpc-url localhost:8545
+pnpm test:integration:effects-systems
+```
+
+**Production Testing**:
+```bash
+# Always test with FullPostDeploy before production
+forge script FullPostDeploy.s.sol --rpc-url mainnet --broadcast
+pnpm test:integration:full
+```
+
+#### **Risk Mitigation**
+
+**Testing Failures**:
+- **Immediate**: Stop modularization, fix issues
+- **Rollback**: Revert to last working PostDeploy
+- **Analysis**: Identify root cause, update testing strategy
+
+**Integration Issues**:
+- **Isolation**: Test individual systems first
+- **Gradual Integration**: Add systems one at a time
+- **Validation**: Comprehensive testing at each step
+
 ---
 
 ## 🔄 **Implementation Phases - Micro-Steps for End-to-End Testing**
@@ -367,6 +780,34 @@ const characterResult = await world.UD__characterCore_mintCharacter(...);
 const statResult = await world.UD__statSystem_rollStats(...);
 ```
 **Test**: Update client, test character creation flow, verify end-to-end functionality
+**Incremental Testing**: Test CharacterCore + StatSystem integration with existing systems
+
+#### **Step 11b: Update API Character Endpoints**
+```typescript
+// Update API to use new character system interfaces
+app.post('/api/character/mint', wrapVercelHandler(characterCoreMint));
+app.post('/api/character/stats', wrapVercelHandler(statSystemRollStats));
+app.post('/api/character/level', wrapVercelHandler(statSystemLevelCharacter));
+```
+**Test**: Update API endpoints, test API functionality, verify server integration
+**Incremental Testing**: Test API integration with new character systems
+
+#### **Step 11c: Update MUD Configuration**
+```typescript
+// mud.config.ts - Add new character systems
+systems: {
+  CharacterCore: {
+    name: "CharacterCore",
+    openAccess: true,
+  },
+  StatSystem: {
+    name: "StatSystem", 
+    openAccess: true,
+  },
+}
+```
+**Test**: Update mud.config.ts, regenerate codegen, verify all systems are recognized
+**Incremental Testing**: Test codegen generation and client interface updates
 
 #### **Step 12: Update PostDeploy for Character Systems**
 ```solidity
@@ -376,6 +817,7 @@ world.registerSystem(statSystemId, statSystem, true);
 world.registerSystem(levelSystemId, levelSystem, true);
 ```
 **Test**: Deploy with PostDeploy, test character creation, verify system registration
+**Incremental Testing**: Test CharacterCore + StatSystem integration with existing systems
 
 ### **Phase 3: Equipment System Modularization (Steps 13-18)**
 
@@ -439,6 +881,39 @@ const equipResult = await world.UD__equipmentCore_equipItems(...);
 const weaponResult = await world.UD__weaponSystem_equipWeapon(...);
 ```
 **Test**: Update client, test equipment flow, verify end-to-end functionality
+**Incremental Testing**: Test EquipmentCore + WeaponSystem + CharacterCore integration
+
+#### **Step 18b: Update API Equipment Endpoints**
+```typescript
+// Update API to use new equipment system interfaces
+app.post('/api/equipment/equip', wrapVercelHandler(equipmentCoreEquipItems));
+app.post('/api/equipment/weapon', wrapVercelHandler(weaponSystemEquipWeapon));
+app.post('/api/equipment/armor', wrapVercelHandler(armorSystemEquipArmor));
+```
+**Test**: Update API endpoints, test API functionality, verify server integration
+**Incremental Testing**: Test API integration with new equipment systems
+
+#### **Step 18c: Update MUD Configuration for Equipment**
+```typescript
+// mud.config.ts - Add new equipment systems
+systems: {
+  // ... existing systems
+  EquipmentCore: {
+    name: "EquipmentCore",
+    openAccess: true,
+  },
+  WeaponSystem: {
+    name: "WeaponSystem",
+    openAccess: true,
+  },
+  ArmorSystem: {
+    name: "ArmorSystem",
+    openAccess: true,
+  },
+}
+```
+**Test**: Update mud.config.ts, regenerate codegen, verify all systems are recognized
+**Incremental Testing**: Test codegen generation and client interface updates
 
 ### **Phase 4: Combat System Modularization (Steps 19-24)**
 
@@ -494,6 +969,39 @@ const physicalResult = await world.UD__physicalCombat_attack(...);
 const magicResult = await world.UD__magicCombat_attack(...);
 ```
 **Test**: Update client, test combat flow, verify end-to-end functionality
+**Incremental Testing**: Test PhysicalCombat + MagicCombat + Equipment + Character integration
+
+#### **Step 23b: Update API Combat Endpoints**
+```typescript
+// Update API to use new combat system interfaces
+app.post('/api/combat/physical', wrapVercelHandler(physicalCombatAttack));
+app.post('/api/combat/magic', wrapVercelHandler(magicCombatAttack));
+app.post('/api/combat/status-effects', wrapVercelHandler(statusEffectsApplyEffect));
+```
+**Test**: Update API endpoints, test API functionality, verify server integration
+**Incremental Testing**: Test API integration with new combat systems
+
+#### **Step 23c: Update MUD Configuration for Combat**
+```typescript
+// mud.config.ts - Add new combat systems
+systems: {
+  // ... existing systems
+  PhysicalCombat: {
+    name: "PhysicalCombat",
+    openAccess: true,
+  },
+  MagicCombat: {
+    name: "MagicCombat",
+    openAccess: true,
+  },
+  StatusEffects: {
+    name: "StatusEffects",
+    openAccess: true,
+  },
+}
+```
+**Test**: Update mud.config.ts, regenerate codegen, verify all systems are recognized
+**Incremental Testing**: Test codegen generation and client interface updates
 
 #### **Step 24: Update PostDeploy for Combat Systems**
 ```solidity
@@ -795,9 +1303,122 @@ world.registerSystem(npcSystemId, npcSystem, true);
 ```
 **Test**: Deploy with PostDeploy, test mob functionality, verify system registration
 
-### **Phase 10: Final Integration & Testing (Steps 55-60)**
+### **Phase 10: PostDeploy Modularization (Steps 55-65)**
 
-#### **Step 55: Update MUD Configuration**
+#### **Step 55: Create MinimalPostDeploy Script**
+```
+script/MinimalPostDeploy.s.sol
+├── Basic configuration (MapConfig, Admin)
+├── Essential modules (PuppetModule, ERC721, ERC20)
+├── Core systems (RngSystem, CharacterSystem)
+├── Essential items (starter weapons, armor)
+└── Essential monsters (goblin, orc, skeleton)
+```
+**Test**: Deploy MinimalPostDeploy, test core functionality, verify stack usage < 16 slots
+
+#### **Step 56: Create DeployEquipment Script**
+```
+script/DeployEquipment.s.sol
+├── WeaponSystem deployment
+├── ArmorSystem deployment
+├── SpellSystem deployment
+├── Equipment items creation
+└── Function selector registration
+```
+**Test**: Deploy DeployEquipment, test equipment functionality, verify integration
+
+#### **Step 57: Create DeployCharacters Script**
+```
+script/DeployCharacters.s.sol
+├── CharacterCore deployment
+├── StatSystem deployment
+├── Character-related items
+├── Function selector registration
+└── Character functionality testing
+```
+**Test**: Deploy DeployCharacters, test character creation, verify stat mechanics
+
+#### **Step 58: Create DeployCombat Script**
+```
+script/DeployCombat.s.sol
+├── CombatSystem deployment
+├── EffectsSystem deployment
+├── Combat-related items
+├── Combat encounters
+└── Function selector registration
+```
+**Test**: Deploy DeployCombat, test combat mechanics, verify effect processing
+
+#### **Step 59: Create DeployItems Script**
+```
+script/DeployItems.s.sol
+├── ItemsSystem deployment
+├── Complete item catalog
+├── Item templates
+└── Function selector registration
+```
+**Test**: Deploy DeployItems, test item creation, verify item mechanics
+
+#### **Step 60: Create DeployMonsters Script**
+```
+script/DeployMonsters.s.sol
+├── MobSystem deployment
+├── EncounterSystem deployment
+├── Complete monster roster
+├── Monster encounters
+└── Function selector registration
+```
+**Test**: Deploy DeployMonsters, test monster spawning, verify encounter mechanics
+
+#### **Step 61: Create DeployEconomy Script**
+```
+script/DeployEconomy.s.sol
+├── ShopSystem deployment
+├── MarketplaceSystem deployment
+├── LootManagerSystem deployment
+├── Economic items
+└── Function selector registration
+```
+**Test**: Deploy DeployEconomy, test trading mechanics, verify economic systems
+
+#### **Step 62: Create DeployWorld Script**
+```
+script/DeployWorld.s.sol
+├── MapSystem deployment
+├── PvESystem deployment
+├── PvPSystem deployment
+├── World-related items
+└── Function selector registration
+```
+**Test**: Deploy DeployWorld, test world mechanics, verify map functionality
+
+#### **Step 63: Create FullPostDeploy Orchestration**
+```
+script/FullPostDeploy.s.sol
+├── Orchestrates all deployment scripts
+├── Complete state verification
+├── Production-ready deployment
+└── Atomic deployment guarantee
+```
+**Test**: Deploy FullPostDeploy, test complete game state, verify end-to-end functionality
+
+#### **Step 64: Update Deployment Workflows**
+```
+# Development workflows
+forge script MinimalPostDeploy.s.sol --rpc-url localhost:8545
+forge script DeployEquipment.s.sol --rpc-url localhost:8545
+
+# Production workflows
+forge script FullPostDeploy.s.sol --rpc-url mainnet --broadcast
+```
+**Test**: Test all deployment workflows, verify CI/CD integration
+
+#### **Step 65: End-to-End PostDeploy Testing**
+**Test**: Test complete deployment flow, verify all systems work together, validate complete game state
+
+### **Phase 11: Final Integration & Testing (Steps 66-70)**
+
+#### **Step 66: Update MUD Configuration**
 ```typescript
 // mud.config.ts - Add all new systems
 export const mudConfig = {
@@ -844,7 +1465,7 @@ export const mudConfig = {
 ```
 **Test**: Update mud.config.ts, regenerate codegen, verify all systems are recognized
 
-#### **Step 56: Update All Client System Calls**
+#### **Step 67: Update All Client System Calls**
 ```typescript
 // Update all client system calls to use new modular structure
 const characterResult = await world.UD__characterCore_mintCharacter(...);
@@ -854,7 +1475,7 @@ const combatResult = await world.UD__physicalCombat_attack(...);
 ```
 **Test**: Update all client calls, test complete game flow, verify end-to-end functionality
 
-#### **Step 57: Update All API Endpoints**
+#### **Step 68: Update All API Endpoints**
 ```typescript
 // Update API to work with modular systems
 app.post('/api/combat/physical', wrapVercelHandler(physicalCombat));
@@ -864,20 +1485,10 @@ app.post('/api/equipment/weapon', wrapVercelHandler(weaponManagement));
 ```
 **Test**: Update all API endpoints, test API functionality, verify server integration
 
-#### **Step 58: Update PostDeploy Script**
-```solidity
-// Register all new systems in PostDeploy
-world.registerSystem(characterCoreId, characterCore, true);
-world.registerSystem(statSystemId, statSystem, true);
-world.registerSystem(levelSystemId, levelSystem, true);
-// ... etc for all systems
-```
-**Test**: Update PostDeploy script, test deployment, verify all systems are registered
-
-#### **Step 59: End-to-End Integration Testing**
+#### **Step 69: End-to-End Integration Testing**
 **Test**: Test complete game flow from character creation to combat to equipment to effects
 
-#### **Step 60: Performance & Gas Optimization**
+#### **Step 70: Performance & Gas Optimization**
 **Test**: Optimize gas costs, verify performance improvements, finalize modular architecture
 
 ---
@@ -1116,14 +1727,36 @@ interface CombatState {
 - [ ] Create `ArmorSystem`
 - [ ] Create `ConsumableSystem`
 - [ ] Create `CharacterCore` system
-- [ ] Update `mud.config.ts`
-- [ ] Regenerate MUD codegen
+- [ ] **Update `mud.config.ts` with all new systems**
+- [ ] **Regenerate MUD codegen**
+- [ ] **Update client calls for all new systems**
+- [ ] **Update API endpoints for all new systems**
 - [ ] Test individual systems
+- [ ] **Create PostDeploy-CharacterSystems.s.sol**
+- [ ] **Test incremental deployment**
+- [ ] **Validate end-to-end functionality**
 
-### **Phase 3: Integration**
-- [ ] Update API endpoints
-- [ ] Update client integration
-- [ ] Update PostDeploy script
+### **Phase 3: PostDeploy Modularization**
+- [ ] Create MinimalPostDeploy.s.sol
+- [ ] Create DeployEquipment.s.sol
+- [ ] Create DeployCharacters.s.sol
+- [ ] Create DeployCombat.s.sol
+- [ ] Create DeployItems.s.sol
+- [ ] Create DeployMonsters.s.sol
+- [ ] Create DeployEconomy.s.sol
+- [ ] Create DeployWorld.s.sol
+- [ ] Create FullPostDeploy.s.sol
+- [ ] **Create PostDeploy-EquipmentSystems.s.sol**
+- [ ] **Create PostDeploy-CombatSystems.s.sol**
+- [ ] **Create PostDeploy-EffectsSystems.s.sol**
+- [ ] Test all deployment scripts
+- [ ] Update deployment workflows
+
+### **Phase 4: Integration**
+- [ ] **Update mud.config.ts with all modular systems**
+- [ ] **Regenerate MUD codegen**
+- [ ] **Update all client system calls**
+- [ ] **Update all API endpoints**
 - [ ] Update test files
 - [ ] End-to-end testing
 - [ ] Performance testing
@@ -1182,6 +1815,7 @@ interface CombatState {
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
 | 1.0 | 2025-10-21 | Initial implementation plan | AI Assistant |
+| 2.0 | 2025-01-XX | Integrated PostDeploy modularization strategy | AI Assistant |
 
 ---
 

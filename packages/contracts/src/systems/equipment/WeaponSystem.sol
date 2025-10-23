@@ -159,7 +159,7 @@ contract WeaponSystem is System {
      * @param weaponId The weapon item ID
      * @return weaponStats The weapon statistics
      */
-    function getWeaponStats(uint256 weaponId) public view returns (WeaponStatsData memory weaponStats) {
+    function getWeaponStatsData(uint256 weaponId) public view returns (WeaponStatsData memory weaponStats) {
         require(Items.getItemType(weaponId) == ItemType.Weapon, "WEAPON: Not a weapon");
         weaponStats = WeaponStats.get(weaponId);
     }

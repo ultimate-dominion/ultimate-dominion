@@ -22,7 +22,7 @@ import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {TokenURI} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/TokenURI.sol";
 import {_tokenUriTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
-import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20System.sol";
+import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {IItemsSystem} from "@codegen/world/IItemsSystem.sol";
 import {ILootManagerSystem} from "@codegen/world/ILootManagerSystem.sol";
 import {Classes} from "@codegen/common.sol";
@@ -56,8 +56,8 @@ contract CharacterSystem is System {
         _class = Stats.getClass(characterId);
     }
 
-    function _goldToken() internal view returns (IERC20System goldToken) {
-        goldToken = IERC20System(UltimateDominionConfig.getGoldToken());
+    function _goldToken() internal view returns (IERC20Mintable goldToken) {
+        goldToken = IERC20Mintable(UltimateDominionConfig.getGoldToken());
     }
 
     function _characterToken() internal view returns (IERC721Mintable characterToken) {
@@ -253,8 +253,8 @@ contract CharacterSystem is System {
         return characterCounter;
     }
 
-    function _gold() internal view returns (IERC20System gold) {
-        return IERC20System(UltimateDominionConfig.getGoldToken());
+    function _gold() internal view returns (IERC20Mintable gold) {
+        return IERC20Mintable(UltimateDominionConfig.getGoldToken());
     }
 
     function getOwner(bytes32 characterId) public view returns (address) {

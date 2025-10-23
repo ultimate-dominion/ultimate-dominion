@@ -165,7 +165,8 @@ contract StatCalculatorTest is Test {
             equippedWeapons: new uint256[](0),
             equippedArmor: new uint256[](0),
             equippedSpells: new uint256[](0),
-            equippedConsumables: new uint256[](0)
+            equippedConsumables: new uint256[](0),
+            equippedAccessories: new uint256[](0)
         });
 
         AdjustedCombatStats memory combatStats = StatCalculator.calculateEquipmentBonuses(baseStats, equipmentStats);

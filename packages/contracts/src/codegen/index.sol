@@ -21,6 +21,7 @@ import { Items, ItemsData } from "./tables/Items.sol";
 import { StatRestrictions, StatRestrictionsData } from "./tables/StatRestrictions.sol";
 import { WeaponStats, WeaponStatsData } from "./tables/WeaponStats.sol";
 import { ArmorStats, ArmorStatsData } from "./tables/ArmorStats.sol";
+import { AccessoryStats, AccessoryStatsData } from "./tables/AccessoryStats.sol";
 import { SpellStats, SpellStatsData } from "./tables/SpellStats.sol";
 import { ConsumableStats, ConsumableStatsData } from "./tables/ConsumableStats.sol";
 import { StarterItems, StarterItemsData } from "./tables/StarterItems.sol";

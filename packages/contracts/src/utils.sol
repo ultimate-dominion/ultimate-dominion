@@ -3,7 +3,7 @@ pragma solidity >=0.8.24;
 
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {RESOURCE_TABLE} from "@latticexyz/store/src/storeResourceTypes.sol";
-import {AccessControlLib} from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
+import {AccessControl} from "@latticexyz/world/src/AccessControl.sol";
 import {WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
@@ -65,13 +65,13 @@ function _rngSystemId(bytes14 namespace) pure returns (ResourceId) {
 }
 
 function _requireOwner(address requiredAddress, address sender) view {
-    AccessControlLib.requireOwner(SystemRegistry.get(requiredAddress), sender);
+    AccessControl.requireOwner(SystemRegistry.get(requiredAddress), sender);
 }
 
 function _requireAccess(address requiredAddress, address sender) view {
-    AccessControlLib.requireAccess(SystemRegistry.get(requiredAddress), sender);
+    AccessControl.requireAccess(SystemRegistry.get(requiredAddress), sender);
 }
 
 function _requireSystemAddress(ResourceId resourceId, address sender) view {
-    AccessControlLib.requireAccess(resourceId, sender);
+    AccessControl.requireAccess(resourceId, sender);
 }

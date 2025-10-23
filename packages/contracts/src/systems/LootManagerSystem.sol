@@ -3,7 +3,7 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
-import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20System.sol";
+import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {WorldContextConsumer} from "@latticexyz/world/src/WorldContext.sol";
@@ -45,8 +45,8 @@ contract LootManagerSystem is ERC1155Holder, System {
     // all items and gold will be managed by this system.  ownership of both contracts will be on this system and permissions
     // distribute will be managed here.
 
-    function _goldToken() internal view returns (IERC20System goldToken) {
-        goldToken = IERC20System(UltimateDominionConfig.getGoldToken());
+    function _goldToken() internal view returns (IERC20Mintable goldToken) {
+        goldToken = IERC20Mintable(UltimateDominionConfig.getGoldToken());
     }
 
     function issueStarterItems(bytes32 characterId) public {

@@ -9,7 +9,8 @@ import {ERC721MetadataData} from "@latticexyz/world-modules/src/modules/erc721-p
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {IWorld} from "../src/codegen/world/IWorld.sol";
-import {CharacterSystem} from "../src/systems/CharacterSystem.sol";
+import {CharacterCore} from "../src/systems/character/CharacterCore.sol";
+import {StatSystem} from "../src/systems/character/StatSystem.sol";
 import {System} from "@latticexyz/world/src/System.sol";
 import {CHARACTERS_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, TOKEN_URI} from "../constants.sol";
 import {NoTransferHook} from "../src/NoTransferHook.sol";
@@ -33,13 +34,16 @@ contract DeployCharacters is Script {
             ERC721MetadataData({name: ERC721_NAME, symbol: ERC721_SYMBOL, baseURI: TOKEN_URI})
         );
 
-        ResourceId systemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "Characters", "Character");
+        ResourceId characterCoreId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "CharacterCore");
+        ResourceId statSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "StatSystem");
 
-        System systemContract = new CharacterSystem();
+        CharacterCore characterCore = new CharacterCore();
+        StatSystem statSystem = new StatSystem();
 
         ResourceId namespaceId = WorldResourceIdLib.encodeNamespace("Characters");
 
-        world.registerSystem(systemId, systemContract, true);
+        world.registerSystem(characterCoreId, characterCore, true);
+        world.registerSystem(statSystemId, statSystem, true);
 
         NoTransferHook characterHook = new NoTransferHook();
 

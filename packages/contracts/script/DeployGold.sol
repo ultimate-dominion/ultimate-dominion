@@ -11,7 +11,7 @@ import {IWorld} from "../src/codegen/world/IWorld.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {System} from "@latticexyz/world/src/System.sol";
 import {GOLD_NAMESPACE} from "../constants.sol";
-import {CharacterSystem} from "../src/systems/CharacterSystem.sol";
+import {CharacterCore} from "../src/systems/character/CharacterCore.sol";
 
 import {UltimateDominionConfig} from "../src/codegen/index.sol";
 import "forge-std/console.sol";
@@ -29,9 +29,10 @@ contract DeployGold is Script {
 
         ResourceId systemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "Gold", "GoldToken");
 
-        System systemContract = new CharacterSystem();
+        CharacterCore characterCore = new CharacterCore();
 
-        world.registerSystem(systemId, systemContract, true);
+        // Note: CharacterCore is already registered in DeployCharacters.sol
+        // This script just sets up the gold token
 
         goldToken.mint(worldAddress, 100_000_000 ether);
         UltimateDominionConfig.setGoldToken(address(goldToken));

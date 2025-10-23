@@ -42,6 +42,10 @@ export default defineWorld({
       name: "ArmorSystem",
       openAccess: true,
     },
+    AccessorySystem: {
+      name: "AccessorySystem",
+      openAccess: true,
+    },
   },
   enums: {
     Classes: [
@@ -50,7 +54,7 @@ export default defineWorld({
       "Mage", // 2
     ],
     RngRequestType: ["World", "CharacterStats", "Combat"],
-    ItemType: ["Weapon", "Armor", "Spell", "Consumable", "QuestItem"],
+    ItemType: ["Weapon", "Armor", "Spell", "Consumable", "QuestItem", "Accessory"],
     MobType: ["Monster", "NPC", "Shop"],
     Alignment: ["Loyalist", "Neutral", "Rebel", "Aggro"],
     EncounterType: ["PvP", "PvE", "World"],
@@ -191,6 +195,7 @@ export default defineWorld({
         equippedWeapons: "uint256[]",
         equippedSpells: "uint256[]",
         equippedConsumables: "uint256[]",
+        equippedAccessories: "uint256[]",
       },
     },
     ///////////////////////////////////////// ITEMS ///////////////////////////////////////////////////////
@@ -236,6 +241,19 @@ export default defineWorld({
         intModifier: "int256",
         minLevel: "uint256",
         strModifier: "int256",
+      },
+      key: ["itemId"],
+    },
+    AccessoryStats: {
+      schema: {
+        itemId: "uint256",
+        agiModifier: "int256",
+        armorModifier: "int256",
+        hpModifier: "int256",
+        intModifier: "int256",
+        minLevel: "uint256",
+        strModifier: "int256",
+        effects: "bytes32[]",
       },
       key: ["itemId"],
     },
