@@ -7,7 +7,6 @@ import {console} from "forge-std/console.sol";
 import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {StoreCore, EncodedLengths} from "@latticexyz/store/src/StoreCore.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
-import {StandardDelegationsModule} from "@latticexyz/world-modules/src/modules/std-delegations/StandardDelegationsModule.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
@@ -28,6 +27,7 @@ import {IWorld} from "@world/IWorld.sol";
 import {UltimateDominionConfig, Levels, MapConfig, Admin} from "@codegen/index.sol";
 import {CharacterSystem} from "@systems/CharacterSystem.sol";
 import {RngSystem} from "@systems/RngSystem.sol";
+import {WeaponSystem} from "@systems/equipment/WeaponSystem.sol";
 import {
     GOLD_NAMESPACE,
     CHARACTERS_NAMESPACE,
@@ -85,6 +85,7 @@ struct ResourceIds {
     ResourceId erc20SystemId;
     ResourceId erc20NamespaceId;
     ResourceId rngSystemId;
+    ResourceId weaponSystemId;
     ResourceId erc1155SystemId;
     ResourceId erc1155NamespaceId;
     ResourceId itemsSystemId;
@@ -122,6 +123,7 @@ contract PostDeploy is Script {
         world.installModule(new PuppetModule(), new bytes(0));
 
         _addRngSystem();
+        _addWeaponSystem();
 
         // install gold module
         IERC20Mintable goldToken = registerERC20(
@@ -300,6 +302,30 @@ contract PostDeploy is Script {
         );
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "getFee()", "getFee()");
         world.registerRootFunctionSelector(resourceIds.rngSystemId, "getEntropy()", "getEntropy()");
+    }
+
+    function _addWeaponSystem() internal {
+        System weaponSystem = new WeaponSystem();
+        
+        resourceIds.weaponSystemId = WorldResourceIdLib.encode({
+            typeId: RESOURCE_SYSTEM,
+            namespace: "UD",
+            name: "WeaponSystem"
+        });
+        
+        world.registerSystem(resourceIds.weaponSystemId, weaponSystem, true);
+        
+        // Register function selectors for WeaponSystem
+        world.registerRootFunctionSelector(resourceIds.weaponSystemId, "equipWeapon(bytes32,uint256)", "equipWeapon(bytes32,uint256)");
+        world.registerRootFunctionSelector(resourceIds.weaponSystemId, "unequipWeapon(bytes32,uint256)", "unequipWeapon(bytes32,uint256)");
+        world.registerRootFunctionSelector(resourceIds.weaponSystemId, "checkWeaponRequirements(bytes32,uint256)", "checkWeaponRequirements(bytes32,uint256)");
+        world.registerRootFunctionSelector(resourceIds.weaponSystemId, "isWeaponEquipped(bytes32,uint256)", "isWeaponEquipped(bytes32,uint256)");
+        world.registerRootFunctionSelector(resourceIds.weaponSystemId, "canEquipMoreWeapons(bytes32)", "canEquipMoreWeapons(bytes32)");
+        world.registerRootFunctionSelector(resourceIds.weaponSystemId, "getEquippedWeapons(bytes32)", "getEquippedWeapons(bytes32)");
+        world.registerRootFunctionSelector(resourceIds.weaponSystemId, "getWeaponStats(uint256)", "getWeaponStats(uint256)");
+        world.registerRootFunctionSelector(resourceIds.weaponSystemId, "checkWeaponEffect(uint256,bytes32)", "checkWeaponEffect(uint256,bytes32)");
+        world.registerRootFunctionSelector(resourceIds.weaponSystemId, "getWeaponEffects(uint256)", "getWeaponEffects(uint256)");
+        world.registerRootFunctionSelector(resourceIds.weaponSystemId, "calculateWeaponBonuses(bytes32)", "calculateWeaponBonuses(bytes32)");
     }
 
     function _createStarterItems() internal {
