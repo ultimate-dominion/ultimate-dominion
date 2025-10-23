@@ -10,11 +10,12 @@ import {
 
 import { type SetupNetworkResult } from '../mud/setupNetwork';
 
+// Use built-in unlimited delegation control - this is available without any modules
 const UNLIMITED_DELEGATION = resourceToHex({
   type: 'system',
   namespace: '',
   name: 'unlimited',
-});
+}) as Hex;
 
 export async function setupDelegation(
   network: SetupNetworkResult,
@@ -28,13 +29,17 @@ export async function setupDelegation(
   });
 
   try {
+    // Use the built-in unlimited delegation control ID
+    const delegationControlId = UNLIMITED_DELEGATION;
+    console.log('Using delegation control ID:', delegationControlId);
+
+    // Use the same approach as the working cast command - no gas estimation
     const delegationTx = await externalWalletClient.writeContract({
       account: externalWalletClient.account,
       address: network.worldContract.address,
       abi: IWorldAbi,
       functionName: 'registerDelegation',
-      args: [delegateeAddress, UNLIMITED_DELEGATION, '0x00'],
-      gas: 100000n, // Set explicit gas limit to avoid gas estimation issues
+      args: [delegateeAddress, delegationControlId, '0x00'],
     });
 
     console.log('Delegation transaction sent:', delegationTx);
