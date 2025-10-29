@@ -26,7 +26,7 @@ import {
     AdventureEscrow
 } from "@codegen/index.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
-import {_characterSystemId, _requireAccess, _lootManagerSystemId} from "../utils.sol";
+import {_characterCoreId, _requireAccess, _lootManagerSystemId} from "../utils.sol";
 import {WORLD_NAMESPACE, BASE_GOLD_DROP, EXP_MODIFIER, PVP_GOLD_DENOMINATOR, MAX_LEVEL} from "../../constants.sol";
 import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
 
@@ -50,7 +50,7 @@ contract LootManagerSystem is ERC1155Holder, System {
     }
 
     function issueStarterItems(bytes32 characterId) public {
-        require(_msgSender() == Systems.getSystem(_characterSystemId(WORLD_NAMESPACE)), "ITEMS: Invalid System");
+        require(_msgSender() == Systems.getSystem(_characterCoreId(WORLD_NAMESPACE)), "ITEMS: Invalid System");
         StarterItemsData memory starterItems = IWorld(_world()).UD__getStarterItems(Stats.getClass(characterId));
 
         address owner = IWorld(_world()).UD__getOwner(characterId);

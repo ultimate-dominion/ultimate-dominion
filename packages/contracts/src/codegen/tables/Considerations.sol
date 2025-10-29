@@ -17,7 +17,7 @@ import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/Encoded
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 // Import user types
-import { TokenType } from "../common.sol";
+import { TokenType } from "./../common.sol";
 
 struct ConsiderationsData {
   TokenType tokenType;

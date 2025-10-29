@@ -729,6 +729,12 @@ src/libraries/AttackTypeUtils.sol
 ```
 **Test**: Deploy library, test attack type calculations, verify rock-paper-scissors logic
 
+#### Anvil Validation (Phase 1)
+- Contracts: Libraries compile and are imported by consumer systems (CombatSystem, EffectsSystem, Character/Equipment systems).
+- PostDeploy: Re-run core postdeploy to ensure no regressions.
+- Client/API: No interface changes expected; smoke test flows.
+- Anvil E2E: Fresh Anvil → run PostDeploy-CoreGameState → run TestFullFlow to confirm mint → roll → enter still succeeds.
+
 ### **Phase 2: Character System Modularization (Steps 7-12)**
 
 #### **Step 7: Create CharacterCore System**
@@ -781,6 +787,13 @@ const statResult = await world.UD__statSystem_rollStats(...);
 ```
 **Test**: Update client, test character creation flow, verify end-to-end functionality
 **Incremental Testing**: Test CharacterCore + StatSystem integration with existing systems
+
+#### Anvil Validation (Phase 2)
+- Contracts: CharacterCore, StatSystem, LevelSystem compile and integrate.
+- Config/Codegen: Add systems to mud.config.ts; run tablegen/codegen.
+- PostDeploy: Grant ERC721System to world and CharacterCore; transfer Characters namespace to CharacterCore; register systems/selectors if needed.
+- Client/API: Update calls/endpoints to new interfaces.
+- Anvil E2E: PostDeploy-CoreGameState → TestFullFlow; verify Characters/CharacterOwner/Stats; confirm enter game succeeds.
 
 #### **Step 11b: Update API Character Endpoints**
 ```typescript
@@ -883,6 +896,13 @@ const weaponResult = await world.UD__weaponSystem_equipWeapon(...);
 **Test**: Update client, test equipment flow, verify end-to-end functionality
 **Incremental Testing**: Test EquipmentCore + WeaponSystem + CharacterCore integration
 
+#### Anvil Validation (Phase 3)
+- Contracts: EquipmentCore, WeaponSystem, ArmorSystem compile/integrate.
+- Config/Codegen: Add to mud.config.ts; regenerate codegen.
+- PostDeploy: Register systems/selectors; seed starter equipment if applicable.
+- Client/API: Update equipment endpoints and client flows.
+- Anvil E2E: Equip starter items where applicable; verify CharacterEquipment updates and flows.
+
 #### **Step 18b: Update API Equipment Endpoints**
 ```typescript
 // Update API to use new equipment system interfaces
@@ -970,6 +990,13 @@ const magicResult = await world.UD__magicCombat_attack(...);
 ```
 **Test**: Update client, test combat flow, verify end-to-end functionality
 **Incremental Testing**: Test PhysicalCombat + MagicCombat + Equipment + Character integration
+
+#### Anvil Validation (Phase 4)
+- Contracts: PhysicalCombat, MagicCombat, StatusEffects compile and route via coordinator.
+- Config/Codegen: Add to mud.config.ts; regenerate codegen.
+- PostDeploy: Register systems/selectors; seed minimal combat content.
+- Client/API: Split combat endpoints; update client.
+- Anvil E2E: Execute physical and magic actions; verify outcomes/tables (e.g., CombatOutcome).
 
 #### **Step 23b: Update API Combat Endpoints**
 ```typescript
@@ -1065,6 +1092,13 @@ world.registerSystem(effectProcessorId, effectProcessor, true);
 #### **Step 30: End-to-End Effects Testing**
 **Test**: Test complete effect flow from application to processing to removal
 
+#### Anvil Validation (Phase 5)
+- Contracts: EffectsCore and EffectProcessor compile and integrate.
+- Config/Codegen: Add to mud.config.ts; regenerate codegen.
+- PostDeploy: Register systems/selectors; seed sample effects.
+- Client/API: Add status-effect endpoints; client apply/remove flows.
+- Anvil E2E: Validate WorldStatusEffects and applied-effect lifecycle across turns/time.
+
 ### **Phase 6: Items System Modularization (Steps 31-36)**
 
 #### **Step 31: Create ItemsCore System**
@@ -1118,6 +1152,13 @@ world.registerSystem(itemTemplatesId, itemTemplates, true);
 #### **Step 36: End-to-End Items Testing**
 **Test**: Test complete item flow from creation to usage to management
 
+#### Anvil Validation (Phase 6)
+- Contracts: ItemsCore, ItemTemplates compile/integrate with ItemsSystem.
+- Config/Codegen: Add to mud.config.ts; regenerate codegen.
+- PostDeploy: Register systems/selectors; seed items/templates.
+- Client/API: Update item endpoints and UI flows.
+- Anvil E2E: Verify item creation/usage reflected in tables and interactions.
+
 ### **Phase 7: Map System Modularization (Steps 37-42)**
 
 #### **Step 37: Create MapCore System**
@@ -1170,6 +1211,13 @@ world.registerSystem(locationSystemId, locationSystem, true);
 
 #### **Step 42: End-to-End Map Testing**
 **Test**: Test complete map flow from movement to location changes to navigation
+
+#### Anvil Validation (Phase 7)
+- Contracts: MapCore, LocationSystem compile/integrate with MapSystem.
+- Config/Codegen: Add to mud.config.ts; regenerate codegen.
+- PostDeploy: Register systems/selectors; seed basic map config.
+- Client/API: Update movement/navigation endpoints and client flows.
+- Anvil E2E: Move entities and verify Position/EntitiesAtPosition updates.
 
 ### **Phase 8: Encounter System Modularization (Steps 43-48)**
 
@@ -1237,6 +1285,13 @@ world.registerSystem(pvpSystemId, pvpSystem, true);
 ```
 **Test**: Deploy with PostDeploy, test encounter functionality, verify system registration
 
+#### Anvil Validation (Phase 8)
+- Contracts: EncounterCore, PvESystem, PvPSystem compile/integrate with EncounterSystem.
+- Config/Codegen: Add to mud.config.ts; regenerate codegen.
+- PostDeploy: Register systems/selectors; seed basic encounter content.
+- Client/API: Update encounter creation/turn processing endpoints.
+- Anvil E2E: Create PvE and PvP encounters; verify lifecycle tables.
+
 ### **Phase 9: Mob System Modularization (Steps 49-54)**
 
 #### **Step 49: Create MobCore System**
@@ -1302,6 +1357,13 @@ world.registerSystem(monsterSystemId, monsterSystem, true);
 world.registerSystem(npcSystemId, npcSystem, true);
 ```
 **Test**: Deploy with PostDeploy, test mob functionality, verify system registration
+
+#### Anvil Validation (Phase 9)
+- Contracts: MobCore, MonsterSystem, NPCSystem compile/integrate with MobSystem.
+- Config/Codegen: Add to mud.config.ts; regenerate codegen.
+- PostDeploy: Register systems/selectors; seed monster/NPC data.
+- Client/API: Update mob spawn/interact endpoints.
+- Anvil E2E: Spawn mobs and interact; verify Mobs/MobStats tables.
 
 ### **Phase 10: PostDeploy Modularization (Steps 55-65)**
 
@@ -1412,6 +1474,12 @@ forge script DeployEquipment.s.sol --rpc-url localhost:8545
 forge script FullPostDeploy.s.sol --rpc-url mainnet --broadcast
 ```
 **Test**: Test all deployment workflows, verify CI/CD integration
+
+#### Anvil Validation (Phase 10)
+- Contracts: All modular systems/scripts are idempotent on fresh Anvil.
+- PostDeploy: Minimal/Feature/Full scripts run; verification passes.
+- Client/API: End-to-end flows work against fresh local state.
+- Anvil E2E: Run Minimal → feature slices → FullPostDeploy and TestFullFlow; confirm stable E2E behavior.
 
 #### **Step 65: End-to-End PostDeploy Testing**
 **Test**: Test complete deployment flow, verify all systems work together, validate complete game state
@@ -1820,3 +1888,131 @@ interface CombatState {
 ---
 
 **Next Steps**: Review and approve this plan, then begin Phase 1 implementation.
+
+---
+
+## 🧪 Local Anvil Testing Process (Contracts + PostDeploy + Client + API)
+
+This section formalizes the end-to-end Anvil workflow to validate every modularization step in parallel across smart contracts, postdeploy scripts, client, and API.
+
+### Anvil Environment
+
+```bash
+# 1) Start a fresh local chain
+anvil --chain-id 31337
+
+# 2) Recommended cleanup when encountering cache/state issues
+pnpm store prune            # frees disk from pnpm global cache
+forge clean                 # clears foundry build cache
+
+# 3) (Optional) Restart Anvil between runs to reset state
+# stop the process (Ctrl+C) and start anvil again
+```
+
+### Required Env Vars for Scripts
+
+```bash
+export PRIVATE_KEY=<anvil_account_private_key>  # e.g., first default Anvil key
+export WORLD_ADDRESS=<deployed_world_address>   # populated after deployment
+```
+
+### Core Deployment on Anvil
+
+You can use either the minimal core script (when available) or the current core initializer.
+
+```bash
+# When MinimalPostDeploy.s.sol exists (Tier 1)
+forge script script/MinimalPostDeploy.s.sol \
+  --rpc-url http://127.0.0.1:8545 --broadcast
+
+# Current repository core initializer
+forge script script/PostDeploy-CoreGameState.s.sol \
+  --rpc-url http://127.0.0.1:8545 --broadcast
+```
+
+What this must ensure (and be verified after run):
+- PuppetModule is installed (needed for ERC20/721 registration)
+- ERC20 Gold is registered and minted; `UltimateDominionConfig.goldToken` set
+- ERC721 Characters is registered; `UltimateDominionConfig.characterToken` set
+- `ERC721System` access granted to world and `CharacterCore`; `Characters` namespace ownership transferred to `CharacterCore`
+- `RngSystem` present and callable (registered if excluded from `mud.config.ts`)
+
+### Delegation and Funding Order (Critical)
+
+Delegation must be registered before funding a burner wallet.
+
+```solidity
+// In test scripts, do:
+// 1) world.registerDelegation(burner, unlimitedDelegationId, "")
+// 2) vm.deal(burner, 0.1 ether)
+```
+
+### End-to-End Anvil Test Script
+
+Use an E2E script to validate the full user flow locally. The repository includes `script/TestFullFlow.s.sol` which:
+- Reads `worldAddress` from `deploys/31337/latest.json`
+- Registers delegation → funds burner → mints character → rolls stats → enters game
+- Uses `StoreSwitch.setStoreAddress(worldAddress)` to read MUD tables
+
+```bash
+forge script script/TestFullFlow.s.sol \
+  --rpc-url http://127.0.0.1:8545 --broadcast -vvvv
+```
+
+Troubleshooting tips:
+- Use `-vvvv` for detailed traces
+- If you see `World_AccessDenied`, confirm ERC721System grants and namespace ownership
+- If you see `ResourceNotFound sy:puppet:Factory`, ensure PuppetModule is installed
+- If disk is full, run `pnpm store prune`, then restart Anvil and `forge clean`
+
+### Per-Phase Parallel Validation (Contracts + PostDeploy + Client + API + Anvil)
+
+Every time a step introduces or changes a system, complete ALL of the following before marking the step done:
+
+1) Smart Contract
+   - Implement or update the system/library
+   - Compile successfully
+
+2) MUD Config + Codegen
+   - Update `mud.config.ts` with the new/changed systems
+   - `pnpm mud tablegen && pnpm mud codegen`
+
+3) PostDeploy
+   - Add registrations, access grants, selectors, content seeding as needed
+   - Ensure idempotency (try/catch resource-already-exists)
+
+4) Client + API
+   - Update client calls to new system interfaces
+   - Update API endpoints to new interfaces
+
+5) Anvil E2E
+   - Deploy core on Anvil
+   - Run the E2E script(s) that exercise the changed functionality
+   - Verify on-chain tables where relevant (e.g., `Stats`, `Characters`)
+
+### Phase-to-Anvil Checklist Mapping
+
+- Phase 1 (Libraries)
+  - Contracts: Libraries exist and are imported by systems
+  - PostDeploy: No system registration changes required (usually)
+  - Client/API: No interface changes unless exposed
+  - Anvil E2E: Re-run TestFullFlow to ensure behavior unchanged or improved
+
+- Phase 2 (Character: CharacterCore, StatSystem, LevelSystem)
+  - Contracts: Systems implemented and integrated
+  - Config/Codegen: Systems added; regen codegen
+  - PostDeploy: Register systems as needed, ensure ERC721 grants and ownership to `CharacterCore`
+  - Client/API: Update to call CharacterCore/StatSystem
+  - Anvil E2E: Verify mint → roll stats → enter game completes
+
+- Subsequent Phases (Equipment, Combat, Effects, Items, Map, Encounters, Mobs)
+  - Follow the same parallel sequence; each feature slice must pass Anvil E2E before moving on
+
+### Common Anvil Pitfalls Captured in This Repo
+
+- `World_AccessDenied` during character mint → grant `ERC721System` access to world and `CharacterCore`, transfer `Characters` namespace ownership to `CharacterCore`
+- Missing PuppetModule → install before registering ERC20/721
+- RNG on Anvil (chainId 31337) → use sequence-based entropy; ensure `RngSystem` is registered and its selector exposed if excluded from config
+- Console logging in scripts → use type-specific `console.logInt`, `console.logUint`, etc.
+
+This Anvil workflow is mandatory at each step of the modularization plan to ensure contracts, postdeploy, client, and API evolve in lockstep with verifiable end-to-end behavior.

@@ -2700,7 +2700,7 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "view"
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -7779,6 +7779,4 @@ declare const abi: [
     "name": "World_UnlimitedDelegationNotAllowed",
     "inputs": []
   }
-];
-
-export default abi;
+]; export default abi;

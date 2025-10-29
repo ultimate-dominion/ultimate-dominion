@@ -23,7 +23,7 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "view"
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -388,6 +388,4 @@ declare const abi: [
       }
     ]
   }
-];
-
-export default abi;
+]; export default abi;

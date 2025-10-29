@@ -12,6 +12,7 @@ bytes16 constant ERC20_SYSTEM_NAME = "ERC20System";
 bytes16 constant ERC721_SYSTEM_NAME = "ERC721System";
 bytes16 constant ERC1155_SYSTEM_NAME = "ERC1155System";
 bytes16 constant CHARACTER_SYSTEM_NAME = "CharacterSystem";
+bytes16 constant CHARACTER_CORE_NAME = "CharacterCore";
 bytes16 constant RNG_SYSTEM_NAME = "RngSystem";
 bytes16 constant ITEMS_SYSTEM_NAME = "ItemsSystem";
 bytes16 constant SHOP_SYSTEM_NAME = "ShopSystem";
@@ -30,6 +31,10 @@ function _erc721SystemId(bytes14 namespace) pure returns (ResourceId) {
 
 function _characterSystemId(bytes14 namespace) pure returns (ResourceId) {
     return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: CHARACTER_SYSTEM_NAME});
+}
+
+function _characterCoreId(bytes14 namespace) pure returns (ResourceId) {
+    return WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: namespace, name: CHARACTER_CORE_NAME});
 }
 
 function _erc1155SystemId(bytes14 namespace) pure returns (ResourceId) {

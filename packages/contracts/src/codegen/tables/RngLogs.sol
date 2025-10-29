@@ -17,7 +17,7 @@ import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/Encoded
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 // Import user types
-import { RngRequestType } from "../common.sol";
+import { RngRequestType } from "./../common.sol";
 
 struct RngLogsData {
   uint64 sequenceNumber;

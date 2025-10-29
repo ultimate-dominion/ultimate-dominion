@@ -58,8 +58,8 @@ contract TestFullFlow is Script {
         // Step 4: Mint a character
         console.log("\nStep 4: Minting character...");
         bytes32 characterId;
-        // Use a unique name based on block timestamp
-        bytes32 uniqueName = bytes32(abi.encodePacked("Hero_", block.timestamp));
+        // Use a unique deterministic name per run
+        bytes32 uniqueName = keccak256(abi.encodePacked("Hero_", block.timestamp, block.number, testAccount));
         try world.UD__mintCharacter(testAccount, uniqueName, "ipfs://bogus-uri") returns (bytes32 id) {
             characterId = id;
             console.log("SUCCESS: Character minted!");
@@ -123,8 +123,25 @@ contract TestFullFlow is Script {
         
         // Step 7: Enter the game
         console.log("\nStep 7: Entering the game...");
+        // Extra diagnostics before entering game
+        try world.UD__getOwner(characterId) returns (address ownerAddr) {
+            console.log("Owner (from storage):", ownerAddr);
+        } catch {}
+        try world.UD__isCharacterLocked(characterId) returns (bool isLocked) {
+            console.log("Locked before enter:");
+            console.logBool(isLocked);
+        } catch {}
+        try world.UD__basicCharacterValidation(characterId) returns (bool isValid) {
+            console.log("Valid character (basic validation):");
+            console.logBool(isValid);
+        } catch {}
         try world.UD__enterGame(characterId) {
             console.log("SUCCESS: Character entered the game");
+            // Confirm lock state after enter
+            try world.UD__isCharacterLocked(characterId) returns (bool isLockedAfter) {
+                console.log("Locked after enter:");
+                console.logBool(isLockedAfter);
+            } catch {}
         } catch Error(string memory reason) {
             console.log("FAILED: Enter game reverted with reason:");
             console.log(reason);
