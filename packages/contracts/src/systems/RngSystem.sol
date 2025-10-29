@@ -51,10 +51,9 @@ contract RngSystem is System {
         RngLogs.set(sequenceNumber, rngLog);
 
         uint256 rng;
-        uint256 timesCalled;
         if (block.chainid == 31337) {
-            rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled + 1234567890) ** 8)));
-            timesCalled++;
+            // For Anvil testing: use sequence number to ensure uniqueness
+            rng = uint256(keccak256(abi.encode(block.timestamp, sequenceNumber, userRandomNumber, _msgSender())));
         } else {
             rng = uint256(keccak256(abi.encode(block.prevrandao, userRandomNumber, _msgSender())));
         }
@@ -73,7 +72,7 @@ contract RngSystem is System {
         RngRequestType requestType = RandomNumbers.getRequestType(sequenceNumber);
         bytes memory _data = RandomNumbers.getArbitraryData(sequenceNumber);
 
-        RngLogs.setRandomNumber(_getCounter(1), randomNumber);
+        RngLogs.setRandomNumber(sequenceNumber, randomNumber);
 
         if (requestType == RngRequestType.CharacterStats) {
             bytes32 characterId = abi.decode(_data, (bytes32));
