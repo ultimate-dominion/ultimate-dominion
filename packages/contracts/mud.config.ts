@@ -594,5 +594,5 @@ export default defineWorld({
       type: "offchainTable",
     },
   },
-  excludeSystems: ["RngSystem"],
+  excludeSystems: ["RngSystem", "CharacterSystem"],
 });

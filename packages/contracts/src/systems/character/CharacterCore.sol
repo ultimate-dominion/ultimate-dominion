@@ -58,12 +58,12 @@ contract CharacterCore is System {
         uint256 tokenId = Counters.getCounter(address(this), 0) + 1;
         Counters.setCounter(address(this), 0, tokenId);
         
-        // Create character ID
-        characterId = bytes32(abi.encodePacked(CHARACTERS_NAMESPACE, bytes14(uint112(tokenId))));
-        
-        // Mint character NFT
+        // Mint character NFT first (needed for characterId encoding)
         IERC721Mintable characterToken = IERC721Mintable(UltimateDominionConfig.getCharacterToken());
         characterToken.mint(account, tokenId);
+        
+        // Create character ID using the same format as old CharacterSystem: ownerAddress << 96 | tokenId
+        characterId = bytes32(uint256(uint160(account)) << 96 | tokenId);
         
         // Set token URI
         TokenURI.set(_tokenUriTableId(CHARACTERS_NAMESPACE), tokenId, tokenUri);
@@ -158,13 +158,12 @@ contract CharacterCore is System {
     }
 
     /**
-     * @dev Get character token ID
-     * @param characterId The character ID
+     * @dev Get character token ID from characterId encoding
+     * @param characterId The character ID (format: ownerAddress << 96 | tokenId)
      * @return The token ID
      */
-    function getCharacterTokenId(bytes32 characterId) public view returns (uint256) {
-        CharactersData memory charData = Characters.get(characterId);
-        return charData.tokenId;
+    function getCharacterTokenId(bytes32 characterId) public pure returns (uint256) {
+        return uint256(uint96(uint256(characterId)));
     }
 
     /**
