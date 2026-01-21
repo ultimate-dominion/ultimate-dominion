@@ -19,11 +19,9 @@ import {
     WeaponStatsData,
     ArmorStats,
     ArmorStatsData,
-    SpellStats,
     ConsumableStats,
     StatRestrictions,
-    StatRestrictionsData,
-    ConsumableStats
+    StatRestrictionsData
 } from "@codegen/index.sol";
 import {ItemType} from "@codegen/common.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
@@ -68,10 +66,6 @@ contract EquipmentSystem is System {
                 // Keep simple equip list management for consumables until dedicated system method exists
                 require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
                 CharacterEquipment.pushEquippedConsumables(characterId, itemId);
-            } else if (itemType == ItemType.Spell) {
-                // Maintain existing behavior for spells for now
-                require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
-                CharacterEquipment.pushEquippedSpells(characterId, itemId);
             } else {
                 revert("EQUIPMENT: Unsupported item type");
             }
@@ -99,17 +93,6 @@ contract EquipmentSystem is System {
             uint256[] memory equippedArmor = CharacterEquipment.getEquippedArmor(characterId);
             for (uint256 i; i < equippedArmor.length;) {
                 if (equippedArmor[i] == itemId) {
-                    _isEquipped = true;
-                    break;
-                }
-                {
-                    i++;
-                }
-            }
-        } else if (itemData.itemType == ItemType.Spell) {
-            uint256[] memory equippedSpells = CharacterEquipment.getEquippedSpells(characterId);
-            for (uint256 i; i < equippedSpells.length;) {
-                if (equippedSpells[i] == itemId) {
                     _isEquipped = true;
                     break;
                 }
@@ -154,15 +137,6 @@ contract EquipmentSystem is System {
             if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
             if (isLevel && hasStats) canUse = true;
         }
-        if (itemData.itemType == ItemType.Spell) {
-            bool isLevel = character.level >= SpellStats.getMinLevel(itemId);
-            bool hasStats = true;
-            if (statRestrictions.minAgility > character.agility) hasStats = false;
-            if (statRestrictions.minStrength > character.strength) hasStats = false;
-            if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;
-
-            if (isLevel && hasStats) canUse = true;
-        }
         if (itemData.itemType == ItemType.Consumable) {
             bool isLevel = character.level >= ConsumableStats.getMinLevel(itemId);
             bool hasStats = true;
@@ -187,15 +161,11 @@ contract EquipmentSystem is System {
         } else {
             // check and equip items
             totalLength += CharacterEquipment.lengthEquippedWeapons(characterId);
-            totalLength += CharacterEquipment.lengthEquippedSpells(characterId);
             totalLength += CharacterEquipment.lengthEquippedConsumables(characterId);
             require(totalLength < 4, "too many items equipped");
 
             if (itemType == ItemType.Weapon) {
                 CharacterEquipment.pushEquippedWeapons(characterId, itemId);
-            }
-            if (itemType == ItemType.Spell) {
-                CharacterEquipment.pushEquippedSpells(characterId, itemId);
             }
             if (itemType == ItemType.Consumable) {
                 CharacterEquipment.pushEquippedConsumables(characterId, itemId);
@@ -252,14 +222,6 @@ contract EquipmentSystem is System {
         } else if (itemType == ItemType.Armor) {
             // Delegate to ArmorSystem
             success = IWorld(_world()).UD__unequipArmor(characterId, itemId);
-        } else if (itemType == ItemType.Spell) {
-            uint256[] memory sortedArray =
-                _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
-            if (sortedArray[sortedArray.length - 1] == itemId) {
-                CharacterEquipment.setEquippedSpells(characterId, sortedArray);
-                CharacterEquipment.popEquippedSpells(characterId);
-                success = true;
-            }
         } else if (itemType == ItemType.Consumable) {
             uint256[] memory sortedArray =
                 _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedConsumables(characterId));
@@ -372,17 +334,6 @@ contract EquipmentSystem is System {
                     i++;
                 }
             }
-        } else if (itemType == ItemType.Spell) {
-            bytes32[] memory effects = SpellStats.getEffects(itemId);
-            for (uint256 i; i < effects.length;) {
-                if (effectId == effects[i]) {
-                    hasAction = true;
-                    break;
-                }
-                {
-                    i++;
-                }
-            }
         } else if (itemType == ItemType.Consumable) {
             bytes32[] memory effects = ConsumableStats.getEffects(itemId);
             for (uint256 i; i < effects.length;) {
@@ -401,8 +352,6 @@ contract EquipmentSystem is System {
         ItemType itemType = Items.getItemType(itemId);
         if (itemType == ItemType.Weapon) {
             effects = WeaponStats.getEffects(itemId);
-        } else if (itemType == ItemType.Spell) {
-            effects = SpellStats.getEffects(itemId);
         } else if (itemType == ItemType.Consumable) {
             effects = ConsumableStats.getEffects(itemId);
         }
