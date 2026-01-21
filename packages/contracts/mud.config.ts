@@ -37,6 +37,10 @@ export default defineWorld({
       name: "LevelSystem",
       openAccess: true,
     },
+    ImplicitClassSystem: {
+      name: "ImplicitClassSys",
+      openAccess: true,
+    },
     // Equipment Systems
     WeaponSystem: {
       name: "WeaponSystem",
@@ -64,6 +68,11 @@ export default defineWorld({
     },
     StatusEffects: {
       name: "StatusEffects",
+      openAccess: true,
+    },
+    // World Action System - consumables and world interactions
+    WorldActionSystem: {
+      name: "WorldActionSys",
       openAccess: true,
     },
   },

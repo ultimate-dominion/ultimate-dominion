@@ -486,6 +486,15 @@ contract PostDeploy is Script {
         // Set max players
         UltimateDominionConfig.setMaxPlayers(100);
         console.log("  Max players: 100");
+
+        // Set system addresses for item/gold approvals
+        // Systems run via delegatecall, so they execute as the World address
+        UltimateDominionConfig.setLootManager(address(world));
+        console.log("  LootManager address:", address(world));
+        UltimateDominionConfig.setShop(address(world));
+        console.log("  Shop address:", address(world));
+        UltimateDominionConfig.setMarketplace(address(world));
+        console.log("  Marketplace address:", address(world));
     }
 
     function _transferItemsOwnership() internal {

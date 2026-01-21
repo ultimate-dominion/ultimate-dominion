@@ -48,11 +48,14 @@ type SystemCallReturn = Promise<{
 }>;
 
 const getContractError = (error: unknown): string => {
+  console.error('[getContractError] Full error:', error);
   // Handle non-viem errors gracefully
   if (!error || typeof error !== 'object' || !('walk' in error)) {
     if (error instanceof Error) {
+      console.error('[getContractError] Error message:', error.message);
       return error.message;
     }
+    console.error('[getContractError] Unknown error type');
     return 'An error occurred calling the contract.';
   }
 
@@ -993,6 +996,10 @@ export function createSystemCalls(
   ): SystemCallReturn => {
     try {
       const characterId = entity.toString() as `0x${string}`;
+      console.log('[useCombatConsumableItem] characterId:', characterId);
+      console.log('[useCombatConsumableItem] tokenId:', tokenId);
+      console.log('[useCombatConsumableItem] delegatorAddress:', delegatorAddress);
+      console.log('[useCombatConsumableItem] worldContract.address:', worldContract.address);
 
       await publicClient.simulateContract({
         abi: worldContract.abi,

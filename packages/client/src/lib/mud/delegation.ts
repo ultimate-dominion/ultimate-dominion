@@ -1,4 +1,3 @@
-import { resourceToHex } from '@latticexyz/common';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import {
   type Account,
@@ -12,11 +11,9 @@ import {
 import { type SetupNetworkResult } from '../mud/setupNetwork';
 
 // Use built-in unlimited delegation control - this is available without any modules
-const UNLIMITED_DELEGATION = resourceToHex({
-  type: 'system',
-  namespace: '',
-  name: 'unlimited',
-}) as Hex;
+// Hardcoded to match MUD's UNLIMITED_DELEGATION constant from @latticexyz/world/src/constants.sol
+// Format: RESOURCE_SYSTEM (2 bytes "sy") + ROOT_NAMESPACE (14 zero bytes) + name (16 bytes "unlimited" padded)
+const UNLIMITED_DELEGATION: Hex = '0x73790000000000000000000000000000756e6c696d6974656400000000000000';
 
 export async function setupDelegation(
   network: SetupNetworkResult,

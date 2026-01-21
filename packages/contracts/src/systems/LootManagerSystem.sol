@@ -413,9 +413,8 @@ contract LootManagerSystem is ERC1155Holder, System {
             _requireAccess(address(this), _msgSender());
         }
 
-        // address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
-        //will require approval
-        IERC1155System(UltimateDominionConfig.getItems()).safeTransferFrom(playerAddr, address(this), itemId, 1, "");
+        // Burn the item directly via table writes (bypasses ERC1155 approval requirement)
+        _burnItemDirect(playerAddr, itemId, 1);
     }
 
     /**
@@ -464,5 +463,23 @@ contract LootManagerSystem is ERC1155Holder, System {
         // Update total supply
         uint256 currentSupply = TotalSupply.getTotalSupply(_totalSupplyTableId(ITEMS_NAMESPACE), itemId);
         TotalSupply.setTotalSupply(_totalSupplyTableId(ITEMS_NAMESPACE), itemId, currentSupply + amount);
+    }
+
+    /**
+     * @dev Burn items directly via table writes (bypasses ERC1155 approval requirement)
+     * Used when consuming items - no approval needed since we're decrementing balance directly
+     */
+    function _burnItemDirect(address from, uint256 itemId, uint256 amount) internal {
+        ResourceId ownersTableId = _ownersTableId(ITEMS_NAMESPACE);
+        ResourceId totalSupplyTableId = _totalSupplyTableId(ITEMS_NAMESPACE);
+
+        // Update owner balance
+        uint256 currentBalance = Owners.getBalance(ownersTableId, from, itemId);
+        require(currentBalance >= amount, "Insufficient item balance");
+        Owners.setBalance(ownersTableId, from, itemId, currentBalance - amount);
+
+        // Update total supply
+        uint256 currentSupply = TotalSupply.getTotalSupply(totalSupplyTableId, itemId);
+        TotalSupply.setTotalSupply(totalSupplyTableId, itemId, currentSupply - amount);
     }
 }
