@@ -4,39 +4,58 @@ pragma solidity >=0.8.24;
 import "forge-std/Test.sol";
 import {StatCalculator} from "../src/libraries/StatCalculator.sol";
 import {StatsData, WeaponStatsData, ArmorStatsData, CharacterEquipmentData} from "@codegen/index.sol";
-import {Classes} from "@codegen/common.sol";
+import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 
 contract StatCalculatorTest is Test {
-    function testCalculateLevelFromExperience() public {
-        uint256[] memory levelsTable = new uint256[](10);
-        levelsTable[0] = 0;    // Level 1
-        levelsTable[1] = 100;  // Level 2
-        levelsTable[2] = 250;  // Level 3
-        levelsTable[3] = 450;  // Level 4
-        levelsTable[4] = 700;  // Level 5
-        levelsTable[5] = 1000; // Level 6
-        levelsTable[6] = 1350; // Level 7
-        levelsTable[7] = 1750; // Level 8
-        levelsTable[8] = 2200; // Level 9
-        levelsTable[9] = 2700; // Level 10
+    function _createDefaultStatsData() internal pure returns (StatsData memory) {
+        return StatsData({
+            strength: 10,
+            agility: 8,
+            intelligence: 6,
+            class: Classes.Warrior,
+            maxHp: 20,
+            currentHp: 20,
+            level: 1,
+            experience: 0,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
+        });
+    }
 
-        // Test level 1
+    function testCalculateLevelFromExperience() public {
+        // Create array with 100 levels (MAX_LEVEL)
+        uint256[] memory levelsTable = new uint256[](100);
+
+        // Set up experience thresholds with increasing requirements
+        for (uint256 i = 0; i < 100; i++) {
+            // Simple formula: level 1 = 0 XP, then increasing exponentially
+            if (i == 0) {
+                levelsTable[i] = 0;
+            } else {
+                levelsTable[i] = levelsTable[i - 1] + (i * 100);
+            }
+        }
+
+        // Test level 1 (0-99 XP)
         uint256 level = StatCalculator.calculateLevelFromExperience(50, levelsTable);
         assertEq(level, 1);
 
-        // Test level 5
-        level = StatCalculator.calculateLevelFromExperience(750, levelsTable);
+        // Test level 5 (levelsTable[4] to levelsTable[5] - 1)
+        level = StatCalculator.calculateLevelFromExperience(1100, levelsTable);
         assertEq(level, 5);
 
-        // Test max level
-        level = StatCalculator.calculateLevelFromExperience(3000, levelsTable);
-        assertEq(level, 10);
+        // Test max level (XP >= levelsTable[99])
+        level = StatCalculator.calculateLevelFromExperience(1000000, levelsTable);
+        assertEq(level, 100);
     }
 
     function testGenerateRandomStats() public {
         uint256 randomNumber = 123456789;
-        
+
         // Test Warrior stats
         StatsData memory warriorStats = StatCalculator.generateRandomStats(randomNumber, Classes.Warrior);
         assertTrue(warriorStats.strength >= 5); // 3 base + 2 class bonus
@@ -62,99 +81,64 @@ contract StatCalculatorTest is Test {
         assertTrue(mageStats.class == Classes.Mage);
     }
 
-    function testCalculateHpBonus() public {
-        // Test Warrior HP bonus (level 3 % 3 == 0, so gets extra bonus)
-        int256 hpBonus = StatCalculator.calculateHpBonus(Classes.Warrior, 3);
-        assertEq(hpBonus, 6); // 3 base + 3 warrior bonus
+    function testCalculateStatPointsForLevel() public {
+        // Test early game: levels 1-10, +1 per level
+        int256 statPoints = StatCalculator.calculateStatPointsForLevel(5);
+        assertEq(statPoints, 1);
 
-        // Test Rogue HP bonus (level 2 % 3 != 0, so no extra bonus)
-        hpBonus = StatCalculator.calculateHpBonus(Classes.Rogue, 2);
-        assertEq(hpBonus, 3); // 3 base only
+        statPoints = StatCalculator.calculateStatPointsForLevel(10);
+        assertEq(statPoints, 1);
 
-        // Test Mage HP bonus (level 6 % 3 == 0, but not Warrior, so no extra bonus)
-        hpBonus = StatCalculator.calculateHpBonus(Classes.Mage, 6);
-        assertEq(hpBonus, 3); // 3 base only
+        // Test mid game: levels 11-50, +1 per 2 levels (even levels only)
+        statPoints = StatCalculator.calculateStatPointsForLevel(12);
+        assertEq(statPoints, 1); // even level gets point
 
-        // Test Warrior at level 1 (no extra bonus)
-        hpBonus = StatCalculator.calculateHpBonus(Classes.Warrior, 1);
-        assertEq(hpBonus, 3); // 3 base only
+        statPoints = StatCalculator.calculateStatPointsForLevel(13);
+        assertEq(statPoints, 0); // odd level gets no point
+
+        // Test late game: levels 51-100, +1 per 5 levels
+        statPoints = StatCalculator.calculateStatPointsForLevel(55);
+        assertEq(statPoints, 1); // level 55 % 5 == 0
+
+        statPoints = StatCalculator.calculateStatPointsForLevel(52);
+        assertEq(statPoints, 0); // level 52 % 5 != 0
     }
 
-    function testCalculateClassBonus() public {
-        // Test Warrior bonus (BONUS_POINT_LEVEL = 1, so every level gets bonus)
-        (int256 strBonus, int256 agiBonus, int256 intBonus) = StatCalculator.calculateClassBonus(Classes.Warrior, 2);
-        assertEq(strBonus, 1);
-        assertEq(agiBonus, 0);
-        assertEq(intBonus, 0);
+    function testCalculateHpForLevel() public {
+        // Test early game: +2 HP per level
+        int256 hpGain = StatCalculator.calculateHpForLevel(5);
+        assertEq(hpGain, 2);
 
-        // Test Rogue bonus
-        (strBonus, agiBonus, intBonus) = StatCalculator.calculateClassBonus(Classes.Rogue, 2);
-        assertEq(strBonus, 0);
-        assertEq(agiBonus, 1);
-        assertEq(intBonus, 0);
+        // Test mid game: +1 HP per level
+        hpGain = StatCalculator.calculateHpForLevel(25);
+        assertEq(hpGain, 1);
 
-        // Test Mage bonus
-        (strBonus, agiBonus, intBonus) = StatCalculator.calculateClassBonus(Classes.Mage, 2);
-        assertEq(strBonus, 0);
-        assertEq(agiBonus, 0);
-        assertEq(intBonus, 1);
+        // Test late game: +1 HP per 2 levels (even only)
+        hpGain = StatCalculator.calculateHpForLevel(60);
+        assertEq(hpGain, 1); // even level
 
-        // Test level 1 also gets bonus (BONUS_POINT_LEVEL = 1)
-        (strBonus, agiBonus, intBonus) = StatCalculator.calculateClassBonus(Classes.Warrior, 1);
-        assertEq(strBonus, 1);
-        assertEq(agiBonus, 0);
-        assertEq(intBonus, 0);
+        hpGain = StatCalculator.calculateHpForLevel(61);
+        assertEq(hpGain, 0); // odd level
     }
 
     function testValidateStatChanges() public {
-        StatsData memory currentStats = StatsData({
-            strength: 10,
-            agility: 8,
-            intelligence: 6,
-            class: Classes.Warrior,
-            maxHp: 20,
-            currentHp: 20,
-            level: 1,
-            experience: 0
-        });
+        StatsData memory currentStats = _createDefaultStatsData();
 
-        StatsData memory desiredStats = StatsData({
-            strength: 12,
-            agility: 9,
-            intelligence: 7,
-            class: Classes.Warrior,
-            maxHp: 20,
-            currentHp: 20,
-            level: 1,
-            experience: 0
-        });
+        StatsData memory desiredStats = _createDefaultStatsData();
+        desiredStats.strength = 11; // +1 point change
 
-        // Valid stat changes (2 + 1 + 1 = 4, but ABILITY_POINTS_PER_LEVEL = 2)
-        // Let me fix the desired stats to match the expected total
-        desiredStats.strength = 11; // 1 point change
-        desiredStats.agility = 9;   // 1 point change
-        desiredStats.intelligence = 6; // 0 point change
-        
-        bool isValid = StatCalculator.validateStatChanges(currentStats, desiredStats);
+        // Valid stat changes for level 2 (early game: +1 point)
+        bool isValid = StatCalculator.validateStatChanges(currentStats, desiredStats, 2);
         assertTrue(isValid);
 
         // Invalid stat changes (too many points)
-        desiredStats.strength = 15;
-        isValid = StatCalculator.validateStatChanges(currentStats, desiredStats);
+        desiredStats.strength = 15; // +5 points
+        isValid = StatCalculator.validateStatChanges(currentStats, desiredStats, 2);
         assertFalse(isValid);
     }
 
     function testCalculateEquipmentBonuses() public {
-        StatsData memory baseStats = StatsData({
-            strength: 10,
-            agility: 8,
-            intelligence: 6,
-            class: Classes.Warrior,
-            maxHp: 20,
-            currentHp: 20,
-            level: 1,
-            experience: 0
-        });
+        StatsData memory baseStats = _createDefaultStatsData();
 
         CharacterEquipmentData memory equipmentStats = CharacterEquipmentData({
             strBonus: 5,
@@ -179,16 +163,7 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateBaseCombatStats() public {
-        StatsData memory baseStats = StatsData({
-            strength: 10,
-            agility: 8,
-            intelligence: 6,
-            class: Classes.Warrior,
-            maxHp: 20,
-            currentHp: 20,
-            level: 1,
-            experience: 0
-        });
+        StatsData memory baseStats = _createDefaultStatsData();
 
         int256 armor = 15;
         AdjustedCombatStats memory combatStats = StatCalculator.calculateBaseCombatStats(baseStats, armor);
@@ -238,16 +213,7 @@ contract StatCalculatorTest is Test {
             effects: new bytes32[](0)
         });
 
-        StatsData memory characterStats = StatsData({
-            strength: 10,
-            agility: 8,
-            intelligence: 6,
-            class: Classes.Warrior,
-            maxHp: 20,
-            currentHp: 20,
-            level: 1,
-            experience: 0
-        });
+        StatsData memory characterStats = _createDefaultStatsData();
 
         // Character meets requirements
         bool meetsRequirements = StatCalculator.checkStatRequirements(itemStats, characterStats);
@@ -266,19 +232,11 @@ contract StatCalculatorTest is Test {
             hpModifier: 0,
             intModifier: 0,
             minLevel: 1,
-            strModifier: 8 // Requires 8 strength
+            strModifier: 8, // Requires 8 strength
+            armorType: ArmorType.Cloth
         });
 
-        StatsData memory characterStats = StatsData({
-            strength: 10,
-            agility: 8,
-            intelligence: 6,
-            class: Classes.Warrior,
-            maxHp: 20,
-            currentHp: 20,
-            level: 1,
-            experience: 0
-        });
+        StatsData memory characterStats = _createDefaultStatsData();
 
         // Character meets requirements
         bool meetsRequirements = StatCalculator.checkArmorStatRequirements(itemStats, characterStats);
@@ -309,10 +267,30 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateTotalStatPoints() public {
-        uint256 level = 5;
-        int256 totalPoints = StatCalculator.calculateTotalStatPoints(level);
-        
-        // Level 5: 5 * 2 = 10 base points + 5 class bonus (every level since BONUS_POINT_LEVEL = 1)
-        assertEq(totalPoints, 15);
+        // Test level 10 (early game: 10 points)
+        int256 totalPoints = StatCalculator.calculateTotalStatPoints(10);
+        assertEq(totalPoints, 10); // 10 levels * 1 point
+
+        // Test level 20 (10 early + 5 mid = 15)
+        totalPoints = StatCalculator.calculateTotalStatPoints(20);
+        assertEq(totalPoints, 15); // 10 + (10/2) = 15
+
+        // Test level 60 (10 early + 20 mid + 2 late)
+        totalPoints = StatCalculator.calculateTotalStatPoints(60);
+        assertEq(totalPoints, 32); // 10 + 20 + 2 = 32
+    }
+
+    function testCalculateTotalHpFromLeveling() public {
+        // Test level 10 (early game: 20 HP)
+        int256 totalHp = StatCalculator.calculateTotalHpFromLeveling(10);
+        assertEq(totalHp, 20); // 10 levels * 2 HP
+
+        // Test level 20 (20 early + 10 mid = 30)
+        totalHp = StatCalculator.calculateTotalHpFromLeveling(20);
+        assertEq(totalHp, 30); // 20 + 10 = 30
+
+        // Test level 60 (20 early + 40 mid + 5 late)
+        totalHp = StatCalculator.calculateTotalHpFromLeveling(60);
+        assertEq(totalHp, 65); // 20 + 40 + 5 = 65
     }
 }

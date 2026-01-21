@@ -135,7 +135,11 @@ contract TestFullFlow is Script {
             console.log("Valid character (basic validation):");
             console.logBool(isValid);
         } catch {}
-        try world.UD__enterGame(characterId) {
+        // Use starter items that should exist after zone loader runs
+        // Armor IDs start at 1, Weapon IDs start after armors (typically ID 4 for first weapon)
+        uint256 starterWeaponId = 4; // First weapon after 3 armors
+        uint256 starterArmorId = 1;  // First armor (Cloth)
+        try world.UD__enterGame(characterId, starterWeaponId, starterArmorId) {
             console.log("SUCCESS: Character entered the game");
             // Confirm lock state after enter
             try world.UD__isCharacterLocked(characterId) returns (bool isLockedAfter) {

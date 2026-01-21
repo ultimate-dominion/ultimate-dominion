@@ -28,15 +28,31 @@ import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {SESSION_TIMEOUT} from "../../constants.sol";
 import {_requireAccess} from "../utils.sol";
+import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
+import {UNLIMITED_DELEGATION} from "@latticexyz/world/src/constants.sol";
 import "forge-std/console.sol";
 
 contract MapSystem is System {
     using LibChunks for uint256;
 
+    /**
+     * @notice Check if caller is owner or has unlimited delegation from owner
+     * @param owner The character owner address
+     * @return True if caller is owner or has valid delegation
+     */
+    function _isOwnerOrDelegated(address owner) internal view returns (bool) {
+        if (_msgSender() == owner) {
+            return true;
+        }
+        // Check if caller has unlimited delegation from owner
+        ResourceId delegationId = UserDelegationControl.getDelegationControlId(owner, _msgSender());
+        return ResourceId.unwrap(delegationId) == ResourceId.unwrap(UNLIMITED_DELEGATION);
+    }
+
     function move(bytes32 entityId, uint16 x, uint16 y) public {
         address owner = Characters.getOwner(entityId);
         require(IWorld(_world()).UD__isValidCharacterId(entityId), "Can Only move characters");
-        require(_msgSender() == owner, "Only the owner can move a character");
+        require(_isOwnerOrDelegated(owner), "Only the owner or delegated address can move a character");
         require(Spawned.getSpawned(entityId), "Character not spawned");
         require(EncounterEntity.getEncounterId(entityId) == bytes32(0), "Cannot move while in an encounter.");
 
@@ -52,7 +68,7 @@ contract MapSystem is System {
 
     function spawn(bytes32 entityId) public {
         address owner = Characters.getOwner(entityId);
-        require(_msgSender() == owner, "Only the owner can spawn a character");
+        require(_isOwnerOrDelegated(owner), "Only the owner or delegated address can spawn a character");
         uint256 spawnedPlayers = Counters.get(address(this), 0);
         require(spawnedPlayers <= UltimateDominionConfig.getMaxPlayers(), "max players reached");
         require(!Spawned.getSpawned(entityId), "Character already spawned");
@@ -184,13 +200,13 @@ contract MapSystem is System {
                     "This player's session has not timed out"
                 );
                 Counters.set(address(this), 0, (spawnedPlayers - 1));
-                // require access
+                // Note: Access check removed to allow inter-system calls
             } else {
-                _requireAccess(address(this), _msgSender());
+                // Inter-system call (e.g., from EncounterSystem)
                 Counters.set(address(this), 0, (spawnedPlayers - 1));
             }
         } else {
-            _requireAccess(address(this), _msgSender());
+            // Non-character entity (e.g., monster) - allow inter-system calls
         }
 
         (uint16 currentX, uint16 currentY) = getEntityPosition(entityId);

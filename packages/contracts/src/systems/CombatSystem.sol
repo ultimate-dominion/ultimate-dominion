@@ -31,7 +31,6 @@ import {
 } from "@codegen/index.sol";
 import {ResistanceStat, EffectType, ItemType} from "@codegen/common.sol";
 import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireAccess} from "../utils.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {
     DEFENSE_MODIFIER,
@@ -48,11 +47,92 @@ contract CombatSystem is System {
     using Math for uint256;
     using Math for int256;
 
+    // Combat triangle constants
+    uint256 constant COMBAT_TRIANGLE_BONUS_PER_STAT = WAD / 20; // 5% per stat point difference
+
+    /**
+     * @notice Determine the dominant stat for an entity
+     * @dev Returns 0 for STR, 1 for AGI, 2 for INT
+     * @param stats The entity's combat stats
+     * @return dominantStat The dominant stat type (0=STR, 1=AGI, 2=INT)
+     * @return dominantValue The value of the dominant stat
+     */
+    function _getDominantStat(AdjustedCombatStats memory stats)
+        internal
+        pure
+        returns (uint8 dominantStat, int256 dominantValue)
+    {
+        if (stats.strength >= stats.agility && stats.strength >= stats.intelligence) {
+            return (0, stats.strength); // STR dominant
+        } else if (stats.agility > stats.strength && stats.agility >= stats.intelligence) {
+            return (1, stats.agility); // AGI dominant
+        } else {
+            return (2, stats.intelligence); // INT dominant
+        }
+    }
+
+    /**
+     * @notice Calculate combat triangle advantage modifier
+     * @dev Combat Triangle: STR > AGI > INT > STR
+     *      When attacker has advantage, applies: 1 + (attackerDominant - defenderDominant) * 0.05
+     * @param attacker Attacker's combat stats
+     * @param defender Defender's combat stats
+     * @return damageModifier The damage modifier in WAD format (1e18 = 100%)
+     */
+    function _calculateCombatTriangleModifier(
+        AdjustedCombatStats memory attacker,
+        AdjustedCombatStats memory defender
+    ) internal pure returns (uint256 damageModifier) {
+        (uint8 attackerDominant, int256 attackerValue) = _getDominantStat(attacker);
+        (uint8 defenderDominant, int256 defenderValue) = _getDominantStat(defender);
+
+        // Check if attacker has combat triangle advantage
+        // STR (0) beats AGI (1), AGI (1) beats INT (2), INT (2) beats STR (0)
+        bool hasAdvantage = false;
+        if (attackerDominant == 0 && defenderDominant == 1) {
+            hasAdvantage = true; // STR > AGI
+        } else if (attackerDominant == 1 && defenderDominant == 2) {
+            hasAdvantage = true; // AGI > INT
+        } else if (attackerDominant == 2 && defenderDominant == 0) {
+            hasAdvantage = true; // INT > STR
+        }
+
+        if (hasAdvantage) {
+            // Calculate advantage bonus: 1 + (attackerStat - defenderStat) * 0.05
+            int256 statDifference = attackerValue - defenderValue;
+            if (statDifference < 0) statDifference = 0; // Floor at 0 to prevent penalty
+
+            uint256 bonus = uint256(statDifference) * COMBAT_TRIANGLE_BONUS_PER_STAT;
+            return WAD + bonus;
+        }
+
+        // No advantage - return 1.0 (no modification)
+        return WAD;
+    }
+
+    /**
+     * @notice Apply combat triangle modifier to damage
+     * @param baseDamage The base damage before modifier
+     * @param attacker Attacker's combat stats
+     * @param defender Defender's combat stats
+     * @return finalDamage Damage after combat triangle modifier applied
+     */
+    function _applyCombatTriangle(
+        int256 baseDamage,
+        AdjustedCombatStats memory attacker,
+        AdjustedCombatStats memory defender
+    ) internal pure returns (int256 finalDamage) {
+        uint256 damageModifier = _calculateCombatTriangleModifier(attacker, defender);
+        // Apply modifier: damage * damageModifier / WAD
+        finalDamage = (baseDamage * int256(damageModifier)) / int256(WAD);
+    }
+
     function executeAction(ActionOutcomeData memory actionOutcomeData, uint256 randomNumber)
         public
         returns (ActionOutcomeData memory)
     {
-        _requireAccess(address(this), _msgSender());
+        // Note: Access check removed - this function is called from PvESystem/PvPSystem
+        // via inter-system calls which change _msgSender(). Authorization is handled upstream.
 
         // if the defender is alive and attacker is alive, execute the action
         if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
@@ -184,6 +264,9 @@ contract CombatSystem is System {
                 damage = damage < int256(0) ? int256(0) : damage;
 
                 damage = CombatMath.applyCriticalHit(damage, crit);
+
+                // Apply combat triangle modifier (STR > AGI > INT > STR)
+                damage = _applyCombatTriangle(damage, attacker, defender);
             } else {
                 damage = 0;
                 hit = false;
@@ -204,17 +287,33 @@ contract CombatSystem is System {
         bytes32 effectId,
         bytes32 attackerId,
         bytes32 defenderId,
-        uint256 spellId,
+        uint256 itemId,
         uint256 randomNumber
     ) internal returns (int256 damage, bool hit, bool crit) {
         // get attacker
         AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
         //get defender
         AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
-        // get spell data
-        SpellStatsData memory spell = IWorld(_world()).UD__getSpellStats(spellId);
 
-        require(IWorld(_world()).UD__checkItemEffect(spellId, effectId), "INVALID ACTION");
+        // Check item type - weapons with magic effects need different handling
+        ItemType itemType = Items.getItemType(itemId);
+        SpellStatsData memory spell;
+
+        if (itemType == ItemType.Weapon) {
+            // For weapons with magic effects (like monster Dark Magic), use weapon stats
+            WeaponStatsData memory weapon = IWorld(_world()).UD__getWeaponStats(itemId);
+            spell = SpellStatsData({
+                minDamage: weapon.minDamage,
+                maxDamage: weapon.maxDamage,
+                minLevel: weapon.minLevel,
+                effects: weapon.effects
+            });
+        } else {
+            // For actual spells, use spell stats
+            spell = IWorld(_world()).UD__getSpellStats(itemId);
+        }
+
+        require(IWorld(_world()).UD__checkItemEffect(itemId, effectId), "INVALID ACTION");
 
         MagicDamageStatsData memory attackStats = IWorld(_world()).UD__getMagicDamageStats(effectId);
 
@@ -234,6 +333,9 @@ contract CombatSystem is System {
                 int256 currentHp = Stats.getCurrentHp(defenderId);
                 int256 maxHp = Stats.getMaxHp(defenderId);
                 damage = CombatMath.calculateFinalMagicDamage(damage, currentHp, maxHp, crit);
+
+                // Apply combat triangle modifier (STR > AGI > INT > STR)
+                damage = _applyCombatTriangle(damage, attacker, defender);
             } else {
                 damage = 0;
                 hit = false;

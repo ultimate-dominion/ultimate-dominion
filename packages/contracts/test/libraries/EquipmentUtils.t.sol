@@ -4,7 +4,7 @@ pragma solidity >=0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {EquipmentUtils} from "@libraries/EquipmentUtils.sol";
 import {StatsData, WeaponStatsData, ArmorStatsData} from "@codegen/index.sol";
-import {Classes} from "@codegen/common.sol";
+import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 
 contract EquipmentUtilsTest is Test {
     using EquipmentUtils for StatsData;
@@ -18,7 +18,12 @@ contract EquipmentUtilsTest is Test {
             maxHp: 20,
             currentHp: 20,
             experience: 0,
-            level: 1
+            level: 1,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         });
 
         bool ok = EquipmentUtils.validateEquipmentRequirements(stats, 5, 5, 5);
@@ -34,7 +39,12 @@ contract EquipmentUtilsTest is Test {
             maxHp: 20,
             currentHp: 20,
             experience: 0,
-            level: 1
+            level: 1,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         });
 
         bool ok = EquipmentUtils.validateEquipmentRequirements(stats, 5, 5, 5);
@@ -50,7 +60,12 @@ contract EquipmentUtilsTest is Test {
             maxHp: 10,
             currentHp: 10,
             experience: 0,
-            level: 1
+            level: 1,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         });
 
         WeaponStatsData memory weapon = WeaponStatsData({
@@ -70,7 +85,8 @@ contract EquipmentUtilsTest is Test {
             hpModifier: 4,
             intModifier: 1,
             minLevel: 1,
-            strModifier: 2
+            strModifier: 2,
+            armorType: ArmorType.Cloth
         });
 
         StatsData memory out = EquipmentUtils.calculateEquipmentBonuses(baseStats, weapon, armor);

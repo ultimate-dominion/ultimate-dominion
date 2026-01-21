@@ -43,7 +43,7 @@ contract ArmorSystem is System {
      * @param characterId The character to equip armor to
      * @param armorId The armor item ID to equip
      */
-    function UD__equipArmor(bytes32 characterId, uint256 armorId) public {
+    function equipArmor(bytes32 characterId, uint256 armorId) public {
         // Validate character exists
         if (!IWorld(_world()).UD__isValidCharacterId(characterId)) {
             revert ArmorSystem_CharacterNotFound();
@@ -51,9 +51,7 @@ contract ArmorSystem is System {
 
         // Validate item exists and is armor
         ItemsData memory itemData = Items.get(armorId);
-        if (itemData.price == 0 && itemData.dropChance == 0) {
-            revert ArmorSystem_ItemNotFound();
-        }
+        // Item exists if itemType is Armor (default uint8 is 0 = Weapon, so Armor = 1 means it was set)
         if (itemData.itemType != ItemType.Armor) {
             revert ArmorSystem_NotArmor();
         }
@@ -88,7 +86,7 @@ contract ArmorSystem is System {
      * @param characterId The character to unequip armor from
      * @param armorId The armor item ID to unequip
      */
-    function UD__unequipArmor(bytes32 characterId, uint256 armorId) public returns (bool success) {
+    function unequipArmor(bytes32 characterId, uint256 armorId) public returns (bool success) {
         // Validate character exists
         if (!IWorld(_world()).UD__isValidCharacterId(characterId)) {
             revert ArmorSystem_CharacterNotFound();
@@ -129,7 +127,7 @@ contract ArmorSystem is System {
      * @return intBonus Total intelligence bonus
      * @return hpBonus Total HP bonus
      */
-    function UD__calculateArmorBonuses(bytes32 characterId) public view returns (
+    function calculateArmorBonuses(bytes32 characterId) public view returns (
         int256 armorBonus,
         int256 strBonus,
         int256 agiBonus,
@@ -158,7 +156,7 @@ contract ArmorSystem is System {
      * @param armorId The armor item ID to check
      * @return canEquip True if requirements are met
      */
-    function UD__checkArmorRequirements(bytes32 characterId, uint256 armorId) public view returns (bool canEquip) {
+    function checkArmorRequirements(bytes32 characterId, uint256 armorId) public view returns (bool canEquip) {
         // Get character stats
         StatsData memory characterStats = Stats.get(characterId);
         
@@ -190,16 +188,16 @@ contract ArmorSystem is System {
      * @param characterId The character to get armor for
      * @return equippedArmor Array of equipped armor IDs
      */
-    function UD__getEquippedArmor(bytes32 characterId) public view returns (uint256[] memory equippedArmor) {
+    function getEquippedArmor(bytes32 characterId) public view returns (uint256[] memory equippedArmor) {
         return CharacterEquipment.getEquippedArmor(characterId);
     }
 
     /**
-     * @dev Gets armor stats for a specific armor item
+     * @dev Gets armor stats for a specific armor item (ArmorSystem version)
      * @param armorId The armor item ID
      * @return armorStats The armor stats data
      */
-    function UD__getArmorStats(uint256 armorId) public view returns (ArmorStatsData memory armorStats) {
+    function getArmorStatsData(uint256 armorId) public view returns (ArmorStatsData memory armorStats) {
         return ArmorStats.get(armorId);
     }
 
@@ -209,7 +207,7 @@ contract ArmorSystem is System {
      * @param armorId The armor item ID to check
      * @return isEquipped True if armor is equipped
      */
-    function UD__isArmorEquipped(bytes32 characterId, uint256 armorId) public view returns (bool isEquipped) {
+    function isArmorEquippedExt(bytes32 characterId, uint256 armorId) public view returns (bool isEquipped) {
         return isArmorEquipped(characterId, armorId);
     }
 
@@ -229,13 +227,4 @@ contract ArmorSystem is System {
         return false;
     }
 
-    /**
-     * @dev Internal function to check armor requirements
-     * @param characterId The character to check
-     * @param armorId The armor item ID to check
-     * @return canEquip True if requirements are met
-     */
-    function checkArmorRequirements(bytes32 characterId, uint256 armorId) internal view returns (bool canEquip) {
-        return UD__checkArmorRequirements(characterId, armorId);
-    }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
-import {ItemType, Classes, Alignment, TokenType} from "@codegen/common.sol";
+import {ItemType, Classes, Alignment, TokenType, ArmorType} from "@codegen/common.sol";
 import {
     StatusEffectStatsData,
     WeaponStatsData,
@@ -41,6 +41,7 @@ struct ArmorStatDetails {
     int256 intModifier;
     uint256 minLevel;
     int256 strModifier;
+    ArmorType armorType;
 }
 
 struct WeaponStatDetails {

@@ -24,7 +24,7 @@ import {
     StatRestrictionsData,
     ShopsData
 } from "@codegen/index.sol";
-import {Classes, MobType, ItemType, EffectType} from "@codegen/common.sol";
+import {Classes, MobType, ItemType, EffectType, ArmorType} from "@codegen/common.sol";
 import {_itemsSystemId, _lootManagerSystemId, _mobSystemId} from "../src/utils.sol";
 import {MonsterStats, StarterItems} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
@@ -161,7 +161,8 @@ contract SetUp is Test {
             strModifier: 1,
             agiModifier: 2,
             intModifier: 3,
-            hpModifier: 4
+            hpModifier: 4,
+            armorType: ArmorType.Cloth
         });
 
         WeaponStatsData memory newWeapon = WeaponStatsData({
@@ -211,6 +212,12 @@ contract SetUp is Test {
             ItemType.Spell, 10 ether, 100000000, 1 ether, abi.encode(newSpell, statRestrictions), "setup_armor_uri"
         );
         world.grantAccess(_lootManagerSystemId("UD"), address(this));
+
+        // Set up starter items in StarterItemPool
+        world.UD__setStarterItemPool(newArmorId, true);
+        world.UD__setStarterItemPool(alsoNewArmorId, true);
+        world.UD__setStarterItemPool(newWeaponId, true);
+        world.UD__setStarterItemPool(alsoNewWeaponId, true);
         vm.stopPrank();
 
         vm.prank(alice);
@@ -220,7 +227,7 @@ contract SetUp is Test {
         bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
 
         world.UD__rollStats(alicesRandomness, bobCharacterId, Classes.Mage);
-        world.UD__enterGame(bobCharacterId);
+        world.UD__enterGame(bobCharacterId, newWeaponId, newArmorId);
         vm.stopPrank();
     }
 

@@ -12,6 +12,8 @@ import {
     Counters,
     StarterItems,
     StarterItemsData,
+    StarterItemPool,
+    StarterConsumables,
     Stats,
     StatsData,
     ArmorStats,
@@ -26,7 +28,7 @@ import {
     ConsumableStatsData
 } from "@codegen/index.sol";
 import {ItemType, Classes} from "@codegen/common.sol";
-import {_erc1155SystemId, _requireOwner, _requireAccess, _lootManagerSystemId} from "../utils.sol";
+import {_erc1155SystemId, _requireOwner, _requireAccess, _requireAccessOrAdmin, _lootManagerSystemId} from "../utils.sol";
 import {ITEMS_NAMESPACE, WORLD_NAMESPACE} from "../../constants.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
@@ -45,7 +47,7 @@ contract ItemsSystem is System {
         bytes memory stats,
         string memory itemMetadataURI
     ) public returns (uint256) {
-        _requireAccess(address(this), _msgSender());
+        _requireAccessOrAdmin(address(this), _msgSender());
         uint256 itemId = _incrementItemsCounter();
         // create new item struct
         ItemsData memory newItem = ItemsData({itemType: itemType, dropChance: dropChance, price: price, stats: stats});
@@ -80,17 +82,10 @@ contract ItemsSystem is System {
             ConsumableStats.set(itemId, consumableStats);
             StatRestrictions.set(itemId, statRestrictions);
         }
-        // mint supply to lootManager contract
-        IWorld(_world()).call(
-            _erc1155SystemId(ITEMS_NAMESPACE),
-            abi.encodeWithSignature(
-                "mint(address,uint256,uint256,bytes)",
-                Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE)),
-                itemId,
-                supply,
-                ""
-            )
-        );
+        // Mint supply directly to LootManager via table writes (bypasses cross-namespace access issues)
+        address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
+        _mintItemDirect(lootManager, itemId, supply);
+
         // see if you can guess what this is doing...
         setTokenUri(itemId, itemMetadataURI);
 
@@ -101,19 +96,11 @@ contract ItemsSystem is System {
     }
 
     function resupplyLootManager(uint256 itemId, uint256 newSupply) public {
-        _requireAccess(address(this), _msgSender());
+        _requireAccessOrAdmin(address(this), _msgSender());
         require(getTotalSupply(itemId) != 0, "No existing supply");
-        // mint supply to lootManager contract
-        IWorld(_world()).call(
-            _erc1155SystemId(ITEMS_NAMESPACE),
-            abi.encodeWithSignature(
-                "mint(address,uint256,uint256,bytes)",
-                Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE)),
-                itemId,
-                newSupply,
-                ""
-            )
-        );
+        // Mint supply directly to LootManager via table writes
+        address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
+        _mintItemDirect(lootManager, itemId, newSupply);
     }
 
     function createItems(
@@ -176,6 +163,26 @@ contract ItemsSystem is System {
         StarterItems.set(class, itemIds, amounts);
     }
 
+    function setStarterItemPool(uint256 itemId, bool isStarter) public {
+        _requireOwner(address(this), _msgSender());
+        StarterItemPool.set(itemId, isStarter);
+    }
+
+    function setStarterConsumables(uint256[] memory itemIds, uint256[] memory amounts) public {
+        _requireOwner(address(this), _msgSender());
+        require(itemIds.length == amounts.length, "ITEMS: Length mismatch");
+        StarterConsumables.set(itemIds, amounts);
+    }
+
+    function getStarterConsumables() public view returns (uint256[] memory itemIds, uint256[] memory amounts) {
+        itemIds = StarterConsumables.getItemIds();
+        amounts = StarterConsumables.getAmounts();
+    }
+
+    function isStarterItem(uint256 itemId) public view returns (bool) {
+        return StarterItemPool.getIsStarter(itemId);
+    }
+
     function isItemOwner(uint256 itemId, address account) public view returns (bool) {
         return Owners.getBalance(_ownersTableId(ITEMS_NAMESPACE), account, itemId) > 0;
     }
@@ -204,5 +211,19 @@ contract ItemsSystem is System {
         ItemType itemType = Items.getItemType(itemId);
         require(itemType == ItemType.Consumable, "ITEMS: Not Consumable");
         _consumableStats = ConsumableStats.get(itemId);
+    }
+
+    /**
+     * @dev Mint items directly via table writes, bypassing ERC1155System cross-namespace call issues
+     * This pattern is used by LootManagerSystem.dropItem() and works for post-deployment admin calls
+     */
+    function _mintItemDirect(address to, uint256 itemId, uint256 amount) internal {
+        // Update owner balance
+        uint256 currentBalance = Owners.getBalance(_ownersTableId(ITEMS_NAMESPACE), to, itemId);
+        Owners.setBalance(_ownersTableId(ITEMS_NAMESPACE), to, itemId, currentBalance + amount);
+
+        // Update total supply
+        uint256 currentSupply = TotalSupply.getTotalSupply(_totalSupplyTableId(ITEMS_NAMESPACE), itemId);
+        TotalSupply.setTotalSupply(_totalSupplyTableId(ITEMS_NAMESPACE), itemId, currentSupply + amount);
     }
 }

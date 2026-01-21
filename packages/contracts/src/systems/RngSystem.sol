@@ -14,7 +14,7 @@ import {
     CombatEncounter
 } from "@codegen/index.sol";
 import {Math} from "@libraries/Math.sol";
-import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
+import {Classes, RngRequestType, EncounterType, Race} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IWorld, IPvESystem, IPvPSystem, IWorldActionSystem} from "@world/IWorld.sol";
@@ -75,8 +75,19 @@ contract RngSystem is System {
         RngLogs.setRandomNumber(sequenceNumber, randomNumber);
 
         if (requestType == RngRequestType.CharacterStats) {
-            bytes32 characterId = abi.decode(_data, (bytes32));
-            _storeStats(randomNumber, characterId);
+            // Check if this is a balanced stats request (implicit class system)
+            // Data format: (bytes32 characterId) for legacy, (bytes32 characterId, bool useBalanced) for new
+            if (_data.length > 32) {
+                (bytes32 characterId, bool useBalanced) = abi.decode(_data, (bytes32, bool));
+                if (useBalanced) {
+                    _storeBalancedStats(randomNumber, characterId);
+                } else {
+                    _storeStats(randomNumber, characterId);
+                }
+            } else {
+                bytes32 characterId = abi.decode(_data, (bytes32));
+                _storeStats(randomNumber, characterId);
+            }
         } else if (requestType == RngRequestType.Combat) {
             (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
             require(moves.length > 0, "RNG: Invalid moves");
@@ -113,11 +124,66 @@ contract RngSystem is System {
 
     function _storeStats(uint256 randomNumber, bytes32 characterId) internal {
         Classes characterClass = Stats.getClass(characterId);
-        
+
         // Use StatCalculator to generate random stats
         StatsData memory stats = StatCalculator.generateRandomStats(randomNumber, characterClass);
-        
+
         Stats.set(characterId, stats);
+    }
+
+    /**
+     * @notice Store balanced base stats for implicit class system
+     * @dev Generates fresh random stats and adds race bonuses (calculated from race enum, not existing stats)
+     * @param randomNumber Random number for stat generation
+     * @param characterId Character to store stats for
+     */
+    function _storeBalancedStats(uint256 randomNumber, bytes32 characterId) internal {
+        // Get existing stats to preserve implicit class choices (race, powerSource, etc.)
+        StatsData memory existingStats = Stats.get(characterId);
+
+        // Generate fresh balanced base stats while preserving implicit class choices
+        StatsData memory newStats = StatCalculator.generateBalancedBaseStats(randomNumber, existingStats);
+
+        // Calculate and add race bonuses based on the race enum (NOT from existing stats)
+        // This prevents stat accumulation on rerolls
+        (int256 strBonus, int256 agiBonus, int256 intBonus, int256 hpBonus) = _getRaceBonuses(existingStats.race);
+        newStats.strength += strBonus;
+        newStats.agility += agiBonus;
+        newStats.intelligence += intBonus;
+        newStats.maxHp += hpBonus;
+
+        Stats.set(characterId, newStats);
+    }
+
+    /**
+     * @notice Get stat bonuses for a specific race
+     * @param race The race to get bonuses for
+     * @return strBonus Strength bonus
+     * @return agiBonus Agility bonus
+     * @return intBonus Intelligence bonus
+     * @return hpBonus HP bonus
+     */
+    function _getRaceBonuses(Race race) internal pure returns (int256 strBonus, int256 agiBonus, int256 intBonus, int256 hpBonus) {
+        if (race == Race.Dwarf) {
+            // Dwarf: STR +2, AGI -1, HP +1
+            strBonus = 2;
+            agiBonus = -1;
+            intBonus = 0;
+            hpBonus = 1;
+        } else if (race == Race.Elf) {
+            // Elf: AGI +2, INT +1, STR -1, HP -1
+            strBonus = -1;
+            agiBonus = 2;
+            intBonus = 1;
+            hpBonus = -1;
+        } else if (race == Race.Human) {
+            // Human: STR +1, AGI +1, INT +1
+            strBonus = 1;
+            agiBonus = 1;
+            intBonus = 1;
+            hpBonus = 0;
+        }
+        // Race.None returns all zeros
     }
 
     function _getCounter(uint256 counterNumber) internal view returns (uint256 _counter) {

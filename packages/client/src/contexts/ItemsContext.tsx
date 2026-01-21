@@ -19,7 +19,7 @@ import {
 } from 'react';
 
 import { useToast } from '../hooks/useToast';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import { fetchMetadataFromUri, isTextOnlyUri, uriToHttp } from '../utils/helpers';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -102,9 +102,18 @@ export const ItemsProvider = ({
             tokenIdEntity,
           ).uri;
 
-          const metadata = await fetchMetadataFromUri(
-            uriToHttp(`${baseURI}${tokenURI}`)[0],
-          );
+          // Try to fetch metadata, but don't fail if it's unavailable
+          let metadata = { name: `Armor #${armorId}`, description: '', image: '' };
+          try {
+            const fullUri = `${baseURI}${tokenURI}`;
+            if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
+              metadata = await fetchMetadataFromUri(tokenURI || fullUri);
+            } else {
+              metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
+            }
+          } catch (e) {
+            console.warn(`Failed to fetch metadata for armor ${armorId}:`, e);
+          }
 
           return {
             ...metadata,
@@ -191,9 +200,18 @@ export const ItemsProvider = ({
             tokenIdEntity,
           ).uri;
 
-          const metadata = await fetchMetadataFromUri(
-            uriToHttp(`${baseURI}${tokenURI}`)[0],
-          );
+          // Try to fetch metadata, but don't fail if it's unavailable
+          let metadata = { name: `Consumable #${consumableId}`, description: '', image: '' };
+          try {
+            const fullUri = `${baseURI}${tokenURI}`;
+            if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
+              metadata = await fetchMetadataFromUri(tokenURI || fullUri);
+            } else {
+              metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
+            }
+          } catch (e) {
+            console.warn(`Failed to fetch metadata for consumable ${consumableId}:`, e);
+          }
 
           return {
             ...metadata,
@@ -272,9 +290,18 @@ export const ItemsProvider = ({
             tokenIdEntity,
           ).uri;
 
-          const metadata = await fetchMetadataFromUri(
-            uriToHttp(`${baseURI}${tokenURI}`)[0],
-          );
+          // Try to fetch metadata, but don't fail if it's unavailable
+          let metadata = { name: `Spell #${spellId}`, description: '', image: '' };
+          try {
+            const fullUri = `${baseURI}${tokenURI}`;
+            if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
+              metadata = await fetchMetadataFromUri(tokenURI || fullUri);
+            } else {
+              metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
+            }
+          } catch (e) {
+            console.warn(`Failed to fetch metadata for spell ${spellId}:`, e);
+          }
 
           return {
             ...metadata,
@@ -328,9 +355,18 @@ export const ItemsProvider = ({
             tokenIdEntity,
           ).uri;
 
-          const metadata = await fetchMetadataFromUri(
-            uriToHttp(`${baseURI}${tokenURI}`)[0],
-          );
+          // Try to fetch metadata, but don't fail if it's unavailable
+          let metadata = { name: `Weapon #${weaponId}`, description: '', image: '' };
+          try {
+            const fullUri = `${baseURI}${tokenURI}`;
+            if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
+              metadata = await fetchMetadataFromUri(tokenURI || fullUri);
+            } else {
+              metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
+            }
+          } catch (e) {
+            console.warn(`Failed to fetch metadata for weapon ${weaponId}:`, e);
+          }
 
           return {
             ...metadata,
@@ -364,14 +400,23 @@ export const ItemsProvider = ({
       if (!isSynced) return;
 
       try {
-        const allItemIds = Array.from(runQuery([Has(Items)])).map(entity => {
+        console.log('[DEBUG ItemsContext] isSynced:', isSynced);
+        console.log('[DEBUG ItemsContext] Items component:', Items);
+
+        const allItemEntities = Array.from(runQuery([Has(Items)]));
+        console.log('[DEBUG ItemsContext] All item entities count:', allItemEntities.length);
+
+        const allItemIds = allItemEntities.map(entity => {
           const itemTemplate = getComponentValueStrict(Items, entity);
           const { tokenId } = decodeEntity({ tokenId: 'uint256' }, entity);
+          console.log('[DEBUG ItemsContext] Item:', { entity, tokenId: tokenId.toString(), itemType: itemTemplate.itemType });
           return {
             itemType: itemTemplate.itemType,
             tokenId,
           };
         });
+
+        console.log('[DEBUG ItemsContext] Total items found:', allItemIds.length);
 
         if (allItemIds.length > 0) {
           const allArmorIds = allItemIds

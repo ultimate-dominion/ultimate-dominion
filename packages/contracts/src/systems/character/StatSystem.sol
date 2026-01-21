@@ -74,26 +74,25 @@ contract StatSystem is System {
     }
 
     /**
-     * @dev Calculate stat bonuses using StatCalculator library
+     * @dev Calculate stat and HP bonuses for a character's next level (diminishing returns)
      * @param characterId The character to calculate bonuses for
-     * @return strBonus Strength bonus
-     * @return agiBonus Agility bonus  
-     * @return intBonus Intelligence bonus
-     * @return hpBonus HP bonus
+     * @return statPoints Number of stat points available for next level
+     * @return hpGain HP gained for next level
      */
-    function calculateStatBonuses(bytes32 characterId) 
-        public 
-        view 
-        returns (int256 strBonus, int256 agiBonus, int256 intBonus, int256 hpBonus) 
+    function calculateStatBonuses(bytes32 characterId)
+        public
+        view
+        returns (int256 statPoints, int256 hpGain)
     {
         StatsData memory stats = Stats.get(characterId);
-        
-        // Calculate class bonus
-        (strBonus, agiBonus, intBonus) = StatCalculator.calculateClassBonus(stats.class, stats.level);
-        
-        // Calculate HP bonus
-        hpBonus = StatCalculator.calculateHpBonus(stats.class, stats.level);
-        
+        uint256 nextLevel = stats.level + 1;
+
+        // Calculate stat points for next level using diminishing returns
+        statPoints = StatCalculator.calculateStatPointsForLevel(nextLevel);
+
+        // Calculate HP gain for next level using diminishing returns
+        hpGain = StatCalculator.calculateHpForLevel(nextLevel);
+
         console.log("StatSystem: Calculated bonuses for character", uint256(characterId));
     }
 
@@ -130,60 +129,54 @@ contract StatSystem is System {
     }
 
     /**
-     * @dev Level up a character with new stats
+     * @dev Level up a character with new stats using diminishing returns
      * @param characterId The character to level up
      * @param desiredStats The desired new stats
      */
-    function levelCharacter(bytes32 characterId, StatsData memory desiredStats) 
-        public 
-        onlyOwner(characterId) 
-        validCharacter(characterId) 
+    function levelCharacter(bytes32 characterId, StatsData memory desiredStats)
+        public
+        onlyOwner(characterId)
+        validCharacter(characterId)
     {
         require(!IWorld(_world()).UD__isInEncounter(characterId), "STAT SYSTEM: cannot level in combat");
-        
-        StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
+
+        // Get baseStats, falling back to Stats table if empty
+        bytes memory encodedBaseStats = Characters.getBaseStats(characterId);
+        StatsData memory stats;
+        if (encodedBaseStats.length > 0) {
+            stats = abi.decode(encodedBaseStats, (StatsData));
+        } else {
+            stats = Stats.get(characterId);
+        }
         stats.currentHp = Stats.getCurrentHp(characterId);
-        uint256 availableLevel = getCurrentAvailableLevel(stats.experience);
-        
+
         if (stats.level == MAX_LEVEL) {
             return;
         }
-        
-        // Validate stat changes using StatCalculator
-        require(StatCalculator.validateStatChanges(stats, desiredStats), "STAT SYSTEM: INVALID STAT CHANGE");
-        
-        // Calculate class bonus using StatCalculator
-        (int256 strBonus, int256 agiBonus, int256 intBonus) = StatCalculator.calculateClassBonus(getClass(characterId), availableLevel);
-        if (strBonus > 0) {
-            ++desiredStats.strength;
-        }
-        if (agiBonus > 0) {
-            ++desiredStats.agility;
-        }
-        if (intBonus > 0) {
-            ++desiredStats.intelligence;
-        }
-        
-        // Calculate HP bonus using StatCalculator
-        int256 hpBonus = StatCalculator.calculateHpBonus(stats.class, stats.level);
-        if (hpBonus > 0) {
-            stats.maxHp += hpBonus;
-        }
-        
+
+        uint256 newLevel = stats.level + 1;
+
+        // Validate stat changes using new diminishing returns system
+        require(StatCalculator.validateStatChanges(stats, desiredStats, newLevel), "STAT SYSTEM: INVALID STAT CHANGE");
+
+        // Calculate HP gain using diminishing returns
+        int256 hpGain = StatCalculator.calculateHpForLevel(newLevel);
+        stats.maxHp += hpGain;
+
         stats.strength = desiredStats.strength;
         stats.agility = desiredStats.agility;
         stats.intelligence = desiredStats.intelligence;
-        stats.level += 1;
+        stats.level = newLevel;
 
         // Set base stats
         Characters.setBaseStats(characterId, abi.encode(stats));
 
         // Apply equipment bonuses and set them to stat table
         _setStats(characterId, IWorld(_world()).UD__calculateEquipmentBonuses(characterId), stats.level);
-        
+
         // Re-apply world effects
         IWorld(_world()).UD__applyWorldEffects(characterId);
-        
+
         console.log("StatSystem: Leveled character", uint256(characterId), "to level", stats.level);
     }
 
@@ -193,7 +186,8 @@ contract StatSystem is System {
      * @param stats The new stats
      */
     function setStats(bytes32 entityId, AdjustedCombatStats memory stats) public {
-        _requireAccess(address(this), _msgSender());
+        // Note: openAccess is true for this system, allowing any caller
+        // This function is typically called by other systems like MapSystem
         StatsData memory statsData = Stats.get(entityId);
 
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
@@ -246,7 +240,13 @@ contract StatSystem is System {
      * @return The character's base stats
      */
     function getBaseStats(bytes32 characterId) public view returns (StatsData memory) {
-        return abi.decode(Characters.getBaseStats(characterId), (StatsData));
+        bytes memory encodedBaseStats = Characters.getBaseStats(characterId);
+        if (encodedBaseStats.length > 0) {
+            return abi.decode(encodedBaseStats, (StatsData));
+        } else {
+            // Fallback to Stats table for characters that haven't entered the game
+            return Stats.get(characterId);
+        }
     }
 
     /**

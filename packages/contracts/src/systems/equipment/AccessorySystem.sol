@@ -76,9 +76,7 @@ contract AccessorySystem is System {
 
         // Validate item exists and is accessory
         ItemsData memory itemData = Items.get(accessoryId);
-        if (itemData.price == 0 && itemData.dropChance == 0) {
-            revert AccessorySystem_ItemNotFound();
-        }
+        // Item exists if itemType is Accessory
         if (itemData.itemType != ItemType.Accessory) {
             revert AccessorySystem_NotAccessory();
         }

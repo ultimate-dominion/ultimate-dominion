@@ -381,6 +381,13 @@ export const theme = extendTheme({
     red: '#AF0D08',
     white: '#fff',
     yellow: '#EFD31C',
+    // Rarity colors
+    rarityWorn: '#9d9d9d',
+    rarityCommon: '#ffffff',
+    rarityUncommon: '#1eff00',
+    rarityRare: '#0070dd',
+    rarityEpic: '#a335ee',
+    rarityLegendary: '#ff8000',
   },
   components: {
     Button,

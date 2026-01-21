@@ -20,6 +20,10 @@ export default defineWorld({
     },
   },
   systems: {
+    EquipmentCore: {
+      name: "EquipmentCore",
+      openAccess: true,
+    },
     // Character Systems (modular) - using existing contract names
     CharacterCore: {
       name: "CharacterCore",
@@ -42,16 +46,73 @@ export default defineWorld({
       name: "ArmorSystem",
       openAccess: true,
     },
+    ConsumableSystem: {
+      name: "ConsumableSystem",
+      openAccess: true,
+    },
     AccessorySystem: {
       name: "AccessorySystem",
       openAccess: true,
     },
+    PhysicalCombat: {
+      name: "PhysicalCombat",
+      openAccess: true,
+    },
+    MagicCombat: {
+      name: "MagicCombat",
+      openAccess: true,
+    },
+    StatusEffects: {
+      name: "StatusEffects",
+      openAccess: true,
+    },
   },
   enums: {
+    // Legacy class enum - kept for backward compatibility
     Classes: [
       "Warrior", // 0
       "Rogue", // 1
       "Mage", // 2
+    ],
+    // New implicit class system enums
+    PowerSource: [
+      "None", // 0
+      "Divine", // 1
+      "Weave", // 2
+      "Physical", // 3
+    ],
+    Race: [
+      "None", // 0
+      "Human", // 1
+      "Elf", // 2
+      "Dwarf", // 3
+    ],
+    ArmorType: [
+      "None", // 0
+      "Cloth", // 1
+      "Leather", // 2
+      "Plate", // 3
+    ],
+    AdvancedClass: [
+      "None", // 0
+      // STR + Divine
+      "Paladin", // 1
+      // STR + Weave
+      "Sorcerer", // 2
+      // STR + Physical
+      "Warrior", // 3
+      // AGI + Divine
+      "Druid", // 4
+      // AGI + Weave
+      "Warlock", // 5
+      // AGI + Physical
+      "Ranger", // 6
+      // INT + Divine
+      "Cleric", // 7
+      // INT + Weave
+      "Wizard", // 8
+      // INT + Physical
+      "Rogue", // 9
     ],
     RngRequestType: ["World", "CharacterStats", "Combat"],
     ItemType: ["Weapon", "Armor", "Spell", "Consumable", "QuestItem", "Accessory"],
@@ -136,12 +197,31 @@ export default defineWorld({
         entityId: "bytes32",
         strength: "int256",
         agility: "int256",
-        class: "Classes",
+        class: "Classes", // Legacy - kept for backward compatibility
         intelligence: "int256",
         maxHp: "int256",
         currentHp: "int256",
         experience: "uint256",
         level: "uint256",
+        // New implicit class system fields
+        powerSource: "PowerSource",
+        race: "Race",
+        startingArmor: "ArmorType",
+        advancedClass: "AdvancedClass",
+        hasSelectedAdvancedClass: "bool",
+      },
+    },
+    // Separate table for class multipliers to avoid stack-too-deep
+    ClassMultipliers: {
+      key: ["entityId"],
+      schema: {
+        entityId: "bytes32",
+        // Class multipliers (basis points: 1000 = 100%, 1100 = 110%)
+        physicalDamageMultiplier: "uint256",
+        spellDamageMultiplier: "uint256",
+        healingMultiplier: "uint256",
+        critDamageMultiplier: "uint256",
+        maxHpMultiplier: "uint256",
       },
     },
     SessionTimer: {
@@ -241,6 +321,7 @@ export default defineWorld({
         intModifier: "int256",
         minLevel: "uint256",
         strModifier: "int256",
+        armorType: "ArmorType",
       },
       key: ["itemId"],
     },
@@ -281,6 +362,41 @@ export default defineWorld({
       key: ["class"],
       schema: {
         class: "Classes",
+        itemIds: "uint256[]",
+        amounts: "uint256[]",
+      },
+    },
+    // New starter items table based on armor type for implicit class system
+    ArmorStarterItems: {
+      key: ["armorType"],
+      schema: {
+        armorType: "ArmorType",
+        itemIds: "uint256[]",
+        amounts: "uint256[]",
+      },
+    },
+    // Pool of items available for selection during character creation
+    // isStarter flag indicates if the item can be chosen as a starter item
+    StarterItemPool: {
+      key: ["itemId"],
+      schema: {
+        itemId: "uint256",
+        isStarter: "bool",
+      },
+    },
+    // Universal starter consumables given to all new characters
+    StarterConsumables: {
+      key: [],
+      schema: {
+        itemIds: "uint256[]",
+        amounts: "uint256[]",
+      },
+    },
+    // Advanced class items issued at level 10
+    AdvancedClassItems: {
+      key: ["advancedClass"],
+      schema: {
+        advancedClass: "AdvancedClass",
         itemIds: "uint256[]",
         amounts: "uint256[]",
       },

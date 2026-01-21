@@ -76,10 +76,10 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
     const delegation = getComponentValue(
       setupResult.components.UserDelegationControl,
       encodeEntity(
-        { delegatee: 'address', delegator: 'address' },
+        { delegator: 'address', delegatee: 'address' },
         {
-          delegatee: externalWalletClient.account.address,
-          delegator: setupResult.network.walletClient.account.address,
+          delegator: externalWalletClient.account.address,
+          delegatee: setupResult.network.walletClient.account.address,
         },
       ),
     );

@@ -17,7 +17,7 @@ import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/Encoded
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 // Import user types
-import { Classes } from "./../common.sol";
+import { Classes, PowerSource, Race, ArmorType, AdvancedClass } from "../common.sol";
 
 struct StatsData {
   int256 strength;
@@ -28,6 +28,11 @@ struct StatsData {
   int256 currentHp;
   uint256 experience;
   uint256 level;
+  PowerSource powerSource;
+  Race race;
+  ArmorType startingArmor;
+  AdvancedClass advancedClass;
+  bool hasSelectedAdvancedClass;
 }
 
 library Stats {
@@ -35,12 +40,12 @@ library Stats {
   ResourceId constant _tableId = ResourceId.wrap(0x7462554400000000000000000000000053746174730000000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x00e1080020200120202020200000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x00e60d0020200120202020200101010101000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (int256, int256, uint8, int256, int256, int256, uint256, uint256)
-  Schema constant _valueSchema = Schema.wrap(0x00e108003f3f003f3f3f1f1f0000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (int256, int256, uint8, int256, int256, int256, uint256, uint256, uint8, uint8, uint8, uint8, bool)
+  Schema constant _valueSchema = Schema.wrap(0x00e60d003f3f003f3f3f1f1f0000000060000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -56,7 +61,7 @@ library Stats {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](8);
+    fieldNames = new string[](13);
     fieldNames[0] = "strength";
     fieldNames[1] = "agility";
     fieldNames[2] = "class";
@@ -65,6 +70,11 @@ library Stats {
     fieldNames[5] = "currentHp";
     fieldNames[6] = "experience";
     fieldNames[7] = "level";
+    fieldNames[8] = "powerSource";
+    fieldNames[9] = "race";
+    fieldNames[10] = "startingArmor";
+    fieldNames[11] = "advancedClass";
+    fieldNames[12] = "hasSelectedAdvancedClass";
   }
 
   /**
@@ -418,6 +428,216 @@ library Stats {
   }
 
   /**
+   * @notice Get powerSource.
+   */
+  function getPowerSource(bytes32 entityId) internal view returns (PowerSource powerSource) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 8, _fieldLayout);
+    return PowerSource(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Get powerSource.
+   */
+  function _getPowerSource(bytes32 entityId) internal view returns (PowerSource powerSource) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 8, _fieldLayout);
+    return PowerSource(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Set powerSource.
+   */
+  function setPowerSource(bytes32 entityId, PowerSource powerSource) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 8, abi.encodePacked(uint8(powerSource)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set powerSource.
+   */
+  function _setPowerSource(bytes32 entityId, PowerSource powerSource) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 8, abi.encodePacked(uint8(powerSource)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get race.
+   */
+  function getRace(bytes32 entityId) internal view returns (Race race) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 9, _fieldLayout);
+    return Race(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Get race.
+   */
+  function _getRace(bytes32 entityId) internal view returns (Race race) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 9, _fieldLayout);
+    return Race(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Set race.
+   */
+  function setRace(bytes32 entityId, Race race) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 9, abi.encodePacked(uint8(race)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set race.
+   */
+  function _setRace(bytes32 entityId, Race race) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 9, abi.encodePacked(uint8(race)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get startingArmor.
+   */
+  function getStartingArmor(bytes32 entityId) internal view returns (ArmorType startingArmor) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 10, _fieldLayout);
+    return ArmorType(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Get startingArmor.
+   */
+  function _getStartingArmor(bytes32 entityId) internal view returns (ArmorType startingArmor) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 10, _fieldLayout);
+    return ArmorType(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Set startingArmor.
+   */
+  function setStartingArmor(bytes32 entityId, ArmorType startingArmor) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 10, abi.encodePacked(uint8(startingArmor)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set startingArmor.
+   */
+  function _setStartingArmor(bytes32 entityId, ArmorType startingArmor) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 10, abi.encodePacked(uint8(startingArmor)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get advancedClass.
+   */
+  function getAdvancedClass(bytes32 entityId) internal view returns (AdvancedClass advancedClass) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 11, _fieldLayout);
+    return AdvancedClass(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Get advancedClass.
+   */
+  function _getAdvancedClass(bytes32 entityId) internal view returns (AdvancedClass advancedClass) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 11, _fieldLayout);
+    return AdvancedClass(uint8(bytes1(_blob)));
+  }
+
+  /**
+   * @notice Set advancedClass.
+   */
+  function setAdvancedClass(bytes32 entityId, AdvancedClass advancedClass) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 11, abi.encodePacked(uint8(advancedClass)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set advancedClass.
+   */
+  function _setAdvancedClass(bytes32 entityId, AdvancedClass advancedClass) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 11, abi.encodePacked(uint8(advancedClass)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get hasSelectedAdvancedClass.
+   */
+  function getHasSelectedAdvancedClass(bytes32 entityId) internal view returns (bool hasSelectedAdvancedClass) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 12, _fieldLayout);
+    return (_toBool(uint8(bytes1(_blob))));
+  }
+
+  /**
+   * @notice Get hasSelectedAdvancedClass.
+   */
+  function _getHasSelectedAdvancedClass(bytes32 entityId) internal view returns (bool hasSelectedAdvancedClass) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 12, _fieldLayout);
+    return (_toBool(uint8(bytes1(_blob))));
+  }
+
+  /**
+   * @notice Set hasSelectedAdvancedClass.
+   */
+  function setHasSelectedAdvancedClass(bytes32 entityId, bool hasSelectedAdvancedClass) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 12, abi.encodePacked((hasSelectedAdvancedClass)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set hasSelectedAdvancedClass.
+   */
+  function _setHasSelectedAdvancedClass(bytes32 entityId, bool hasSelectedAdvancedClass) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = entityId;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 12, abi.encodePacked((hasSelectedAdvancedClass)), _fieldLayout);
+  }
+
+  /**
    * @notice Get the full data.
    */
   function get(bytes32 entityId) internal view returns (StatsData memory _table) {
@@ -459,7 +679,12 @@ library Stats {
     int256 maxHp,
     int256 currentHp,
     uint256 experience,
-    uint256 level
+    uint256 level,
+    PowerSource powerSource,
+    Race race,
+    ArmorType startingArmor,
+    AdvancedClass advancedClass,
+    bool hasSelectedAdvancedClass
   ) internal {
     bytes memory _staticData = encodeStatic(
       strength,
@@ -469,7 +694,12 @@ library Stats {
       maxHp,
       currentHp,
       experience,
-      level
+      level,
+      powerSource,
+      race,
+      startingArmor,
+      advancedClass,
+      hasSelectedAdvancedClass
     );
 
     EncodedLengths _encodedLengths;
@@ -493,7 +723,12 @@ library Stats {
     int256 maxHp,
     int256 currentHp,
     uint256 experience,
-    uint256 level
+    uint256 level,
+    PowerSource powerSource,
+    Race race,
+    ArmorType startingArmor,
+    AdvancedClass advancedClass,
+    bool hasSelectedAdvancedClass
   ) internal {
     bytes memory _staticData = encodeStatic(
       strength,
@@ -503,7 +738,12 @@ library Stats {
       maxHp,
       currentHp,
       experience,
-      level
+      level,
+      powerSource,
+      race,
+      startingArmor,
+      advancedClass,
+      hasSelectedAdvancedClass
     );
 
     EncodedLengths _encodedLengths;
@@ -527,7 +767,12 @@ library Stats {
       _table.maxHp,
       _table.currentHp,
       _table.experience,
-      _table.level
+      _table.level,
+      _table.powerSource,
+      _table.race,
+      _table.startingArmor,
+      _table.advancedClass,
+      _table.hasSelectedAdvancedClass
     );
 
     EncodedLengths _encodedLengths;
@@ -551,7 +796,12 @@ library Stats {
       _table.maxHp,
       _table.currentHp,
       _table.experience,
-      _table.level
+      _table.level,
+      _table.powerSource,
+      _table.race,
+      _table.startingArmor,
+      _table.advancedClass,
+      _table.hasSelectedAdvancedClass
     );
 
     EncodedLengths _encodedLengths;
@@ -579,7 +829,12 @@ library Stats {
       int256 maxHp,
       int256 currentHp,
       uint256 experience,
-      uint256 level
+      uint256 level,
+      PowerSource powerSource,
+      Race race,
+      ArmorType startingArmor,
+      AdvancedClass advancedClass,
+      bool hasSelectedAdvancedClass
     )
   {
     strength = (int256(uint256(Bytes.getBytes32(_blob, 0))));
@@ -597,6 +852,16 @@ library Stats {
     experience = (uint256(Bytes.getBytes32(_blob, 161)));
 
     level = (uint256(Bytes.getBytes32(_blob, 193)));
+
+    powerSource = PowerSource(uint8(Bytes.getBytes1(_blob, 225)));
+
+    race = Race(uint8(Bytes.getBytes1(_blob, 226)));
+
+    startingArmor = ArmorType(uint8(Bytes.getBytes1(_blob, 227)));
+
+    advancedClass = AdvancedClass(uint8(Bytes.getBytes1(_blob, 228)));
+
+    hasSelectedAdvancedClass = (_toBool(uint8(Bytes.getBytes1(_blob, 229))));
   }
 
   /**
@@ -618,7 +883,12 @@ library Stats {
       _table.maxHp,
       _table.currentHp,
       _table.experience,
-      _table.level
+      _table.level,
+      _table.powerSource,
+      _table.race,
+      _table.startingArmor,
+      _table.advancedClass,
+      _table.hasSelectedAdvancedClass
     ) = decodeStatic(_staticData);
   }
 
@@ -654,9 +924,29 @@ library Stats {
     int256 maxHp,
     int256 currentHp,
     uint256 experience,
-    uint256 level
+    uint256 level,
+    PowerSource powerSource,
+    Race race,
+    ArmorType startingArmor,
+    AdvancedClass advancedClass,
+    bool hasSelectedAdvancedClass
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(strength, agility, class, intelligence, maxHp, currentHp, experience, level);
+    return
+      abi.encodePacked(
+        strength,
+        agility,
+        class,
+        intelligence,
+        maxHp,
+        currentHp,
+        experience,
+        level,
+        powerSource,
+        race,
+        startingArmor,
+        advancedClass,
+        hasSelectedAdvancedClass
+      );
   }
 
   /**
@@ -673,7 +963,12 @@ library Stats {
     int256 maxHp,
     int256 currentHp,
     uint256 experience,
-    uint256 level
+    uint256 level,
+    PowerSource powerSource,
+    Race race,
+    ArmorType startingArmor,
+    AdvancedClass advancedClass,
+    bool hasSelectedAdvancedClass
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(
       strength,
@@ -683,7 +978,12 @@ library Stats {
       maxHp,
       currentHp,
       experience,
-      level
+      level,
+      powerSource,
+      race,
+      startingArmor,
+      advancedClass,
+      hasSelectedAdvancedClass
     );
 
     EncodedLengths _encodedLengths;
@@ -700,5 +1000,17 @@ library Stats {
     _keyTuple[0] = entityId;
 
     return _keyTuple;
+  }
+}
+
+/**
+ * @notice Cast a value to a bool.
+ * @dev Boolean values are encoded as uint8 (1 = true, 0 = false), but Solidity doesn't allow casting between uint8 and bool.
+ * @param value The uint8 value to convert.
+ * @return result The boolean value.
+ */
+function _toBool(uint8 value) pure returns (bool result) {
+  assembly {
+    result := value
   }
 }

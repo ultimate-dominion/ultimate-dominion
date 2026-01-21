@@ -20,6 +20,8 @@ import {
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {_requireAccess} from "../utils.sol";
+import {ItemType, MobType, EffectType} from "@codegen/common.sol";
+import {ShopsData, Shops, Position, EntitiesAtPosition, Spawned, Mobs} from "@codegen/index.sol";
 
 contract AdminSystem is System {
     modifier onlyAdmin() {
@@ -98,5 +100,78 @@ contract AdminSystem is System {
 
     function adminApplyStatusEffect(bytes32 entityId, bytes32 statusEffectId) public onlyAdmin {
         IWorld(_world()).UD__applyStatusEffect(entityId, statusEffectId);
+    }
+
+    // Admin functions for creating items post-deployment
+    function adminCreateItem(
+        ItemType itemType,
+        uint256 supply,
+        uint256 dropChance,
+        uint256 price,
+        bytes memory stats,
+        string memory itemMetadataURI
+    ) public onlyAdmin returns (uint256) {
+        return IWorld(_world()).UD__createItem(itemType, supply, dropChance, price, stats, itemMetadataURI);
+    }
+
+    function adminCreateItems(
+        ItemType[] memory itemTypes,
+        uint256[] memory supply,
+        uint256[] memory dropChances,
+        uint256[] memory prices,
+        bytes[] memory stats,
+        string[] memory itemMetadataURIs
+    ) public onlyAdmin {
+        IWorld(_world()).UD__createItems(itemTypes, supply, dropChances, prices, stats, itemMetadataURIs);
+    }
+
+    function adminResupplyLootManager(uint256 itemId, uint256 newSupply) public onlyAdmin {
+        IWorld(_world()).UD__resupplyLootManager(itemId, newSupply);
+    }
+
+    // Admin functions for creating mobs post-deployment
+    function adminCreateMob(MobType mobType, bytes memory stats, string memory mobMetadataUri) public onlyAdmin returns (uint256) {
+        return IWorld(_world()).UD__createMob(mobType, stats, mobMetadataUri);
+    }
+
+    function adminCreateMobs(MobType[] memory mobTypes, bytes[] memory stats, string[] memory mobMetadataURIs) public onlyAdmin {
+        IWorld(_world()).UD__createMobs(mobTypes, stats, mobMetadataURIs);
+    }
+
+    // Admin functions for creating effects post-deployment
+    function adminCreateEffect(
+        EffectType effectType,
+        string memory name,
+        bytes memory effectStats
+    ) public onlyAdmin returns (bytes32) {
+        return IWorld(_world()).UD__createEffect(effectType, name, effectStats);
+    }
+
+    // Admin functions for creating and configuring shops post-deployment
+    function adminCreateShop(
+        uint16 x,
+        uint16 y,
+        ShopsData memory shopData,
+        string memory shopMetadataUri
+    ) public onlyAdmin returns (bytes32 entityId) {
+        // Create the shop mob
+        uint256 mobId = IWorld(_world()).UD__createMob(MobType.Shop, abi.encode(shopData), shopMetadataUri);
+
+        // Spawn at location - create entity ID with position encoded
+        entityId = IWorld(_world()).UD__spawnMob(mobId, x, y);
+
+        // Configure shop data
+        Shops.set(entityId, shopData);
+    }
+
+    // Update shop inventory without respawning
+    function adminUpdateShop(bytes32 shopEntityId, ShopsData memory shopData) public onlyAdmin {
+        require(IWorld(_world()).UD__isShop(shopEntityId), "Not a shop");
+        Shops.set(shopEntityId, shopData);
+    }
+
+    // Spawn a mob at a specific location
+    function adminSpawnMob(uint256 mobId, uint16 x, uint16 y) public onlyAdmin returns (bytes32 entityId) {
+        return IWorld(_world()).UD__spawnMob(mobId, x, y);
     }
 }

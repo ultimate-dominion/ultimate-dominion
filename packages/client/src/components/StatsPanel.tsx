@@ -66,10 +66,10 @@ export const StatsPanel = (): JSX.Element => {
   const currentLevelXpRequirement =
     useComponentValue(
       Levels,
-      character
+      character && Number(character.level) > 0
         ? encodeEntity(
             { level: 'uint256' },
-            { level: BigInt(Number(character.level) - 1) },
+            { level: BigInt(Math.max(0, Number(character.level) - 1)) },
           )
         : undefined,
     )?.experience ?? BigInt(0);

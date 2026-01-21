@@ -8,9 +8,13 @@ import {
 } from 'viem';
 
 import {
+  AdvancedClass,
+  ArmorType,
   type EntityStats,
   type Metadata,
   type MonsterStats,
+  PowerSource,
+  Race,
 } from '../utils/types';
 
 export const etherToFixedNumber = (
@@ -78,6 +82,11 @@ export const decodeBaseStats = (statsBytes: string): EntityStats => {
           { name: 'currentHp', type: 'int256' },
           { name: 'experience', type: 'uint256' },
           { name: 'level', type: 'uint256' },
+          { name: 'powerSource', type: 'uint8' },
+          { name: 'race', type: 'uint8' },
+          { name: 'startingArmor', type: 'uint8' },
+          { name: 'advancedClass', type: 'uint8' },
+          { name: 'hasSelectedAdvancedClass', type: 'bool' },
         ],
       },
     ],
@@ -93,6 +102,12 @@ export const decodeBaseStats = (statsBytes: string): EntityStats => {
     level: characterBaseStats.level,
     maxHp: characterBaseStats.maxHp,
     strength: characterBaseStats.strength,
+    // Implicit class system fields
+    powerSource: (characterBaseStats.powerSource as number) ?? PowerSource.None,
+    race: (characterBaseStats.race as number) ?? Race.None,
+    startingArmor: (characterBaseStats.startingArmor as number) ?? ArmorType.None,
+    advancedClass: (characterBaseStats.advancedClass as number) ?? AdvancedClass.None,
+    hasSelectedAdvancedClass: characterBaseStats.hasSelectedAdvancedClass ?? false,
   };
 };
 
@@ -161,7 +176,40 @@ export const decodeMonsterStats = (statsBytes: string): MonsterStats => {
 export const getStatSymbol = (stat: string): string =>
   Number(stat) >= 0 ? '+' : '';
 
+/**
+ * Parse a text-only URI (e.g., "monster:training_dummy", "text:Hero") into a display name
+ * Converts underscores to spaces and capitalizes each word
+ */
+export const parseTextUri = (uri: string): string => {
+  const parts = uri.split(':');
+  if (parts.length < 2) return uri;
+  const rawName = parts.slice(1).join(':'); // Handle names with colons
+  return rawName
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+/**
+ * Check if a URI is a text-only URI (not requiring HTTP fetch)
+ */
+export const isTextOnlyUri = (uri: string): boolean => {
+  if (!uri) return false;
+  const protocol = uri.split(':')[0].toLowerCase();
+  return ['text', 'monster', 'item', 'armor', 'weapon', 'spell', 'consumable', 'accessory'].includes(protocol);
+};
+
 export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
+  // Handle text-only URIs (no HTTP fetch needed)
+  if (isTextOnlyUri(uri)) {
+    const name = parseTextUri(uri);
+    return {
+      name,
+      description: '',
+      image: '',
+    };
+  }
+
   // Check if it's a local development URI
   if (import.meta.env.DEV && uri.includes('local-')) {
     try {

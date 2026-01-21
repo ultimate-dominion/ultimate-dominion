@@ -1,0 +1,1006 @@
+{
+  "armor": [
+    {
+      "name": "Tattered Cloth",
+      "rarity": 0,
+      "dropChance": 25,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:tattered_cloth",
+      "price": 5000000000000000000,
+      "armorType": "Cloth",
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 1,
+        "hpModifier": 0,
+        "intModifier": 1,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Worn Leather Vest",
+      "rarity": 0,
+      "dropChance": 25,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:worn_leather_vest",
+      "price": 5000000000000000000,
+      "armorType": "Leather",
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 1,
+        "armorModifier": 2,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "minLevel": 1,
+        "strModifier": -1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Rusty Chainmail",
+      "rarity": 0,
+      "dropChance": 25,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:rusty_chainmail",
+      "price": 5000000000000000000,
+      "armorType": "Plate",
+      "isStarter": true,
+      "stats": {
+        "agiModifier": -1,
+        "armorModifier": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Padded Armor",
+      "rarity": 1,
+      "dropChance": 20,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:padded_armor",
+      "price": 15000000000000000000,
+      "armorType": "Plate",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "minLevel": 1,
+        "strModifier": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 6
+      }
+    },
+    {
+      "name": "Leather Jerkin",
+      "rarity": 1,
+      "dropChance": 20,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:leather_jerkin",
+      "price": 15000000000000000000,
+      "armorType": "Leather",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 1,
+        "armorModifier": 2,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 6,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Apprentice Robes",
+      "rarity": 1,
+      "dropChance": 20,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:apprentice_robes",
+      "price": 15000000000000000000,
+      "armorType": "Cloth",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 1,
+        "hpModifier": 0,
+        "intModifier": 1,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 6,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Studded Leather",
+      "rarity": 2,
+      "dropChance": 15,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:studded_leather",
+      "price": 35000000000000000000,
+      "armorType": "Plate",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 5,
+        "hpModifier": 5,
+        "intModifier": 0,
+        "minLevel": 5,
+        "strModifier": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 8
+      }
+    },
+    {
+      "name": "Scout Armor",
+      "rarity": 2,
+      "dropChance": 15,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:scout_armor",
+      "price": 35000000000000000000,
+      "armorType": "Leather",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 2,
+        "armorModifier": 4,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "minLevel": 5,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 8,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Acolyte Vestments",
+      "rarity": 2,
+      "dropChance": 15,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:acolyte_vestments",
+      "price": 35000000000000000000,
+      "armorType": "Cloth",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 2,
+        "hpModifier": 0,
+        "intModifier": 2,
+        "minLevel": 5,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 8,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Chainmail Shirt",
+      "rarity": 3,
+      "dropChance": 10,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:chainmail_shirt",
+      "price": 80000000000000000000,
+      "armorType": "Plate",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 8,
+        "hpModifier": 8,
+        "intModifier": 0,
+        "minLevel": 10,
+        "strModifier": 2
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 12
+      }
+    },
+    {
+      "name": "Ranger Leathers",
+      "rarity": 3,
+      "dropChance": 10,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:ranger_leathers",
+      "price": 80000000000000000000,
+      "armorType": "Leather",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 3,
+        "armorModifier": 6,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 12,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Mage Robes",
+      "rarity": 3,
+      "dropChance": 10,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:mage_robes",
+      "price": 80000000000000000000,
+      "armorType": "Cloth",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 4,
+        "hpModifier": 0,
+        "intModifier": 3,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 12,
+        "minStrength": 0
+      }
+    }
+  ],
+  "weapons": [
+    {
+      "name": "Broken Sword",
+      "rarity": 0,
+      "dropChance": 25,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:broken_sword",
+      "price": 5000000000000000000,
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 4,
+        "minDamage": 2,
+        "minLevel": 1,
+        "strModifier": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Worn Shortbow",
+      "rarity": 0,
+      "dropChance": 25,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:worn_shortbow",
+      "price": 5000000000000000000,
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 1,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 4,
+        "minDamage": 2,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Cracked Wand",
+      "rarity": 0,
+      "dropChance": 25,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:cracked_wand",
+      "price": 5000000000000000000,
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 1,
+        "maxDamage": 4,
+        "minDamage": 2,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Iron Axe",
+      "rarity": 1,
+      "dropChance": 20,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:iron_axe",
+      "price": 15000000000000000000,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 8,
+        "minDamage": 4,
+        "minLevel": 1,
+        "strModifier": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 6
+      }
+    },
+    {
+      "name": "Hunting Bow",
+      "rarity": 1,
+      "dropChance": 20,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:hunting_bow",
+      "price": 15000000000000000000,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 1,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 7,
+        "minDamage": 4,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 6,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Apprentice Staff",
+      "rarity": 1,
+      "dropChance": 20,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:apprentice_staff",
+      "price": 15000000000000000000,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 1,
+        "maxDamage": 6,
+        "minDamage": 3,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 6,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Steel Mace",
+      "rarity": 2,
+      "dropChance": 15,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:steel_mace",
+      "price": 40000000000000000000,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 5,
+        "intModifier": 0,
+        "maxDamage": 14,
+        "minDamage": 8,
+        "minLevel": 5,
+        "strModifier": 2
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 8
+      }
+    },
+    {
+      "name": "Recurve Bow",
+      "rarity": 2,
+      "dropChance": 15,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:recurve_bow",
+      "price": 40000000000000000000,
+      "stats": {
+        "agiModifier": 2,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 12,
+        "minDamage": 7,
+        "minLevel": 5,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 8,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Channeling Rod",
+      "rarity": 2,
+      "dropChance": 15,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:channeling_rod",
+      "price": 40000000000000000000,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 2,
+        "maxDamage": 10,
+        "minDamage": 6,
+        "minLevel": 5,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 8,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Runesword",
+      "rarity": 2,
+      "dropChance": 12,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:runesword",
+      "price": 50000000000000000000,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 1,
+        "maxDamage": 11,
+        "minDamage": 7,
+        "minLevel": 5,
+        "strModifier": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 5,
+        "minStrength": 5
+      }
+    },
+    {
+      "name": "Warhammer",
+      "rarity": 3,
+      "dropChance": 10,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:warhammer",
+      "price": 100000000000000000000,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 8,
+        "intModifier": 0,
+        "maxDamage": 25,
+        "minDamage": 15,
+        "minLevel": 10,
+        "strModifier": 3
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 12
+      }
+    },
+    {
+      "name": "Longbow",
+      "rarity": 3,
+      "dropChance": 10,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:longbow",
+      "price": 100000000000000000000,
+      "stats": {
+        "agiModifier": 3,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 22,
+        "minDamage": 13,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 12,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Mage Staff",
+      "rarity": 3,
+      "dropChance": 10,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:mage_staff",
+      "price": 100000000000000000000,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 3,
+        "maxDamage": 18,
+        "minDamage": 12,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 12,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Venomous Bite",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:monster_venomous_bite",
+      "price": 0,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
+          "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 5,
+        "minDamage": 2,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Crushing Slam",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:monster_crushing_slam",
+      "price": 0,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 10,
+        "minDamage": 4,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Razor Claws",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:monster_razor_claws",
+      "price": 0,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 6,
+        "minDamage": 2,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Dark Magic",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:monster_dark_magic",
+      "price": 0,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xeee09063621624b3000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 8,
+        "minDamage": 3,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Elemental Burst",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:monster_elemental_burst",
+      "price": 0,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xeee09063621624b3000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 7,
+        "minDamage": 3,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Stone Fist",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:monster_stone_fist",
+      "price": 0,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 8,
+        "minDamage": 3,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Shadow Strike",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:monster_shadow_strike",
+      "price": 0,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 7,
+        "minDamage": 3,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    }
+  ],
+  "spells": [
+    {
+      "name": "Heal",
+      "dropChance": 15,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "spell:heal",
+      "price": "30000000000000000000",
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 4,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Ice Shard",
+      "dropChance": 12,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "spell:ice_shard",
+      "price": "40000000000000000000",
+      "stats": {
+        "effects": [],
+        "maxDamage": 20,
+        "minDamage": 12,
+        "minLevel": 2
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 6,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Fireball",
+      "dropChance": 10,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "spell:fireball",
+      "price": "50000000000000000000",
+      "stats": {
+        "effects": [],
+        "maxDamage": 25,
+        "minDamage": 15,
+        "minLevel": 3
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 8,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Lightning Bolt",
+      "dropChance": 8,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "spell:lightning_bolt",
+      "price": "75000000000000000000",
+      "stats": {
+        "effects": [],
+        "maxDamage": 35,
+        "minDamage": 20,
+        "minLevel": 5
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 12,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Meteor Swarm",
+      "dropChance": 3,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "spell:meteor_swarm",
+      "price": "200000000000000000000",
+      "stats": {
+        "effects": [],
+        "maxDamage": 60,
+        "minDamage": 40,
+        "minLevel": 10
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 20,
+        "minStrength": 0
+      }
+    }
+  ],
+  "consumables": [
+    {
+      "name": "Minor Health Potion",
+      "rarity": 1,
+      "dropChance": 30,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:minor_health_potion",
+      "price": 10000000000000000000,
+      "isStarter": true,
+      "stats": {
+        "effects": ["0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"],
+        "maxDamage": -15,
+        "minDamage": -15,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Health Potion",
+      "rarity": 2,
+      "dropChance": 20,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:health_potion",
+      "price": 25000000000000000000,
+      "stats": {
+        "effects": ["0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"],
+        "maxDamage": -35,
+        "minDamage": -35,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Greater Health Potion",
+      "rarity": 3,
+      "dropChance": 10,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:greater_health_potion",
+      "price": 60000000000000000000,
+      "stats": {
+        "effects": ["0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"],
+        "maxDamage": -75,
+        "minDamage": -75,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Fortifying Stew",
+      "rarity": 1,
+      "dropChance": 20,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:fortifying_stew",
+      "price": 20000000000000000000,
+      "stats": {
+        "effects": ["0x5b73694f86a16512000000000000000000000000000000000000000000000000"],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Quickening Berries",
+      "rarity": 1,
+      "dropChance": 20,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:quickening_berries",
+      "price": 20000000000000000000,
+      "stats": {
+        "effects": ["0x940c7cad73f61cb6000000000000000000000000000000000000000000000000"],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Focusing Tea",
+      "rarity": 1,
+      "dropChance": 20,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:focusing_tea",
+      "price": 20000000000000000000,
+      "stats": {
+        "effects": ["0x54d076d5607dc751000000000000000000000000000000000000000000000000"],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Antidote",
+      "rarity": 1,
+      "dropChance": 15,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:antidote",
+      "price": 15000000000000000000,
+      "stats": {
+        "effects": ["0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Smoke Bomb",
+      "rarity": 2,
+      "dropChance": 10,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:smoke_bomb",
+      "price": 35000000000000000000,
+      "stats": {
+        "effects": ["0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000"],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    }
+  ],
+  "metadataUriPrefix": "ipfs://dark_cave/"
+}

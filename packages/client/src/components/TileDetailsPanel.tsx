@@ -167,6 +167,11 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const onInitiateCombat = useCallback(
     async (opponent: Character | Monster, encounterType: EncounterType) => {
+      console.log('[DEBUG] onInitiateCombat called:', {
+        characterId: character?.id,
+        opponentId: opponent.id,
+        encounterType,
+      });
       try {
         setIsInitiating(true);
 
@@ -178,11 +183,14 @@ export const TileDetailsPanel = (): JSX.Element => {
           throw new Error('Missing delegation.');
         }
 
+        console.log('[DEBUG] Calling createEncounter...');
         const { error, success } = await createEncounter(
           encounterType,
           [character.id],
           [opponent.id],
         );
+
+        console.log('[DEBUG] createEncounter result:', { error, success });
 
         if (error && !success) {
           throw new Error(error);
@@ -191,6 +199,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         renderSuccess('Battle has begun!');
         refreshCharacter();
       } catch (e) {
+        console.error('[DEBUG] onInitiateCombat error:', e);
         renderError((e as Error)?.message ?? 'Failed to initiate battle.', e);
       } finally {
         setIsInitiating(false);
@@ -794,11 +803,18 @@ export const TileDetailsPanel = (): JSX.Element => {
                 <Box key={`tile-monster-${i}-${monster.name}`}>
                   <OpponentRow
                     encounterType={EncounterType.PvE}
-                    onClick={() =>
-                      isMoveEquipped
-                        ? onInitiateCombat(monster, EncounterType.PvE)
-                        : onOpenNoMoveEquippedModal()
-                    }
+                    onClick={() => {
+                      console.log('[DEBUG] Monster click:', {
+                        isMoveEquipped,
+                        monsterId: monster.id,
+                        monsterName: monster.name,
+                      });
+                      if (isMoveEquipped) {
+                        onInitiateCombat(monster, EncounterType.PvE);
+                      } else {
+                        onOpenNoMoveEquippedModal();
+                      }
+                    }}
                     opponent={monster}
                   />
                   <Box

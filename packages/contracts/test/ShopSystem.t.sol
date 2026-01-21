@@ -156,7 +156,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__dropGoldToPlayer(userBCharacterID, balance);
         vm.startPrank(userA);
         world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
-        world.UD__enterGame(userACharacterID);
+        world.UD__enterGame(userACharacterID, newWeaponId, newArmorId);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
         createShopEncounter(userACharacterID, shopId);
@@ -168,7 +168,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         // give userB gold
         vm.startPrank(userB);
         world.UD__rollStats(bytes32("Alan"), userBCharacterID, Classes.Warrior);
-        world.UD__enterGame(userBCharacterID);
+        world.UD__enterGame(userBCharacterID, newWeaponId, newArmorId);
         // spawn and move to 0,0
         world.UD__spawn(userBCharacterID);
 
@@ -202,7 +202,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         Shops.setStock(shopId, stock);
         vm.startPrank(userA);
         world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
-        world.UD__enterGame(userACharacterID);
+        world.UD__enterGame(userACharacterID, newWeaponId, newArmorId);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
         createShopEncounter(userACharacterID, shopId);
@@ -232,7 +232,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__dropGoldToPlayer(userACharacterID, balance);
         vm.startPrank(userA);
         world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
-        world.UD__enterGame(userACharacterID);
+        world.UD__enterGame(userACharacterID, newWeaponId, newArmorId);
         world.UD__spawn(userACharacterID);
         world.UD__move(userACharacterID, 0, 1);
         vm.expectRevert(bytes("Invalid World Location"));
@@ -263,7 +263,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__dropGoldToPlayer(userACharacterID, balance);
         vm.startPrank(userA);
         world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
-        world.UD__enterGame(userACharacterID);
+        world.UD__enterGame(userACharacterID, newWeaponId, newArmorId);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
         createShopEncounter(userACharacterID, shopId);
@@ -323,7 +323,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__dropItem(userBCharacterID, itemIndex, amount);
         vm.startPrank(userA);
         world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
-        world.UD__enterGame(userACharacterID);
+        world.UD__enterGame(userACharacterID, newWeaponId, newArmorId);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
         createShopEncounter(userACharacterID, shopId);
@@ -335,7 +335,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
         vm.startPrank(userB);
         world.UD__rollStats(bytes32("Alan"), userBCharacterID, Classes.Warrior);
-        world.UD__enterGame(userBCharacterID);
+        world.UD__enterGame(userBCharacterID, newWeaponId, newArmorId);
         // spawn and move to 0,0
         world.UD__spawn(userBCharacterID);
 
@@ -367,7 +367,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         Shops.setGold(shopId, 0);
         vm.startPrank(userA);
         world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
-        world.UD__enterGame(userACharacterID);
+        world.UD__enterGame(userACharacterID, newWeaponId, newArmorId);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
         createShopEncounter(userACharacterID, shopId);
@@ -398,7 +398,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__dropGoldToPlayer(userACharacterID, balance);
         vm.startPrank(userA);
         world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
-        world.UD__enterGame(userACharacterID);
+        world.UD__enterGame(userACharacterID, newWeaponId, newArmorId);
         // move away from 0,0
         world.UD__spawn(userACharacterID);
         world.UD__move(userACharacterID, 0, 1);
@@ -470,7 +470,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__dropGoldToPlayer(userACharacterID, balance);
         vm.startPrank(userA);
         world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
-        world.UD__enterGame(userACharacterID);
+        world.UD__enterGame(userACharacterID, newWeaponId, newArmorId);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
 
@@ -508,7 +508,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         world.UD__dropItem(userBCharacterID, itemIndex, amount);
         vm.startPrank(userA);
         world.UD__rollStats(bytes32("Alan"), userACharacterID, Classes.Warrior);
-        world.UD__enterGame(userACharacterID);
+        world.UD__enterGame(userACharacterID, newWeaponId, newArmorId);
         // spawn and move to 0,0
         world.UD__spawn(userACharacterID);
         bytes32 encounterA = createShopEncounter(userACharacterID, shopId);
@@ -520,7 +520,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
         vm.startPrank(userB);
         world.UD__rollStats(bytes32("Alan"), userBCharacterID, Classes.Warrior);
-        world.UD__enterGame(userBCharacterID);
+        world.UD__enterGame(userBCharacterID, newWeaponId, newArmorId);
         // spawn and move to 0,0
         world.UD__spawn(userBCharacterID);
 

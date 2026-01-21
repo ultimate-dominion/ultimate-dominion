@@ -60,6 +60,68 @@ export enum StatsClasses {
   Mage,
 }
 
+// Implicit Class System enums
+export enum Race {
+  None,
+  Human,
+  Elf,
+  Dwarf,
+}
+
+export enum PowerSource {
+  None,
+  Divine,
+  Weave,
+  Physical,
+}
+
+export enum ArmorType {
+  None,
+  Cloth,
+  Leather,
+  Plate,
+}
+
+export enum AdvancedClass {
+  None,
+  Paladin,   // STR + Divine
+  Sorcerer,  // STR + Weave
+  Warrior,   // STR + Physical
+  Druid,     // AGI + Divine
+  Warlock,   // AGI + Weave
+  Ranger,    // AGI + Physical
+  Cleric,    // INT + Divine
+  Wizard,    // INT + Weave
+  Rogue,     // INT + Physical
+}
+
+export enum Rarity {
+  Worn = 0,
+  Common = 1,
+  Uncommon = 2,
+  Rare = 3,
+  Epic = 4,
+  Legendary = 5,
+}
+
+export const RARITY_COLORS: Record<Rarity, string> = {
+  [Rarity.Worn]: '#9d9d9d',      // Gray
+  [Rarity.Common]: '#ffffff',    // White
+  [Rarity.Uncommon]: '#1eff00',  // Green
+  [Rarity.Rare]: '#0070dd',      // Blue
+  [Rarity.Epic]: '#a335ee',      // Purple
+  [Rarity.Legendary]: '#ff8000', // Orange
+};
+
+export const RARITY_NAMES: Record<Rarity, string> = {
+  [Rarity.Worn]: 'Worn',
+  [Rarity.Common]: 'Common',
+  [Rarity.Uncommon]: 'Uncommon',
+  [Rarity.Rare]: 'Rare',
+  [Rarity.Epic]: 'Epic',
+  [Rarity.Legendary]: 'Legendary',
+};
+
 export enum SystemToAllow {
   LootManager = 'LootManager',
   Marketplace = 'Marketplace',
@@ -92,6 +154,7 @@ export type ArmorTemplate = ArmorStats &
   Metadata & {
     itemType: ItemType;
     price: bigint;
+    rarity?: Rarity;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
@@ -175,6 +238,7 @@ export type ConsumableTemplate = ConsumableStats &
   Metadata & {
     itemType: ItemType;
     price: bigint;
+    rarity?: Rarity;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
@@ -195,6 +259,12 @@ export type EntityStats = {
   level: bigint;
   maxHp: bigint;
   strength: bigint;
+  // Implicit class system fields
+  race: Race;
+  powerSource: PowerSource;
+  startingArmor: ArmorType;
+  advancedClass: AdvancedClass;
+  hasSelectedAdvancedClass: boolean;
 };
 
 export type CombatDetails = {
@@ -309,6 +379,7 @@ export type SpellTemplate = SpellStats &
   Metadata & {
     itemType: ItemType;
     price: bigint;
+    rarity?: Rarity;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };
@@ -349,6 +420,7 @@ export type WeaponTemplate = WeaponStats &
   Metadata & {
     itemType: ItemType;
     price: bigint;
+    rarity?: Rarity;
     statRestrictions: StatRestrictions;
     tokenId: string;
   };

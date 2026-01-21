@@ -17,7 +17,7 @@ import {
     StatRestrictions,
     StatRestrictionsData
 } from "../../src/codegen/index.sol";
-import {ItemType, Classes} from "../../src/codegen/common.sol";
+import {ItemType, Classes, PowerSource, Race, ArmorType, AdvancedClass} from "../../src/codegen/common.sol";
 import {_itemsSystemId} from "../../src/utils.sol";
 import {IWorld} from "../../src/codegen/world/IWorld.sol";
 import {World} from "@latticexyz/world/src/World.sol";
@@ -83,7 +83,12 @@ contract WeaponSystemTest is SetUp {
             maxHp: 100,
             currentHp: 100,
             experience: 0,
-            level: 5
+            level: 5,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         }));
 
         // Create test weapon

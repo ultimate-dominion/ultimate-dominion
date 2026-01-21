@@ -5,20 +5,38 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {
     Characters,
     CharactersData,
+    CharacterEquipment,
     NameExists,
     Counters,
-    CharacterOwner
+    CharacterOwner,
+    Stats,
+    StatsData,
+    StarterItems,
+    StarterItemsData,
+    StarterItemPool,
+    StarterConsumables,
+    ArmorStats,
+    WeaponStats,
+    StatRestrictions,
+    StatRestrictionsData,
+    Items,
+    UltimateDominionConfig
 } from "@codegen/index.sol";
-import {Classes} from "@codegen/common.sol";
+import {Classes, ArmorType, ItemType} from "@codegen/common.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {TokenURI} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/TokenURI.sol";
 import {_tokenUriTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {_erc721SystemId, _requireAccess} from "../../utils.sol";
-import {CHARACTERS_NAMESPACE} from "../../../constants.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
-import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
+import {_erc721SystemId} from "../../utils.sol";
+import {CHARACTERS_NAMESPACE, GOLD_NAMESPACE, ITEMS_NAMESPACE} from "../../../constants.sol";
+// Direct table access for gold transfers
+import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
+import {_balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
+// Direct table access for item transfers
+import {Owners} from "@erc1155/tables/Owners.sol";
+import {_ownersTableId} from "@erc1155/utils.sol";
+import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import "forge-std/console.sol";
 
 contract CharacterCore is System {
@@ -77,9 +95,10 @@ contract CharacterCore is System {
             originalStats: "",
             baseStats: ""
         }));
-        
-        // Character owner is stored in Characters table
-        
+
+        // Set up CharacterOwner mapping for lookups
+        CharacterOwner.set(account, tokenId, characterId);
+
         // Mark name as taken
         NameExists.set(name, true);
         
@@ -89,15 +108,108 @@ contract CharacterCore is System {
     /**
      * @dev Character entry into the game - locks character and enables gameplay
      * @param characterId The character to enter the game
+     * @param starterWeaponId The weapon item ID chosen by the player
+     * @param starterArmorId The armor item ID chosen by the player (determines startingArmor type)
      */
-    function enterGame(bytes32 characterId) public onlyOwner(characterId) validCharacter(characterId) {
+    function enterGame(
+        bytes32 characterId,
+        uint256 starterWeaponId,
+        uint256 starterArmorId
+    ) public onlyOwner(characterId) validCharacter(characterId) {
         CharactersData memory charData = Characters.get(characterId);
         require(!charData.locked, "CHARACTER CORE: CHARACTER ALREADY IN GAME");
-        
-        // Lock character for gameplay
-        Characters.setLocked(characterId, true);
-        
-        console.log("CharacterCore: Character", uint256(characterId), "entered game");
+
+        // Get stats for validation
+        StatsData memory tempStats = Stats.get(characterId);
+
+        // Validate starter items are in the pool
+        require(StarterItemPool.getIsStarter(starterWeaponId), "CHARACTER CORE: INVALID STARTER WEAPON");
+        require(StarterItemPool.getIsStarter(starterArmorId), "CHARACTER CORE: INVALID STARTER ARMOR");
+
+        // Validate item types
+        require(Items.getItemType(starterWeaponId) == ItemType.Weapon, "CHARACTER CORE: NOT A WEAPON");
+        require(Items.getItemType(starterArmorId) == ItemType.Armor, "CHARACTER CORE: NOT AN ARMOR");
+
+        // Validate stat requirements for weapon
+        StatRestrictionsData memory weaponRestrictions = StatRestrictions.get(starterWeaponId);
+        require(tempStats.strength >= weaponRestrictions.minStrength, "CHARACTER CORE: INSUFFICIENT STR FOR WEAPON");
+        require(tempStats.agility >= weaponRestrictions.minAgility, "CHARACTER CORE: INSUFFICIENT AGI FOR WEAPON");
+        require(tempStats.intelligence >= weaponRestrictions.minIntelligence, "CHARACTER CORE: INSUFFICIENT INT FOR WEAPON");
+
+        // Validate stat requirements for armor
+        StatRestrictionsData memory armorRestrictions = StatRestrictions.get(starterArmorId);
+        require(tempStats.strength >= armorRestrictions.minStrength, "CHARACTER CORE: INSUFFICIENT STR FOR ARMOR");
+        require(tempStats.agility >= armorRestrictions.minAgility, "CHARACTER CORE: INSUFFICIENT AGI FOR ARMOR");
+        require(tempStats.intelligence >= armorRestrictions.minIntelligence, "CHARACTER CORE: INSUFFICIENT INT FOR ARMOR");
+
+        // Set startingArmor based on the chosen armor's type
+        ArmorType armorType = ArmorStats.getArmorType(starterArmorId);
+        require(armorType != ArmorType.None, "CHARACTER CORE: ARMOR HAS NO TYPE");
+        tempStats.startingArmor = armorType;
+
+        // Apply armor-based stat modifiers (same as chooseStartingArmor)
+        if (armorType == ArmorType.Cloth) {
+            tempStats.intelligence += 2;
+            tempStats.agility += 1;
+            tempStats.strength -= 1;
+        } else if (armorType == ArmorType.Leather) {
+            tempStats.agility += 2;
+            tempStats.strength += 1;
+        } else if (armorType == ArmorType.Plate) {
+            tempStats.strength += 2;
+            tempStats.maxHp += 1;
+            tempStats.agility -= 1;
+        }
+
+        // Update stats for game entry
+        tempStats.level = 1;
+        tempStats.currentHp = int256(tempStats.maxHp);
+        Stats.set(characterId, tempStats);
+
+        address playerAddress = charData.owner;
+
+        // Mint gold directly to player via table write (bypasses ERC20System access checks)
+        ResourceId goldBalanceTableId = _balancesTableId(GOLD_NAMESPACE);
+        uint256 playerGoldBalance = Balances.get(goldBalanceTableId, playerAddress);
+        uint256 goldAmount = 5 ether;
+        Balances.set(goldBalanceTableId, playerAddress, playerGoldBalance + goldAmount);
+        console.log("CharacterCore: Minted 5 GOLD to player");
+
+        // Mint chosen starter items directly to player
+        ResourceId itemsOwnersTableId = _ownersTableId(ITEMS_NAMESPACE);
+
+        // Mint weapon
+        uint256 playerWeaponBalance = Owners.getBalance(itemsOwnersTableId, playerAddress, starterWeaponId);
+        Owners.setBalance(itemsOwnersTableId, playerAddress, starterWeaponId, playerWeaponBalance + 1);
+        console.log("CharacterCore: Minted starter weapon", starterWeaponId);
+
+        // Mint armor
+        uint256 playerArmorBalance = Owners.getBalance(itemsOwnersTableId, playerAddress, starterArmorId);
+        Owners.setBalance(itemsOwnersTableId, playerAddress, starterArmorId, playerArmorBalance + 1);
+        console.log("CharacterCore: Minted starter armor", starterArmorId);
+
+        // Mint starter consumables (e.g., health potions)
+        uint256[] memory consumableIds = StarterConsumables.getItemIds();
+        uint256[] memory consumableAmounts = StarterConsumables.getAmounts();
+        for (uint256 i = 0; i < consumableIds.length; i++) {
+            uint256 playerConsumableBalance = Owners.getBalance(itemsOwnersTableId, playerAddress, consumableIds[i]);
+            Owners.setBalance(itemsOwnersTableId, playerAddress, consumableIds[i], playerConsumableBalance + consumableAmounts[i]);
+            console.log("CharacterCore: Minted starter consumable", consumableIds[i], "x", consumableAmounts[i]);
+        }
+
+        // Equip the starter items so they can be used in combat
+        CharacterEquipment.pushEquippedWeapons(characterId, starterWeaponId);
+        CharacterEquipment.pushEquippedArmor(characterId, starterArmorId);
+        console.log("CharacterCore: Equipped starter weapon and armor");
+
+        // Lock character and store base stats
+        charData.locked = true;
+        bytes memory encodedStats = abi.encode(tempStats);
+        charData.baseStats = encodedStats;
+        charData.originalStats = encodedStats;
+        Characters.set(characterId, charData);
+
+        console.log("CharacterCore: Character", uint256(characterId), "entered game with gold and items");
     }
 
     /**

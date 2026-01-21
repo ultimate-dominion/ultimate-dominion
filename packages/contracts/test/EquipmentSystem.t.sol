@@ -253,7 +253,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     function test_unequipItem() public {
         vm.startPrank(alice);
         world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
-        world.UD__enterGame(alicesCharacterId);
+        world.UD__enterGame(alicesCharacterId, newWeaponId, newArmorId);
         vm.stopPrank();
         StatsData memory alicesStats = world.UD__getStats(alicesCharacterId);
         alicesStats.agility = 9;

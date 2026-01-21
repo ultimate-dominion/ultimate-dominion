@@ -109,4 +109,31 @@ contract WorldActionSystem is System {
 
         Stats.setCurrentHp(receivingEntity, stats.currentHp);
     }
+
+    /**
+     * @dev Use a healing consumable during combat. Only works for instant healing items (negative maxDamage).
+     * @param characterId The character using the consumable
+     * @param itemId The consumable item ID
+     */
+    function useCombatConsumableItem(bytes32 characterId, uint256 itemId) public {
+        require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "Cannot consume another's item");
+        require(IWorld(_world()).UD__isItemOwner(itemId, _msgSender()), "you do not own this item");
+
+        // Get consumable stats
+        ConsumableStatsData memory consumableStats = IWorld(_world()).UD__getConsumableStats(itemId);
+
+        // Only allow instant healing items during combat (negative maxDamage = healing)
+        require(
+            consumableStats.maxDamage == consumableStats.minDamage && consumableStats.maxDamage < 0,
+            "Only instant healing items can be used in combat"
+        );
+
+        // Apply the healing
+        _applyHealingPotion(characterId, characterId, itemId);
+
+        // Consume the item
+        IWorld(_world()).UD__consumeItem(characterId, itemId);
+
+        console.log("WorldActionSystem: Used combat consumable", itemId);
+    }
 }

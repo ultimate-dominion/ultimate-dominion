@@ -70,9 +70,9 @@ contract TestStatSystem is Script {
             console.log("getCurrentAvailableLevel not available yet");
         }
 
-        // Test calculateStatBonuses with a test character ID
+        // Test calculateStatBonuses with a test character ID (now returns statPoints, hpGain)
         bytes32 testCharacterId = bytes32(uint256(1));
-        try world.UD__calculateStatBonuses(testCharacterId) returns (int256 strBonus, int256 agiBonus, int256 intBonus, int256 hpBonus) {
+        try world.UD__calculateStatBonuses(testCharacterId) returns (int256 statPoints, int256 hpGain) {
             // Stat bonuses calculated successfully
         } catch {
             // calculateStatBonuses not available yet

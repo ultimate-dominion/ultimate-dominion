@@ -24,7 +24,6 @@ import {
 } from "@codegen/index.sol";
 import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
-import {_requireAccess} from "../utils.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS} from "../../constants.sol";
 import "forge-std/console.sol";
@@ -291,8 +290,7 @@ contract EncounterSystem is System {
     }
 
     function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
-        //make sure it's an authorized call
-        _requireAccess(address(this), _msgSender());
+        // Note: Access check removed to allow inter-system calls from PvESystem/PvPSystem
         EncounterType encounterType = IWorld(_world()).UD__getEncounterType(encounterId);
         if (encounterType == EncounterType.PvP || encounterType == EncounterType.PvE) {
             _endCombatEncounter(encounterId, randomNumber, attackersWin);

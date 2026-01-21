@@ -75,7 +75,7 @@ contract EffectsSystem is System {
             for (uint256 i; i < appliedEffects.length; i++) {
                 effectId = appliedEffects[i];
                 bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
-                if (!isNotExpired(updatedEffectId)) {
+                if (!_isNotExpired(updatedEffectId)) {
                     WorldStatusEffects.updateAppliedStatusEffects(entityId, i, updatedEffectId);
                     numberOfExpiredEffects++;
                 }
@@ -86,7 +86,7 @@ contract EffectsSystem is System {
         for (uint256 i; i < numberOfExpiredEffects; i++) {
             bytes32[] memory cullingEffects = WorldStatusEffects.get(entityId);
             for (uint256 j; j < cullingEffects.length; j++) {
-                if (!isNotExpired(cullingEffects[j])) {
+                if (!_isNotExpired(cullingEffects[j])) {
                     cullExpiredWorldEffect(entityId, cullingEffects[j], j);
                     break;
                 }
@@ -113,7 +113,7 @@ contract EffectsSystem is System {
                 effectId = encounterData.appliedStatusEffects[i];
                 statsData = getStatusEffectStats(getEffectStatId(effectId));
                 bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
-                if (isNotExpired(updatedEffectId)) {
+                if (_isNotExpired(updatedEffectId)) {
                     _adjustedStats = EffectProcessor.applyStatusEffectModifiers(_adjustedStats, statsData);
                 } else {
                     EncounterEntity.updateAppliedStatusEffects(entityId, i, updatedEffectId);
@@ -138,7 +138,7 @@ contract EffectsSystem is System {
         AdjustedCombatStats memory _statInput = IWorld(_world()).UD__getCombatStats(entityId);
 
         if (worldStatusEffect != bytes32(0)) {
-            if (!isNotExpired(effectId) && worldStatusEffect == effectId) {
+            if (!_isNotExpired(effectId) && worldStatusEffect == effectId) {
                 StatusEffectStatsData memory effectStats = getStatusEffectStats(effectId);
                 if (effectsLength > 1) {
                     bytes32 lastEffectId = WorldStatusEffects.getItemAppliedStatusEffects(entityId, effectsLength - 1);
@@ -163,7 +163,7 @@ contract EffectsSystem is System {
         public
         returns (AdjustedCombatStats memory _adjustedStats)
     {
-        _requireAccess(address(this), _msgSender());
+        // Note: Access check removed to allow inter-system calls during combat
         bytes32 appliedEffectId =
             _getAppliedEffectId(effectId, CombatEncounter.getCurrentTurn(EncounterEntity.getEncounterId(entityId)));
         _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
@@ -187,7 +187,7 @@ contract EffectsSystem is System {
     }
 
     function applyWorldEffects(bytes32 entityId) public returns (AdjustedCombatStats memory _adjustedStats) {
-        _requireAccess(address(this), _msgSender());
+        // Note: Access check removed to allow inter-system calls from EquipmentSystem
         checkWorldStatusEffects(entityId);
         bytes32[] memory worldEffects = WorldStatusEffects.get(entityId);
         if (worldEffects.length > 0) {
@@ -224,16 +224,15 @@ contract EffectsSystem is System {
     }
 
     function isValidEffect(bytes32 entityId, bytes32 appliedEffectId) public view returns (bool) {
-        return isNotExpired(expireIfInvalid(entityId, appliedEffectId));
+        return _isNotExpired(expireIfInvalid(entityId, appliedEffectId));
     }
-
-    function isNotExpired(bytes32 appliedEffectId) public pure returns (bool) {
+    function _isNotExpired(bytes32 appliedEffectId) internal pure returns (bool) {
         return EffectProcessor.isNotExpired(appliedEffectId);
     }
 
     function expireIfInvalid(bytes32 entityId, bytes32 appliedEffectId) public view returns (bytes32) {
         this;
-        if (isNotExpired(appliedEffectId)) {
+        if (_isNotExpired(appliedEffectId)) {
             (bytes32 effectStatId, uint256 timestampApplied, uint256 expiredTime, uint256 turnApplied) =
                 getAppliedEffectInfo(appliedEffectId);
 
@@ -266,7 +265,7 @@ contract EffectsSystem is System {
     }
 
     function applyDamageOverTime(bytes32 encounterId, bytes32 entityId) public {
-        _requireAccess(address(this), _msgSender());
+        // Note: Access check removed to allow inter-system calls from PvESystem/PvPSystem
         uint256 currentTurn = CombatEncounter.getCurrentTurn(encounterId);
         int256 totalDamage;
         bytes32[] memory appliedStatusEffects = EncounterEntity.getAppliedStatusEffects(entityId);

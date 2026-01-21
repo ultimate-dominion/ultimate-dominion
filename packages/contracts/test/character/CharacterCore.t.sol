@@ -83,7 +83,7 @@ contract CharacterCoreTest is SetUp {
         characterId = characterCore.mintCharacter(player, name, tokenUri);
 
         // Enter game
-        characterCore.enterGame(characterId);
+        characterCore.enterGame(characterId, newWeaponId, newArmorId);
 
         // Verify character is locked
         assertTrue(characterCore.isCharacterLocked(characterId));
@@ -180,7 +180,7 @@ contract CharacterCoreTest is SetUp {
         // Try to enter game as other player
         vm.startPrank(otherPlayer);
         vm.expectRevert("CHARACTER CORE: INVALID OPERATOR");
-        characterCore.enterGame(characterId);
+        characterCore.enterGame(characterId, newWeaponId, newArmorId);
         vm.stopPrank();
 
         vm.stopPrank();
@@ -192,11 +192,11 @@ contract CharacterCoreTest is SetUp {
         characterId = characterCore.mintCharacter(player, name, tokenUri);
 
         // Enter game first time
-        characterCore.enterGame(characterId);
+        characterCore.enterGame(characterId, newWeaponId, newArmorId);
 
         // Try to enter game again
         vm.expectRevert("CHARACTER CORE: CHARACTER ALREADY IN GAME");
-        characterCore.enterGame(characterId);
+        characterCore.enterGame(characterId, newWeaponId, newArmorId);
 
         vm.stopPrank();
     }
@@ -205,7 +205,7 @@ contract CharacterCoreTest is SetUp {
         bytes32 fakeCharacterId = bytes32(uint256(999));
 
         vm.expectRevert("CHARACTER CORE: INVALID CHARACTER");
-        characterCore.enterGame(fakeCharacterId);
+        characterCore.enterGame(fakeCharacterId, newWeaponId, newArmorId);
 
         vm.stopPrank();
     }

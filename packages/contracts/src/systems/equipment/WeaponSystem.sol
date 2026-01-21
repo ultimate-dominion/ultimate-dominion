@@ -19,6 +19,9 @@ import {
 import {ItemType} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
+import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
+import {UNLIMITED_DELEGATION} from "@latticexyz/world/src/constants.sol";
+import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 
 contract WeaponSystem is System {
     modifier inGame(bytes32 characterId) {
@@ -29,7 +32,11 @@ contract WeaponSystem is System {
 
     modifier onlyCharacterOwner(bytes32 characterId) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
-        require(characterOwner == _msgSender(), "WEAPON: Not Character Owner");
+        address caller = _msgSender();
+        // Check direct ownership or delegation
+        bool isOwner = characterOwner == caller;
+        bool hasDelegation = ResourceId.unwrap(UserDelegationControl.getDelegationControlId(characterOwner, caller)) == ResourceId.unwrap(UNLIMITED_DELEGATION);
+        require(isOwner || hasDelegation, "WEAPON: Not Character Owner");
         _;
     }
 
@@ -43,13 +50,15 @@ contract WeaponSystem is System {
      * @param characterId The character ID
      * @param weaponId The weapon item ID
      */
-    function equipWeapon(bytes32 characterId, uint256 weaponId) 
-        public 
-        inGame(characterId) 
-        onlyCharacterOwner(characterId) 
-        notInCombat(characterId) 
+    function equipWeapon(bytes32 characterId, uint256 weaponId)
+        public
+        inGame(characterId)
+        notInCombat(characterId)
     {
-        require(IWorld(_world()).UD__isItemOwner(weaponId, _msgSender()), "WEAPON: Not Item Owner");
+        // Note: Ownership/delegation is validated by EquipmentSystem before calling this
+        // Check item ownership - items are owned by the character owner (delegator)
+        address characterOwner = IWorld(_world()).UD__getOwner(characterId);
+        require(IWorld(_world()).UD__isItemOwner(weaponId, characterOwner), "WEAPON: Not Item Owner");
         require(Items.getItemType(weaponId) == ItemType.Weapon, "WEAPON: Not a weapon");
         require(checkWeaponRequirements(characterId, weaponId), "WEAPON: Requirements not met");
         require(!isWeaponEquipped(characterId, weaponId), "WEAPON: Already equipped");
@@ -69,11 +78,10 @@ contract WeaponSystem is System {
      * @param characterId The character ID
      * @param weaponId The weapon item ID
      */
-    function unequipWeapon(bytes32 characterId, uint256 weaponId) 
-        public 
-        inGame(characterId) 
-        onlyCharacterOwner(characterId) 
-        notInCombat(characterId) 
+    function unequipWeapon(bytes32 characterId, uint256 weaponId)
+        public
+        inGame(characterId)
+        notInCombat(characterId)
         returns (bool success) 
     {
         require(isWeaponEquipped(characterId, weaponId), "WEAPON: Not equipped");

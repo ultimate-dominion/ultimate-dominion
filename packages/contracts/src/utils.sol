@@ -80,3 +80,15 @@ function _requireAccess(address requiredAddress, address sender) view {
 function _requireSystemAddress(ResourceId resourceId, address sender) view {
     AccessControl.requireAccess(resourceId, sender);
 }
+
+// Import Admin table for admin checks
+import {Admin} from "@codegen/index.sol";
+
+function _requireAccessOrAdmin(address requiredAddress, address sender) view {
+    // Allow if sender is admin
+    if (Admin.get(sender)) {
+        return;
+    }
+    // Otherwise require namespace access
+    AccessControl.requireAccess(SystemRegistry.get(requiredAddress), sender);
+}

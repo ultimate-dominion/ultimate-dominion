@@ -21,27 +21,36 @@ import { useMovement } from '../contexts/MovementContext';
 import { EncounterType, Monster } from '../utils/types';
 
 export const MONSTER_MOVE_MAPPING: Record<string, string> = {
-  '5': 'Bite',
-  '6': 'Acid Spray',
-  '7': 'Swift Stab',
-  '8': 'Sludge Ball',
-  '9': 'Rusty Axe',
-  '10': 'Bite',
-  '11': 'Iron Sword',
-  '12': 'Venom Bite',
-  '13': 'Ember',
-  '14': 'Iron Sword',
-  '15': 'Wall of Force',
-  '16': 'Venom Bite',
-  '17': 'Claw',
-  '18': 'Wall of Force',
-  '19': 'Burrow Strike',
-  '20': 'Steel Sword',
-  '21': 'Fire Lance',
-  '22': 'Spectral Bite',
-  '23': 'Maul',
-  '24': 'Steel Sword',
-  '25': 'Dragon Breath',
+  '1': 'Razor Claws',      // Rock Beetle
+  '2': 'Razor Claws',      // Cave Rat
+  '3': 'Dark Magic',       // Glowcap Sprite
+  '4': 'Razor Claws',      // Tunnel Crawler
+  '5': 'Razor Claws',      // Shadow Bat
+  '6': 'Elemental Burst',  // Fungal Shaman
+  '7': 'Stone Fist',       // Cavern Brute
+  '8': 'Venomous Bite',    // Cave Spider
+  '9': 'Dark Magic',       // Dark Wisp
+  '10': 'Stone Fist',      // Stone Golem Shard
+  '11': 'Venomous Bite',   // Giant Scorpion
+  '12': 'Elemental Burst', // Crystal Elemental
+  '13': 'Crushing Slam',   // Cave Troll
+  '14': 'Razor Claws',     // Stalker
+  '15': 'Dark Magic',      // Shadow Caster
+  '16': 'Stone Fist',      // Iron Golem
+  '17': 'Venomous Bite',   // Phase Spider
+  '18': 'Dark Magic',      // Void Whisper
+  '19': 'Crushing Slam',   // Cavern Ogre
+  '20': 'Venomous Bite',   // Assassin Bug
+  '21': 'Dark Magic',      // Lich Acolyte
+  '22': 'Crushing Slam',   // Stone Giant
+  '23': 'Shadow Strike',   // Tunnel Wraith
+  '24': 'Dark Magic',      // Dark Sorcerer
+  '25': 'Crushing Slam',   // Mountain Troll
+  '26': 'Shadow Strike',   // Shadow Stalker
+  '27': 'Dark Magic',      // Abyssal Channeler
+  '28': 'Crushing Slam',   // Cavern Lord
+  '29': 'Shadow Strike',   // Cave Wyvern
+  '30': 'Elemental Burst', // Shadow Dragon
 };
 
 export const ActionsPanel = (): JSX.Element => {

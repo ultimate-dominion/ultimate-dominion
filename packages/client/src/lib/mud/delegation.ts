@@ -4,6 +4,7 @@ import {
   type Account,
   type Chain,
   type Hex,
+  parseGwei,
   type Transport,
   type WalletClient,
 } from 'viem';
@@ -33,13 +34,29 @@ export async function setupDelegation(
     const delegationControlId = UNLIMITED_DELEGATION;
     console.log('Using delegation control ID:', delegationControlId);
 
-    // Use the same approach as the working cast command - no gas estimation
+    // Check if we're on a local chain (chainId 31337)
+    const chainId = externalWalletClient.chain?.id;
+    const isLocalChain = chainId === 31337;
+
+    // For local Anvil chains, we need to set explicit gas price to avoid
+    // MetaMask's gas estimation which often fails with Anvil's default settings
+    const gasConfig = isLocalChain
+      ? {
+          gas: 200000n,
+          maxFeePerGas: parseGwei('20'),
+          maxPriorityFeePerGas: parseGwei('1'),
+        }
+      : {
+          gas: 200000n,
+        };
+
     const delegationTx = await externalWalletClient.writeContract({
       account: externalWalletClient.account,
       address: network.worldContract.address,
       abi: IWorldAbi,
       functionName: 'registerDelegation',
-      args: [delegateeAddress, delegationControlId, '0x00'],
+      args: [delegateeAddress, delegationControlId, '0x'],
+      ...gasConfig,
     });
 
     console.log('Delegation transaction sent:', delegationTx);

@@ -9,12 +9,18 @@ import {
     ArmorStatsData,
     CharacterEquipmentData
 } from "@codegen/index.sol";
-import {Classes} from "@codegen/common.sol";
+import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {
-    ABILITY_POINTS_PER_LEVEL,
     MAX_LEVEL,
-    BONUS_POINT_LEVEL
+    EARLY_GAME_CAP,
+    MID_GAME_CAP,
+    STAT_POINTS_EARLY,
+    STAT_POINTS_MID,
+    STAT_POINTS_LATE,
+    BASE_HP_GAIN_EARLY,
+    BASE_HP_GAIN_MID,
+    BASE_HP_GAIN_LATE
 } from "../../constants.sol";
 
 /**
@@ -53,7 +59,7 @@ library StatCalculator {
     }
 
     /**
-     * @notice Generate random stats for character creation
+     * @notice Generate random stats for character creation (legacy - uses class system)
      * @param randomNumber Random number for stat generation
      * @param characterClass Character's class
      * @return stats Generated stats data
@@ -109,6 +115,60 @@ library StatCalculator {
     }
 
     /**
+     * @notice Generate balanced base stats for implicit class system
+     * @dev Generates stats totaling 19 points (each stat 3-10), base HP of 18
+     *      Race and armor bonuses are applied separately via chooseRace/chooseStartingArmor
+     * @param randomNumber Random number for stat generation
+     * @param existingStats Existing stats to preserve (race, powerSource, etc. if already set)
+     * @return stats Generated stats data with balanced distribution
+     */
+    function generateBalancedBaseStats(uint256 randomNumber, StatsData memory existingStats)
+        internal
+        pure
+        returns (StatsData memory stats)
+    {
+        uint64[] memory chunks = LibChunks.get4Chunks(randomNumber);
+
+        // Preserve existing implicit class choices
+        stats.powerSource = existingStats.powerSource;
+        stats.race = existingStats.race;
+        stats.startingArmor = existingStats.startingArmor;
+        stats.advancedClass = existingStats.advancedClass;
+        stats.hasSelectedAdvancedClass = existingStats.hasSelectedAdvancedClass;
+
+        // Generate base stats in range [3, 10]
+        stats.strength = int256(Math.absolute(int256(int64(chunks[0]))) % 8 + 3);
+        stats.agility = int256(Math.absolute(int256(int64(chunks[1]))) % 8 + 3);
+
+        // Calculate intelligence to ensure total is 19
+        stats.intelligence = int256(19 - stats.strength - stats.agility);
+
+        // Ensure intelligence is within the range [3, 10]
+        if (stats.intelligence < 3) {
+            int256 deficit = int256(3 - stats.intelligence);
+            stats.intelligence = int256(3);
+
+            if (stats.strength > stats.agility) {
+                stats.strength -= deficit;
+            } else {
+                stats.agility -= deficit;
+            }
+        } else if (stats.intelligence > 10) {
+            int256 excess = int256(stats.intelligence - 10);
+            stats.intelligence = int256(10);
+
+            if (stats.strength < stats.agility) {
+                stats.strength += int256(excess);
+            } else {
+                stats.agility += int256(excess);
+            }
+        }
+
+        // Base HP for all characters (bonuses come from race/armor choices)
+        stats.maxHp = int256(18);
+    }
+
+    /**
      * @notice Calculate HP bonus for leveling up
      * @param characterClass Character's class
      * @param currentLevel Current character level
@@ -129,27 +189,46 @@ library StatCalculator {
     }
 
     /**
-     * @notice Calculate class bonus for leveling up
-     * @param characterClass Character's class
-     * @param availableLevel Available level for leveling
-     * @return strBonus Strength bonus
-     * @return agiBonus Agility bonus
-     * @return intBonus Intelligence bonus
+     * @notice Calculate stat points gained for a specific level (diminishing returns)
+     * @param level The level being gained
+     * @return statPoints Number of stat points gained at this level
      */
-    function calculateClassBonus(Classes characterClass, uint256 availableLevel)
+    function calculateStatPointsForLevel(uint256 level)
         internal
         pure
-        returns (int256 strBonus, int256 agiBonus, int256 intBonus)
+        returns (int256 statPoints)
     {
-        // Add an extra point for class stat every BONUS_POINT_LEVEL levels
-        if (availableLevel % BONUS_POINT_LEVEL == 0) {
-            if (characterClass == Classes.Warrior) {
-                strBonus = 1;
-            } else if (characterClass == Classes.Rogue) {
-                agiBonus = 1;
-            } else if (characterClass == Classes.Mage) {
-                intBonus = 1;
-            }
+        if (level <= EARLY_GAME_CAP) {
+            // Levels 1-10: +1 stat point every level
+            statPoints = STAT_POINTS_EARLY;
+        } else if (level <= MID_GAME_CAP) {
+            // Levels 11-50: +1 stat point every 2 levels
+            statPoints = (level % 2 == 0) ? STAT_POINTS_MID : int256(0);
+        } else {
+            // Levels 51-100: +1 stat point every 5 levels
+            statPoints = (level % 5 == 0) ? STAT_POINTS_LATE : int256(0);
+        }
+    }
+
+    /**
+     * @notice Calculate HP gained for a specific level (diminishing returns)
+     * @param level The level being gained
+     * @return hpGain HP gained at this level
+     */
+    function calculateHpForLevel(uint256 level)
+        internal
+        pure
+        returns (int256 hpGain)
+    {
+        if (level <= EARLY_GAME_CAP) {
+            // Levels 1-10: +2 HP every level
+            hpGain = BASE_HP_GAIN_EARLY;
+        } else if (level <= MID_GAME_CAP) {
+            // Levels 11-50: +1 HP every level
+            hpGain = BASE_HP_GAIN_MID;
+        } else {
+            // Levels 51-100: +1 HP every 2 levels
+            hpGain = (level % 2 == 0) ? BASE_HP_GAIN_LATE : int256(0);
         }
     }
 
@@ -157,9 +236,10 @@ library StatCalculator {
      * @notice Validate stat changes during leveling
      * @param currentStats Current character stats
      * @param desiredStats Desired new stats
+     * @param newLevel The level being gained
      * @return isValid Whether the stat changes are valid
      */
-    function validateStatChanges(StatsData memory currentStats, StatsData memory desiredStats)
+    function validateStatChanges(StatsData memory currentStats, StatsData memory desiredStats, uint256 newLevel)
         internal
         pure
         returns (bool isValid)
@@ -168,8 +248,9 @@ library StatCalculator {
         int256 agiChange = desiredStats.agility - currentStats.agility;
         int256 intChange = desiredStats.intelligence - currentStats.intelligence;
 
-        // Total stat changes must equal ABILITY_POINTS_PER_LEVEL
-        isValid = (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL;
+        // Total stat changes must equal the stat points for this level
+        int256 allowedPoints = calculateStatPointsForLevel(newLevel);
+        isValid = (strChange + agiChange + intChange) == allowedPoints;
     }
 
     /**
@@ -296,16 +377,52 @@ library StatCalculator {
     }
 
     /**
-     * @notice Calculate total stat points available for leveling
+     * @notice Calculate total stat points accumulated up to a level (diminishing returns)
      * @param level Character level
-     * @return totalPoints Total stat points available
+     * @return totalPoints Total stat points accumulated
      */
     function calculateTotalStatPoints(uint256 level) internal pure returns (int256 totalPoints) {
-        // Each level gives ABILITY_POINTS_PER_LEVEL points
-        // Plus class bonus every BONUS_POINT_LEVEL levels
-        totalPoints = int256(level) * ABILITY_POINTS_PER_LEVEL;
-        
-        // Add class bonus points
-        totalPoints += int256(level / BONUS_POINT_LEVEL);
+        totalPoints = 0;
+
+        // Early game: levels 1-10, +1 per level
+        uint256 earlyLevels = level > EARLY_GAME_CAP ? EARLY_GAME_CAP : level;
+        totalPoints += int256(earlyLevels) * STAT_POINTS_EARLY;
+
+        if (level > EARLY_GAME_CAP) {
+            // Mid game: levels 11-50, +1 per 2 levels
+            uint256 midLevels = level > MID_GAME_CAP ? MID_GAME_CAP - EARLY_GAME_CAP : level - EARLY_GAME_CAP;
+            totalPoints += int256(midLevels / 2) * STAT_POINTS_MID;
+
+            if (level > MID_GAME_CAP) {
+                // Late game: levels 51-100, +1 per 5 levels
+                uint256 lateLevels = level - MID_GAME_CAP;
+                totalPoints += int256(lateLevels / 5) * STAT_POINTS_LATE;
+            }
+        }
+    }
+
+    /**
+     * @notice Calculate total HP accumulated up to a level (diminishing returns)
+     * @param level Character level
+     * @return totalHp Total HP accumulated from leveling
+     */
+    function calculateTotalHpFromLeveling(uint256 level) internal pure returns (int256 totalHp) {
+        totalHp = 0;
+
+        // Early game: levels 1-10, +2 per level
+        uint256 earlyLevels = level > EARLY_GAME_CAP ? EARLY_GAME_CAP : level;
+        totalHp += int256(earlyLevels) * BASE_HP_GAIN_EARLY;
+
+        if (level > EARLY_GAME_CAP) {
+            // Mid game: levels 11-50, +1 per level
+            uint256 midLevels = level > MID_GAME_CAP ? MID_GAME_CAP - EARLY_GAME_CAP : level - EARLY_GAME_CAP;
+            totalHp += int256(midLevels) * BASE_HP_GAIN_MID;
+
+            if (level > MID_GAME_CAP) {
+                // Late game: levels 51-100, +1 per 2 levels
+                uint256 lateLevels = level - MID_GAME_CAP;
+                totalHp += int256(lateLevels / 2) * BASE_HP_GAIN_LATE;
+            }
+        }
     }
 }

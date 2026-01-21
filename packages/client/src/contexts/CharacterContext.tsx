@@ -24,8 +24,15 @@ import {
   decodeAppliedStatusEffectId,
   decodeBaseStats,
   fetchMetadataFromUri,
+  isTextOnlyUri,
   uriToHttp,
 } from '../utils/helpers';
+import {
+  AdvancedClass,
+  ArmorType,
+  PowerSource,
+  Race,
+} from '../utils/types';
 import type {
   Armor,
   Character,
@@ -105,6 +112,7 @@ export const CharacterProvider = ({
 
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(true);
+  const [itemsRefreshCounter, setItemsRefreshCounter] = useState(0);
   const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
   const [inventoryConsumables, setInventoryConsumables] = useState<
     Consumable[]
@@ -241,6 +249,12 @@ export const CharacterProvider = ({
             }
           : undefined,
         worldStatusEffects,
+        // Implicit class system fields
+        race: (characterStats?.race as Race) ?? Race.None,
+        powerSource: (characterStats?.powerSource as PowerSource) ?? PowerSource.None,
+        startingArmor: (characterStats?.startingArmor as ArmorType) ?? ArmorType.None,
+        advancedClass: (characterStats?.advancedClass as AdvancedClass) ?? AdvancedClass.None,
+        hasSelectedAdvancedClass: characterStats?.hasSelectedAdvancedClass ?? false,
       };
     })[0];
 
@@ -257,13 +271,35 @@ export const CharacterProvider = ({
       tokenIdEntity,
     ).tokenURI;
 
-    const fetachedMetadata = await fetchMetadataFromUri(
-      uriToHttp(`ipfs://${metadataURI}`)[0],
-    );
+    // Try to fetch metadata, but use defaults if it fails (e.g., test URIs)
+    let fetchedMetadata = {
+      name: '',
+      description: '',
+      image: '',
+    };
 
+    try {
+      // Handle text-only URIs directly (no HTTP fetch needed)
+      if (metadataURI && isTextOnlyUri(metadataURI)) {
+        fetchedMetadata = await fetchMetadataFromUri(metadataURI);
+      } else if (metadataURI && !metadataURI.startsWith('test') && metadataURI.length > 10) {
+        // Handle IPFS/HTTP URIs
+        const urls = metadataURI.startsWith('ipfs://')
+          ? uriToHttp(metadataURI)
+          : uriToHttp(`ipfs://${metadataURI}`);
+        fetchedMetadata = await fetchMetadataFromUri(urls[0]);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch character metadata, using defaults:', error);
+    }
+
+    // Only override partialCharacter fields if fetchedMetadata has non-empty values
     setUserCharacter({
       ...partialCharacter,
-      ...fetachedMetadata,
+      // Keep decoded bytes32 name if fetched name is empty
+      name: fetchedMetadata.name || partialCharacter.name,
+      description: fetchedMetadata.description || '',
+      image: fetchedMetadata.image || '',
     });
   }, [
     AdventureEscrow,
@@ -285,6 +321,9 @@ export const CharacterProvider = ({
     setIsRefreshing(true);
     try {
       await fetchCharacterData();
+      // Small delay to ensure RECS sync has propagated, then force items refresh
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setItemsRefreshCounter(c => c + 1);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error refreshing character.', e);
     } finally {
@@ -434,8 +473,10 @@ export const CharacterProvider = ({
   useEffect(() => {
     if (!(isSynced && userCharacter) || isLoadingItemTemplates) return;
 
+    const equipmentData = getComponentValue(CharacterEquipment, userCharacter.id);
+
     const { equippedArmor, equippedSpells, equippedWeapons } =
-      getComponentValue(CharacterEquipment, userCharacter.id) ??
+      equipmentData ??
       ({ equippedArmor: [], equippedSpells: [], equippedWeapons: [] } as {
         equippedArmor: bigint[];
         equippedSpells: bigint[];
@@ -453,6 +494,7 @@ export const CharacterProvider = ({
     fetchCharacterItems,
     isLoadingItemTemplates,
     isSynced,
+    itemsRefreshCounter,
     userCharacter,
   ]);
 

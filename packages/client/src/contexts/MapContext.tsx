@@ -197,9 +197,23 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               tokenIdEntity,
             ).tokenURI;
 
-            const fetachedMetadata = await fetchMetadataFromUri(
-              uriToHttp(`ipfs://${metadataURI}`)[0],
-            );
+            // Try to fetch metadata, but use defaults if it fails (e.g., test URIs)
+            let fetachedMetadata = {
+              name: '',
+              description: '',
+              image: '',
+            };
+
+            try {
+              // Skip fetch for obvious test/placeholder URIs
+              if (metadataURI && !metadataURI.startsWith('test') && metadataURI.length > 10) {
+                fetachedMetadata = await fetchMetadataFromUri(
+                  uriToHttp(`ipfs://${metadataURI}`)[0],
+                );
+              }
+            } catch (error) {
+              console.warn('Failed to fetch character metadata in MapContext, using defaults:', error);
+            }
 
             const { encounterId, pvpTimer } = getComponentValue(
               EncounterEntity,

@@ -33,6 +33,9 @@ import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
 import {ERC1155MetadataURI} from "@erc1155/tables/ERC1155MetadataURI.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
+import {UNLIMITED_DELEGATION} from "@latticexyz/world/src/constants.sol";
+import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 
 contract EquipmentSystem is System {
     modifier inGame(bytes32 characterId) {
@@ -43,20 +46,39 @@ contract EquipmentSystem is System {
 
     function equipItems(bytes32 characterId, uint256[] memory itemIds) public inGame(characterId) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
-        require(characterOwner == _msgSender(), "EQUIPMENT: Not Character Owner");
+        address caller = _msgSender();
+        // Check direct ownership or delegation
+        bool isOwner = characterOwner == caller;
+        bool hasDelegation = ResourceId.unwrap(UserDelegationControl.getDelegationControlId(characterOwner, caller)) == ResourceId.unwrap(UNLIMITED_DELEGATION);
+        require(isOwner || hasDelegation, "EQUIPMENT: Not Character Owner");
         require(!IWorld(_world()).UD__isInEncounter(characterId), "Cannot equip items in combat");
         uint256 itemId;
         for (uint256 i; i < itemIds.length; i++) {
             itemId = itemIds[i];
-            require(IWorld(_world()).UD__isItemOwner(itemId, _msgSender()), "EQUIPMENT: Not Item Owner");
+            // Items are owned by the character owner (delegator), not the caller (session wallet)
+            require(IWorld(_world()).UD__isItemOwner(itemId, characterOwner), "EQUIPMENT: Not Item Owner");
             ItemType itemType = Items.getItemType(itemId);
-            require(checkRequirements(characterId, itemId), "EQUIPMENT: Requirements not met");
-            _equipItem(characterId, itemId, itemType);
+            if (itemType == ItemType.Weapon) {
+                // Delegate to WeaponSystem
+                IWorld(_world()).UD__equipWeapon(characterId, itemId);
+            } else if (itemType == ItemType.Armor) {
+                // Delegate to ArmorSystem
+                IWorld(_world()).UD__equipArmor(characterId, itemId);
+            } else if (itemType == ItemType.Consumable) {
+                // Keep simple equip list management for consumables until dedicated system method exists
+                require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
+                CharacterEquipment.pushEquippedConsumables(characterId, itemId);
+            } else if (itemType == ItemType.Spell) {
+                // Maintain existing behavior for spells for now
+                require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
+                CharacterEquipment.pushEquippedSpells(characterId, itemId);
+            } else {
+                revert("EQUIPMENT: Unsupported item type");
+            }
         }
-        _setEquipmentBonuses(characterId);
 
-        IWorld(_world()).UD__setStats(characterId, calculateEquipmentBonuses(characterId));
-
+        // Recalculate and apply bonuses after all equips
+        IWorld(_world()).UD__setStats(characterId, IWorld(_world()).UD__calculateEquipmentBonuses(characterId));
         IWorld(_world()).UD__applyWorldEffects(characterId);
     }
 
@@ -215,26 +237,21 @@ contract EquipmentSystem is System {
 
     function unequipItem(bytes32 characterId, uint256 itemId) public inGame(characterId) returns (bool success) {
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
-        require(characterOwner == _msgSender(), "EQUIPMENT: Not Character Owner");
+        address caller = _msgSender();
+        // Check direct ownership or delegation
+        bool isOwner = characterOwner == caller;
+        bool hasDelegation = ResourceId.unwrap(UserDelegationControl.getDelegationControlId(characterOwner, caller)) == ResourceId.unwrap(UNLIMITED_DELEGATION);
+        require(isOwner || hasDelegation, "EQUIPMENT: Not Character Owner");
         require(isEquipped(characterId, itemId), "EQUIPMENT: NOT EQUIPPED");
         require(!IWorld(_world()).UD__isInEncounter(characterId), "Cannot un-equip items in combat");
         ItemType itemType = IWorld(_world()).UD__getItemType(itemId);
 
         if (itemType == ItemType.Weapon) {
-            uint256[] memory sortedArray = _swapToEndOfArray(itemId, CharacterEquipment.getEquippedWeapons(characterId));
-            if (sortedArray[sortedArray.length - 1] == itemId) {
-                CharacterEquipment.setEquippedWeapons(characterId, sortedArray);
-                CharacterEquipment.popEquippedWeapons(characterId);
-
-                success = true;
-            }
+            // Delegate to WeaponSystem
+            success = IWorld(_world()).UD__unequipWeapon(characterId, itemId);
         } else if (itemType == ItemType.Armor) {
-            uint256[] memory sortedArray = _swapToEndOfArray(itemId, CharacterEquipment.getEquippedArmor(characterId));
-            if (sortedArray[sortedArray.length - 1] == itemId) {
-                CharacterEquipment.setEquippedArmor(characterId, sortedArray);
-                CharacterEquipment.popEquippedArmor(characterId);
-                success = true;
-            }
+            // Delegate to ArmorSystem
+            success = IWorld(_world()).UD__unequipArmor(characterId, itemId);
         } else if (itemType == ItemType.Spell) {
             uint256[] memory sortedArray =
                 _moveIdToEndOfArray(itemId, CharacterEquipment.getEquippedSpells(characterId));
@@ -254,10 +271,11 @@ contract EquipmentSystem is System {
         } else {
             revert("EQUIPMENT: UNRECOGNIZED ITEM TYPE");
         }
-        _setEquipmentBonuses(characterId);
-
-        IWorld(_world()).UD__setStats(characterId, calculateEquipmentBonuses(characterId));
-        IWorld(_world()).UD__applyWorldEffects(characterId);
+        if (success) {
+            // Ensure stats are recalculated after unequip
+            IWorld(_world()).UD__setStats(characterId, IWorld(_world()).UD__calculateEquipmentBonuses(characterId));
+            IWorld(_world()).UD__applyWorldEffects(characterId);
+        }
     }
 
     function getCombatStats(bytes32 entityId) public view returns (AdjustedCombatStats memory modifiedStats) {
@@ -279,7 +297,15 @@ contract EquipmentSystem is System {
     function calculateEquipmentBonuses(bytes32 entityId) public view returns (AdjustedCombatStats memory) {
         AdjustedCombatStats memory combatStats = getCombatStats(entityId);
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
-            StatsData memory baseStats = abi.decode(Characters.getBaseStats(entityId), (StatsData));
+            // Get baseStats from Characters table, falling back to Stats table if empty
+            bytes memory encodedBaseStats = Characters.getBaseStats(entityId);
+            StatsData memory baseStats;
+            if (encodedBaseStats.length > 0) {
+                baseStats = abi.decode(encodedBaseStats, (StatsData));
+            } else {
+                // Fallback to Stats table for characters that haven't properly entered the game
+                baseStats = Stats.get(entityId);
+            }
             CharacterEquipmentData memory equipmentStats = CharacterEquipment.get(entityId);
 
             return StatCalculator.calculateEquipmentBonuses(baseStats, equipmentStats);

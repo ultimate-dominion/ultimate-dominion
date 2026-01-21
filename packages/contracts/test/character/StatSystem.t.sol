@@ -11,7 +11,7 @@ import {
     Levels,
     CharacterEquipment
 } from "../../src/codegen/index.sol";
-import {Classes, RngRequestType} from "../../src/codegen/common.sol";
+import {Classes, RngRequestType, PowerSource, Race, ArmorType, AdvancedClass} from "../../src/codegen/common.sol";
 import {IWorld} from "../../src/codegen/world/IWorld.sol";
 import {World} from "@latticexyz/world/src/World.sol";
 import {WorldProxy} from "@latticexyz/world/src/WorldProxy.sol";
@@ -69,7 +69,12 @@ contract StatSystemTest is SetUp {
             maxHp: 100,
             currentHp: 100,
             experience: 0,
-            level: 1
+            level: 1,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         }));
 
         vm.stopPrank();
@@ -100,7 +105,12 @@ contract StatSystemTest is SetUp {
             maxHp: 120,
             currentHp: 120,
             experience: 100,
-            level: 2
+            level: 2,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         });
 
         statSystem.updateStats(characterId, newStats);
@@ -117,16 +127,13 @@ contract StatSystemTest is SetUp {
     }
 
     function testCalculateStatBonuses() public {
-        // Test stat bonus calculation
-        (int256 strBonus, int256 agiBonus, int256 intBonus, int256 hpBonus) = 
-            statSystem.calculateStatBonuses(characterId);
+        // Test stat bonus calculation (now returns statPoints and hpGain for next level)
+        (int256 statPoints, int256 hpGain) = statSystem.calculateStatBonuses(characterId);
 
         // These values depend on the StatCalculator library implementation
-        // For now, just verify the function doesn't revert and returns values
-        assertTrue(strBonus >= 0);
-        assertTrue(agiBonus >= 0);
-        assertTrue(intBonus >= 0);
-        assertTrue(hpBonus >= 0);
+        // For early game (level 1->2), should get 1 stat point and 2 HP
+        assertTrue(statPoints >= 0);
+        assertTrue(hpGain >= 0);
 
         vm.stopPrank();
     }
@@ -141,7 +148,12 @@ contract StatSystemTest is SetUp {
             maxHp: 50,
             currentHp: 50,
             experience: 0,
-            level: 1
+            level: 1,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         });
 
         assertTrue(statSystem.validateStatRequirements(characterId, requiredStats));
@@ -194,7 +206,12 @@ contract StatSystemTest is SetUp {
             maxHp: 110,
             currentHp: 110,
             experience: 50,
-            level: 2
+            level: 2,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         });
         Characters.setBaseStats(characterId, abi.encode(baseStats));
 
@@ -240,7 +257,12 @@ contract StatSystemTest is SetUp {
             maxHp: 120,
             currentHp: 120,
             experience: 100,
-            level: 2
+            level: 2,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         });
 
         vm.expectRevert("STAT SYSTEM: INVALID OPERATOR");
@@ -261,7 +283,12 @@ contract StatSystemTest is SetUp {
             maxHp: 120,
             currentHp: 120,
             experience: 100,
-            level: 2
+            level: 2,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         });
 
         vm.expectRevert("STAT SYSTEM: INVALID CHARACTER");
@@ -284,7 +311,12 @@ contract StatSystemTest is SetUp {
             maxHp: 120,
             currentHp: 120,
             experience: 100,
-            level: 2
+            level: 2,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
         });
 
         vm.expectRevert("STAT SYSTEM: cannot update stats in game");

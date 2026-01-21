@@ -9,10 +9,10 @@ import {
     CharactersData,
     StatsData
 } from "@codegen/index.sol";
-import {Classes} from "@codegen/common.sol";
+import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
-import {MAX_LEVEL, ABILITY_POINTS_PER_LEVEL, BONUS_POINT_LEVEL} from "../../../constants.sol";
+import {MAX_LEVEL} from "../../../constants.sol";
 import {_requireAccess} from "../../utils.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 
@@ -68,37 +68,34 @@ contract LevelSystem is System {
             revert LevelSystem_InsufficientExperience();
         }
 
-        // Validate stat changes
-        if (!StatCalculator.validateStatChanges(stats, desiredStats)) {
+        // Validate stat changes using new level
+        uint256 newLevel = stats.level + 1;
+        if (!StatCalculator.validateStatChanges(stats, desiredStats, newLevel)) {
             revert LevelSystem_InvalidStatChanges();
         }
 
         // Process the level up
-        processLevelUp(characterId, stats, desiredStats);
+        processLevelUp(characterId, stats, desiredStats, newLevel);
     }
 
     /**
-     * @dev Calculates level bonuses for a character
+     * @dev Calculates level bonuses for a character using diminishing returns
      * @param characterId The character to calculate bonuses for
-     * @return strBonus Strength bonus
-     * @return agiBonus Agility bonus  
-     * @return intBonus Intelligence bonus
-     * @return hpBonus HP bonus
+     * @return statPoints Number of stat points available for the next level
+     * @return hpGain HP gained for the next level
      */
     function calculateLevelBonuses(bytes32 characterId) public view returns (
-        int256 strBonus,
-        int256 agiBonus, 
-        int256 intBonus,
-        int256 hpBonus
+        int256 statPoints,
+        int256 hpGain
     ) {
         StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
-        uint256 availableLevel = UD__getCurrentAvailableLevel(stats.experience);
-        
-        // Calculate class bonuses
-        (strBonus, agiBonus, intBonus) = StatCalculator.calculateClassBonus(stats.class, availableLevel);
-        
-        // Calculate HP bonus
-        hpBonus = StatCalculator.calculateHpBonus(stats.class, stats.level);
+        uint256 nextLevel = stats.level + 1;
+
+        // Calculate stat points for next level using diminishing returns
+        statPoints = StatCalculator.calculateStatPointsForLevel(nextLevel);
+
+        // Calculate HP gain for next level using diminishing returns
+        hpGain = StatCalculator.calculateHpForLevel(nextLevel);
     }
 
     /**
@@ -110,68 +107,48 @@ contract LevelSystem is System {
     function validateLevelRequirements(bytes32 characterId, StatsData memory desiredStats) public view returns (bool isValid) {
         StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
         uint256 availableLevel = UD__getCurrentAvailableLevel(stats.experience);
-        
+
         // Check if character can level up
         if (availableLevel <= stats.level) {
             return false;
         }
-        
-        // Validate stat changes
-        return StatCalculator.validateStatChanges(stats, desiredStats);
+
+        // Validate stat changes using new level
+        uint256 newLevel = stats.level + 1;
+        return StatCalculator.validateStatChanges(stats, desiredStats, newLevel);
     }
 
     /**
-     * @dev Processes a character level up
+     * @dev Processes a character level up with diminishing returns
      * @param characterId The character to level up
      * @param currentStats Current character stats
      * @param desiredStats Desired stat distribution
+     * @param newLevel The new level being attained
      */
-    function processLevelUp(bytes32 characterId, StatsData memory currentStats, StatsData memory desiredStats) internal {
-        uint256 availableLevel = UD__getCurrentAvailableLevel(currentStats.experience);
-        
-        // Calculate class bonuses
-        (int256 strBonus, int256 agiBonus, int256 intBonus) = StatCalculator.calculateClassBonus(
-            currentStats.class, 
-            availableLevel
-        );
-        
-        // Apply class bonuses to desired stats
-        if (strBonus > 0) {
-            desiredStats.strength = desiredStats.strength + strBonus;
-            emit LevelBonusApplied(characterId, 0, strBonus); // 0 = strength
+    function processLevelUp(bytes32 characterId, StatsData memory currentStats, StatsData memory desiredStats, uint256 newLevel) internal {
+        // Calculate and apply HP gain using diminishing returns
+        int256 hpGain = StatCalculator.calculateHpForLevel(newLevel);
+        if (hpGain > 0) {
+            currentStats.maxHp = currentStats.maxHp + hpGain;
+            emit LevelBonusApplied(characterId, 3, hpGain); // 3 = HP
         }
-        if (agiBonus > 0) {
-            desiredStats.agility = desiredStats.agility + agiBonus;
-            emit LevelBonusApplied(characterId, 1, agiBonus); // 1 = agility
-        }
-        if (intBonus > 0) {
-            desiredStats.intelligence = desiredStats.intelligence + intBonus;
-            emit LevelBonusApplied(characterId, 2, intBonus); // 2 = intelligence
-        }
-        
-        // Calculate and apply HP bonus
-        int256 hpBonus = StatCalculator.calculateHpBonus(currentStats.class, currentStats.level);
-        if (hpBonus > 0) {
-            currentStats.maxHp = currentStats.maxHp + hpBonus;
-            emit LevelBonusApplied(characterId, 3, hpBonus); // 3 = HP
-        }
-        
+
         // Update stats
         currentStats.strength = desiredStats.strength;
         currentStats.agility = desiredStats.agility;
         currentStats.intelligence = desiredStats.intelligence;
-        currentStats.level += 1;
-        
+        currentStats.level = newLevel;
+
         // Update character base stats
         Characters.setBaseStats(characterId, abi.encode(currentStats));
-        
+
         // Apply equipment bonuses and set them to stat table
         AdjustedCombatStats memory equipmentBonuses = IWorld(_world()).UD__calculateEquipmentBonuses(characterId);
         _setStats(characterId, equipmentBonuses, currentStats.level);
-        
+
         // Re-apply world effects
         IWorld(_world()).UD__applyWorldEffects(characterId);
-        
+
         emit CharacterLeveledUp(characterId, currentStats.level, currentStats.experience);
     }
 
@@ -196,18 +173,18 @@ contract LevelSystem is System {
      */
     function _setStats(bytes32 entityId, AdjustedCombatStats memory adjustedStats, uint256 level) internal {
         _requireAccess(address(this), _msgSender());
-        // Convert AdjustedCombatStats to StatsData
-        StatsData memory statsData = StatsData({
-            strength: adjustedStats.strength,
-            agility: adjustedStats.agility,
-            intelligence: adjustedStats.intelligence,
-            maxHp: adjustedStats.maxHp,
-            currentHp: adjustedStats.maxHp, // Use maxHp as currentHp for now
-            experience: 0, // This will be set by the calling function
-            level: level,
-            class: Classes.Warrior // This will be set by the calling function
-        });
-        Stats.set(entityId, statsData);
+        // Get existing stats to preserve certain fields
+        StatsData memory existingStats = Stats.get(entityId);
+
+        // Update combat-related fields while preserving class-related fields
+        existingStats.strength = adjustedStats.strength;
+        existingStats.agility = adjustedStats.agility;
+        existingStats.intelligence = adjustedStats.intelligence;
+        existingStats.maxHp = adjustedStats.maxHp;
+        existingStats.currentHp = adjustedStats.maxHp;
+        existingStats.level = level;
+
+        Stats.set(entityId, existingStats);
     }
 
     /**

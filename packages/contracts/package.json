@@ -6,7 +6,12 @@
   "scripts": {
     "build": "mud build",
     "clean": "forge clean && rimraf src/codegen",
-    "deploy:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337",
+    "seed": "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 npx tsx scripts/seed-game-data.ts",
+    "seed:items": "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 npx tsx scripts/seed-game-data.ts --items-only",
+    "seed:monsters": "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 npx tsx scripts/seed-game-data.ts --monsters-only",
+    "zone:load": "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 npx tsx scripts/zone-loader.ts",
+    "zone:list": "npx tsx scripts/zone-loader.ts --help",
+    "deploy:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry",
     "update:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337 --worldAddress",
     "deploy:testnet-base": "DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000\" --profile=base-sepolia",
     "deploy:garnet": "DEBUG=mud:* mud deploy --profile=garnet --forgeScriptOptions=\"--slow\"",
@@ -33,6 +38,8 @@
   "devDependencies": {
     "@pythnetwork/entropy-sdk-solidity": "1.3.0",
     "@types/node": "^18.15.11",
+    "tsx": "^4.7.0",
+    "viem": "^2.9.20",
     "ds-test": "https://github.com/dapphub/ds-test.git#e282159d5170298eb2455a6c05280ab5a73a4ef0",
     "forge-std": "https://github.com/foundry-rs/forge-std.git#74cfb77e308dd188d2f58864aaf44963ae6b88b1",
     "prettier": "3.2.5",

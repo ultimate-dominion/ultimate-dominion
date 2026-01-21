@@ -11,6 +11,7 @@ import { NameExists } from "./tables/NameExists.sol";
 import { Characters, CharactersData } from "./tables/Characters.sol";
 import { CharacterOwner, CharacterOwnerData } from "./tables/CharacterOwner.sol";
 import { Stats, StatsData } from "./tables/Stats.sol";
+import { ClassMultipliers, ClassMultipliersData } from "./tables/ClassMultipliers.sol";
 import { SessionTimer } from "./tables/SessionTimer.sol";
 import { Mobs, MobsData } from "./tables/Mobs.sol";
 import { MobStats, MobStatsData } from "./tables/MobStats.sol";
@@ -25,6 +26,10 @@ import { AccessoryStats, AccessoryStatsData } from "./tables/AccessoryStats.sol"
 import { SpellStats, SpellStatsData } from "./tables/SpellStats.sol";
 import { ConsumableStats, ConsumableStatsData } from "./tables/ConsumableStats.sol";
 import { StarterItems, StarterItemsData } from "./tables/StarterItems.sol";
+import { ArmorStarterItems, ArmorStarterItemsData } from "./tables/ArmorStarterItems.sol";
+import { StarterItemPool } from "./tables/StarterItemPool.sol";
+import { StarterConsumables, StarterConsumablesData } from "./tables/StarterConsumables.sol";
+import { AdvancedClassItems, AdvancedClassItemsData } from "./tables/AdvancedClassItems.sol";
 import { AdventureEscrow } from "./tables/AdventureEscrow.sol";
 import { Effects, EffectsData } from "./tables/Effects.sol";
 import { PhysicalDamageStats, PhysicalDamageStatsData } from "./tables/PhysicalDamageStats.sol";

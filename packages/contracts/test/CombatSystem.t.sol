@@ -50,7 +50,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         vm.startPrank(alice);
         world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
-        world.UD__enterGame(alicesCharacterId);
+        world.UD__enterGame(alicesCharacterId, newWeaponId, newArmorId);
         vm.stopPrank();
 
         // alice has lower agi to go second
