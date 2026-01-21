@@ -22,8 +22,8 @@ import {
     WeaponStats,
     Items,
     WeaponStatsData,
-    SpellStatsData,
-    SpellStats,
+    ConsumableStatsData,
+    ConsumableStats,
     PhysicalDamageStats,
     PhysicalDamageStatsData,
     MagicDamageStats,
@@ -297,20 +297,22 @@ contract CombatSystem is System {
 
         // Check item type - weapons with magic effects need different handling
         ItemType itemType = Items.getItemType(itemId);
-        SpellStatsData memory spell;
+        ConsumableStatsData memory magicItem;
 
         if (itemType == ItemType.Weapon) {
             // For weapons with magic effects (like monster Dark Magic), use weapon stats
             WeaponStatsData memory weapon = IWorld(_world()).UD__getWeaponStats(itemId);
-            spell = SpellStatsData({
+            magicItem = ConsumableStatsData({
                 minDamage: weapon.minDamage,
                 maxDamage: weapon.maxDamage,
                 minLevel: weapon.minLevel,
                 effects: weapon.effects
             });
+        } else if (itemType == ItemType.Consumable) {
+            // For consumables with magic effects
+            magicItem = IWorld(_world()).UD__getConsumableStats(itemId);
         } else {
-            // For actual spells, use spell stats
-            spell = IWorld(_world()).UD__getSpellStats(itemId);
+            revert("COMBAT: Invalid magic item type");
         }
 
         require(IWorld(_world()).UD__checkItemEffect(itemId, effectId), "INVALID ACTION");
@@ -328,7 +330,7 @@ contract CombatSystem is System {
             );
             if (hit) {
                 damage = CombatMath.calculateMagicDamage(
-                    attackStats, spell, rnChunks[2], attacker.intelligence, defender.intelligence, crit
+                    attackStats, magicItem, rnChunks[2], attacker.intelligence, defender.intelligence, crit
                 );
                 int256 currentHp = Stats.getCurrentHp(defenderId);
                 int256 maxHp = Stats.getMaxHp(defenderId);

@@ -7,7 +7,7 @@ import {
     PhysicalDamageStatsData,
     MagicDamageStatsData,
     WeaponStatsData,
-    SpellStatsData
+    ConsumableStatsData
 } from "@codegen/index.sol";
 import {ResistanceStat} from "@codegen/common.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
@@ -120,9 +120,9 @@ library CombatMath {
     }
 
     /**
-     * @notice Calculate magic damage for spell attacks
+     * @notice Calculate magic damage for consumable/magic attacks
      * @param attackStats Magic damage stats for the attack
-     * @param equippedSpell Spell stats
+     * @param consumable Consumable stats (or weapon stats converted to consumable format)
      * @param rnChunk Random number chunk for damage variation
      * @param attackerIntelligence Attacker's intelligence stat
      * @param defenderIntelligence Defender's intelligence stat
@@ -131,7 +131,7 @@ library CombatMath {
      */
     function calculateMagicDamage(
         MagicDamageStatsData memory attackStats,
-        SpellStatsData memory equippedSpell,
+        ConsumableStatsData memory consumable,
         uint64 rnChunk,
         int256 attackerIntelligence,
         int256 defenderIntelligence,
@@ -142,19 +142,33 @@ library CombatMath {
             baseDamage = (
                 attackStats.bonusDamage
                     + int256(
-                        uint256(rnChunk) % uint256(equippedSpell.maxDamage) + 1 <= uint256(equippedSpell.minDamage)
-                            ? equippedSpell.minDamage
-                            : int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage) + 1)
+                        uint256(rnChunk) % uint256(consumable.maxDamage) + 1 <= uint256(consumable.minDamage)
+                            ? consumable.minDamage
+                            : int256(uint256(rnChunk) % uint256(consumable.maxDamage) + 1)
                     )
             ) * int256(ATTACK_MODIFIER);
         } else {
-            baseDamage = (equippedSpell.maxDamage + attackStats.bonusDamage) * int256(ATTACK_MODIFIER);
+            baseDamage = (consumable.maxDamage + attackStats.bonusDamage) * int256(ATTACK_MODIFIER);
         }
         damage = addStatBonus(attackerIntelligence, defenderIntelligence, baseDamage);
 
-        if (damage < int256(0) && equippedSpell.maxDamage > int256(0)) {
+        if (damage < int256(0) && consumable.maxDamage > int256(0)) {
             damage = int256(0);
         }
+    }
+
+    /**
+     * @notice Calculate magic damage for consumable attacks (alias for backwards compatibility)
+     */
+    function calculateMagicDamageFromConsumable(
+        MagicDamageStatsData memory attackStats,
+        ConsumableStatsData memory consumable,
+        uint64 rnChunk,
+        int256 attackerIntelligence,
+        int256 defenderIntelligence,
+        bool crit
+    ) internal pure returns (int256 damage) {
+        return calculateMagicDamage(attackStats, consumable, rnChunk, attackerIntelligence, defenderIntelligence, crit);
     }
 
     /**

@@ -50,8 +50,6 @@ import {
     WeaponStatsData,
     ArmorStats,
     ArmorStatsData,
-    SpellStats,
-    SpellStatsData,
     ConsumableStats,
     ConsumableStatsData,
     StatRestrictions,
@@ -81,7 +79,6 @@ import {
     ShopTemplate,
     StarterItems,
     StarterEffects,
-    SpellTemplateDetails,
     ConsumableTemplateDetails
 } from "@interfaces/Structs.sol";
 
@@ -545,7 +542,7 @@ contract PostDeploy is Script {
         // NOTE: Game content (effects, items, monsters, shops) is loaded via zone scripts
         // Use admin functions or zone loader TypeScript scripts to add content post-deployment:
         // - adminCreateEffect() for status effects, damage effects
-        // - adminCreateItem() / adminCreateItems() for weapons, armor, spells, consumables
+        // - adminCreateItem() / adminCreateItems() for weapons, armor, consumables
         // - adminCreateMob() / adminCreateMobs() for monsters
         // - adminCreateShop() for shops with inventory
 
@@ -655,7 +652,7 @@ contract PostDeploy is Script {
 
         uint256[] memory warriorItemIds = new uint256[](2);
         uint256[] memory rogueItemIds = new uint256[](2);
-        uint256[] memory mageItemIds = new uint256[](2);
+        uint256[] memory mageItemIds = new uint256[](1);
 
         // Create armor
         for (uint256 i = 0; i < itemsData.armor.length; i++) {
@@ -752,47 +749,6 @@ contract PostDeploy is Script {
             }
         }
 
-        // Create spells
-        for (uint256 i = 0; i < itemsData.spells.length; i++) {
-            SpellTemplateDetails memory spellTemplate = itemsData.spells[i];
-
-            uint256 itemId = _incrementItemsCounter();
-
-            SpellStatsData memory newSpell = SpellStatsData({
-                effects: spellTemplate.stats.effects,
-                maxDamage: spellTemplate.stats.maxDamage,
-                minDamage: spellTemplate.stats.minDamage,
-                minLevel: spellTemplate.stats.minLevel
-            });
-
-            // Write to SpellStats table
-            SpellStats.set(itemId, newSpell);
-
-            // Write to StatRestrictions table
-            StatRestrictions.set(itemId, spellTemplate.statRestrictions);
-
-            // Write to Items table
-            ItemsData memory newItem = ItemsData({
-                itemType: ItemType.Spell,
-                dropChance: spellTemplate.dropChance,
-                price: spellTemplate.price,
-                stats: abi.encode(newSpell, spellTemplate.statRestrictions)
-            });
-            Items.set(itemId, newItem);
-
-            // Mint supply to LootManager
-            _mintItem(itemId, spellTemplate.initialSupply);
-
-            // Set token URI
-            _setTokenUri(itemId, spellTemplate.metadataUri);
-
-            console.log("Spell created:", spellTemplate.name, "id:", itemId);
-
-            if (i == 0) {
-                mageItemIds[1] = itemId;
-            }
-        }
-
         // Create consumables
         for (uint256 i = 0; i < itemsData.consumables.length; i++) {
             ConsumableTemplateDetails memory consumablesTemplate = itemsData.consumables[i];
@@ -841,7 +797,9 @@ contract PostDeploy is Script {
         StarterItemsTable.set(Classes.Rogue, rogueItemIds, amounts);
         console.log("Rogue starter items set");
 
-        StarterItemsTable.set(Classes.Mage, mageItemIds, amounts);
+        uint256[] memory mageAmounts = new uint256[](1);
+        mageAmounts[0] = 1;
+        StarterItemsTable.set(Classes.Mage, mageItemIds, mageAmounts);
         console.log("Mage starter items set");
     }
 

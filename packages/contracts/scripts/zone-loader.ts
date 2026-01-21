@@ -143,26 +143,6 @@ interface WeaponTemplate {
   };
 }
 
-interface SpellTemplate {
-  name: string;
-  rarity?: number;
-  dropChance: number;
-  initialSupply: string | number;
-  metadataUri: string;
-  price: string | number;
-  stats: {
-    effects: Hex[];
-    maxDamage: number;
-    minDamage: number;
-    minLevel: number;
-  };
-  statRestrictions: {
-    minAgility: number;
-    minIntelligence: number;
-    minStrength: number;
-  };
-}
-
 interface ConsumableTemplate {
   name: string;
   rarity?: number;
@@ -187,7 +167,6 @@ interface ConsumableTemplate {
 interface ItemsJson {
   armor: ArmorTemplate[];
   weapons: WeaponTemplate[];
-  spells: SpellTemplate[];
   consumables: ConsumableTemplate[];
   metadataUriPrefix?: string;
 }
@@ -239,10 +218,9 @@ interface ShopsJson {
 enum ItemType {
   Weapon = 0,
   Armor = 1,
-  Spell = 2,
-  Consumable = 3,
-  QuestItem = 4,
-  Accessory = 5,
+  Consumable = 2,
+  QuestItem = 3,
+  Accessory = 4,
 }
 
 enum MobType {
@@ -429,38 +407,6 @@ function encodeWeaponStats(template: WeaponTemplate): Hex {
         minDamage: BigInt(template.stats.minDamage),
         minLevel: BigInt(template.stats.minLevel),
         strModifier: BigInt(template.stats.strModifier),
-        effects: template.stats.effects,
-      },
-      {
-        minAgility: BigInt(template.statRestrictions.minAgility),
-        minIntelligence: BigInt(template.statRestrictions.minIntelligence),
-        minStrength: BigInt(template.statRestrictions.minStrength),
-      },
-    ]
-  );
-}
-
-function encodeSpellStats(template: SpellTemplate): Hex {
-  // Field order must match Solidity struct: minDamage, maxDamage, minLevel, effects
-  return encodeAbiParameters(
-    [
-      { type: 'tuple', components: [
-        { name: 'minDamage', type: 'int256' },
-        { name: 'maxDamage', type: 'int256' },
-        { name: 'minLevel', type: 'uint256' },
-        { name: 'effects', type: 'bytes32[]' },
-      ]},
-      { type: 'tuple', components: [
-        { name: 'minAgility', type: 'int256' },
-        { name: 'minIntelligence', type: 'int256' },
-        { name: 'minStrength', type: 'int256' },
-      ]},
-    ],
-    [
-      {
-        minDamage: BigInt(template.stats.minDamage),
-        maxDamage: BigInt(template.stats.maxDamage),
-        minLevel: BigInt(template.stats.minLevel),
         effects: template.stats.effects,
       },
       {
@@ -830,35 +776,6 @@ Available zones:
             await publicClient.waitForTransactionReceipt({ hash: starterHash });
             console.log(`    -> Added to StarterItemPool`);
           }
-        }
-      }
-
-      // Spells
-      for (const spell of items.spells || []) {
-        console.log(`  Spell: ${spell.name}`);
-        if (!dryRun && walletClient) {
-          const stats = encodeSpellStats(spell);
-          const hash = await walletClient.writeContract({
-            address: worldAddress,
-            abi: worldAbi,
-            functionName: 'UD__createItem',
-            args: [
-              ItemType.Spell,
-              BigInt(spell.initialSupply),
-              BigInt(spell.dropChance),
-              BigInt(spell.price),
-              stats,
-              spell.metadataUri,
-            ],
-          });
-          await publicClient.waitForTransactionReceipt({ hash });
-          const itemId = await publicClient.readContract({
-            address: worldAddress,
-            abi: worldAbi,
-            functionName: 'UD__getCurrentItemsCounter',
-          });
-          itemIdsByName.set(spell.name, itemId);
-          console.log(`    -> ID: ${itemId}`);
         }
       }
 

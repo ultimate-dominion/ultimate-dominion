@@ -20,7 +20,6 @@ import {
     ArmorStatsData,
     WeaponStatsData,
     ConsumableStatsData,
-    SpellStatsData,
     StatRestrictionsData,
     ShopsData
 } from "@codegen/index.sol";
@@ -56,8 +55,6 @@ contract SetUp is Test {
     uint256 alsoNewArmorId;
     uint256 newWeaponId;
     uint256 alsoNewWeaponId;
-    uint256 newSpellId;
-    uint256 alsoNewSpellId;
     uint256 newConsumableId;
 
     bytes32 basicMagicDamageStatsId;
@@ -65,7 +62,6 @@ contract SetUp is Test {
     uint256 public startingArmorId;
     uint256 public endingArmorId;
     uint256 public startingWeaponId;
-    uint256 public startingSpellId;
     uint256 public startingConsumableId;
     uint256 public totalItems;
 
@@ -91,8 +87,7 @@ contract SetUp is Test {
         // order the items are created in:
         // 1. armor
         // 2. weapons
-        // 3. spells
-        // 4. consumables
+        // 3. consumables
 
         //load armor
         for (uint256 i; i < _starterItems.armor.length; i++) {
@@ -102,22 +97,15 @@ contract SetUp is Test {
         for (uint256 i; i < _starterItems.weapons.length; i++) {
             starterItems.weapons.push(_starterItems.weapons[i]);
         }
-        // load spells
-        for (uint256 i; i < _starterItems.spells.length; i++) {
-            starterItems.spells.push(_starterItems.spells[i]);
-        }
         // load consumables
         for (uint256 i; i < _starterItems.consumables.length; i++) {
             starterItems.consumables.push(_starterItems.consumables[i]);
         }
 
         startingWeaponId = starterItems.armor.length;
-        startingSpellId = starterItems.armor.length + starterItems.weapons.length + 1;
-
-        assertGt(world.UD__getSpellStats(startingSpellId).effects.length, 0, "invalid spell effect");
-        startingConsumableId = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length + 1;
+        startingConsumableId = starterItems.armor.length + starterItems.weapons.length + 1;
         assertGt(world.UD__getConsumableStats(startingConsumableId).effects.length, 0, "invalid consumable effect");
-        totalItems = starterItems.armor.length + starterItems.weapons.length + starterItems.spells.length;
+        totalItems = starterItems.armor.length + starterItems.weapons.length + starterItems.consumables.length;
 
         basicMagicDamageStatsId = bytes32(bytes8(keccak256(abi.encode("basic magic attack"))));
         basicActionIdStatsId = bytes32(bytes8(keccak256(abi.encode("basic weapon attack"))));
@@ -178,8 +166,6 @@ contract SetUp is Test {
 
         ConsumableStatsData memory newConsumable =
             ConsumableStatsData({minDamage: 0, maxDamage: 0, minLevel: 0, effects: new bytes32[](0)});
-        SpellStatsData memory newSpell =
-            SpellStatsData({minDamage: 0, maxDamage: 0, minLevel: 0, effects: new bytes32[](0)});
         vm.label(alice, "alice");
         vm.label(bob, "bob");
         vm.label(worldAddress, "world");
@@ -204,12 +190,6 @@ contract SetUp is Test {
             1 ether,
             abi.encode(newConsumable, statRestrictions),
             "setup_armor_uri"
-        );
-        newSpellId = world.UD__createItem(
-            ItemType.Spell, 10 ether, 100000000, 1 ether, abi.encode(newSpell, statRestrictions), "setup_armor_uri"
-        );
-        alsoNewSpellId = world.UD__createItem(
-            ItemType.Spell, 10 ether, 100000000, 1 ether, abi.encode(newSpell, statRestrictions), "setup_armor_uri"
         );
         world.grantAccess(_lootManagerSystemId("UD"), address(this));
 

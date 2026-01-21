@@ -16,8 +16,6 @@ import {
     WeaponStatsData,
     ArmorStats,
     ArmorStatsData,
-    SpellStats,
-    SpellStatsData,
     ConsumableStats,
     ConsumableStatsData,
     StatRestrictions,
@@ -28,7 +26,6 @@ import {
     StarterItems,
     WeaponTemplateDetails,
     ArmorTemplateDetails,
-    SpellTemplateDetails,
     ConsumableTemplateDetails
 } from "@interfaces/Structs.sol";
 
@@ -44,7 +41,7 @@ import "forge-std/StdJson.sol";
 
 /**
  * @title DeployItems (Tier 2)
- * @notice Deploys all game items (armor, weapons, spells, consumables) and starter items
+ * @notice Deploys all game items (armor, weapons, consumables) and starter items
  * @dev Feature script for the 3-tier deployment system
  *
  * Prerequisites:
@@ -118,7 +115,7 @@ contract DeployItems is Script {
 
         uint256[] memory warriorItemIds = new uint256[](2);
         uint256[] memory rogueItemIds = new uint256[](2);
-        uint256[] memory mageItemIds = new uint256[](2);
+        uint256[] memory mageItemIds = new uint256[](1);
 
         // Create armor
         console.log("Creating armor...");
@@ -145,16 +142,6 @@ contract DeployItems is Script {
             }
         }
 
-        // Create spells
-        console.log("Creating spells...");
-        for (uint256 i = 0; i < itemsData.spells.length; i++) {
-            uint256 itemId = _createSpell(itemsData.spells[i]);
-
-            if (i == 0) {
-                mageItemIds[1] = itemId;
-            }
-        }
-
         // Create consumables
         console.log("Creating consumables...");
         for (uint256 i = 0; i < itemsData.consumables.length; i++) {
@@ -167,7 +154,6 @@ contract DeployItems is Script {
         console.log("Items deployment complete:");
         console.log("  Armor:", itemsData.armor.length);
         console.log("  Weapons:", itemsData.weapons.length);
-        console.log("  Spells:", itemsData.spells.length);
         console.log("  Consumables:", itemsData.consumables.length);
     }
 
@@ -232,33 +218,6 @@ contract DeployItems is Script {
         console.log("  Weapon created:", weaponTemplate.name, "id:", itemId);
     }
 
-    function _createSpell(SpellTemplateDetails memory spellTemplate) internal returns (uint256 itemId) {
-        itemId = _incrementItemsCounter();
-
-        SpellStatsData memory newSpell = SpellStatsData({
-            effects: spellTemplate.stats.effects,
-            maxDamage: spellTemplate.stats.maxDamage,
-            minDamage: spellTemplate.stats.minDamage,
-            minLevel: spellTemplate.stats.minLevel
-        });
-
-        SpellStats.set(itemId, newSpell);
-        StatRestrictions.set(itemId, spellTemplate.statRestrictions);
-
-        ItemsData memory newItem = ItemsData({
-            itemType: ItemType.Spell,
-            dropChance: spellTemplate.dropChance,
-            price: spellTemplate.price,
-            stats: abi.encode(newSpell, spellTemplate.statRestrictions)
-        });
-        Items.set(itemId, newItem);
-
-        _mintItem(itemId, spellTemplate.initialSupply);
-        _setTokenUri(itemId, spellTemplate.metadataUri);
-
-        console.log("  Spell created:", spellTemplate.name, "id:", itemId);
-    }
-
     function _createConsumable(ConsumableTemplateDetails memory consumableTemplate) internal returns (uint256 itemId) {
         itemId = _incrementItemsCounter();
 
@@ -303,7 +262,9 @@ contract DeployItems is Script {
         StarterItemsTable.set(Classes.Rogue, rogueItemIds, amounts);
         console.log("  Rogue starter items set");
 
-        StarterItemsTable.set(Classes.Mage, mageItemIds, amounts);
+        uint256[] memory mageAmounts = new uint256[](1);
+        mageAmounts[0] = 1;
+        StarterItemsTable.set(Classes.Mage, mageItemIds, mageAmounts);
         console.log("  Mage starter items set");
     }
 

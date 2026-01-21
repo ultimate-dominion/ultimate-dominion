@@ -3,7 +3,7 @@ pragma solidity >=0.8.24;
 
 import "forge-std/Test.sol";
 import {CombatMath} from "../src/libraries/CombatMath.sol";
-import {PhysicalDamageStatsData, MagicDamageStatsData, WeaponStatsData, SpellStatsData} from "@codegen/index.sol";
+import {PhysicalDamageStatsData, MagicDamageStatsData, WeaponStatsData, ConsumableStatsData} from "@codegen/index.sol";
 import {ResistanceStat} from "@codegen/common.sol";
 
 contract CombatMathTest is Test {
@@ -71,16 +71,16 @@ contract CombatMathTest is Test {
             critChanceBonus: 0
         });
         
-        SpellStatsData memory spell = SpellStatsData({
+        ConsumableStatsData memory consumable = ConsumableStatsData({
             minDamage: 8,
             maxDamage: 16,
             minLevel: 1,
             effects: new bytes32[](0)
         });
-        
+
         int256 damage = CombatMath.calculateMagicDamage(
             attackStats,
-            spell,
+            consumable,
             54321, // rnChunk
             12, // attackerIntelligence
             8,  // defenderIntelligence

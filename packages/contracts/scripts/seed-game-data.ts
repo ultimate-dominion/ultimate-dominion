@@ -48,13 +48,6 @@ interface WeaponStats {
   strModifier: bigint;
 }
 
-interface SpellStats {
-  effects: Hex[];
-  maxDamage: bigint;
-  minDamage: bigint;
-  minLevel: bigint;
-}
-
 interface ConsumableStats {
   effects: Hex[];
   maxDamage: bigint;
@@ -108,26 +101,6 @@ interface WeaponTemplate {
   };
 }
 
-interface SpellTemplate {
-  name: string;
-  rarity?: number;
-  dropChance: number;
-  initialSupply: string;
-  metadataUri: string;
-  price: string;
-  stats: {
-    effects: Hex[];
-    maxDamage: number;
-    minDamage: number;
-    minLevel: number;
-  };
-  statRestrictions: {
-    minAgility: number;
-    minIntelligence: number;
-    minStrength: number;
-  };
-}
-
 interface ConsumableTemplate {
   name: string;
   rarity?: number;
@@ -151,7 +124,6 @@ interface ConsumableTemplate {
 interface ItemsJson {
   armor: ArmorTemplate[];
   weapons: WeaponTemplate[];
-  spells: SpellTemplate[];
   consumables: ConsumableTemplate[];
   metadataUriPrefix: string;
 }
@@ -182,10 +154,9 @@ interface MonstersJson {
 enum ItemType {
   Weapon = 0,
   Armor = 1,
-  Spell = 2,
-  Consumable = 3,
-  QuestItem = 4,
-  Accessory = 5,
+  Consumable = 2,
+  QuestItem = 3,
+  Accessory = 4,
 }
 
 enum MobType {
@@ -270,38 +241,6 @@ function encodeWeaponStats(stats: WeaponStats, restrictions: StatRestrictions): 
         minDamage: stats.minDamage,
         minLevel: stats.minLevel,
         strModifier: stats.strModifier,
-      },
-      {
-        minAgility: restrictions.minAgility,
-        minIntelligence: restrictions.minIntelligence,
-        minStrength: restrictions.minStrength,
-      },
-    ]
-  );
-}
-
-function encodeSpellStats(stats: SpellStats, restrictions: StatRestrictions): Hex {
-  // Field order must match Solidity struct: minDamage, maxDamage, minLevel, effects
-  return encodeAbiParameters(
-    [
-      { type: 'tuple', components: [
-        { name: 'minDamage', type: 'int256' },
-        { name: 'maxDamage', type: 'int256' },
-        { name: 'minLevel', type: 'uint256' },
-        { name: 'effects', type: 'bytes32[]' },
-      ]},
-      { type: 'tuple', components: [
-        { name: 'minAgility', type: 'int256' },
-        { name: 'minIntelligence', type: 'int256' },
-        { name: 'minStrength', type: 'int256' },
-      ]},
-    ],
-    [
-      {
-        minDamage: stats.minDamage,
-        maxDamage: stats.maxDamage,
-        minLevel: stats.minLevel,
-        effects: stats.effects,
       },
       {
         minAgility: restrictions.minAgility,
@@ -448,7 +387,7 @@ async function main() {
   const items: ItemsJson = JSON.parse(fs.readFileSync(itemsPath, 'utf-8'));
   const monsters: MonstersJson = JSON.parse(fs.readFileSync(monstersPath, 'utf-8'));
 
-  console.log(`\nLoaded ${items.armor.length} armor, ${items.weapons.length} weapons, ${items.spells.length} spells, ${items.consumables.length} consumables`);
+  console.log(`\nLoaded ${items.armor.length} armor, ${items.weapons.length} weapons, ${items.consumables.length} consumables`);
   console.log(`Loaded ${monsters.monsters.length} monsters`);
 
   // Check current item counter
@@ -460,7 +399,7 @@ async function main() {
   console.log(`\nCurrent items counter: ${currentCounter}`);
 
   // Check if we should skip (only if counter matches expected full count)
-  const expectedItemCount = items.armor.length + items.weapons.length + items.spells.length + items.consumables.length;
+  const expectedItemCount = items.armor.length + items.weapons.length + items.consumables.length;
   if (Number(currentCounter) >= expectedItemCount) {
     console.log(`\nItems already fully seeded (${currentCounter}/${expectedItemCount}). Skipping.`);
   } else {
@@ -471,10 +410,9 @@ async function main() {
     console.log('\n>>> Seeding Items <<<');
 
     // Track item IDs for starter items
-    const itemIds: { armor: bigint[], weapons: bigint[], spells: bigint[], consumables: bigint[] } = {
+    const itemIds: { armor: bigint[], weapons: bigint[], consumables: bigint[] } = {
       armor: [],
       weapons: [],
-      spells: [],
       consumables: [],
     };
 
@@ -566,48 +504,6 @@ async function main() {
 
       itemIds.weapons.push(newCounter);
       console.log(`  Weapon created: ${weapon.name} (id: ${newCounter})`);
-    }
-
-    // Create spells
-    console.log('\nCreating spells...');
-    for (const spell of items.spells) {
-      const stats = encodeSpellStats(
-        {
-          effects: spell.stats.effects,
-          maxDamage: BigInt(spell.stats.maxDamage),
-          minDamage: BigInt(spell.stats.minDamage),
-          minLevel: BigInt(spell.stats.minLevel),
-        },
-        {
-          minAgility: BigInt(spell.statRestrictions.minAgility),
-          minIntelligence: BigInt(spell.statRestrictions.minIntelligence),
-          minStrength: BigInt(spell.statRestrictions.minStrength),
-        }
-      );
-
-      const hash = await walletClient.writeContract({
-        address: worldAddress,
-        abi: worldAbi,
-        functionName: 'UD__createItem',
-        args: [
-          ItemType.Spell,
-          BigInt(spell.initialSupply),
-          BigInt(spell.dropChance),
-          BigInt(spell.price),
-          stats,
-          spell.metadataUri,
-        ],
-      });
-
-      await publicClient.waitForTransactionReceipt({ hash });
-      const newCounter = await publicClient.readContract({
-        address: worldAddress,
-        abi: worldAbi,
-        functionName: 'UD__getCurrentItemsCounter',
-      });
-
-      itemIds.spells.push(newCounter);
-      console.log(`  Spell created: ${spell.name} (id: ${newCounter})`);
     }
 
     // Create consumables

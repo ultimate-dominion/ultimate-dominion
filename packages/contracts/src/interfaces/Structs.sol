@@ -55,23 +55,6 @@ struct WeaponStatDetails {
     int256 strModifier;
 }
 
-struct SpellStatDetails {
-    bytes32[] effects;
-    int256 maxDamage;
-    int256 minDamage;
-    uint256 minLevel;
-}
-
-struct SpellTemplateDetails {
-    uint256 dropChance;
-    uint256 initialSupply;
-    string metadataUri;
-    string name;
-    uint256 price;
-    StatRestrictionsData statRestrictions;
-    SpellStatDetails stats;
-}
-
 struct ConsumableTemplateDetails {
     uint256 dropChance;
     uint256 initialSupply;
@@ -93,7 +76,6 @@ struct StarterItems {
     ArmorTemplateDetails[] armor;
     ConsumableTemplateDetails[] consumables;
     string metadataUriPrefix;
-    SpellTemplateDetails[] spells;
     WeaponTemplateDetails[] weapons;
 }
 

@@ -22,8 +22,6 @@ import {
     WeaponStatsData,
     StatRestrictions,
     StatRestrictionsData,
-    SpellStatsData,
-    SpellStats,
     ConsumableStats,
     ConsumableStatsData
 } from "@codegen/index.sol";
@@ -66,13 +64,6 @@ contract ItemsSystem is System {
 
             // set armor stats table
             ArmorStats.set(itemId, armorStats);
-            StatRestrictions.set(itemId, statRestrictions);
-        } else if (itemType == ItemType.Spell) {
-            SpellStatsData memory spellStats;
-            (spellStats, statRestrictions) = abi.decode(stats, (SpellStatsData, StatRestrictionsData));
-
-            // set Spell stats table
-            SpellStats.set(itemId, spellStats);
             StatRestrictions.set(itemId, statRestrictions);
         } else if (itemType == ItemType.Consumable) {
             ConsumableStatsData memory consumableStats;
@@ -201,10 +192,6 @@ contract ItemsSystem is System {
         ItemType itemType = Items.getItemType(itemId);
         require(itemType == ItemType.Armor, "ITEMS: Not a  Armor");
         _ArmorStats = ArmorStats.get(itemId);
-    }
-
-    function getSpellStats(uint256 itemId) public view returns (SpellStatsData memory _spellStats) {
-        _spellStats = SpellStats.get(itemId);
     }
 
     function getConsumableStats(uint256 itemId) public view returns (ConsumableStatsData memory _consumableStats) {
