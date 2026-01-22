@@ -27,6 +27,8 @@ export const ChatBox: React.FC = () => {
   const { allCharacters } = useMap();
   const {
     chatUser,
+    hasBadge,
+    isCheckingBadge,
     isGroupMember,
     isJoiningGroupChat,
     isLoggedIn,
@@ -42,6 +44,10 @@ export const ChatBox: React.FC = () => {
     onSetNewMessage,
     onSetMessageInputFocus,
   } = useChat();
+
+  // Badge gating is disabled if no badge contract is configured
+  const badgeGatingEnabled = !!import.meta.env.VITE_BADGE_CONTRACT_ADDRESS;
+  const canAccessChat = !badgeGatingEnabled || hasBadge;
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -158,7 +164,30 @@ export const ChatBox: React.FC = () => {
           overflowY="auto"
           transition="height 0.3s ease"
         >
-          {(isLoggingIn || !isGroupMember) && (
+          {/* Badge gating message */}
+          {badgeGatingEnabled && !canAccessChat && !isCheckingBadge && (
+            <VStack justifyContent="center" mt={8} p={2} spacing={4}>
+              <Text size="sm" textAlign="center" fontWeight="bold">
+                Chat Locked
+              </Text>
+              <Text size="sm" textAlign="center">
+                Reach level 3 to unlock global chat and earn your Adventurer badge!
+              </Text>
+              <Text size="xs" textAlign="center" color="gray.500">
+                Keep adventuring and defeating monsters to level up.
+              </Text>
+            </VStack>
+          )}
+          {/* Checking badge status */}
+          {badgeGatingEnabled && isCheckingBadge && (
+            <VStack justifyContent="center" mt={8} p={2} spacing={4}>
+              <Text size="sm" textAlign="center">
+                Checking chat access...
+              </Text>
+            </VStack>
+          )}
+          {/* Login/Join flow - only show if badge gating passes */}
+          {canAccessChat && (isLoggingIn || !isGroupMember) && (
             <VStack justifyContent="center" mt={8} p={2} spacing={8}>
               <Text size="sm" textAlign="center">
                 Ultimate Dominion&apos;s chat is public and permanent. Do not
@@ -179,7 +208,7 @@ export const ChatBox: React.FC = () => {
               )}
             </VStack>
           )}
-          {isLoggedIn && isGroupMember && chatUser && (
+          {canAccessChat && isLoggedIn && isGroupMember && chatUser && (
             <VStack bg="grey300" flex="1" overflowY="auto" p={2} spacing={2}>
               {messages.map((message, index) => {
                 const isUser = message.from === chatUser.account;
@@ -287,7 +316,7 @@ export const ChatBox: React.FC = () => {
             </VStack>
           )}
         </Box>
-        {isLoggedIn && isGroupMember && chatUser && isChatBoxOpen && (
+        {canAccessChat && isLoggedIn && isGroupMember && chatUser && isChatBoxOpen && (
           <HStack alignItems="center" pr={2}>
             <Textarea
               h="auto"

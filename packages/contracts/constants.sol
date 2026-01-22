@@ -4,7 +4,15 @@ pragma solidity >=0.8.24;
 bytes14 constant GOLD_NAMESPACE = "Gold";
 bytes14 constant CHARACTERS_NAMESPACE = "Characters";
 bytes14 constant ITEMS_NAMESPACE = "Items";
+bytes14 constant BADGES_NAMESPACE = "Badges";
 bytes14 constant WORLD_NAMESPACE = "UD";
+
+// Badge Token IDs
+uint256 constant BADGE_ADVENTURER = 1;  // Unlocks chat at level 3
+uint256 constant BADGE_FOUNDER = 50;    // Limited time launch badge
+
+// Badge requirements
+uint256 constant ADVENTURER_BADGE_LEVEL = 3;
 
 string constant ERC721_NAME = "UDCharacters";
 string constant ERC721_SYMBOL = "UDC";

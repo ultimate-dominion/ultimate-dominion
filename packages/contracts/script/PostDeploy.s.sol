@@ -20,7 +20,7 @@ import {_erc721SystemId} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {_erc20SystemId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {_erc1155SystemId} from "../src/utils.sol";
 import {BEFORE_CALL_SYSTEM} from "@latticexyz/world/src/systemHookTypes.sol";
-import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, TOKEN_URI, WORLD_NAMESPACE} from "../constants.sol";
+import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, BADGES_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, TOKEN_URI, WORLD_NAMESPACE} from "../constants.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {StandardDelegationsModule} from "@latticexyz/world-modules/src/modules/std-delegations/StandardDelegationsModule.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
@@ -145,10 +145,11 @@ contract PostDeploy is Script {
         _installPuppetModule();
         _installStandardDelegationsModule();
 
-        // Step 2-4: Deploy tokens
+        // Step 2-5: Deploy tokens
         _deployGoldToken(_worldAddress);
         _deployCharacterToken();
         _deployItemsToken();
+        _deployBadgesToken();
 
         // Step 5: Configure character system
         _configureCharacterSystem();
@@ -324,6 +325,58 @@ contract PostDeploy is Script {
             // mint() requires owner-level access, and we need deployer to mint items first
         } else {
             console.log("  Items token already configured, skipping");
+        }
+    }
+
+    function _deployBadgesToken() internal {
+        if (UltimateDominionConfig.getBadgeToken() == address(0)) {
+            console.log("Deploying Badges token (soulbound ERC721)...");
+            IERC721Mintable badges = registerERC721(
+                world,
+                BADGES_NAMESPACE,
+                ERC721MetadataData({name: "Ultimate Dominion Badges", symbol: "UDB", baseURI: "ipfs://"})
+            );
+            UltimateDominionConfig.setBadgeToken(address(badges));
+            console.log("  Badges token deployed at:", address(badges));
+
+            // Grant World access to Badges namespace so systems can mint badges
+            ResourceId badgesNamespaceId = WorldResourceIdLib.encodeNamespace(BADGES_NAMESPACE);
+            try world.grantAccess(badgesNamespaceId, address(world)) {
+                console.log("  Granted Badges namespace access to World");
+            } catch {
+                console.log("  Badges namespace access already granted");
+            }
+
+            // Grant World access to Badges:ERC721System
+            ResourceId badgesErc721SystemId = _erc721SystemId(BADGES_NAMESPACE);
+            try world.grantAccess(badgesErc721SystemId, address(world)) {
+                console.log("  Granted Badges:ERC721System access to World");
+            } catch {
+                console.log("  Badges:ERC721System access already granted");
+            }
+
+            // Set founder window end (7 days from deployment)
+            uint256 founderWindowEnd = block.timestamp + 7 days;
+            UltimateDominionConfig.setFounderWindowEnd(founderWindowEnd);
+            console.log("  Founder window ends:", founderWindowEnd);
+
+            // NOTE: This token is soulbound - transfers are blocked via NoTransferHook
+            // Register hook to prevent transfers
+            NoTransferHook badgeHook = new NoTransferHook();
+            try world.registerSystemHook(badgesErc721SystemId, badgeHook, BEFORE_CALL_SYSTEM) {
+                console.log("  Registered NoTransferHook for Badges (soulbound)");
+            } catch {
+                console.log("  NoTransferHook for Badges already registered");
+            }
+
+            // Transfer ownership to World
+            try world.transferOwnership(badgesNamespaceId, address(world)) {
+                console.log("  Transferred Badges namespace ownership to World");
+            } catch {
+                console.log("  Badges namespace ownership transfer failed");
+            }
+        } else {
+            console.log("  Badges token already configured, skipping");
         }
     }
 

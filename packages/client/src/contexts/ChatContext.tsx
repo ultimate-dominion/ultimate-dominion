@@ -18,8 +18,8 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { zeroAddress } from 'viem';
-import { useWalletClient } from 'wagmi';
+import { zeroAddress, erc721Abi } from 'viem';
+import { useWalletClient, usePublicClient, useAccount } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
@@ -31,8 +31,16 @@ import { useMap } from './MapContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
 
+// TODO: Update these after deploying badges and creating new group
 const GROUP_CHAT_ID =
   '7699bfa8e5309b876a7b60e75074ecdf41d029575f3655a33f2b449e7730dfa4';
+
+// Badge contract address - set after deployment
+// Get from UltimateDominionConfig.getBadgeToken() or worlds.json deployment
+const BADGE_CONTRACT_ADDRESS = import.meta.env.VITE_BADGE_CONTRACT_ADDRESS || '';
+
+// Adventurer badge token ID base (actual ID = 1_000_000 + characterTokenId)
+const ADVENTURER_BADGE_BASE = 1;
 
 type Message = {
   delivered: boolean;
@@ -44,6 +52,8 @@ type Message = {
 
 type ChatContextType = {
   chatUser: PushAPI | null;
+  hasBadge: boolean;
+  isCheckingBadge: boolean;
   isGroupMember: boolean;
   isJoiningGroupChat: boolean;
   isLoggedIn: boolean;
@@ -64,6 +74,8 @@ type ChatContextType = {
 
 const ChatContext = createContext<ChatContextType>({
   chatUser: null,
+  hasBadge: false,
+  isCheckingBadge: false,
   isGroupMember: false,
   isJoiningGroupChat: false,
   isLoggedIn: false,
@@ -90,6 +102,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { renderError } = useToast();
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { data } = useWalletClient();
+  const publicClient = usePublicClient();
+  const { address } = useAccount();
   const {
     components: { CombatEncounter, CombatOutcome, MarketplaceSale, ShopSale },
   } = useMUD();
@@ -100,7 +114,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     weaponTemplates,
   } = useItems();
   const { monsterTemplates } = useMonsters();
-  const { allCharacters } = useMap();
+  const { allCharacters, currentCharacter } = useMap();
 
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [user, setUser] = useState<PushAPI | null>(null);
@@ -112,6 +126,50 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
   const [isSending, setIsSending] = useState<boolean>(false);
+
+  // Badge checking state
+  const [hasBadge, setHasBadge] = useState<boolean>(false);
+  const [isCheckingBadge, setIsCheckingBadge] = useState<boolean>(false);
+
+  // Check if user has Adventurer badge
+  useEffect(() => {
+    const checkBadge = async () => {
+      if (!address || !publicClient || !BADGE_CONTRACT_ADDRESS) {
+        setHasBadge(false);
+        return;
+      }
+
+      setIsCheckingBadge(true);
+      try {
+        // Get character token ID from currentCharacter
+        const characterTokenId = currentCharacter?.tokenId;
+        if (!characterTokenId) {
+          setHasBadge(false);
+          return;
+        }
+
+        // Calculate badge token ID: ADVENTURER_BADGE_BASE * 1_000_000 + characterTokenId
+        const badgeTokenId = BigInt(ADVENTURER_BADGE_BASE) * BigInt(1_000_000) + BigInt(characterTokenId);
+
+        // Check if user owns this badge
+        const owner = await publicClient.readContract({
+          address: BADGE_CONTRACT_ADDRESS as `0x${string}`,
+          abi: erc721Abi,
+          functionName: 'ownerOf',
+          args: [badgeTokenId],
+        });
+
+        setHasBadge(owner === address);
+      } catch (error) {
+        // Badge doesn't exist or other error - user doesn't have badge
+        setHasBadge(false);
+      } finally {
+        setIsCheckingBadge(false);
+      }
+    };
+
+    checkBadge();
+  }, [address, publicClient, currentCharacter?.tokenId]);
 
   const allBattleOutcomes: Message[] = useEntityQuery([Has(CombatOutcome)]).map(
     entity => {
@@ -460,6 +518,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     <ChatContext.Provider
       value={{
         chatUser: user,
+        hasBadge,
+        isCheckingBadge,
         isGroupMember,
         isJoiningGroupChat,
         isLoggedIn: !!user,

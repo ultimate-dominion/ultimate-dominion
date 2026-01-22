@@ -12,7 +12,9 @@ import {
 import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
-import {MAX_LEVEL} from "../../../constants.sol";
+import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGES_NAMESPACE} from "../../../constants.sol";
+import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
+import {UltimateDominionConfig} from "@codegen/index.sol";
 import {_requireAccess} from "../../utils.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 
@@ -149,7 +151,40 @@ contract LevelSystem is System {
         // Re-apply world effects
         IWorld(_world()).UD__applyWorldEffects(characterId);
 
+        // Mint Adventurer badge at level 3 (unlocks chat)
+        if (newLevel == ADVENTURER_BADGE_LEVEL) {
+            _mintAdventurerBadge(characterId);
+        }
+
         emit CharacterLeveledUp(characterId, currentStats.level, currentStats.experience);
+    }
+
+    /**
+     * @dev Mints the Adventurer badge to a character's owner
+     * @param characterId The character that reached the badge level
+     */
+    function _mintAdventurerBadge(bytes32 characterId) internal {
+        address badgeToken = UltimateDominionConfig.getBadgeToken();
+        if (badgeToken == address(0)) return;
+
+        address owner = Characters.getOwner(characterId);
+        IERC721Mintable badges = IERC721Mintable(badgeToken);
+
+        // Check if owner already has the badge (prevent double mint)
+        try badges.ownerOf(BADGE_ADVENTURER) returns (address existingOwner) {
+            // Badge already exists, check if same owner
+            if (existingOwner == owner) return;
+            // Different owner - this badge ID is taken, would need unique IDs per player
+            // For now, we use a unique token ID per player: BADGE_ADVENTURER + characterTokenId
+        } catch {
+            // Badge doesn't exist yet, mint it
+        }
+
+        // Mint badge with unique ID: base badge ID + character token ID
+        uint256 tokenId = Characters.getTokenId(characterId);
+        uint256 badgeId = (BADGE_ADVENTURER * 1_000_000) + tokenId;
+
+        badges.mint(owner, badgeId);
     }
 
     /**

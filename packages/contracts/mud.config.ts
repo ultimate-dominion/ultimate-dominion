@@ -581,12 +581,14 @@ export default defineWorld({
         goldToken: "address",
         characterToken: "address",
         items: "address",
+        badgeToken: "address",
         marketplace: "address",
         lootManager: "address",
         shop: "address",
         maxPlayers: "uint256",
         feeRecipient: "address",
         feePercent: "uint256", // Basis points (300 = 3%)
+        founderWindowEnd: "uint256", // Timestamp when Founder badge minting ends
       },
     },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////

@@ -29,7 +29,7 @@ import {TokenURI} from "@latticexyz/world-modules/src/modules/erc721-puppet/tabl
 import {_tokenUriTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {_erc721SystemId} from "../../utils.sol";
-import {CHARACTERS_NAMESPACE, GOLD_NAMESPACE, ITEMS_NAMESPACE} from "../../../constants.sol";
+import {CHARACTERS_NAMESPACE, GOLD_NAMESPACE, ITEMS_NAMESPACE, BADGE_FOUNDER} from "../../../constants.sol";
 // Direct table access for gold transfers
 import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {_balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
@@ -209,7 +209,34 @@ contract CharacterCore is System {
         charData.originalStats = encodedStats;
         Characters.set(characterId, charData);
 
+        // Mint Founder badge if within founder window
+        _mintFounderBadgeIfEligible(characterId, charData.tokenId, playerAddress);
+
         console.log("CharacterCore: Character", uint256(characterId), "entered game with gold and items");
+    }
+
+    /**
+     * @dev Mints Founder badge if within the founder window period
+     * @param characterId The character ID
+     * @param tokenId The character's token ID (used to create unique badge ID)
+     * @param owner The character owner's address
+     */
+    function _mintFounderBadgeIfEligible(bytes32 characterId, uint256 tokenId, address owner) internal {
+        uint256 founderWindowEnd = UltimateDominionConfig.getFounderWindowEnd();
+        if (founderWindowEnd == 0 || block.timestamp > founderWindowEnd) {
+            return; // Founder window not set or has ended
+        }
+
+        address badgeToken = UltimateDominionConfig.getBadgeToken();
+        if (badgeToken == address(0)) {
+            return; // Badge token not deployed
+        }
+
+        // Mint founder badge with unique ID: base badge ID * 1M + character token ID
+        uint256 badgeId = (BADGE_FOUNDER * 1_000_000) + tokenId;
+        IERC721Mintable(badgeToken).mint(owner, badgeId);
+
+        console.log("CharacterCore: Minted Founder badge", badgeId, "to", owner);
     }
 
     /**
