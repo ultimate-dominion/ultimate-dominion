@@ -80,23 +80,28 @@ export const ItemsProvider = ({
     async (allArmorIds: bigint[]) => {
       const allArmorTemplates = await Promise.all(
         allArmorIds.map(async armorId => {
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: armorId },
+          const itemIdEntity = encodeEntity(
+            { itemId: 'uint256' },
+            { itemId: armorId },
           );
 
           const statRestrictions = getComponentValueStrict(
             StatRestrictions,
-            tokenIdEntity,
+            itemIdEntity,
           );
-          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-          const armorStats = getComponentValueStrict(ArmorStats, tokenIdEntity);
+          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
+          const armorStats = getComponentValueStrict(ArmorStats, itemIdEntity);
 
           const baseURI = getComponentValueStrict(
             ItemsBaseURI,
             singletonEntity,
           ).uri;
 
+          // ERC1155 tables use tokenId as key (same numeric value, different key name)
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: armorId },
+          );
           const tokenURI = getComponentValueStrict(
             ItemsTokenURI,
             tokenIdEntity,
@@ -144,19 +149,19 @@ export const ItemsProvider = ({
     async (allConsumableIds: bigint[]) => {
       const allConsumableTemplates = await Promise.all(
         allConsumableIds.map(async consumableId => {
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: consumableId },
+          const itemIdEntity = encodeEntity(
+            { itemId: 'uint256' },
+            { itemId: consumableId },
           );
 
           const statRestrictions = getComponentValueStrict(
             StatRestrictions,
-            tokenIdEntity,
+            itemIdEntity,
           );
-          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
           const consumableStats = getComponentValueStrict(
             ConsumableStats,
-            tokenIdEntity,
+            itemIdEntity,
           );
           const statusEffectStats = consumableStats.effects
             .map(effect => {
@@ -195,6 +200,11 @@ export const ItemsProvider = ({
             singletonEntity,
           ).uri;
 
+          // ERC1155 tables use tokenId as key (same numeric value, different key name)
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: consumableId },
+          );
           const tokenURI = getComponentValueStrict(
             ItemsTokenURI,
             tokenIdEntity,
@@ -267,24 +277,29 @@ export const ItemsProvider = ({
     async (allSpellIds: bigint[]) => {
       const allSpellTemplates = await Promise.all(
         allSpellIds.map(async spellId => {
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: spellId },
+          const itemIdEntity = encodeEntity(
+            { itemId: 'uint256' },
+            { itemId: spellId },
           );
 
           const statRestrictions = getComponentValueStrict(
             StatRestrictions,
-            tokenIdEntity,
+            itemIdEntity,
           );
-          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
 
-          const spellStats = getComponentValueStrict(SpellStats, tokenIdEntity);
+          const spellStats = getComponentValueStrict(SpellStats, itemIdEntity);
 
           const baseURI = getComponentValueStrict(
             ItemsBaseURI,
             singletonEntity,
           ).uri;
 
+          // ERC1155 tables use tokenId as key (same numeric value, different key name)
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: spellId },
+          );
           const tokenURI = getComponentValueStrict(
             ItemsTokenURI,
             tokenIdEntity,
@@ -330,19 +345,19 @@ export const ItemsProvider = ({
     async (allWeaponIds: bigint[]) => {
       const allWeaponTemplates = await Promise.all(
         allWeaponIds.map(async weaponId => {
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: weaponId },
+          const itemIdEntity = encodeEntity(
+            { itemId: 'uint256' },
+            { itemId: weaponId },
           );
 
           const statRestrictions = getComponentValueStrict(
             StatRestrictions,
-            tokenIdEntity,
+            itemIdEntity,
           );
-          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
           const weaponStats = getComponentValueStrict(
             WeaponStats,
-            tokenIdEntity,
+            itemIdEntity,
           );
 
           const baseURI = getComponentValueStrict(
@@ -350,6 +365,11 @@ export const ItemsProvider = ({
             singletonEntity,
           ).uri;
 
+          // ERC1155 tables use tokenId as key (same numeric value, different key name)
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: weaponId },
+          );
           const tokenURI = getComponentValueStrict(
             ItemsTokenURI,
             tokenIdEntity,
@@ -408,11 +428,11 @@ export const ItemsProvider = ({
 
         const allItemIds = allItemEntities.map(entity => {
           const itemTemplate = getComponentValueStrict(Items, entity);
-          const { tokenId } = decodeEntity({ tokenId: 'uint256' }, entity);
-          console.log('[DEBUG ItemsContext] Item:', { entity, tokenId: tokenId.toString(), itemType: itemTemplate.itemType });
+          const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
+          console.log('[DEBUG ItemsContext] Item:', { entity, itemId: itemId.toString(), itemType: itemTemplate.itemType });
           return {
             itemType: itemTemplate.itemType,
-            tokenId,
+            itemId,
           };
         });
 
@@ -421,28 +441,28 @@ export const ItemsProvider = ({
         if (allItemIds.length > 0) {
           const allArmorIds = allItemIds
             .filter(({ itemType }) => itemType === ItemType.Armor)
-            .map(({ tokenId }) => tokenId);
+            .map(({ itemId }) => itemId);
 
           const _armor = await fetchAllArmor(allArmorIds);
           setArmorTemplates(_armor);
 
           const allConsumableIds = allItemIds
             .filter(({ itemType }) => itemType === ItemType.Consumable)
-            .map(({ tokenId }) => tokenId);
+            .map(({ itemId }) => itemId);
 
           const _consumables = await fetchAllConsumables(allConsumableIds);
           setConsumableTemplates(_consumables);
 
           const allSpellIds = allItemIds
             .filter(({ itemType }) => itemType === ItemType.Spell)
-            .map(({ tokenId }) => tokenId);
+            .map(({ itemId }) => itemId);
 
           const _spells = await fetchAllSpells(allSpellIds);
           setSpellTemplates(_spells);
 
           const allWeaponIds = allItemIds
             .filter(({ itemType }) => itemType === ItemType.Weapon)
-            .map(({ tokenId }) => tokenId);
+            .map(({ itemId }) => itemId);
 
           const _weapons = await fetchAllWeapons(allWeaponIds);
           setWeaponTemplates(_weapons);
