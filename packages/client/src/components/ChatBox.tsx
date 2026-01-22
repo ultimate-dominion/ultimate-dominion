@@ -13,6 +13,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CiCircleCheck } from 'react-icons/ci';
 import { IoIosSend, IoMdInformationCircleOutline } from 'react-icons/io';
+import { FaMedal } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { createPublicClient, http } from 'viem';
 import { mainnet } from 'viem/chains';
@@ -147,6 +148,19 @@ export const ChatBox: React.FC = () => {
         >
           <HStack>
             <Heading size={{ base: 'sm', md: 'md' }}>Chat</Heading>
+            {hasBadge && (
+              <Tooltip
+                bg="#070D2A"
+                hasArrow
+                label="Adventurer Badge - Chat Unlocked!"
+                placement="top"
+                shouldWrapChildren
+              >
+                <Box color="gold">
+                  <FaMedal size={16} />
+                </Box>
+              </Tooltip>
+            )}
             <Tooltip
               bg="#070D2A"
               hasArrow

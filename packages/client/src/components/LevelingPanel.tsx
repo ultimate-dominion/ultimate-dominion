@@ -237,7 +237,14 @@ export const LevelingPanel = ({
       }
 
       await refreshCharacter();
-      renderSuccess('Character leveled up!');
+
+      // Check if this level up earned the Adventurer badge (level 3)
+      const newLevel = Number(character.level) + 1;
+      if (newLevel === 3) {
+        renderSuccess('Level 3! You earned the Adventurer Badge - Chat Unlocked!');
+      } else {
+        renderSuccess('Character leveled up!');
+      }
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to unequip item.', e);
     } finally {

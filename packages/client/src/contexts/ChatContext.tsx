@@ -169,7 +169,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     };
 
     checkBadge();
-  }, [address, publicClient, currentCharacter?.tokenId]);
+    // Re-check when level changes (badge is minted at level 3)
+  }, [address, publicClient, currentCharacter?.tokenId, currentCharacter?.level]);
 
   const allBattleOutcomes: Message[] = useEntityQuery([Has(CombatOutcome)]).map(
     entity => {
