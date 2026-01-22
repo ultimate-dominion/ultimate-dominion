@@ -68,6 +68,29 @@
         "minIntelligence": 0,
         "minStrength": 0
       }
+    },
+    {
+      "name": "Iron Chainmail",
+      "rarity": 1,
+      "dropChance": 50,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:iron_chainmail",
+      "price": 15000000000000000000,
+      "armorType": "Leather",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 5,
+        "hpModifier": 5,
+        "intModifier": 0,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
     }
   ],
   "weapons": [
@@ -160,6 +183,30 @@
         "minDamage": 2,
         "minLevel": 1,
         "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Iron Sword",
+      "rarity": 1,
+      "dropChance": 50,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:iron_sword",
+      "price": 10000000000000000000,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 8,
+        "minDamage": 4,
+        "minLevel": 1,
+        "strModifier": 1
       },
       "statRestrictions": {
         "minAgility": 0,

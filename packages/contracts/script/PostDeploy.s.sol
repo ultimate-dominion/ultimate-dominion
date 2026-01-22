@@ -434,6 +434,21 @@ contract PostDeploy is Script {
             console.log("  Items:TotalSupply table access grant failed");
         }
 
+        // Grant LootManagerSystem access to Gold namespace tables for direct writes
+        ResourceId goldBalancesTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Balances");
+        try world.grantAccess(goldBalancesTableId, lootManagerAddress) {
+            console.log("  Granted Gold:Balances table access to LootManagerSystem");
+        } catch {
+            console.log("  Gold:Balances table access grant to LootManagerSystem failed");
+        }
+
+        ResourceId goldTotalSupplyTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "TotalSupply");
+        try world.grantAccess(goldTotalSupplyTableId, lootManagerAddress) {
+            console.log("  Granted Gold:TotalSupply table access to LootManagerSystem");
+        } catch {
+            console.log("  Gold:TotalSupply table access grant to LootManagerSystem failed");
+        }
+
         // Grant AdminSystem and ItemsSystem access to Items namespace (for post-deployment seeding)
         ResourceId adminSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "AdminSystem");
         address adminSystemAddress = Systems.getSystem(adminSystemId);
@@ -473,6 +488,32 @@ contract PostDeploy is Script {
         Admin.set(itemsSystemAddress, true);
         console.log("  ItemsSystem added to Admin table");
 
+        // Grant MarketplaceSystem access to Items namespace (for listing items)
+        // Note: MUD truncates "MarketplaceSystem" (17 chars) to "MarketplaceSyste" (16 chars)
+        ResourceId marketplaceSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "MarketplaceSyste");
+        address marketplaceSystemAddress = Systems.getSystem(marketplaceSystemId);
+        console.log("  MarketplaceSystem address:", marketplaceSystemAddress);
+
+        try world.grantAccess(itemsNamespaceId, marketplaceSystemAddress) {
+            console.log("  Granted Items namespace access to MarketplaceSystem");
+        } catch {
+            console.log("  Items namespace access grant to MarketplaceSystem failed");
+        }
+
+        try world.grantAccess(erc1155SystemId, marketplaceSystemAddress) {
+            console.log("  Granted ERC1155System access to MarketplaceSystem");
+        } catch {
+            console.log("  ERC1155System access grant to MarketplaceSystem failed");
+        }
+
+        // Grant MarketplaceSystem access to Gold namespace (for gold transfers)
+        ResourceId goldNamespaceId = WorldResourceIdLib.encodeNamespace(GOLD_NAMESPACE);
+        try world.grantAccess(goldNamespaceId, marketplaceSystemAddress) {
+            console.log("  Granted Gold namespace access to MarketplaceSystem");
+        } catch {
+            console.log("  Gold namespace access grant to MarketplaceSystem failed");
+        }
+
         // Grant MobSystem access to Admin table (for post-deployment mob creation)
         ResourceId mobSystemResourceId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "MobSystem");
         address mobSystemAddress = Systems.getSystem(mobSystemResourceId);
@@ -492,6 +533,14 @@ contract PostDeploy is Script {
         console.log("  Shop address:", address(world));
         UltimateDominionConfig.setMarketplace(address(world));
         console.log("  Marketplace address:", address(world));
+
+        // Set marketplace fee configuration
+        // Fee recipient is the deployer (treasury) - change this for production
+        UltimateDominionConfig.setFeeRecipient(deployer);
+        console.log("  Fee recipient:", deployer);
+        // 300 basis points = 3%
+        UltimateDominionConfig.setFeePercent(300);
+        console.log("  Fee percent: 3% (300 basis points)");
     }
 
     function _transferItemsOwnership() internal {

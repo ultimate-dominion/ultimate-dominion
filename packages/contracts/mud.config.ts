@@ -585,6 +585,8 @@ export default defineWorld({
         lootManager: "address",
         shop: "address",
         maxPlayers: "uint256",
+        feeRecipient: "address",
+        feePercent: "uint256", // Basis points (300 = 3%)
       },
     },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////

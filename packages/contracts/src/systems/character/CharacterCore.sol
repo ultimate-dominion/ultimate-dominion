@@ -171,9 +171,9 @@ contract CharacterCore is System {
         // Mint gold directly to player via table write (bypasses ERC20System access checks)
         ResourceId goldBalanceTableId = _balancesTableId(GOLD_NAMESPACE);
         uint256 playerGoldBalance = Balances.get(goldBalanceTableId, playerAddress);
-        uint256 goldAmount = 5 ether;
+        uint256 goldAmount = 100 ether; // Increased for marketplace testing
         Balances.set(goldBalanceTableId, playerAddress, playerGoldBalance + goldAmount);
-        console.log("CharacterCore: Minted 5 GOLD to player");
+        console.log("CharacterCore: Minted 100 GOLD to player");
 
         // Mint chosen starter items directly to player
         ResourceId itemsOwnersTableId = _ownersTableId(ITEMS_NAMESPACE);

@@ -10,7 +10,7 @@
         "experience": 10,
         "hitPoints": 15,
         "intelligence": 3,
-        "inventory": [7],
+        "inventory": [8, 9],
         "level": 1,
         "strength": 4
       }
@@ -25,7 +25,7 @@
         "experience": 20,
         "hitPoints": 25,
         "intelligence": 2,
-        "inventory": [7],
+        "inventory": [8, 9, 4],
         "level": 2,
         "strength": 6
       }
