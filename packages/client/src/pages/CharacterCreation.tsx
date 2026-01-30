@@ -106,13 +106,29 @@ const POWER_SOURCE_INFO = {
 };
 
 
+// Wrapper component that checks if MUD components are ready
 export const CharacterCreation = (): JSX.Element => {
+  const { components, isSynced } = useMUD();
+
+  // If components aren't ready, show loading
+  if (!components?.UltimateDominion) {
+    return (
+      <Center h="100vh">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+
+  return <CharacterCreationInner />;
+};
+
+const CharacterCreationInner = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const { chainId, isConnected } = useAccount();
   const {
-    components: { Levels, StarterItemPool, UltimateDominionConfig },
+    components,
     delegatorAddress,
     isSynced,
     systemCalls: {
@@ -123,6 +139,9 @@ export const CharacterCreation = (): JSX.Element => {
       rollBaseStats,
     },
   } = useMUD();
+  const Levels = components?.Levels;
+  const StarterItemPool = components?.StarterItemPool;
+  const UltimateDominion = components?.UltimateDominion;
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
@@ -160,7 +179,7 @@ export const CharacterCreation = (): JSX.Element => {
   const [isEnteringGame, setIsEnteringGame] = useState(false);
 
   const { characterToken } = useComponentValue(
-    UltimateDominionConfig,
+    UltimateDominion,
     singletonEntity,
   ) ?? { characterToken: null };
 
@@ -171,11 +190,26 @@ export const CharacterCreation = (): JSX.Element => {
 
   // Load available starter items from StarterItemPool
   useEffect(() => {
-    if (!isSynced || isLoadingItemTemplates) return;
+    console.log('[CharacterCreation] useEffect triggered:', {
+      isSynced,
+      isLoadingItemTemplates,
+      hasStarterItemPool: !!StarterItemPool,
+      weaponTemplatesCount: weaponTemplates.length,
+      armorTemplatesCount: armorTemplates.length,
+      weaponTemplateIds: weaponTemplates.map(w => w.tokenId),
+      armorTemplateIds: armorTemplates.map(a => a.tokenId),
+    });
+
+    if (!isSynced || isLoadingItemTemplates || !StarterItemPool) {
+      console.log('[CharacterCreation] Waiting for sync...', { isSynced, isLoadingItemTemplates, hasStarterItemPool: !!StarterItemPool });
+      return;
+    }
 
     // Query StarterItemPool for items that are starters
     const starterPoolEntities = Array.from(runQuery([Has(StarterItemPool)]));
     console.log('[CharacterCreation] StarterItemPool entities found:', starterPoolEntities.length);
+    console.log('[CharacterCreation] Weapon templates available:', weaponTemplates.length);
+    console.log('[CharacterCreation] Armor templates available:', armorTemplates.length);
 
     const starterWeapons: Weapon[] = [];
     const starterArmors: Armor[] = [];
@@ -540,7 +574,6 @@ export const CharacterCreation = (): JSX.Element => {
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
-      window.location.reload();
       return;
     }
 
@@ -603,7 +636,15 @@ export const CharacterCreation = (): JSX.Element => {
   }, [avatar, delegatorAddress]);
 
   // Show loading state while syncing or loading item templates
+  console.log('[CharacterCreation] Inner component check:', {
+    isSynced,
+    isLoadingItemTemplates,
+    hasCharacter: !!character,
+    delegatorAddress,
+  });
+
   if (!isSynced || isLoadingItemTemplates) {
+    console.log('[CharacterCreation] Inner showing spinner:', { isSynced, isLoadingItemTemplates });
     return (
       <Center h="100vh">
         <Spinner size="xl" />

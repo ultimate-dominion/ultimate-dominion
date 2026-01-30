@@ -111,7 +111,6 @@ export const Marketplace = (): JSX.Element => {
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
-      window.location.reload();
       return;
     }
 

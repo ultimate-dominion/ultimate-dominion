@@ -20,7 +20,7 @@ import {_erc721SystemId} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {_erc20SystemId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {_erc1155SystemId} from "../src/utils.sol";
 import {BEFORE_CALL_SYSTEM} from "@latticexyz/world/src/systemHookTypes.sol";
-import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, BADGES_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, TOKEN_URI, WORLD_NAMESPACE} from "../constants.sol";
+import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, BADGES_NAMESPACE, FRAGMENTS_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, TOKEN_URI, WORLD_NAMESPACE} from "../constants.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {StandardDelegationsModule} from "@latticexyz/world-modules/src/modules/std-delegations/StandardDelegationsModule.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
@@ -150,6 +150,7 @@ contract PostDeploy is Script {
         _deployCharacterToken();
         _deployItemsToken();
         _deployBadgesToken();
+        _deployFragmentToken();
 
         // Step 5: Configure character system
         _configureCharacterSystem();
@@ -369,7 +370,25 @@ contract PostDeploy is Script {
                 console.log("  NoTransferHook for Badges already registered");
             }
 
-            // Transfer ownership to World
+            // Grant CharacterCore access to mint Founder badges (BEFORE ownership transfer)
+            ResourceId characterCoreId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "CharacterCore");
+            address characterCoreAddress = Systems.getSystem(characterCoreId);
+            try world.grantAccess(badgesErc721SystemId, characterCoreAddress) {
+                console.log("  Granted Badges:ERC721System access to CharacterCore");
+            } catch {
+                console.log("  Badges:ERC721System access grant to CharacterCore failed");
+            }
+
+            // Grant LevelSystem access to mint Adventurer badges (BEFORE ownership transfer)
+            ResourceId levelSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "LevelSystem");
+            address levelSystemAddress = Systems.getSystem(levelSystemId);
+            try world.grantAccess(badgesErc721SystemId, levelSystemAddress) {
+                console.log("  Granted Badges:ERC721System access to LevelSystem");
+            } catch {
+                console.log("  Badges:ERC721System access grant to LevelSystem failed");
+            }
+
+            // Transfer ownership to World (AFTER granting access)
             try world.transferOwnership(badgesNamespaceId, address(world)) {
                 console.log("  Transferred Badges namespace ownership to World");
             } catch {
@@ -377,6 +396,56 @@ contract PostDeploy is Script {
             }
         } else {
             console.log("  Badges token already configured, skipping");
+        }
+    }
+
+    function _deployFragmentToken() internal {
+        if (UltimateDominionConfig.getFragmentToken() == address(0)) {
+            console.log("Deploying Fragment token (lore NFTs)...");
+            IERC721Mintable fragments = registerERC721(
+                world,
+                FRAGMENTS_NAMESPACE,
+                ERC721MetadataData({name: "Fragments of the Fallen", symbol: "FRAGMENT", baseURI: "ipfs://"})
+            );
+            UltimateDominionConfig.setFragmentToken(address(fragments));
+            console.log("  Fragment token deployed at:", address(fragments));
+
+            // Grant World access to Fragments namespace so systems can mint fragments
+            ResourceId fragmentsNamespaceId = WorldResourceIdLib.encodeNamespace(FRAGMENTS_NAMESPACE);
+            try world.grantAccess(fragmentsNamespaceId, address(world)) {
+                console.log("  Granted Fragments namespace access to World");
+            } catch {
+                console.log("  Fragments namespace access already granted");
+            }
+
+            // Grant World access to Fragments:ERC721System
+            ResourceId fragmentsErc721SystemId = _erc721SystemId(FRAGMENTS_NAMESPACE);
+            try world.grantAccess(fragmentsErc721SystemId, address(world)) {
+                console.log("  Granted Fragments:ERC721System access to World");
+            } catch {
+                console.log("  Fragments:ERC721System access already granted");
+            }
+
+            // Grant FragmentSystem access to mint fragments (BEFORE ownership transfer)
+            ResourceId fragmentSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "FragmentSystem");
+            address fragmentSystemAddress = Systems.getSystem(fragmentSystemId);
+            console.log("  FragmentSystem address:", fragmentSystemAddress);
+
+            try world.grantAccess(fragmentsErc721SystemId, fragmentSystemAddress) {
+                console.log("  Granted Fragments:ERC721System access to FragmentSystem");
+            } catch {
+                console.log("  Fragments:ERC721System access grant to FragmentSystem failed");
+            }
+
+            // Transfer Fragments namespace ownership to FragmentSystem (like Characters -> CharacterCore)
+            // This allows FragmentSystem to mint tokens without access control issues
+            try world.transferOwnership(fragmentsNamespaceId, fragmentSystemAddress) {
+                console.log("  Transferred Fragments namespace ownership to FragmentSystem");
+            } catch {
+                console.log("  Fragments namespace ownership transfer failed");
+            }
+        } else {
+            console.log("  Fragment token already configured, skipping");
         }
     }
 

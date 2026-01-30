@@ -26,7 +26,9 @@ import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
-import {SESSION_TIMEOUT} from "../../constants.sol";
+import {SESSION_TIMEOUT, FRAGMENT_CENTER_X, FRAGMENT_CENTER_Y} from "../../constants.sol";
+import {FragmentProgress} from "@codegen/index.sol";
+import {FragmentType} from "@codegen/common.sol";
 import {_requireAccess} from "../utils.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
 import {UNLIMITED_DELEGATION} from "@latticexyz/world/src/constants.sol";
@@ -97,6 +99,11 @@ contract MapSystem is System {
         EntitiesAtPosition.pushEntities(0, 0, entityId);
         // add 1 to spawned players
         Counters.set(address(this), 0, (spawnedPlayers + 1));
+
+        // Fragment I: The Awakening - triggers on first spawn
+        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+            IWorld(_world()).UD__triggerFragment(entityId, 1, 0, 0);
+        }
     }
 
     function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
@@ -270,6 +277,13 @@ contract MapSystem is System {
         // if character set session timer
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             SessionTimer.set(entityId, block.timestamp);
+
+            // Fragment V: The Wound - triggers when reaching center tile (5,5)
+            if (x == FRAGMENT_CENTER_X && y == FRAGMENT_CENTER_Y) {
+                if (!FragmentProgress.getClaimed(entityId, FragmentType.TheWound)) {
+                    IWorld(_world()).UD__triggerFragment(entityId, 5, x, y);
+                }
+            }
         }
         Position.set(entityId, x, y);
         EntitiesAtPosition.pushEntities(x, y, entityId);

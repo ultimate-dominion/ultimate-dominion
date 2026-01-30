@@ -29,7 +29,7 @@ import {TokenURI} from "@latticexyz/world-modules/src/modules/erc721-puppet/tabl
 import {_tokenUriTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {_erc721SystemId} from "../../utils.sol";
-import {CHARACTERS_NAMESPACE, GOLD_NAMESPACE, ITEMS_NAMESPACE, BADGE_FOUNDER} from "../../../constants.sol";
+import {CHARACTERS_NAMESPACE, GOLD_NAMESPACE, ITEMS_NAMESPACE} from "../../../constants.sol";
 // Direct table access for gold transfers
 import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {_balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
@@ -37,7 +37,6 @@ import {_balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-pupp
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {_ownersTableId} from "@erc1155/utils.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
-import "forge-std/console.sol";
 
 contract CharacterCore is System {
     modifier onlyOwner(bytes32 characterId) {
@@ -102,7 +101,6 @@ contract CharacterCore is System {
         // Mark name as taken
         NameExists.set(name, true);
         
-        console.log("CharacterCore: Minted character", uint256(characterId), "to", account);
     }
 
     /**
@@ -173,7 +171,6 @@ contract CharacterCore is System {
         uint256 playerGoldBalance = Balances.get(goldBalanceTableId, playerAddress);
         uint256 goldAmount = 100 ether; // Increased for marketplace testing
         Balances.set(goldBalanceTableId, playerAddress, playerGoldBalance + goldAmount);
-        console.log("CharacterCore: Minted 100 GOLD to player");
 
         // Mint chosen starter items directly to player
         ResourceId itemsOwnersTableId = _ownersTableId(ITEMS_NAMESPACE);
@@ -181,12 +178,10 @@ contract CharacterCore is System {
         // Mint weapon
         uint256 playerWeaponBalance = Owners.getBalance(itemsOwnersTableId, playerAddress, starterWeaponId);
         Owners.setBalance(itemsOwnersTableId, playerAddress, starterWeaponId, playerWeaponBalance + 1);
-        console.log("CharacterCore: Minted starter weapon", starterWeaponId);
 
         // Mint armor
         uint256 playerArmorBalance = Owners.getBalance(itemsOwnersTableId, playerAddress, starterArmorId);
         Owners.setBalance(itemsOwnersTableId, playerAddress, starterArmorId, playerArmorBalance + 1);
-        console.log("CharacterCore: Minted starter armor", starterArmorId);
 
         // Mint starter consumables (e.g., health potions)
         uint256[] memory consumableIds = StarterConsumables.getItemIds();
@@ -194,13 +189,11 @@ contract CharacterCore is System {
         for (uint256 i = 0; i < consumableIds.length; i++) {
             uint256 playerConsumableBalance = Owners.getBalance(itemsOwnersTableId, playerAddress, consumableIds[i]);
             Owners.setBalance(itemsOwnersTableId, playerAddress, consumableIds[i], playerConsumableBalance + consumableAmounts[i]);
-            console.log("CharacterCore: Minted starter consumable", consumableIds[i], "x", consumableAmounts[i]);
         }
 
         // Equip the starter items so they can be used in combat
         CharacterEquipment.pushEquippedWeapons(characterId, starterWeaponId);
         CharacterEquipment.pushEquippedArmor(characterId, starterArmorId);
-        console.log("CharacterCore: Equipped starter weapon and armor");
 
         // Lock character and store base stats
         charData.locked = true;
@@ -208,35 +201,6 @@ contract CharacterCore is System {
         charData.baseStats = encodedStats;
         charData.originalStats = encodedStats;
         Characters.set(characterId, charData);
-
-        // Mint Founder badge if within founder window
-        _mintFounderBadgeIfEligible(characterId, charData.tokenId, playerAddress);
-
-        console.log("CharacterCore: Character", uint256(characterId), "entered game with gold and items");
-    }
-
-    /**
-     * @dev Mints Founder badge if within the founder window period
-     * @param characterId The character ID
-     * @param tokenId The character's token ID (used to create unique badge ID)
-     * @param owner The character owner's address
-     */
-    function _mintFounderBadgeIfEligible(bytes32 characterId, uint256 tokenId, address owner) internal {
-        uint256 founderWindowEnd = UltimateDominionConfig.getFounderWindowEnd();
-        if (founderWindowEnd == 0 || block.timestamp > founderWindowEnd) {
-            return; // Founder window not set or has ended
-        }
-
-        address badgeToken = UltimateDominionConfig.getBadgeToken();
-        if (badgeToken == address(0)) {
-            return; // Badge token not deployed
-        }
-
-        // Mint founder badge with unique ID: base badge ID * 1M + character token ID
-        uint256 badgeId = (BADGE_FOUNDER * 1_000_000) + tokenId;
-        IERC721Mintable(badgeToken).mint(owner, badgeId);
-
-        console.log("CharacterCore: Minted Founder badge", badgeId, "to", owner);
     }
 
     /**
@@ -253,8 +217,6 @@ contract CharacterCore is System {
         
         CharactersData memory charData = Characters.get(characterId);
         TokenURI.set(_tokenUriTableId(CHARACTERS_NAMESPACE), charData.tokenId, tokenUri);
-        
-        console.log("CharacterCore: Updated token URI for character", uint256(characterId));
     }
 
     /**

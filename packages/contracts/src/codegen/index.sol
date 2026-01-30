@@ -55,3 +55,6 @@ import { RngLogs, RngLogsData } from "./tables/RngLogs.sol";
 import { ActionOutcome, ActionOutcomeData } from "./tables/ActionOutcome.sol";
 import { DamageOverTimeApplied, DamageOverTimeAppliedData } from "./tables/DamageOverTimeApplied.sol";
 import { CombatOutcome, CombatOutcomeData } from "./tables/CombatOutcome.sol";
+import { FragmentProgress, FragmentProgressData } from "./tables/FragmentProgress.sol";
+import { CharacterFirstActions, CharacterFirstActionsData } from "./tables/CharacterFirstActions.sol";
+import { FragmentMetadata, FragmentMetadataData } from "./tables/FragmentMetadata.sol";

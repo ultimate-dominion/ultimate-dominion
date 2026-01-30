@@ -200,6 +200,15 @@ export const isTextOnlyUri = (uri: string): boolean => {
 };
 
 export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
+  // Handle empty or invalid URIs
+  if (!uri || uri.trim() === '') {
+    return {
+      name: '',
+      description: '',
+      image: '',
+    };
+  }
+
   // Handle text-only URIs (no HTTP fetch needed)
   if (isTextOnlyUri(uri)) {
     const name = parseTextUri(uri);
@@ -217,7 +226,8 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
       // It might be a full URI like ipfs://local-1234-file.json or just local-1234-file.json
       const segments = uri.split('/');
       const filename = segments[segments.length - 1];
-      const localUrl = `http://localhost:3001/files/${filename}`;
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const localUrl = `${apiUrl}/files/${filename}`;
       console.log(`Development mode: Fetching from local API at ${localUrl}`);
 
       const res = await fetch(localUrl);
@@ -231,7 +241,7 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
       // If image is local, properly format it for local access
       if (metadata.image && metadata.image.includes('local-')) {
         const imgFilename = metadata.image.split('/').pop();
-        metadata.image = `http://localhost:3001/files/${imgFilename}`;
+        metadata.image = `${apiUrl}/files/${imgFilename}`;
       } else {
         metadata.image = uriToHttp(metadata.image)[0] || '';
       }
@@ -245,6 +255,16 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
 
   // Standard IPFS/HTTP handling for non-local URIs
   const urls = uriToHttp(uri);
+
+  // If no valid URLs could be generated, return empty metadata
+  if (urls.length === 0) {
+    return {
+      name: '',
+      description: '',
+      image: '',
+    };
+  }
+
   let lastError: Error | null = null;
 
   for (const url of urls) {
@@ -286,6 +306,11 @@ const IPFS_GATEWAYS = [
  * @param uri to convert to fetch-able http url
  */
 export const uriToHttp = (uri: string): string[] => {
+  // Handle empty or invalid URIs
+  if (!uri || uri.trim() === '') {
+    return [];
+  }
+
   try {
     const protocol = uri.split(':')[0].toLowerCase();
     switch (protocol) {
@@ -297,22 +322,25 @@ export const uriToHttp = (uri: string): string[] => {
         return ['https' + uri.substring(4), uri];
       case 'ipfs': {
         const hash = uri.match(/^ipfs:(\/\/)?(.*)$/i)?.[2];
+        if (!hash) return [];
         return IPFS_GATEWAYS.map(gateway => `${gateway}/ipfs/${hash}`);
       }
       case 'ipns': {
         const name = uri.match(/^ipns:(\/\/)?(.*)$/i)?.[2];
+        if (!name) return [];
         return IPFS_GATEWAYS.map(gateway => `${gateway}/ipns/${name}`);
       }
       case 'ar': {
         const tx = uri.match(/^ar:(\/\/)?(.*)$/i)?.[2];
+        if (!tx) return [];
         return [`https://arweave.net/${tx}`];
       }
       default:
-        return [''];
+        return [];
     }
   } catch (e) {
     console.error(e);
-    return [''];
+    return [];
   }
 };
 

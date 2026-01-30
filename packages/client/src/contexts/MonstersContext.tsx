@@ -67,10 +67,15 @@ export const MonstersProvider = ({
           // Handle text-only URIs directly
           let fetachedMetadata = { name: `Monster #${mobId}`, description: '', image: '' };
           try {
-            if (isTextOnlyUri(metadataURI)) {
-              fetachedMetadata = await fetchMetadataFromUri(metadataURI);
-            } else {
-              fetachedMetadata = await fetchMetadataFromUri(uriToHttp(metadataURI)[0]);
+            if (metadataURI && metadataURI.trim() !== '') {
+              if (isTextOnlyUri(metadataURI)) {
+                fetachedMetadata = await fetchMetadataFromUri(metadataURI);
+              } else {
+                const urls = uriToHttp(metadataURI);
+                if (urls.length > 0) {
+                  fetachedMetadata = await fetchMetadataFromUri(urls[0]);
+                }
+              }
             }
           } catch (e) {
             console.warn(`Failed to fetch metadata for monster ${mobId}:`, e);

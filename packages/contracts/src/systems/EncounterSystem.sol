@@ -22,7 +22,9 @@ import {
     WorldEncounter,
     WorldEncounterData
 } from "@codegen/index.sol";
-import {RngRequestType, EncounterType} from "@codegen/common.sol";
+import {RngRequestType, EncounterType, MobType, FragmentType} from "@codegen/common.sol";
+import {CharacterFirstActions, FragmentProgress, Mobs, MobsData} from "@codegen/index.sol";
+import {DARK_WISP_MOB_ID, VOID_WHISPER_MOB_ID, LICH_ACOLYTE_MOB_ID} from "../../constants.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS} from "../../constants.sol";
@@ -278,6 +280,79 @@ contract EncounterSystem is System {
         }
 
         CombatOutcome.set(encounterId, combatOutcome);
+
+        // Check combat fragment triggers for the winning side
+        (uint16 currentX, uint16 currentY) = Position.get(encounterData.attackers[0]);
+        if (attackersWin) {
+            // Attackers won - check triggers for each attacker that is a character
+            for (uint256 i = 0; i < encounterData.attackers.length; i++) {
+                bytes32 winnerId = encounterData.attackers[i];
+                if (IWorld(_world()).UD__isValidCharacterId(winnerId)) {
+                    _checkCombatFragmentTriggers(winnerId, encounterData.defenders, currentX, currentY, encounterData.attackersAreMobs);
+                }
+            }
+        } else {
+            // Defenders won - check triggers for each defender that is a character
+            for (uint256 i = 0; i < encounterData.defenders.length; i++) {
+                bytes32 winnerId = encounterData.defenders[i];
+                if (IWorld(_world()).UD__isValidCharacterId(winnerId)) {
+                    _checkCombatFragmentTriggers(winnerId, encounterData.attackers, currentX, currentY, !encounterData.attackersAreMobs);
+                }
+            }
+        }
+    }
+
+    /**
+     * @notice Check and trigger combat-related fragments
+     * @param characterId The winning character
+     * @param defeated Array of defeated entity IDs
+     * @param tileX X coordinate of combat
+     * @param tileY Y coordinate of combat
+     * @param defeatedAreMobs Whether the defeated side were mobs
+     */
+    function _checkCombatFragmentTriggers(
+        bytes32 characterId,
+        bytes32[] memory defeated,
+        uint16 tileX,
+        uint16 tileY,
+        bool defeatedAreMobs
+    ) internal {
+        // Fragment III: The Restless - first monster kill
+        if (defeatedAreMobs && !CharacterFirstActions.getHasKilledMonster(characterId)) {
+            CharacterFirstActions.setHasKilledMonster(characterId, true);
+            IWorld(_world()).UD__triggerFragment(characterId, 3, tileX, tileY);
+        }
+
+        for (uint256 i = 0; i < defeated.length; i++) {
+            bytes32 defeatedId = defeated[i];
+
+            if (defeatedAreMobs) {
+                // Get mob ID from the defeated entity
+                uint256 mobId = IWorld(_world()).UD__getMobId(defeatedId);
+
+                // Fragment IV: Souls That Linger - kill Dark Wisp
+                if (mobId == DARK_WISP_MOB_ID) {
+                    IWorld(_world()).UD__triggerFragment(characterId, 4, tileX, tileY);
+                }
+                // Fragment VI: Death of the Death God - kill Lich Acolyte
+                else if (mobId == LICH_ACOLYTE_MOB_ID) {
+                    IWorld(_world()).UD__triggerFragment(characterId, 6, tileX, tileY);
+                }
+                // Fragment VII: Betrayer's Truth - kill Void Whisper
+                else if (mobId == VOID_WHISPER_MOB_ID) {
+                    IWorld(_world()).UD__triggerFragment(characterId, 7, tileX, tileY);
+                }
+            } else {
+                // PvP kill - defeated is a player character
+                // Fragment VIII: Blood Price - first PvP kill
+                if (IWorld(_world()).UD__isValidCharacterId(defeatedId)) {
+                    if (!CharacterFirstActions.getHasKilledPlayer(characterId)) {
+                        CharacterFirstActions.setHasKilledPlayer(characterId, true);
+                        IWorld(_world()).UD__triggerFragment(characterId, 8, tileX, tileY);
+                    }
+                }
+            }
+        }
     }
 
     function _endWorldEncounter(bytes32 encounterId) internal {

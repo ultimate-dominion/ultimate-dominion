@@ -20,6 +20,7 @@ import { Header } from './components/Header';
 import { WalletDetailsModal } from './components/WalletDetailsModal';
 import { BattleProvider } from './contexts/BattleContext';
 import { ChatProvider, useChat } from './contexts/ChatContext';
+import { FragmentProvider } from './contexts/FragmentContext';
 import { MapProvider, useMap } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
@@ -28,21 +29,21 @@ import AppRoutes, { CHARACTER_CREATION_PATH, HOME_PATH } from './Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from './utils/constants';
 
 export const App = (): JSX.Element => {
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // disable lint line
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const memoryUsage = window.performance?.memory?.usedJSHeapSize;
-
-      // TODO: Handle memory usage more gracefully
-      // If more than 2GB of memory usage, reload the page
-      if (memoryUsage && memoryUsage > 2000 * 1024 * 1024) {
-        window.location.reload();
-      }
-    }, 20000);
-    return () => clearInterval(interval);
-  }, []);
+  // Memory check disabled - was causing unexpected page refreshes
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //     // @ts-ignore
+  //     const memoryUsage = window.performance?.memory?.usedJSHeapSize;
+  //
+  //     // TODO: Handle memory usage more gracefully
+  //     // If more than 2GB of memory usage, reload the page
+  //     if (memoryUsage && memoryUsage > 2000 * 1024 * 1024) {
+  //       window.location.reload();
+  //     }
+  //   }, 20000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   return (
     <Router>
@@ -50,8 +51,10 @@ export const App = (): JSX.Element => {
         <BattleProvider>
           <ChatProvider>
             <MovementProvider>
-              <Analytics />
-              <AppInner />
+              <FragmentProvider>
+                <Analytics />
+                <AppInner />
+              </FragmentProvider>
             </MovementProvider>
           </ChatProvider>
         </BattleProvider>

@@ -43,7 +43,8 @@ setup().then(async result => {
               </OrdersProvider>
             </MonstersProvider>
           </ItemsProvider>
-          {import.meta.env.DEV && <DevTools />}
+          {/* DevTools temporarily disabled - causes error with undefined table values */}
+          {/* {import.meta.env.DEV && <DevTools />} */}
         </MUDProvider>
       </Web3Provider>
     </ChakraProvider>,

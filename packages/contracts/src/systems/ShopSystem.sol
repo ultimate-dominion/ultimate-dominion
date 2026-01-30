@@ -18,7 +18,8 @@ import {
 import {IWorld} from "@world/IWorld.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
 import {_lootManagerSystemId} from "../utils.sol";
-import {WORLD_NAMESPACE} from "../../constants.sol";
+import {WORLD_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y} from "../../constants.sol";
+import {Position} from "@codegen/index.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
@@ -185,6 +186,13 @@ contract ShopSystem is System, ReentrancyGuard {
                 && IWorld(_world()).UD__isValidOwner(characterId, _msgSender()),
             "can only exit your own shop"
         );
+
+        // Fragment II: The Quartermaster - talk to Tal at (9,9)
+        bytes32 shopEntityId = WorldEncounter.getEntity(encounterId);
+        (uint16 shopX, uint16 shopY) = Position.get(shopEntityId);
+        if (shopX == TAL_SHOP_X && shopY == TAL_SHOP_Y) {
+            IWorld(_world()).UD__triggerFragment(characterId, 2, shopX, shopY);
+        }
 
         IWorld(_world()).UD__endEncounter(encounterId, 0, false);
     }

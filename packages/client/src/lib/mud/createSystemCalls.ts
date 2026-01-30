@@ -433,22 +433,30 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const characterEquipment = getComponentValueStrict(
-        CharacterEquipment,
-        characterEntity,
-      );
+      // CharacterEquipment component may not be synced yet, so use non-strict get
+      const characterEquipment = CharacterEquipment
+        ? getComponentValue(CharacterEquipment, characterEntity)
+        : undefined;
 
-      const { equippedArmor, equippedSpells, equippedWeapons } =
-        characterEquipment;
+      // If component data is available, verify equip succeeded
+      if (characterEquipment) {
+        const { equippedArmor, equippedSpells, equippedWeapons } =
+          characterEquipment;
 
-      const success =
-        equippedArmor.some(id => itemIds.includes(id.toString())) ||
-        equippedSpells.some(id => itemIds.includes(id.toString())) ||
-        equippedWeapons.some(id => itemIds.includes(id.toString()));
+        const success =
+          equippedArmor?.some(id => itemIds.includes(id.toString())) ||
+          equippedSpells?.some(id => itemIds.includes(id.toString())) ||
+          equippedWeapons?.some(id => itemIds.includes(id.toString()));
 
+        return {
+          error: success ? undefined : 'Failed to equip items.',
+          success: !!success,
+        };
+      }
+
+      // If component not available, trust the transaction succeeded
       return {
-        error: success ? undefined : 'Failed to equip items.',
-        success,
+        success: true,
       };
     } catch (e) {
       return {
@@ -883,21 +891,29 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const characterEquipment = getComponentValueStrict(
-        CharacterEquipment,
-        characterEntity,
-      );
+      // CharacterEquipment component may not be synced yet, so use non-strict get
+      const characterEquipment = CharacterEquipment
+        ? getComponentValue(CharacterEquipment, characterEntity)
+        : undefined;
 
-      const { equippedArmor, equippedWeapons } = characterEquipment;
+      // If component data is available, verify unequip succeeded
+      if (characterEquipment) {
+        const { equippedArmor, equippedWeapons } = characterEquipment;
 
-      const success = !(
-        equippedArmor.includes(BigInt(itemId)) ||
-        equippedWeapons.includes(BigInt(itemId))
-      );
+        const success = !(
+          equippedArmor?.includes(BigInt(itemId)) ||
+          equippedWeapons?.includes(BigInt(itemId))
+        );
 
+        return {
+          error: success ? undefined : 'Failed to unequip item.',
+          success,
+        };
+      }
+
+      // If component not available, trust the transaction succeeded
       return {
-        error: success ? undefined : 'Failed to unequip item.',
-        success,
+        success: true,
       };
     } catch (e) {
       return {
@@ -1231,11 +1247,78 @@ export function createSystemCalls(
     }
   };
 
+  // Manual trigger for testing - normally called by contract systems
+  const triggerFragment = async (
+    characterId: string,
+    fragmentType: number,
+    tileX: number,
+    tileY: number,
+  ): SystemCallReturn => {
+    try {
+      const tx = await worldContract.write.UD__triggerFragment([
+        characterId as `0x${string}`,
+        fragmentType,
+        tileX,
+        tileY,
+      ]);
+
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      return {
+        error: status === 'reverted' ? 'Transaction reverted' : undefined,
+        success: status === 'success',
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const claimFragment = async (
+    characterId: string,
+    fragmentType: number,
+  ): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId as `0x${string}`, fragmentType],
+        functionName: 'UD__claimFragment',
+      });
+
+      const tx = await worldContract.write.UD__claimFragment([
+        characterId as `0x${string}`,
+        fragmentType,
+      ]);
+
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      const success = status === 'success';
+
+      return {
+        error: success ? undefined : 'Failed to claim fragment.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
   return {
     buy,
     cancelOrder,
     chooseRace,
     choosePowerSource,
+    claimFragment,
+    triggerFragment,
     createEncounter,
     createOrder,
     depositToEscrow,

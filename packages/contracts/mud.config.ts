@@ -75,6 +75,11 @@ export default defineWorld({
       name: "WorldActionSys",
       openAccess: true,
     },
+    // Fragment System - lore NFTs
+    FragmentSystem: {
+      name: "FragmentSystem",
+      openAccess: true,
+    },
   },
   enums: {
     // Legacy class enum - kept for backward compatibility
@@ -139,6 +144,17 @@ export default defineWorld({
       "ArmorMod",
       "WeaponMod",
       "Stun",
+    ],
+    FragmentType: [
+      "None",              // 0
+      "TheAwakening",      // 1
+      "TheQuartermaster",  // 2
+      "TheRestless",       // 3
+      "SoulsThatLinger",   // 4
+      "TheWound",          // 5
+      "DeathOfDeathGod",   // 6
+      "BetrayersTruth",    // 7
+      "BloodPrice",        // 8
     ],
   },
   tables: {
@@ -589,6 +605,7 @@ export default defineWorld({
         feeRecipient: "address",
         feePercent: "uint256", // Basis points (300 = 3%)
         founderWindowEnd: "uint256", // Timestamp when Founder badge minting ends
+        fragmentToken: "address", // ERC721 fragment NFT contract
       },
     },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////
@@ -721,6 +738,41 @@ export default defineWorld({
       },
       key: ["encounterId"],
       type: "offchainTable",
+    },
+    ///////////////////////////////////// FRAGMENTS (Lore NFTs) ///////////////////////////////////
+    // Track trigger progress and claims per character
+    FragmentProgress: {
+      key: ["characterId", "fragmentType"],
+      schema: {
+        characterId: "bytes32",
+        fragmentType: "FragmentType",
+        triggered: "bool",
+        triggeredAt: "uint256",
+        triggerTileX: "uint16",
+        triggerTileY: "uint16",
+        claimed: "bool",
+        claimedAt: "uint256",
+        tokenId: "uint256",
+      },
+    },
+    // Track first-time actions for triggers
+    CharacterFirstActions: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        hasKilledMonster: "bool",
+        hasKilledPlayer: "bool",
+      },
+    },
+    // Fragment metadata (set once by admin)
+    FragmentMetadata: {
+      key: ["fragmentType"],
+      schema: {
+        fragmentType: "FragmentType",
+        name: "string",
+        narrative: "string",
+        hint: "string",
+      },
     },
   },
   excludeSystems: ["RngSystem", "CharacterSystem"],

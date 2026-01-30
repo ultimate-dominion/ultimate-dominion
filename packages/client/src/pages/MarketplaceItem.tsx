@@ -56,7 +56,23 @@ import {
 
 const ITEMS_PER_PAGE = 10;
 
+// Wrapper component that checks if MUD components are ready
 export const MarketplaceItem = (): JSX.Element => {
+  const { components } = useMUD();
+  const navigate = useNavigate();
+
+  if (!components?.UltimateDominion) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" h="100vh">
+        <Spinner size="xl" />
+      </Box>
+    );
+  }
+
+  return <MarketplaceItemInner />;
+};
+
+const MarketplaceItemInner = (): JSX.Element => {
   const { renderError, renderSuccess, renderWarning } = useToast();
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
@@ -64,11 +80,13 @@ export const MarketplaceItem = (): JSX.Element => {
   const { isConnected } = useAccount();
 
   const {
-    components: { ItemsOwners, UltimateDominionConfig },
+    components,
     delegatorAddress,
     isSynced,
     systemCalls: { createOrder },
   } = useMUD();
+  const ItemsOwners = components?.ItemsOwners;
+  const UltimateDominion = components?.UltimateDominion;
   const {
     armorTemplates,
     consumableTemplates,
@@ -116,17 +134,17 @@ export const MarketplaceItem = (): JSX.Element => {
     onOpen: onOpenConfirmationModal,
   } = useDisclosure();
 
-  const { goldToken: goldTokenAddress, items: itemsAddress } =
-    useComponentValue(UltimateDominionConfig, singletonEntity) ?? {
-      goldToken: null,
-      items: null,
-    };
+  const configValue = useComponentValue(
+    UltimateDominion!,
+    singletonEntity,
+  );
+  const goldTokenAddress = configValue?.goldToken ?? null;
+  const itemsAddress = configValue?.items ?? null;
 
   // Redirect to home if synced, but missing other requirements
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
-      window.location.reload();
       return;
     }
 

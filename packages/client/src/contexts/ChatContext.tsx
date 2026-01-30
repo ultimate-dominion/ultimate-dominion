@@ -36,7 +36,7 @@ const GROUP_CHAT_ID =
   '7699bfa8e5309b876a7b60e75074ecdf41d029575f3655a33f2b449e7730dfa4';
 
 // Badge contract address - set after deployment
-// Get from UltimateDominionConfig.getBadgeToken() or worlds.json deployment
+// Get from UltimateDominion.getBadgeToken() or worlds.json deployment
 const BADGE_CONTRACT_ADDRESS = import.meta.env.VITE_BADGE_CONTRACT_ADDRESS || '';
 
 // Adventurer badge token ID base (actual ID = 1_000_000 + characterTokenId)

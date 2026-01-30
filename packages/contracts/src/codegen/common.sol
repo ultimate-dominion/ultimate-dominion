@@ -112,3 +112,15 @@ enum StatusEffects {
   WeaponMod,
   Stun
 }
+
+enum FragmentType {
+  None,
+  TheAwakening,
+  TheQuartermaster,
+  TheRestless,
+  SoulsThatLinger,
+  TheWound,
+  DeathOfDeathGod,
+  BetrayersTruth,
+  BloodPrice
+}

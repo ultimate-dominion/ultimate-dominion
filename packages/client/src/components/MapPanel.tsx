@@ -19,7 +19,6 @@ import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
-
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
 import { CompassSvg } from './SVGs/CompassSvg';
@@ -30,10 +29,18 @@ const SAFE_ZONE_AREA = {
   bottomRight: { x: 4, y: 0 },
 };
 
+// Wrapper component that handles undefined MUD components
 export const MapPanel = (): JSX.Element => {
-  const {
-    components: { UltimateDominionConfig },
-  } = useMUD();
+  const { components } = useMUD();
+
+  if (!components?.UltimateDominion) {
+    return <Box />;
+  }
+
+  return <MapPanelInner UltimateDominion={components.UltimateDominion} />;
+};
+
+const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Element => {
   const { allCharacters, isSpawned, isSpawning, onSpawn, position } = useMap();
   const { allShops } = useMap();
   const { currentBattle } = useBattle();
@@ -45,10 +52,11 @@ export const MapPanel = (): JSX.Element => {
     return allCharacters.filter(character => character.isSpawned).length;
   }, [allCharacters]);
 
-  const { maxPlayers } = useComponentValue(
-    UltimateDominionConfig,
+  const configValue = useComponentValue(
+    UltimateDominion,
     singletonEntity,
-  ) ?? { maxPlayers: BigInt(0) };
+  );
+  const maxPlayers = configValue?.maxPlayers ?? BigInt(0);
 
   return (
     <Stack alignItems="center" h="100%">

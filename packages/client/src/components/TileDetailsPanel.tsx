@@ -26,6 +26,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useFragments } from '../contexts/FragmentContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -37,8 +38,11 @@ import {
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { type Character, EncounterType, type Monster } from '../utils/types';
 
+import { getRomanNumeral } from '../utils/fragmentNarratives';
+
 import { AdventureEscrowModal } from './AdventureEscrowModal';
 import { ClassSymbol } from './ClassSymbol';
+import { FragmentClaimModal } from './FragmentClaimModal';
 import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
 import { ShopRow } from './ShopRow';
@@ -63,11 +67,17 @@ export const TileDetailsPanel = (): JSX.Element => {
     onClose: onCloseNoMoveEquippedModal,
     onOpen: onOpenNoMoveEquippedModal,
   } = useDisclosure();
+  const {
+    isOpen: isFragmentClaimModalOpen,
+    onClose: onCloseFragmentClaimModal,
+    onOpen: onOpenFragmentClaimModal,
+  } = useDisclosure();
 
   const {
     delegatorAddress,
     systemCalls: { createEncounter },
   } = useMUD();
+  const { pendingEcho } = useFragments();
   const {
     character,
     isMoveEquipped,
@@ -776,6 +786,21 @@ export const TileDetailsPanel = (): JSX.Element => {
               h="6px"
               w="100%"
             />
+            {pendingEcho && (
+              <>
+                <FragmentEchoRow
+                  fragmentName={pendingEcho.name}
+                  fragmentType={pendingEcho.fragmentType}
+                  onClick={onOpenFragmentClaimModal}
+                />
+                <Box
+                  backgroundColor="#F5F5FA1F"
+                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                  h="6px"
+                  w="100%"
+                />
+              </>
+            )}
             {shopsOnTile.map((shop, i) => (
               <Box key={`tile-shop-${i}`}>
                 <ShopRow shopId={shop.shopId} shopName={shop.name} />
@@ -798,6 +823,21 @@ export const TileDetailsPanel = (): JSX.Element => {
               h="6px"
               w="100%"
             />
+            {pendingEcho && (
+              <>
+                <FragmentEchoRow
+                  fragmentName={pendingEcho.name}
+                  fragmentType={pendingEcho.fragmentType}
+                  onClick={onOpenFragmentClaimModal}
+                />
+                <Box
+                  backgroundColor="#F5F5FA1F"
+                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                  h="6px"
+                  w="100%"
+                />
+              </>
+            )}
             {monstersOnTile.length > 0 &&
               monstersOnTile.map((monster, i) => (
                 <Box key={`tile-monster-${i}-${monster.name}`}>
@@ -944,6 +984,14 @@ export const TileDetailsPanel = (): JSX.Element => {
           </Text>
         </VStack>
       </InfoModal>
+
+      {pendingEcho && (
+        <FragmentClaimModal
+          fragment={pendingEcho}
+          isOpen={isFragmentClaimModalOpen}
+          onClose={onCloseFragmentClaimModal}
+        />
+      )}
     </Box>
   );
 };
@@ -1061,6 +1109,73 @@ const OpponentRow = ({
           </MenuList>
         </Menu>
       )}
+    </HStack>
+  );
+};
+
+const FragmentEchoRow = ({
+  fragmentName,
+  fragmentType,
+  onClick,
+}: {
+  fragmentName: string;
+  fragmentType: number;
+  onClick: () => void;
+}) => {
+  return (
+    <HStack
+      borderBottom="2px solid transparent"
+      h={ROW_HEIGHT}
+      spacing={0}
+      bg="linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%)"
+      _active={{
+        borderBottom: '2px solid gold',
+      }}
+      _hover={{
+        borderBottom: '2px solid gold',
+        bg: 'linear-gradient(90deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 215, 0, 0.1) 100%)',
+      }}
+    >
+      <HStack
+        as="button"
+        h="98%"
+        justifyContent="space-between"
+        onClick={onClick}
+        px={{ base: 1, sm: 4 }}
+        transition="all 0.3s ease"
+        w="100%"
+        _active={{
+          cursor: 'pointer',
+        }}
+        _hover={{
+          cursor: 'pointer',
+        }}
+      >
+        <HStack justifyContent="start" spacing={2}>
+          <Text
+            color="yellow.400"
+            fontWeight={700}
+            size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+            textShadow="0 0 8px rgba(255, 215, 0, 0.6)"
+          >
+            ✦
+          </Text>
+          <Text
+            color="yellow.300"
+            fontWeight={600}
+            size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+          >
+            {fragmentName}
+          </Text>
+        </HStack>
+        <Text
+          color="yellow.400"
+          fontWeight={500}
+          size={{ base: '3xs', sm: '2xs', md: 'sm' }}
+        >
+          Fragment {getRomanNumeral(fragmentType)}
+        </Text>
+      </HStack>
     </HStack>
   );
 };
