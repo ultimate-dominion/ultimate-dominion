@@ -12,6 +12,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { DevTools } from './components/DevTools';
 import { AllowanceProvider } from './contexts/AllowanceContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { ItemsProvider } from './contexts/ItemsContext';
 import { MonstersProvider } from './contexts/MonstersContext';
@@ -31,21 +32,23 @@ setup().then(async result => {
     <ChakraProvider resetCSS theme={theme}>
       <Global styles={globalStyles} />
       <Web3Provider>
-        <MUDProvider setupResult={result}>
-          <ItemsProvider>
-            <MonstersProvider>
-              <OrdersProvider>
-                <CharacterProvider>
-                  <AllowanceProvider>
-                    <App />
-                  </AllowanceProvider>
-                </CharacterProvider>
-              </OrdersProvider>
-            </MonstersProvider>
-          </ItemsProvider>
-          {/* DevTools temporarily disabled - causes error with undefined table values */}
-          {/* {import.meta.env.DEV && <DevTools />} */}
-        </MUDProvider>
+        <AuthProvider>
+          <MUDProvider setupResult={result}>
+            <ItemsProvider>
+              <MonstersProvider>
+                <OrdersProvider>
+                  <CharacterProvider>
+                    <AllowanceProvider>
+                      <App />
+                    </AllowanceProvider>
+                  </CharacterProvider>
+                </OrdersProvider>
+              </MonstersProvider>
+            </ItemsProvider>
+            {/* DevTools temporarily disabled - causes error with undefined table values */}
+            {/* {import.meta.env.DEV && <DevTools />} */}
+          </MUDProvider>
+        </AuthProvider>
       </Web3Provider>
     </ChakraProvider>,
   );

@@ -3,16 +3,20 @@
 ## Pre-Launch Requirements
 
 ### 1. Narrative & Lore
-- [ ] Develop game narrative/storyline
-- [ ] Create NFT drop system that reveals parts of the story
-- [ ] Design lore fragments tied to NFT collectibles
-- [ ] Plan narrative progression through gameplay
+- [x] Develop game narrative/storyline ✓ "Fragments of the Fallen" - 8-part story arc complete
+- [x] Create NFT drop system that reveals parts of the story ✓ FragmentSystem.sol fully implemented
+- [x] Design lore fragments tied to NFT collectibles ✓ ERC721 minting on claim
+- [x] Plan narrative progression through gameplay ✓ Triggers: spawn, shop, combat, PvP, locations
+- [ ] Fragment artwork (currently placeholders)
+- [ ] Fragment system tests
+- [x] Badge system integration ✓ Adventurer badge mints at level 3, gates chat access
 
 ### 2. Non-Crypto Authentication
-- [ ] Implement traditional authentication (email/password, OAuth)
-- [ ] Allow players to onboard without requiring wallet connection
+- [x] Implement traditional authentication (email/password, OAuth) ✓ Thirdweb embedded wallet with Google, Apple, Email OTP
+- [x] Allow players to onboard without requiring wallet connection ✓ Embedded wallet created invisibly on sign-in
 - [ ] Wallet linking as optional feature for existing accounts
-- [ ] Session management for non-crypto users
+- [x] Session management for non-crypto users ✓ Thirdweb auto-persists sessions, auto-reconnect on refresh
+- **Note**: MetaMask "Connect Wallet" button only shows when `window.ethereum` is detected. Needs `VITE_THIRDWEB_CLIENT_ID` env var set.
 
 ### 3. UI Tweaks
 - [ ] Review and polish all UI components
@@ -51,7 +55,7 @@
 - [ ] Starting stat point allocation balance
 - [ ] Stat points per level progression
 - [ ] Class stat multiplier tuning
-- [ ] HP/damage scaling by level
+- [x] HP/damage scaling by level ✓ Weapon scalingStat implemented (STR/AGI/INT)
 - [ ] Experience curve balance
 - [ ] Level cap and endgame balance
 

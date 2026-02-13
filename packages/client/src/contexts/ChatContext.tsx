@@ -19,13 +19,15 @@ import {
   useState,
 } from 'react';
 import { zeroAddress, erc721Abi } from 'viem';
-import { useWalletClient, usePublicClient, useAccount } from 'wagmi';
+import { usePublicClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
 import { decodeMobInstanceId, startsWithVowel } from '../utils/helpers';
 import { Character, MonsterTemplate } from '../utils/types';
 
+import { useAuth } from './AuthContext';
+import { useCharacter } from './CharacterContext';
 import { useItems } from './ItemsContext';
 import { useMap } from './MapContext';
 import { useMonsters } from './MonstersContext';
@@ -33,7 +35,7 @@ import { useMUD } from './MUDContext';
 
 // TODO: Update these after deploying badges and creating new group
 const GROUP_CHAT_ID =
-  '7699bfa8e5309b876a7b60e75074ecdf41d029575f3655a33f2b449e7730dfa4';
+  '20ca5a940d23fae1191bcf39a7f02cafd02d5427b7f6aa8a1b882c8641239475';
 
 // Badge contract address - set after deployment
 // Get from UltimateDominion.getBadgeToken() or worlds.json deployment
@@ -101,9 +103,15 @@ export type ChatProviderProps = {
 export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { renderError } = useToast();
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const { data } = useWalletClient();
+  const {
+    authMethod,
+    embeddedWalletClient,
+    externalWalletClient,
+    ownerAddress: address,
+  } = useAuth();
   const publicClient = usePublicClient();
-  const { address } = useAccount();
+  // Use the appropriate wallet client for Push Protocol
+  const data = authMethod === 'embedded' ? embeddedWalletClient : externalWalletClient;
   const {
     components: { CombatEncounter, CombatOutcome, MarketplaceSale, ShopSale },
   } = useMUD();
@@ -114,7 +122,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     weaponTemplates,
   } = useItems();
   const { monsterTemplates } = useMonsters();
-  const { allCharacters, currentCharacter } = useMap();
+  const { allCharacters } = useMap();
+  const { character: currentCharacter } = useCharacter();
 
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [user, setUser] = useState<PushAPI | null>(null);
@@ -134,7 +143,18 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // Check if user has Adventurer badge
   useEffect(() => {
     const checkBadge = async () => {
+      console.log('[ChatContext] Badge check starting:', {
+        address,
+        hasPublicClient: !!publicClient,
+        BADGE_CONTRACT_ADDRESS,
+        currentCharacter: currentCharacter ? {
+          tokenId: currentCharacter.tokenId,
+          level: currentCharacter.level?.toString(),
+        } : null,
+      });
+
       if (!address || !publicClient || !BADGE_CONTRACT_ADDRESS) {
+        console.log('[ChatContext] Badge check early exit - missing deps');
         setHasBadge(false);
         return;
       }
@@ -144,12 +164,18 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         // Get character token ID from currentCharacter
         const characterTokenId = currentCharacter?.tokenId;
         if (!characterTokenId) {
+          console.log('[ChatContext] Badge check - no characterTokenId');
           setHasBadge(false);
           return;
         }
 
         // Calculate badge token ID: ADVENTURER_BADGE_BASE * 1_000_000 + characterTokenId
         const badgeTokenId = BigInt(ADVENTURER_BADGE_BASE) * BigInt(1_000_000) + BigInt(characterTokenId);
+        console.log('[ChatContext] Checking badge ownership:', {
+          characterTokenId,
+          badgeTokenId: badgeTokenId.toString(),
+          badgeContract: BADGE_CONTRACT_ADDRESS,
+        });
 
         // Check if user owns this badge
         const owner = await publicClient.readContract({
@@ -159,9 +185,16 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
           args: [badgeTokenId],
         });
 
+        console.log('[ChatContext] Badge ownerOf result:', {
+          owner,
+          address,
+          matches: owner === address,
+        });
+
         setHasBadge(owner === address);
       } catch (error) {
         // Badge doesn't exist or other error - user doesn't have badge
+        console.log('[ChatContext] Badge check error:', error);
         setHasBadge(false);
       } finally {
         setIsCheckingBadge(false);
@@ -172,13 +205,22 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     // Re-check when level changes (badge is minted at level 3)
   }, [address, publicClient, currentCharacter?.tokenId, currentCharacter?.level]);
 
-  const allBattleOutcomes: Message[] = useEntityQuery([Has(CombatOutcome)]).map(
-    entity => {
+  const allBattleOutcomes: Message[] = useEntityQuery([Has(CombatOutcome)])
+    .map(entity => {
       const combatOutcome = getComponentValueStrict(CombatOutcome, entity);
       const encounter = getComponentValueStrict(CombatEncounter, entity);
 
       const attackerId = encounter.attackers[0];
       const defenderId = encounter.defenders[0];
+
+      // Only show battles involving the current character
+      if (
+        currentCharacter &&
+        attackerId !== currentCharacter.id &&
+        defenderId !== currentCharacter.id
+      ) {
+        return null;
+      }
 
       let attacker: Character | MonsterTemplate | undefined =
         allCharacters.find(character => character.id === attackerId);
@@ -207,11 +249,14 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
       const allItems = [...spellTemplates, ...weaponTemplates];
 
-      const firstDroppedItemName = itemsDropped.map(itemId => {
-        const item = allItems.find(item => item.tokenId === itemId.toString());
-        return item ? item.name : null;
-      })[0];
+      const droppedItemNames = itemsDropped
+        .map(itemId => {
+          const item = allItems.find(item => item.tokenId === itemId.toString());
+          return item ? item.name : null;
+        })
+        .filter(Boolean);
 
+      const firstDroppedItemName = droppedItemNames[0];
       const article = startsWithVowel(firstDroppedItemName ?? '') ? 'an' : 'a';
 
       return {
@@ -230,8 +275,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         message: '',
         timestamp: Number(combatOutcome.endTime) * 1000,
       };
-    },
-  );
+    })
+    .filter((m): m is Message => m !== null);
 
   const allShopSales: Message[] = useEntityQuery([Has(ShopSale)]).map(
     entity => {

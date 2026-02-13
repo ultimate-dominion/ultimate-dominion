@@ -9,12 +9,12 @@ import {
   useState,
 } from 'react';
 import { Address, erc20Abi, maxUint256 } from 'viem';
-import { useWalletClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { ERC_1155_ABI } from '../utils/constants';
 import { SystemToAllow } from '../utils/types';
 
+import { useAuth } from './AuthContext';
 import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 
@@ -69,7 +69,8 @@ const AllowanceProviderInner = ({
   isSynced: boolean;
 }): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
-  const { data: externalWalletClient } = useWalletClient();
+  const { authMethod, embeddedWalletClient, externalWalletClient } = useAuth();
+  const approvalClient = authMethod === 'embedded' ? embeddedWalletClient : externalWalletClient;
   const { character, isRefreshing } = useCharacter();
 
   const [goldMarketplaceAllowance, setGoldMarketplaceAllowance] =
@@ -190,8 +191,8 @@ const AllowanceProviderInner = ({
       try {
         setIsApprovingGold(true);
 
-        if (!externalWalletClient) {
-          throw new Error('No external wallet client found.');
+        if (!approvalClient) {
+          throw new Error('No wallet client found.');
         }
 
         const systemAddress = getSystemAddress(systemToAllow);
@@ -211,7 +212,7 @@ const AllowanceProviderInner = ({
           args: [systemAddress as Address, allowanceAmount],
         });
 
-        const txHash = await externalWalletClient.writeContract(request);
+        const txHash = await approvalClient.writeContract(request);
         const { status } = await publicClient.waitForTransactionReceipt({
           hash: txHash,
         });
@@ -232,7 +233,7 @@ const AllowanceProviderInner = ({
       }
     },
     [
-      externalWalletClient,
+      approvalClient,
       fetchAllowances,
       getSystemAddress,
       goldTokenAddress,
@@ -254,8 +255,8 @@ const AllowanceProviderInner = ({
       try {
         setIsApprovingItems(true);
 
-        if (!externalWalletClient) {
-          throw new Error('No external wallet client found.');
+        if (!approvalClient) {
+          throw new Error('No wallet client found.');
         }
 
         const systemAddress = getSystemAddress(systemToAllow);
@@ -271,7 +272,7 @@ const AllowanceProviderInner = ({
           args: [systemAddress, true],
         });
 
-        const txHash = await externalWalletClient.writeContract(request);
+        const txHash = await approvalClient.writeContract(request);
         const { status } = await publicClient.waitForTransactionReceipt({
           hash: txHash,
         });
@@ -292,7 +293,7 @@ const AllowanceProviderInner = ({
       }
     },
     [
-      externalWalletClient,
+      approvalClient,
       fetchAllowances,
       getSystemAddress,
       itemsAddress,

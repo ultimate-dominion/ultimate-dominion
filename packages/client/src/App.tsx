@@ -12,12 +12,12 @@ import { useEffect } from 'react';
 import { IoChatbubble } from 'react-icons/io5';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 import { parseEther } from 'viem';
-import { useWalletClient } from 'wagmi';
 
 import { ChatBox } from './components/ChatBox';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { WalletDetailsModal } from './components/WalletDetailsModal';
+import { useAuth } from './contexts/AuthContext';
 import { BattleProvider } from './contexts/BattleContext';
 import { ChatProvider, useChat } from './contexts/ChatContext';
 import { FragmentProvider } from './contexts/FragmentContext';
@@ -70,7 +70,7 @@ const CHAT_NOT_ALLOWED_PATHS = [CHARACTER_CREATION_PATH, HOME_PATH];
 const AppInner = (): JSX.Element => {
   const { pathname } = useLocation();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const { data: externalWalletClient } = useWalletClient();
+  const { ownerAddress } = useAuth();
   const {
     burnerBalance,
     burnerBalanceFetched,
@@ -103,30 +103,26 @@ const AppInner = (): JSX.Element => {
   ]);
 
   useEffect(() => {
-    if (DEFAULT_CHAIN_ID === garnet.id && externalWalletClient) {
-      const address = externalWalletClient.account?.address;
-
-      if (!address) return;
-
+    if (DEFAULT_CHAIN_ID === garnet.id && ownerAddress) {
       // eslint-disable-next-line no-console
-      console.info('[Dev Faucet]: External address -> ', address);
+      console.info('[Dev Faucet]: Owner address -> ', ownerAddress);
       const faucetClient = createFaucetClient({
         url: 'https://ultimate-dominion-faucet.onrender.com/trpc',
       });
       const requestDrip = async () => {
         const balance = await network.publicClient.getBalance({
-          address,
+          address: ownerAddress,
         });
         // eslint-disable-next-line no-console
-        console.info(`[Dev Faucet]: External balance -> ${balance}`);
+        console.info(`[Dev Faucet]: Owner balance -> ${balance}`);
         const lowBalance = balance < parseEther('0.00001');
         if (lowBalance) {
           // eslint-disable-next-line no-console
           console.info(
-            '[Dev Faucet]: Balance is low, dripping funds to external wallet',
+            '[Dev Faucet]: Balance is low, dripping funds to owner wallet',
           );
           await faucetClient.drip.mutate({
-            address,
+            address: ownerAddress,
           });
         }
       };
@@ -134,7 +130,7 @@ const AppInner = (): JSX.Element => {
       // Request a drip every 20 seconds
       setInterval(requestDrip, 20000);
     }
-  }, [externalWalletClient, network]);
+  }, [ownerAddress, network]);
 
   useEffect(() => {
     const isChatBoxOpen = localStorage.getItem(IS_CHAT_BOX_OPEN_KEY);

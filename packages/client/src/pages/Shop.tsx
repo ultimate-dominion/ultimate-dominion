@@ -11,14 +11,13 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { IoNavigate } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAccount } from 'wagmi';
-
 import { PolygonalCard } from '../components/PolygonalCard';
 import { ShopHalf } from '../components/ShopHalf';
 import { ShopSvg } from '../components/SVGs/ShopSvg';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
@@ -33,7 +32,7 @@ import {
 export const Shop = (): JSX.Element => {
   const { shopId } = useParams();
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
+  const { isAuthenticated: isConnected } = useAuth();
 
   const { delegatorAddress, isSynced } = useMUD();
   const {

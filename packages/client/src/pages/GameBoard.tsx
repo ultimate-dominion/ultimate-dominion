@@ -13,7 +13,7 @@ import {
 import { useCallback, useEffect } from 'react';
 import { IoIosWarning } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
+import { useAuth } from '../contexts/AuthContext';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
@@ -46,7 +46,7 @@ export const GameBoard = (): JSX.Element => {
     onClose: onCloseBattleOutcomeModal,
   } = useDisclosure();
 
-  const { isConnected } = useAccount();
+  const { isAuthenticated: isConnected } = useAuth();
   const navigate = useNavigate();
   const {
     delegatorAddress,

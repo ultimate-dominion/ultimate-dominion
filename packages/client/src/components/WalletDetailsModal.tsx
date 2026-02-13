@@ -18,17 +18,18 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 import { formatEther, parseEther } from 'viem';
-import { useAccount, useBalance, useDisconnect, useWalletClient } from 'wagmi';
+import { useBalance, useWalletClient } from 'wagmi';
 
+import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { shortenAddress } from '../utils/helpers';
 
-import { ConnectWalletButton } from './ConnectWalletButton';
 import { CopyText } from './CopyText';
 import { PolygonalCard } from './PolygonalCard';
+import { SignInModal } from './SignInModal';
 
 export const WalletDetailsModal = ({
   isOpen,
@@ -39,12 +40,11 @@ export const WalletDetailsModal = ({
 }): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
   const { data: externalWalletClient } = useWalletClient();
-  const { disconnect } = useDisconnect();
-  const { isConnected, address } = useAccount();
+  const { authMethod, isAuthenticated, ownerAddress, disconnect } = useAuth();
   const {
     burnerAddress,
     burnerBalance,
-    network: { walletClient },
+    network: { walletClient, publicClient },
     systemCalls: { removeEntityFromBoard },
   } = useMUD();
   const { data: externalWalletBalance, refetch } = useBalance({
@@ -92,14 +92,19 @@ export const WalletDetailsModal = ({
           throw new Error(error);
         }
       }
-      disconnect();
-      renderSuccess('Wallet disconnected successfully!');
+      await disconnect();
+      renderSuccess(
+        authMethod === 'embedded'
+          ? 'Signed out successfully!'
+          : 'Wallet disconnected successfully!',
+      );
     } catch (e) {
-      renderError((e as Error)?.message ?? 'Error disconnecting wallet.', e);
+      renderError((e as Error)?.message ?? 'Error disconnecting.', e);
     } finally {
       setIsLoggingOut(false);
     }
   }, [
+    authMethod,
     character,
     disconnect,
     isSpawned,
@@ -167,7 +172,7 @@ export const WalletDetailsModal = ({
       }
 
       await walletClient.sendTransaction({
-        to: address,
+        to: ownerAddress!,
         value: parseEther(withdrawAmount),
         gas: 21000n, // Standard gas limit for ETH transfers
         maxFeePerGas: 2000000000n, // 2 gwei max fee
@@ -182,8 +187,8 @@ export const WalletDetailsModal = ({
       setIsWithdrawing(false);
     }
   }, [
-    address,
     burnerBalance,
+    ownerAddress,
     renderError,
     renderSuccess,
     walletClient,
@@ -208,17 +213,62 @@ export const WalletDetailsModal = ({
     }
   }, [renderError]);
 
+  // Not authenticated — show sign in modal
+  if (!isAuthenticated) {
+    return <SignInModal isOpen={isOpen} onClose={onClose} />;
+  }
+
+  // Embedded wallet — simplified view (no deposit/withdraw, no session wallet)
+  if (authMethod === 'embedded') {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <PolygonalCard isModal />
+          <ModalHeader>Account Details</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={6} alignItems="start">
+              <Text>Account:</Text>
+              <CopyText text={ownerAddress!}>
+                <Text>{shortenAddress(ownerAddress!)}</Text>
+              </CopyText>
+              <Text size="sm">Balance: {burnerBalance}</Text>
+              <Button
+                isDisabled={character?.inBattle}
+                isLoading={isLoggingOut}
+                onClick={onLogout}
+                size="sm"
+              >
+                Sign Out
+              </Button>
+              {character?.inBattle && (
+                <Text color="orange" fontWeight={700} size="sm">
+                  You cannot sign out while in battle.
+                </Text>
+              )}
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose} size="sm" variant="ghost">
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  }
+
+  // External wallet — full view with session wallet, deposit, withdraw
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
-        <ModalHeader>
-          {isConnected ? 'Wallet Details' : 'Connect Wallet'}
-        </ModalHeader>
+        <ModalHeader>Wallet Details</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {address && externalWalletClient && isConnected ? (
+          {ownerAddress && externalWalletClient ? (
             <VStack spacing={10}>
               <VStack alignItems="start" spacing={4}>
                 {burnerBalance === '0' && (
@@ -231,8 +281,8 @@ export const WalletDetailsModal = ({
                   </>
                 )}
                 <Text>Connected Account:</Text>
-                <CopyText text={address}>
-                  <Text>{shortenAddress(address)}</Text>
+                <CopyText text={ownerAddress}>
+                  <Text>{shortenAddress(ownerAddress)}</Text>
                 </CopyText>
                 <Text size="sm">
                   Balance:{' '}
@@ -331,8 +381,7 @@ export const WalletDetailsModal = ({
             </VStack>
           ) : (
             <VStack spacing={10}>
-              <Text textAlign="center">Connect your wallet to play.</Text>
-              <ConnectWalletButton />
+              <Text textAlign="center">Connecting wallet...</Text>
             </VStack>
           )}
         </ModalBody>

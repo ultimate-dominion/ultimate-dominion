@@ -30,7 +30,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
-import { useAccount } from 'wagmi';
+import { useAuth } from '../contexts/AuthContext';
 
 import { ItemCardSmall } from '../components/ItemCard';
 import { PolygonalCard } from '../components/PolygonalCard';
@@ -40,7 +40,7 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
-import { EXPLORER_URLS } from '../lib/web3';
+import { DEFAULT_CHAIN_ID, EXPLORER_URLS } from '../lib/web3';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import { debug } from '../utils/debug';
@@ -126,7 +126,8 @@ const CharacterCreationInner = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
-  const { chainId, isConnected } = useAccount();
+  const { isAuthenticated: isConnected } = useAuth();
+  const chainId = DEFAULT_CHAIN_ID;
   const {
     components,
     delegatorAddress,

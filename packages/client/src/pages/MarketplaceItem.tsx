@@ -28,8 +28,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Address, parseEther } from 'viem';
-import { useAccount } from 'wagmi';
-
 import { InfoModal } from '../components/InfoModal';
 import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
@@ -39,6 +37,7 @@ import { MarketplaceIconSvg } from '../components/SVGs';
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
@@ -77,7 +76,7 @@ const MarketplaceItemInner = (): JSX.Element => {
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
   const [searchParams] = useSearchParams();
-  const { isConnected } = useAccount();
+  const { isAuthenticated: isConnected } = useAuth();
 
   const {
     components,

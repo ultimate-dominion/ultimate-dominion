@@ -29,8 +29,6 @@ import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
 import { erc721Abi, hexToBigInt, hexToString, zeroHash } from 'viem';
-import { useAccount } from 'wagmi';
-
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
 import { FragmentCollection } from '../components/FragmentCollection';
@@ -44,6 +42,7 @@ import { LeaderboardIconSvg, MarketplaceIconSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useChat } from '../contexts/ChatContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { HOME_PATH, LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
@@ -77,7 +76,7 @@ export const CharacterPage = (): JSX.Element => {
   const { id } = useParams();
   const { renderError } = useToast();
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
+  const { isAuthenticated: isConnected } = useAuth();
 
   const {
     components: {
