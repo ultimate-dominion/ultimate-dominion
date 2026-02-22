@@ -20,6 +20,10 @@
 
 ### 3. UI Tweaks
 - [ ] Review and polish all UI components
+- [x] StatsPanel readability ✓ Larger fonts for XP/gold, visual dividers between sections, total gold display
+- [x] StatsPanel cleanup ✓ Removed redundant "Equipped Items" section (visible in ActionsPanel during battle)
+- [x] Level bar readability ✓ Larger font (10px→12px), thicker progress bar, semi-bold level labels
+- [x] Battle UI consumables ✓ Potion buttons in ActionsPanel during combat, opens ItemConsumeModal
 - [ ] Mobile responsiveness
 - [ ] Accessibility improvements
 - [ ] Loading states and error handling
@@ -35,7 +39,7 @@
 ### 5. Shop System
 - [ ] Shop inventory and pricing fixes
 - [ ] Shop UI/UX improvements
-- [ ] Buy/sell flow validation
+- [x] Buy/sell flow validation ✓ Fixed ERC1155MissingApprovalForAll bug — PostDeploy was corrupting shop address in config (wrote 32-byte ABI-encoded address to 20-byte field). Fixed PostDeploy to use Systems.getSystem() and patched on-chain data.
 - [ ] Restock mechanics testing
 
 ### 6. Item Drop Balance

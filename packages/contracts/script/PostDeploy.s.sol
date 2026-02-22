@@ -330,7 +330,9 @@ contract PostDeploy is Script {
     }
 
     function _deployBadgesToken() internal {
-        if (UltimateDominionConfig.getBadgeToken() == address(0)) {
+        address badgeToken = UltimateDominionConfig.getBadgeToken();
+
+        if (badgeToken == address(0)) {
             console.log("Deploying Badges token (soulbound ERC721)...");
             IERC721Mintable badges = registerERC721(
                 world,
@@ -338,23 +340,8 @@ contract PostDeploy is Script {
                 ERC721MetadataData({name: "Ultimate Dominion Badges", symbol: "UDB", baseURI: "ipfs://"})
             );
             UltimateDominionConfig.setBadgeToken(address(badges));
-            console.log("  Badges token deployed at:", address(badges));
-
-            // Grant World access to Badges namespace so systems can mint badges
-            ResourceId badgesNamespaceId = WorldResourceIdLib.encodeNamespace(BADGES_NAMESPACE);
-            try world.grantAccess(badgesNamespaceId, address(world)) {
-                console.log("  Granted Badges namespace access to World");
-            } catch {
-                console.log("  Badges namespace access already granted");
-            }
-
-            // Grant World access to Badges:ERC721System
-            ResourceId badgesErc721SystemId = _erc721SystemId(BADGES_NAMESPACE);
-            try world.grantAccess(badgesErc721SystemId, address(world)) {
-                console.log("  Granted Badges:ERC721System access to World");
-            } catch {
-                console.log("  Badges:ERC721System access already granted");
-            }
+            badgeToken = address(badges);
+            console.log("  Badges token deployed at:", badgeToken);
 
             // Set founder window end (7 days from deployment)
             uint256 founderWindowEnd = block.timestamp + 7 days;
@@ -363,39 +350,132 @@ contract PostDeploy is Script {
 
             // NOTE: This token is soulbound - transfers are blocked via NoTransferHook
             // Register hook to prevent transfers
+            ResourceId badgesErc721SystemId = _erc721SystemId(BADGES_NAMESPACE);
             NoTransferHook badgeHook = new NoTransferHook();
             try world.registerSystemHook(badgesErc721SystemId, badgeHook, BEFORE_CALL_SYSTEM) {
                 console.log("  Registered NoTransferHook for Badges (soulbound)");
             } catch {
                 console.log("  NoTransferHook for Badges already registered");
             }
-
-            // Grant CharacterCore access to mint Founder badges (BEFORE ownership transfer)
-            ResourceId characterCoreId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "CharacterCore");
-            address characterCoreAddress = Systems.getSystem(characterCoreId);
-            try world.grantAccess(badgesErc721SystemId, characterCoreAddress) {
-                console.log("  Granted Badges:ERC721System access to CharacterCore");
-            } catch {
-                console.log("  Badges:ERC721System access grant to CharacterCore failed");
-            }
-
-            // Grant LevelSystem access to mint Adventurer badges (BEFORE ownership transfer)
-            ResourceId levelSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "LevelSystem");
-            address levelSystemAddress = Systems.getSystem(levelSystemId);
-            try world.grantAccess(badgesErc721SystemId, levelSystemAddress) {
-                console.log("  Granted Badges:ERC721System access to LevelSystem");
-            } catch {
-                console.log("  Badges:ERC721System access grant to LevelSystem failed");
-            }
-
-            // Transfer ownership to World (AFTER granting access)
-            try world.transferOwnership(badgesNamespaceId, address(world)) {
-                console.log("  Transferred Badges namespace ownership to World");
-            } catch {
-                console.log("  Badges namespace ownership transfer failed");
-            }
         } else {
-            console.log("  Badges token already configured, skipping");
+            console.log("  Badges token already configured at:", badgeToken);
+        }
+
+        // Always ensure permissions are set (even if token already exists)
+        _configureBadgePermissions();
+    }
+
+    function _configureBadgePermissions() internal {
+        console.log("Configuring Badge permissions...");
+
+        address badgeToken = UltimateDominionConfig.getBadgeToken();
+        ResourceId badgesNamespaceId = WorldResourceIdLib.encodeNamespace(BADGES_NAMESPACE);
+        ResourceId badgesErc721SystemId = _erc721SystemId(BADGES_NAMESPACE);
+
+        // Grant World access to Badges namespace so systems can mint badges
+        try world.grantAccess(badgesNamespaceId, address(world)) {
+            console.log("  Granted Badges namespace access to World");
+        } catch {
+            console.log("  Badges namespace access already granted or failed");
+        }
+
+        // Grant World access to Badges:ERC721System
+        try world.grantAccess(badgesErc721SystemId, address(world)) {
+            console.log("  Granted Badges:ERC721System access to World");
+        } catch {
+            console.log("  Badges:ERC721System access already granted or failed");
+        }
+
+        // Grant Badge puppet access to call back to World (needed for puppet callbacks)
+        try world.grantAccess(badgesNamespaceId, badgeToken) {
+            console.log("  Granted Badges namespace access to Badge puppet");
+        } catch {
+            console.log("  Badge puppet namespace access already granted or failed");
+        }
+
+        try world.grantAccess(badgesErc721SystemId, badgeToken) {
+            console.log("  Granted Badges:ERC721System access to Badge puppet");
+        } catch {
+            console.log("  Badge puppet ERC721System access already granted or failed");
+        }
+
+        // Grant CharacterCore access to mint Founder badges
+        ResourceId characterCoreId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "CharacterCore");
+        address characterCoreAddress = Systems.getSystem(characterCoreId);
+        try world.grantAccess(badgesErc721SystemId, characterCoreAddress) {
+            console.log("  Granted Badges:ERC721System access to CharacterCore");
+        } catch {
+            console.log("  Badges:ERC721System access to CharacterCore already granted or failed");
+        }
+
+        // Grant LevelSystem access to mint Adventurer badges
+        ResourceId levelSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "LevelSystem");
+        address levelSystemAddress = Systems.getSystem(levelSystemId);
+        try world.grantAccess(badgesErc721SystemId, levelSystemAddress) {
+            console.log("  Granted Badges:ERC721System access to LevelSystem");
+        } catch {
+            console.log("  Badges:ERC721System access to LevelSystem already granted or failed");
+        }
+
+        // Grant LevelSystem access to Badges:Owners and Badges:Balances tables for direct writes
+        ResourceId badgesOwnersTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Owners");
+        ResourceId badgesBalancesTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Balances");
+        try world.grantAccess(badgesOwnersTableId, levelSystemAddress) {
+            console.log("  Granted Badges:Owners table access to LevelSystem");
+        } catch {
+            console.log("  Badges:Owners table access to LevelSystem already granted or failed");
+        }
+        try world.grantAccess(badgesBalancesTableId, levelSystemAddress) {
+            console.log("  Granted Badges:Balances table access to LevelSystem");
+        } catch {
+            console.log("  Badges:Balances table access to LevelSystem already granted or failed");
+        }
+
+        // Grant AdminSystem access to mint badges via admin function
+        ResourceId adminSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "AdminSystem");
+        address adminSystemAddress = Systems.getSystem(adminSystemId);
+        try world.grantAccess(badgesErc721SystemId, adminSystemAddress) {
+            console.log("  Granted Badges:ERC721System access to AdminSystem");
+        } catch {
+            console.log("  Badges:ERC721System access to AdminSystem already granted or failed");
+        }
+
+        // Grant AdminSystem access to Badges:Owners and Badges:Balances tables for direct writes
+        try world.grantAccess(badgesOwnersTableId, adminSystemAddress) {
+            console.log("  Granted Badges:Owners table access to AdminSystem");
+        } catch {
+            console.log("  Badges:Owners table access to AdminSystem already granted or failed");
+        }
+        try world.grantAccess(badgesBalancesTableId, adminSystemAddress) {
+            console.log("  Granted Badges:Balances table access to AdminSystem");
+        } catch {
+            console.log("  Badges:Balances table access to AdminSystem already granted or failed");
+        }
+
+        // Grant StatSystem access to mint Adventurer badges (StatSystem has the active levelCharacter)
+        ResourceId statSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "StatSystem");
+        address statSystemAddress = Systems.getSystem(statSystemId);
+        try world.grantAccess(badgesErc721SystemId, statSystemAddress) {
+            console.log("  Granted Badges:ERC721System access to StatSystem");
+        } catch {
+            console.log("  Badges:ERC721System access to StatSystem already granted or failed");
+        }
+        try world.grantAccess(badgesOwnersTableId, statSystemAddress) {
+            console.log("  Granted Badges:Owners table access to StatSystem");
+        } catch {
+            console.log("  Badges:Owners table access to StatSystem already granted or failed");
+        }
+        try world.grantAccess(badgesBalancesTableId, statSystemAddress) {
+            console.log("  Granted Badges:Balances table access to StatSystem");
+        } catch {
+            console.log("  Badges:Balances table access to StatSystem already granted or failed");
+        }
+
+        // Transfer ownership to World (idempotent - will fail if already transferred)
+        try world.transferOwnership(badgesNamespaceId, address(world)) {
+            console.log("  Transferred Badges namespace ownership to World");
+        } catch {
+            console.log("  Badges namespace ownership already with World or transfer failed");
         }
     }
 
@@ -648,11 +728,17 @@ contract PostDeploy is Script {
         console.log("  Max players: 100");
 
         // Set system addresses for item/gold approvals
-        // Systems run via delegatecall, so they execute as the World address
+        // Non-root namespace systems run via regular call (not delegatecall),
+        // so msg.sender at the ERC1155 puppet is the system's own address.
+        // The config must store the actual System contract address so the client
+        // approves the correct operator for item/gold transfers.
         UltimateDominionConfig.setLootManager(address(world));
         console.log("  LootManager address:", address(world));
-        UltimateDominionConfig.setShop(address(world));
-        console.log("  Shop address:", address(world));
+        ResourceId shopSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "ShopSystem");
+        address shopSysAddr = Systems.getSystem(shopSystemId);
+        require(shopSysAddr != address(0), "ShopSystem not registered");
+        UltimateDominionConfig.setShop(shopSysAddr);
+        console.log("  Shop address:", shopSysAddr);
         UltimateDominionConfig.setMarketplace(address(world));
         console.log("  Marketplace address:", address(world));
 
@@ -883,7 +969,8 @@ contract PostDeploy is Script {
                 maxDamage: weaponTemplate.stats.maxDamage,
                 minDamage: weaponTemplate.stats.minDamage,
                 minLevel: weaponTemplate.stats.minLevel,
-                strModifier: weaponTemplate.stats.strModifier
+                strModifier: weaponTemplate.stats.strModifier,
+                scalingStat: weaponTemplate.stats.scalingStat
             });
 
             // Write to WeaponStats table

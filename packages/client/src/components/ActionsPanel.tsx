@@ -6,6 +6,7 @@ import {
   Spinner,
   Stack,
   Text,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -18,7 +19,10 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
-import { EncounterType, Monster } from '../utils/types';
+import { Consumable, EncounterType, Monster } from '../utils/types';
+
+import { ItemConsumeModal } from './ItemConsumeModal';
+import { PotionSvg } from './SVGs/PotionSvg';
 
 export const MONSTER_MOVE_MAPPING: Record<string, string> = {
   '1': 'Razor Claws',      // Rock Beetle
@@ -54,7 +58,8 @@ export const MONSTER_MOVE_MAPPING: Record<string, string> = {
 };
 
 export const ActionsPanel = (): JSX.Element => {
-  const { character, equippedSpells, equippedWeapons } = useCharacter();
+  const { character, equippedSpells, equippedWeapons, inventoryConsumables } =
+    useCharacter();
   const { isSpawned, monstersOnTile, position } = useMap();
   const {
     attackOutcomes,
@@ -74,6 +79,14 @@ export const ActionsPanel = (): JSX.Element => {
     spellTemplates,
     weaponTemplates,
   } = useItems();
+
+  const {
+    isOpen: isConsumeModalOpen,
+    onOpen: onOpenConsumeModal,
+    onClose: onCloseConsumeModal,
+  } = useDisclosure();
+  const [selectedConsumable, setSelectedConsumable] =
+    useState<Consumable | null>(null);
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
   const [attackButtonFocus, setAttackButtonFocus] = useState<number>(0);
@@ -265,6 +278,19 @@ export const ActionsPanel = (): JSX.Element => {
     [equippedSpells, equippedWeapons],
   );
 
+  const combatConsumables = useMemo(
+    () => inventoryConsumables.filter(c => c.hpRestoreAmount !== BigInt(0)),
+    [inventoryConsumables],
+  );
+
+  const onUsePotion = useCallback(
+    (consumable: Consumable) => {
+      setSelectedConsumable(consumable);
+      onOpenConsumeModal();
+    },
+    [onOpenConsumeModal],
+  );
+
   const spellAndWeaponTemplates = useMemo(
     () => [...spellTemplates, ...weaponTemplates],
     [spellTemplates, weaponTemplates],
@@ -443,6 +469,29 @@ export const ActionsPanel = (): JSX.Element => {
                 )}
               </Stack>
             </HStack>
+            {combatConsumables.length > 0 && (
+              <HStack spacing={0} w="100%">
+                {combatConsumables.map((consumable, index) => (
+                  <Button
+                    borderLeft={index === 0 ? 'none' : '2px'}
+                    borderRadius={0}
+                    borderRight="none"
+                    borderTop="none"
+                    isDisabled={
+                      attackingItemId !== null || !canAttack || isFleeing
+                    }
+                    key={`consumable-${index}`}
+                    onClick={() => onUsePotion(consumable)}
+                    size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                    variant="outline"
+                    w="100%"
+                  >
+                    <PotionSvg size={3} theme="dark" mr={1} />
+                    {consumable.name} (x{consumable.balance.toString()})
+                  </Button>
+                ))}
+              </HStack>
+            )}
             {canFlee && (
               <VStack>
                 <Button
@@ -735,6 +784,13 @@ export const ActionsPanel = (): JSX.Element => {
             </HStack>
           </HStack>
         </Stack>
+      )}
+      {selectedConsumable && (
+        <ItemConsumeModal
+          {...selectedConsumable}
+          isOpen={isConsumeModalOpen}
+          onClose={onCloseConsumeModal}
+        />
       )}
     </Box>
   );

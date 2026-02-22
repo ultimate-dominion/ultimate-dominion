@@ -24,7 +24,7 @@ export const Level = ({
   }, [levelPercent]);
 
   return (
-    <Box fontSize="10px" mt={8} position="relative" w="100%" {...props}>
+    <Box fontSize="xs" mt={8} position="relative" w="100%" {...props}>
       {maxed ? (
         <Box>
           <Text
@@ -39,10 +39,10 @@ export const Level = ({
           <Text display="none" position="absolute" right="0%" top="-15px">
             100%
           </Text>
-          <Progress h={2} value={100} variant="maxed" />
+          <Progress h={2.5} value={100} variant="maxed" />
           <HStack mt={1}>
             <Spacer />
-            <Text>Level {Number(currentLevel)}</Text>
+            <Text fontWeight={600}>Level {Number(currentLevel)}</Text>
           </HStack>
         </Box>
       ) : (
@@ -66,14 +66,14 @@ export const Level = ({
             100%
           </Text>
           <Progress
-            h={2}
+            h={2.5}
             value={levelPercent}
             variant={levelPercent === 100 ? 'filled' : 'filling'}
           />
           <HStack mt={1}>
-            <Text>Level {currentLevel.toString()}</Text>
+            <Text fontWeight={600}>Level {currentLevel.toString()}</Text>
             <Spacer />
-            <Text>Level {Number(currentLevel) + 1}</Text>
+            <Text fontWeight={600}>Level {Number(currentLevel) + 1}</Text>
           </HStack>
         </Box>
       )}
