@@ -132,7 +132,7 @@ contract CombatSystem is System {
         public
         returns (ActionOutcomeData memory)
     {
-        _requireSystemOrAdmin(_msgSender(), _world());
+        _requireSystemOrAdmin(_msgSender());
 
         // if the defender is alive and attacker is alive, execute the action
         if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {

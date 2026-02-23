@@ -14,8 +14,8 @@ import {
 } from "@codegen/index.sol";
 import {MobType, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {MonsterStats, NPCStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess, _requireAccessOrAdmin, _requireSystemOrAdmin} from "../utils.sol";
-import {Stats, StatsData, Spawned, ShopsData, Shops, CharacterOwner, Admin} from "@codegen/index.sol";
+import {Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
+import {_requireOwner, _requireAccess, _requireAccessOrAdmin} from "../utils.sol";
 import {MAX_MONSTERS} from "../../constants.sol";
 
 contract MobSystem is System {
@@ -47,11 +47,6 @@ contract MobSystem is System {
     }
 
     function spawnMob(uint256 mobId, uint16 x, uint16 y) public returns (bytes32 entityId) {
-        // Allow system-to-system calls (IWorld), admins, or valid players (SystemSwitch from MapSpawnSystem)
-        address sender = _msgSender();
-        if (sender != _world() && !Admin.get(sender)) {
-            require(CharacterOwner.getCharacterId(sender) != bytes32(0), "MOB SYSTEM: Not authorized");
-        }
         require(Counters.getCounter(address(this), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
         entityId = bytes32(abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), x, y));
         MobsData memory stats = Mobs.get(mobId);

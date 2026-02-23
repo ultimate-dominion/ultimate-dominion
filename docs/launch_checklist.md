@@ -18,16 +18,19 @@
 - [x] Embedded wallet MUD integration ✓ Thirdweb wallet client used directly (preserves signing transport), custom waitForTransaction using viem polling (avoids RECS sync race)
 - **Note**: MetaMask "Connect Wallet" button only shows when `window.ethereum` is detected. Needs `VITE_THIRDWEB_CLIENT_ID` env var set.
 
-### 3. UI Tweaks
-- [ ] Review and polish all UI components
+### 3. UI/UX
+- [x] Review and polish all UI components ✓ Full 6-phase UI/UX overhaul
 - [x] StatsPanel readability ✓ Larger fonts for XP/gold, visual dividers between sections, total gold display
 - [x] StatsPanel cleanup ✓ Removed redundant "Equipped Items" section (visible in ActionsPanel during battle)
 - [x] Level bar readability ✓ Larger font (10px→12px), thicker progress bar, semi-bold level labels
 - [x] Battle UI consumables ✓ Potion buttons in ActionsPanel during combat, opens ItemConsumeModal
-- [ ] Mobile responsiveness
-- [ ] Accessibility improvements
-- [ ] Loading states and error handling
-- [ ] User feedback and tooltips
+- [x] Mobile responsiveness ✓ GameBoard auto height, responsive grids, MapPanel/compass sizing, Stats drawer on mobile, modal full-screen on small screens
+- [x] Accessibility improvements ✓ aria-labels on icon buttons, role="alert" on errors, focus-visible styles on buttons
+- [x] Loading states and error handling ✓ Welcome sync timeout with retry, waitForTransaction retry wrapper (3 attempts with backoff)
+- [x] User feedback and tooltips ✓ Character creation step indicator, battle keyboard shortcut hints [1-4], item requirement per-stat breakdown, golden level-up card
+- [x] Hybrid font system ✓ Inter for UI text, Fira Code mono for stats/numbers
+- [x] Crypto abstraction ✓ All blockchain terminology replaced with game-friendly language (wallet→account, delegation→authorize, allowance→permission, $GOLD→Gold)
+- [x] Dark mode theme support ✓ Semantic tokens, useColorModeValue in PolygonalCard (toggle hidden for now)
 
 ### 4. PvP Testing
 - [ ] Comprehensive PvP balance testing
@@ -64,18 +67,18 @@
 - [ ] Level cap and endgame balance
 
 ### 9. Delegation UI/UX
-- [ ] Delegation flow improvements
-- [ ] Clear delegation status indicators
-- [x] Revoke delegation functionality ✓ "Revoke Session Wallet" button in WalletDetailsModal with AlertDialog confirmation. Logout also revokes delegation (best-effort) and clears burner from localStorage. RECS auto-syncs removal, UI transitions back to pre-delegation state.
-- [ ] Delegation permissions display
+- [x] Delegation flow improvements ✓ Crypto-free language ("Authorize & Play"), streamlined ConnectWalletModal
+- [x] Clear delegation status indicators ✓ "Game Account" terminology, simplified WalletDetailsModal
+- [x] Revoke delegation functionality ✓ "Reset Game Account" button with AlertDialog confirmation. Logout also revokes delegation (best-effort) and clears burner from localStorage.
+- [x] Delegation permissions display ✓ Renamed allowance modals to "Permissions" with clear spending language
 - [x] Error handling for delegation failures ✓ BattleContext guards against undefined RECS components (StatusEffectValidity null check), graceful error toasts on revoke failure
 
 ### 10. Security Review
 - [ ] Smart contract audit (external or internal review)
-- [ ] Access control verification (admin functions, namespace permissions)
+- [x] Access control verification (admin functions, namespace permissions) ✓ 6 admin systems locked (openAccess:false), _requireSystemOrAdmin() on LootManager/PveReward/PvpReward/CombatSystem/MobSystem, marketplace counter bug fixed
 - [ ] Reentrancy protection on all external calls
 - [ ] Integer overflow/underflow checks
-- [ ] Input validation on all user-facing functions
+- [x] Input validation on all user-facing functions ✓ Negative stat validation in StatCalculator, HP clamping in CombatSystem
 - [ ] Rate limiting and anti-griefing measures
 - [ ] Private key management for deployment accounts
 - [ ] Frontend security (XSS, CSRF protection)
@@ -85,7 +88,59 @@
 - [ ] Economic exploit review (inflation attacks, arbitrage)
 - [x] Emergency pause/upgrade mechanisms ✓ PauseSystem with admin-only pause/unpause, PauseLib checks on all 30+ user-facing entry points across 13 systems
 
-### 11. Launch Strategy
+### 11. Testnet Deployment
+#### Smart Contracts
+- [ ] Deploy MUD World to testnet (Garnet/Base Sepolia)
+- [ ] Run FullPostDeploy (ERC20 Gold, ERC721 Characters, ERC1155 Items, core config)
+- [ ] Seed game data (items, monsters, shops via zone loader or SeedGameData)
+- [ ] Configure badge token and fragment NFTs
+- [ ] Verify all contracts on block explorer
+- [ ] Record deployed WORLD_ADDRESS and INITIAL_BLOCK_NUMBER
+- [ ] Test all system calls against live testnet (mint, move, combat, shop, marketplace)
+- [ ] Validate MUD indexer sync (latency, missed events, reorgs)
+
+#### API Server
+- [ ] Deploy API to Vercel (or hosting provider)
+- [ ] Configure production environment variables (PINATA_JWT, WORLD_ADDRESS, RPC URLs, INITIAL_BLOCK_NUMBER)
+- [ ] Set up Pinata IPFS for character metadata storage (replace local dev-storage)
+- [ ] Verify /api/upload, /api/upload-file, /api/session endpoints work
+- [ ] Set up health check monitoring (/health endpoint)
+- [ ] Configure CORS for production domain
+- [ ] API rate limiting
+
+#### Client / Website
+- [ ] Build client for production (`pnpm build`)
+- [ ] Deploy to Vercel (vercel.json SPA rewrite already configured)
+- [ ] Configure production .env (CHAIN_ID, RPC URLs, INDEXER_URL, API_URL, THIRDWEB_CLIENT_ID)
+- [ ] Set up custom domain and SSL
+- [ ] Verify Thirdweb embedded wallet works on production domain (allowlisted origins)
+- [ ] Verify WalletConnect works on production domain
+- [ ] Test MUD indexer proxy / direct indexer URL in production mode
+- [ ] Verify Vite build output (bundle size, code splitting, no dev artifacts)
+
+#### Infrastructure
+- [ ] Set up RPC provider (public node or dedicated — Alchemy/Infura/custom)
+- [ ] Ensure MUD indexer is reachable and syncing for chosen testnet
+- [ ] DNS and domain configuration
+- [ ] Set up error monitoring (Sentry or similar)
+- [ ] Set up uptime monitoring for API and client
+- [ ] Push Protocol chat — verify works on production domain (CORS issue on localhost)
+- [ ] Document deployment runbook (step-by-step for future deploys/resets)
+
+#### Smoke Test Checklist (post-deploy)
+- [ ] Sign in with Google (embedded wallet) — full flow
+- [ ] Sign in with MetaMask (external wallet) — delegation flow
+- [ ] Create character (metadata upload to IPFS, mint tx)
+- [ ] Enter game, move on map
+- [ ] Fight a monster, win/lose
+- [ ] Visit shop, buy/sell items
+- [ ] List item on marketplace, buy from marketplace
+- [ ] Level up, allocate stats
+- [ ] Chat (Push Protocol)
+- [ ] Mobile browser — full flow
+- [ ] Multiple concurrent users
+
+### 12. Launch Strategy
 - [ ] Define target audience
 - [ ] Marketing plan and timeline
 - [ ] Community building (Discord, social media)

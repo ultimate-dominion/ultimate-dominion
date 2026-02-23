@@ -17,7 +17,7 @@ contract PvpRewardSystem is System {
         public
         returns (uint256 _expAmount, uint256 _goldAmount, uint256[] memory _itemIdsDropped)
     {
-        _requireSystemOrAdmin(_msgSender(), _world());
+        _requireSystemOrAdmin(_msgSender());
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         if (encounterData.end == 0 || encounterData.rewardsDistributed) revert InvalidRewardState();
 

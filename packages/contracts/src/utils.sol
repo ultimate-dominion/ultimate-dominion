@@ -95,9 +95,14 @@ function _requireAccessOrAdmin(address requiredAddress, address sender) view {
 
 error NotAuthorizedCaller();
 
-/// @dev Restricts to system-to-system IWorld calls (where _msgSender() == World address) or admin direct calls
-function _requireSystemOrAdmin(address sender, address world) view {
-    if (sender != world && !Admin.get(sender)) {
-        revert NotAuthorizedCaller();
-    }
+/// @dev Restricts to registered MUD systems (inter-system IWorld calls) or admin direct calls.
+/// In non-root MUD namespaces, systems run via CALL (not delegatecall), so _msgSender() returns
+/// the calling system's contract address, not the World address.
+function _requireSystemOrAdmin(address sender) view {
+    // Check if sender is a registered MUD system (inter-system call via IWorld)
+    if (ResourceId.unwrap(SystemRegistry.get(sender)) != bytes32(0)) return;
+    // Check if sender is an admin
+    if (Admin.get(sender)) return;
+    // Neither a registered system nor an admin
+    revert NotAuthorizedCaller();
 }
