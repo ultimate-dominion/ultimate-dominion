@@ -65,7 +65,7 @@ contract MarketplaceSystem is System, ReentrancyGuard {
         // create order Hash out of offer and consideration data and the Counter for the offerer
         uint256 offerCounter = Counters.getCounter(order.offerer, 0) + 1;
 
-        Counters.setCounter(order.consideration.recipient, 0, (offerCounter));
+        Counters.setCounter(order.offerer, 0, (offerCounter));
         _orderHash = getOrderHash(order);
 
         // store offer in offers table

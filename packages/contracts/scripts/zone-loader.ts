@@ -617,9 +617,9 @@ Available zones:
     transport: http(rpcUrl),
   });
 
+  const account = privateKey ? privateKeyToAccount(privateKey as Hex) : null;
   let walletClient: ReturnType<typeof createWalletClient> | null = null;
-  if (!dryRun && privateKey) {
-    const account = privateKeyToAccount(privateKey as Hex);
+  if (!dryRun && account) {
     console.log(`Admin account: ${account.address}`);
     walletClient = createWalletClient({
       account,
@@ -721,6 +721,7 @@ Available zones:
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__getCurrentItemsCounter',
+            account: account!,
           });
           itemIdsByName.set(armor.name, itemId);
           console.log(`    -> ID: ${itemId}`);
@@ -762,6 +763,7 @@ Available zones:
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__getCurrentItemsCounter',
+            account: account!,
           });
           itemIdsByName.set(weapon.name, itemId);
           console.log(`    -> ID: ${itemId}`);
@@ -803,6 +805,7 @@ Available zones:
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__getCurrentItemsCounter',
+            account: account!,
           });
           itemIdsByName.set(consumable.name, itemId);
           console.log(`    -> ID: ${itemId}`);

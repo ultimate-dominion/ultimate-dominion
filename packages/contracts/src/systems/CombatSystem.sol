@@ -41,6 +41,7 @@ import {
     ATTACKER_HIT_DAMPENER,
     DEFENDER_HIT_DAMPENER
 } from "../../constants.sol";
+import {_requireSystemOrAdmin} from "../utils.sol";
 import "forge-std/console.sol";
 
 contract CombatSystem is System {
@@ -131,8 +132,7 @@ contract CombatSystem is System {
         public
         returns (ActionOutcomeData memory)
     {
-        // Note: Access check removed - this function is called from PvESystem/PvPSystem
-        // via inter-system calls which change _msgSender(). Authorization is handled upstream.
+        _requireSystemOrAdmin(_msgSender(), _world());
 
         // if the defender is alive and attacker is alive, execute the action
         if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
@@ -169,6 +169,7 @@ contract CombatSystem is System {
                     if (actionOutcomeData.hit[i]) {
                         int256 currentHp =
                             Stats.getCurrentHp(actionOutcomeData.defenderId) - int256(actionOutcomeData.damagePerHit[i]);
+                        if (currentHp < 0) currentHp = 0;
                         if (currentHp <= 0) actionOutcomeData.defenderDied = true;
                         Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
                     } else {
@@ -189,9 +190,9 @@ contract CombatSystem is System {
                     if (actionOutcomeData.hit[i]) {
                         int256 currentHp =
                             Stats.getCurrentHp(actionOutcomeData.defenderId) - int256(actionOutcomeData.damagePerHit[i]);
-
-                        Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
+                        if (currentHp < 0) currentHp = 0;
                         if (currentHp <= 0) actionOutcomeData.defenderDied = true;
+                        Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
                     } else {
                         actionOutcomeData.miss[i] = true;
                     }

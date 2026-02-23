@@ -244,6 +244,11 @@ library StatCalculator {
         pure
         returns (bool isValid)
     {
+        // Prevent negative stats
+        require(desiredStats.strength >= 0, "Negative stat");
+        require(desiredStats.agility >= 0, "Negative stat");
+        require(desiredStats.intelligence >= 0, "Negative stat");
+
         int256 strChange = desiredStats.strength - currentStats.strength;
         int256 agiChange = desiredStats.agility - currentStats.agility;
         int256 intChange = desiredStats.intelligence - currentStats.intelligence;

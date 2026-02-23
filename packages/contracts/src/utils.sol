@@ -92,3 +92,12 @@ function _requireAccessOrAdmin(address requiredAddress, address sender) view {
     // Otherwise require namespace access
     AccessControl.requireAccess(SystemRegistry.get(requiredAddress), sender);
 }
+
+error NotAuthorizedCaller();
+
+/// @dev Restricts to system-to-system IWorld calls (where _msgSender() == World address) or admin direct calls
+function _requireSystemOrAdmin(address sender, address world) view {
+    if (sender != world && !Admin.get(sender)) {
+        revert NotAuthorizedCaller();
+    }
+}

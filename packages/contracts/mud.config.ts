@@ -82,7 +82,7 @@ export default defineWorld({
     },
     AdminShopSystem: {
       name: "AdminShopSys",
-      openAccess: true,
+      openAccess: false,
     },
     PvpRewardSystem: {
       name: "PvpRewardSystem",
@@ -94,11 +94,11 @@ export default defineWorld({
     },
     ItemCreationSystem: {
       name: "ItemCreationSys",
-      openAccess: true,
+      openAccess: false,
     },
     EffectDataSystem: {
       name: "EffectDataSys",
-      openAccess: true,
+      openAccess: false,
     },
     PveRewardSystem: {
       name: "PveRewardSystem",
@@ -106,6 +106,68 @@ export default defineWorld({
     },
     PauseSystem: {
       name: "PauseSystem",
+      openAccess: false,
+    },
+    // Admin systems (not previously listed)
+    AdminSystem: {
+      name: "AdminSystem",
+      openAccess: false,
+    },
+    UltimateDominionConfigSystem: {
+      name: "UDConfigSys",
+      openAccess: false,
+    },
+    // Player-facing systems (previously auto-discovered with defaults)
+    MapSystem: {
+      name: "MapSystem",
+      openAccess: true,
+    },
+    ShopSystem: {
+      name: "ShopSystem",
+      openAccess: true,
+    },
+    MarketplaceSystem: {
+      name: "MarketplaceSys",
+      openAccess: true,
+    },
+    EncounterSystem: {
+      name: "EncounterSys",
+      openAccess: true,
+    },
+    EquipmentSystem: {
+      name: "EquipmentSystem",
+      openAccess: true,
+    },
+    PvPSystem: {
+      name: "PvPSystem",
+      openAccess: true,
+    },
+    PvESystem: {
+      name: "PvESystem",
+      openAccess: true,
+    },
+    CombatSystem: {
+      name: "CombatSystem",
+      openAccess: true,
+    },
+    LootManagerSystem: {
+      name: "LootManagerSyste",
+      openAccess: true,
+    },
+    MobSystem: {
+      name: "MobSystem",
+      openAccess: true,
+    },
+    ItemsSystem: {
+      name: "ItemsSystem",
+      openAccess: true,
+    },
+    EffectsSystem: {
+      name: "EffectsSystem",
+      openAccess: true,
+    },
+    UtilsSystem: {
+      name: "UtilsSystem",
       openAccess: true,
     },
   },

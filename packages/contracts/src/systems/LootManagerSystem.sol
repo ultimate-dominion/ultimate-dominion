@@ -18,7 +18,7 @@ import {
 import {AdvancedClass} from "@codegen/common.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
-import {_requireAccess} from "../utils.sol";
+import {_requireAccess, _requireSystemOrAdmin} from "../utils.sol";
 import {ITEMS_NAMESPACE, GOLD_NAMESPACE} from "../../constants.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
@@ -47,7 +47,7 @@ contract LootManagerSystem is ERC1155Holder, System {
     }
 
     function issueStarterItems(bytes32 characterId) public {
-        // Note: Original check was broken - _msgSender() returns EOA, not system address
+        _requireSystemOrAdmin(_msgSender(), _world());
         // This function is called from CharacterSystem.enterGame which validates ownership
         StarterItemsData memory starterItems = IWorld(_world()).UD__getStarterItems(Stats.getClass(characterId));
 
@@ -65,7 +65,8 @@ contract LootManagerSystem is ERC1155Holder, System {
      * @param advancedClass The selected advanced class
      */
     function issueAdvancedClassItems(bytes32 characterId, AdvancedClass advancedClass) public {
-        // Note: This function is called from CharacterSystem.selectAdvancedClass which validates ownership
+        _requireSystemOrAdmin(_msgSender(), _world());
+        // This function is called from CharacterSystem.selectAdvancedClass which validates ownership
         AdvancedClassItemsData memory classItems = AdvancedClassItems.get(advancedClass);
 
         // If no items configured for this class, skip
@@ -82,7 +83,7 @@ contract LootManagerSystem is ERC1155Holder, System {
     }
 
     function dropGoldToEscrow(bytes32 characterId, uint256 amount) public {
-        // Note: Access check removed to allow inter-system calls
+        _requireSystemOrAdmin(_msgSender(), _world());
         // Only update escrow balance - no minting needed since World has pre-minted gold supply
         // Actual gold transfer happens when player withdraws from escrow at spawn
         uint256 currentBalance = AdventureEscrow.get(characterId);
@@ -90,21 +91,20 @@ contract LootManagerSystem is ERC1155Holder, System {
     }
 
     function dropGoldToPlayer(bytes32 characterId, uint256 amount) public {
-        // Note: Access check removed - this is called by CharacterCore.enterGame via World
-        // The system has openAccess: true in MUD config
+        _requireSystemOrAdmin(_msgSender(), _world());
         // Mint gold directly to player (mint-on-demand model - no pre-minted supply needed)
         address recipient = IWorld(_world()).UD__getOwnerAddress(characterId);
         _mintGoldDirect(recipient, amount);
     }
 
     function transferGold(address player, uint256 amount) public {
-        // Note: Access check removed to allow inter-system calls
+        _requireSystemOrAdmin(_msgSender(), _world());
         // Mint gold directly to player (mint-on-demand model)
         _mintGoldDirect(player, amount);
     }
 
     function dropItem(bytes32 characterId, uint256 itemId, uint256 amount) public {
-        // Note: Access check removed to allow inter-system calls
+        _requireSystemOrAdmin(_msgSender(), _world());
         // Write directly to ERC1155 tables to bypass puppet authorization issues
         address to = IWorld(_world()).UD__getOwner(characterId);
 
@@ -121,6 +121,7 @@ contract LootManagerSystem is ERC1155Holder, System {
     }
 
     function dropItems(bytes32[] memory characterIds, uint256[] memory itemIds, uint256[] memory amounts) public {
+        _requireSystemOrAdmin(_msgSender(), _world());
         for (uint256 i; i < itemIds.length; i++) {
             dropItem(characterIds[i], itemIds[i], amounts[i]);
         }
@@ -140,7 +141,7 @@ contract LootManagerSystem is ERC1155Holder, System {
     }
 
     function increaseEscrowBalance(bytes32 characterId, uint256 amount) public returns (uint256 newBalance) {
-        // Note: Access check removed to allow inter-system calls
+        _requireSystemOrAdmin(_msgSender(), _world());
         _addEscrowBalance(characterId, amount);
     }
 
