@@ -19,10 +19,12 @@ import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {_requireAccess} from "../utils.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 import "forge-std/console.sol";
 
 contract WorldActionSystem is System {
     function useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId) public {
+        PauseLib.requireNotPaused();
         // Items are owned by the character owner (delegator), not the caller (session wallet)
         address characterOwner = IWorld(_world()).UD__getOwner(givingEntity);
         require(IWorld(_world()).UD__isItemOwner(itemId, characterOwner), "you do not own this item");
@@ -117,6 +119,7 @@ contract WorldActionSystem is System {
      * @param itemId The consumable item ID
      */
     function useCombatConsumableItem(bytes32 characterId, uint256 itemId) public {
+        PauseLib.requireNotPaused();
         // Items are owned by the character owner (delegator), not the caller (session wallet)
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         require(IWorld(_world()).UD__isItemOwner(itemId, characterOwner), "you do not own this item");

@@ -17,6 +17,7 @@ import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {_requireAccess} from "../../utils.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {PauseLib} from "../../libraries/PauseLib.sol";
 
 /**
  * @title LevelSystem
@@ -43,6 +44,7 @@ contract LevelSystem is System {
      * @param desiredStats The desired stat distribution for the level up
      */
     function UD__levelCharacter(bytes32 characterId, StatsData memory desiredStats) public {
+        PauseLib.requireNotPaused();
         // Validate character exists
         if (!IWorld(_world()).UD__isValidCharacterId(characterId)) {
             revert LevelSystem_CharacterNotFound();

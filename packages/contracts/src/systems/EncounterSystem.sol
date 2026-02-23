@@ -4,45 +4,37 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {Math} from "@libraries/Math.sol";
 import {
     EncounterEntity,
     EncounterEntityData,
     Stats,
-    Effects,
-    Items,
     CombatEncounter,
     CombatEncounterData,
     CombatOutcome,
     CombatOutcomeData,
     Position,
-    Mobs,
     SessionTimer,
     WorldStatusEffects,
     WorldEncounter,
     WorldEncounterData
 } from "@codegen/index.sol";
-import {RngRequestType, EncounterType, MobType, FragmentType} from "@codegen/common.sol";
-import {CharacterFirstActions, FragmentProgress, Mobs, MobsData} from "@codegen/index.sol";
-import {DARK_WISP_MOB_ID, VOID_WHISPER_MOB_ID, LICH_ACOLYTE_MOB_ID} from "../../constants.sol";
+import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS} from "../../constants.sol";
-import "forge-std/console.sol";
+import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity} from "../Errors.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 
 contract EncounterSystem is System {
-    using Math for uint256;
-    using Math for int256;
-
     function createEncounter(EncounterType encounterType, bytes32[] memory group1, bytes32[] memory group2)
         public
         returns (bytes32 encounterId)
     {
-        require(
-            IWorld(_world()).UD__isParticipant(_msgSender(), group1)
-                || IWorld(_world()).UD__isParticipant(_msgSender(), group2),
-            "ENCOUNTER SYSTEM: INVALID SENDER"
-        );
+        PauseLib.requireNotPaused();
+        if (!IWorld(_world()).UD__isParticipant(_msgSender(), group1)
+                && !IWorld(_world()).UD__isParticipant(_msgSender(), group2)) {
+            revert Unauthorized();
+        }
         (uint16 x, uint16 y) = Position.get(group1[0]);
 
         if (encounterType == EncounterType.PvE) {
@@ -50,7 +42,7 @@ contract EncounterSystem is System {
             (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
 
             (bool isValidPvE, bool attackersAreMobs) = IWorld(_world()).UD__isValidPvE(attackers, defenders, x, y);
-            require(isValidPvE, "ENCOUNTER SYSTEM: INVALID PVE");
+            if (!isValidPvE) revert InvalidPvE();
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
 
@@ -72,7 +64,7 @@ contract EncounterSystem is System {
             // higher agi attacks first
             (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
 
-            require(IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y), "ENCOUNTER SYSTEM: INVALID PVP");
+            if (!IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y)) revert InvalidPvP();
 
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
@@ -94,7 +86,7 @@ contract EncounterSystem is System {
         } else if (encounterType == EncounterType.World) {
             (uint16 group1X, uint16 group1Y) = IWorld(_world()).UD__getEntityPosition(group1[0]);
 
-            require(IWorld(_world()).UD__isAtPosition(group2[0], group1X, group1Y), "Invalid World Location");
+            if (!IWorld(_world()).UD__isAtPosition(group2[0], group1X, group1Y)) revert InvalidWorldLocation();
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(group1, group2, startTime));
 
@@ -108,10 +100,10 @@ contract EncounterSystem is System {
                 shopId = group2[0];
                 characterId = group1[0];
             } else {
-                revert("invalid shop encounter");
+                revert InvalidShopEncounter();
             }
 
-            require(EncounterEntity.getEncounterId(characterId) == bytes32(0), "cannot start a new encounter");
+            if (EncounterEntity.getEncounterId(characterId) != bytes32(0)) revert AlreadyInEncounter();
 
             WorldEncounterData memory worldData =
                 WorldEncounterData({character: characterId, entity: shopId, start: startTime, end: 0});
@@ -121,7 +113,7 @@ contract EncounterSystem is System {
             // exit function
             return encounterId;
         } else {
-            revert("unrecognized encounter type");
+            revert InvalidEncounterType();
         }
 
         EncounterEntityData memory tempEncounterEntityData;
@@ -130,10 +122,9 @@ contract EncounterSystem is System {
         for (uint256 i; i < group1.length; i++) {
             tempEncounterEntityData = EncounterEntity.get(group1[i]);
             // check that entity is not already in an encounter and is not dead
-            require(
-                tempEncounterEntityData.encounterId == bytes32(0) && !tempEncounterEntityData.died,
-                "ENCOUNTER SYSTEM: INVALID ENTITY"
-            );
+            if (tempEncounterEntityData.encounterId != bytes32(0) || tempEncounterEntityData.died) {
+                revert InvalidCombatEntity();
+            }
             tempEncounterEntityData.encounterId = encounterId;
             EncounterEntity.set(group1[i], tempEncounterEntityData);
         }
@@ -142,10 +133,9 @@ contract EncounterSystem is System {
         for (uint256 i; i < group2.length; i++) {
             tempEncounterEntityData = EncounterEntity.get(group2[i]);
             // check that entity is not already in an encounter and is not dead
-            require(
-                tempEncounterEntityData.encounterId == bytes32(0) && !tempEncounterEntityData.died,
-                "ENCOUNTER SYSTEM: INVALID ENTITY"
-            );
+            if (tempEncounterEntityData.encounterId != bytes32(0) || tempEncounterEntityData.died) {
+                revert InvalidCombatEntity();
+            }
             tempEncounterEntityData.encounterId = encounterId;
             EncounterEntity.set(group2[i], tempEncounterEntityData);
         }
@@ -156,18 +146,17 @@ contract EncounterSystem is System {
      * @param attacks : for a pve the entity with the highest agi has their attacks calculated first
      */
     function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory attacks) public payable {
+        PauseLib.requireNotPaused();
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         address playerAddress = IWorld(_world()).UD__getOwnerAddress(playerId);
-        require(
-            encounterData.encounterType == EncounterType.PvP || encounterData.encounterType == EncounterType.PvE,
-            "Not a combat enounter"
-        );
-        require(encounterData.start != 0 && encounterData.end == 0, "ENCOUNTER SYSTEM: INVALID ENCOUNTER");
-        require(encounterData.currentTurn < encounterData.maxTurns, "ENCOUNTER SYSTEM: EXPIRED ENCOUNTER");
-        require(
-            playerAddress == _msgSender() && IWorld(_world()).UD__isParticipant(playerId, encounterId),
-            "ENCOUNTER SYSTEM: NON-COMBATANT"
-        );
+        if (encounterData.encounterType != EncounterType.PvP && encounterData.encounterType != EncounterType.PvE) {
+            revert NotCombatEncounter();
+        }
+        if (encounterData.start == 0 || encounterData.end != 0) revert InvalidEncounter();
+        if (encounterData.currentTurn >= encounterData.maxTurns) revert ExpiredEncounter();
+        if (playerAddress != _msgSender() || !IWorld(_world()).UD__isParticipant(playerId, encounterId)) {
+            revert NonCombatant();
+        }
 
         // is pvp
         if (encounterData.encounterType == EncounterType.PvP) {
@@ -175,27 +164,26 @@ contract EncounterSystem is System {
             if (encounterData.currentTurn % 2 == 0) {
                 // if timestamp is less than timeout
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
-                    require(
-                        IWorld(_world()).UD__isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER"
-                    );
+                    if (!IWorld(_world()).UD__isParticipant(playerId, encounterId)) {
+                        revert Unauthorized();
+                    }
                     // if player is attacker add +1 to current turn
                     if (IWorld(_world()).UD__isParticipant(playerAddress, encounterData.attackers)) {
                         encounterData.currentTurn += 1;
                         CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
                     }
                 } else {
-                    require(
-                        IWorld(_world()).UD__isParticipant(playerAddress, encounterData.defenders),
-                        "Cannot end defenders turn"
-                    );
+                    if (!IWorld(_world()).UD__isParticipant(playerAddress, encounterData.defenders)) {
+                        revert CannotEndTurn();
+                    }
                 }
             } else {
                 // should be attacker turn unless defender has timed out
                 if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
                     // allow either player to end the turn.
-                    require(
-                        IWorld(_world()).UD__isParticipant(playerId, encounterId), "ENCOUNTER SYSTEM: INVALID CALLER"
-                    );
+                    if (!IWorld(_world()).UD__isParticipant(playerId, encounterId)) {
+                        revert Unauthorized();
+                    }
                     // if playerId is of a defender added 1 to current turn
                     // if player is attacker add +1 to current turn
                     if (IWorld(_world()).UD__isParticipant(playerAddress, encounterData.defenders)) {
@@ -204,10 +192,9 @@ contract EncounterSystem is System {
                     }
                 } else {
                     // check that player action is for attacker
-                    require(
-                        IWorld(_world()).UD__isParticipant(playerAddress, encounterData.attackers),
-                        "Cannot end attackers turn"
-                    );
+                    if (!IWorld(_world()).UD__isParticipant(playerAddress, encounterData.attackers)) {
+                        revert CannotEndTurn();
+                    }
                 }
             }
         }
@@ -216,7 +203,7 @@ contract EncounterSystem is System {
 
     function _endCombatEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) internal {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        require(CombatEncounter.getEnd(encounterId) == 0, "encounter already over");
+        if (CombatEncounter.getEnd(encounterId) != 0) revert EncounterAlreadyOver();
 
         if (block.chainid == 31337) {
             CombatEncounter.setEnd(encounterId, block.number);
@@ -236,7 +223,7 @@ contract EncounterSystem is System {
         } else if (encounterData.encounterType == EncounterType.PvP) {
             (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePvpRewards(encounterId, randomNumber);
         } else {
-            revert("unrecognized enocounter type");
+            revert InvalidEncounterType();
         }
 
         combatOutcome = CombatOutcomeData({
@@ -284,80 +271,15 @@ contract EncounterSystem is System {
         // Check combat fragment triggers for the winning side
         (uint16 currentX, uint16 currentY) = Position.get(encounterData.attackers[0]);
         if (attackersWin) {
-            // Attackers won - check triggers for each attacker that is a character
-            for (uint256 i = 0; i < encounterData.attackers.length; i++) {
-                bytes32 winnerId = encounterData.attackers[i];
-                if (IWorld(_world()).UD__isValidCharacterId(winnerId)) {
-                    _checkCombatFragmentTriggers(winnerId, encounterData.defenders, currentX, currentY, encounterData.attackersAreMobs);
-                }
-            }
+            IWorld(_world()).UD__checkCombatFragmentTriggersForGroup(encounterData.attackers, encounterData.defenders, currentX, currentY, encounterData.attackersAreMobs);
         } else {
-            // Defenders won - check triggers for each defender that is a character
-            for (uint256 i = 0; i < encounterData.defenders.length; i++) {
-                bytes32 winnerId = encounterData.defenders[i];
-                if (IWorld(_world()).UD__isValidCharacterId(winnerId)) {
-                    _checkCombatFragmentTriggers(winnerId, encounterData.attackers, currentX, currentY, !encounterData.attackersAreMobs);
-                }
-            }
-        }
-    }
-
-    /**
-     * @notice Check and trigger combat-related fragments
-     * @param characterId The winning character
-     * @param defeated Array of defeated entity IDs
-     * @param tileX X coordinate of combat
-     * @param tileY Y coordinate of combat
-     * @param defeatedAreMobs Whether the defeated side were mobs
-     */
-    function _checkCombatFragmentTriggers(
-        bytes32 characterId,
-        bytes32[] memory defeated,
-        uint16 tileX,
-        uint16 tileY,
-        bool defeatedAreMobs
-    ) internal {
-        // Fragment III: The Restless - first monster kill
-        if (defeatedAreMobs && !CharacterFirstActions.getHasKilledMonster(characterId)) {
-            CharacterFirstActions.setHasKilledMonster(characterId, true);
-            IWorld(_world()).UD__triggerFragment(characterId, 3, tileX, tileY);
-        }
-
-        for (uint256 i = 0; i < defeated.length; i++) {
-            bytes32 defeatedId = defeated[i];
-
-            if (defeatedAreMobs) {
-                // Get mob ID from the defeated entity
-                uint256 mobId = IWorld(_world()).UD__getMobId(defeatedId);
-
-                // Fragment IV: Souls That Linger - kill Dark Wisp
-                if (mobId == DARK_WISP_MOB_ID) {
-                    IWorld(_world()).UD__triggerFragment(characterId, 4, tileX, tileY);
-                }
-                // Fragment VI: Death of the Death God - kill Lich Acolyte
-                else if (mobId == LICH_ACOLYTE_MOB_ID) {
-                    IWorld(_world()).UD__triggerFragment(characterId, 6, tileX, tileY);
-                }
-                // Fragment VII: Betrayer's Truth - kill Void Whisper
-                else if (mobId == VOID_WHISPER_MOB_ID) {
-                    IWorld(_world()).UD__triggerFragment(characterId, 7, tileX, tileY);
-                }
-            } else {
-                // PvP kill - defeated is a player character
-                // Fragment VIII: Blood Price - first PvP kill
-                if (IWorld(_world()).UD__isValidCharacterId(defeatedId)) {
-                    if (!CharacterFirstActions.getHasKilledPlayer(characterId)) {
-                        CharacterFirstActions.setHasKilledPlayer(characterId, true);
-                        IWorld(_world()).UD__triggerFragment(characterId, 8, tileX, tileY);
-                    }
-                }
-            }
+            IWorld(_world()).UD__checkCombatFragmentTriggersForGroup(encounterData.defenders, encounterData.attackers, currentX, currentY, !encounterData.attackersAreMobs);
         }
     }
 
     function _endWorldEncounter(bytes32 encounterId) internal {
         WorldEncounterData memory encounterData = WorldEncounter.get(encounterId);
-        require(encounterData.end == 0 && encounterData.start != 0, "Encounter System: Invalid Encounter");
+        if (encounterData.end != 0 || encounterData.start == 0) revert InvalidEncounter();
 
         encounterData.end = block.timestamp;
         EncounterEntity.setEncounterId(encounterData.character, bytes32(0));

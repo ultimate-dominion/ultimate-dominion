@@ -19,6 +19,7 @@ import {StatCalculator} from "@libraries/StatCalculator.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireAccess} from "../../utils.sol";
 import {MAX_LEVEL} from "../../../constants.sol";
+import {PauseLib} from "../../libraries/PauseLib.sol";
 import "forge-std/console.sol";
 
 contract StatSystem is System {
@@ -46,6 +47,7 @@ contract StatSystem is System {
         onlyOwner(characterId)
         validCharacter(characterId)
     {
+        PauseLib.requireNotPaused();
         require(!Characters.getLocked(characterId), "STAT SYSTEM: character already in game world");
         RngRequestType requestType = RngRequestType.CharacterStats;
         Stats.setClass(characterId, class);
@@ -138,6 +140,7 @@ contract StatSystem is System {
         onlyOwner(characterId)
         validCharacter(characterId)
     {
+        PauseLib.requireNotPaused();
         require(!IWorld(_world()).UD__isInEncounter(characterId), "STAT SYSTEM: cannot level in combat");
 
         // Get baseStats, falling back to Stats table if empty

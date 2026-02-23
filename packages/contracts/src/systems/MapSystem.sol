@@ -17,26 +17,21 @@ import {
     Position,
     Spawned,
     Stats,
-    MobsByLevel,
     EncounterEntity,
     SessionTimer,
     UltimateDominionConfig
 } from "../codegen/index.sol";
-import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
-import {IMobSystem} from "@world/IWorld.sol";
-import {LibChunks} from "../libraries/LibChunks.sol";
 import {SESSION_TIMEOUT, FRAGMENT_CENTER_X, FRAGMENT_CENTER_Y} from "../../constants.sol";
 import {FragmentProgress} from "@codegen/index.sol";
 import {FragmentType} from "@codegen/common.sol";
 import {_requireAccess} from "../utils.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
 import {UNLIMITED_DELEGATION} from "@latticexyz/world/src/constants.sol";
-import "forge-std/console.sol";
+import {OnlyCharacters, Unauthorized, NotSpawned, AlreadySpawned, InEncounter, OutOfBounds, InvalidMove, MaxPlayers, EntityNotAtPosition, UseFleeFunction, SessionNotTimedOut} from "../Errors.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 
 contract MapSystem is System {
-    using LibChunks for uint256;
-
     /**
      * @notice Check if caller is owner or has unlimited delegation from owner
      * @param owner The character owner address
@@ -52,28 +47,30 @@ contract MapSystem is System {
     }
 
     function move(bytes32 entityId, uint16 x, uint16 y) public {
+        PauseLib.requireNotPaused();
         address owner = Characters.getOwner(entityId);
-        require(IWorld(_world()).UD__isValidCharacterId(entityId), "Can Only move characters");
-        require(_isOwnerOrDelegated(owner), "Only the owner or delegated address can move a character");
-        require(Spawned.getSpawned(entityId), "Character not spawned");
-        require(EncounterEntity.getEncounterId(entityId) == bytes32(0), "Cannot move while in an encounter.");
+        if (!IWorld(_world()).UD__isValidCharacterId(entityId)) revert OnlyCharacters();
+        if (!_isOwnerOrDelegated(owner)) revert Unauthorized();
+        if (!Spawned.getSpawned(entityId)) revert NotSpawned();
+        if (EncounterEntity.getEncounterId(entityId) != bytes32(0)) revert InEncounter();
 
         (uint16 currentX, uint16 currentY) = Position.get(entityId);
         (uint16 height, uint16 width) = MapConfig.get();
 
-        require(x < width, "X out of bounds");
-        require(y < height, "Y out of bounds");
-        require(_standardDistance(currentX, currentY, x, y) == 1, "Can only move 1 tile at a time");
+        if (x >= width) revert OutOfBounds();
+        if (y >= height) revert OutOfBounds();
+        if (_standardDistance(currentX, currentY, x, y) != 1) revert InvalidMove();
         _moveEntity(entityId, currentX, currentY, x, y);
-        _spawnOnTileEnter(x, y);
+        IWorld(_world()).UD__spawnOnTileEnter(x, y);
     }
 
     function spawn(bytes32 entityId) public {
+        PauseLib.requireNotPaused();
         address owner = Characters.getOwner(entityId);
-        require(_isOwnerOrDelegated(owner), "Only the owner or delegated address can spawn a character");
+        if (!_isOwnerOrDelegated(owner)) revert Unauthorized();
         uint256 spawnedPlayers = Counters.get(address(this), 0);
-        require(spawnedPlayers <= UltimateDominionConfig.getMaxPlayers(), "max players reached");
-        require(!Spawned.getSpawned(entityId), "Character already spawned");
+        if (spawnedPlayers > UltimateDominionConfig.getMaxPlayers()) revert MaxPlayers();
+        if (Spawned.getSpawned(entityId)) revert AlreadySpawned();
         int256 maxHp = Stats.getMaxHp(entityId);
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             int256 currentHp = maxHp + CharacterEquipment.getHpBonus(entityId);
@@ -121,74 +118,14 @@ contract MapSystem is System {
         (x, y) = Position.get(entityId);
     }
 
-    function _spawnOnTileEnter(uint16 x, uint16 y) internal {
-        uint256 distanceFromHome = uint256(_chebyshevDistance(0, 0, x, y));
-        if (distanceFromHome == 0) {
-            return;
-        }
-
-        uint8 startLevel = 0;
-        uint8 endLevel = 0;
-
-        if (distanceFromHome < 5) {
-            startLevel = 1;
-            endLevel = 6;
-        } else {
-            startLevel = 6;
-            endLevel = 11;
-        }
-
-        uint256 numOfMobs = 0;
-        for (uint256 i = startLevel; i < endLevel; i++) {
-            numOfMobs += MobsByLevel.lengthMobIds(i);
-        }
-
-        uint256[] memory availableMonsters = new uint256[](numOfMobs);
-        uint256 index = 0;
-
-        for (uint256 i = startLevel; i < endLevel; i++) {
-            uint256[] memory mobIds = MobsByLevel.getMobIds(i);
-            for (uint256 j = 0; j < mobIds.length; j++) {
-                availableMonsters[index] = mobIds[j];
-                index++;
-            }
-        }
-
-        require(availableMonsters.length > 0, "No monsters available for this distance");
-
-        uint32[] memory rng;
-
-        rng = LibChunks.get8Chunks(block.prevrandao);
-
-        for (uint256 i; i < (rng[0] % 6); i++) {
-            SystemSwitch.call(
-                abi.encodeCall(
-                    IMobSystem.UD__spawnMob, (availableMonsters[uint256(rng[i] % availableMonsters.length)], x, y)
-                )
-            );
-        }
-    }
-
     function _standardDistance(uint16 fromX, uint16 fromY, uint16 toX, uint16 toY) internal pure returns (uint16) {
         uint16 deltaX = fromX > toX ? fromX - toX : toX - fromX;
         uint16 deltaY = fromY > toY ? fromY - toY : toY - fromY;
         return deltaX + deltaY;
     }
 
-    // Allows (0,1), (1,1), and (1,0) to all be the same distance from (0,0)
-    function _chebyshevDistance(uint256 x1, uint256 y1, uint256 x2, uint256 y2) internal pure returns (uint16) {
-        return uint16(_max(_absDiff(x1, x2), _absDiff(y1, y2)));
-    }
-
-    function _absDiff(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a > b ? a - b : b - a;
-    }
-
-    function _max(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a >= b ? a : b;
-    }
-
     function removeEntityFromBoard(bytes32 entityId) public {
+        PauseLib.requireNotPaused();
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
 
         // if entity is a character
@@ -198,14 +135,11 @@ contract MapSystem is System {
             // if sender is owner
             if (senderIsOwner) {
                 // if character is in combat use the combat flee function
-                require(encounterId == bytes32(0), "use correct fleeing function");
+                if (encounterId != bytes32(0)) revert UseFleeFunction();
                 Counters.set(address(this), 0, (spawnedPlayers - 1));
                 // if caller is not a system
             } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
-                require(
-                    (SessionTimer.get(entityId) + SESSION_TIMEOUT) < block.timestamp,
-                    "This player's session has not timed out"
-                );
+                if ((SessionTimer.get(entityId) + SESSION_TIMEOUT) >= block.timestamp) revert SessionNotTimedOut();
                 Counters.set(address(this), 0, (spawnedPlayers - 1));
                 // Note: Access check removed to allow inter-system calls
             } else {
@@ -273,7 +207,7 @@ contract MapSystem is System {
                 i++;
             }
         }
-        require(entityWasAtPosition, "Entity not at position");
+        if (!entityWasAtPosition) revert EntityNotAtPosition();
         // if character set session timer
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             SessionTimer.set(entityId, block.timestamp);

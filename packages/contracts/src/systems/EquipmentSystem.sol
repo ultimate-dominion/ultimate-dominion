@@ -34,6 +34,7 @@ import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
 import {UNLIMITED_DELEGATION} from "@latticexyz/world/src/constants.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 
 contract EquipmentSystem is System {
     modifier inGame(bytes32 characterId) {
@@ -43,6 +44,7 @@ contract EquipmentSystem is System {
     }
 
     function equipItems(bytes32 characterId, uint256[] memory itemIds) public inGame(characterId) {
+        PauseLib.requireNotPaused();
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         address caller = _msgSender();
         // Check direct ownership or delegation
@@ -206,6 +208,7 @@ contract EquipmentSystem is System {
     }
 
     function unequipItem(bytes32 characterId, uint256 itemId) public inGame(characterId) returns (bool success) {
+        PauseLib.requireNotPaused();
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
         address caller = _msgSender();
         // Check direct ownership or delegation

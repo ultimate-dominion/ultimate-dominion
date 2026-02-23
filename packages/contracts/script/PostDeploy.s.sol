@@ -31,6 +31,7 @@ import {IERC1155} from "@erc1155/IERC1155.sol";
 
 // Import tables for direct writes (game data seeding)
 import {
+    Paused,
     MapConfig,
     Admin,
     Levels,
@@ -690,6 +691,17 @@ contract PostDeploy is Script {
         Admin.set(itemsSystemAddress, true);
         console.log("  ItemsSystem added to Admin table");
 
+        // Grant ItemCreationSystem access to Items namespace (createItem writes to Owners/TotalSupply/URIStorage)
+        ResourceId itemCreationSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "ItemCreationSys");
+        address itemCreationSystemAddress = Systems.getSystem(itemCreationSystemId);
+        try world.grantAccess(itemsNamespaceId, itemCreationSystemAddress) {
+            console.log("  Granted Items namespace access to ItemCreationSystem");
+        } catch {
+            console.log("  Items namespace access grant to ItemCreationSystem failed");
+        }
+        Admin.set(itemCreationSystemAddress, true);
+        console.log("  ItemCreationSystem added to Admin table");
+
         // Grant MarketplaceSystem access to Items namespace (for listing items)
         // Note: MUD truncates "MarketplaceSystem" (17 chars) to "MarketplaceSyste" (16 chars)
         ResourceId marketplaceSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "MarketplaceSyste");
@@ -791,6 +803,10 @@ contract PostDeploy is Script {
         // Set deployer as admin
         Admin.set(deployer, true);
         console.log("Admin set");
+
+        // Initialize pause state (unpaused)
+        Paused.set(false);
+        console.log("Pause state initialized (unpaused)");
 
         // Set level experience requirements (core progression system)
         _setLevels();
@@ -969,8 +985,7 @@ contract PostDeploy is Script {
                 maxDamage: weaponTemplate.stats.maxDamage,
                 minDamage: weaponTemplate.stats.minDamage,
                 minLevel: weaponTemplate.stats.minLevel,
-                strModifier: weaponTemplate.stats.strModifier,
-                scalingStat: weaponTemplate.stats.scalingStat
+                strModifier: weaponTemplate.stats.strModifier
             });
 
             // Write to WeaponStats table

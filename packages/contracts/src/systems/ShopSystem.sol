@@ -26,6 +26,7 @@ import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
 import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 import "forge-std/console.sol";
 
 contract ShopSystem is System, ReentrancyGuard {
@@ -37,6 +38,7 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param characterId the id of the character buying
      */
     function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public {
+        PauseLib.requireNotPaused();
         bytes32 encounterId = EncounterEntity.getEncounterId(characterId);
         WorldEncounterData memory worldData = WorldEncounter.get(encounterId);
         // check that player is in encounter with the shop
@@ -94,6 +96,7 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param characterId the characterId of the character selling
      */
     function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public {
+        PauseLib.requireNotPaused();
         bytes32 encounterId = EncounterEntity.getEncounterId(characterId);
         WorldEncounterData memory worldData = WorldEncounter.get(encounterId);
         ShopSellTemps memory sellTemps;
@@ -159,6 +162,7 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param shopId the shop Id
      */
     function restock(bytes32 shopId) public returns (bool) {
+        PauseLib.requireNotPaused();
         if (canRestock(shopId)) {
             uint256 lastRecordedIntervalTimestamp = Shops.getRestockTimestamp(shopId);
             uint256 timeSinceLastInterval = (block.timestamp - lastRecordedIntervalTimestamp) % 12 hours;
@@ -180,6 +184,7 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param encounterId the encounter ID you wish to end (must be an encounter with the shop)
      */
     function endShopEncounter(bytes32 encounterId) public {
+        PauseLib.requireNotPaused();
         bytes32 characterId = WorldEncounter.getCharacter(encounterId);
         require(
             IWorld(_world()).UD__isValidCharacterId(characterId)

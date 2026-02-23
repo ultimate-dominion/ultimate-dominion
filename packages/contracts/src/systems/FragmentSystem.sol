@@ -13,6 +13,8 @@ import {
 } from "@codegen/index.sol";
 import {FragmentType} from "@codegen/common.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
+import {DARK_WISP_MOB_ID, VOID_WHISPER_MOB_ID, LICH_ACOLYTE_MOB_ID} from "../../constants.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 
 /**
  * @title FragmentSystem
@@ -33,6 +35,7 @@ contract FragmentSystem is System {
      * @param tileY The Y coordinate where triggered
      */
     function triggerFragment(bytes32 characterId, uint8 fragmentType, uint16 tileX, uint16 tileY) public {
+        PauseLib.requireNotPaused();
         require(fragmentType >= 1 && fragmentType <= 8, "Invalid fragment type");
         require(IWorld(_world()).UD__isValidCharacterId(characterId), "Invalid character");
 
@@ -59,6 +62,7 @@ contract FragmentSystem is System {
      * @return tokenId The minted token ID
      */
     function claimFragment(bytes32 characterId, uint8 fragmentType) public returns (uint256 tokenId) {
+        PauseLib.requireNotPaused();
         require(fragmentType >= 1 && fragmentType <= 8, "Invalid fragment type");
         require(IWorld(_world()).UD__isValidCharacterId(characterId), "Invalid character");
 
@@ -181,5 +185,62 @@ contract FragmentSystem is System {
         name = FragmentMetadata.getName(fType);
         narrative = FragmentMetadata.getNarrative(fType);
         hint = FragmentMetadata.getHint(fType);
+    }
+
+    function checkCombatFragmentTriggersForGroup(
+        bytes32[] memory winners,
+        bytes32[] memory defeated,
+        uint16 tileX,
+        uint16 tileY,
+        bool defeatedAreMobs
+    ) public {
+        for (uint256 i = 0; i < winners.length; i++) {
+            if (IWorld(_world()).UD__isValidCharacterId(winners[i])) {
+                checkCombatFragmentTriggers(winners[i], defeated, tileX, tileY, defeatedAreMobs);
+            }
+        }
+    }
+
+    function checkCombatFragmentTriggers(
+        bytes32 characterId,
+        bytes32[] memory defeated,
+        uint16 tileX,
+        uint16 tileY,
+        bool defeatedAreMobs
+    ) public {
+        // Fragment III: The Restless - first monster kill
+        if (defeatedAreMobs && !CharacterFirstActions.getHasKilledMonster(characterId)) {
+            CharacterFirstActions.setHasKilledMonster(characterId, true);
+            IWorld(_world()).UD__triggerFragment(characterId, 3, tileX, tileY);
+        }
+
+        for (uint256 i = 0; i < defeated.length; i++) {
+            bytes32 defeatedId = defeated[i];
+
+            if (defeatedAreMobs) {
+                uint256 mobId = IWorld(_world()).UD__getMobId(defeatedId);
+
+                // Fragment IV: Souls That Linger - kill Dark Wisp
+                if (mobId == DARK_WISP_MOB_ID) {
+                    IWorld(_world()).UD__triggerFragment(characterId, 4, tileX, tileY);
+                }
+                // Fragment VI: Death of the Death God - kill Lich Acolyte
+                else if (mobId == LICH_ACOLYTE_MOB_ID) {
+                    IWorld(_world()).UD__triggerFragment(characterId, 6, tileX, tileY);
+                }
+                // Fragment VII: Betrayer's Truth - kill Void Whisper
+                else if (mobId == VOID_WHISPER_MOB_ID) {
+                    IWorld(_world()).UD__triggerFragment(characterId, 7, tileX, tileY);
+                }
+            } else {
+                // PvP kill
+                if (IWorld(_world()).UD__isValidCharacterId(defeatedId)) {
+                    if (!CharacterFirstActions.getHasKilledPlayer(characterId)) {
+                        CharacterFirstActions.setHasKilledPlayer(characterId, true);
+                        IWorld(_world()).UD__triggerFragment(characterId, 8, tileX, tileY);
+                    }
+                }
+            }
+        }
     }
 }

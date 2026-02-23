@@ -23,7 +23,7 @@
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -369,22 +369,6 @@
         "name": "end",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "World_AccessDenied",
-    "inputs": [
-      {
-        "name": "resource",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "caller",
-        "type": "address",
-        "internalType": "address"
       }
     ]
   }

@@ -13,6 +13,7 @@ import {
 import {Race, PowerSource, ArmorType, AdvancedClass, RngRequestType} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 
 /**
  * @title ImplicitClassSystem
@@ -40,6 +41,7 @@ contract ImplicitClassSystem is System {
      *      - Human: STR +1, AGI +1, INT +1
      */
     function chooseRace(bytes32 characterId, Race race) public onlyOwner(characterId) {
+        PauseLib.requireNotPaused();
         require(!Characters.getLocked(characterId), "IMPLICIT CLASS: character already in game world");
         require(race != Race.None, "IMPLICIT CLASS: invalid race");
         require(Stats.getRace(characterId) == Race.None, "IMPLICIT CLASS: race already selected");
@@ -74,6 +76,7 @@ contract ImplicitClassSystem is System {
      * @dev Power source determines which advanced classes are available at level 10
      */
     function choosePowerSource(bytes32 characterId, PowerSource powerSource) public onlyOwner(characterId) {
+        PauseLib.requireNotPaused();
         require(!Characters.getLocked(characterId), "IMPLICIT CLASS: character already in game world");
         require(powerSource != PowerSource.None, "IMPLICIT CLASS: invalid power source");
         require(Stats.getPowerSource(characterId) == PowerSource.None, "IMPLICIT CLASS: power source already selected");
@@ -124,6 +127,7 @@ contract ImplicitClassSystem is System {
      * @dev Requires race and power source to be selected first. Armor is chosen via enterGame.
      */
     function rollBaseStats(bytes32 userRandomNumber, bytes32 characterId) public payable onlyOwner(characterId) {
+        PauseLib.requireNotPaused();
         require(!Characters.getLocked(characterId), "IMPLICIT CLASS: character already in game world");
         require(Stats.getRace(characterId) != Race.None, "IMPLICIT CLASS: must choose race first");
         require(Stats.getPowerSource(characterId) != PowerSource.None, "IMPLICIT CLASS: must choose power source first");
@@ -173,6 +177,7 @@ contract ImplicitClassSystem is System {
      * @param advancedClass The chosen advanced class
      */
     function selectAdvancedClass(bytes32 characterId, AdvancedClass advancedClass) public onlyOwner(characterId) {
+        PauseLib.requireNotPaused();
         StatsData memory stats = Stats.get(characterId);
 
         // Check requirements

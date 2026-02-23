@@ -12,10 +12,10 @@
 - [x] Badge system integration ✓ Adventurer badge mints at level 3, gates chat access
 
 ### 2. Non-Crypto Authentication
-- [x] Implement traditional authentication (email/password, OAuth) ✓ Thirdweb embedded wallet with Google, Apple, Email OTP
+- [x] Implement traditional authentication (OAuth) ✓ Thirdweb embedded wallet with Google sign-in (Apple/Email removed to simplify)
 - [x] Allow players to onboard without requiring wallet connection ✓ Embedded wallet created invisibly on sign-in
-- [ ] Wallet linking as optional feature for existing accounts
 - [x] Session management for non-crypto users ✓ Thirdweb auto-persists sessions, auto-reconnect on refresh
+- [x] Embedded wallet MUD integration ✓ Thirdweb wallet client used directly (preserves signing transport), custom waitForTransaction using viem polling (avoids RECS sync race)
 - **Note**: MetaMask "Connect Wallet" button only shows when `window.ethereum` is detected. Needs `VITE_THIRDWEB_CLIENT_ID` env var set.
 
 ### 3. UI Tweaks
@@ -66,9 +66,9 @@
 ### 9. Delegation UI/UX
 - [ ] Delegation flow improvements
 - [ ] Clear delegation status indicators
-- [ ] Revoke delegation functionality
+- [x] Revoke delegation functionality ✓ "Revoke Session Wallet" button in WalletDetailsModal with AlertDialog confirmation. Logout also revokes delegation (best-effort) and clears burner from localStorage. RECS auto-syncs removal, UI transitions back to pre-delegation state.
 - [ ] Delegation permissions display
-- [ ] Error handling for delegation failures
+- [x] Error handling for delegation failures ✓ BattleContext guards against undefined RECS components (StatusEffectValidity null check), graceful error toasts on revoke failure
 
 ### 10. Security Review
 - [ ] Smart contract audit (external or internal review)
@@ -83,7 +83,7 @@
 - [ ] Dependency audit (npm, forge dependencies)
 - [ ] Test coverage for critical paths (combat, trading, minting)
 - [ ] Economic exploit review (inflation attacks, arbitrage)
-- [ ] Emergency pause/upgrade mechanisms
+- [x] Emergency pause/upgrade mechanisms ✓ PauseSystem with admin-only pause/unpause, PauseLib checks on all 30+ user-facing entry points across 13 systems
 
 ### 11. Launch Strategy
 - [ ] Define target audience

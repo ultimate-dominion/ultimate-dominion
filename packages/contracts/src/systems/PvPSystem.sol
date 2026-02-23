@@ -20,6 +20,7 @@ import {
 import {EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {PVP_TIMER} from "../../constants.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 import "forge-std/console.sol";
 
 contract PvPSystem is System {
@@ -123,6 +124,7 @@ contract PvPSystem is System {
     }
 
     function fleePvp(bytes32 entityId) public {
+        PauseLib.requireNotPaused();
         require(IWorld(_world()).UD__isValidOwner(entityId, _msgSender()), "Cannot flee another's character");
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
         require(encounterId != bytes32(0), "use removeEntityFromMap to logout");

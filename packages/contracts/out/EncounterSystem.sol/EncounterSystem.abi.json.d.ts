@@ -23,7 +23,7 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -268,6 +268,16 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "AlreadyInEncounter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CannotEndTurn",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EncodedLengths_InvalidLength",
     "inputs": [
       {
@@ -276,6 +286,66 @@ declare const abi: [
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "EncounterAlreadyOver",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ExpiredEncounter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GamePaused",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidCombatEntity",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidEncounter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidEncounterType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidPvE",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidPvP",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidShopEncounter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidWorldLocation",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NonCombatant",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotCombatEncounter",
+    "inputs": []
   },
   {
     "type": "error",
@@ -358,6 +428,11 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "Unauthorized",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "World_AccessDenied",
     "inputs": [
       {
@@ -399,4 +474,6 @@ declare const abi: [
       }
     ]
   }
-]; export default abi;
+];
+
+export default abi;

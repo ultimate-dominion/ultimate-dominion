@@ -23,7 +23,7 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -315,6 +315,11 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "AlreadySpawned",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EncodedLengths_InvalidLength",
     "inputs": [
       {
@@ -323,6 +328,51 @@ declare const abi: [
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "EntityNotAtPosition",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GamePaused",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InEncounter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMove",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MaxPlayers",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotSpawned",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyCharacters",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OutOfBounds",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SessionNotTimedOut",
+    "inputs": []
   },
   {
     "type": "error",
@@ -405,45 +455,14 @@ declare const abi: [
   },
   {
     "type": "error",
-    "name": "World_AccessDenied",
-    "inputs": [
-      {
-        "name": "resource",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "caller",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
+    "name": "Unauthorized",
+    "inputs": []
   },
   {
     "type": "error",
-    "name": "World_FunctionSelectorNotFound",
-    "inputs": [
-      {
-        "name": "functionSelector",
-        "type": "bytes4",
-        "internalType": "bytes4"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "World_ResourceNotFound",
-    "inputs": [
-      {
-        "name": "resourceId",
-        "type": "bytes32",
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "resourceIdString",
-        "type": "string",
-        "internalType": "string"
-      }
-    ]
+    "name": "UseFleeFunction",
+    "inputs": []
   }
-]; export default abi;
+];
+
+export default abi;

@@ -80,6 +80,34 @@ export default defineWorld({
       name: "FragmentSystem",
       openAccess: true,
     },
+    AdminShopSystem: {
+      name: "AdminShopSys",
+      openAccess: true,
+    },
+    PvpRewardSystem: {
+      name: "PvpRewardSystem",
+      openAccess: true,
+    },
+    MapSpawnSystem: {
+      name: "MapSpawnSystem",
+      openAccess: true,
+    },
+    ItemCreationSystem: {
+      name: "ItemCreationSys",
+      openAccess: true,
+    },
+    EffectDataSystem: {
+      name: "EffectDataSys",
+      openAccess: true,
+    },
+    PveRewardSystem: {
+      name: "PveRewardSystem",
+      openAccess: true,
+    },
+    PauseSystem: {
+      name: "PauseSystem",
+      openAccess: true,
+    },
   },
   enums: {
     // Legacy class enum - kept for backward compatibility
@@ -158,6 +186,15 @@ export default defineWorld({
     ],
   },
   tables: {
+    /**
+     * Global pause state. When true, user-facing game actions are blocked.
+     */
+    Paused: {
+      key: [],
+      schema: {
+        value: "bool",
+      },
+    },
     /**
      * Marks an entity as an admin. Used on address entities.
      */

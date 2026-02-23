@@ -17,6 +17,7 @@ import {IERC1155} from "@erc1155/IERC1155.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
 import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 
 // Direct table access for ERC1155 (Items)
 import {Owners} from "@erc1155/tables/Owners.sol";
@@ -32,6 +33,7 @@ contract MarketplaceSystem is System, ReentrancyGuard {
      * @param order An order
      */
     function createOrder(Order memory order) public nonReentrant returns (bytes32 _orderHash) {
+        PauseLib.requireNotPaused();
         require(order.offerer == _msgSender(), "You cannot offer someone else's items");
         require(order.consideration.recipient == _msgSender(), "You cannot purchase an item for someone else");
 
@@ -80,6 +82,7 @@ contract MarketplaceSystem is System, ReentrancyGuard {
     }
 
     function fulfillOrder(bytes32 orderHash) public nonReentrant returns (bool fulfilled) {
+        PauseLib.requireNotPaused();
         OffersData memory o = Offers.get(orderHash);
         ConsiderationsData memory c = Considerations.get(orderHash);
         // check that order is active
@@ -163,6 +166,7 @@ contract MarketplaceSystem is System, ReentrancyGuard {
 
     // cancels an order transfers offers out of escrow
     function cancelOrder(bytes32 _orderHash) public nonReentrant returns (bool) {
+        PauseLib.requireNotPaused();
         // check that _msgSender is the person who created the order
         require(getOrderStatus(_orderHash) == OrderStatus.Active, "Order is not active");
         ConsiderationsData memory c = getConsideration(_orderHash);

@@ -30,6 +30,17 @@ import {_tokenUriTableId} from "@latticexyz/world-modules/src/modules/erc721-pup
 import {IWorld} from "@world/IWorld.sol";
 import {_erc721SystemId} from "../../utils.sol";
 import {CHARACTERS_NAMESPACE, GOLD_NAMESPACE, ITEMS_NAMESPACE} from "../../../constants.sol";
+import {
+    Unauthorized,
+    InvalidAccount,
+    InvalidTokenUri,
+    NameTaken,
+    CharacterLocked,
+    InvalidStarterItem,
+    InvalidItemType,
+    InsufficientStat,
+    InvalidArmorType
+} from "../../Errors.sol";
 // Direct table access for gold transfers
 import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {_balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
@@ -37,15 +48,16 @@ import {_balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-pupp
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {_ownersTableId} from "@erc1155/utils.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
+import {PauseLib} from "../../libraries/PauseLib.sol";
 
 contract CharacterCore is System {
     modifier onlyOwner(bytes32 characterId) {
-        require(isValidOwner(characterId, _msgSender()), "CHARACTER CORE: INVALID OPERATOR");
+        if (!isValidOwner(characterId, _msgSender())) revert Unauthorized();
         _;
     }
 
     modifier validCharacter(bytes32 characterId) {
-        require(isValidCharacterId(characterId), "CHARACTER CORE: INVALID CHARACTER");
+        if (!isValidCharacterId(characterId)) revert InvalidAccount();
         _;
     }
 
@@ -64,12 +76,13 @@ contract CharacterCore is System {
         public
         returns (bytes32 characterId)
     {
-        require(account != address(0), "CHARACTER CORE: INVALID ACCOUNT");
-        require(name != bytes32(0), "CHARACTER CORE: INVALID NAME");
-        require(bytes(tokenUri).length > 0, "CHARACTER CORE: INVALID TOKEN URI");
-        
+        PauseLib.requireNotPaused();
+        if (account == address(0)) revert InvalidAccount();
+        if (name == bytes32(0)) revert InvalidAccount();
+        if (bytes(tokenUri).length == 0) revert InvalidTokenUri();
+
         // Check if name already exists
-        require(!NameExists.get(name), "CHARACTER CORE: NAME ALREADY EXISTS");
+        if (NameExists.get(name)) revert NameTaken();
         
         // Get next token ID
         uint256 tokenId = Counters.getCounter(address(this), 0) + 1;
@@ -114,35 +127,36 @@ contract CharacterCore is System {
         uint256 starterWeaponId,
         uint256 starterArmorId
     ) public onlyOwner(characterId) validCharacter(characterId) {
+        PauseLib.requireNotPaused();
         CharactersData memory charData = Characters.get(characterId);
-        require(!charData.locked, "CHARACTER CORE: CHARACTER ALREADY IN GAME");
+        if (charData.locked) revert CharacterLocked();
 
         // Get stats for validation
         StatsData memory tempStats = Stats.get(characterId);
 
         // Validate starter items are in the pool
-        require(StarterItemPool.getIsStarter(starterWeaponId), "CHARACTER CORE: INVALID STARTER WEAPON");
-        require(StarterItemPool.getIsStarter(starterArmorId), "CHARACTER CORE: INVALID STARTER ARMOR");
+        if (!StarterItemPool.getIsStarter(starterWeaponId)) revert InvalidStarterItem();
+        if (!StarterItemPool.getIsStarter(starterArmorId)) revert InvalidStarterItem();
 
         // Validate item types
-        require(Items.getItemType(starterWeaponId) == ItemType.Weapon, "CHARACTER CORE: NOT A WEAPON");
-        require(Items.getItemType(starterArmorId) == ItemType.Armor, "CHARACTER CORE: NOT AN ARMOR");
+        if (Items.getItemType(starterWeaponId) != ItemType.Weapon) revert InvalidItemType();
+        if (Items.getItemType(starterArmorId) != ItemType.Armor) revert InvalidItemType();
 
         // Validate stat requirements for weapon
         StatRestrictionsData memory weaponRestrictions = StatRestrictions.get(starterWeaponId);
-        require(tempStats.strength >= weaponRestrictions.minStrength, "CHARACTER CORE: INSUFFICIENT STR FOR WEAPON");
-        require(tempStats.agility >= weaponRestrictions.minAgility, "CHARACTER CORE: INSUFFICIENT AGI FOR WEAPON");
-        require(tempStats.intelligence >= weaponRestrictions.minIntelligence, "CHARACTER CORE: INSUFFICIENT INT FOR WEAPON");
+        if (tempStats.strength < weaponRestrictions.minStrength) revert InsufficientStat();
+        if (tempStats.agility < weaponRestrictions.minAgility) revert InsufficientStat();
+        if (tempStats.intelligence < weaponRestrictions.minIntelligence) revert InsufficientStat();
 
         // Validate stat requirements for armor
         StatRestrictionsData memory armorRestrictions = StatRestrictions.get(starterArmorId);
-        require(tempStats.strength >= armorRestrictions.minStrength, "CHARACTER CORE: INSUFFICIENT STR FOR ARMOR");
-        require(tempStats.agility >= armorRestrictions.minAgility, "CHARACTER CORE: INSUFFICIENT AGI FOR ARMOR");
-        require(tempStats.intelligence >= armorRestrictions.minIntelligence, "CHARACTER CORE: INSUFFICIENT INT FOR ARMOR");
+        if (tempStats.strength < armorRestrictions.minStrength) revert InsufficientStat();
+        if (tempStats.agility < armorRestrictions.minAgility) revert InsufficientStat();
+        if (tempStats.intelligence < armorRestrictions.minIntelligence) revert InsufficientStat();
 
         // Set startingArmor based on the chosen armor's type
         ArmorType armorType = ArmorStats.getArmorType(starterArmorId);
-        require(armorType != ArmorType.None, "CHARACTER CORE: ARMOR HAS NO TYPE");
+        if (armorType == ArmorType.None) revert InvalidArmorType();
         tempStats.startingArmor = armorType;
 
         // Apply armor-based stat modifiers (same as chooseStartingArmor)
@@ -208,13 +222,14 @@ contract CharacterCore is System {
      * @param characterId The character to update
      * @param tokenUri The new token URI
      */
-    function updateTokenUri(bytes32 characterId, string memory tokenUri) 
-        public 
-        onlyOwner(characterId) 
-        validCharacter(characterId) 
+    function updateTokenUri(bytes32 characterId, string memory tokenUri)
+        public
+        onlyOwner(characterId)
+        validCharacter(characterId)
     {
-        require(bytes(tokenUri).length > 0, "CHARACTER CORE: INVALID TOKEN URI");
-        
+        PauseLib.requireNotPaused();
+        if (bytes(tokenUri).length == 0) revert InvalidTokenUri();
+
         CharactersData memory charData = Characters.get(characterId);
         TokenURI.set(_tokenUriTableId(CHARACTERS_NAMESPACE), charData.tokenId, tokenUri);
     }

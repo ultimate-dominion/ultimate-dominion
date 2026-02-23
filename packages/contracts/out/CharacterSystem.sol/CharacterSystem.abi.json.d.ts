@@ -23,7 +23,7 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -40,6 +40,60 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "choosePowerSource",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "powerSource",
+        "type": "uint8",
+        "internalType": "enum PowerSource"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "chooseRace",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "race",
+        "type": "uint8",
+        "internalType": "enum Race"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "chooseStartingArmor",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorType",
+        "type": "uint8",
+        "internalType": "enum ArmorType"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "enterGame",
     "inputs": [
       {
@@ -50,6 +104,25 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getAdvancedClass",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum AdvancedClass"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -106,6 +179,31 @@ declare const abi: [
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -285,6 +383,63 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "getPowerSource",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum PowerSource"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRace",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum Race"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getStartingArmor",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum ArmorType"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getStats",
     "inputs": [
       {
@@ -338,8 +493,52 @@ declare const abi: [
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getValidAdvancedClass",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum AdvancedClass"
       }
     ],
     "stateMutability": "view"
@@ -440,6 +639,31 @@ declare const abi: [
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -478,6 +702,24 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "rollBaseStats",
+    "inputs": [
+      {
+        "name": "userRandomNumber",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
     "name": "rollStats",
     "inputs": [
       {
@@ -498,6 +740,24 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "selectAdvancedClass",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "advancedClass",
+        "type": "uint8",
+        "internalType": "enum AdvancedClass"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -585,6 +845,82 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "AdvancedClassSelected",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "advancedClass",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum AdvancedClass"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ArmorTypeSelected",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorType",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum ArmorType"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PowerSourceSelected",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "powerSource",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum PowerSource"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RaceSelected",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "race",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum Race"
+      }
+    ],
+    "anonymous": false
   },
   {
     "type": "event",
@@ -836,4 +1172,6 @@ declare const abi: [
       }
     ]
   }
-]; export default abi;
+];
+
+export default abi;
