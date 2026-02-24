@@ -29,7 +29,7 @@ export const ConnectWalletButton: React.FC = () => {
               if (!connected) {
                 return (
                   <Button onClick={openConnectModal} type="button">
-                    Connect
+                    Sign in with Wallet
                   </Button>
                 );
               }
