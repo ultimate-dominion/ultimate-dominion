@@ -55,6 +55,7 @@ The manifesto (`packages/client/src/pages/Manifesto.tsx`) defines the game's ide
 - NEVER mix testnet/mainnet configs. Double-check CHAIN_ID, RPC URLs, and WORLD_ADDRESS before any deploy.
 
 ### MUD Deploy Safety
+- **Always use `--worldAddress` when deploying to existing chains** to force upgrade instead of accidental fresh deploy. Compiler setting changes (optimizer_runs, via_ir) change all bytecodes → different CREATE2 addresses → MUD deploys a new world instead of upgrading.
 - `mud deploy` with nonce errors can silently skip transactions — always verify function selectors after deploy.
 - System upgrades create NEW contract addresses — data keyed by `address(this)` is orphaned at the old address.
 - Always run PostDeploy seed/config scripts after a fresh deploy.

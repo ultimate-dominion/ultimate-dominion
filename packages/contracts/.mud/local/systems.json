@@ -282,6 +282,47 @@
     },
     {
       "namespaceLabel": "UD",
+      "label": "GasStationSystem",
+      "namespace": "UD",
+      "name": "GasStationSys",
+      "systemId": "0x7379554400000000000000000000000047617353746174696f6e537973000000",
+      "abi": [
+        "error GamePaused()",
+        "error GasStationBelowMinLevel()",
+        "error GasStationCooldownActive()",
+        "error GasStationDisabled()",
+        "error GasStationInsufficientTreasury()",
+        "error GasStationMaxSwapExceeded()",
+        "error GasStationTransferFailed()",
+        "error GasStationZeroAmount()",
+        "error InsufficientBalance()",
+        "function buyGas(bytes32 characterId, uint256 goldAmount)",
+        "function fundGasTreasury() payable",
+        "function gasTreasuryBalance() view returns (uint256)",
+        "function setGasStationConfig(uint256 ethPerGold, uint256 maxGoldPerSwap, uint256 cooldownSeconds, bool enabled)",
+        "function withdrawGasTreasury(uint256 amount)",
+        "receive() external payable"
+      ],
+      "worldAbi": [
+        "error GamePaused()",
+        "error GasStationBelowMinLevel()",
+        "error GasStationCooldownActive()",
+        "error GasStationDisabled()",
+        "error GasStationInsufficientTreasury()",
+        "error GasStationMaxSwapExceeded()",
+        "error GasStationTransferFailed()",
+        "error GasStationZeroAmount()",
+        "error InsufficientBalance()",
+        "function UD__buyGas(bytes32 characterId, uint256 goldAmount)",
+        "function UD__fundGasTreasury() payable",
+        "function UD__gasTreasuryBalance() view returns (uint256)",
+        "function UD__setGasStationConfig(uint256 ethPerGold, uint256 maxGoldPerSwap, uint256 cooldownSeconds, bool enabled)",
+        "function UD__withdrawGasTreasury(uint256 amount)",
+        "receive() external payable"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
       "label": "ImplicitClassSystem",
       "namespace": "UD",
       "name": "ImplicitClassSys",
@@ -1107,5 +1148,5 @@
       ]
     }
   ],
-  "createdAt": 1771941705148
+  "createdAt": 1771964713832
 }

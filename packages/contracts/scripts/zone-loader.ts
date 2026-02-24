@@ -23,9 +23,11 @@ config();
 
 import { createPublicClient, createWalletClient, http, parseAbi, encodeAbiParameters, Hex, Address } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { foundry } from 'viem/chains';
+import { foundry, baseSepolia, base } from 'viem/chains';
 import * as fs from 'fs';
 import * as path from 'path';
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ============ Types ============
 
@@ -614,9 +616,13 @@ Available zones:
   if (dryRun) console.log(`MODE: DRY RUN (no transactions)`);
   console.log('');
 
+  // Select chain based on CHAIN_ID env var
+  const chainId = parseInt(process.env.CHAIN_ID || '31337');
+  const chain = chainId === 84532 ? baseSepolia : chainId === 8453 ? base : foundry;
+
   // Create clients
   const publicClient = createPublicClient({
-    chain: foundry,
+    chain,
     transport: http(rpcUrl),
   });
 
@@ -626,7 +632,7 @@ Available zones:
     console.log(`Admin account: ${account.address}`);
     walletClient = createWalletClient({
       account,
-      chain: foundry,
+      chain,
       transport: http(rpcUrl),
     });
   }
@@ -658,7 +664,7 @@ Available zones:
             functionName: 'UD__createEffect',
             args: [EffectType.PhysicalDamage, effect.name, stats],
           });
-          await publicClient.waitForTransactionReceipt({ hash });
+          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
         }
       }
 
@@ -673,7 +679,7 @@ Available zones:
             functionName: 'UD__createEffect',
             args: [EffectType.MagicDamage, effect.name, stats],
           });
-          await publicClient.waitForTransactionReceipt({ hash });
+          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
         }
       }
 
@@ -688,7 +694,7 @@ Available zones:
             functionName: 'UD__createEffect',
             args: [EffectType.StatusEffect, effect.name, stats],
           });
-          await publicClient.waitForTransactionReceipt({ hash });
+          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
         }
       }
     }
@@ -719,7 +725,7 @@ Available zones:
               armor.metadataUri,
             ],
           });
-          await publicClient.waitForTransactionReceipt({ hash });
+          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
           const itemId = await publicClient.readContract({
             address: worldAddress,
             abi: worldAbi,
@@ -737,7 +743,7 @@ Available zones:
               functionName: 'UD__setStarterItemPool',
               args: [itemId, true],
             });
-            await publicClient.waitForTransactionReceipt({ hash: starterHash });
+            await publicClient.waitForTransactionReceipt({ hash: starterHash }); await sleep(2000);
             console.log(`    -> Added to StarterItemPool`);
           }
         }
@@ -761,7 +767,7 @@ Available zones:
               weapon.metadataUri,
             ],
           });
-          await publicClient.waitForTransactionReceipt({ hash });
+          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
           const itemId = await publicClient.readContract({
             address: worldAddress,
             abi: worldAbi,
@@ -779,7 +785,7 @@ Available zones:
               functionName: 'UD__setStarterItemPool',
               args: [itemId, true],
             });
-            await publicClient.waitForTransactionReceipt({ hash: starterHash });
+            await publicClient.waitForTransactionReceipt({ hash: starterHash }); await sleep(2000);
             console.log(`    -> Added to StarterItemPool`);
           }
         }
@@ -803,7 +809,7 @@ Available zones:
               consumable.metadataUri,
             ],
           });
-          await publicClient.waitForTransactionReceipt({ hash });
+          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
           const itemId = await publicClient.readContract({
             address: worldAddress,
             abi: worldAbi,
@@ -821,7 +827,7 @@ Available zones:
               functionName: 'UD__setStarterItemPool',
               args: [itemId, true],
             });
-            await publicClient.waitForTransactionReceipt({ hash: starterHash });
+            await publicClient.waitForTransactionReceipt({ hash: starterHash }); await sleep(2000);
             console.log(`    -> Added to StarterItemPool`);
           }
         }
@@ -850,7 +856,7 @@ Available zones:
           functionName: 'UD__setStarterConsumables',
           args: [starterConsumableIds, starterConsumableAmounts],
         });
-        await publicClient.waitForTransactionReceipt({ hash: starterConsumablesHash });
+        await publicClient.waitForTransactionReceipt({ hash: starterConsumablesHash }); await sleep(2000);
         console.log(`  Set ${starterConsumableIds.length} starter consumable(s) with amount 3 each`);
       }
     }
@@ -873,7 +879,7 @@ Available zones:
             functionName: 'UD__createMob',
             args: [MobType.Monster, stats, monster.metadataUri],
           });
-          await publicClient.waitForTransactionReceipt({ hash });
+          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
         }
       }
     }
@@ -928,7 +934,7 @@ Available zones:
             functionName: 'UD__createMob',
             args: [MobType.Shop, shopStats, `shop:${shop.name.toLowerCase().replace(/\s+/g, '_')}`],
           });
-          const createReceipt = await publicClient.waitForTransactionReceipt({ hash: createHash });
+          const createReceipt = await publicClient.waitForTransactionReceipt({ hash: createHash }); await sleep(2000);
 
           // Get the mob ID from the createMob return value (it's the incremented counter)
           // For simplicity, we'll read the counter after creation
@@ -975,7 +981,7 @@ Available zones:
             functionName: 'UD__spawnMob',
             args: [mobId, shop.location[0], shop.location[1]],
           });
-          await publicClient.waitForTransactionReceipt({ hash: spawnHash });
+          await publicClient.waitForTransactionReceipt({ hash: spawnHash }); await sleep(2000);
           console.log(`    -> Spawned at (${shop.location[0]}, ${shop.location[1]}) with mobId ${mobId}`);
         }
       }
