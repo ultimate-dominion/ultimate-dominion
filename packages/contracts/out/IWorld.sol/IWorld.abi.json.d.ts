@@ -1134,6 +1134,24 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__buyGas",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "goldAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__calculateAllStatusEffects",
     "inputs": [
       {
@@ -2974,6 +2992,26 @@ declare const abi: [
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__fundGasTreasury",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "UD__gasTreasuryBalance",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -6275,6 +6313,34 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__setGasStationConfig",
+    "inputs": [
+      {
+        "name": "ethPerGold",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxGoldPerSwap",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "cooldownSeconds",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "enabled",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__setGoldApproval",
     "inputs": [
       {
@@ -7085,6 +7151,19 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__withdrawGasTreasury",
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
