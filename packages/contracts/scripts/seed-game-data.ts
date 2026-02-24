@@ -14,6 +14,9 @@
  *   RPC_URL - RPC URL (default: http://127.0.0.1:8545)
  */
 
+import { config } from 'dotenv';
+config();
+
 import { createPublicClient, createWalletClient, http, parseAbi, encodeAbiParameters, Hex, Address } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { foundry } from 'viem/chains';

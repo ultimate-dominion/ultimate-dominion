@@ -1,4 +1,10 @@
 import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
   Button,
   Divider,
   FormControl,
@@ -16,7 +22,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatEther, parseEther } from 'viem';
 import { useBalance, useWalletClient } from 'wagmi';
 
@@ -44,6 +50,9 @@ export const WalletDetailsModal = ({
   const {
     burnerAddress,
     burnerBalance,
+    handleLogoutRevoke,
+    handleRevokeDelegation,
+    isRevokingDelegation,
     network: { walletClient, publicClient },
     systemCalls: { removeEntityFromBoard },
   } = useMUD();
@@ -67,6 +76,9 @@ export const WalletDetailsModal = ({
     string | null
   >(null);
 
+  const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false);
+  const cancelRevokeRef = useRef<HTMLButtonElement>(null);
+
   // Reset errorMessage state when any of the form fields change
   useEffect(() => {
     setDepositErrorMessage(null);
@@ -82,6 +94,19 @@ export const WalletDetailsModal = ({
     }
   }, [isOpen, refetch]);
 
+  const onConfirmRevoke = useCallback(async () => {
+    setIsRevokeDialogOpen(false);
+    try {
+      await handleRevokeDelegation();
+      renderSuccess('Game account has been reset.');
+    } catch (e) {
+      renderError(
+        (e as Error)?.message ?? 'Error revoking delegation.',
+        e,
+      );
+    }
+  }, [handleRevokeDelegation, renderError, renderSuccess]);
+
   const onLogout = useCallback(async () => {
     try {
       setIsLoggingOut(true);
@@ -91,6 +116,10 @@ export const WalletDetailsModal = ({
         if (error && !success) {
           throw new Error(error);
         }
+      }
+      // Best-effort revoke delegation before disconnecting
+      if (authMethod === 'external') {
+        await handleLogoutRevoke();
       }
       await disconnect();
       renderSuccess(
@@ -107,6 +136,7 @@ export const WalletDetailsModal = ({
     authMethod,
     character,
     disconnect,
+    handleLogoutRevoke,
     isSpawned,
     removeEntityFromBoard,
     renderError,
@@ -167,7 +197,7 @@ export const WalletDetailsModal = ({
       }
 
       if (parseEther(withdrawAmount) > parseEther(burnerBalance)) {
-        setWithdrawErrorMessage('Insufficient funds in session wallet.');
+        setWithdrawErrorMessage('Insufficient funds in game account.');
         return;
       }
 
@@ -194,24 +224,6 @@ export const WalletDetailsModal = ({
     walletClient,
     withdrawAmount,
   ]);
-
-  const onDownloadSessionPrivateKey = useCallback(() => {
-    try {
-      const element = document.createElement('a');
-      const sessionPrivateKey = localStorage.getItem('mud:burnerWallet');
-      if (!sessionPrivateKey) {
-        throw new Error('No session wallet found.');
-      }
-      const file = new Blob([sessionPrivateKey], { type: 'text/plain' });
-      element.href = URL.createObjectURL(file);
-      element.download = 'ultimate-dominion-session-wallet-pk.txt';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error downloading private key.', e);
-    }
-  }, [renderError]);
 
   // Not authenticated — show sign in modal
   if (!isAuthenticated) {
@@ -261,11 +273,12 @@ export const WalletDetailsModal = ({
 
   // External wallet — full view with session wallet, deposit, withdraw
   return (
+    <>
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
-        <ModalHeader>Wallet Details</ModalHeader>
+        <ModalHeader>Account Settings</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {ownerAddress && externalWalletClient ? (
@@ -274,13 +287,13 @@ export const WalletDetailsModal = ({
                 {burnerBalance === '0' && (
                   <>
                     <Text color="red" fontWeight={700} size="sm">
-                      Your session wallet balance is 0. In order to play, you
-                      must deposit funds into your session account.
+                      Your game account balance is 0. In order to play, you
+                      must add funds to your game account.
                     </Text>
                     <Divider />
                   </>
                 )}
-                <Text>Connected Account:</Text>
+                <Text>Main Account:</Text>
                 <CopyText text={ownerAddress}>
                   <Text>{shortenAddress(ownerAddress)}</Text>
                 </CopyText>
@@ -304,29 +317,18 @@ export const WalletDetailsModal = ({
                   </Text>
                 )}
                 <Divider />
-                <Text>Session Account:</Text>
-                <VStack alignItems="start" spacing={0}>
-                  <CopyText text={burnerAddress}>
-                    <Text>{shortenAddress(burnerAddress)}</Text>
-                  </CopyText>
-                  <Button
-                    onClick={onDownloadSessionPrivateKey}
-                    size="xs"
-                    variant="outline"
-                  >
-                    Export Private Key
-                  </Button>
-                </VStack>
+                <Text>Game Account:</Text>
+                <CopyText text={burnerAddress}>
+                  <Text>{shortenAddress(burnerAddress)}</Text>
+                </CopyText>
                 <Text size="sm">Balance: {burnerBalance}</Text>
                 <Text fontWeight={700} size="sm">
-                  Do not deposit any funds into this account that you are not
-                  willing to lose. We recommend no more than 0.0005 ETH at a
-                  time.
+                  We recommend keeping a small amount here for gameplay.
                 </Text>
                 <HStack>
                   <FormControl isInvalid={!!depositErrorMessage}>
                     <FormLabel fontSize="xs">
-                      Deposit to session wallet
+                      Add funds to game account
                     </FormLabel>
                     {!!depositErrorMessage && (
                       <FormHelperText color="red" fontSize="xs" mb={2}>
@@ -353,7 +355,7 @@ export const WalletDetailsModal = ({
                 <HStack>
                   <FormControl isInvalid={!!withdrawErrorMessage}>
                     <FormLabel fontSize="xs">
-                      Withdraw from session wallet
+                      Withdraw to main account
                     </FormLabel>
                     {!!withdrawErrorMessage && (
                       <FormHelperText color="red" fontSize="xs" mb={2}>
@@ -377,6 +379,23 @@ export const WalletDetailsModal = ({
                     Withdraw
                   </Button>
                 </HStack>
+                <Divider />
+                <Button
+                  colorScheme="red"
+                  isDisabled={character?.inBattle || isRevokingDelegation}
+                  isLoading={isRevokingDelegation}
+                  loadingText="Revoking..."
+                  onClick={() => setIsRevokeDialogOpen(true)}
+                  size="sm"
+                  variant="outline"
+                >
+                  Reset Game Account
+                </Button>
+                {character?.inBattle && (
+                  <Text color="orange" fontWeight={700} size="sm">
+                    You cannot revoke while in battle.
+                  </Text>
+                )}
               </VStack>
             </VStack>
           ) : (
@@ -392,5 +411,35 @@ export const WalletDetailsModal = ({
         </ModalFooter>
       </ModalContent>
     </Modal>
+
+    <AlertDialog
+      isOpen={isRevokeDialogOpen}
+      leastDestructiveRef={cancelRevokeRef}
+      onClose={() => setIsRevokeDialogOpen(false)}
+    >
+      <AlertDialogOverlay>
+        <AlertDialogContent>
+          <AlertDialogHeader fontSize="lg" fontWeight="bold">
+            Reset Game Account?
+          </AlertDialogHeader>
+          <AlertDialogBody>
+            This will remove the game account&apos;s permission to play on
+            your behalf. Any remaining funds stay in the game account.
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <Button
+              onClick={() => setIsRevokeDialogOpen(false)}
+              ref={cancelRevokeRef}
+            >
+              Cancel
+            </Button>
+            <Button colorScheme="red" ml={3} onClick={onConfirmRevoke}>
+              Revoke
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogOverlay>
+    </AlertDialog>
+    </>
   );
 };

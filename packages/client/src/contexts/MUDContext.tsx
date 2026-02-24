@@ -1,6 +1,6 @@
 import { useDisclosure } from '@chakra-ui/react';
 import { type ContractWrite } from '@latticexyz/common';
-import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
+import { writeObserver } from '@latticexyz/common/actions';
 import { useComponentValue } from '@latticexyz/react';
 import { getComponentValue, overridableComponent } from '@latticexyz/recs';
 import { SyncStep } from '@latticexyz/store-sync';
@@ -19,7 +19,6 @@ import {
 import { share, Subject } from 'rxjs';
 import {
   type Address,
-  createWalletClient,
   formatEther,
   getContract,
   type Hex,
@@ -28,8 +27,11 @@ import { useWalletClient } from 'wagmi';
 
 import { type Burner, createBurner } from '../lib/mud/createBurner';
 import { createSystemCalls } from '../lib/mud/createSystemCalls';
-import { createViemClientConfig } from '../lib/mud/createViemClientConfig';
-import { isDelegated } from '../lib/mud/delegation';
+import {
+  clearBurnerWallet,
+  isDelegated,
+  revokeDelegation,
+} from '../lib/mud/delegation';
 import {
   ComponentsResult,
   NetworkResult,
@@ -49,6 +51,9 @@ type MUDContextType = {
   delegatorAddress: Address | null;
   delegatorEntity: string | null;
   getBurner: () => void;
+  handleLogoutRevoke: () => Promise<void>;
+  handleRevokeDelegation: () => Promise<void>;
+  isRevokingDelegation: boolean;
   isSynced: boolean;
   isWalletDetailsModalOpen: boolean;
   network: NetworkResult;
@@ -114,20 +119,19 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
 
     const write$ = new Subject<ContractWrite>();
 
-    const account = embeddedWalletClient.account;
-    if (!account) {
+    if (!embeddedWalletClient.account) {
       console.error('[MUDContext] Embedded wallet client has no account');
       return;
     }
 
-    // Create a wallet client using the network's transport config (http/ws)
-    // with the embedded wallet's account for signing
-    const chain = setupResult.network.publicClient.chain;
-    let walletClient = createWalletClient({
-      ...createViemClientConfig(chain),
-      account,
-    })
-      .extend(transactionQueue())
+    // Use the Thirdweb wallet client directly — it has its own signing transport.
+    // Extracting the account and pairing it with an HTTP transport doesn't work
+    // because the Thirdweb account is a JSON-RPC type that delegates signing
+    // to Thirdweb's transport layer.
+    // Note: we skip transactionQueue() here because Thirdweb handles its own
+    // nonce management; layering MUD's queue on top causes receipt-polling
+    // mismatches with the RECS sync.
+    let walletClient = (embeddedWalletClient as any)
       .extend(writeObserver({ onWrite: write => write$.next(write) }));
 
     const worldContract = getContract({
@@ -141,9 +145,18 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
       Position: overridableComponent(setupResult.components.Position),
     };
 
+    // MUD's waitForTransaction relies on RECS block sync (storedBlockLogs$),
+    // which races with the Thirdweb transport's receipt availability.
+    // Use viem's standard polling instead — it retries getTransactionReceipt
+    // until found, independent of RECS sync state.
+    const embeddedWaitForTransaction = async (tx: Hex) => {
+      return setupResult.network.publicClient.waitForTransactionReceipt({ hash: tx });
+    };
+
     const systemCalls = createSystemCalls(
       {
         ...setupResult.network,
+        waitForTransaction: embeddedWaitForTransaction,
         delegatorAddress: ownerAddress,
         worldContract,
       },
@@ -278,10 +291,55 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
   }, [activeWalletAddress, getBurnerBalance]);
 
   // =============================================
+  // Revoke delegation
+  // =============================================
+  const [isRevokingDelegation, setIsRevokingDelegation] = useState(false);
+
+  const handleRevokeDelegation = useCallback(async () => {
+    if (!externalWalletClient || authMethod !== 'external') return;
+
+    setIsRevokingDelegation(true);
+    try {
+      await revokeDelegation(
+        setupResult.network,
+        externalWalletClient,
+        setupResult.network.walletClient.account.address,
+      );
+      // RECS will sync the delegation removal automatically,
+      // causing delegationValue to become undefined and the UI
+      // to transition back to "pre-delegation" state.
+      // Reset burner state so the UI shows the pre-delegation view.
+      burnerCreated.current = false;
+      setBurner(null);
+    } finally {
+      setIsRevokingDelegation(false);
+    }
+  }, [authMethod, externalWalletClient, setupResult.network]);
+
+  const handleLogoutRevoke = useCallback(async () => {
+    if (authMethod !== 'external' || !externalWalletClient) return;
+
+    // Best-effort revoke — if it fails, still proceed with logout
+    try {
+      await revokeDelegation(
+        setupResult.network,
+        externalWalletClient,
+        setupResult.network.walletClient.account.address,
+      );
+    } catch (e) {
+      console.warn('Failed to revoke delegation during logout:', e);
+    }
+
+    clearBurnerWallet();
+  }, [authMethod, externalWalletClient, setupResult.network]);
+
+  // =============================================
   // Build context value
   // =============================================
   const value = useMemo(() => {
     if (!setupResult) return null;
+
+    const noopRevoke = async () => {};
 
     // EMBEDDED PATH: use embedded wallet directly, no delegation needed
     if (authMethod === 'embedded' && embeddedSetup) {
@@ -297,6 +355,9 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
           { address: embeddedSetup.walletAddress },
         ),
         getBurner,
+        handleLogoutRevoke: noopRevoke,
+        handleRevokeDelegation: noopRevoke,
+        isRevokingDelegation: false,
         isSynced,
         isWalletDetailsModalOpen,
         network: embeddedSetup.network,
@@ -306,7 +367,7 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
       };
     }
 
-    // EXTERNAL PATH (unchanged): burner + delegation
+    // EXTERNAL PATH: burner + delegation
     if (!(burner && burner.delegatorAddress)) {
       return {
         authMethod: (authMethod ?? 'external') as AuthMethod,
@@ -317,6 +378,9 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
         delegatorAddress: null,
         delegatorEntity: null,
         getBurner,
+        handleLogoutRevoke,
+        handleRevokeDelegation,
+        isRevokingDelegation,
         isSynced,
         isWalletDetailsModalOpen,
         network: setupResult.network,
@@ -338,6 +402,9 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
         { address: burner.delegatorAddress },
       ),
       getBurner,
+      handleLogoutRevoke,
+      handleRevokeDelegation,
+      isRevokingDelegation,
       isSynced,
       isWalletDetailsModalOpen,
       network: burner.network,
@@ -352,6 +419,9 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
     burnerBalanceFetched,
     embeddedSetup,
     getBurner,
+    handleLogoutRevoke,
+    handleRevokeDelegation,
+    isRevokingDelegation,
     isSynced,
     isWalletDetailsModalOpen,
     onCloseWalletDetailsModal,

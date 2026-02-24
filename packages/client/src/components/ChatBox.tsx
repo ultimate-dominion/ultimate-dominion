@@ -133,7 +133,7 @@ export const ChatBox: React.FC = () => {
 
   return (
     <ScaleFade initialScale={0.9} in={isChatBoxOpen}>
-      <PolygonalCard clipPath="none" w={{ base: '350px', sm: '365px' }}>
+      <PolygonalCard clipPath="none" w={{ base: 'calc(100vw - 16px)', sm: '365px' }}>
         <HStack
           bgColor="blue500"
           color="white"
@@ -174,7 +174,7 @@ export const ChatBox: React.FC = () => {
           <CloseButton onClick={onCloseChatBox} />
         </HStack>
         <Box
-          h={isChatBoxOpen ? '250px' : '0'}
+          h={isChatBoxOpen ? { base: '200px', sm: '250px', lg: '300px' } : '0'}
           overflowY="auto"
           transition="height 0.3s ease"
         >

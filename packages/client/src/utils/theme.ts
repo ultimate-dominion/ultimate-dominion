@@ -7,7 +7,7 @@ export const globalStyles = css`
   body {
     background: #a2a9b0;
     color: #000;
-    font-family: 'Fira Code', monospace;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 1rem;
   }
 `;
@@ -16,6 +16,10 @@ const Button = {
   baseStyle: {
     borderRadius: '12px',
     fontWeight: 500,
+    _focusVisible: {
+      boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.6)',
+      outline: 'none',
+    },
   },
   defaultProps: {
     variant: 'blue',
@@ -202,8 +206,10 @@ const Modal = {
     },
     dialog: {
       bgColor: '#B3B9BE',
+      borderRadius: { base: 0, md: 'lg' },
       clipPath:
         'polygon(40px 0%, 100% 0%, 100% calc(100% - 50px), calc(100% - 50px) 100%, 0% 100%, 0% 80px)',
+      m: { base: 0, md: 'auto' },
       maxH: 'calc(100% - 7.5rem)',
       minW: { base: '100%', md: '500px' },
       maxW: { base: '100%', md: '500px' },
@@ -361,10 +367,11 @@ const Tooltip = {
 };
 
 export const theme = extendTheme({
-  config: { initialColorMode: 'light', useSystemColorMode: false },
+  config: { initialColorMode: 'dark', useSystemColorMode: true },
   fonts: {
-    body: `'Fira Code', monospace`,
-    heading: `'Fira Code', monospace`,
+    body: `'Inter', -apple-system, BlinkMacSystemFont, sans-serif`,
+    heading: `'Inter', -apple-system, BlinkMacSystemFont, sans-serif`,
+    mono: `'Fira Code', monospace`,
   },
   colors: {
     black: '#000',
@@ -388,6 +395,38 @@ export const theme = extendTheme({
     rarityRare: '#0070dd',
     rarityEpic: '#a335ee',
     rarityLegendary: '#ff8000',
+  },
+  semanticTokens: {
+    colors: {
+      'bg.primary': {
+        default: '#B3B9BE',
+        _dark: '#1a1a2e',
+      },
+      'bg.secondary': {
+        default: '#A2A9B0',
+        _dark: '#16213e',
+      },
+      'bg.card': {
+        default: '#B3B9BE',
+        _dark: '#0f3460',
+      },
+      'text.primary': {
+        default: '#000',
+        _dark: '#e0e0e0',
+      },
+      'text.secondary': {
+        default: '#3D4247',
+        _dark: '#a0a0b0',
+      },
+      'border.primary': {
+        default: '#1A244E',
+        _dark: '#2a2a4e',
+      },
+      'border.accent': {
+        default: '#3B82C4',
+        _dark: '#4a6fa5',
+      },
+    },
   },
   components: {
     Button,

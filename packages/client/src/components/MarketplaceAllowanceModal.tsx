@@ -19,7 +19,7 @@ import { OrderType, SystemToAllow } from '../utils/types';
 import { PolygonalCard } from './PolygonalCard';
 
 export const MarketplaceAllowanceModal = ({
-  completeMessage = 'Allowance was successful!',
+  completeMessage = 'Permission granted!',
   isCompleting,
   isOpen,
   itemName,
@@ -57,7 +57,7 @@ export const MarketplaceAllowanceModal = ({
         <ModalOverlay />
         <ModalContent>
           <PolygonalCard isModal />
-          <ModalHeader>Marketplace Allowances</ModalHeader>
+          <ModalHeader>Marketplace Permissions</ModalHeader>
           <ModalCloseButton />
           <ModalBody px={8}>
             <Text textAlign="center">{completeMessage}</Text>
@@ -80,13 +80,13 @@ export const MarketplaceAllowanceModal = ({
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
-        <ModalHeader>Marketplace Allowances</ModalHeader>
+        <ModalHeader>Marketplace Permissions</ModalHeader>
         <ModalCloseButton />
         <ModalBody px={8}>
           {orderType === OrderType.Buying && (
             <Text alignSelf="start">
-              In order to buy {itemName}, you must allow the marketplace to use{' '}
-              {etherToFixedNumber(orderPrice)} of your $GOLD.
+              In order to buy {itemName}, you need to give permission to spend{' '}
+              {etherToFixedNumber(orderPrice)} Gold.
             </Text>
           )}
           {orderType === OrderType.Selling && (
@@ -108,13 +108,13 @@ export const MarketplaceAllowanceModal = ({
                   onApproveGoldAllowance(SystemToAllow.Marketplace, orderPrice)
                 }
               >
-                Allow
+                Allow Spending
               </Button>
               {!isApprovingGold && (
                 <Tooltip
                   bg="#070D2A"
                   hasArrow
-                  label="This allows you to spend $GOLD on the Marketplace without having to approve each transaction. It is a faster and smoother experience, but is less secure."
+                  label="This allows you to spend Gold on the Marketplace without having to approve each transaction. It is a faster and smoother experience."
                   placement="top"
                   shouldWrapChildren
                 >
@@ -138,7 +138,7 @@ export const MarketplaceAllowanceModal = ({
                       textDecoration: 'underline',
                     }}
                   >
-                    Max Allow
+                    Always Allow
                   </Button>
                 </Tooltip>
               )}
@@ -151,7 +151,7 @@ export const MarketplaceAllowanceModal = ({
               }
               isLoading={isApprovingItems}
             >
-              Allow
+              Allow Spending
             </Button>
           )}
         </ModalFooter>

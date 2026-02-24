@@ -10,10 +10,6 @@ import {
     Stats,
     CombatEncounter,
     StatsData,
-    PhysicalDamageStats,
-    PhysicalDamageStatsData,
-    MagicDamageStats,
-    MagicDamageStatsData,
     StatusEffectStats,
     StatusEffectStatsData,
     StatusEffectValidity,
@@ -25,48 +21,11 @@ import {
 import {IWorld} from "@world/IWorld.sol";
 import {EffectType} from "@codegen/common.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
 import {EffectProcessor} from "@libraries/EffectProcessor.sol";
-import "forge-std/console.sol";
+import {NonExistentIndex, InvalidEffect, InvalidEffectApplication, InvalidEffectType, EffectNotApplied, NotEffectType} from "../Errors.sol";
 
 contract EffectsSystem is System {
     using EffectProcessor for *;
-    function createEffect(EffectType effectType, string memory name, bytes memory effectStats)
-        public
-        returns (bytes32 effectStatsId)
-    {
-        _requireAccess(address(this), _msgSender());
-        effectStatsId = bytes32(bytes8(keccak256(abi.encode(name))));
-
-        // Skip if effect already exists (idempotent operation)
-        if (Effects.getEffectExists(effectStatsId)) {
-            return effectStatsId;
-        }
-
-        if (effectType == EffectType.PhysicalDamage) {
-            PhysicalDamageStatsData memory physicalStats = abi.decode(effectStats, (PhysicalDamageStatsData));
-            PhysicalDamageStats.set(effectStatsId, physicalStats);
-        } else if (effectType == EffectType.MagicDamage) {
-            MagicDamageStatsData memory magicStats = abi.decode(effectStats, (MagicDamageStatsData));
-            MagicDamageStats.set(effectStatsId, magicStats);
-        } else if (effectType == EffectType.StatusEffect) {
-            (StatusEffectStatsData memory statusStats, StatusEffectValidityData memory validityData) =
-                abi.decode(effectStats, (StatusEffectStatsData, StatusEffectValidityData));
-            // a status effect that expires after a certain time cannot expire after a number of turns
-            // combat effects and world effects cannot overlap
-            // also a world effect cannot cause damage over time
-
-            if (validityData.validTime != 0) {
-                require(validityData.validTurns == 0, "INVALID EFFECT: TIME");
-                require(statusStats.damagePerTick == 0, "INVALID EFFECT: WORLD EFFECT DAMAGE");
-            } else if (validityData.validTime == 0) {
-                require(validityData.validTurns != 0, "INVALID EFFECT: TURNS");
-            }
-            StatusEffectStats.set(effectStatsId, statusStats);
-            StatusEffectValidity.set(effectStatsId, validityData);
-        }
-        Effects.set(effectStatsId, effectType, true);
-    }
 
     // world status effects change global stat state
 
@@ -114,7 +73,7 @@ contract EffectsSystem is System {
         if (encounterData.encounterId != bytes32(0)) {
             for (uint256 i; i < encounterData.appliedStatusEffects.length; i++) {
                 effectId = encounterData.appliedStatusEffects[i];
-                statsData = getStatusEffectStats(getEffectStatId(effectId));
+                statsData = _getStatusEffectStats(EffectProcessor.getEffectStatId(effectId));
                 bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
                 if (_isNotExpired(updatedEffectId)) {
                     _adjustedStats = EffectProcessor.applyStatusEffectModifiers(_adjustedStats, statsData);
@@ -135,14 +94,14 @@ contract EffectsSystem is System {
 
     function cullExpiredWorldEffect(bytes32 entityId, bytes32 effectId, uint256 index) public {
         uint256 effectsLength = WorldStatusEffects.lengthAppliedStatusEffects(entityId);
-        require(effectsLength > index, "non existent index");
+        if (effectsLength <= index) revert NonExistentIndex();
         bytes32 worldStatusEffect = WorldStatusEffects.getItem(entityId, index);
-        require(getEffectStatId(effectId) == getEffectStatId(worldStatusEffect), "invalid effectId");
+        if (EffectProcessor.getEffectStatId(effectId) != EffectProcessor.getEffectStatId(worldStatusEffect)) revert InvalidEffect();
         AdjustedCombatStats memory _statInput = IWorld(_world()).UD__getCombatStats(entityId);
 
         if (worldStatusEffect != bytes32(0)) {
             if (!_isNotExpired(effectId) && worldStatusEffect == effectId) {
-                StatusEffectStatsData memory effectStats = getStatusEffectStats(effectId);
+                StatusEffectStatsData memory effectStats = _getStatusEffectStats(effectId);
                 if (effectsLength > 1) {
                     bytes32 lastEffectId = WorldStatusEffects.getItemAppliedStatusEffects(entityId, effectsLength - 1);
                     WorldStatusEffects.updateAppliedStatusEffects(entityId, index, lastEffectId);
@@ -155,10 +114,10 @@ contract EffectsSystem is System {
                 _statInput.armor -= effectStats.armorModifier;
                 IWorld(_world()).UD__setStats(entityId, _statInput);
             } else {
-                revert("Invalid effect");
+                revert InvalidEffect();
             }
         } else {
-            revert("invalid culling");
+            revert InvalidEffect();
         }
     }
 
@@ -171,7 +130,7 @@ contract EffectsSystem is System {
             _getAppliedEffectId(effectId, CombatEncounter.getCurrentTurn(EncounterEntity.getEncounterId(entityId)));
         _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
         StatusEffectValidityData memory effectValidity = StatusEffectValidity.get(effectId);
-        StatusEffectStatsData memory effectStats = getStatusEffectStats(effectId);
+        StatusEffectStatsData memory effectStats = _getStatusEffectStats(effectId);
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
         uint256 currentStacksCount = currentStacks(entityId, effectId);
         if (currentStacksCount < effectValidity.maxStacks) {
@@ -184,7 +143,7 @@ contract EffectsSystem is System {
                 IWorld(_world()).UD__setStats(entityId, _adjustedStats);
                 WorldStatusEffects.pushAppliedStatusEffects(entityId, appliedEffectId);
             } else {
-                revert("invalid effect application");
+                revert InvalidEffectApplication();
             }
         }
     }
@@ -198,7 +157,7 @@ contract EffectsSystem is System {
             StatusEffectStatsData memory effectStats;
 
             for (uint256 i; i < worldEffects.length; i++) {
-                effectStats = getStatusEffectStats(worldEffects[i]);
+                effectStats = _getStatusEffectStats(worldEffects[i]);
                 _adjustedStats.agility += effectStats.agiModifier;
                 _adjustedStats.strength += effectStats.strModifier;
                 _adjustedStats.intelligence += effectStats.intModifier;
@@ -214,15 +173,15 @@ contract EffectsSystem is System {
         if (effectValidity.validTurns != 0 && effectValidity.validTime == 0) {
             bytes32[] memory appliedEffects = EncounterEntity.getAppliedStatusEffects(entityId);
             for (uint256 i; i < appliedEffects.length; i++) {
-                if (effectId == getEffectStatId(appliedEffects[i])) _appliedStack++;
+                if (effectId == EffectProcessor.getEffectStatId(appliedEffects[i])) _appliedStack++;
             }
         } else if (effectValidity.validTime != 0 && effectValidity.validTurns == 0) {
             bytes32[] memory appliedEffects = WorldStatusEffects.getAppliedStatusEffects(entityId);
             for (uint256 i; i < appliedEffects.length; i++) {
-                if (effectId == getEffectStatId(appliedEffects[i])) _appliedStack++;
+                if (effectId == EffectProcessor.getEffectStatId(appliedEffects[i])) _appliedStack++;
             }
         } else {
-            revert("invalid effect type");
+            revert InvalidEffectType();
         }
     }
 
@@ -237,12 +196,12 @@ contract EffectsSystem is System {
         this;
         if (_isNotExpired(appliedEffectId)) {
             (bytes32 effectStatId, uint256 timestampApplied, uint256 expiredTime, uint256 turnApplied) =
-                getAppliedEffectInfo(appliedEffectId);
+                EffectProcessor.getAppliedEffectInfo(appliedEffectId);
 
             // since the applied effect has extra data in it if we strip that data, the resulting ID should not be the same as the original id
-            require(bytes32(bytes8(appliedEffectId)) != appliedEffectId, "effect not applied");
+            if (bytes32(bytes8(appliedEffectId)) == appliedEffectId) revert EffectNotApplied();
 
-            StatusEffectValidityData memory validityData = StatusEffectValidity.get(getEffectStatId(appliedEffectId));
+            StatusEffectValidityData memory validityData = StatusEffectValidity.get(EffectProcessor.getEffectStatId(appliedEffectId));
 
             bool isValidTime;
             bool isValidTurn;
@@ -277,8 +236,8 @@ contract EffectsSystem is System {
 
         if (appliedStatusEffects.length > 0) {
             for (uint256 i; i < appliedStatusEffects.length; i++) {
-                StatusEffectStatsData memory effectStats = getStatusEffectStats(getEffectStatId(appliedStatusEffects[i]));
-                uint256 stacks = EffectProcessor.calculateEffectStacks(getEffectStatId(appliedStatusEffects[i]), appliedStatusEffects);
+                StatusEffectStatsData memory effectStats = _getStatusEffectStats(EffectProcessor.getEffectStatId(appliedStatusEffects[i]));
+                uint256 stacks = EffectProcessor.calculateEffectStacks(EffectProcessor.getEffectStatId(appliedStatusEffects[i]), appliedStatusEffects);
                 int256 damageToApply = EffectProcessor.calculateDamageOverTime(effectStats, stacks);
                 damages[i] = damageToApply;
                 totalDamage += damageToApply;
@@ -295,78 +254,15 @@ contract EffectsSystem is System {
         }
     }
 
-    function getPhysicalDamageStats(bytes32 effectId)
-        public
-        view
-        returns (PhysicalDamageStatsData memory _physicalDamageStats)
-    {
-        bytes32 statId = getEffectStatId(effectId);
-        EffectsData memory effectsData = Effects.get(statId);
-        require(
-            effectsData.effectType == EffectType.PhysicalDamage && effectsData.effectExists, "Not Physical Damage type"
-        );
-        _physicalDamageStats = PhysicalDamageStats.get(statId);
-    }
-
-    function getMagicDamageStats(bytes32 effectId)
-        public
-        view
-        returns (MagicDamageStatsData memory _magicDamageStats)
-    {
-        bytes32 statId = getEffectStatId(effectId);
-        EffectsData memory effectsData = Effects.get(statId);
-        require(effectsData.effectType == EffectType.MagicDamage && effectsData.effectExists, "Not Magic Damage type");
-        _magicDamageStats = MagicDamageStats.get(statId);
-    }
-
-    function getStatusEffectStats(bytes32 effectId)
-        public
+    function _getStatusEffectStats(bytes32 effectId)
+        internal
         view
         returns (StatusEffectStatsData memory _statusEffectStats)
     {
-        bytes32 statId = getEffectStatId(effectId);
+        bytes32 statId = EffectProcessor.getEffectStatId(effectId);
         EffectsData memory effectsData = Effects.get(statId);
-        require(effectsData.effectType == EffectType.StatusEffect && effectsData.effectExists, "Not Status Effect type");
+        if (effectsData.effectType != EffectType.StatusEffect || !effectsData.effectExists) revert NotEffectType();
         _statusEffectStats = StatusEffectStats.get(statId);
-    }
-
-    /**
-     * @dev Separates an applied effect id into it's component parts
-     */
-    function getAppliedEffectInfo(bytes32 appliedEffectId)
-        public
-        pure
-        returns (bytes32 _effectStatsId, uint256 _timestampApplied, uint256 _effectExpiredTime, uint256 _turnApplied)
-    {
-        return EffectProcessor.getAppliedEffectInfo(appliedEffectId);
-    }
-
-    /**
-     * @dev returns the base stat id stripped of extra info
-     */
-    function getEffectStatId(bytes32 effectId) public pure returns (bytes32 _effectStatsId) {
-        return EffectProcessor.getEffectStatId(effectId);
-    }
-
-    /**
-     * @dev takes the applied statId and gets the block it was applied
-     */
-    function getEffectTimestamp(bytes32 appliedEffectId) public pure returns (uint256 _timestampApplied) {
-        return EffectProcessor.getEffectTimestamp(appliedEffectId);
-    }
-
-    /**
-     * @dev takes the applied statId and gets the timestamp it was applied
-     */
-    function getEffectExpired(bytes32 appliedEffectId) public pure returns (uint256 _effectExpiredTimestamp) {
-        return EffectProcessor.getEffectExpired(appliedEffectId);
-    }
-
-    /**
-     * @dev takes the applied statId and gets the turn it was applied
-     */
-    function getEffectTurnApplied(bytes32 appliedEffectId) public pure returns (uint256 _turnApplied) {
-        return EffectProcessor.getEffectTurnApplied(appliedEffectId);
     }
 
     function _getAppliedEffectId(bytes32 effectId, uint256 turnApplied) internal view returns (bytes32) {

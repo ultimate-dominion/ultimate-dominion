@@ -21,8 +21,8 @@ import {
 import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
-import {DEFAULT_MAX_TURNS} from "../../constants.sol";
-import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity} from "../Errors.sol";
+import {DEFAULT_MAX_TURNS, MAX_PARTY_SIZE} from "../../constants.sol";
+import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
 contract EncounterSystem is System {
@@ -31,6 +31,8 @@ contract EncounterSystem is System {
         returns (bytes32 encounterId)
     {
         PauseLib.requireNotPaused();
+        if (group1.length == 0 || group1.length > MAX_PARTY_SIZE) revert InvalidGroupSize();
+        if (group2.length == 0 || group2.length > MAX_PARTY_SIZE) revert InvalidGroupSize();
         if (!IWorld(_world()).UD__isParticipant(_msgSender(), group1)
                 && !IWorld(_world()).UD__isParticipant(_msgSender(), group2)) {
             revert Unauthorized();

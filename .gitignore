@@ -8,3 +8,9 @@ node_modules
 .env.staging
 .env.production
 !.env.sample
+
+# Dev test data
+packages/api/dev-storage/
+items.json
+monsters.json
+mprocs.log

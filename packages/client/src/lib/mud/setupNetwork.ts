@@ -9,7 +9,13 @@ import { encodeEntity, syncToRecs } from '@latticexyz/store-sync/recs';
 import mudConfig from 'contracts/mud.config';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import { share, Subject } from 'rxjs';
-import { createPublicClient, createWalletClient, getContract, Hex } from 'viem';
+import {
+  createPublicClient,
+  createWalletClient,
+  getContract,
+  Hex,
+  type TransactionReceipt,
+} from 'viem';
 
 import { debug } from '../../utils/debug';
 
@@ -88,8 +94,12 @@ export async function setupNetwork() {
     });
   };
 
-  const { components, latestBlock$, storedBlockLogs$, waitForTransaction } =
-    await syncToRecs({
+  const {
+    components,
+    latestBlock$,
+    storedBlockLogs$,
+    waitForTransaction: mudWaitForTransaction,
+  } = await syncToRecs({
       world,
       config: mudConfig,
       address: networkConfig.worldAddress as Hex,
@@ -130,6 +140,32 @@ export async function setupNetwork() {
         }
       },
     });
+
+  // Wrap waitForTransaction with retry logic to handle anvil receipt timing
+  const waitForTransaction = async (
+    tx: Hex,
+  ): Promise<TransactionReceipt & { blockNumber: bigint }> => {
+    const maxRetries = 3;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await mudWaitForTransaction(tx);
+      } catch (e) {
+        const isReceiptNotFound =
+          e instanceof Error &&
+          e.message.includes('could not be found');
+        if (isReceiptNotFound && attempt < maxRetries - 1) {
+          debug.log(
+            `waitForTransaction retry ${attempt + 1}/${maxRetries} for ${tx}`,
+          );
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          continue;
+        }
+        throw e;
+      }
+    }
+    // Unreachable, but TypeScript needs it
+    return mudWaitForTransaction(tx);
+  };
 
   return {
     components,

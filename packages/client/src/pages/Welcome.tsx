@@ -10,7 +10,7 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { SyncStep } from '@latticexyz/store-sync';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
@@ -30,6 +30,21 @@ export const Welcome = (): JSX.Element => {
   const { character } = useCharacter();
 
   const syncProgress = useComponentValue(SyncProgress, singletonEntity);
+
+  const [syncStalled, setSyncStalled] = useState(false);
+
+  useEffect(() => {
+    if (syncProgress && syncProgress.step === SyncStep.LIVE) {
+      setSyncStalled(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setSyncStalled(true);
+    }, 30000);
+
+    return () => clearTimeout(timer);
+  }, [syncProgress]);
 
   const onPlay = useCallback(() => {
     // Embedded path: authenticated = ready to go (no delegation needed)
@@ -99,6 +114,20 @@ export const Welcome = (): JSX.Element => {
             <VStack justify="center" w={{ base: '80%', sm: '50%' }}>
               <Text>Loading {Math.round(syncProgress.percentage)}%</Text>
               <Progress value={Math.round(syncProgress.percentage)} w="100%" />
+              {syncStalled && (
+                <VStack spacing={2} mt={2}>
+                  <Text size="xs" color="grey500" textAlign="center">
+                    Taking longer than expected...
+                  </Text>
+                  <Button
+                    onClick={() => window.location.reload()}
+                    size="sm"
+                    variant="outline"
+                  >
+                    Retry
+                  </Button>
+                </VStack>
+              )}
             </VStack>
           ) : (
             <Button onClick={onPlay}>Play</Button>

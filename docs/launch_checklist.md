@@ -76,14 +76,14 @@
 ### 10. Security Review
 - [ ] Smart contract audit (external or internal review)
 - [x] Access control verification (admin functions, namespace permissions) ✓ 6 admin systems locked (openAccess:false), _requireSystemOrAdmin() on LootManager/PveReward/PvpReward/CombatSystem/MobSystem, marketplace counter bug fixed
-- [ ] Reentrancy protection on all external calls
-- [ ] Integer overflow/underflow checks
+- [x] Reentrancy protection on all external calls ✓ PvpRewardSystem: fixed missing rewardsDistributed flag (double-claim bug), ShopSystem: added nonReentrant to buy()/sell()
+- [x] Integer overflow/underflow checks ✓ CombatMath: clamped negative hit probability (5-98%), PveRewardSystem: guarded mobLevel==0 division-by-zero
 - [x] Input validation on all user-facing functions ✓ Negative stat validation in StatCalculator, HP clamping in CombatSystem
-- [ ] Rate limiting and anti-griefing measures
-- [ ] Private key management for deployment accounts
-- [ ] Frontend security (XSS, CSRF protection)
-- [ ] API authentication and authorization
-- [ ] Dependency audit (npm, forge dependencies)
+- [x] Rate limiting and anti-griefing measures ✓ 1s move cooldown (MapSystem), one character per account (CharacterSystem), MAX_PARTY_SIZE=10 (EncounterSystem)
+- [x] Private key management for deployment accounts ✓ Removed hardcoded anvil keys from package.json scripts, Forge scripts use vm.envUint("PRIVATE_KEY"), TS scripts auto-load .env via dotenv
+- [x] Frontend security (XSS, CSRF protection) ✓ Verified: no dangerouslySetInnerHTML, no eval/Function, chainId validated against supportedChains, React JSX auto-escapes
+- [x] API authentication and authorization ✓ Path traversal fix (resolve + startsWith guard), CORS restricted to env-driven allowlist, rate limiting (100 req/15min), file upload validation (1MB max, image-only mimetype, sanitized filenames), metadata schema validation, removed secret logging, removed stack traces from error responses
+- [x] Dependency audit (npm, forge dependencies) ✓ Pinned OpenZeppelin to 5.0.2, pnpm audit run (126 vulns mostly from transitive deps in ethersproject/next/wagmi — not directly fixable without upstream updates)
 - [ ] Test coverage for critical paths (combat, trading, minting)
 - [ ] Economic exploit review (inflation attacks, arbitrage)
 - [x] Emergency pause/upgrade mechanisms ✓ PauseSystem with admin-only pause/unpause, PauseLib checks on all 30+ user-facing entry points across 13 systems
@@ -105,8 +105,8 @@
 - [ ] Set up Pinata IPFS for character metadata storage (replace local dev-storage)
 - [ ] Verify /api/upload, /api/upload-file, /api/session endpoints work
 - [ ] Set up health check monitoring (/health endpoint)
-- [ ] Configure CORS for production domain
-- [ ] API rate limiting
+- [x] Configure CORS for production domain ✓ CORS_ORIGINS env var (comma-separated allowlist, defaults to localhost:3000)
+- [x] API rate limiting ✓ express-rate-limit: 100 req/15min on /api/ routes
 
 #### Client / Website
 - [ ] Build client for production (`pnpm build`)

@@ -5,7 +5,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { type Address, type WalletClient } from 'viem';
@@ -16,7 +15,7 @@ import {
   type ThirdwebClient,
 } from 'thirdweb';
 import { type Wallet } from 'thirdweb/wallets';
-import { inAppWallet, preAuthenticate } from 'thirdweb/wallets/in-app';
+import { inAppWallet } from 'thirdweb/wallets/in-app';
 import { viemAdapter } from 'thirdweb/adapters/viem';
 
 import { DEFAULT_CHAIN_ID, SUPPORTED_CHAINS } from '../lib/web3';
@@ -27,6 +26,7 @@ type AuthMethod = 'embedded' | 'external' | null;
 
 type AuthContextType = {
   authMethod: AuthMethod;
+  connectWithGoogle: () => Promise<void>;
   disconnect: () => Promise<void>;
   embeddedWalletClient: WalletClient | null;
   externalWalletClient: WalletClient | null;
@@ -36,11 +36,6 @@ type AuthContextType = {
   ownerAddress: Address | null;
   thirdwebChain: ReturnType<typeof defineThirdwebChain>;
   thirdwebClient: ThirdwebClient;
-  connectWithGoogle: () => Promise<void>;
-  connectWithApple: () => Promise<void>;
-  connectWithEmail: (email: string) => Promise<void>;
-  verifyOtp: (otp: string) => Promise<void>;
-  pendingEmailVerification: boolean;
 };
 
 const thirdwebClient = createThirdwebClient({
@@ -71,13 +66,6 @@ export const AuthProvider = ({
   const [embeddedAddress, setEmbeddedAddress] = useState<Address | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
-  const [pendingEmailVerification, setPendingEmailVerification] =
-    useState(false);
-
-  const emailVerificationRef = useRef<{
-    sendVerificationCode: () => Promise<void>;
-    verifyCode: (otp: string) => Promise<void>;
-  } | null>(null);
 
   // Detect injected wallet (MetaMask etc.)
   // Use localStorage flag to hide MetaMask for testing embedded flow:
@@ -149,82 +137,6 @@ export const AuthProvider = ({
     }
   }, [initEmbeddedClient]);
 
-  const connectWithApple = useCallback(async () => {
-    setIsConnecting(true);
-    try {
-      const wallet = inAppWallet();
-      await wallet.connect({
-        client: thirdwebClient,
-        chain: thirdwebChain,
-        strategy: 'apple',
-      });
-      await initEmbeddedClient(wallet);
-    } catch (e) {
-      console.error('[AuthContext] Apple sign-in failed:', e);
-      throw e;
-    } finally {
-      setIsConnecting(false);
-    }
-  }, [initEmbeddedClient]);
-
-  const connectWithEmail = useCallback(
-    async (email: string) => {
-      setIsConnecting(true);
-      try {
-        const wallet = inAppWallet();
-        await preAuthenticate({
-          client: thirdwebClient,
-          strategy: 'email',
-          email,
-        });
-
-        // Store verification callbacks for OTP step
-        emailVerificationRef.current = {
-          sendVerificationCode: async () => {
-            await preAuthenticate({
-              client: thirdwebClient,
-              strategy: 'email',
-              email,
-            });
-          },
-          verifyCode: async (otp: string) => {
-            await wallet.connect({
-              client: thirdwebClient,
-              chain: thirdwebChain,
-              strategy: 'email',
-              email,
-              verificationCode: otp,
-            });
-            await initEmbeddedClient(wallet);
-          },
-        };
-
-        setPendingEmailVerification(true);
-      } catch (e) {
-        console.error('[AuthContext] Email sign-in failed:', e);
-        setIsConnecting(false);
-        throw e;
-      }
-    },
-    [initEmbeddedClient],
-  );
-
-  const verifyOtp = useCallback(async (otp: string) => {
-    try {
-      if (!emailVerificationRef.current) {
-        throw new Error('No pending email verification');
-      }
-      await emailVerificationRef.current.verifyCode(otp);
-      setPendingEmailVerification(false);
-      emailVerificationRef.current = null;
-    } catch (e) {
-      console.error('[AuthContext] OTP verification failed:', e);
-      throw e;
-    } finally {
-      setIsConnecting(false);
-    }
-  }, []);
-
   const disconnect = useCallback(async () => {
     if (embeddedWallet) {
       try {
@@ -239,8 +151,6 @@ export const AuthProvider = ({
     if (wagmiConnected) {
       wagmiDisconnect();
     }
-    setPendingEmailVerification(false);
-    emailVerificationRef.current = null;
   }, [embeddedWallet, wagmiConnected, wagmiDisconnect]);
 
   const value = useMemo((): AuthContextType => {
@@ -248,6 +158,7 @@ export const AuthProvider = ({
     if (embeddedAddress && embeddedWalletClient) {
       return {
         authMethod: 'embedded',
+        connectWithGoogle,
         disconnect,
         embeddedWalletClient,
         externalWalletClient: null,
@@ -257,11 +168,6 @@ export const AuthProvider = ({
         ownerAddress: embeddedAddress,
         thirdwebChain,
         thirdwebClient,
-        connectWithGoogle,
-        connectWithApple,
-        connectWithEmail,
-        verifyOtp,
-        pendingEmailVerification,
       };
     }
 
@@ -269,6 +175,7 @@ export const AuthProvider = ({
     if (wagmiConnected && wagmiAddress && wagmiWalletClient) {
       return {
         authMethod: 'external',
+        connectWithGoogle,
         disconnect,
         embeddedWalletClient: null,
         externalWalletClient: wagmiWalletClient,
@@ -278,17 +185,13 @@ export const AuthProvider = ({
         ownerAddress: wagmiAddress,
         thirdwebChain,
         thirdwebClient,
-        connectWithGoogle,
-        connectWithApple,
-        connectWithEmail,
-        verifyOtp,
-        pendingEmailVerification,
       };
     }
 
     // Not authenticated
     return {
       authMethod: null,
+      connectWithGoogle,
       disconnect,
       embeddedWalletClient: null,
       externalWalletClient: null,
@@ -298,23 +201,14 @@ export const AuthProvider = ({
       ownerAddress: null,
       thirdwebChain,
       thirdwebClient,
-      connectWithGoogle,
-      connectWithApple,
-      connectWithEmail,
-      verifyOtp,
-      pendingEmailVerification,
     };
   }, [
-    connectWithApple,
-    connectWithEmail,
     connectWithGoogle,
     disconnect,
     embeddedAddress,
     embeddedWalletClient,
     hasInjectedWallet,
     isConnecting,
-    pendingEmailVerification,
-    verifyOtp,
     wagmiAddress,
     wagmiConnected,
     wagmiWalletClient,

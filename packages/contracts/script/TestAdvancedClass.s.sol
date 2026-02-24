@@ -8,7 +8,7 @@ import {AdvancedClass, Classes, PowerSource, Race, ArmorType} from "@codegen/com
 
 contract TestAdvancedClass is Script {
     function run() external {
-        uint256 privateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
         address player = vm.addr(privateKey);
 
         vm.startBroadcast(privateKey);

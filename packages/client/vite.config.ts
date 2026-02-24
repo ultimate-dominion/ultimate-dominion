@@ -1,6 +1,27 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+// esbuild 0.18 doesn't support import attributes (`with { type: 'json' }`).
+// This plugin strips them so @base-org/account can be pre-bundled.
+const stripImportAttributes = {
+  name: 'strip-import-attributes',
+  setup(build: any) {
+    build.onLoad(
+      { filter: /\.js$/, namespace: 'file' },
+      async (args: any) => {
+        if (!args.path.includes('@base-org/account')) return undefined;
+        const fs = await import('fs');
+        let contents = fs.readFileSync(args.path, 'utf8');
+        contents = contents.replace(
+          /\bwith\s*\{\s*type:\s*['"]json['"]\s*\}/g,
+          '',
+        );
+        return { contents, loader: 'js' };
+      },
+    );
+  },
+};
+
 export default defineConfig(({ command }) => {
   return {
     plugins: [react()],
@@ -53,6 +74,7 @@ export default defineConfig(({ command }) => {
         banner: {
           js: '// @ts-nocheck\n"use client";',
         },
+        plugins: [stripImportAttributes],
       },
     },
     define: {

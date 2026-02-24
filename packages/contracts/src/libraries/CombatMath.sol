@@ -55,7 +55,14 @@ library CombatMath {
                     / int256(int256(Math.absolute(attackerStat - defenderStat) + hitDampener) * 10)
             );
 
-        uint256 probability = uint256(uint256(startingProbability) > 98 ? 98 : uint256(startingProbability));
+        uint256 probability;
+        if (startingProbability < 5) {
+            probability = 5; // minimum 5% hit chance
+        } else if (startingProbability > 98) {
+            probability = 98; // maximum 98% hit chance
+        } else {
+            probability = uint256(startingProbability);
+        }
 
         attackLands = (attackRoll % 100) + 1 <= probability;
 

@@ -20,13 +20,13 @@ import { PolygonalCard } from './PolygonalCard';
 
 export const LootManagerAllowanceModal = ({
   amount,
-  heading = 'Loot Manager Allowance',
+  heading = 'Loot Manager Permission',
   isOpen,
   message,
   onClose,
   successMessage = 'You can use your token with the Loot Manager.',
 }: {
-  // If you set an amount, it is assumed that you are approving $GOLD. Otherwise, it will be assumed that you are approving items.
+  // If you set an amount, it is assumed that you are approving Gold. Otherwise, it will be assumed that you are approving items.
   amount?: string;
   heading?: string;
   isOpen: boolean;
@@ -57,7 +57,7 @@ export const LootManagerAllowanceModal = ({
           <ModalCloseButton />
           <ModalBody px={{ base: 6, sm: 8 }}>
             <Text textAlign="center">
-              Allowance was succesful! {successMessage}
+              Permission granted! {successMessage}
             </Text>
           </ModalBody>
           <ModalFooter>
@@ -82,7 +82,7 @@ export const LootManagerAllowanceModal = ({
             <VStack spacing={10} textAlign="center">
               {!message && (
                 <Text>
-                  Allow {amount} $GOLD to be used by the Loot Manager?
+                  Give permission to spend {amount} Gold with the Loot Manager?
                 </Text>
               )}
               {message && <Text>{message}</Text>}
@@ -102,13 +102,13 @@ export const LootManagerAllowanceModal = ({
                   )
                 }
               >
-                Allow
+                Allow Spending
               </Button>
               {!isApprovingGold && (
                 <Tooltip
                   bg="#070D2A"
                   hasArrow
-                  label="This allows you to deposit $GOLD into your Adventure Escrow without having to approve each transaction. It is a faster and smoother experience, but is less secure."
+                  label="This allows you to deposit Gold into your Adventure Escrow without having to approve each transaction. It is a faster and smoother experience."
                   placement="top"
                   shouldWrapChildren
                 >
@@ -132,7 +132,7 @@ export const LootManagerAllowanceModal = ({
                       textDecoration: 'underline',
                     }}
                   >
-                    Max Allow
+                    Always Allow
                   </Button>
                 </Tooltip>
               )}
@@ -166,7 +166,7 @@ export const LootManagerAllowanceModal = ({
             isLoading={isApprovingItems}
             onClick={() => onSetApprovalForAllItems(SystemToAllow.LootManager)}
           >
-            Allow
+            Allow Spending
           </Button>
         </ModalFooter>
       </ModalContent>

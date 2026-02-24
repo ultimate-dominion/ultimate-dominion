@@ -4,6 +4,7 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
+import {NotAdmin, EntityNotAtPosition} from "../Errors.sol";
 import {
     EncounterEntity,
     Stats,
@@ -19,13 +20,11 @@ import {
     UltimateDominionConfig
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {_requireAccess} from "../utils.sol";
 import {ItemType, MobType, EffectType} from "@codegen/common.sol";
-import {ShopsData, Shops, Position, EntitiesAtPosition, Spawned, Mobs} from "@codegen/index.sol";
 
 contract AdminSystem is System {
     modifier onlyAdmin() {
-        require(Admin.get(_msgSender()), "NOT AN ADMIN");
+        if (!Admin.get(_msgSender())) revert NotAdmin();
         _;
     }
 
@@ -89,7 +88,7 @@ contract AdminSystem is System {
                 i++;
             }
         }
-        require(entityWasAtPosition, "Entity not at position");
+        if (!entityWasAtPosition) revert EntityNotAtPosition();
         Position.set(entityId, x, y);
         EntitiesAtPosition.pushEntities(x, y, entityId);
     }
@@ -147,31 +146,4 @@ contract AdminSystem is System {
         return IWorld(_world()).UD__createEffect(effectType, name, effectStats);
     }
 
-    // Admin functions for creating and configuring shops post-deployment
-    function adminCreateShop(
-        uint16 x,
-        uint16 y,
-        ShopsData memory shopData,
-        string memory shopMetadataUri
-    ) public onlyAdmin returns (bytes32 entityId) {
-        // Create the shop mob
-        uint256 mobId = IWorld(_world()).UD__createMob(MobType.Shop, abi.encode(shopData), shopMetadataUri);
-
-        // Spawn at location - create entity ID with position encoded
-        entityId = IWorld(_world()).UD__spawnMob(mobId, x, y);
-
-        // Configure shop data
-        Shops.set(entityId, shopData);
-    }
-
-    // Update shop inventory without respawning
-    function adminUpdateShop(bytes32 shopEntityId, ShopsData memory shopData) public onlyAdmin {
-        require(IWorld(_world()).UD__isShop(shopEntityId), "Not a shop");
-        Shops.set(shopEntityId, shopData);
-    }
-
-    // Spawn a mob at a specific location
-    function adminSpawnMob(uint256 mobId, uint16 x, uint16 y) public onlyAdmin returns (bytes32 entityId) {
-        return IWorld(_world()).UD__spawnMob(mobId, x, y);
-    }
 }

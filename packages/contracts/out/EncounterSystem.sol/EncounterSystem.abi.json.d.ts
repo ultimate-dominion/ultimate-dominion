@@ -319,6 +319,11 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "InvalidGroupSize",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidPvE",
     "inputs": []
   },

@@ -30,7 +30,7 @@ export const ConnectWalletModal = ({
 }): JSX.Element => {
   const { data: externalWalletClient } = useWalletClient();
   const { authMethod, isAuthenticated, ownerAddress } = useAuth();
-  const { burnerAddress, delegatorAddress } = useMUD();
+  const { delegatorAddress } = useMUD();
 
   // Auto-close when fully set up
   useEffect(() => {
@@ -81,25 +81,10 @@ export const ConnectWalletModal = ({
               </Text>
             </CopyText>
             <Text size="sm" textAlign="center">
-              In order to play, you must delegate in-game power to a session
-              account.
+              One more step to set up your game account.
             </Text>
             <Text size="sm" textAlign="center">
-              A session account is a private key stored in your browser&apos;s
-              local storage. It allows you to play games without having to
-              confirm transactions, but is less secure.
-            </Text>
-            <Text size="sm" textAlign="center">
-              Your session account:
-            </Text>
-            <CopyText text={burnerAddress}>
-              <Text fontWeight={700} textAlign="center">
-                {shortenAddress(burnerAddress)}
-              </Text>
-            </CopyText>
-            <Text fontWeight={700} size="sm" textAlign="center">
-              Do not deposit any funds into this account that you are not
-              willing to lose.
+              This lets you play without approving every action.
             </Text>
           </VStack>
           <DelegationButton
@@ -123,7 +108,7 @@ export const ConnectWalletModal = ({
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader>
-          {delegatorAddress ? 'Delegated' : 'Delegate Account'}
+          {delegatorAddress ? 'Delegated' : 'Set Up Game Account'}
         </ModalHeader>
         <ModalCloseButton>
           <IoClose size={30} />

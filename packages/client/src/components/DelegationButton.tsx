@@ -38,7 +38,7 @@ export const DelegationButton = ({
       setIsDelegating(true);
       await setupDelegation(network, externalWalletClient, burnerAddress);
 
-      renderSuccess('Delegation successful.');
+      renderSuccess('Game account ready!');
 
       if (onClose) {
         onClose();
@@ -73,10 +73,10 @@ export const DelegationButton = ({
   return (
     <Button
       isLoading={isDelegating}
-      loadingText="Delegating..."
+      loadingText="Setting up..."
       onClick={onSetupDelegation}
     >
-      Delegate
+      Authorize & Play
     </Button>
   );
 };

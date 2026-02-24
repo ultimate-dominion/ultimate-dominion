@@ -80,12 +80,14 @@
       "systemId": "0x73795544000000000000000000000000436f6d62617453797374656d00000000",
       "abi": [
         "error IntOverflow()",
+        "error NotAuthorizedCaller()",
         "function executeAction((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit) actionOutcomeData, uint256 randomNumber) returns ((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit))",
         "function getDied(bytes32 entityId) view returns (bool isDied)",
         "function getEncounter(bytes32 encounterId) view returns ((uint8 encounterType, uint256 start, uint256 end, bool rewardsDistributed, uint256 currentTurn, uint256 currentTurnTimer, uint256 maxTurns, bool attackersAreMobs, bytes32[] defenders, bytes32[] attackers))"
       ],
       "worldAbi": [
         "error IntOverflow()",
+        "error NotAuthorizedCaller()",
         "function UD__executeAction((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit) actionOutcomeData, uint256 randomNumber) returns ((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit))",
         "function UD__getDied(bytes32 entityId) view returns (bool isDied)",
         "function UD__getEncounter(bytes32 encounterId) view returns ((uint8 encounterType, uint256 start, uint256 end, bool rewardsDistributed, uint256 currentTurn, uint256 currentTurnTimer, uint256 maxTurns, bool attackersAreMobs, bytes32[] defenders, bytes32[] attackers))"
@@ -171,8 +173,8 @@
       "namespaceLabel": "UD",
       "label": "EncounterSystem",
       "namespace": "UD",
-      "name": "EncounterSystem",
-      "systemId": "0x73795544000000000000000000000000456e636f756e74657253797374656d00",
+      "name": "EncounterSys",
+      "systemId": "0x73795544000000000000000000000000456e636f756e74657253797300000000",
       "abi": [
         "error AlreadyInEncounter()",
         "error CannotEndTurn()",
@@ -182,6 +184,7 @@
         "error InvalidCombatEntity()",
         "error InvalidEncounter()",
         "error InvalidEncounterType()",
+        "error InvalidGroupSize()",
         "error InvalidPvE()",
         "error InvalidPvP()",
         "error InvalidShopEncounter()",
@@ -202,6 +205,7 @@
         "error InvalidCombatEntity()",
         "error InvalidEncounter()",
         "error InvalidEncounterType()",
+        "error InvalidGroupSize()",
         "error InvalidPvE()",
         "error InvalidPvP()",
         "error InvalidShopEncounter()",
@@ -399,6 +403,7 @@
         "error GamePaused()",
         "error InsufficientBalance()",
         "error NotAtSpawn()",
+        "error NotAuthorizedCaller()",
         "function consumeItem(bytes32 characterId, uint256 itemId)",
         "function depositToEscrow(bytes32 characterId, uint256 amount) returns (uint256 _balance)",
         "function dropGoldToEscrow(bytes32 characterId, uint256 amount)",
@@ -420,6 +425,7 @@
         "error GamePaused()",
         "error InsufficientBalance()",
         "error NotAtSpawn()",
+        "error NotAuthorizedCaller()",
         "function UD__consumeItem(bytes32 characterId, uint256 itemId)",
         "function UD__depositToEscrow(bytes32 characterId, uint256 amount) returns (uint256 _balance)",
         "function UD__dropGoldToEscrow(bytes32 characterId, uint256 amount)",
@@ -466,6 +472,7 @@
         "error InEncounter()",
         "error InvalidMove()",
         "error MaxPlayers()",
+        "error MoveTooFast()",
         "error NotSpawned()",
         "error OnlyCharacters()",
         "error OutOfBounds()",
@@ -487,6 +494,7 @@
         "error InEncounter()",
         "error InvalidMove()",
         "error MaxPlayers()",
+        "error MoveTooFast()",
         "error NotSpawned()",
         "error OnlyCharacters()",
         "error OutOfBounds()",
@@ -506,8 +514,8 @@
       "namespaceLabel": "UD",
       "label": "MarketplaceSystem",
       "namespace": "UD",
-      "name": "MarketplaceSyste",
-      "systemId": "0x737955440000000000000000000000004d61726b6574706c6163655379737465",
+      "name": "MarketplaceSys",
+      "systemId": "0x737955440000000000000000000000004d61726b6574706c6163655379730000",
       "abi": [
         "error GamePaused()",
         "error ReentrancyGuardReentrantCall()",
@@ -641,11 +649,13 @@
       "systemId": "0x7379554400000000000000000000000050766552657761726453797374656d00",
       "abi": [
         "error InvalidRewardState()",
+        "error NotAuthorizedCaller()",
         "function calculateExpMultiplier(bytes32 characterId) view returns (uint256 _expMultiplier)",
         "function distributePveRewards(bytes32 encounterId, uint256 randomNumber) returns (uint256 _expAmount, uint256 _goldAmount, uint256[] _itemIdsDropped)"
       ],
       "worldAbi": [
         "error InvalidRewardState()",
+        "error NotAuthorizedCaller()",
         "function UD__calculateExpMultiplier(bytes32 characterId) view returns (uint256 _expMultiplier)",
         "function UD__distributePveRewards(bytes32 encounterId, uint256 randomNumber) returns (uint256 _expAmount, uint256 _goldAmount, uint256[] _itemIdsDropped)"
       ]
@@ -658,10 +668,12 @@
       "systemId": "0x7379554400000000000000000000000050767052657761726453797374656d00",
       "abi": [
         "error InvalidRewardState()",
+        "error NotAuthorizedCaller()",
         "function distributePvpRewards(bytes32 encounterId, uint256 randomNumber) returns (uint256 _expAmount, uint256 _goldAmount, uint256[] _itemIdsDropped)"
       ],
       "worldAbi": [
         "error InvalidRewardState()",
+        "error NotAuthorizedCaller()",
         "function UD__distributePvpRewards(bytes32 encounterId, uint256 randomNumber) returns (uint256 _expAmount, uint256 _goldAmount, uint256[] _itemIdsDropped)"
       ]
     },
@@ -706,8 +718,8 @@
       "namespaceLabel": "UD",
       "label": "UltimateDominionConfigSystem",
       "namespace": "UD",
-      "name": "UltimateDominion",
-      "systemId": "0x73795544000000000000000000000000556c74696d617465446f6d696e696f6e",
+      "name": "UDConfigSys",
+      "systemId": "0x737955440000000000000000000000005544436f6e6669675379730000000000",
       "abi": [
         "function getCharacterToken() view returns (address _characterToken)",
         "function getGoldToken() view returns (address _goldToken)",
@@ -1093,5 +1105,5 @@
       ]
     }
   ],
-  "createdAt": 1771852356499
+  "createdAt": 1771895954432
 }

@@ -1,6 +1,7 @@
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import {
   type Account,
+  type Address,
   type Chain,
   type Hex,
   parseGwei,
@@ -63,6 +64,40 @@ export async function setupDelegation(
     console.error('Delegation failed with error:', error);
     throw error;
   }
+}
+
+export async function revokeDelegation(
+  network: SetupNetworkResult,
+  externalWalletClient: WalletClient<Transport, Chain, Account>,
+  delegateeAddress: Address,
+): Promise<void> {
+  const chainId = externalWalletClient.chain?.id;
+  const isLocalChain = chainId === 31337;
+
+  const gasConfig = isLocalChain
+    ? {
+        gas: 200000n,
+        maxFeePerGas: parseGwei('20'),
+        maxPriorityFeePerGas: parseGwei('1'),
+      }
+    : {
+        gas: 200000n,
+      };
+
+  const txHash = await externalWalletClient.writeContract({
+    account: externalWalletClient.account,
+    address: network.worldContract.address,
+    abi: IWorldAbi,
+    functionName: 'unregisterDelegation',
+    args: [delegateeAddress],
+    ...gasConfig,
+  });
+
+  await network.waitForTransaction(txHash);
+}
+
+export function clearBurnerWallet(): void {
+  localStorage.removeItem('mud:burnerWallet');
 }
 
 export function isDelegated(
