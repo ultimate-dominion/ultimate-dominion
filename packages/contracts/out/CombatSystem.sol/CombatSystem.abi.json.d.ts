@@ -353,6 +353,11 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "NotAuthorizedCaller",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "Slice_OutOfBounds",
     "inputs": [
       {

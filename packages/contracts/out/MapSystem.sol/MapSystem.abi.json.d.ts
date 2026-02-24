@@ -356,6 +356,11 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "MoveTooFast",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotSpawned",
     "inputs": []
   },

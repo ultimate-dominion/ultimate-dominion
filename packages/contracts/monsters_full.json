@@ -1,0 +1,1714 @@
+{
+  "monsters": [
+    {
+      "name": "Rock Beetle",
+      "metadataUri": "ipfs://monsters/dark_cave/rock_beetle.json",
+      "stats": {
+        "agility": 3,
+        "armor": 1,
+        "class": 0,
+        "experience": 50,
+        "hitPoints": 12,
+        "intelligence": 2,
+        "inventory": [
+          1,
+          48,
+          91
+        ],
+        "level": 1,
+        "strength": 6
+      }
+    },
+    {
+      "name": "Cave Rat",
+      "metadataUri": "ipfs://monsters/dark_cave/cave_rat.json",
+      "stats": {
+        "agility": 6,
+        "armor": 0,
+        "class": 1,
+        "experience": 45,
+        "hitPoints": 10,
+        "intelligence": 2,
+        "inventory": [
+          2,
+          49,
+          91
+        ],
+        "level": 1,
+        "strength": 3
+      }
+    },
+    {
+      "name": "Glowcap Sprite",
+      "metadataUri": "ipfs://monsters/dark_cave/glowcap_sprite.json",
+      "stats": {
+        "agility": 3,
+        "armor": 0,
+        "class": 2,
+        "experience": 55,
+        "hitPoints": 8,
+        "intelligence": 6,
+        "inventory": [
+          5,
+          50,
+          91
+        ],
+        "level": 1,
+        "strength": 2
+      }
+    },
+    {
+      "name": "Tunnel Crawler",
+      "metadataUri": "ipfs://monsters/dark_cave/tunnel_crawler.json",
+      "stats": {
+        "agility": 4,
+        "armor": 1,
+        "class": 0,
+        "experience": 75,
+        "hitPoints": 15,
+        "intelligence": 3,
+        "inventory": [
+          1,
+          48,
+          91
+        ],
+        "level": 2,
+        "strength": 7
+      }
+    },
+    {
+      "name": "Shadow Bat",
+      "metadataUri": "ipfs://monsters/dark_cave/shadow_bat.json",
+      "stats": {
+        "agility": 8,
+        "armor": 0,
+        "class": 1,
+        "experience": 70,
+        "hitPoints": 12,
+        "intelligence": 3,
+        "inventory": [
+          2,
+          49,
+          91
+        ],
+        "level": 2,
+        "strength": 4
+      }
+    },
+    {
+      "name": "Fungal Shaman",
+      "metadataUri": "ipfs://monsters/dark_cave/fungal_shaman.json",
+      "stats": {
+        "agility": 4,
+        "armor": 0,
+        "class": 2,
+        "experience": 80,
+        "hitPoints": 11,
+        "intelligence": 8,
+        "inventory": [
+          5,
+          50,
+          97
+        ],
+        "level": 2,
+        "strength": 3
+      }
+    },
+    {
+      "name": "Cavern Brute",
+      "metadataUri": "ipfs://monsters/dark_cave/cavern_brute.json",
+      "stats": {
+        "agility": 4,
+        "armor": 1,
+        "class": 0,
+        "experience": 110,
+        "hitPoints": 18,
+        "intelligence": 3,
+        "inventory": [
+          3,
+          51,
+          95
+        ],
+        "level": 3,
+        "strength": 9
+      }
+    },
+    {
+      "name": "Cave Spider",
+      "metadataUri": "ipfs://monsters/dark_cave/cave_spider.json",
+      "stats": {
+        "agility": 9,
+        "armor": 0,
+        "class": 1,
+        "experience": 100,
+        "hitPoints": 14,
+        "intelligence": 4,
+        "inventory": [
+          4,
+          52,
+          96
+        ],
+        "level": 3,
+        "strength": 5
+      }
+    },
+    {
+      "name": "Dark Wisp",
+      "metadataUri": "ipfs://monsters/dark_cave/dark_wisp.json",
+      "stats": {
+        "agility": 5,
+        "armor": 0,
+        "class": 2,
+        "experience": 115,
+        "hitPoints": 13,
+        "intelligence": 9,
+        "inventory": [
+          5,
+          53,
+          97
+        ],
+        "level": 3,
+        "strength": 3
+      }
+    },
+    {
+      "name": "Stone Golem Shard",
+      "metadataUri": "ipfs://monsters/dark_cave/stone_golem_shard.json",
+      "stats": {
+        "agility": 5,
+        "armor": 2,
+        "class": 0,
+        "experience": 150,
+        "hitPoints": 22,
+        "intelligence": 4,
+        "inventory": [
+          3,
+          51,
+          95
+        ],
+        "level": 4,
+        "strength": 10
+      }
+    },
+    {
+      "name": "Giant Scorpion",
+      "metadataUri": "ipfs://monsters/dark_cave/giant_scorpion.json",
+      "stats": {
+        "agility": 10,
+        "armor": 1,
+        "class": 1,
+        "experience": 140,
+        "hitPoints": 17,
+        "intelligence": 4,
+        "inventory": [
+          4,
+          52,
+          96
+        ],
+        "level": 4,
+        "strength": 6
+      }
+    },
+    {
+      "name": "Crystal Elemental",
+      "metadataUri": "ipfs://monsters/dark_cave/crystal_elemental.json",
+      "stats": {
+        "agility": 5,
+        "armor": 1,
+        "class": 2,
+        "experience": 160,
+        "hitPoints": 16,
+        "intelligence": 10,
+        "inventory": [
+          5,
+          53,
+          97
+        ],
+        "level": 4,
+        "strength": 4
+      }
+    },
+    {
+      "name": "Cave Troll",
+      "metadataUri": "ipfs://monsters/dark_cave/cave_troll.json",
+      "stats": {
+        "agility": 6,
+        "armor": 2,
+        "class": 0,
+        "experience": 200,
+        "hitPoints": 26,
+        "intelligence": 5,
+        "inventory": [
+          6,
+          51,
+          92
+        ],
+        "level": 5,
+        "strength": 11
+      }
+    },
+    {
+      "name": "Stalker",
+      "metadataUri": "ipfs://monsters/dark_cave/stalker.json",
+      "stats": {
+        "agility": 12,
+        "armor": 0,
+        "class": 1,
+        "experience": 190,
+        "hitPoints": 20,
+        "intelligence": 5,
+        "inventory": [
+          7,
+          52,
+          92
+        ],
+        "level": 5,
+        "strength": 7
+      }
+    },
+    {
+      "name": "Shadow Caster",
+      "metadataUri": "ipfs://monsters/dark_cave/shadow_caster.json",
+      "stats": {
+        "agility": 6,
+        "armor": 0,
+        "class": 2,
+        "experience": 210,
+        "hitPoints": 18,
+        "intelligence": 12,
+        "inventory": [
+          8,
+          53,
+          92
+        ],
+        "level": 5,
+        "strength": 5
+      }
+    },
+    {
+      "name": "Iron Golem",
+      "metadataUri": "ipfs://monsters/dark_cave/iron_golem.json",
+      "stats": {
+        "agility": 6,
+        "armor": 3,
+        "class": 0,
+        "experience": 280,
+        "hitPoints": 30,
+        "intelligence": 5,
+        "inventory": [
+          6,
+          51,
+          92
+        ],
+        "level": 6,
+        "strength": 13
+      }
+    },
+    {
+      "name": "Phase Spider",
+      "metadataUri": "ipfs://monsters/dark_cave/phase_spider.json",
+      "stats": {
+        "agility": 13,
+        "armor": 0,
+        "class": 1,
+        "experience": 265,
+        "hitPoints": 23,
+        "intelligence": 6,
+        "inventory": [
+          7,
+          52,
+          92
+        ],
+        "level": 6,
+        "strength": 8
+      }
+    },
+    {
+      "name": "Void Whisper",
+      "metadataUri": "ipfs://monsters/dark_cave/void_whisper.json",
+      "stats": {
+        "agility": 7,
+        "armor": 0,
+        "class": 2,
+        "experience": 295,
+        "hitPoints": 22,
+        "intelligence": 13,
+        "inventory": [
+          8,
+          53,
+          92
+        ],
+        "level": 6,
+        "strength": 6
+      }
+    },
+    {
+      "name": "Cavern Ogre",
+      "metadataUri": "ipfs://monsters/dark_cave/cavern_ogre.json",
+      "stats": {
+        "agility": 7,
+        "armor": 2,
+        "class": 0,
+        "experience": 380,
+        "hitPoints": 35,
+        "intelligence": 6,
+        "inventory": [
+          6,
+          54,
+          100
+        ],
+        "level": 7,
+        "strength": 14
+      }
+    },
+    {
+      "name": "Assassin Bug",
+      "metadataUri": "ipfs://monsters/dark_cave/assassin_bug.json",
+      "stats": {
+        "agility": 15,
+        "armor": 0,
+        "class": 1,
+        "experience": 360,
+        "hitPoints": 26,
+        "intelligence": 6,
+        "inventory": [
+          7,
+          55,
+          101
+        ],
+        "level": 7,
+        "strength": 9
+      }
+    },
+    {
+      "name": "Lich Acolyte",
+      "metadataUri": "ipfs://monsters/dark_cave/lich_acolyte.json",
+      "stats": {
+        "agility": 7,
+        "armor": 0,
+        "class": 2,
+        "experience": 400,
+        "hitPoints": 25,
+        "intelligence": 15,
+        "inventory": [
+          8,
+          56,
+          102
+        ],
+        "level": 7,
+        "strength": 6
+      }
+    },
+    {
+      "name": "Stone Giant",
+      "metadataUri": "ipfs://monsters/dark_cave/stone_giant.json",
+      "stats": {
+        "agility": 8,
+        "armor": 3,
+        "class": 0,
+        "experience": 500,
+        "hitPoints": 40,
+        "intelligence": 7,
+        "inventory": [
+          6,
+          54,
+          100
+        ],
+        "level": 8,
+        "strength": 16
+      }
+    },
+    {
+      "name": "Tunnel Wraith",
+      "metadataUri": "ipfs://monsters/dark_cave/tunnel_wraith.json",
+      "stats": {
+        "agility": 16,
+        "armor": 0,
+        "class": 1,
+        "experience": 480,
+        "hitPoints": 30,
+        "intelligence": 7,
+        "inventory": [
+          7,
+          55,
+          101
+        ],
+        "level": 8,
+        "strength": 10
+      }
+    },
+    {
+      "name": "Dark Sorcerer",
+      "metadataUri": "ipfs://monsters/dark_cave/dark_sorcerer.json",
+      "stats": {
+        "agility": 8,
+        "armor": 0,
+        "class": 2,
+        "experience": 520,
+        "hitPoints": 28,
+        "intelligence": 16,
+        "inventory": [
+          8,
+          56,
+          102
+        ],
+        "level": 8,
+        "strength": 7
+      }
+    },
+    {
+      "name": "Mountain Troll",
+      "metadataUri": "ipfs://monsters/dark_cave/mountain_troll.json",
+      "stats": {
+        "agility": 9,
+        "armor": 3,
+        "class": 0,
+        "experience": 680,
+        "hitPoints": 45,
+        "intelligence": 8,
+        "inventory": [
+          9,
+          54,
+          93
+        ],
+        "level": 9,
+        "strength": 17
+      }
+    },
+    {
+      "name": "Shadow Stalker",
+      "metadataUri": "ipfs://monsters/dark_cave/shadow_stalker.json",
+      "stats": {
+        "agility": 18,
+        "armor": 0,
+        "class": 1,
+        "experience": 650,
+        "hitPoints": 34,
+        "intelligence": 8,
+        "inventory": [
+          10,
+          55,
+          93
+        ],
+        "level": 9,
+        "strength": 11
+      }
+    },
+    {
+      "name": "Abyssal Channeler",
+      "metadataUri": "ipfs://monsters/dark_cave/abyssal_channeler.json",
+      "stats": {
+        "agility": 9,
+        "armor": 0,
+        "class": 2,
+        "experience": 710,
+        "hitPoints": 32,
+        "intelligence": 18,
+        "inventory": [
+          11,
+          56,
+          93
+        ],
+        "level": 9,
+        "strength": 8
+      }
+    },
+    {
+      "name": "Cavern Lord",
+      "metadataUri": "ipfs://monsters/dark_cave/cavern_lord.json",
+      "stats": {
+        "agility": 10,
+        "armor": 4,
+        "class": 0,
+        "experience": 1200,
+        "hitPoints": 55,
+        "intelligence": 10,
+        "inventory": [
+          9,
+          54,
+          93
+        ],
+        "level": 10,
+        "strength": 19
+      }
+    },
+    {
+      "name": "Cave Wyvern",
+      "metadataUri": "ipfs://monsters/dark_cave/cave_wyvern.json",
+      "stats": {
+        "agility": 20,
+        "armor": 1,
+        "class": 1,
+        "experience": 1150,
+        "hitPoints": 42,
+        "intelligence": 10,
+        "inventory": [
+          10,
+          55,
+          99
+        ],
+        "level": 10,
+        "strength": 13
+      }
+    },
+    {
+      "name": "Shadow Dragon",
+      "metadataUri": "ipfs://monsters/dark_cave/shadow_dragon.json",
+      "stats": {
+        "agility": 12,
+        "armor": 2,
+        "class": 2,
+        "experience": 1300,
+        "hitPoints": 48,
+        "intelligence": 20,
+        "inventory": [
+          11,
+          56,
+          93
+        ],
+        "level": 10,
+        "strength": 12
+      }
+    },
+    {
+      "name": "Mountain Goat",
+      "metadataUri": "ipfs://monsters/windy_peaks/mountain_goat.json",
+      "stats": {
+        "agility": 12,
+        "armor": 2,
+        "class": 0,
+        "experience": 1400,
+        "hitPoints": 58,
+        "intelligence": 10,
+        "inventory": [
+          9,
+          54,
+          92
+        ],
+        "level": 11,
+        "strength": 20
+      }
+    },
+    {
+      "name": "Wind Sprite",
+      "metadataUri": "ipfs://monsters/windy_peaks/wind_sprite.json",
+      "stats": {
+        "agility": 22,
+        "armor": 0,
+        "class": 1,
+        "experience": 1350,
+        "hitPoints": 44,
+        "intelligence": 11,
+        "inventory": [
+          10,
+          55,
+          92
+        ],
+        "level": 11,
+        "strength": 13
+      }
+    },
+    {
+      "name": "Frost Wisp",
+      "metadataUri": "ipfs://monsters/windy_peaks/frost_wisp.json",
+      "stats": {
+        "agility": 12,
+        "armor": 0,
+        "class": 2,
+        "experience": 1450,
+        "hitPoints": 50,
+        "intelligence": 22,
+        "inventory": [
+          11,
+          56,
+          92
+        ],
+        "level": 11,
+        "strength": 11
+      }
+    },
+    {
+      "name": "Rock Elemental",
+      "metadataUri": "ipfs://monsters/windy_peaks/rock_elemental.json",
+      "stats": {
+        "agility": 13,
+        "armor": 3,
+        "class": 0,
+        "experience": 1600,
+        "hitPoints": 62,
+        "intelligence": 11,
+        "inventory": [
+          9,
+          54,
+          92
+        ],
+        "level": 12,
+        "strength": 22
+      }
+    },
+    {
+      "name": "Harpy Scout",
+      "metadataUri": "ipfs://monsters/windy_peaks/harpy_scout.json",
+      "stats": {
+        "agility": 24,
+        "armor": 0,
+        "class": 1,
+        "experience": 1550,
+        "hitPoints": 48,
+        "intelligence": 12,
+        "inventory": [
+          10,
+          55,
+          92
+        ],
+        "level": 12,
+        "strength": 14
+      }
+    },
+    {
+      "name": "Storm Imp",
+      "metadataUri": "ipfs://monsters/windy_peaks/storm_imp.json",
+      "stats": {
+        "agility": 13,
+        "armor": 0,
+        "class": 2,
+        "experience": 1650,
+        "hitPoints": 52,
+        "intelligence": 24,
+        "inventory": [
+          11,
+          56,
+          92
+        ],
+        "level": 12,
+        "strength": 12
+      }
+    },
+    {
+      "name": "Yeti Cub",
+      "metadataUri": "ipfs://monsters/windy_peaks/yeti_cub.json",
+      "stats": {
+        "agility": 14,
+        "armor": 2,
+        "class": 0,
+        "experience": 1850,
+        "hitPoints": 68,
+        "intelligence": 12,
+        "inventory": [
+          9,
+          54,
+          100
+        ],
+        "level": 13,
+        "strength": 24
+      }
+    },
+    {
+      "name": "Snow Leopard",
+      "metadataUri": "ipfs://monsters/windy_peaks/snow_leopard.json",
+      "stats": {
+        "agility": 26,
+        "armor": 0,
+        "class": 1,
+        "experience": 1800,
+        "hitPoints": 52,
+        "intelligence": 12,
+        "inventory": [
+          10,
+          55,
+          101
+        ],
+        "level": 13,
+        "strength": 15
+      }
+    },
+    {
+      "name": "Ice Shaman",
+      "metadataUri": "ipfs://monsters/windy_peaks/ice_shaman.json",
+      "stats": {
+        "agility": 14,
+        "armor": 0,
+        "class": 2,
+        "experience": 1900,
+        "hitPoints": 56,
+        "intelligence": 26,
+        "inventory": [
+          11,
+          56,
+          102
+        ],
+        "level": 13,
+        "strength": 13
+      }
+    },
+    {
+      "name": "Mountain Ogre",
+      "metadataUri": "ipfs://monsters/windy_peaks/mountain_ogre.json",
+      "stats": {
+        "agility": 15,
+        "armor": 3,
+        "class": 0,
+        "experience": 2100,
+        "hitPoints": 74,
+        "intelligence": 13,
+        "inventory": [
+          9,
+          54,
+          100
+        ],
+        "level": 14,
+        "strength": 26
+      }
+    },
+    {
+      "name": "Wind Serpent",
+      "metadataUri": "ipfs://monsters/windy_peaks/wind_serpent.json",
+      "stats": {
+        "agility": 28,
+        "armor": 0,
+        "class": 1,
+        "experience": 2050,
+        "hitPoints": 56,
+        "intelligence": 13,
+        "inventory": [
+          10,
+          55,
+          101
+        ],
+        "level": 14,
+        "strength": 16
+      }
+    },
+    {
+      "name": "Thunder Spirit",
+      "metadataUri": "ipfs://monsters/windy_peaks/thunder_spirit.json",
+      "stats": {
+        "agility": 15,
+        "armor": 0,
+        "class": 2,
+        "experience": 2150,
+        "hitPoints": 60,
+        "intelligence": 28,
+        "inventory": [
+          11,
+          56,
+          102
+        ],
+        "level": 14,
+        "strength": 14
+      }
+    },
+    {
+      "name": "Stone Sentinel",
+      "metadataUri": "ipfs://monsters/windy_peaks/stone_sentinel.json",
+      "stats": {
+        "agility": 16,
+        "armor": 4,
+        "class": 0,
+        "experience": 2400,
+        "hitPoints": 82,
+        "intelligence": 14,
+        "inventory": [
+          12,
+          58,
+          93
+        ],
+        "level": 15,
+        "strength": 28
+      }
+    },
+    {
+      "name": "Roc Fledgling",
+      "metadataUri": "ipfs://monsters/windy_peaks/roc_fledgling.json",
+      "stats": {
+        "agility": 30,
+        "armor": 1,
+        "class": 1,
+        "experience": 2350,
+        "hitPoints": 62,
+        "intelligence": 14,
+        "inventory": [
+          13,
+          59,
+          99
+        ],
+        "level": 15,
+        "strength": 18
+      }
+    },
+    {
+      "name": "Frost Witch",
+      "metadataUri": "ipfs://monsters/windy_peaks/frost_witch.json",
+      "stats": {
+        "agility": 16,
+        "armor": 0,
+        "class": 2,
+        "experience": 2450,
+        "hitPoints": 65,
+        "intelligence": 30,
+        "inventory": [
+          14,
+          60,
+          93
+        ],
+        "level": 15,
+        "strength": 15
+      }
+    },
+    {
+      "name": "Frost Giant Scout",
+      "metadataUri": "ipfs://monsters/windy_peaks/frost_giant_scout.json",
+      "stats": {
+        "agility": 17,
+        "armor": 4,
+        "class": 0,
+        "experience": 2750,
+        "hitPoints": 90,
+        "intelligence": 15,
+        "inventory": [
+          12,
+          58,
+          100
+        ],
+        "level": 16,
+        "strength": 30
+      }
+    },
+    {
+      "name": "Cliff Stalker",
+      "metadataUri": "ipfs://monsters/windy_peaks/cliff_stalker.json",
+      "stats": {
+        "agility": 32,
+        "armor": 1,
+        "class": 1,
+        "experience": 2700,
+        "hitPoints": 68,
+        "intelligence": 15,
+        "inventory": [
+          13,
+          59,
+          101
+        ],
+        "level": 16,
+        "strength": 19
+      }
+    },
+    {
+      "name": "Storm Caller",
+      "metadataUri": "ipfs://monsters/windy_peaks/storm_caller.json",
+      "stats": {
+        "agility": 17,
+        "armor": 0,
+        "class": 2,
+        "experience": 2800,
+        "hitPoints": 70,
+        "intelligence": 32,
+        "inventory": [
+          14,
+          60,
+          102
+        ],
+        "level": 16,
+        "strength": 16
+      }
+    },
+    {
+      "name": "Mountain Troll Chief",
+      "metadataUri": "ipfs://monsters/windy_peaks/mountain_troll_chief.json",
+      "stats": {
+        "agility": 18,
+        "armor": 4,
+        "class": 0,
+        "experience": 3150,
+        "hitPoints": 98,
+        "intelligence": 16,
+        "inventory": [
+          12,
+          58,
+          100
+        ],
+        "level": 17,
+        "strength": 32
+      }
+    },
+    {
+      "name": "Thunderbird",
+      "metadataUri": "ipfs://monsters/windy_peaks/thunderbird.json",
+      "stats": {
+        "agility": 34,
+        "armor": 1,
+        "class": 1,
+        "experience": 3100,
+        "hitPoints": 74,
+        "intelligence": 16,
+        "inventory": [
+          13,
+          59,
+          101
+        ],
+        "level": 17,
+        "strength": 20
+      }
+    },
+    {
+      "name": "Blizzard Mage",
+      "metadataUri": "ipfs://monsters/windy_peaks/blizzard_mage.json",
+      "stats": {
+        "agility": 18,
+        "armor": 0,
+        "class": 2,
+        "experience": 3200,
+        "hitPoints": 76,
+        "intelligence": 34,
+        "inventory": [
+          14,
+          60,
+          102
+        ],
+        "level": 17,
+        "strength": 17
+      }
+    },
+    {
+      "name": "Avalanche Golem",
+      "metadataUri": "ipfs://monsters/windy_peaks/avalanche_golem.json",
+      "stats": {
+        "agility": 19,
+        "armor": 5,
+        "class": 0,
+        "experience": 3600,
+        "hitPoints": 108,
+        "intelligence": 17,
+        "inventory": [
+          12,
+          58,
+          100
+        ],
+        "level": 18,
+        "strength": 34
+      }
+    },
+    {
+      "name": "Gale Spirit",
+      "metadataUri": "ipfs://monsters/windy_peaks/gale_spirit.json",
+      "stats": {
+        "agility": 36,
+        "armor": 0,
+        "class": 1,
+        "experience": 3550,
+        "hitPoints": 80,
+        "intelligence": 17,
+        "inventory": [
+          13,
+          59,
+          101
+        ],
+        "level": 18,
+        "strength": 21
+      }
+    },
+    {
+      "name": "Tempest Sorcerer",
+      "metadataUri": "ipfs://monsters/windy_peaks/tempest_sorcerer.json",
+      "stats": {
+        "agility": 19,
+        "armor": 0,
+        "class": 2,
+        "experience": 3650,
+        "hitPoints": 82,
+        "intelligence": 36,
+        "inventory": [
+          14,
+          60,
+          102
+        ],
+        "level": 18,
+        "strength": 18
+      }
+    },
+    {
+      "name": "Titan's Spawn",
+      "metadataUri": "ipfs://monsters/windy_peaks/titans_spawn.json",
+      "stats": {
+        "agility": 20,
+        "armor": 5,
+        "class": 0,
+        "experience": 4100,
+        "hitPoints": 118,
+        "intelligence": 18,
+        "inventory": [
+          12,
+          58,
+          94
+        ],
+        "level": 19,
+        "strength": 36
+      }
+    },
+    {
+      "name": "Phoenix Hatchling",
+      "metadataUri": "ipfs://monsters/windy_peaks/phoenix_hatchling.json",
+      "stats": {
+        "agility": 38,
+        "armor": 0,
+        "class": 1,
+        "experience": 4050,
+        "hitPoints": 86,
+        "intelligence": 18,
+        "inventory": [
+          13,
+          59,
+          94
+        ],
+        "level": 19,
+        "strength": 22
+      }
+    },
+    {
+      "name": "Frost Lich",
+      "metadataUri": "ipfs://monsters/windy_peaks/frost_lich.json",
+      "stats": {
+        "agility": 20,
+        "armor": 1,
+        "class": 2,
+        "experience": 4150,
+        "hitPoints": 88,
+        "intelligence": 38,
+        "inventory": [
+          14,
+          60,
+          94
+        ],
+        "level": 19,
+        "strength": 19
+      }
+    },
+    {
+      "name": "Frost Giant Warlord",
+      "metadataUri": "ipfs://monsters/windy_peaks/frost_giant_warlord.json",
+      "stats": {
+        "agility": 22,
+        "armor": 6,
+        "class": 0,
+        "experience": 5500,
+        "hitPoints": 135,
+        "intelligence": 20,
+        "inventory": [
+          12,
+          58,
+          94
+        ],
+        "level": 20,
+        "strength": 40
+      }
+    },
+    {
+      "name": "Storm Drake",
+      "metadataUri": "ipfs://monsters/windy_peaks/storm_drake.json",
+      "stats": {
+        "agility": 42,
+        "armor": 2,
+        "class": 1,
+        "experience": 5400,
+        "hitPoints": 100,
+        "intelligence": 20,
+        "inventory": [
+          13,
+          59,
+          94
+        ],
+        "level": 20,
+        "strength": 25
+      }
+    },
+    {
+      "name": "Archmage of Peaks",
+      "metadataUri": "ipfs://monsters/windy_peaks/archmage_of_peaks.json",
+      "stats": {
+        "agility": 22,
+        "armor": 2,
+        "class": 2,
+        "experience": 5600,
+        "hitPoints": 105,
+        "intelligence": 42,
+        "inventory": [
+          14,
+          60,
+          94
+        ],
+        "level": 20,
+        "strength": 22
+      }
+    },
+    {
+      "name": "Wild Boar",
+      "metadataUri": "ipfs://monsters/mystic_grove/wild_boar.json",
+      "stats": {
+        "agility": 24,
+        "armor": 3,
+        "class": 0,
+        "experience": 5800,
+        "hitPoints": 140,
+        "intelligence": 20,
+        "inventory": [
+          12,
+          58,
+          93
+        ],
+        "level": 21,
+        "strength": 42
+      }
+    },
+    {
+      "name": "Forest Fox",
+      "metadataUri": "ipfs://monsters/mystic_grove/forest_fox.json",
+      "stats": {
+        "agility": 44,
+        "armor": 0,
+        "class": 1,
+        "experience": 5700,
+        "hitPoints": 102,
+        "intelligence": 21,
+        "inventory": [
+          13,
+          59,
+          93
+        ],
+        "level": 21,
+        "strength": 26
+      }
+    },
+    {
+      "name": "Pixie",
+      "metadataUri": "ipfs://monsters/mystic_grove/pixie.json",
+      "stats": {
+        "agility": 24,
+        "armor": 0,
+        "class": 2,
+        "experience": 5900,
+        "hitPoints": 95,
+        "intelligence": 44,
+        "inventory": [
+          14,
+          60,
+          93
+        ],
+        "level": 21,
+        "strength": 22
+      }
+    },
+    {
+      "name": "Forest Troll",
+      "metadataUri": "ipfs://monsters/mystic_grove/forest_troll.json",
+      "stats": {
+        "agility": 25,
+        "armor": 4,
+        "class": 0,
+        "experience": 6200,
+        "hitPoints": 148,
+        "intelligence": 21,
+        "inventory": [
+          12,
+          58,
+          100
+        ],
+        "level": 22,
+        "strength": 44
+      }
+    },
+    {
+      "name": "Dire Wolf",
+      "metadataUri": "ipfs://monsters/mystic_grove/dire_wolf.json",
+      "stats": {
+        "agility": 46,
+        "armor": 1,
+        "class": 1,
+        "experience": 6100,
+        "hitPoints": 108,
+        "intelligence": 22,
+        "inventory": [
+          13,
+          59,
+          101
+        ],
+        "level": 22,
+        "strength": 27
+      }
+    },
+    {
+      "name": "Dryad Sapling",
+      "metadataUri": "ipfs://monsters/mystic_grove/dryad_sapling.json",
+      "stats": {
+        "agility": 25,
+        "armor": 0,
+        "class": 2,
+        "experience": 6300,
+        "hitPoints": 100,
+        "intelligence": 46,
+        "inventory": [
+          14,
+          60,
+          102
+        ],
+        "level": 22,
+        "strength": 23
+      }
+    },
+    {
+      "name": "Treant Seedling",
+      "metadataUri": "ipfs://monsters/mystic_grove/treant_seedling.json",
+      "stats": {
+        "agility": 26,
+        "armor": 5,
+        "class": 0,
+        "experience": 6650,
+        "hitPoints": 156,
+        "intelligence": 22,
+        "inventory": [
+          12,
+          58,
+          100
+        ],
+        "level": 23,
+        "strength": 46
+      }
+    },
+    {
+      "name": "Panther",
+      "metadataUri": "ipfs://monsters/mystic_grove/panther.json",
+      "stats": {
+        "agility": 48,
+        "armor": 0,
+        "class": 1,
+        "experience": 6550,
+        "hitPoints": 112,
+        "intelligence": 22,
+        "inventory": [
+          13,
+          59,
+          101
+        ],
+        "level": 23,
+        "strength": 28
+      }
+    },
+    {
+      "name": "Will-o-Wisp",
+      "metadataUri": "ipfs://monsters/mystic_grove/will_o_wisp.json",
+      "stats": {
+        "agility": 26,
+        "armor": 0,
+        "class": 2,
+        "experience": 6750,
+        "hitPoints": 105,
+        "intelligence": 48,
+        "inventory": [
+          14,
+          60,
+          102
+        ],
+        "level": 23,
+        "strength": 24
+      }
+    },
+    {
+      "name": "Owlbear",
+      "metadataUri": "ipfs://monsters/mystic_grove/owlbear.json",
+      "stats": {
+        "agility": 27,
+        "armor": 4,
+        "class": 0,
+        "experience": 7150,
+        "hitPoints": 165,
+        "intelligence": 23,
+        "inventory": [
+          12,
+          58,
+          100
+        ],
+        "level": 24,
+        "strength": 48
+      }
+    },
+    {
+      "name": "Assassin Vine",
+      "metadataUri": "ipfs://monsters/mystic_grove/assassin_vine.json",
+      "stats": {
+        "agility": 50,
+        "armor": 1,
+        "class": 1,
+        "experience": 7050,
+        "hitPoints": 118,
+        "intelligence": 23,
+        "inventory": [
+          13,
+          59,
+          101
+        ],
+        "level": 24,
+        "strength": 30
+      }
+    },
+    {
+      "name": "Fey Enchanter",
+      "metadataUri": "ipfs://monsters/mystic_grove/fey_enchanter.json",
+      "stats": {
+        "agility": 27,
+        "armor": 0,
+        "class": 2,
+        "experience": 7250,
+        "hitPoints": 112,
+        "intelligence": 50,
+        "inventory": [
+          14,
+          60,
+          102
+        ],
+        "level": 24,
+        "strength": 25
+      }
+    },
+    {
+      "name": "Ancient Boar",
+      "metadataUri": "ipfs://monsters/mystic_grove/ancient_boar.json",
+      "stats": {
+        "agility": 28,
+        "armor": 5,
+        "class": 0,
+        "experience": 7700,
+        "hitPoints": 175,
+        "intelligence": 24,
+        "inventory": [
+          12,
+          61,
+          94
+        ],
+        "level": 25,
+        "strength": 50
+      }
+    },
+    {
+      "name": "Shadow Wolf",
+      "metadataUri": "ipfs://monsters/mystic_grove/shadow_wolf.json",
+      "stats": {
+        "agility": 52,
+        "armor": 1,
+        "class": 1,
+        "experience": 7600,
+        "hitPoints": 125,
+        "intelligence": 24,
+        "inventory": [
+          13,
+          62,
+          94
+        ],
+        "level": 25,
+        "strength": 32
+      }
+    },
+    {
+      "name": "Grove Witch",
+      "metadataUri": "ipfs://monsters/mystic_grove/grove_witch.json",
+      "stats": {
+        "agility": 28,
+        "armor": 0,
+        "class": 2,
+        "experience": 7800,
+        "hitPoints": 118,
+        "intelligence": 52,
+        "inventory": [
+          14,
+          63,
+          94
+        ],
+        "level": 25,
+        "strength": 26
+      }
+    },
+    {
+      "name": "Shambling Mound",
+      "metadataUri": "ipfs://monsters/mystic_grove/shambling_mound.json",
+      "stats": {
+        "agility": 29,
+        "armor": 5,
+        "class": 0,
+        "experience": 8300,
+        "hitPoints": 185,
+        "intelligence": 25,
+        "inventory": [
+          12,
+          61,
+          100
+        ],
+        "level": 26,
+        "strength": 52
+      }
+    },
+    {
+      "name": "Displacer Beast",
+      "metadataUri": "ipfs://monsters/mystic_grove/displacer_beast.json",
+      "stats": {
+        "agility": 54,
+        "armor": 2,
+        "class": 1,
+        "experience": 8200,
+        "hitPoints": 132,
+        "intelligence": 25,
+        "inventory": [
+          13,
+          62,
+          101
+        ],
+        "level": 26,
+        "strength": 33
+      }
+    },
+    {
+      "name": "Corrupted Druid",
+      "metadataUri": "ipfs://monsters/mystic_grove/corrupted_druid.json",
+      "stats": {
+        "agility": 29,
+        "armor": 1,
+        "class": 2,
+        "experience": 8400,
+        "hitPoints": 125,
+        "intelligence": 54,
+        "inventory": [
+          14,
+          63,
+          102
+        ],
+        "level": 26,
+        "strength": 27
+      }
+    },
+    {
+      "name": "Forest Giant",
+      "metadataUri": "ipfs://monsters/mystic_grove/forest_giant.json",
+      "stats": {
+        "agility": 30,
+        "armor": 6,
+        "class": 0,
+        "experience": 8950,
+        "hitPoints": 198,
+        "intelligence": 26,
+        "inventory": [
+          12,
+          61,
+          100
+        ],
+        "level": 27,
+        "strength": 54
+      }
+    },
+    {
+      "name": "Blink Dog Alpha",
+      "metadataUri": "ipfs://monsters/mystic_grove/blink_dog_alpha.json",
+      "stats": {
+        "agility": 56,
+        "armor": 1,
+        "class": 1,
+        "experience": 8850,
+        "hitPoints": 140,
+        "intelligence": 26,
+        "inventory": [
+          13,
+          62,
+          101
+        ],
+        "level": 27,
+        "strength": 34
+      }
+    },
+    {
+      "name": "Arch Dryad",
+      "metadataUri": "ipfs://monsters/mystic_grove/arch_dryad.json",
+      "stats": {
+        "agility": 30,
+        "armor": 1,
+        "class": 2,
+        "experience": 9050,
+        "hitPoints": 132,
+        "intelligence": 56,
+        "inventory": [
+          14,
+          63,
+          102
+        ],
+        "level": 27,
+        "strength": 28
+      }
+    },
+    {
+      "name": "Treant Elder",
+      "metadataUri": "ipfs://monsters/mystic_grove/treant_elder.json",
+      "stats": {
+        "agility": 31,
+        "armor": 7,
+        "class": 0,
+        "experience": 9700,
+        "hitPoints": 210,
+        "intelligence": 27,
+        "inventory": [
+          12,
+          61,
+          100
+        ],
+        "level": 28,
+        "strength": 56
+      }
+    },
+    {
+      "name": "Phase Panther",
+      "metadataUri": "ipfs://monsters/mystic_grove/phase_panther.json",
+      "stats": {
+        "agility": 58,
+        "armor": 1,
+        "class": 1,
+        "experience": 9600,
+        "hitPoints": 148,
+        "intelligence": 27,
+        "inventory": [
+          13,
+          62,
+          101
+        ],
+        "level": 28,
+        "strength": 36
+      }
+    },
+    {
+      "name": "Fey Lord",
+      "metadataUri": "ipfs://monsters/mystic_grove/fey_lord.json",
+      "stats": {
+        "agility": 31,
+        "armor": 2,
+        "class": 2,
+        "experience": 9800,
+        "hitPoints": 140,
+        "intelligence": 58,
+        "inventory": [
+          14,
+          63,
+          102
+        ],
+        "level": 28,
+        "strength": 29
+      }
+    },
+    {
+      "name": "Titan Oak",
+      "metadataUri": "ipfs://monsters/mystic_grove/titan_oak.json",
+      "stats": {
+        "agility": 32,
+        "armor": 8,
+        "class": 0,
+        "experience": 10500,
+        "hitPoints": 225,
+        "intelligence": 28,
+        "inventory": [
+          15,
+          61,
+          94
+        ],
+        "level": 29,
+        "strength": 58
+      }
+    },
+    {
+      "name": "Grove Guardian",
+      "metadataUri": "ipfs://monsters/mystic_grove/grove_guardian.json",
+      "stats": {
+        "agility": 60,
+        "armor": 2,
+        "class": 1,
+        "experience": 10400,
+        "hitPoints": 158,
+        "intelligence": 28,
+        "inventory": [
+          16,
+          62,
+          94
+        ],
+        "level": 29,
+        "strength": 38
+      }
+    },
+    {
+      "name": "Archfey Emissary",
+      "metadataUri": "ipfs://monsters/mystic_grove/archfey_emissary.json",
+      "stats": {
+        "agility": 32,
+        "armor": 2,
+        "class": 2,
+        "experience": 10600,
+        "hitPoints": 150,
+        "intelligence": 60,
+        "inventory": [
+          17,
+          63,
+          94
+        ],
+        "level": 29,
+        "strength": 30
+      }
+    },
+    {
+      "name": "Ancient Treant",
+      "metadataUri": "ipfs://monsters/mystic_grove/ancient_treant.json",
+      "stats": {
+        "agility": 35,
+        "armor": 10,
+        "class": 0,
+        "experience": 13000,
+        "hitPoints": 250,
+        "intelligence": 30,
+        "inventory": [
+          15,
+          61,
+          94
+        ],
+        "level": 30,
+        "strength": 62
+      }
+    },
+    {
+      "name": "Nightmare Stalker",
+      "metadataUri": "ipfs://monsters/mystic_grove/nightmare_stalker.json",
+      "stats": {
+        "agility": 65,
+        "armor": 3,
+        "class": 1,
+        "experience": 12800,
+        "hitPoints": 175,
+        "intelligence": 30,
+        "inventory": [
+          16,
+          62,
+          94
+        ],
+        "level": 30,
+        "strength": 42
+      }
+    },
+    {
+      "name": "Queen of Thorns",
+      "metadataUri": "ipfs://monsters/mystic_grove/queen_of_thorns.json",
+      "stats": {
+        "agility": 35,
+        "armor": 4,
+        "class": 2,
+        "experience": 13200,
+        "hitPoints": 180,
+        "intelligence": 65,
+        "inventory": [
+          17,
+          63,
+          94
+        ],
+        "level": 30,
+        "strength": 35
+      }
+    }
+  ]
+}

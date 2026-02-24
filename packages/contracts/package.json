@@ -6,10 +6,10 @@
   "scripts": {
     "build": "mud build",
     "clean": "forge clean && rimraf src/codegen",
-    "seed": "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 npx tsx scripts/seed-game-data.ts",
-    "seed:items": "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 npx tsx scripts/seed-game-data.ts --items-only",
-    "seed:monsters": "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 npx tsx scripts/seed-game-data.ts --monsters-only",
-    "zone:load": "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 npx tsx scripts/zone-loader.ts",
+    "seed": "npx tsx scripts/seed-game-data.ts",
+    "seed:items": "npx tsx scripts/seed-game-data.ts --items-only",
+    "seed:monsters": "npx tsx scripts/seed-game-data.ts --monsters-only",
+    "zone:load": "npx tsx scripts/zone-loader.ts",
     "zone:list": "npx tsx scripts/zone-loader.ts --help",
     "deploy:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry",
     "update:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry && CHAIN_ID=31337 --worldAddress",
@@ -33,7 +33,8 @@
     "@latticexyz/store": "^2.2.23",
     "@latticexyz/world": "^2.2.23",
     "@latticexyz/world-modules": "^2.2.23",
-    "@openzeppelin/contracts": "^5.0.2"
+    "dotenv": "^16.4.5",
+    "@openzeppelin/contracts": "5.0.2"
   },
   "devDependencies": {
     "@pythnetwork/entropy-sdk-solidity": "1.3.0",
