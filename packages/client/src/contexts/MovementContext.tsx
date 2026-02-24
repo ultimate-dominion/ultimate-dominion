@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { IoIosWarning } from 'react-icons/io';
@@ -60,6 +61,7 @@ export const MovementProvider = ({
   const { isMessageInputFocused } = useChat();
 
   const [isMoving, setIsMoving] = useState(false);
+  const moveInFlight = useRef(false);
   const [isMovementDisabled, setIsMovementDisabled] = useState(false);
 
   const onSetIsMovementDisabled = useCallback((isDisabled: boolean) => {
@@ -70,11 +72,12 @@ export const MovementProvider = ({
     async (direction: 'up' | 'down' | 'left' | 'right') => {
       try {
         if (isMovementDisabled) return;
-        if (isMoving) return;
+        if (moveInFlight.current) return;
         if (!isSpawned) return;
         if (currentBattle) return;
         if (isMessageInputFocused) return;
 
+        moveInFlight.current = true;
         setIsMoving(true);
 
         if (!delegatorAddress) {
@@ -138,6 +141,7 @@ export const MovementProvider = ({
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to move.', e);
       } finally {
+        moveInFlight.current = false;
         setIsMoving(false);
       }
     },
@@ -148,7 +152,6 @@ export const MovementProvider = ({
       isMessageInputFocused,
       isMoveEquipped,
       isMovementDisabled,
-      isMoving,
       isSpawned,
       move,
       onOpenNoMoveEquippedModal,
@@ -166,7 +169,7 @@ export const MovementProvider = ({
       }
 
       if (isMovementDisabled) return;
-      if (isMoving) return;
+      if (moveInFlight.current) return;
       if (!isSpawned) return;
       if (currentBattle) return;
       if (isMessageInputFocused) return;
@@ -208,7 +211,6 @@ export const MovementProvider = ({
     currentBattle,
     isMessageInputFocused,
     isMovementDisabled,
-    isMoving,
     isSpawned,
     onMove,
     pathname,
