@@ -26,12 +26,17 @@ import {
 
 import { INSUFFICIENT_FUNDS_MESSAGE } from '../../utils/errors';
 import {
+  AdvancedClass,
+  ArmorType,
   EncounterType,
   type EntityStats,
   type NewOrder,
   OrderStatus,
+  PowerSource,
+  Race,
   StatsClasses,
 } from '../../utils/types';
+
 import { ClientComponents } from './createClientComponents';
 import { SetupNetworkResult } from './setupNetwork';
 
@@ -42,15 +47,27 @@ type SystemCallReturn = Promise<{
   error?: string;
 }>;
 
-const getContractError = (error: BaseError): string => {
-  const revertError = error.walk(
+const getContractError = (error: unknown): string => {
+  console.error('[getContractError] Full error:', error);
+  // Handle non-viem errors gracefully
+  if (!error || typeof error !== 'object' || !('walk' in error)) {
+    if (error instanceof Error) {
+      console.error('[getContractError] Error message:', error.message);
+      return error.message;
+    }
+    console.error('[getContractError] Unknown error type');
+    return 'An error occurred calling the contract.';
+  }
+
+  const baseError = error as BaseError;
+  const revertError = baseError.walk(
     e => e instanceof ContractFunctionRevertedError,
   );
   if (revertError instanceof ContractFunctionRevertedError) {
     const args = revertError.data?.args ?? [];
     return (args[0] as string) ?? 'An error occurred calling the contract.';
   }
-  const insufficientFundsError = error.walk(
+  const insufficientFundsError = baseError.walk(
     e => e instanceof InsufficientFundsError,
   );
   if (insufficientFundsError instanceof InsufficientFundsError) {
@@ -120,7 +137,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -155,7 +172,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -196,7 +213,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -228,7 +245,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -269,7 +286,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -292,7 +309,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -312,18 +329,6 @@ export function createSystemCalls(
           itemId: BigInt(itemId),
         },
       ];
-
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [
-          encounterId.toString() as `0x${string}`,
-          playerId.toString() as `0x${string}`,
-          actions,
-        ],
-        functionName: 'UD__endTurn',
-      });
 
       const tx = await worldContract.write.UD__endTurn(
         [
@@ -348,24 +353,34 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
   };
 
-  const enterGame = async (characterEntity: Entity): SystemCallReturn => {
+  const enterGame = async (
+    characterEntity: Entity,
+    starterWeaponId: bigint,
+    starterArmorId: bigint,
+  ): SystemCallReturn => {
     try {
       await publicClient.simulateContract({
         abi: worldContract.abi,
         account: delegatorAddress,
         address: worldContract.address,
-        args: [characterEntity.toString() as `0x${string}`],
+        args: [
+          characterEntity.toString() as `0x${string}`,
+          starterWeaponId,
+          starterArmorId,
+        ],
         functionName: 'UD__enterGame',
       });
 
       const tx = await worldContract.write.UD__enterGame([
         characterEntity.toString() as `0x${string}`,
+        starterWeaponId,
+        starterArmorId,
       ]);
 
       await waitForTransaction(tx);
@@ -377,7 +392,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -406,26 +421,34 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const characterEquipment = getComponentValueStrict(
-        CharacterEquipment,
-        characterEntity,
-      );
+      // CharacterEquipment component may not be synced yet, so use non-strict get
+      const characterEquipment = CharacterEquipment
+        ? getComponentValue(CharacterEquipment, characterEntity)
+        : undefined;
 
-      const { equippedArmor, equippedSpells, equippedWeapons } =
-        characterEquipment;
+      // If component data is available, verify equip succeeded
+      if (characterEquipment) {
+        const { equippedArmor, equippedSpells, equippedWeapons } =
+          characterEquipment;
 
-      const success =
-        equippedArmor.some(id => itemIds.includes(id.toString())) ||
-        equippedSpells.some(id => itemIds.includes(id.toString())) ||
-        equippedWeapons.some(id => itemIds.includes(id.toString()));
+        const success =
+          equippedArmor?.some(id => itemIds.includes(id.toString())) ||
+          equippedSpells?.some(id => itemIds.includes(id.toString())) ||
+          equippedWeapons?.some(id => itemIds.includes(id.toString()));
 
+        return {
+          error: success ? undefined : 'Failed to equip items.',
+          success: !!success,
+        };
+      }
+
+      // If component not available, trust the transaction succeeded
       return {
-        error: success ? undefined : 'Failed to equip items.',
-        success,
+        success: true,
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -456,7 +479,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -493,7 +516,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -507,14 +530,20 @@ export function createSystemCalls(
   ): SystemCallReturn => {
     try {
       const formattedNewStats = {
+        strength: BigInt(entityStats.strength),
         agility: BigInt(entityStats.agility),
-        maxHp: BigInt(entityStats.maxHp),
         class: entityStats.class,
+        intelligence: BigInt(entityStats.intelligence),
+        maxHp: BigInt(entityStats.maxHp),
         currentHp: BigInt(entityStats.currentHp),
         experience: BigInt(entityStats.experience),
-        intelligence: BigInt(entityStats.intelligence),
         level: BigInt(entityStats.level) + BigInt(1),
-        strength: BigInt(entityStats.strength),
+        // Implicit class system fields - preserve existing values
+        powerSource: entityStats.powerSource ?? PowerSource.None,
+        race: entityStats.race ?? Race.None,
+        startingArmor: entityStats.startingArmor ?? ArmorType.None,
+        advancedClass: entityStats.advancedClass ?? AdvancedClass.None,
+        hasSelectedAdvancedClass: entityStats.hasSelectedAdvancedClass ?? false,
       };
 
       await publicClient.simulateContract({
@@ -548,7 +577,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -594,7 +623,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -605,14 +634,6 @@ export function createSystemCalls(
     x: number,
     y: number,
   ): SystemCallReturn => {
-    await publicClient.simulateContract({
-      abi: worldContract.abi,
-      account: delegatorAddress,
-      address: worldContract.address,
-      args: [characterEntity.toString() as `0x${string}`, x, y],
-      functionName: 'UD__move',
-    });
-
     const positionId = uuid();
     Position.addOverride(positionId, {
       entity: characterEntity,
@@ -641,7 +662,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     } finally {
@@ -677,7 +698,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -708,7 +729,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -742,22 +763,29 @@ export function createSystemCalls(
 
       const { blockNumber } = await waitForTransaction(tx);
 
-      const blockToWaitFor = blockNumber + BigInt(2);
+      // On real networks, wait for additional blocks for finality
+      // On local Anvil (chainId 31337), skip this as blocks only mine on transactions
+      const chainId = await publicClient.getChainId();
+      if (chainId !== 31337) {
+        const blockToWaitFor = blockNumber + BigInt(2);
 
-      let currentBlockNumber = await publicClient.getBlockNumber();
-      while (currentBlockNumber < blockToWaitFor) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        currentBlockNumber = await publicClient.getBlockNumber();
+        let currentBlockNumber = await publicClient.getBlockNumber();
+        while (currentBlockNumber < blockToWaitFor) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          currentBlockNumber = await publicClient.getBlockNumber();
+        }
       }
 
-      const success = !!getComponentValue(Stats, characterEntity);
+      const stats = getComponentValue(Stats, characterEntity);
+      const success = stats && stats.maxHp > BigInt(0);
+
       return {
         error: success ? undefined : 'Failed to roll stats.',
-        success,
+        success: !!success,
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -787,7 +815,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -817,7 +845,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -843,25 +871,33 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const characterEquipment = getComponentValueStrict(
-        CharacterEquipment,
-        characterEntity,
-      );
+      // CharacterEquipment component may not be synced yet, so use non-strict get
+      const characterEquipment = CharacterEquipment
+        ? getComponentValue(CharacterEquipment, characterEntity)
+        : undefined;
 
-      const { equippedArmor, equippedWeapons } = characterEquipment;
+      // If component data is available, verify unequip succeeded
+      if (characterEquipment) {
+        const { equippedArmor, equippedWeapons } = characterEquipment;
 
-      const success = !(
-        equippedArmor.includes(BigInt(itemId)) ||
-        equippedWeapons.includes(BigInt(itemId))
-      );
+        const success = !(
+          equippedArmor?.includes(BigInt(itemId)) ||
+          equippedWeapons?.includes(BigInt(itemId))
+        );
 
+        return {
+          error: success ? undefined : 'Failed to unequip item.',
+          success,
+        };
+      }
+
+      // If component not available, trust the transaction succeeded
       return {
-        error: success ? undefined : 'Failed to unequip item.',
-        success,
+        success: true,
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -906,7 +942,7 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
         success: false,
       };
     }
@@ -944,7 +980,48 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const useCombatConsumableItem = async (
+    entity: Entity,
+    tokenId: string,
+  ): SystemCallReturn => {
+    try {
+      const characterId = entity.toString() as `0x${string}`;
+      console.log('[useCombatConsumableItem] characterId:', characterId);
+      console.log('[useCombatConsumableItem] tokenId:', tokenId);
+      console.log('[useCombatConsumableItem] delegatorAddress:', delegatorAddress);
+      console.log('[useCombatConsumableItem] worldContract.address:', worldContract.address);
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId, BigInt(tokenId)],
+        functionName: 'UD__useCombatConsumableItem',
+      });
+
+      const tx = await worldContract.write.UD__useCombatConsumableItem([
+        characterId,
+        BigInt(tokenId),
+      ]);
+
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      const success = status === 'success';
+
+      return {
+        error: success ? undefined : 'Failed to use combat consumable.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
         success: false,
       };
     }
@@ -985,7 +1062,231 @@ export function createSystemCalls(
       };
     } catch (e) {
       return {
-        error: getContractError(e as BaseError),
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  // === Implicit Class System Functions ===
+
+  const chooseRace = async (
+    characterEntity: Entity,
+    race: Race,
+  ): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterEntity.toString() as `0x${string}`, race],
+        functionName: 'UD__chooseRace',
+      });
+
+      const tx = await worldContract.write.UD__chooseRace([
+        characterEntity.toString() as `0x${string}`,
+        race,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const stats = getComponentValue(Stats, characterEntity);
+      const success = stats && stats.race === race;
+
+      return {
+        error: success ? undefined : 'Failed to choose race.',
+        success: !!success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const choosePowerSource = async (
+    characterEntity: Entity,
+    powerSource: PowerSource,
+  ): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterEntity.toString() as `0x${string}`, powerSource],
+        functionName: 'UD__choosePowerSource',
+      });
+
+      const tx = await worldContract.write.UD__choosePowerSource([
+        characterEntity.toString() as `0x${string}`,
+        powerSource,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const stats = getComponentValue(Stats, characterEntity);
+      const success = stats && stats.powerSource === powerSource;
+
+      return {
+        error: success ? undefined : 'Failed to choose power source.',
+        success: !!success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const rollBaseStats = async (
+    characterEntity: Entity,
+  ): SystemCallReturn => {
+    try {
+      const randomString = 'UltimateDominion';
+      const userRandomNumber = keccak256(toBytes(randomString));
+
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [
+          userRandomNumber,
+          characterEntity.toString() as `0x${string}`,
+        ],
+        functionName: 'UD__rollBaseStats',
+      });
+
+      const tx = await worldContract.write.UD__rollBaseStats([
+        userRandomNumber,
+        characterEntity.toString() as `0x${string}`,
+      ]);
+
+      const { blockNumber } = await waitForTransaction(tx);
+
+      // On real networks, wait for additional blocks for finality
+      const chainId = await publicClient.getChainId();
+      if (chainId !== 31337) {
+        const blockToWaitFor = blockNumber + BigInt(2);
+
+        let currentBlockNumber = await publicClient.getBlockNumber();
+        while (currentBlockNumber < blockToWaitFor) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          currentBlockNumber = await publicClient.getBlockNumber();
+        }
+      }
+
+      const stats = getComponentValue(Stats, characterEntity);
+      const success = stats && stats.maxHp > BigInt(0);
+
+      return {
+        error: success ? undefined : 'Failed to roll base stats.',
+        success: !!success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const selectAdvancedClass = async (
+    characterEntity: Entity,
+    advancedClass: AdvancedClass,
+  ): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterEntity.toString() as `0x${string}`, advancedClass],
+        functionName: 'UD__selectAdvancedClass',
+      });
+
+      const tx = await worldContract.write.UD__selectAdvancedClass([
+        characterEntity.toString() as `0x${string}`,
+        advancedClass,
+      ]);
+
+      await waitForTransaction(tx);
+
+      const stats = getComponentValue(Stats, characterEntity);
+      const success = stats && stats.advancedClass === advancedClass && stats.hasSelectedAdvancedClass;
+
+      return {
+        error: success ? undefined : 'Failed to select advanced class.',
+        success: !!success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  // Manual trigger for testing - normally called by contract systems
+  const triggerFragment = async (
+    characterId: string,
+    fragmentType: number,
+    tileX: number,
+    tileY: number,
+  ): SystemCallReturn => {
+    try {
+      const tx = await worldContract.write.UD__triggerFragment([
+        characterId as `0x${string}`,
+        fragmentType,
+        tileX,
+        tileY,
+      ]);
+
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      return {
+        error: status === 'reverted' ? 'Transaction reverted' : undefined,
+        success: status === 'success',
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const claimFragment = async (
+    characterId: string,
+    fragmentType: number,
+  ): SystemCallReturn => {
+    try {
+      await publicClient.simulateContract({
+        abi: worldContract.abi,
+        account: delegatorAddress,
+        address: worldContract.address,
+        args: [characterId as `0x${string}`, fragmentType],
+        functionName: 'UD__claimFragment',
+      });
+
+      const tx = await worldContract.write.UD__claimFragment([
+        characterId as `0x${string}`,
+        fragmentType,
+      ]);
+
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      const success = status === 'success';
+
+      return {
+        error: success ? undefined : 'Failed to claim fragment.',
+        success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
         success: false,
       };
     }
@@ -994,6 +1295,10 @@ export function createSystemCalls(
   return {
     buy,
     cancelOrder,
+    chooseRace,
+    choosePowerSource,
+    claimFragment,
+    triggerFragment,
     createEncounter,
     createOrder,
     depositToEscrow,
@@ -1008,11 +1313,14 @@ export function createSystemCalls(
     move,
     removeEntityFromBoard,
     restock,
+    rollBaseStats,
     rollStats,
+    selectAdvancedClass,
     sell,
     spawn,
     unequipItem,
     updateTokenUri,
+    useCombatConsumableItem,
     useWorldConsumableItem,
     withdrawFromEscrow,
   };

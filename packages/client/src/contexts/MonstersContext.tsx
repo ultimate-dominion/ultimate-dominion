@@ -18,9 +18,11 @@ import { useToast } from '../hooks/useToast';
 import {
   decodeMonsterStats,
   fetchMetadataFromUri,
+  isTextOnlyUri,
   uriToHttp,
 } from '../utils/helpers';
 import { MobType, type MonsterTemplate } from '../utils/types';
+
 import { useMUD } from './MUDContext';
 
 type MonstersContextType = {
@@ -61,9 +63,23 @@ export const MonstersProvider = ({
           const { mobMetadata: metadataURI, mobStats } = mobData;
 
           const monsterStats = decodeMonsterStats(mobStats);
-          const fetachedMetadata = await fetchMetadataFromUri(
-            uriToHttp(metadataURI)[0],
-          );
+
+          // Handle text-only URIs directly
+          let fetachedMetadata = { name: `Monster #${mobId}`, description: '', image: '' };
+          try {
+            if (metadataURI && metadataURI.trim() !== '') {
+              if (isTextOnlyUri(metadataURI)) {
+                fetachedMetadata = await fetchMetadataFromUri(metadataURI);
+              } else {
+                const urls = uriToHttp(metadataURI);
+                if (urls.length > 0) {
+                  fetachedMetadata = await fetchMetadataFromUri(urls[0]);
+                }
+              }
+            }
+          } catch (e) {
+            console.warn(`Failed to fetch metadata for monster ${mobId}:`, e);
+          }
 
           return {
             agility: monsterStats.agility,

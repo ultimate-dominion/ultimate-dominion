@@ -28,8 +28,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Address, parseEther } from 'viem';
-import { useAccount } from 'wagmi';
-
 import { InfoModal } from '../components/InfoModal';
 import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
@@ -39,6 +37,7 @@ import { MarketplaceIconSvg } from '../components/SVGs';
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
@@ -56,19 +55,37 @@ import {
 
 const ITEMS_PER_PAGE = 10;
 
+// Wrapper component that checks if MUD components are ready
 export const MarketplaceItem = (): JSX.Element => {
+  const { components } = useMUD();
+  const navigate = useNavigate();
+
+  if (!components?.UltimateDominion) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" h="100vh">
+        <Spinner size="xl" />
+      </Box>
+    );
+  }
+
+  return <MarketplaceItemInner />;
+};
+
+const MarketplaceItemInner = (): JSX.Element => {
   const { renderError, renderSuccess, renderWarning } = useToast();
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
   const [searchParams] = useSearchParams();
-  const { isConnected } = useAccount();
+  const { isAuthenticated: isConnected } = useAuth();
 
   const {
-    components: { ItemsOwners, UltimateDominionConfig },
+    components,
     delegatorAddress,
     isSynced,
     systemCalls: { createOrder },
   } = useMUD();
+  const ItemsOwners = components?.ItemsOwners;
+  const UltimateDominion = components?.UltimateDominion;
   const {
     armorTemplates,
     consumableTemplates,
@@ -116,17 +133,17 @@ export const MarketplaceItem = (): JSX.Element => {
     onOpen: onOpenConfirmationModal,
   } = useDisclosure();
 
-  const { goldToken: goldTokenAddress, items: itemsAddress } =
-    useComponentValue(UltimateDominionConfig, singletonEntity) ?? {
-      goldToken: null,
-      items: null,
-    };
+  const configValue = useComponentValue(
+    UltimateDominion!,
+    singletonEntity,
+  );
+  const goldTokenAddress = configValue?.goldToken ?? null;
+  const itemsAddress = configValue?.items ?? null;
 
   // Redirect to home if synced, but missing other requirements
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
-      window.location.reload();
       return;
     }
 

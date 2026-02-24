@@ -1,0 +1,24 @@
+{
+  "physicalDamage": [
+    {
+      "name": "basic weapon attack",
+      "stats": {
+        "armorPenetration": 0,
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0
+      }
+    }
+  ],
+  "magicDamage": [
+    {
+      "name": "basic magic attack",
+      "stats": {
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0
+      }
+    }
+  ],
+  "statusEffects": []
+}

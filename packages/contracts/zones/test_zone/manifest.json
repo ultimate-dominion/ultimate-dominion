@@ -1,0 +1,15 @@
+{
+  "name": "Test Zone",
+  "description": "Minimal test zone for quick iteration",
+  "levelRange": {
+    "min": 1,
+    "max": 7
+  },
+  "dependencies": [],
+  "load": {
+    "effects": true,
+    "items": true,
+    "monsters": true,
+    "shops": true
+  }
+}

@@ -1,36 +1,54 @@
-import { VercelRequest, VercelResponse } from "@vercel/node";
+import { Request, Response } from "express";
+import { uploadJsonToPinata } from "../lib/fileStorage.js";
 
-import { uploadToPinata } from "../lib/fileStorage.js";
+export default async function uploadMetadata(
+  req: Request,
+  res: Response
+) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-const uploadMetadata = async (req: VercelRequest, res: VercelResponse) => {
-  try {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-    if (!(req.method === "POST" || req.method == "OPTIONS")) {
-      return res.status(405).json({ error: "Method not allowed" });
-    }
-
-    if (req.method === "OPTIONS") {
-      return res.status(200).end();
-    }
-
-    const fileName = req.query.name as string;
-    const metadata = req.body;
-
-    console.log(metadata);
-
-    const fileContents = Buffer.from(JSON.stringify(metadata));
-    const cid = await uploadToPinata(fileContents, fileName);
-    if (!cid) {
-      return res.status(500).json({ error: "Error uploading file" });
-    }
-    return res.status(200).json({ cid });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Something went wrong" });
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
   }
-};
 
-export default uploadMetadata;
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    const jsonData = req.body;
+
+    // Validate metadata schema
+    if (!jsonData || typeof jsonData !== 'object' || !jsonData.name) {
+      return res.status(400).json({ error: "Invalid metadata: 'name' field is required" });
+    }
+
+    // Generate a filename based on character name or timestamp
+    const fileName = jsonData.name ? 
+      `character-${jsonData.name}-${Date.now()}.json` : 
+      `character-${Date.now()}.json`;
+
+    const cid = await uploadJsonToPinata(jsonData, fileName);
+    console.log('Upload result CID:', cid);
+    
+    if (!cid) {
+      console.error('Failed to get CID from Pinata');
+      return res.status(500).json({ error: "Error uploading metadata" });
+    }
+
+    const gatewayUrl = `https://violet-magnetic-tick-248.mypinata.cloud/ipfs/${cid}`;
+    return res.status(200).json({ url: gatewayUrl });
+  } catch (error: unknown) {
+    console.error('Error in uploadMetadata:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+    return res.status(500).json({ error: "Error uploading metadata" });
+  }
+}

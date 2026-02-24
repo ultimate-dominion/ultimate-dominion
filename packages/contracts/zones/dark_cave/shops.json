@@ -1,0 +1,32 @@
+{
+  "shops": [
+    {
+      "name": "Grizzled Merchant",
+      "location": [9, 9],
+      "gold": 2000000000000000000000,
+      "maxGold": 2000000000000000000000,
+      "priceMarkdown": 5000,
+      "priceMarkup": 2000,
+      "restockTimestamp": 0,
+      "inventory": [
+        { "itemName": "Minor Health Potion", "stock": 20, "restock": 20 },
+        { "itemName": "Health Potion", "stock": 10, "restock": 10 },
+        { "itemName": "Greater Health Potion", "stock": 5, "restock": 5 },
+        { "itemName": "Fortifying Stew", "stock": 10, "restock": 10 },
+        { "itemName": "Quickening Berries", "stock": 10, "restock": 10 },
+        { "itemName": "Focusing Tea", "stock": 10, "restock": 10 },
+        { "itemName": "Antidote", "stock": 15, "restock": 15 },
+        { "itemName": "Smoke Bomb", "stock": 5, "restock": 5 },
+        { "itemName": "Tattered Cloth", "stock": 5, "restock": 5 },
+        { "itemName": "Worn Leather Vest", "stock": 5, "restock": 5 },
+        { "itemName": "Apprentice Robes", "stock": 5, "restock": 5 },
+        { "itemName": "Broken Sword", "stock": 5, "restock": 5 },
+        { "itemName": "Worn Shortbow", "stock": 5, "restock": 5 },
+        { "itemName": "Cracked Wand", "stock": 5, "restock": 5 },
+        { "itemName": "Heal", "stock": 3, "restock": 3 },
+        { "itemName": "Ice Shard", "stock": 2, "restock": 2 },
+        { "itemName": "Fireball", "stock": 2, "restock": 2 }
+      ]
+    }
+  ]
+}

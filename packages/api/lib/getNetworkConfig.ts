@@ -1,4 +1,4 @@
-import { garnet, MUDChain } from "@latticexyz/common/chains";
+import type { MUDChain } from "@latticexyz/common/chains";
 import { mudFoundry } from "@latticexyz/common/chains";
 import "dotenv/config";
 
@@ -20,7 +20,55 @@ if (!INITIAL_BLOCK_NUMBER) {
   );
 }
 
-const SUPPORTED_CHAINS = [garnet, mudFoundry];
+// Define Base Sepolia chain
+const baseSepolia: MUDChain = {
+  name: "Base Sepolia",
+  id: 84532,
+  nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
+  rpcUrls: {
+    default: {
+      http: [(process.env.RPC_HTTP_URL || "https://base-sepolia-rpc.publicnode.com") as string],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : [],
+    },
+    public: {
+      http: [(process.env.RPC_HTTP_URL || "https://base-sepolia-rpc.publicnode.com") as string],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : [],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "BaseScan Sepolia",
+      url: "https://sepolia.basescan.org",
+    },
+  },
+};
+
+// Define Pyrope chain
+const pyrope: MUDChain = {
+  name: "Pyrope",
+  id: 695569,
+  nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
+  rpcUrls: {
+    default: {
+      http: [(process.env.RPC_HTTP_URL || "https://rpc.pyropechain.com") as string],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://ws.pyropechain.com"],
+    },
+    public: {
+      http: [(process.env.RPC_HTTP_URL || "https://rpc.pyropechain.com") as string],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://ws.pyropechain.com"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Pyrope Explorer",
+      url: "https://explorer.pyropechain.com",
+    },
+  },
+  // Add indexer URL for MUD sync
+  indexerUrl: process.env.INDEXER_URL || "https://indexer.mud.pyropechain.com",
+};
+
+const SUPPORTED_CHAINS = [mudFoundry, baseSepolia, pyrope];
 
 export async function getNetworkConfig(): Promise<{
   privateKey: `0x${string}`;
@@ -29,7 +77,16 @@ export async function getNetworkConfig(): Promise<{
   worldAddress: string;
   initialBlockNumber: number | bigint;
 }> {
-  const chainId = Number(garnet.id);
+  // Use CHAIN_ID env var to select chain. Defaults to Base Sepolia in production, Foundry locally.
+  let chainId: number;
+  if (process.env.CHAIN_ID) {
+    chainId = Number(process.env.CHAIN_ID);
+  } else if (process.env.NODE_ENV === "production") {
+    chainId = Number(baseSepolia.id);
+  } else {
+    chainId = Number(mudFoundry.id);
+  }
+  console.log(`[getNetworkConfig] Using chain ID: ${chainId}`);
 
   const chainIndex = SUPPORTED_CHAINS.findIndex((c) => c.id === chainId);
   const chain = SUPPORTED_CHAINS[chainIndex];

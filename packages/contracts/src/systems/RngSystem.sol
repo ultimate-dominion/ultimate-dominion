@@ -14,15 +14,17 @@ import {
     CombatEncounter
 } from "@codegen/index.sol";
 import {Math} from "@libraries/Math.sol";
-import {Classes, RngRequestType, EncounterType} from "@codegen/common.sol";
+import {Classes, RngRequestType, EncounterType, Race} from "@codegen/common.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IWorld, IPvESystem, IPvPSystem, IWorldActionSystem} from "@world/IWorld.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
+import {StatCalculator} from "@libraries/StatCalculator.sol";
 import "forge-std/console.sol";
 
 contract RngSystem is System {
     using LibChunks for uint256;
+    using StatCalculator for *;
 
     event RNGFulfilled(bytes32 randomNumber);
 
@@ -49,10 +51,9 @@ contract RngSystem is System {
         RngLogs.set(sequenceNumber, rngLog);
 
         uint256 rng;
-        uint256 timesCalled;
         if (block.chainid == 31337) {
-            rng = uint256(keccak256(abi.encode((block.timestamp + timesCalled + 1234567890) ** 8)));
-            timesCalled++;
+            // For Anvil testing: use sequence number to ensure uniqueness
+            rng = uint256(keccak256(abi.encode(block.timestamp, sequenceNumber, userRandomNumber, _msgSender())));
         } else {
             rng = uint256(keccak256(abi.encode(block.prevrandao, userRandomNumber, _msgSender())));
         }
@@ -71,11 +72,22 @@ contract RngSystem is System {
         RngRequestType requestType = RandomNumbers.getRequestType(sequenceNumber);
         bytes memory _data = RandomNumbers.getArbitraryData(sequenceNumber);
 
-        RngLogs.setRandomNumber(_getCounter(1), randomNumber);
+        RngLogs.setRandomNumber(sequenceNumber, randomNumber);
 
         if (requestType == RngRequestType.CharacterStats) {
-            bytes32 characterId = abi.decode(_data, (bytes32));
-            _storeStats(randomNumber, characterId);
+            // Check if this is a balanced stats request (implicit class system)
+            // Data format: (bytes32 characterId) for legacy, (bytes32 characterId, bool useBalanced) for new
+            if (_data.length > 32) {
+                (bytes32 characterId, bool useBalanced) = abi.decode(_data, (bytes32, bool));
+                if (useBalanced) {
+                    _storeBalancedStats(randomNumber, characterId);
+                } else {
+                    _storeStats(randomNumber, characterId);
+                }
+            } else {
+                bytes32 characterId = abi.decode(_data, (bytes32));
+                _storeStats(randomNumber, characterId);
+            }
         } else if (requestType == RngRequestType.Combat) {
             (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
             require(moves.length > 0, "RNG: Invalid moves");
@@ -111,54 +123,67 @@ contract RngSystem is System {
     }
 
     function _storeStats(uint256 randomNumber, bytes32 characterId) internal {
-        uint64[] memory chunks = randomNumber.get4Chunks();
-
         Classes characterClass = Stats.getClass(characterId);
 
-        StatsData memory stats;
-
-        stats.class = characterClass;
-
-        stats.strength = int256(Math.absolute(int256(int64(chunks[0]))) % 8 + 3); // Range [3, 10]
-        stats.agility = int256(Math.absolute(int256(int64(chunks[1]))) % 8 + 3); // Range [3, 10]
-
-        // Calculate intelligence to ensure total is 19
-        stats.intelligence = int256(19 - stats.strength - stats.agility);
-
-        // Ensure intelligence is within the range [3, 10]
-        if (stats.intelligence < 3) {
-            int256 deficit = int256(3 - stats.intelligence);
-            stats.intelligence = int256(3);
-
-            if (stats.strength > stats.agility) {
-                stats.strength -= deficit;
-            } else {
-                stats.agility -= deficit;
-            }
-        } else if (stats.intelligence > 10) {
-            int256 excess = int256(stats.intelligence - 10);
-            stats.intelligence = int256(10);
-
-            if (stats.strength < stats.agility) {
-                stats.strength += int256(excess);
-            } else {
-                stats.agility += int256(excess);
-            }
-        }
-
-        // Class-based adjustments; should total to 21
-        if (characterClass == Classes.Warrior) {
-            stats.strength += 2;
-            stats.maxHp = int256(20);
-        } else if (characterClass == Classes.Rogue) {
-            stats.agility += 2;
-            stats.maxHp = int256(18);
-        } else if (characterClass == Classes.Mage) {
-            stats.intelligence += 2;
-            stats.maxHp = int256(16);
-        }
+        // Use StatCalculator to generate random stats
+        StatsData memory stats = StatCalculator.generateRandomStats(randomNumber, characterClass);
 
         Stats.set(characterId, stats);
+    }
+
+    /**
+     * @notice Store balanced base stats for implicit class system
+     * @dev Generates fresh random stats and adds race bonuses (calculated from race enum, not existing stats)
+     * @param randomNumber Random number for stat generation
+     * @param characterId Character to store stats for
+     */
+    function _storeBalancedStats(uint256 randomNumber, bytes32 characterId) internal {
+        // Get existing stats to preserve implicit class choices (race, powerSource, etc.)
+        StatsData memory existingStats = Stats.get(characterId);
+
+        // Generate fresh balanced base stats while preserving implicit class choices
+        StatsData memory newStats = StatCalculator.generateBalancedBaseStats(randomNumber, existingStats);
+
+        // Calculate and add race bonuses based on the race enum (NOT from existing stats)
+        // This prevents stat accumulation on rerolls
+        (int256 strBonus, int256 agiBonus, int256 intBonus, int256 hpBonus) = _getRaceBonuses(existingStats.race);
+        newStats.strength += strBonus;
+        newStats.agility += agiBonus;
+        newStats.intelligence += intBonus;
+        newStats.maxHp += hpBonus;
+
+        Stats.set(characterId, newStats);
+    }
+
+    /**
+     * @notice Get stat bonuses for a specific race
+     * @param race The race to get bonuses for
+     * @return strBonus Strength bonus
+     * @return agiBonus Agility bonus
+     * @return intBonus Intelligence bonus
+     * @return hpBonus HP bonus
+     */
+    function _getRaceBonuses(Race race) internal pure returns (int256 strBonus, int256 agiBonus, int256 intBonus, int256 hpBonus) {
+        if (race == Race.Dwarf) {
+            // Dwarf: STR +2, AGI -1, HP +1
+            strBonus = 2;
+            agiBonus = -1;
+            intBonus = 0;
+            hpBonus = 1;
+        } else if (race == Race.Elf) {
+            // Elf: AGI +2, INT +1, STR -1, HP -1
+            strBonus = -1;
+            agiBonus = 2;
+            intBonus = 1;
+            hpBonus = -1;
+        } else if (race == Race.Human) {
+            // Human: STR +1, AGI +1, INT +1
+            strBonus = 1;
+            agiBonus = 1;
+            intBonus = 1;
+            hpBonus = 0;
+        }
+        // Race.None returns all zeros
     }
 
     function _getCounter(uint256 counterNumber) internal view returns (uint256 _counter) {

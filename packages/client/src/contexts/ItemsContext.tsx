@@ -19,7 +19,7 @@ import {
 } from 'react';
 
 import { useToast } from '../hooks/useToast';
-import { fetchMetadataFromUri, uriToHttp } from '../utils/helpers';
+import { fetchMetadataFromUri, isTextOnlyUri, uriToHttp } from '../utils/helpers';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -27,6 +27,7 @@ import {
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
+
 import { useMUD } from './MUDContext';
 
 type ItemsContextType = {
@@ -79,31 +80,45 @@ export const ItemsProvider = ({
     async (allArmorIds: bigint[]) => {
       const allArmorTemplates = await Promise.all(
         allArmorIds.map(async armorId => {
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: armorId },
+          const itemIdEntity = encodeEntity(
+            { itemId: 'uint256' },
+            { itemId: armorId },
           );
 
           const statRestrictions = getComponentValueStrict(
             StatRestrictions,
-            tokenIdEntity,
+            itemIdEntity,
           );
-          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
-          const armorStats = getComponentValueStrict(ArmorStats, tokenIdEntity);
+          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
+          const armorStats = getComponentValueStrict(ArmorStats, itemIdEntity);
 
           const baseURI = getComponentValueStrict(
             ItemsBaseURI,
             singletonEntity,
           ).uri;
 
+          // ERC1155 tables use tokenId as key (same numeric value, different key name)
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: armorId },
+          );
           const tokenURI = getComponentValueStrict(
             ItemsTokenURI,
             tokenIdEntity,
           ).uri;
 
-          const metadata = await fetchMetadataFromUri(
-            uriToHttp(`${baseURI}${tokenURI}`)[0],
-          );
+          // Try to fetch metadata, but don't fail if it's unavailable
+          let metadata = { name: `Armor #${armorId}`, description: '', image: '' };
+          try {
+            const fullUri = `${baseURI}${tokenURI}`;
+            if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
+              metadata = await fetchMetadataFromUri(tokenURI || fullUri);
+            } else {
+              metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
+            }
+          } catch (e) {
+            console.warn(`Failed to fetch metadata for armor ${armorId}:`, e);
+          }
 
           return {
             ...metadata,
@@ -134,21 +149,21 @@ export const ItemsProvider = ({
     async (allConsumableIds: bigint[]) => {
       const allConsumableTemplates = await Promise.all(
         allConsumableIds.map(async consumableId => {
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: consumableId },
+          const itemIdEntity = encodeEntity(
+            { itemId: 'uint256' },
+            { itemId: consumableId },
           );
 
           const statRestrictions = getComponentValueStrict(
             StatRestrictions,
-            tokenIdEntity,
+            itemIdEntity,
           );
-          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
           const consumableStats = getComponentValueStrict(
             ConsumableStats,
-            tokenIdEntity,
+            itemIdEntity,
           );
-          const statusEffectStats = consumableStats.effects
+          const statusEffectStats = StatusEffectStats ? consumableStats.effects
             .map(effect => {
               const effectEntity = encodeEntity(
                 { effectId: 'bytes32' },
@@ -161,9 +176,9 @@ export const ItemsProvider = ({
             hpModifier: bigint;
             intModifier: bigint;
             strModifier: bigint;
-          }[];
+          }[] : [];
 
-          const statusEffectValidities = consumableStats.effects
+          const statusEffectValidities = StatusEffectValidity ? consumableStats.effects
             .map(effect => {
               const effectEntity = encodeEntity(
                 { effectId: 'bytes32' },
@@ -176,7 +191,7 @@ export const ItemsProvider = ({
             maxStacks: bigint;
             validTime: bigint;
             validTurns: bigint;
-          }[];
+          }[] : [];
 
           const hpRestoreAmount = BigInt(consumableStats.maxDamage) * -1n;
 
@@ -185,14 +200,28 @@ export const ItemsProvider = ({
             singletonEntity,
           ).uri;
 
+          // ERC1155 tables use tokenId as key (same numeric value, different key name)
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: consumableId },
+          );
           const tokenURI = getComponentValueStrict(
             ItemsTokenURI,
             tokenIdEntity,
           ).uri;
 
-          const metadata = await fetchMetadataFromUri(
-            uriToHttp(`${baseURI}${tokenURI}`)[0],
-          );
+          // Try to fetch metadata, but don't fail if it's unavailable
+          let metadata = { name: `Consumable #${consumableId}`, description: '', image: '' };
+          try {
+            const fullUri = `${baseURI}${tokenURI}`;
+            if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
+              metadata = await fetchMetadataFromUri(tokenURI || fullUri);
+            } else {
+              metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
+            }
+          } catch (e) {
+            console.warn(`Failed to fetch metadata for consumable ${consumableId}:`, e);
+          }
 
           return {
             ...metadata,
@@ -248,32 +277,46 @@ export const ItemsProvider = ({
     async (allSpellIds: bigint[]) => {
       const allSpellTemplates = await Promise.all(
         allSpellIds.map(async spellId => {
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: spellId },
+          const itemIdEntity = encodeEntity(
+            { itemId: 'uint256' },
+            { itemId: spellId },
           );
 
-          const statRestrictions = getComponentValueStrict(
+          const statRestrictions = getComponentValue(
             StatRestrictions,
-            tokenIdEntity,
-          );
-          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+            itemIdEntity,
+          ) ?? { minAgility: 0, minIntelligence: 0, minStrength: 0 };
+          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
 
-          const spellStats = getComponentValueStrict(SpellStats, tokenIdEntity);
+          const spellStats = getComponentValueStrict(SpellStats, itemIdEntity);
 
           const baseURI = getComponentValueStrict(
             ItemsBaseURI,
             singletonEntity,
           ).uri;
 
+          // ERC1155 tables use tokenId as key (same numeric value, different key name)
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: spellId },
+          );
           const tokenURI = getComponentValueStrict(
             ItemsTokenURI,
             tokenIdEntity,
           ).uri;
 
-          const metadata = await fetchMetadataFromUri(
-            uriToHttp(`${baseURI}${tokenURI}`)[0],
-          );
+          // Try to fetch metadata, but don't fail if it's unavailable
+          let metadata = { name: `Spell #${spellId}`, description: '', image: '' };
+          try {
+            const fullUri = `${baseURI}${tokenURI}`;
+            if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
+              metadata = await fetchMetadataFromUri(tokenURI || fullUri);
+            } else {
+              metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
+            }
+          } catch (e) {
+            console.warn(`Failed to fetch metadata for spell ${spellId}:`, e);
+          }
 
           return {
             ...metadata,
@@ -302,19 +345,19 @@ export const ItemsProvider = ({
     async (allWeaponIds: bigint[]) => {
       const allWeaponTemplates = await Promise.all(
         allWeaponIds.map(async weaponId => {
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: weaponId },
+          const itemIdEntity = encodeEntity(
+            { itemId: 'uint256' },
+            { itemId: weaponId },
           );
 
           const statRestrictions = getComponentValueStrict(
             StatRestrictions,
-            tokenIdEntity,
+            itemIdEntity,
           );
-          const itemTemplate = getComponentValueStrict(Items, tokenIdEntity);
+          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
           const weaponStats = getComponentValueStrict(
             WeaponStats,
-            tokenIdEntity,
+            itemIdEntity,
           );
 
           const baseURI = getComponentValueStrict(
@@ -322,14 +365,28 @@ export const ItemsProvider = ({
             singletonEntity,
           ).uri;
 
+          // ERC1155 tables use tokenId as key (same numeric value, different key name)
+          const tokenIdEntity = encodeEntity(
+            { tokenId: 'uint256' },
+            { tokenId: weaponId },
+          );
           const tokenURI = getComponentValueStrict(
             ItemsTokenURI,
             tokenIdEntity,
           ).uri;
 
-          const metadata = await fetchMetadataFromUri(
-            uriToHttp(`${baseURI}${tokenURI}`)[0],
-          );
+          // Try to fetch metadata, but don't fail if it's unavailable
+          let metadata = { name: `Weapon #${weaponId}`, description: '', image: '' };
+          try {
+            const fullUri = `${baseURI}${tokenURI}`;
+            if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
+              metadata = await fetchMetadataFromUri(tokenURI || fullUri);
+            } else {
+              metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
+            }
+          } catch (e) {
+            console.warn(`Failed to fetch metadata for weapon ${weaponId}:`, e);
+          }
 
           return {
             ...metadata,
@@ -363,43 +420,63 @@ export const ItemsProvider = ({
       if (!isSynced) return;
 
       try {
-        const allItemIds = Array.from(runQuery([Has(Items)])).map(entity => {
+        const allItemEntities = Array.from(runQuery([Has(Items)]));
+
+        const allItemIds = allItemEntities.map(entity => {
           const itemTemplate = getComponentValueStrict(Items, entity);
-          const { tokenId } = decodeEntity({ tokenId: 'uint256' }, entity);
+          const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
+          const itemTypeNum = Number(itemTemplate.itemType);
           return {
-            itemType: itemTemplate.itemType,
-            tokenId,
+            itemType: itemTypeNum,
+            itemId,
           };
         });
 
         if (allItemIds.length > 0) {
           const allArmorIds = allItemIds
             .filter(({ itemType }) => itemType === ItemType.Armor)
-            .map(({ tokenId }) => tokenId);
-
-          const _armor = await fetchAllArmor(allArmorIds);
-          setArmorTemplates(_armor);
-
-          const allConsumableIds = allItemIds
-            .filter(({ itemType }) => itemType === ItemType.Consumable)
-            .map(({ tokenId }) => tokenId);
-
-          const _consumables = await fetchAllConsumables(allConsumableIds);
-          setConsumableTemplates(_consumables);
-
-          const allSpellIds = allItemIds
-            .filter(({ itemType }) => itemType === ItemType.Spell)
-            .map(({ tokenId }) => tokenId);
-
-          const _spells = await fetchAllSpells(allSpellIds);
-          setSpellTemplates(_spells);
-
+            .map(({ itemId }) => itemId);
           const allWeaponIds = allItemIds
             .filter(({ itemType }) => itemType === ItemType.Weapon)
-            .map(({ tokenId }) => tokenId);
+            .map(({ itemId }) => itemId);
+          const allConsumableIds = allItemIds
+            .filter(({ itemType }) => itemType === ItemType.Consumable)
+            .map(({ itemId }) => itemId);
+          const allSpellIds = allItemIds
+            .filter(({ itemType }) => itemType === ItemType.Spell)
+            .map(({ itemId }) => itemId);
 
-          const _weapons = await fetchAllWeapons(allWeaponIds);
-          setWeaponTemplates(_weapons);
+          const [armorResult, weaponResult, consumableResult, spellResult] =
+            await Promise.allSettled([
+              fetchAllArmor(allArmorIds),
+              fetchAllWeapons(allWeaponIds),
+              fetchAllConsumables(allConsumableIds),
+              fetchAllSpells(allSpellIds),
+            ]);
+
+          if (armorResult.status === 'fulfilled') {
+            setArmorTemplates(armorResult.value);
+          } else {
+            console.error('[ItemsContext] Error fetching armor:', armorResult.reason);
+          }
+
+          if (weaponResult.status === 'fulfilled') {
+            setWeaponTemplates(weaponResult.value);
+          } else {
+            console.error('[ItemsContext] Error fetching weapons:', weaponResult.reason);
+          }
+
+          if (consumableResult.status === 'fulfilled') {
+            setConsumableTemplates(consumableResult.value);
+          } else {
+            console.error('[ItemsContext] Error fetching consumables:', consumableResult.reason);
+          }
+
+          if (spellResult.status === 'fulfilled') {
+            setSpellTemplates(spellResult.value);
+          } else {
+            console.error('[ItemsContext] Error fetching spells:', spellResult.reason);
+          }
         }
       } catch (e) {
         renderError(

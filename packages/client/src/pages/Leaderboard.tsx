@@ -19,8 +19,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
-import { useAccount } from 'wagmi';
-
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Pagination } from '../components/Pagination';
 import { PolygonalCard } from '../components/PolygonalCard';
@@ -30,6 +28,7 @@ import {
   RogueSvg,
   WarriorSvg,
 } from '../components/SVGs';
+import { useAuth } from '../contexts/AuthContext';
 import { useMap } from '../contexts/MapContext';
 import { HOME_PATH } from '../Routes';
 import { Character, StatsClasses } from '../utils/types';
@@ -39,8 +38,8 @@ const PLAYERS_PER_PAGE = 10;
 export const Leaderboard = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
-  const { allCharacters, isFetchingEntities } = useMap();
+  const { isAuthenticated: isConnected } = useAuth();
+  const { allCharacters, isFetchingEntities, refreshEntities } = useMap();
 
   const [entries, setEntries] = useState<Character[]>([]);
   const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
@@ -54,9 +53,10 @@ export const Leaderboard = (): JSX.Element => {
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
-      window.location.reload();
+    } else {
+      refreshEntities();
     }
-  }, [isConnected, navigate]);
+  }, [isConnected, navigate, refreshEntities]);
 
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {

@@ -1,0 +1,398 @@
+# Ultimate Dominion - Frontend Guidelines
+
+## Design Philosophy
+
+Ultimate Dominion's design focuses on creating an immersive medieval fantasy experience while keeping the interface clean and intuitive. We use a dark theme with accent colors to create a mystical atmosphere, and maintain consistent spacing and typography to ensure everything is easy to read and use.
+
+## Color Palette
+
+### Primary Colors
+```
++------------------+----------------------+------------------+
+|    Navy Blue     |     Royal Blue      |    Steel Blue   |
+|    #0A0F2D      |      #1A237E        |     #4A5568     |
+| Main Background  |    Primary Actions  | Secondary Text   |
++------------------+----------------------+------------------+
+```
+
+### Secondary Colors
+```
++------------------+----------------------+------------------+
+|    Gold          |     Bronze          |    Silver       |
+|    #FFD700      |      #CD7F32        |     #C0C0C0     |
+| Special Actions  |    Achievements     |  Disabled State  |
++------------------+----------------------+------------------+
+```
+
+### Status Colors
+```
++------------------+----------------------+------------------+
+|    Success       |     Warning         |     Danger      |
+|    #48BB78      |      #F6AD55        |     #E53E3E     |
+|  Positive Events | Caution Required    | Critical Actions |
++------------------+----------------------+------------------+
+```
+
+### UI Element Colors
+```
++------------------+----------------------+------------------+
+|    Background    |     Surface         |    Border       |
+|    #1A1F3D      |      #2D3748        |     #4A5568     |
+| Card Background  |    Input Fields     |  Separators     |
++------------------+----------------------+------------------+
+```
+
+## Typography
+
+### Main Fonts
+```
+Primary Font: 'MedievalSharp'
+Used for: Headings, Important Labels
+Example: "Ultimate Dominion"
+
+Secondary Font: 'Roboto'
+Used for: Body Text, UI Elements
+Example: "Health Points: 100/100"
+
+Monospace Font: 'Fira Code'
+Used for: Statistics, Numerical Values
+Example: "DMG: 15-20"
+```
+
+### Font Sizes
+```
+Headings:
+H1: 2.5rem (40px)  - Main Titles
+H2: 2rem   (32px)  - Section Headers
+H3: 1.5rem (24px)  - Subsection Headers
+H4: 1.25rem (20px) - Card Titles
+
+Body Text:
+Large: 1.125rem (18px) - Important Information
+Regular: 1rem (16px)   - Standard Text
+Small: 0.875rem (14px) - Secondary Information
+Tiny: 0.75rem (12px)   - Tooltips
+```
+
+## Icons and Visual Elements
+
+### Game-Specific Icons
+```
+Combat Actions
+Defense/Armor
+Currency/Gold
+Inventory Items
+Movement/Speed
+Weapons
+Magic/Spells
+Health/Life
+Energy/Mana
+```
+
+### UI Icons
+```
+Back/Previous
+Next/Forward
+Add/Create
+Confirm/Success
+Close/Cancel
+Settings
+Search
+Refresh
+More Options
+```
+
+### Status Icons
+```
+New Item/Feature
+Favorite/Special
+Warning
+Error
+Success
+Locked
+Unlocked
+```
+
+## Component Design
+
+### Buttons
+```
++------------------+
+|    Primary       |    Background: #1A237E
+|    Button        |    Text: White
++------------------+    Hover: Lighten 10%
+
++------------------+
+|    Secondary     |    Background: #4A5568
+|    Button        |    Text: White
++------------------+    Hover: Lighten 10%
+
++------------------+
+|    Danger        |    Background: #E53E3E
+|    Button        |    Text: White
++------------------+    Hover: Lighten 10%
+```
+
+### Input Fields
+```
++------------------+
+|  Input Field     |    Background: #2D3748
+|                  |    Border: #4A5568
++------------------+    Focus: #1A237E
+
++------------------+
+|  Search Field    |    Background: #2D3748
+|  |    Icon Color: #4A5568
++------------------+    
+```
+
+### Cards
+```
++------------------+
+|    Card Title    |    Background: #1A1F3D
+|                  |    Border: #4A5568
+|    Content       |    Shadow: 0 2px 4px rgba(0,0,0,0.1)
+|                  |
++------------------+
+```
+
+## Layout Guidelines
+
+### Grid System
+```
+Desktop Layout (1200px+)
++--------+--------+--------+
+|   1/3  |   1/3  |   1/3  |
++--------+--------+--------+
+
+Tablet Layout (768px - 1199px)
++--------+--------+
+|   1/2  |   1/2  |
++--------+--------+
+
+Mobile Layout (<768px)
++----------------+
+|      Full      |
++----------------+
+```
+
+### Spacing Scale
+```
+4px  - Minimal spacing
+8px  - Default spacing
+16px - Component spacing
+24px - Section spacing
+32px - Large section spacing
+48px - Page spacing
+```
+
+## Animation Guidelines
+
+### Transitions
+- Duration: 200ms
+- Timing: ease-in-out
+- Use for: Hover states, expanding/collapsing elements
+
+### Loading States
+```
++------------------+
+|    Loading...    |
+|    |      |
++------------------+
+```
+
+## Accessibility Guidelines
+
+### Color Contrast
+- Minimum contrast ratio: 4.5:1
+- Large text contrast ratio: 3:1
+- Use color blind safe palette
+
+### Focus States
+```
++------------------+
+|    Focused       |    Border: 2px solid #1A237E
+|    Element       |    Outline: none
++------------------+    Ring: 0 0 0 3px rgba(26,35,126,0.5)
+```
+
+## Responsive Design
+
+### Breakpoints
+```
+Mobile: < 768px
+Tablet: 768px - 1199px
+Desktop: >= 1200px
+```
+
+### Mobile-First Approach
+- Design for mobile first
+- Progressively enhance for larger screens
+- Keep touch targets at least 44x44px
+
+## Performance Guidelines
+
+### Image Optimization
+- Use WebP format with PNG fallback
+- Lazy load images below the fold
+- Implement responsive images
+
+### Loading States
+- Show skeleton screens for content
+- Implement progressive loading
+- Cache frequently used assets
+
+## API Integration Guidelines
+
+### Edge API Integration
+
+When integrating with our Vercel Edge Functions:
+
+1. **Base URL Configuration**
+```typescript
+// Use relative path in production
+const apiBase = import.meta.env.PROD ? '/api' : import.meta.env.VITE_API_URL;
+```
+
+2. **Error Handling**
+```typescript
+try {
+  const response = await fetch(`${apiBase}/endpoint`);
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+  const data = await response.json();
+} catch (error) {
+  // Handle network/API errors
+}
+```
+
+3. **Request Headers**
+```typescript
+const headers = {
+  'Content-Type': 'application/json',
+  // Add any auth headers here
+};
+```
+
+4. **Response Types**
+- Define TypeScript interfaces for all API responses
+- Use zod for runtime type validation
+- Handle edge cases and loading states
+
+5. **Performance Best Practices**
+- Implement request caching where appropriate
+- Use SWR or React Query for data fetching
+- Add retry logic for failed requests
+- Monitor response times and errors
+
+## Best Practices
+
+### Component Structure
+- Keep components small and focused
+- Use composition over inheritance
+- Implement proper error boundaries
+
+### State Management
+- Use Zustand for global state
+- Keep local state in components
+- Implement proper state updates
+- Handle side effects in useEffect
+
+### Code Style
+- Use TypeScript for type safety
+- Follow ESLint configuration
+- Implement proper error handling
+
+## Common Patterns
+
+### 1. Modal Pattern
+```typescript
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+  if (!isOpen) return null
+  
+  return (
+    <div className="modal">
+      {children}
+      <button onClick={onClose}>Close</button>
+    </div>
+  )
+}
+```
+
+### 2. Form Pattern
+```typescript
+const Form: React.FC<FormProps> = ({ onSubmit }) => {
+  const [formData, setFormData] = useState({})
+  
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    onSubmit(formData)
+  }
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form fields */}
+    </form>
+  )
+}
+```
+
+### 3. List Pattern
+```typescript
+const List: React.FC<ListProps> = ({ items }) => {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>
+          {/* Item content */}
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+## Deployment Checklist
+
+### Pre-deployment
+- Run all tests
+- Check bundle size
+- Verify environment variables
+- Test in staging environment
+
+### Post-deployment
+- Verify routes work
+- Check performance metrics
+- Monitor error rates
+- Test critical flows
+
+## Version Control
+
+### Branch Naming
+- feature/feature-name
+- bugfix/bug-description
+- hotfix/issue-description
+
+### Commit Messages
+```
+feat: add new game component
+fix: resolve inventory display issue
+docs: update component documentation
+```
+
+## Resources
+
+### Official Documentation
+- [React Documentation](https://reactjs.org/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [TailwindCSS Documentation](https://tailwindcss.com/docs)
+- [MUD Documentation](https://mud.dev/)
+
+### Tools
+- VS Code Extensions
+- Chrome DevTools
+- React Developer Tools
+- Performance Monitoring Tools
+
+Remember to update these guidelines as new patterns and best practices emerge in the project.

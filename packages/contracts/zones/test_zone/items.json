@@ -1,0 +1,241 @@
+{
+  "armor": [
+    {
+      "name": "Basic Cloth",
+      "rarity": 0,
+      "dropChance": 100,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:basic_cloth",
+      "price": 1000000000000000000,
+      "armorType": "Cloth",
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 1,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Basic Leather",
+      "rarity": 0,
+      "dropChance": 100,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:basic_leather",
+      "price": 1000000000000000000,
+      "armorType": "Leather",
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 2,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Basic Plate",
+      "rarity": 0,
+      "dropChance": 100,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:basic_plate",
+      "price": 1000000000000000000,
+      "armorType": "Plate",
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Iron Chainmail",
+      "rarity": 1,
+      "dropChance": 50,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:iron_chainmail",
+      "price": 15000000000000000000,
+      "armorType": "Leather",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 5,
+        "hpModifier": 5,
+        "intModifier": 0,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    }
+  ],
+  "weapons": [
+    {
+      "name": "Basic Sword",
+      "rarity": 0,
+      "dropChance": 100,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:basic_sword",
+      "price": 1000000000000000000,
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 5,
+        "minDamage": 2,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Basic Bow",
+      "rarity": 0,
+      "dropChance": 100,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:basic_bow",
+      "price": 1000000000000000000,
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 4,
+        "minDamage": 3,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Basic Staff",
+      "rarity": 0,
+      "dropChance": 100,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:basic_staff",
+      "price": 1000000000000000000,
+      "isStarter": true,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xeee09063621624b3000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 6,
+        "minDamage": 1,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Monster Bite",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": 1,
+      "metadataUri": "weapon:monster_bite",
+      "price": 0,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 4,
+        "minDamage": 2,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Iron Sword",
+      "rarity": 1,
+      "dropChance": 50,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:iron_sword",
+      "price": 10000000000000000000,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": ["0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 8,
+        "minDamage": 4,
+        "minLevel": 1,
+        "strModifier": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    }
+  ],
+  "spells": [],
+  "consumables": [
+    {
+      "name": "Test Health Potion",
+      "rarity": 0,
+      "dropChance": 100,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:test_health_potion",
+      "price": 500000000000000000,
+      "isStarter": true,
+      "stats": {
+        "effects": [],
+        "maxDamage": -10,
+        "minDamage": -10,
+        "minLevel": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    }
+  ]
+}

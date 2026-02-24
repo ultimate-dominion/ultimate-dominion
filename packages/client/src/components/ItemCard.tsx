@@ -1,4 +1,4 @@
-import { Box, Center, HStack, Stack, Text, VStack } from '@chakra-ui/react';
+import { Box, Center, HStack, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
 import { useMemo } from 'react';
 
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
@@ -6,9 +6,36 @@ import {
   type Armor,
   type Consumable,
   ItemType,
+  Rarity,
+  RARITY_COLORS,
+  RARITY_NAMES,
   type Spell,
   type Weapon,
 } from '../utils/types';
+
+const getRarityColor = (rarity?: Rarity): string => {
+  if (rarity === undefined) return RARITY_COLORS[Rarity.Common];
+  return RARITY_COLORS[rarity];
+};
+
+const getRarityName = (rarity?: Rarity): string => {
+  if (rarity === undefined) return RARITY_NAMES[Rarity.Common];
+  return RARITY_NAMES[rarity];
+};
+
+const getRarityGlow = (rarity?: Rarity): string => {
+  const color = getRarityColor(rarity);
+  if (rarity === Rarity.Legendary) {
+    return `0 0 10px ${color}, 0 0 20px ${color}`;
+  }
+  if (rarity === Rarity.Epic) {
+    return `0 0 8px ${color}, 0 0 15px ${color}`;
+  }
+  if (rarity === Rarity.Rare) {
+    return `0 0 6px ${color}`;
+  }
+  return 'none';
+};
 
 type ItemCardProps = (Armor | Consumable | Spell | Weapon) & {
   isEquipped?: boolean;
@@ -22,7 +49,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   showBalance = true,
   ...item
 }): JSX.Element => {
-  const { balance, name } = item;
+  const { balance, name, rarity } = item;
+  const rarityColor = getRarityColor(rarity);
+  const rarityName = getRarityName(rarity);
+  const rarityGlow = getRarityGlow(rarity);
 
   const itemStats = useMemo(() => {
     if (item.itemType === ItemType.Consumable) {
@@ -143,63 +173,87 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   }, [item]);
 
   return (
-    <HStack
-      border={isEquipped ? '2px solid' : 'none'}
-      borderBottom="2px solid"
-      borderColor="white"
-      boxShadow={
-        isEquipped
-          ? '-10px -10px 8px 0px #A2A9B0, 10px 10px 8px 0px #54545480, 5px 5px 10px 0px #54545440, -5px -5px 4px 0px #5454547D'
-          : '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset'
+    <Tooltip
+      label={
+        <VStack align="start" spacing={1} p={1}>
+          <Text fontWeight="bold" color={rarityColor}>{rarityName}</Text>
+          {itemStats}
+        </VStack>
       }
-      cursor={onClick ? 'pointer' : 'default'}
-      direction="row"
-      minH="100px"
-      onClick={onClick}
-      py={4}
-      px={{ base: 4, sm: 8 }}
-      transition="all 0.3s"
-      w="100%"
-      _active={
-        onClick && {
-          bgColor: 'rgba(0, 0, 0, .04)',
-          borderColor: 'black',
-        }
-      }
-      _hover={
-        onClick && {
-          borderColor: 'black',
-        }
-      }
+      placement="top"
+      hasArrow
     >
-      <Center h="100%" mr={{ base: 2, sm: 6 }}>
-        <Text fontSize={{ base: 'xl', lg: '3xl' }}>{getEmoji(name)}</Text>
-      </Center>
-      <VStack alignItems="start" spacing={0}>
-        <Text fontWeight="bold" mb={2} size={{ base: 'xs', sm: 'md' }}>
-          {removeEmoji(name)}
-          {showBalance && (
-            <Text as="span" size="xs">
-              {' '}
-              x {balance.toString()}
+      <HStack
+        border={isEquipped ? '2px solid' : '2px solid'}
+        borderBottom="2px solid"
+        borderColor={isEquipped ? 'white' : rarityColor}
+        boxShadow={
+          isEquipped
+            ? '-10px -10px 8px 0px #A2A9B0, 10px 10px 8px 0px #54545480, 5px 5px 10px 0px #54545440, -5px -5px 4px 0px #5454547D'
+            : rarityGlow !== 'none'
+              ? rarityGlow
+              : '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset'
+        }
+        cursor={onClick ? 'pointer' : 'default'}
+        direction="row"
+        minH="100px"
+        onClick={onClick}
+        py={4}
+        px={{ base: 4, sm: 8 }}
+        transition="all 0.3s"
+        w="100%"
+        _active={
+          onClick && {
+            bgColor: 'rgba(0, 0, 0, .04)',
+            borderColor: 'black',
+          }
+        }
+        _hover={
+          onClick && {
+            borderColor: 'black',
+          }
+        }
+      >
+        <Center h="100%" mr={{ base: 2, sm: 6 }}>
+          <Text fontSize={{ base: 'xl', lg: '3xl' }}>{getEmoji(name)}</Text>
+        </Center>
+        <VStack alignItems="start" spacing={0}>
+          <HStack spacing={2} mb={1}>
+            <Text
+              fontWeight="bold"
+              size={{ base: 'xs', sm: 'md' }}
+              color={rarityColor}
+              textShadow={rarity && rarity >= Rarity.Rare ? `0 0 5px ${rarityColor}` : 'none'}
+            >
+              {removeEmoji(name)}
             </Text>
-          )}
-        </Text>
-
-        {itemStats}
-      </VStack>
-    </HStack>
+            {showBalance && (
+              <Text as="span" size="xs">
+                x {balance.toString()}
+              </Text>
+            )}
+          </HStack>
+          <Text size="2xs" color={rarityColor} fontStyle="italic" mb={1}>
+            {rarityName}
+          </Text>
+          {itemStats}
+        </VStack>
+      </HStack>
+    </Tooltip>
   );
 };
 
 export const ItemCardSmall: React.FC<ItemCardProps> = ({
   ...item
 }): JSX.Element => {
+  const { rarity } = item;
+  const rarityColor = getRarityColor(rarity);
+
   if (item.itemType === ItemType.Spell) {
     return (
       <HStack
         borderBottom="2px solid"
-        borderColor="white"
+        borderColor={rarityColor}
         boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
         px={{ base: 4, sm: 10 }}
         w="100%"
@@ -210,7 +264,7 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
           </Text>
         </Stack>
         <Box>
-          <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }}>
+          <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }} color={rarityColor}>
             {removeEmoji(item.name)}
           </Text>
         </Box>
@@ -225,7 +279,7 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
   return (
     <HStack
       borderBottom="2px solid"
-      borderColor="white"
+      borderColor={rarityColor}
       boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
       px={{ base: 4, sm: 10 }}
       w="100%"
@@ -236,7 +290,7 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
         </Text>
       </Stack>
       <Box>
-        <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }}>
+        <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }} color={rarityColor}>
           {removeEmoji(name)}
         </Text>
         <Text fontWeight={500} size={{ base: 'xs', sm: 'sm' }}>

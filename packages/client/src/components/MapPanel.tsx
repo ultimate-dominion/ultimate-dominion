@@ -29,10 +29,18 @@ const SAFE_ZONE_AREA = {
   bottomRight: { x: 4, y: 0 },
 };
 
+// Wrapper component that handles undefined MUD components
 export const MapPanel = (): JSX.Element => {
-  const {
-    components: { UltimateDominionConfig },
-  } = useMUD();
+  const { components } = useMUD();
+
+  if (!components?.UltimateDominion) {
+    return <Box />;
+  }
+
+  return <MapPanelInner UltimateDominion={components.UltimateDominion} />;
+};
+
+const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Element => {
   const { allCharacters, isSpawned, isSpawning, onSpawn, position } = useMap();
   const { allShops } = useMap();
   const { currentBattle } = useBattle();
@@ -44,14 +52,15 @@ export const MapPanel = (): JSX.Element => {
     return allCharacters.filter(character => character.isSpawned).length;
   }, [allCharacters]);
 
-  const { maxPlayers } = useComponentValue(
-    UltimateDominionConfig,
+  const configValue = useComponentValue(
+    UltimateDominion,
     singletonEntity,
-  ) ?? { maxPlayers: BigInt(0) };
+  );
+  const maxPlayers = configValue?.maxPlayers ?? BigInt(0);
 
   return (
     <Stack alignItems="center" h="100%">
-      <Box w="100%" h={{ base: '250px', lg: '400px' }}>
+      <Box w="100%" h={{ base: '300px', lg: '400px' }}>
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
@@ -174,6 +183,7 @@ export const MapPanel = (): JSX.Element => {
               <HStack>
                 <BiSolidNavigation size={isDesktop ? 20 : 10} />
                 <Text
+                  fontFamily="mono"
                   fontWeight={700}
                   size={{ base: 'xs', sm: 'md', md: 'xl' }}
                 >
@@ -229,11 +239,11 @@ const NavigationCompass = ({
   return (
     <VStack
       alignItems="stretch"
-      h={175}
+      h={{ base: 140, lg: 175 }}
       justifyContent="space-between"
       mt={{ base: 0, lg: 12, xl: 8 }}
       position="relative"
-      w={175}
+      w={{ base: 140, lg: 175 }}
     >
       <Box
         left="50%"
@@ -261,12 +271,13 @@ const NavigationCompass = ({
         </Icon>
 
         <Button
+          aria-label="Move north"
           borderRadius="50%"
           fontWeight={700}
           isDisabled={isDisabled}
           onClick={() => onMove('up')}
           p={0}
-          size="sm"
+          size={{ base: 'xs', lg: 'sm' }}
           variant="blue"
         >
           N
@@ -291,12 +302,13 @@ const NavigationCompass = ({
           </Icon>
 
           <Button
+            aria-label="Move west"
             borderRadius="50%"
             fontWeight={700}
             isDisabled={isDisabled}
             onClick={() => onMove('left')}
             p={0}
-            size="sm"
+            size={{ base: 'xs', lg: 'sm' }}
             variant="blue"
           >
             W
@@ -304,12 +316,13 @@ const NavigationCompass = ({
         </HStack>
         <HStack spacing={1}>
           <Button
+            aria-label="Move east"
             borderRadius="50%"
             fontWeight={700}
             isDisabled={isDisabled}
             onClick={() => onMove('right')}
             p={0}
-            size="sm"
+            size={{ base: 'xs', lg: 'sm' }}
             variant="blue"
           >
             E
@@ -333,12 +346,13 @@ const NavigationCompass = ({
       </HStack>
       <VStack spacing={0}>
         <Button
+          aria-label="Move south"
           borderRadius="50%"
           fontWeight={700}
           isDisabled={isDisabled}
           onClick={() => onMove('down')}
           p={0}
-          size="sm"
+          size={{ base: 'xs', lg: 'sm' }}
           variant="blue"
         >
           S

@@ -4,6 +4,7 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
+import {NotAdmin, EntityNotAtPosition} from "../Errors.sol";
 import {
     EncounterEntity,
     Stats,
@@ -19,11 +20,11 @@ import {
     UltimateDominionConfig
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {_requireAccess} from "../utils.sol";
+import {ItemType, MobType, EffectType} from "@codegen/common.sol";
 
 contract AdminSystem is System {
     modifier onlyAdmin() {
-        require(Admin.get(_msgSender()), "NOT AN ADMIN");
+        if (!Admin.get(_msgSender())) revert NotAdmin();
         _;
     }
 
@@ -87,7 +88,7 @@ contract AdminSystem is System {
                 i++;
             }
         }
-        require(entityWasAtPosition, "Entity not at position");
+        if (!entityWasAtPosition) revert EntityNotAtPosition();
         Position.set(entityId, x, y);
         EntitiesAtPosition.pushEntities(x, y, entityId);
     }
@@ -99,4 +100,50 @@ contract AdminSystem is System {
     function adminApplyStatusEffect(bytes32 entityId, bytes32 statusEffectId) public onlyAdmin {
         IWorld(_world()).UD__applyStatusEffect(entityId, statusEffectId);
     }
+
+    // Admin functions for creating items post-deployment
+    function adminCreateItem(
+        ItemType itemType,
+        uint256 supply,
+        uint256 dropChance,
+        uint256 price,
+        bytes memory stats,
+        string memory itemMetadataURI
+    ) public onlyAdmin returns (uint256) {
+        return IWorld(_world()).UD__createItem(itemType, supply, dropChance, price, stats, itemMetadataURI);
+    }
+
+    function adminCreateItems(
+        ItemType[] memory itemTypes,
+        uint256[] memory supply,
+        uint256[] memory dropChances,
+        uint256[] memory prices,
+        bytes[] memory stats,
+        string[] memory itemMetadataURIs
+    ) public onlyAdmin {
+        IWorld(_world()).UD__createItems(itemTypes, supply, dropChances, prices, stats, itemMetadataURIs);
+    }
+
+    function adminResupplyLootManager(uint256 itemId, uint256 newSupply) public onlyAdmin {
+        IWorld(_world()).UD__resupplyLootManager(itemId, newSupply);
+    }
+
+    // Admin functions for creating mobs post-deployment
+    function adminCreateMob(MobType mobType, bytes memory stats, string memory mobMetadataUri) public onlyAdmin returns (uint256) {
+        return IWorld(_world()).UD__createMob(mobType, stats, mobMetadataUri);
+    }
+
+    function adminCreateMobs(MobType[] memory mobTypes, bytes[] memory stats, string[] memory mobMetadataURIs) public onlyAdmin {
+        IWorld(_world()).UD__createMobs(mobTypes, stats, mobMetadataURIs);
+    }
+
+    // Admin functions for creating effects post-deployment
+    function adminCreateEffect(
+        EffectType effectType,
+        string memory name,
+        bytes memory effectStats
+    ) public onlyAdmin returns (bytes32) {
+        return IWorld(_world()).UD__createEffect(effectType, name, effectStats);
+    }
+
 }

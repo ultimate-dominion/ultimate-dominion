@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
-import {ItemType, Classes, Alignment, TokenType} from "@codegen/common.sol";
+import {ItemType, Classes, Alignment, TokenType, ArmorType} from "@codegen/common.sol";
 import {
     StatusEffectStatsData,
     WeaponStatsData,
@@ -41,6 +41,7 @@ struct ArmorStatDetails {
     int256 intModifier;
     uint256 minLevel;
     int256 strModifier;
+    ArmorType armorType;
 }
 
 struct WeaponStatDetails {
@@ -52,23 +53,6 @@ struct WeaponStatDetails {
     int256 minDamage;
     uint256 minLevel;
     int256 strModifier;
-}
-
-struct SpellStatDetails {
-    bytes32[] effects;
-    int256 maxDamage;
-    int256 minDamage;
-    uint256 minLevel;
-}
-
-struct SpellTemplateDetails {
-    uint256 dropChance;
-    uint256 initialSupply;
-    string metadataUri;
-    string name;
-    uint256 price;
-    StatRestrictionsData statRestrictions;
-    SpellStatDetails stats;
 }
 
 struct ConsumableTemplateDetails {
@@ -92,7 +76,6 @@ struct StarterItems {
     ArmorTemplateDetails[] armor;
     ConsumableTemplateDetails[] consumables;
     string metadataUriPrefix;
-    SpellTemplateDetails[] spells;
     WeaponTemplateDetails[] weapons;
 }
 

@@ -13,6 +13,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CiCircleCheck } from 'react-icons/ci';
 import { IoIosSend, IoMdInformationCircleOutline } from 'react-icons/io';
+import { FaMedal } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { createPublicClient, http } from 'viem';
 import { mainnet } from 'viem/chains';
@@ -20,12 +21,15 @@ import { mainnet } from 'viem/chains';
 import { useChat } from '../contexts/ChatContext';
 import { useMap } from '../contexts/MapContext';
 import { shortenAddress } from '../utils/helpers';
+
 import { PolygonalCard } from './PolygonalCard';
 
 export const ChatBox: React.FC = () => {
   const { allCharacters } = useMap();
   const {
     chatUser,
+    hasBadge,
+    isCheckingBadge,
     isGroupMember,
     isJoiningGroupChat,
     isLoggedIn,
@@ -41,6 +45,10 @@ export const ChatBox: React.FC = () => {
     onSetNewMessage,
     onSetMessageInputFocus,
   } = useChat();
+
+  // Badge gating is disabled if no badge contract is configured
+  const badgeGatingEnabled = !!import.meta.env.VITE_BADGE_CONTRACT_ADDRESS;
+  const canAccessChat = !badgeGatingEnabled || hasBadge;
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -125,7 +133,7 @@ export const ChatBox: React.FC = () => {
 
   return (
     <ScaleFade initialScale={0.9} in={isChatBoxOpen}>
-      <PolygonalCard clipPath="none" w={{ base: '350px', sm: '365px' }}>
+      <PolygonalCard clipPath="none" w={{ base: 'calc(100vw - 16px)', sm: '365px' }}>
         <HStack
           bgColor="blue500"
           color="white"
@@ -140,6 +148,19 @@ export const ChatBox: React.FC = () => {
         >
           <HStack>
             <Heading size={{ base: 'sm', md: 'md' }}>Chat</Heading>
+            {hasBadge && (
+              <Tooltip
+                bg="#070D2A"
+                hasArrow
+                label="Adventurer Badge - Chat Unlocked!"
+                placement="top"
+                shouldWrapChildren
+              >
+                <Box color="gold">
+                  <FaMedal size={16} />
+                </Box>
+              </Tooltip>
+            )}
             <Tooltip
               bg="#070D2A"
               hasArrow
@@ -153,11 +174,34 @@ export const ChatBox: React.FC = () => {
           <CloseButton onClick={onCloseChatBox} />
         </HStack>
         <Box
-          h={isChatBoxOpen ? '250px' : '0'}
+          h={isChatBoxOpen ? { base: '200px', sm: '250px', lg: '300px' } : '0'}
           overflowY="auto"
           transition="height 0.3s ease"
         >
-          {(isLoggingIn || !isGroupMember) && (
+          {/* Badge gating message */}
+          {badgeGatingEnabled && !canAccessChat && !isCheckingBadge && (
+            <VStack justifyContent="center" mt={8} p={2} spacing={4}>
+              <Text size="sm" textAlign="center" fontWeight="bold">
+                Chat Locked
+              </Text>
+              <Text size="sm" textAlign="center">
+                Reach level 3 to unlock global chat and earn your Adventurer badge!
+              </Text>
+              <Text size="xs" textAlign="center" color="gray.500">
+                Keep adventuring and defeating monsters to level up.
+              </Text>
+            </VStack>
+          )}
+          {/* Checking badge status */}
+          {badgeGatingEnabled && isCheckingBadge && (
+            <VStack justifyContent="center" mt={8} p={2} spacing={4}>
+              <Text size="sm" textAlign="center">
+                Checking chat access...
+              </Text>
+            </VStack>
+          )}
+          {/* Login/Join flow - only show if badge gating passes */}
+          {canAccessChat && (isLoggingIn || !isGroupMember) && (
             <VStack justifyContent="center" mt={8} p={2} spacing={8}>
               <Text size="sm" textAlign="center">
                 Ultimate Dominion&apos;s chat is public and permanent. Do not
@@ -178,7 +222,7 @@ export const ChatBox: React.FC = () => {
               )}
             </VStack>
           )}
-          {isLoggedIn && isGroupMember && chatUser && (
+          {canAccessChat && isLoggedIn && isGroupMember && chatUser && (
             <VStack bg="grey300" flex="1" overflowY="auto" p={2} spacing={2}>
               {messages.map((message, index) => {
                 const isUser = message.from === chatUser.account;
@@ -286,7 +330,7 @@ export const ChatBox: React.FC = () => {
             </VStack>
           )}
         </Box>
-        {isLoggedIn && isGroupMember && chatUser && isChatBoxOpen && (
+        {canAccessChat && isLoggedIn && isGroupMember && chatUser && isChatBoxOpen && (
           <HStack alignItems="center" pr={2}>
             <Textarea
               h="auto"

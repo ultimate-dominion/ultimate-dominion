@@ -15,10 +15,11 @@ import {
 import { useAllowance } from '../contexts/AllowanceContext';
 import { etherToFixedNumber } from '../utils/helpers';
 import { OrderType, SystemToAllow } from '../utils/types';
+
 import { PolygonalCard } from './PolygonalCard';
 
 export const ShopAllowanceModal = ({
-  completeMessage = 'Allowance was successful!',
+  completeMessage = 'Permission granted!',
   isCompleting,
   isOpen,
   itemName,
@@ -55,7 +56,7 @@ export const ShopAllowanceModal = ({
         <ModalOverlay />
         <ModalContent>
           <PolygonalCard isModal />
-          <ModalHeader>Shop Allowances</ModalHeader>
+          <ModalHeader>Shop Permissions</ModalHeader>
           <ModalCloseButton />
           <ModalBody p={8}>
             <Text textAlign="center">{completeMessage}</Text>
@@ -78,13 +79,13 @@ export const ShopAllowanceModal = ({
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
-        <ModalHeader>Shop Allowances</ModalHeader>
+        <ModalHeader>Shop Permissions</ModalHeader>
         <ModalCloseButton />
         <ModalBody p={8}>
           {orderType === OrderType.Buying && (
             <Text alignSelf="start">
-              In order to buy {itemName}, you must allow the shop to use{' '}
-              {etherToFixedNumber(orderPrice)} of your $GOLD.
+              In order to buy {itemName}, you need to give permission to spend{' '}
+              {etherToFixedNumber(orderPrice)} Gold.
             </Text>
           )}
           {orderType === OrderType.Selling && (
@@ -106,13 +107,13 @@ export const ShopAllowanceModal = ({
                   onApproveGoldAllowance(SystemToAllow.Shop, orderPrice)
                 }
               >
-                Allow
+                Allow Spending
               </Button>
               {!isApprovingGold && (
                 <Tooltip
                   bg="#070D2A"
                   hasArrow
-                  label="This allows you to spend $GOLD on Shops without having to approve each transaction. It is a faster and smoother experience, but is less secure."
+                  label="This allows you to spend Gold on Shops without having to approve each transaction. It is a faster and smoother experience."
                   placement="top"
                   shouldWrapChildren
                 >
@@ -133,7 +134,7 @@ export const ShopAllowanceModal = ({
                       textDecoration: 'underline',
                     }}
                   >
-                    Max Allow
+                    Always Allow
                   </Button>
                 </Tooltip>
               )}
@@ -144,7 +145,7 @@ export const ShopAllowanceModal = ({
               isLoading={isApprovingItems}
               onClick={() => onSetApprovalForAllItems(SystemToAllow.Shop)}
             >
-              Allow
+              Allow Spending
             </Button>
           )}
         </ModalFooter>

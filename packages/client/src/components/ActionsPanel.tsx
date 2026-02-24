@@ -6,6 +6,8 @@ import {
   Spinner,
   Stack,
   Text,
+  useBreakpointValue,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -18,34 +20,47 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
-import { EncounterType, Monster } from '../utils/types';
+import { Consumable, EncounterType, Monster } from '../utils/types';
+
+import { ItemConsumeModal } from './ItemConsumeModal';
+import { PotionSvg } from './SVGs/PotionSvg';
 
 export const MONSTER_MOVE_MAPPING: Record<string, string> = {
-  '5': 'Bite',
-  '6': 'Acid Spray',
-  '7': 'Swift Stab',
-  '8': 'Sludge Ball',
-  '9': 'Rusty Axe',
-  '10': 'Bite',
-  '11': 'Iron Sword',
-  '12': 'Venom Bite',
-  '13': 'Ember',
-  '14': 'Iron Sword',
-  '15': 'Wall of Force',
-  '16': 'Venom Bite',
-  '17': 'Claw',
-  '18': 'Wall of Force',
-  '19': 'Burrow Strike',
-  '20': 'Steel Sword',
-  '21': 'Fire Lance',
-  '22': 'Spectral Bite',
-  '23': 'Maul',
-  '24': 'Steel Sword',
-  '25': 'Dragon Breath',
+  '1': 'Razor Claws',      // Rock Beetle
+  '2': 'Razor Claws',      // Cave Rat
+  '3': 'Dark Magic',       // Glowcap Sprite
+  '4': 'Razor Claws',      // Tunnel Crawler
+  '5': 'Razor Claws',      // Shadow Bat
+  '6': 'Elemental Burst',  // Fungal Shaman
+  '7': 'Stone Fist',       // Cavern Brute
+  '8': 'Venomous Bite',    // Cave Spider
+  '9': 'Dark Magic',       // Dark Wisp
+  '10': 'Stone Fist',      // Stone Golem Shard
+  '11': 'Venomous Bite',   // Giant Scorpion
+  '12': 'Elemental Burst', // Crystal Elemental
+  '13': 'Crushing Slam',   // Cave Troll
+  '14': 'Razor Claws',     // Stalker
+  '15': 'Dark Magic',      // Shadow Caster
+  '16': 'Stone Fist',      // Iron Golem
+  '17': 'Venomous Bite',   // Phase Spider
+  '18': 'Dark Magic',      // Void Whisper
+  '19': 'Crushing Slam',   // Cavern Ogre
+  '20': 'Venomous Bite',   // Assassin Bug
+  '21': 'Dark Magic',      // Lich Acolyte
+  '22': 'Crushing Slam',   // Stone Giant
+  '23': 'Shadow Strike',   // Tunnel Wraith
+  '24': 'Dark Magic',      // Dark Sorcerer
+  '25': 'Crushing Slam',   // Mountain Troll
+  '26': 'Shadow Strike',   // Shadow Stalker
+  '27': 'Dark Magic',      // Abyssal Channeler
+  '28': 'Crushing Slam',   // Cavern Lord
+  '29': 'Shadow Strike',   // Cave Wyvern
+  '30': 'Elemental Burst', // Shadow Dragon
 };
 
 export const ActionsPanel = (): JSX.Element => {
-  const { character, equippedSpells, equippedWeapons } = useCharacter();
+  const { character, equippedSpells, equippedWeapons, inventoryConsumables } =
+    useCharacter();
   const { isSpawned, monstersOnTile, position } = useMap();
   const {
     attackOutcomes,
@@ -65,6 +80,15 @@ export const ActionsPanel = (): JSX.Element => {
     spellTemplates,
     weaponTemplates,
   } = useItems();
+
+  const {
+    isOpen: isConsumeModalOpen,
+    onOpen: onOpenConsumeModal,
+    onClose: onCloseConsumeModal,
+  } = useDisclosure();
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const [selectedConsumable, setSelectedConsumable] =
+    useState<Consumable | null>(null);
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
   const [attackButtonFocus, setAttackButtonFocus] = useState<number>(0);
@@ -219,19 +243,12 @@ export const ActionsPanel = (): JSX.Element => {
     }
 
     const interval = setInterval(() => {
-      if (turnEndTime - Date.now() < 0) {
-        setTurnTimeLeft(0);
-        return;
-      }
-      setTurnTimeLeft(prev => prev - 1);
+      const remaining = Math.floor((turnEndTime - Date.now()) / 1000);
+      setTurnTimeLeft(remaining > 0 ? remaining : 0);
     }, 1000);
 
-    if (currentBattle?.encounterType === EncounterType.PvE) {
-      return () => clearInterval(interval);
-    }
-
     return () => clearInterval(interval);
-  }, [currentBattle, turnEndTime, turnTimeLeft]);
+  }, [currentBattle, turnEndTime]);
 
   const canAttack = useMemo(() => {
     if (!currentBattle) return false;
@@ -254,6 +271,19 @@ export const ActionsPanel = (): JSX.Element => {
   const equippedSpellsAndWeapons = useMemo(
     () => [...equippedSpells, ...equippedWeapons],
     [equippedSpells, equippedWeapons],
+  );
+
+  const combatConsumables = useMemo(
+    () => inventoryConsumables.filter(c => c.hpRestoreAmount !== BigInt(0)),
+    [inventoryConsumables],
+  );
+
+  const onUsePotion = useCallback(
+    (consumable: Consumable) => {
+      setSelectedConsumable(consumable);
+      onOpenConsumeModal();
+    },
+    [onOpenConsumeModal],
   );
 
   const spellAndWeaponTemplates = useMemo(
@@ -398,7 +428,14 @@ export const ActionsPanel = (): JSX.Element => {
                       variant="outline"
                       w="100%"
                     >
-                      {item.name}
+                      <>
+                        {isDesktop && (
+                          <Text as="span" fontSize="2xs" fontFamily="mono" opacity={0.6} mr={1}>
+                            [{index + 1}]
+                          </Text>
+                        )}
+                        {item.name}
+                      </>
                     </Button>
                   ))}
                 </HStack>
@@ -427,13 +464,48 @@ export const ActionsPanel = (): JSX.Element => {
                         variant="outline"
                         w="100%"
                       >
-                        {item.name}
+                        <>
+                          {isDesktop && (
+                            <Text as="span" fontSize="2xs" fontFamily="mono" opacity={0.6} mr={1}>
+                              [{index + 3}]
+                            </Text>
+                          )}
+                          {item.name}
+                        </>
                       </Button>
                     ))}
                   </HStack>
                 )}
               </Stack>
             </HStack>
+            {isDesktop && equippedSpellsAndWeapons.length > 0 && (
+              <Text fontSize="2xs" color="grey400" textAlign="center" mt={1}>
+                Use 1-{Math.min(equippedSpellsAndWeapons.length, 4)} keys to attack
+              </Text>
+            )}
+            {combatConsumables.length > 0 && (
+              <HStack spacing={0} w="100%">
+                {combatConsumables.map((consumable, index) => (
+                  <Button
+                    borderLeft={index === 0 ? 'none' : '2px'}
+                    borderRadius={0}
+                    borderRight="none"
+                    borderTop="none"
+                    isDisabled={
+                      attackingItemId !== null || !canAttack || isFleeing
+                    }
+                    key={`consumable-${index}`}
+                    onClick={() => onUsePotion(consumable)}
+                    size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                    variant="outline"
+                    w="100%"
+                  >
+                    <PotionSvg size={3} theme="dark" mr={1} />
+                    {consumable.name} (x{consumable.balance.toString()})
+                  </Button>
+                ))}
+              </HStack>
+            )}
             {canFlee && (
               <VStack>
                 <Button
@@ -450,7 +522,7 @@ export const ActionsPanel = (): JSX.Element => {
                   You can only flee on your first turn.
                 </Text>
                 <Text size="xs" textAlign="center">
-                  By fleeing, you will lose 25% of the $GOLD in your Adventure
+                  By fleeing, you will lose 25% of the Gold in your Adventure
                   Escrow.
                 </Text>
               </VStack>
@@ -631,7 +703,7 @@ export const ActionsPanel = (): JSX.Element => {
                         {opponent.name}
                       </Text>{' '}
                       with {itemName} for{' '}
-                      <Text as="span" color="red">
+                      <Text as="span" color="red" fontFamily="mono">
                         {attack.attackerDamageDelt.toString()}
                       </Text>{' '}
                       damage.
@@ -646,7 +718,7 @@ export const ActionsPanel = (): JSX.Element => {
                         {opponent.name}
                       </Text>{' '}
                       attacked you with {itemName} for{' '}
-                      <Text as="span" color="red">
+                      <Text as="span" color="red" fontFamily="mono">
                         {attack.attackerDamageDelt.toString()}
                       </Text>{' '}
                       damage.
@@ -726,6 +798,13 @@ export const ActionsPanel = (): JSX.Element => {
             </HStack>
           </HStack>
         </Stack>
+      )}
+      {selectedConsumable && (
+        <ItemConsumeModal
+          {...selectedConsumable}
+          isOpen={isConsumeModalOpen}
+          onClose={onCloseConsumeModal}
+        />
       )}
     </Box>
   );

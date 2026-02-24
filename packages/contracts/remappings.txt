@@ -10,6 +10,6 @@ forge-std/=node_modules/forge-std/src/
 @libraries=src/libraries/
 @world/=src/codegen/world/
 @codegen/=src/codegen/
-@openzeppelin=node_modules/@openzeppelin/contracts/
+@openzeppelin/=node_modules/@openzeppelin/contracts/
 @openzeppelin-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/
 @erc1155/=lib/ERC1155-puppet/

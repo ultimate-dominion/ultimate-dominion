@@ -1,11 +1,14 @@
 import {
   Box,
   Button,
+  Drawer,
+  DrawerBody,
+  DrawerCloseButton,
+  DrawerContent,
+  DrawerHeader,
+  DrawerOverlay,
   Grid,
   GridItem,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   Text,
   useDisclosure,
   VStack,
@@ -13,7 +16,7 @@ import {
 import { useCallback, useEffect } from 'react';
 import { IoIosWarning } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
+import { useAuth } from '../contexts/AuthContext';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
@@ -45,8 +48,13 @@ export const GameBoard = (): JSX.Element => {
     onOpen: onOpenBattleOutcomeModal,
     onClose: onCloseBattleOutcomeModal,
   } = useDisclosure();
+  const {
+    isOpen: isStatsDrawerOpen,
+    onOpen: onOpenStatsDrawer,
+    onClose: onCloseStatsDrawer,
+  } = useDisclosure();
 
-  const { isConnected } = useAccount();
+  const { isAuthenticated: isConnected } = useAuth();
   const navigate = useNavigate();
   const {
     delegatorAddress,
@@ -61,7 +69,6 @@ export const GameBoard = (): JSX.Element => {
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
-      window.location.reload();
       return;
     }
 
@@ -159,14 +166,15 @@ export const GameBoard = (): JSX.Element => {
   return (
     <Grid
       gap={2}
-      h={{ base: '1000px', md: 'calc(100vh - 125px)' }}
+      h={{ base: 'auto', md: 'calc(100vh - 125px)' }}
+      minH={{ base: 'calc(100vh - 80px)' }}
       templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
-      templateRows="repeat(12, 1fr)"
+      templateRows={{ base: 'auto', lg: 'repeat(12, 1fr)' }}
     >
       <GridItem
         colSpan={{ base: 1, lg: 4 }}
         display={{ base: 'none', lg: 'block' }}
-        rowSpan={{ base: 12, lg: 12 }}
+        rowSpan={{ base: 'auto', lg: 12 }}
       >
         <PolygonalCard clipPath="none" overflowY="auto">
           <StatsPanel />
@@ -175,7 +183,7 @@ export const GameBoard = (): JSX.Element => {
       <GridItem
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
-        rowSpan={{ base: 3, lg: 6 }}
+        rowSpan={{ base: 'auto', lg: 6 }}
         rowStart={{ base: 0, lg: 0 }}
       >
         <PolygonalCard clipPath="none">
@@ -185,8 +193,8 @@ export const GameBoard = (): JSX.Element => {
       <GridItem
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
-        rowSpan={{ base: 3, lg: 6 }}
-        rowStart={{ base: 4, lg: 7 }}
+        rowSpan={{ base: 'auto', lg: 6 }}
+        rowStart={{ base: 'auto', lg: 7 }}
       >
         <PolygonalCard clipPath="none">
           <ActionsPanel />
@@ -195,8 +203,8 @@ export const GameBoard = (): JSX.Element => {
       <GridItem
         colSpan={{ base: 1, lg: 4 }}
         colStart={{ base: 0, lg: 13 }}
-        rowSpan={{ base: 5, lg: 12 }}
-        rowStart={{ base: 7, lg: 0 }}
+        rowSpan={{ base: 'auto', lg: 12 }}
+        rowStart={{ base: 'auto', lg: 0 }}
       >
         <MapPanel />
       </GridItem>
@@ -209,20 +217,21 @@ export const GameBoard = (): JSX.Element => {
         transform="translateX(-50%)"
         w="100%"
       >
-        <Popover>
-          <PopoverTrigger>
-            <VStack>
-              <Button alignSelf="start" size="sm" w="calc(100% - 67px)">
-                Stats
-              </Button>
-            </VStack>
-          </PopoverTrigger>
-          <PopoverContent>
-            <PolygonalCard clipPath="none" h="500px" overflowY="auto">
+        <VStack>
+          <Button alignSelf="start" onClick={onOpenStatsDrawer} size="sm" w="calc(100% - 67px)">
+            Stats
+          </Button>
+        </VStack>
+        <Drawer isOpen={isStatsDrawerOpen} onClose={onCloseStatsDrawer} placement="bottom">
+          <DrawerOverlay />
+          <DrawerContent maxH="60vh" borderTopRadius="lg">
+            <DrawerCloseButton />
+            <DrawerHeader>Stats</DrawerHeader>
+            <DrawerBody overflowY="auto" pb={6}>
               <StatsPanel />
-            </PolygonalCard>
-          </PopoverContent>
-        </Popover>
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
       </Box>
 
       <InfoModal

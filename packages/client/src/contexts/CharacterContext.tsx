@@ -24,8 +24,15 @@ import {
   decodeAppliedStatusEffectId,
   decodeBaseStats,
   fetchMetadataFromUri,
+  isTextOnlyUri,
   uriToHttp,
 } from '../utils/helpers';
+import {
+  AdvancedClass,
+  ArmorType,
+  PowerSource,
+  Race,
+} from '../utils/types';
 import type {
   Armor,
   Character,
@@ -36,6 +43,7 @@ import type {
   Weapon,
   WorldStatusEffect,
 } from '../utils/types';
+
 import { useItems } from './ItemsContext';
 import { useMUD } from './MUDContext';
 
@@ -71,28 +79,82 @@ export type CharacterProviderProps = {
   children: ReactNode;
 };
 
+// Wrapper component that checks if MUD components are ready
 export const CharacterProvider = ({
   children,
 }: CharacterProviderProps): JSX.Element => {
+  const { components, isSynced } = useMUD();
+
+  // Check if the essential components for character lookup are available
+  // Only require the minimum components needed to find and display a character
+  // Other components (for equipment, encounters, effects) may be empty tables
+  const componentsReady = !!(
+    components?.Characters &&
+    components?.CharactersTokenURI &&
+    components?.Stats
+  );
+
+  // If components aren't ready, render with default context
+  if (!componentsReady) {
+    return (
+      <CharacterContext.Provider
+        value={{
+          character: null,
+          equippedArmor: [],
+          equippedSpells: [],
+          equippedWeapons: [],
+          inventoryArmor: [],
+          inventoryConsumables: [],
+          inventorySpells: [],
+          inventoryWeapons: [],
+          isMoveEquipped: false,
+          isRefreshing: true,
+          refreshCharacter: async () => {},
+        }}
+      >
+        {children}
+      </CharacterContext.Provider>
+    );
+  }
+
+  return (
+    <CharacterProviderInner components={components} isSynced={isSynced}>
+      {children}
+    </CharacterProviderInner>
+  );
+};
+
+// Inner component that uses the hooks - only rendered when components are ready
+const CharacterProviderInner = ({
+  children,
+  components,
+  isSynced,
+}: {
+  children: ReactNode;
+  components: any;
+  isSynced: boolean;
+}): JSX.Element => {
+  console.log('[CharacterProviderInner] Mounted with isSynced:', isSynced);
+
   const {
-    components: {
-      AdventureEscrow,
-      CharacterEquipment,
-      Characters,
-      CharactersTokenURI,
-      EncounterEntity,
-      GoldBalances,
-      ItemsOwners,
-      Stats,
-      StatusEffectStats,
-      StatusEffectValidity,
-      WorldEncounter,
-      WorldStatusEffects,
-    },
+    AdventureEscrow,
+    CharacterEquipme,
+    Characters,
+    CharactersTokenURI,
+    EncounterEntity,
+    GoldBalances,
+    ItemsOwners,
+    Stats,
+    StatusEffectStat,
+    StatusEffectVali,
+    WorldEncounter,
+    WorldStatusEffec,
+  } = components;
+  const {
     delegatorAddress,
-    isSynced,
     network: { publicClient, worldContract },
   } = useMUD();
+
   const { renderError } = useToast();
   const {
     armorTemplates,
@@ -104,6 +166,7 @@ export const CharacterProvider = ({
 
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(true);
+  const [itemsRefreshCounter, setItemsRefreshCounter] = useState(0);
   const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
   const [inventoryConsumables, setInventoryConsumables] = useState<
     Consumable[]
@@ -114,15 +177,41 @@ export const CharacterProvider = ({
   const [equippedSpells, setEquippedSpells] = useState<Spell[]>([]);
   const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
 
-  const fetchCharacterData = useCallback(async () => {
-    if (!(delegatorAddress && publicClient && worldContract)) return;
-    const partialCharacter: CharacterData & EntityStats = Array.from(
+  const fetchCharacterData = useCallback(async (): Promise<boolean> => {
+    if (!(delegatorAddress && publicClient && worldContract)) return false;
+
+    // Find character by owner - try exact match first, then lowercase match
+    // MUD may store addresses in different cases depending on how they were set
+    let characterEntities = Array.from(
       runQuery([
         HasValue(Characters, {
-          owner: delegatorAddress,
+          owner: delegatorAddress as `0x${string}`,
         }),
       ]),
-    ).map(entity => {
+    );
+
+    // If no match, try lowercase (some contracts store addresses in lowercase)
+    if (characterEntities.length === 0) {
+      characterEntities = Array.from(
+        runQuery([
+          HasValue(Characters, {
+            owner: delegatorAddress.toLowerCase() as `0x${string}`,
+          }),
+        ]),
+      );
+    }
+
+    // If still no match, manually find by comparing lowercase addresses
+    if (characterEntities.length === 0) {
+      const allChars = Array.from(runQuery([Has(Characters)]));
+      characterEntities = allChars.filter(entity => {
+        const data = getComponentValue(Characters, entity);
+        return data?.owner?.toLowerCase() === delegatorAddress.toLowerCase();
+      });
+      // Found via manual lowercase comparison
+    }
+
+    const partialCharacter: CharacterData & EntityStats = characterEntities.map(entity => {
       const characterData = getComponentValueStrict(Characters, entity);
       const characterStats = getComponentValue(Stats, entity);
       const { tokenId } = characterData;
@@ -131,15 +220,17 @@ export const CharacterProvider = ({
         { address: 'address' },
         { address: characterData.owner as `0x${string}` },
       );
-      const externalGoldBalance =
-        getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
-      const escrowGoldBalance =
-        getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0);
+      // These components may be undefined if tables are empty
+      const externalGoldBalance = GoldBalances
+        ? (getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0))
+        : BigInt(0);
+      const escrowGoldBalance = AdventureEscrow
+        ? (getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0))
+        : BigInt(0);
 
-      const { encounterId, pvpTimer } = getComponentValue(
-        EncounterEntity,
-        entity,
-      ) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) };
+      const { encounterId, pvpTimer } = EncounterEntity
+        ? (getComponentValue(EncounterEntity, entity) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) })
+        : { encounterId: zeroHash, pvpTimer: BigInt(0) };
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
       let decodedBaseStats = {
@@ -157,10 +248,10 @@ export const CharacterProvider = ({
         decodedBaseStats = decodeBaseStats(characterData.baseStats);
       }
 
-      const worldStatusEffectsComponent = getComponentValue(
-        WorldStatusEffects,
-        entity,
-      );
+      // WorldStatusEffec and related components may be undefined
+      const worldStatusEffectsComponent = WorldStatusEffec
+        ? getComponentValue(WorldStatusEffec, entity)
+        : undefined;
 
       const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
         appliedStatusEffects: [],
@@ -170,48 +261,49 @@ export const CharacterProvider = ({
         decodeAppliedStatusEffectId,
       );
 
-      const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects.map(
-        effect => {
-          const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
+      // Only process status effects if the required components exist
+      const worldStatusEffects: WorldStatusEffect[] = (StatusEffectStat && StatusEffectVali)
+        ? decodedStatusEffects.map(effect => {
+            const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
 
-          const effectStats = getComponentValueStrict(
-            StatusEffectStats,
-            paddedEffectId,
-          );
+            const effectStats = getComponentValue(StatusEffectStat, paddedEffectId);
+            const validity = getComponentValue(StatusEffectVali, paddedEffectId);
 
-          const validity = getComponentValueStrict(
-            StatusEffectValidity,
-            paddedEffectId,
-          );
+            if (!effectStats || !validity) {
+              return null;
+            }
 
-          const timestampEnd = effect.timestamp + validity.validTime;
-          const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
+            const timestampEnd = effect.timestamp + validity.validTime;
+            const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
 
-          const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+            const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
 
-          return {
-            active: isActive,
-            agiModifier: effectStats.agiModifier,
-            effectId: paddedEffectId,
-            intModifier: effectStats.intModifier,
-            maxStacks: validity.maxStacks,
-            name,
-            strModifier: effectStats.strModifier,
-            timestampEnd,
-            timestampStart: effect.timestamp,
-          };
-        },
-      );
+            return {
+              active: isActive,
+              agiModifier: effectStats.agiModifier,
+              effectId: paddedEffectId,
+              intModifier: effectStats.intModifier,
+              maxStacks: validity.maxStacks,
+              name,
+              strModifier: effectStats.strModifier,
+              timestampEnd,
+              timestampStart: effect.timestamp,
+            };
+          }).filter((effect): effect is WorldStatusEffect => effect !== null)
+        : [];
 
-      const worldEncounter = Array.from(
-        runQuery([
-          Has(WorldEncounter),
-          HasValue(WorldEncounter, { character: entity, end: BigInt(0) }),
-        ]),
-      ).map(worldEncounterEntity => ({
-        encounterId: worldEncounterEntity,
-        ...getComponentValueStrict(WorldEncounter, worldEncounterEntity),
-      }))[0];
+      // WorldEncounter may be undefined if table is empty
+      const worldEncounter = WorldEncounter
+        ? Array.from(
+            runQuery([
+              Has(WorldEncounter),
+              HasValue(WorldEncounter, { character: entity, end: BigInt(0) }),
+            ]),
+          ).map(worldEncounterEntity => ({
+            encounterId: worldEncounterEntity,
+            ...getComponentValueStrict(WorldEncounter, worldEncounterEntity),
+          }))[0]
+        : undefined;
 
       return {
         agility: characterStats?.agility ?? BigInt(0),
@@ -240,10 +332,18 @@ export const CharacterProvider = ({
             }
           : undefined,
         worldStatusEffects,
+        // Implicit class system fields
+        race: (characterStats?.race as Race) ?? Race.None,
+        powerSource: (characterStats?.powerSource as PowerSource) ?? PowerSource.None,
+        startingArmor: (characterStats?.startingArmor as ArmorType) ?? ArmorType.None,
+        advancedClass: (characterStats?.advancedClass as AdvancedClass) ?? AdvancedClass.None,
+        hasSelectedAdvancedClass: characterStats?.hasSelectedAdvancedClass ?? false,
       };
     })[0];
 
-    if (!partialCharacter) return;
+    if (!partialCharacter) {
+      return false;
+    }
     const { tokenId } = partialCharacter;
 
     const tokenIdEntity = encodeEntity(
@@ -256,14 +356,37 @@ export const CharacterProvider = ({
       tokenIdEntity,
     ).tokenURI;
 
-    const fetachedMetadata = await fetchMetadataFromUri(
-      uriToHttp(`ipfs://${metadataURI}`)[0],
-    );
+    // Try to fetch metadata, but use defaults if it fails (e.g., test URIs)
+    let fetchedMetadata = {
+      name: '',
+      description: '',
+      image: '',
+    };
 
+    try {
+      // Handle text-only URIs directly (no HTTP fetch needed)
+      if (metadataURI && isTextOnlyUri(metadataURI)) {
+        fetchedMetadata = await fetchMetadataFromUri(metadataURI);
+      } else if (metadataURI && !metadataURI.startsWith('test') && metadataURI.length > 10) {
+        // Handle IPFS/HTTP URIs
+        const urls = metadataURI.startsWith('ipfs://')
+          ? uriToHttp(metadataURI)
+          : uriToHttp(`ipfs://${metadataURI}`);
+        fetchedMetadata = await fetchMetadataFromUri(urls[0]);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch character metadata, using defaults:', error);
+    }
+
+    // Only override partialCharacter fields if fetchedMetadata has non-empty values
     setUserCharacter({
       ...partialCharacter,
-      ...fetachedMetadata,
+      // Keep decoded bytes32 name if fetched name is empty
+      name: fetchedMetadata.name || partialCharacter.name,
+      description: fetchedMetadata.description || '',
+      image: fetchedMetadata.image || '',
     });
+    return true;
   }, [
     AdventureEscrow,
     Characters,
@@ -273,17 +396,35 @@ export const CharacterProvider = ({
     GoldBalances,
     publicClient,
     Stats,
-    StatusEffectStats,
-    StatusEffectValidity,
+    StatusEffectStat,
+    StatusEffectVali,
     worldContract,
     WorldEncounter,
-    WorldStatusEffects,
+    WorldStatusEffec,
   ]);
 
   const refreshCharacter = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await fetchCharacterData();
+      // Retry fetching character data - MUD sync can take time after a transaction
+      let retries = 0;
+      const maxRetries = 15;
+      const baseDelay = 500;
+
+      while (retries < maxRetries) {
+        const found = await fetchCharacterData();
+
+        if (found) {
+          break;
+        }
+
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, baseDelay));
+      }
+
+      // Small additional delay then refresh items
+      await new Promise(resolve => setTimeout(resolve, 200));
+      setItemsRefreshCounter(c => c + 1);
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error refreshing character.', e);
     } finally {
@@ -311,6 +452,11 @@ export const CharacterProvider = ({
       _equippedWeaponsIds: bigint[],
     ) => {
       try {
+        // If ItemsOwners component doesn't exist, skip item fetching
+        if (!ItemsOwners) {
+          return;
+        }
+
         const _armor = armorTemplates
           .map(armor => {
             const tokenOwnersEntity = encodeEntity(
@@ -433,8 +579,13 @@ export const CharacterProvider = ({
   useEffect(() => {
     if (!(isSynced && userCharacter) || isLoadingItemTemplates) return;
 
+    // CharacterEquipme may be undefined if the table is empty
+    const equipmentData = CharacterEquipme
+      ? getComponentValue(CharacterEquipme, userCharacter.id)
+      : undefined;
+
     const { equippedArmor, equippedSpells, equippedWeapons } =
-      getComponentValue(CharacterEquipment, userCharacter.id) ??
+      equipmentData ??
       ({ equippedArmor: [], equippedSpells: [], equippedWeapons: [] } as {
         equippedArmor: bigint[];
         equippedSpells: bigint[];
@@ -448,10 +599,11 @@ export const CharacterProvider = ({
       equippedWeapons,
     );
   }, [
-    CharacterEquipment,
+    CharacterEquipme,
     fetchCharacterItems,
     isLoadingItemTemplates,
     isSynced,
+    itemsRefreshCounter,
     userCharacter,
   ]);
 

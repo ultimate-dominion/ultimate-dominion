@@ -21,10 +21,15 @@ struct UltimateDominionConfigData {
   address goldToken;
   address characterToken;
   address items;
+  address badgeToken;
   address marketplace;
   address lootManager;
   address shop;
   uint256 maxPlayers;
+  address feeRecipient;
+  uint256 feePercent;
+  uint256 founderWindowEnd;
+  address fragmentToken;
 }
 
 library UltimateDominionConfig {
@@ -32,12 +37,12 @@ library UltimateDominionConfig {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000556c74696d617465446f6d696e696f6e);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0099080001141414141414200000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x01150d0001141414141414142014202014000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (bool, address, address, address, address, address, address, uint256)
-  Schema constant _valueSchema = Schema.wrap(0x00990800606161616161611f0000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (bool, address, address, address, address, address, address, address, uint256, address, uint256, uint256, address)
+  Schema constant _valueSchema = Schema.wrap(0x01150d0060616161616161611f611f1f61000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -52,15 +57,20 @@ library UltimateDominionConfig {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](8);
+    fieldNames = new string[](13);
     fieldNames[0] = "locked";
     fieldNames[1] = "goldToken";
     fieldNames[2] = "characterToken";
     fieldNames[3] = "items";
-    fieldNames[4] = "marketplace";
-    fieldNames[5] = "lootManager";
-    fieldNames[6] = "shop";
-    fieldNames[7] = "maxPlayers";
+    fieldNames[4] = "badgeToken";
+    fieldNames[5] = "marketplace";
+    fieldNames[6] = "lootManager";
+    fieldNames[7] = "shop";
+    fieldNames[8] = "maxPlayers";
+    fieldNames[9] = "feeRecipient";
+    fieldNames[10] = "feePercent";
+    fieldNames[11] = "founderWindowEnd";
+    fieldNames[12] = "fragmentToken";
   }
 
   /**
@@ -230,12 +240,50 @@ library UltimateDominionConfig {
   }
 
   /**
+   * @notice Get badgeToken.
+   */
+  function getBadgeToken() internal view returns (address badgeToken) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Get badgeToken.
+   */
+  function _getBadgeToken() internal view returns (address badgeToken) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Set badgeToken.
+   */
+  function setBadgeToken(address badgeToken) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((badgeToken)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set badgeToken.
+   */
+  function _setBadgeToken(address badgeToken) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((badgeToken)), _fieldLayout);
+  }
+
+  /**
    * @notice Get marketplace.
    */
   function getMarketplace() internal view returns (address marketplace) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -245,7 +293,7 @@ library UltimateDominionConfig {
   function _getMarketplace() internal view returns (address marketplace) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -255,7 +303,7 @@ library UltimateDominionConfig {
   function setMarketplace(address marketplace) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((marketplace)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((marketplace)), _fieldLayout);
   }
 
   /**
@@ -264,7 +312,7 @@ library UltimateDominionConfig {
   function _setMarketplace(address marketplace) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((marketplace)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((marketplace)), _fieldLayout);
   }
 
   /**
@@ -273,7 +321,7 @@ library UltimateDominionConfig {
   function getLootManager() internal view returns (address lootManager) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -283,7 +331,7 @@ library UltimateDominionConfig {
   function _getLootManager() internal view returns (address lootManager) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -293,7 +341,7 @@ library UltimateDominionConfig {
   function setLootManager(address lootManager) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((lootManager)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((lootManager)), _fieldLayout);
   }
 
   /**
@@ -302,7 +350,7 @@ library UltimateDominionConfig {
   function _setLootManager(address lootManager) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((lootManager)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((lootManager)), _fieldLayout);
   }
 
   /**
@@ -311,7 +359,7 @@ library UltimateDominionConfig {
   function getShop() internal view returns (address shop) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -321,7 +369,7 @@ library UltimateDominionConfig {
   function _getShop() internal view returns (address shop) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 6, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
@@ -331,7 +379,7 @@ library UltimateDominionConfig {
   function setShop(address shop) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((shop)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((shop)), _fieldLayout);
   }
 
   /**
@@ -340,7 +388,7 @@ library UltimateDominionConfig {
   function _setShop(address shop) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 6, abi.encodePacked((shop)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((shop)), _fieldLayout);
   }
 
   /**
@@ -349,7 +397,7 @@ library UltimateDominionConfig {
   function getMaxPlayers() internal view returns (uint256 maxPlayers) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 8, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -359,7 +407,7 @@ library UltimateDominionConfig {
   function _getMaxPlayers() internal view returns (uint256 maxPlayers) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 7, _fieldLayout);
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 8, _fieldLayout);
     return (uint256(bytes32(_blob)));
   }
 
@@ -369,7 +417,7 @@ library UltimateDominionConfig {
   function setMaxPlayers(uint256 maxPlayers) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((maxPlayers)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 8, abi.encodePacked((maxPlayers)), _fieldLayout);
   }
 
   /**
@@ -378,7 +426,159 @@ library UltimateDominionConfig {
   function _setMaxPlayers(uint256 maxPlayers) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 7, abi.encodePacked((maxPlayers)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 8, abi.encodePacked((maxPlayers)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get feeRecipient.
+   */
+  function getFeeRecipient() internal view returns (address feeRecipient) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 9, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Get feeRecipient.
+   */
+  function _getFeeRecipient() internal view returns (address feeRecipient) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 9, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Set feeRecipient.
+   */
+  function setFeeRecipient(address feeRecipient) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 9, abi.encodePacked((feeRecipient)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set feeRecipient.
+   */
+  function _setFeeRecipient(address feeRecipient) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 9, abi.encodePacked((feeRecipient)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get feePercent.
+   */
+  function getFeePercent() internal view returns (uint256 feePercent) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 10, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get feePercent.
+   */
+  function _getFeePercent() internal view returns (uint256 feePercent) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 10, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set feePercent.
+   */
+  function setFeePercent(uint256 feePercent) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 10, abi.encodePacked((feePercent)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set feePercent.
+   */
+  function _setFeePercent(uint256 feePercent) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 10, abi.encodePacked((feePercent)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get founderWindowEnd.
+   */
+  function getFounderWindowEnd() internal view returns (uint256 founderWindowEnd) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 11, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get founderWindowEnd.
+   */
+  function _getFounderWindowEnd() internal view returns (uint256 founderWindowEnd) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 11, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set founderWindowEnd.
+   */
+  function setFounderWindowEnd(uint256 founderWindowEnd) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 11, abi.encodePacked((founderWindowEnd)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set founderWindowEnd.
+   */
+  function _setFounderWindowEnd(uint256 founderWindowEnd) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 11, abi.encodePacked((founderWindowEnd)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get fragmentToken.
+   */
+  function getFragmentToken() internal view returns (address fragmentToken) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 12, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Get fragmentToken.
+   */
+  function _getFragmentToken() internal view returns (address fragmentToken) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 12, _fieldLayout);
+    return (address(bytes20(_blob)));
+  }
+
+  /**
+   * @notice Set fragmentToken.
+   */
+  function setFragmentToken(address fragmentToken) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 12, abi.encodePacked((fragmentToken)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set fragmentToken.
+   */
+  function _setFragmentToken(address fragmentToken) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 12, abi.encodePacked((fragmentToken)), _fieldLayout);
   }
 
   /**
@@ -417,20 +617,30 @@ library UltimateDominionConfig {
     address goldToken,
     address characterToken,
     address items,
+    address badgeToken,
     address marketplace,
     address lootManager,
     address shop,
-    uint256 maxPlayers
+    uint256 maxPlayers,
+    address feeRecipient,
+    uint256 feePercent,
+    uint256 founderWindowEnd,
+    address fragmentToken
   ) internal {
     bytes memory _staticData = encodeStatic(
       locked,
       goldToken,
       characterToken,
       items,
+      badgeToken,
       marketplace,
       lootManager,
       shop,
-      maxPlayers
+      maxPlayers,
+      feeRecipient,
+      feePercent,
+      founderWindowEnd,
+      fragmentToken
     );
 
     EncodedLengths _encodedLengths;
@@ -449,20 +659,30 @@ library UltimateDominionConfig {
     address goldToken,
     address characterToken,
     address items,
+    address badgeToken,
     address marketplace,
     address lootManager,
     address shop,
-    uint256 maxPlayers
+    uint256 maxPlayers,
+    address feeRecipient,
+    uint256 feePercent,
+    uint256 founderWindowEnd,
+    address fragmentToken
   ) internal {
     bytes memory _staticData = encodeStatic(
       locked,
       goldToken,
       characterToken,
       items,
+      badgeToken,
       marketplace,
       lootManager,
       shop,
-      maxPlayers
+      maxPlayers,
+      feeRecipient,
+      feePercent,
+      founderWindowEnd,
+      fragmentToken
     );
 
     EncodedLengths _encodedLengths;
@@ -482,10 +702,15 @@ library UltimateDominionConfig {
       _table.goldToken,
       _table.characterToken,
       _table.items,
+      _table.badgeToken,
       _table.marketplace,
       _table.lootManager,
       _table.shop,
-      _table.maxPlayers
+      _table.maxPlayers,
+      _table.feeRecipient,
+      _table.feePercent,
+      _table.founderWindowEnd,
+      _table.fragmentToken
     );
 
     EncodedLengths _encodedLengths;
@@ -505,10 +730,15 @@ library UltimateDominionConfig {
       _table.goldToken,
       _table.characterToken,
       _table.items,
+      _table.badgeToken,
       _table.marketplace,
       _table.lootManager,
       _table.shop,
-      _table.maxPlayers
+      _table.maxPlayers,
+      _table.feeRecipient,
+      _table.feePercent,
+      _table.founderWindowEnd,
+      _table.fragmentToken
     );
 
     EncodedLengths _encodedLengths;
@@ -532,10 +762,15 @@ library UltimateDominionConfig {
       address goldToken,
       address characterToken,
       address items,
+      address badgeToken,
       address marketplace,
       address lootManager,
       address shop,
-      uint256 maxPlayers
+      uint256 maxPlayers,
+      address feeRecipient,
+      uint256 feePercent,
+      uint256 founderWindowEnd,
+      address fragmentToken
     )
   {
     locked = (_toBool(uint8(Bytes.getBytes1(_blob, 0))));
@@ -546,13 +781,23 @@ library UltimateDominionConfig {
 
     items = (address(Bytes.getBytes20(_blob, 41)));
 
-    marketplace = (address(Bytes.getBytes20(_blob, 61)));
+    badgeToken = (address(Bytes.getBytes20(_blob, 61)));
 
-    lootManager = (address(Bytes.getBytes20(_blob, 81)));
+    marketplace = (address(Bytes.getBytes20(_blob, 81)));
 
-    shop = (address(Bytes.getBytes20(_blob, 101)));
+    lootManager = (address(Bytes.getBytes20(_blob, 101)));
 
-    maxPlayers = (uint256(Bytes.getBytes32(_blob, 121)));
+    shop = (address(Bytes.getBytes20(_blob, 121)));
+
+    maxPlayers = (uint256(Bytes.getBytes32(_blob, 141)));
+
+    feeRecipient = (address(Bytes.getBytes20(_blob, 173)));
+
+    feePercent = (uint256(Bytes.getBytes32(_blob, 193)));
+
+    founderWindowEnd = (uint256(Bytes.getBytes32(_blob, 225)));
+
+    fragmentToken = (address(Bytes.getBytes20(_blob, 257)));
   }
 
   /**
@@ -571,10 +816,15 @@ library UltimateDominionConfig {
       _table.goldToken,
       _table.characterToken,
       _table.items,
+      _table.badgeToken,
       _table.marketplace,
       _table.lootManager,
       _table.shop,
-      _table.maxPlayers
+      _table.maxPlayers,
+      _table.feeRecipient,
+      _table.feePercent,
+      _table.founderWindowEnd,
+      _table.fragmentToken
     ) = decodeStatic(_staticData);
   }
 
@@ -605,12 +855,32 @@ library UltimateDominionConfig {
     address goldToken,
     address characterToken,
     address items,
+    address badgeToken,
     address marketplace,
     address lootManager,
     address shop,
-    uint256 maxPlayers
+    uint256 maxPlayers,
+    address feeRecipient,
+    uint256 feePercent,
+    uint256 founderWindowEnd,
+    address fragmentToken
   ) internal pure returns (bytes memory) {
-    return abi.encodePacked(locked, goldToken, characterToken, items, marketplace, lootManager, shop, maxPlayers);
+    return
+      abi.encodePacked(
+        locked,
+        goldToken,
+        characterToken,
+        items,
+        badgeToken,
+        marketplace,
+        lootManager,
+        shop,
+        maxPlayers,
+        feeRecipient,
+        feePercent,
+        founderWindowEnd,
+        fragmentToken
+      );
   }
 
   /**
@@ -624,20 +894,30 @@ library UltimateDominionConfig {
     address goldToken,
     address characterToken,
     address items,
+    address badgeToken,
     address marketplace,
     address lootManager,
     address shop,
-    uint256 maxPlayers
+    uint256 maxPlayers,
+    address feeRecipient,
+    uint256 feePercent,
+    uint256 founderWindowEnd,
+    address fragmentToken
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(
       locked,
       goldToken,
       characterToken,
       items,
+      badgeToken,
       marketplace,
       lootManager,
       shop,
-      maxPlayers
+      maxPlayers,
+      feeRecipient,
+      feePercent,
+      founderWindowEnd,
+      fragmentToken
     );
 
     EncodedLengths _encodedLengths;

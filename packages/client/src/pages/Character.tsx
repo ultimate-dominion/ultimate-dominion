@@ -24,14 +24,14 @@ import {
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FaMedal } from 'react-icons/fa';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
-import { hexToBigInt, hexToString, zeroHash } from 'viem';
-import { useAccount } from 'wagmi';
-
+import { erc721Abi, hexToBigInt, hexToString, zeroHash } from 'viem';
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
+import { FragmentCollection } from '../components/FragmentCollection';
 import { ItemCard } from '../components/ItemCard';
 import { ItemConsumeModal } from '../components/ItemConsumeModal';
 import { ItemEquipModal } from '../components/ItemEquipModal';
@@ -42,6 +42,7 @@ import { LeaderboardIconSvg, MarketplaceIconSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useChat } from '../contexts/ChatContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { HOME_PATH, LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
@@ -67,11 +68,15 @@ import {
   type WorldStatusEffect,
 } from '../utils/types';
 
+// Badge contract address - get from environment
+const BADGE_CONTRACT_ADDRESS = import.meta.env.VITE_BADGE_CONTRACT_ADDRESS || '';
+const ADVENTURER_BADGE_BASE = 1;
+
 export const CharacterPage = (): JSX.Element => {
   const { id } = useParams();
   const { renderError } = useToast();
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
+  const { isAuthenticated: isConnected } = useAuth();
 
   const {
     components: {
@@ -82,9 +87,9 @@ export const CharacterPage = (): JSX.Element => {
       GoldBalances,
       Levels,
       Stats,
-      StatusEffectStats,
-      StatusEffectValidity,
-      WorldStatusEffects,
+      StatusEffectStat,
+      StatusEffectVali,
+      WorldStatusEffec,
     },
     isSynced,
     network: { publicClient, worldContract },
@@ -100,13 +105,43 @@ export const CharacterPage = (): JSX.Element => {
 
   const [character, setCharacter] = useState<Character | null>(null);
   const [isLoadingCharacter, setIsLoadingCharacter] = useState(true);
+  const [hasBadge, setHasBadge] = useState(false);
 
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
-      window.location.reload();
     }
   }, [isConnected, navigate]);
+
+  // Check if character has Adventurer badge
+  useEffect(() => {
+    const checkBadge = async () => {
+      if (!character || !publicClient || !BADGE_CONTRACT_ADDRESS) {
+        setHasBadge(false);
+        return;
+      }
+
+      try {
+        const badgeTokenId =
+          BigInt(ADVENTURER_BADGE_BASE) * BigInt(1_000_000) +
+          BigInt(character.tokenId);
+
+        const owner = await publicClient.readContract({
+          address: BADGE_CONTRACT_ADDRESS as `0x${string}`,
+          abi: erc721Abi,
+          functionName: 'ownerOf',
+          args: [badgeTokenId],
+        });
+
+        setHasBadge(owner === character.owner);
+      } catch {
+        // Badge doesn't exist or other error
+        setHasBadge(false);
+      }
+    };
+
+    checkBadge();
+  }, [character, publicClient]);
 
   const fetchCharacter = useCallback(async () => {
     try {
@@ -127,10 +162,13 @@ export const CharacterPage = (): JSX.Element => {
         { tokenId: characterData.tokenId },
       );
 
-      const externalGoldBalance =
-        getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
-      const escrowGoldBalance =
-        getComponentValue(AdventureEscrow, id as Entity)?.balance ?? BigInt(0);
+      // These components may be undefined if tables are empty
+      const externalGoldBalance = GoldBalances
+        ? (getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0))
+        : BigInt(0);
+      const escrowGoldBalance = AdventureEscrow
+        ? (getComponentValue(AdventureEscrow, id as Entity)?.balance ?? BigInt(0))
+        : BigInt(0);
 
       const metadataURI = getComponentValueStrict(
         CharactersTokenURI,
@@ -141,18 +179,17 @@ export const CharacterPage = (): JSX.Element => {
         uriToHttp(`ipfs://${metadataURI}`)[0],
       );
 
-      const { encounterId, pvpTimer } = getComponentValue(
-        EncounterEntity,
-        id as Entity,
-      ) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) };
+      const { encounterId, pvpTimer } = EncounterEntity
+        ? (getComponentValue(EncounterEntity, id as Entity) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) })
+        : { encounterId: zeroHash, pvpTimer: BigInt(0) };
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
       const decodedBaseStats = decodeBaseStats(characterData.baseStats);
 
-      const worldStatusEffectsComponent = getComponentValue(
-        WorldStatusEffects,
-        id as Entity,
-      );
+      // WorldStatusEffec and related components may be undefined
+      const worldStatusEffectsComponent = WorldStatusEffec
+        ? getComponentValue(WorldStatusEffec, id as Entity)
+        : undefined;
 
       const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
         appliedStatusEffects: [],
@@ -162,37 +199,33 @@ export const CharacterPage = (): JSX.Element => {
         decodeAppliedStatusEffectId,
       );
 
-      const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects.map(
-        effect => {
-          const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
-          const effectStats = getComponentValueStrict(
-            StatusEffectStats,
-            paddedEffectId,
-          );
+      // Only process status effects if the required components exist
+      const worldStatusEffects: WorldStatusEffect[] = (StatusEffectStat && StatusEffectVali)
+        ? decodedStatusEffects.map(effect => {
+            const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
+            const effectStats = getComponentValue(StatusEffectStat, paddedEffectId);
+            const validity = getComponentValue(StatusEffectVali, paddedEffectId);
 
-          const validity = getComponentValueStrict(
-            StatusEffectValidity,
-            paddedEffectId,
-          );
+            if (!effectStats || !validity) return null;
 
-          const timestampEnd = effect.timestamp + validity.validTime;
-          const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
+            const timestampEnd = effect.timestamp + validity.validTime;
+            const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
 
-          const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+            const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
 
-          return {
-            active: isActive,
-            agiModifier: effectStats.agiModifier,
-            effectId: paddedEffectId,
-            intModifier: effectStats.intModifier,
-            maxStacks: validity.maxStacks,
-            name,
-            strModifier: effectStats.strModifier,
-            timestampEnd,
-            timestampStart: effect.timestamp,
-          };
-        },
-      );
+              return {
+                active: isActive,
+                agiModifier: effectStats.agiModifier,
+                effectId: paddedEffectId,
+                intModifier: effectStats.intModifier,
+                maxStacks: validity.maxStacks,
+                name,
+                strModifier: effectStats.strModifier,
+                timestampEnd,
+                timestampStart: effect.timestamp,
+              };
+          }).filter((effect): effect is WorldStatusEffect => effect !== null)
+        : [];
 
       const _character = {
         ...fetachedMetadata,
@@ -242,10 +275,10 @@ export const CharacterPage = (): JSX.Element => {
     publicClient,
     renderError,
     Stats,
-    StatusEffectStats,
-    StatusEffectValidity,
+    StatusEffectStat,
+    StatusEffectVali,
     worldContract,
-    WorldStatusEffects,
+    WorldStatusEffec,
   ]);
 
   const isOwner = useMemo(() => {
@@ -269,10 +302,10 @@ export const CharacterPage = (): JSX.Element => {
   const currentLevelXpRequirement =
     useComponentValue(
       Levels,
-      character
+      character && Number(character.level) > 0
         ? encodeEntity(
             { level: 'uint256' },
-            { level: BigInt(Number(character.level) - 1) },
+            { level: BigInt(Math.max(0, Number(character.level) - 1)) },
           )
         : undefined,
     )?.experience ?? BigInt(0);
@@ -475,6 +508,19 @@ export const CharacterPage = (): JSX.Element => {
                 <Text fontWeight={700} mt={1} size="xl">
                   {character.name}
                 </Text>
+                {hasBadge && (
+                  <Tooltip
+                    bg="#070D2A"
+                    hasArrow
+                    label="Adventurer Badge - Earned at Level 3"
+                    placement="top"
+                    shouldWrapChildren
+                  >
+                    <Box color="gold">
+                      <FaMedal size={20} />
+                    </Box>
+                  </Tooltip>
+                )}
                 <ClassSymbol entityClass={character.entityClass} />
               </HStack>
               <Text fontWeight={500} my={12} size={{ base: 'sm', sm: 'md' }}>
@@ -500,6 +546,12 @@ export const CharacterPage = (): JSX.Element => {
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
           >
             <ItemsPanel character={character} />
+          </GridItem>
+          <GridItem
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+          >
+            <FragmentCollection />
           </GridItem>
         </Grid>
       ) : (
@@ -540,7 +592,7 @@ export const CharacterPage = (): JSX.Element => {
 const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const { renderError } = useToast();
   const {
-    components: { CharacterEquipment, ItemsOwners },
+    components: { CharacterEquipme, ItemsOwners },
   } = useMUD();
   const {
     armorTemplates,
@@ -584,6 +636,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       _equippedWeaponsIds: bigint[],
     ) => {
       try {
+        // If ItemsOwners component doesn't exist, skip item fetching
+        if (!ItemsOwners) {
+          console.log('[Character] ItemsOwners component not available, skipping items');
+          return;
+        }
+
         const _armor = armorTemplates
           .map(armor => {
             const tokenOwnersEntity = encodeEntity(
@@ -703,29 +761,32 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     ],
   );
 
+  // Use useComponentValue to subscribe to equipment data changes
+  // CharacterEquipme may be undefined if table is empty/not synced yet
+  const equipmentData = useComponentValue(
+    CharacterEquipme ?? undefined,
+    CharacterEquipme ? character.id : undefined,
+  );
+
   useEffect(() => {
     if (isLoadingItemTemplates) return;
 
+    // Destructure with default values to handle undefined fields
     const {
-      equippedArmor: equippedArmorIds,
-      equippedSpells: equippedSpellsIds,
-      equippedWeapons: equippedWeaponsIds,
-    } = getComponentValue(CharacterEquipment, character.id) ??
-    ({ equippedArmor: [], equippedSpells: [], equippedWeapons: [] } as {
-      equippedArmor: bigint[];
-      equippedSpells: bigint[];
-      equippedWeapons: bigint[];
-    });
+      equippedArmor: equippedArmorIds = [],
+      equippedSpells: equippedSpellsIds = [],
+      equippedWeapons: equippedWeaponsIds = [],
+    } = equipmentData ?? {};
 
     fetchCharacterItems(
       character,
-      equippedArmorIds,
-      equippedSpellsIds,
-      equippedWeaponsIds,
+      equippedArmorIds as bigint[],
+      equippedSpellsIds as bigint[],
+      equippedWeaponsIds as bigint[],
     );
   }, [
     character,
-    CharacterEquipment,
+    equipmentData,
     fetchCharacterItems,
     isLoadingItemTemplates,
   ]);

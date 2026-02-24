@@ -9,11 +9,12 @@ import {
   useState,
 } from 'react';
 import { Address, erc20Abi, maxUint256 } from 'viem';
-import { useWalletClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { ERC_1155_ABI } from '../utils/constants';
 import { SystemToAllow } from '../utils/types';
+
+import { useAuth } from './AuthContext';
 import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 
@@ -38,7 +39,7 @@ type AllowanceContextType = {
   refreshAllowances: () => void;
 };
 
-const AllowanceContext = createContext<AllowanceContextType>({
+const defaultContextValue: AllowanceContextType = {
   goldLootManagerAllowance: 0n,
   goldMarketplaceAllowance: 0n,
   goldShopAllowance: 0n,
@@ -51,20 +52,25 @@ const AllowanceContext = createContext<AllowanceContextType>({
   onApproveMaxGoldAllowance: () => {},
   onSetApprovalForAllItems: () => {},
   refreshAllowances: () => {},
-});
+};
 
-export const AllowanceProvider = ({
+const AllowanceContext = createContext<AllowanceContextType>(defaultContextValue);
+
+// Inner component that uses hooks - only rendered when components are ready
+const AllowanceProviderInner = ({
   children,
+  UltimateDominion,
+  publicClient,
+  isSynced,
 }: {
   children: ReactNode;
+  UltimateDominion: any;
+  publicClient: any;
+  isSynced: boolean;
 }): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
-  const { data: externalWalletClient } = useWalletClient();
-  const {
-    components: { UltimateDominionConfig },
-    isSynced,
-    network: { publicClient },
-  } = useMUD();
+  const { authMethod, embeddedWalletClient, externalWalletClient } = useAuth();
+  const approvalClient = authMethod === 'embedded' ? embeddedWalletClient : externalWalletClient;
   const { character, isRefreshing } = useCharacter();
 
   const [goldMarketplaceAllowance, setGoldMarketplaceAllowance] =
@@ -81,22 +87,19 @@ export const AllowanceProvider = ({
   const [isApprovingGold, setIsApprovingGold] = useState(false);
   const [isApprovingItems, setIsApprovingItems] = useState(false);
 
-  const {
-    goldToken: goldTokenAddress,
-    items: itemsAddress,
-    lootManager: lootManagerAddress,
-    marketplace: marketplaceAddress,
-    shop: shopAddress,
-  } = useComponentValue(UltimateDominionConfig, singletonEntity) ?? {
-    goldToken: null,
-    items: null,
-    lootManager: null,
-    marketplace: null,
-    shop: null,
-  };
+  const configValue = useComponentValue(
+    UltimateDominion,
+    singletonEntity,
+  );
+  const goldTokenAddress = configValue?.goldToken ?? null;
+  const itemsAddress = configValue?.items ?? null;
+  const lootManagerAddress = configValue?.lootManager ?? null;
+  const marketplaceAddress = configValue?.marketplace ?? null;
+  const shopAddress = configValue?.shop ?? null;
 
   const fetchAllowances = useCallback(async () => {
     if (!character) return;
+    if (!goldTokenAddress || !itemsAddress || !marketplaceAddress || !lootManagerAddress || !shopAddress) return;
 
     try {
       const _goldMarketplaceAllowance = await publicClient.readContract({
@@ -188,8 +191,8 @@ export const AllowanceProvider = ({
       try {
         setIsApprovingGold(true);
 
-        if (!externalWalletClient) {
-          throw new Error('No external wallet client found.');
+        if (!approvalClient) {
+          throw new Error('No wallet client found.');
         }
 
         const systemAddress = getSystemAddress(systemToAllow);
@@ -209,7 +212,7 @@ export const AllowanceProvider = ({
           args: [systemAddress as Address, allowanceAmount],
         });
 
-        const txHash = await externalWalletClient.writeContract(request);
+        const txHash = await approvalClient.writeContract(request);
         const { status } = await publicClient.waitForTransactionReceipt({
           hash: txHash,
         });
@@ -230,7 +233,7 @@ export const AllowanceProvider = ({
       }
     },
     [
-      externalWalletClient,
+      approvalClient,
       fetchAllowances,
       getSystemAddress,
       goldTokenAddress,
@@ -246,13 +249,14 @@ export const AllowanceProvider = ({
     },
     [onApproveGoldAllowance],
   );
+
   const onSetApprovalForAllItems = useCallback(
     async (systemToAllow: SystemToAllow) => {
       try {
         setIsApprovingItems(true);
 
-        if (!externalWalletClient) {
-          throw new Error('No external wallet client found.');
+        if (!approvalClient) {
+          throw new Error('No wallet client found.');
         }
 
         const systemAddress = getSystemAddress(systemToAllow);
@@ -268,7 +272,7 @@ export const AllowanceProvider = ({
           args: [systemAddress, true],
         });
 
-        const txHash = await externalWalletClient.writeContract(request);
+        const txHash = await approvalClient.writeContract(request);
         const { status } = await publicClient.waitForTransactionReceipt({
           hash: txHash,
         });
@@ -289,7 +293,7 @@ export const AllowanceProvider = ({
       }
     },
     [
-      externalWalletClient,
+      approvalClient,
       fetchAllowances,
       getSystemAddress,
       itemsAddress,
@@ -318,6 +322,35 @@ export const AllowanceProvider = ({
     >
       {children}
     </AllowanceContext.Provider>
+  );
+};
+
+export const AllowanceProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}): JSX.Element => {
+  const { components, isSynced, network } = useMUD();
+  const { publicClient } = network;
+  const UltimateDominion = components?.UltimateDominion;
+
+  // If component isn't ready, render with default context
+  if (!UltimateDominion) {
+    return (
+      <AllowanceContext.Provider value={defaultContextValue}>
+        {children}
+      </AllowanceContext.Provider>
+    );
+  }
+
+  return (
+    <AllowanceProviderInner
+      UltimateDominion={UltimateDominion}
+      publicClient={publicClient}
+      isSynced={isSynced}
+    >
+      {children}
+    </AllowanceProviderInner>
   );
 };
 

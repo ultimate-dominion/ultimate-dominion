@@ -20,6 +20,7 @@ import {
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
+
 import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const MarketplaceRow = ({

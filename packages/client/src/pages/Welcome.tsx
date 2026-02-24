@@ -10,11 +10,11 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { SyncStep } from '@latticexyz/store-sync';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
+import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH } from '../Routes';
@@ -22,7 +22,7 @@ import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH } from '../Routes';
 export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const { isConnected } = useAccount();
+  const { authMethod, isAuthenticated } = useAuth();
   const {
     components: { SyncProgress },
     delegatorAddress,
@@ -31,8 +31,34 @@ export const Welcome = (): JSX.Element => {
 
   const syncProgress = useComponentValue(SyncProgress, singletonEntity);
 
+  const [syncStalled, setSyncStalled] = useState(false);
+
+  useEffect(() => {
+    if (syncProgress && syncProgress.step === SyncStep.LIVE) {
+      setSyncStalled(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setSyncStalled(true);
+    }, 30000);
+
+    return () => clearTimeout(timer);
+  }, [syncProgress]);
+
   const onPlay = useCallback(() => {
-    if (!(delegatorAddress && isConnected)) {
+    // Embedded path: authenticated = ready to go (no delegation needed)
+    if (authMethod === 'embedded' && isAuthenticated) {
+      if (character?.locked) {
+        navigate(GAME_BOARD_PATH);
+      } else {
+        navigate(CHARACTER_CREATION_PATH);
+      }
+      return;
+    }
+
+    // External path: need both connection and delegation
+    if (!(delegatorAddress && isAuthenticated)) {
       onOpen();
       return;
     }
@@ -42,7 +68,7 @@ export const Welcome = (): JSX.Element => {
     } else {
       navigate(CHARACTER_CREATION_PATH);
     }
-  }, [character, delegatorAddress, isConnected, navigate, onOpen]);
+  }, [authMethod, character, delegatorAddress, isAuthenticated, navigate, onOpen]);
 
   return (
     <Box border="6px solid #1A244E" p={1.5}>
@@ -88,6 +114,20 @@ export const Welcome = (): JSX.Element => {
             <VStack justify="center" w={{ base: '80%', sm: '50%' }}>
               <Text>Loading {Math.round(syncProgress.percentage)}%</Text>
               <Progress value={Math.round(syncProgress.percentage)} w="100%" />
+              {syncStalled && (
+                <VStack spacing={2} mt={2}>
+                  <Text size="xs" color="grey500" textAlign="center">
+                    Taking longer than expected...
+                  </Text>
+                  <Button
+                    onClick={() => window.location.reload()}
+                    size="sm"
+                    variant="outline"
+                  >
+                    Retry
+                  </Button>
+                </VStack>
+              )}
             </VStack>
           ) : (
             <Button onClick={onPlay}>Play</Button>

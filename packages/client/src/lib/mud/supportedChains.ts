@@ -12,8 +12,6 @@
 
 import { garnet, MUDChain, mudFoundry } from '@latticexyz/common/chains';
 
-import { DEFAULT_CHAIN_ID } from '../web3';
-
 export const baseSepolia = {
   name: 'Base Sepolia',
   id: 84532,
@@ -37,16 +35,50 @@ export const baseSepolia = {
   },
 };
 
-const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, garnet, mudFoundry];
+export const pyrope = {
+  name: 'Pyrope',
+  id: 695569,
+  nativeCurrency: { decimals: 18, name: 'Ether', symbol: 'ETH' },
+  rpcUrls: {
+    default: {
+      http: [
+        import.meta.env.VITE_HTTPS_RPC_URL || 'https://rpc.pyropechain.com',
+      ],
+      webSocket: [
+        import.meta.env.VITE_WS_RPC_URL || 'wss://rpc.pyropechain.com',
+      ],
+    },
+    public: {
+      http: [
+        import.meta.env.VITE_HTTPS_RPC_URL || 'https://rpc.pyropechain.com',
+      ],
+      webSocket: [
+        import.meta.env.VITE_WS_RPC_URL || 'wss://rpc.pyropechain.com',
+      ],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Pyrope Explorer',
+      url: 'https://explorer.pyropechain.com',
+    },
+  },
+};
+
+const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, garnet, mudFoundry, pyrope];
 
 const getSupportedChains = () => {
-  if (import.meta.env.DEV) {
-    return POSSIBLE_SUPPORTED_CHAINS.filter(
-      chain => chain.id === DEFAULT_CHAIN_ID,
-    );
-  }
+  // Get the chain ID from environment or use 31337 (Anvil) as default for development
+  const chainId = import.meta.env.VITE_CHAIN_ID
+    ? Number(import.meta.env.VITE_CHAIN_ID)
+    : 31337;
 
-  return [garnet];
+  // Filter to the chain matching the configured chain ID
+  const matched = POSSIBLE_SUPPORTED_CHAINS.filter(chain => chain.id === chainId);
+  if (matched.length > 0) return matched;
+
+  // Fallback for production if no match
+  return [baseSepolia];
 };
 
 /*

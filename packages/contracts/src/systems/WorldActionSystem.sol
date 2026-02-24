@@ -19,12 +19,15 @@ import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {_requireAccess} from "../utils.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 import "forge-std/console.sol";
 
 contract WorldActionSystem is System {
     function useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId) public {
-        require(IWorld(_world()).UD__isValidOwner(givingEntity, _msgSender()), "Cannot consume another's item");
-        require(IWorld(_world()).UD__isItemOwner(itemId, _msgSender()), "you do not own this item");
+        PauseLib.requireNotPaused();
+        // Items are owned by the character owner (delegator), not the caller (session wallet)
+        address characterOwner = IWorld(_world()).UD__getOwner(givingEntity);
+        require(IWorld(_world()).UD__isItemOwner(itemId, characterOwner), "you do not own this item");
         require(EncounterEntity.getEncounterId(givingEntity) == bytes32(0), "cannot use in an encounter");
         ConsumableStatsData memory consumableStats = IWorld(_world()).UD__getConsumableStats(itemId);
         Action[] memory actions = new Action[](consumableStats.effects.length);
@@ -108,5 +111,34 @@ contract WorldActionSystem is System {
         stats.currentHp -= _heal;
 
         Stats.setCurrentHp(receivingEntity, stats.currentHp);
+    }
+
+    /**
+     * @dev Use a healing consumable during combat. Only works for instant healing items (negative maxDamage).
+     * @param characterId The character using the consumable
+     * @param itemId The consumable item ID
+     */
+    function useCombatConsumableItem(bytes32 characterId, uint256 itemId) public {
+        PauseLib.requireNotPaused();
+        // Items are owned by the character owner (delegator), not the caller (session wallet)
+        address characterOwner = IWorld(_world()).UD__getOwner(characterId);
+        require(IWorld(_world()).UD__isItemOwner(itemId, characterOwner), "you do not own this item");
+
+        // Get consumable stats
+        ConsumableStatsData memory consumableStats = IWorld(_world()).UD__getConsumableStats(itemId);
+
+        // Only allow instant healing items during combat (negative maxDamage = healing)
+        require(
+            consumableStats.maxDamage == consumableStats.minDamage && consumableStats.maxDamage < 0,
+            "Only instant healing items can be used in combat"
+        );
+
+        // Apply the healing
+        _applyHealingPotion(characterId, characterId, itemId);
+
+        // Consume the item
+        IWorld(_world()).UD__consumeItem(characterId, itemId);
+
+        console.log("WorldActionSystem: Used combat consumable", itemId);
     }
 }

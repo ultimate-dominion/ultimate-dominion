@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { etherToFixedNumber } from '../utils/helpers';
 import { type Character } from '../utils/types';
+
 import { ClassSymbol } from './ClassSymbol';
 import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 

@@ -25,7 +25,7 @@ import {
     TOKEN_URI,
     ITEMS_NAMESPACE
 } from "../constants.sol";
-import {CombatEncounterData, StarterItemsData, SpellStatsData, SpellStats} from "@codegen/index.sol";
+import {CombatEncounterData, StarterItemsData, ConsumableStatsData, ConsumableStats} from "@codegen/index.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
 import "forge-std/console.sol";
 
@@ -50,7 +50,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         vm.startPrank(alice);
         world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
-        world.UD__enterGame(alicesCharacterId);
+        world.UD__enterGame(alicesCharacterId, newWeaponId, newArmorId);
         vm.stopPrank();
 
         // alice has lower agi to go second
@@ -198,10 +198,10 @@ contract Test_CombatSystem is SetUp, GasReporter {
         bobStats.agility = 10;
         world.UD__adminSetStats(bobCharacterId, bobStats);
 
-        // assert that spell is correct
-        SpellStatsData memory spellStats = SpellStats.get(startingSpellId);
-        assert(spellStats.maxDamage == 5);
-        assert(spellStats.minDamage == 1);
+        // assert that consumable is correct
+        ConsumableStatsData memory consumableStats = ConsumableStats.get(startingConsumableId);
+        assert(consumableStats.maxDamage == 5);
+        assert(consumableStats.minDamage == 1);
 
         // set defender stats
         StatsData memory entityStats = world.UD__getStats(entityId);
@@ -209,16 +209,16 @@ contract Test_CombatSystem is SetUp, GasReporter {
         entityStats.agility = 9;
         world.UD__adminSetStats(entityId, entityStats);
 
-        // world.UD__adminDropItem(bobCharacterId, startingSpellId, 1);
+        // world.UD__adminDropItem(bobCharacterId, startingConsumableId, 1);
         // uint256[] memory itemIds = new uint256[](1);
-        // itemIds[0] = startingSpellId;
+        // itemIds[0] = startingConsumableId;
         // vm.prank(bob);
         // world.UD__equipItems(bobCharacterId, itemIds);
 
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
-        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingSpellId});
+        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingConsumableId});
 
         vm.prank(bob);
         world.UD__endTurn(encounterId, bobCharacterId, actions);
@@ -278,7 +278,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
         Action[] memory actions = new Action[](1);
-        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingSpellId});
+        actions[0] = Action({attackerEntityId: bobCharacterId, defenderEntityId: entityId, itemId: startingConsumableId});
         uint256 fees = 0; // entropy.getFee(address(1));
         vm.prank(bob);
         world.UD__endTurn(encounterId, bobCharacterId, actions);

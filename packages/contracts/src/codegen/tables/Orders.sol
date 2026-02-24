@@ -17,7 +17,7 @@ import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/Encoded
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 // Import user types
-import { OrderStatus } from "./../common.sol";
+import { OrderStatus } from "../common.sol";
 
 struct OrdersData {
   address offerer;

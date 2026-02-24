@@ -21,6 +21,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { ITEM_PATH } from '../Routes';
 import { type Consumable, OrderType } from '../utils/types';
+
 import { HealthBar } from './HealthBar';
 import { ItemCard } from './ItemCard';
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
@@ -47,7 +48,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   const { renderError, renderSuccess } = useToast();
   const {
     delegatorAddress,
-    systemCalls: { useWorldConsumableItem },
+    systemCalls: { useCombatConsumableItem, useWorldConsumableItem },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
   const { isSpawned } = useMap();
@@ -90,11 +91,10 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
         return;
       }
 
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const { error, success } = await useWorldConsumableItem(
-        character.id,
-        item.tokenId,
-      );
+      // Use combat consumable function when in battle, otherwise use world consumable
+      const { error, success } = currentBattle
+        ? await useCombatConsumableItem(character.id, item.tokenId)
+        : await useWorldConsumableItem(character.id, item.tokenId);
 
       if (error && !success) {
         throw new Error(error);
@@ -110,6 +110,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     }
   }, [
     character,
+    currentBattle,
     delegatorAddress,
     item,
     itemsLootManagerAllowance,
@@ -117,6 +118,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     refreshCharacter,
     renderError,
     renderSuccess,
+    useCombatConsumableItem,
     useWorldConsumableItem,
   ]);
 
@@ -166,15 +168,22 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     return effectsAtMaxStacks.length > 0;
   }, [character, isOwner, item]);
 
+  // Check if this is an instant heal consumable (can be used in combat)
+  const isInstantHeal = useMemo(
+    () => item.hpRestoreAmount !== BigInt(0),
+    [item.hpRestoreAmount],
+  );
+
   const isDisabled = useMemo(() => {
     if (!isOwner) return false;
-    if (currentBattle) return true;
+    // Only allow instant heal items during combat
+    if (currentBattle && !isInstantHeal) return true;
     if (isHealthFull) return true;
     if (!isSpawned) return true;
     if (maxStacksReached) return true;
 
     return false;
-  }, [currentBattle, isHealthFull, isOwner, isSpawned, maxStacksReached]);
+  }, [currentBattle, isHealthFull, isInstantHeal, isOwner, isSpawned, maxStacksReached]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -208,9 +217,14 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
             <Text mb={6}>Do you want to make an offer for this item?</Text>
           )}
           <ItemCard {...item} balance={itemBalance} />
-          {!!currentBattle && isOwner && (
+          {!!currentBattle && isOwner && !isInstantHeal && (
             <Text color="red" fontWeight="bold" mt={4} size="sm">
               You cannot consume this during battle.
+            </Text>
+          )}
+          {!!currentBattle && isOwner && isInstantHeal && (
+            <Text color="green" fontWeight="bold" mt={4} size="sm">
+              This healing item can be used during combat!
             </Text>
           )}
           {isOwner && !isSpawned && (

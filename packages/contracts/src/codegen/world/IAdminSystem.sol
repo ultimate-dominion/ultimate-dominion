@@ -5,6 +5,7 @@ pragma solidity >=0.8.24;
 
 import { CombatEncounterData, EncounterEntityData, StatsData } from "@codegen/index.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
+import { ItemType, MobType, EffectType } from "@codegen/common.sol";
 
 /**
  * @title IAdminSystem
@@ -35,4 +36,42 @@ interface IAdminSystem {
   function UD__getSystemAddress(ResourceId systemId) external view returns (address);
 
   function UD__adminApplyStatusEffect(bytes32 entityId, bytes32 statusEffectId) external;
+
+  function UD__adminCreateItem(
+    ItemType itemType,
+    uint256 supply,
+    uint256 dropChance,
+    uint256 price,
+    bytes memory stats,
+    string memory itemMetadataURI
+  ) external returns (uint256);
+
+  function UD__adminCreateItems(
+    ItemType[] memory itemTypes,
+    uint256[] memory supply,
+    uint256[] memory dropChances,
+    uint256[] memory prices,
+    bytes[] memory stats,
+    string[] memory itemMetadataURIs
+  ) external;
+
+  function UD__adminResupplyLootManager(uint256 itemId, uint256 newSupply) external;
+
+  function UD__adminCreateMob(
+    MobType mobType,
+    bytes memory stats,
+    string memory mobMetadataUri
+  ) external returns (uint256);
+
+  function UD__adminCreateMobs(
+    MobType[] memory mobTypes,
+    bytes[] memory stats,
+    string[] memory mobMetadataURIs
+  ) external;
+
+  function UD__adminCreateEffect(
+    EffectType effectType,
+    string memory name,
+    bytes memory effectStats
+  ) external returns (bytes32);
 }

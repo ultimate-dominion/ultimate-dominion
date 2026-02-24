@@ -13,8 +13,6 @@ import {
   Image,
   Link,
   Stack,
-  Text,
-  Tooltip,
   useDisclosure,
 } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
@@ -36,6 +34,7 @@ import {
   MARKETPLACE_PATH,
   SHOP_PATH,
 } from '../Routes';
+
 import { BackCaretSvg } from './SVGs';
 
 const PAGES_WITH_BACK_BUTTON = [
@@ -54,9 +53,7 @@ export const Header = ({
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { renderError } = useToast();
-
   const {
-    burnerBalance,
     delegatorAddress,
     systemCalls: { endShopEncounter },
   } = useMUD();
@@ -144,10 +141,10 @@ export const Header = ({
       mt={4}
       px={4}
       py={2}
-      templateColumns={{ base: 'repeat(4, 1fr)', lg: 'repeat(1, fr)' }}
+      templateColumns={{ base: '1fr auto', lg: '1fr' }}
       w="100%"
     >
-      <GridItem colSpan={{ base: 3, lg: 4 }}>
+      <GridItem colSpan={1}>
         <Stack
           direction={{ base: 'column-reverse', lg: 'row' }}
           justify={
@@ -168,7 +165,7 @@ export const Header = ({
                 size="sm"
                 variant="dark"
               >
-                Wallet Details
+                Account
               </Button>
             )}
             {showBackButton && (
@@ -182,18 +179,6 @@ export const Header = ({
               >
                 {character?.worldEncounter ? 'Exit Shop' : 'Back'}
               </Button>
-            )}
-            {pathname !== HOME_PATH && (
-              <Tooltip
-                aria-label="Your session wallet balance"
-                bg="#070D2A"
-                hasArrow
-                label="Your session wallet balance"
-              >
-                <Text size="2xs">
-                  Balance: {Number(burnerBalance).toFixed(5)}
-                </Text>
-              </Tooltip>
             )}
           </HStack>
           <Button
@@ -212,11 +197,11 @@ export const Header = ({
       </GridItem>
       <GridItem
         alignContent="center"
-        colSpan={{ base: 1, lg: 0 }}
         display={{ lg: 'none' }}
         textAlign="right"
       >
         <Button
+          aria-label="Open menu"
           backgroundColor="#D0D0D0"
           onClick={onOpen}
           p={3}

@@ -18,13 +18,15 @@ import {
 import {IWorld} from "@world/IWorld.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
 import {_lootManagerSystemId} from "../utils.sol";
-import {WORLD_NAMESPACE} from "../../constants.sol";
+import {WORLD_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y} from "../../constants.sol";
+import {Position} from "@codegen/index.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
+import {PauseLib} from "../libraries/PauseLib.sol";
 import "forge-std/console.sol";
 
 contract ShopSystem is System, ReentrancyGuard {
@@ -35,7 +37,8 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param itemIndex the index of the item in the buyableItems array
      * @param characterId the id of the character buying
      */
-    function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public {
+    function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public nonReentrant {
+        PauseLib.requireNotPaused();
         bytes32 encounterId = EncounterEntity.getEncounterId(characterId);
         WorldEncounterData memory worldData = WorldEncounter.get(encounterId);
         // check that player is in encounter with the shop
@@ -92,7 +95,8 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param itemIndex the index of the item in the sellableItems array
      * @param characterId the characterId of the character selling
      */
-    function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public {
+    function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public nonReentrant {
+        PauseLib.requireNotPaused();
         bytes32 encounterId = EncounterEntity.getEncounterId(characterId);
         WorldEncounterData memory worldData = WorldEncounter.get(encounterId);
         ShopSellTemps memory sellTemps;
@@ -158,6 +162,7 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param shopId the shop Id
      */
     function restock(bytes32 shopId) public returns (bool) {
+        PauseLib.requireNotPaused();
         if (canRestock(shopId)) {
             uint256 lastRecordedIntervalTimestamp = Shops.getRestockTimestamp(shopId);
             uint256 timeSinceLastInterval = (block.timestamp - lastRecordedIntervalTimestamp) % 12 hours;
@@ -179,12 +184,20 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param encounterId the encounter ID you wish to end (must be an encounter with the shop)
      */
     function endShopEncounter(bytes32 encounterId) public {
+        PauseLib.requireNotPaused();
         bytes32 characterId = WorldEncounter.getCharacter(encounterId);
         require(
             IWorld(_world()).UD__isValidCharacterId(characterId)
                 && IWorld(_world()).UD__isValidOwner(characterId, _msgSender()),
             "can only exit your own shop"
         );
+
+        // Fragment II: The Quartermaster - talk to Tal at (9,9)
+        bytes32 shopEntityId = WorldEncounter.getEntity(encounterId);
+        (uint16 shopX, uint16 shopY) = Position.get(shopEntityId);
+        if (shopX == TAL_SHOP_X && shopY == TAL_SHOP_Y) {
+            IWorld(_world()).UD__triggerFragment(characterId, 2, shopX, shopY);
+        }
 
         IWorld(_world()).UD__endEncounter(encounterId, 0, false);
     }

@@ -22,24 +22,31 @@ import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {TokenURI} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/TokenURI.sol";
 import {_tokenUriTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
-import {IERC20System} from "@latticexyz/world-modules/src/interfaces/IERC20System.sol";
+import {IERC20System} from "@interfaces/IERC20System.sol";
 import {IItemsSystem} from "@codegen/world/IItemsSystem.sol";
 import {ILootManagerSystem} from "@codegen/world/ILootManagerSystem.sol";
-import {Classes} from "@codegen/common.sol";
+import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {ResourceId} from "@latticexyz/world/src/WorldResourceId.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Math} from "@libraries/Math.sol";
+import {StatCalculator} from "@libraries/StatCalculator.sol";
 import "forge-std/console.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_erc721SystemId, _requireAccess} from "../utils.sol";
-import {CHARACTERS_NAMESPACE, ABILITY_POINTS_PER_LEVEL, MAX_LEVEL, BONUS_POINT_LEVEL} from "../../constants.sol";
+import {CHARACTERS_NAMESPACE, MAX_LEVEL, EARLY_GAME_CAP, MID_GAME_CAP} from "../../constants.sol";
 
 contract CharacterSystem is System {
+    // Events for implicit class system
+    event RaceSelected(bytes32 indexed characterId, Race race);
+    event PowerSourceSelected(bytes32 indexed characterId, PowerSource powerSource);
+    event ArmorTypeSelected(bytes32 indexed characterId, ArmorType armorType);
+    event AdvancedClassSelected(bytes32 indexed characterId, AdvancedClass advancedClass);
+
     modifier onlyOwner(bytes32 characterId) {
         require(isValidOwner(characterId, _msgSender()), "CHARACTER SYSTEM: INVALID OPERATOR");
         _;
@@ -105,6 +112,7 @@ contract CharacterSystem is System {
         public
         returns (bytes32 characterId)
     {
+        require(CharacterOwner.getCharacterTokenId(_msgSender()) == 0, "CHARACTERS: Already has a character");
         uint256 characterTokenId = _incrementCharacterCounter();
         require(characterTokenId < type(uint96).max, "CHARACATERS: Max characters reached");
         IWorld(_world()).call(
@@ -131,6 +139,308 @@ contract CharacterSystem is System {
         Stats.setClass(characterId, class);
         // use systemSwitch to call rng system
         SystemSwitch.call(abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, abi.encode(characterId))));
+    }
+
+    /**
+     * @notice Roll balanced base stats for implicit class system
+     * @dev This should be called AFTER chooseRace, choosePowerSource, and chooseStartingArmor
+     *      Stats total 19 points distributed across STR/AGI/INT (each 3-10 range)
+     *      Race and armor bonuses are already applied and will be preserved
+     * @param userRandomNumber User-provided random seed
+     * @param characterId The character to generate stats for
+     */
+    function rollBaseStats(bytes32 userRandomNumber, bytes32 characterId)
+        public
+        payable
+        onlyOwner(characterId)
+    {
+        require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
+        require(Stats.getRace(characterId) != Race.None, "CHARACTERS: must choose race first");
+        require(Stats.getPowerSource(characterId) != PowerSource.None, "CHARACTERS: must choose power source first");
+        // Note: startingArmor is now set via enterGame when player selects their starter armor
+
+        RngRequestType requestType = RngRequestType.CharacterStats;
+        // Encode characterId with a flag indicating this is for balanced stats
+        bytes memory data = abi.encode(characterId, true); // true = use balanced stats
+        SystemSwitch.call(abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, data)));
+    }
+
+    /**
+     * @notice Choose race for a character (part of implicit class system)
+     * @param characterId The character to set race for
+     * @param race The chosen race (Human, Elf, Dwarf)
+     * @dev Applies race-specific stat modifiers:
+     *      - Dwarf: STR +2, AGI -1, HP +1
+     *      - Elf: AGI +2, INT +1, STR -1, HP -1
+     *      - Human: STR +1, AGI +1, INT +1
+     */
+    function chooseRace(bytes32 characterId, Race race) public onlyOwner(characterId) {
+        require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
+        require(race != Race.None, "CHARACTERS: invalid race");
+        require(Stats.getRace(characterId) == Race.None, "CHARACTERS: race already selected");
+
+        StatsData memory stats = Stats.get(characterId);
+        stats.race = race;
+
+        // Apply race-based stat modifiers
+        if (race == Race.Dwarf) {
+            stats.strength += 2;
+            stats.agility -= 1;
+            stats.maxHp += 1;
+        } else if (race == Race.Elf) {
+            stats.agility += 2;
+            stats.intelligence += 1;
+            stats.strength -= 1;
+            stats.maxHp -= 1;
+        } else if (race == Race.Human) {
+            stats.strength += 1;
+            stats.agility += 1;
+            stats.intelligence += 1;
+        }
+
+        Stats.set(characterId, stats);
+        emit RaceSelected(characterId, race);
+    }
+
+    /**
+     * @notice Choose power source for a character (part of implicit class system)
+     * @param characterId The character to set power source for
+     * @param powerSource The chosen power source (Divine, Weave, Physical)
+     * @dev Power source determines which advanced classes are available at level 10
+     */
+    function choosePowerSource(bytes32 characterId, PowerSource powerSource) public onlyOwner(characterId) {
+        require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
+        require(powerSource != PowerSource.None, "CHARACTERS: invalid power source");
+        require(Stats.getPowerSource(characterId) == PowerSource.None, "CHARACTERS: power source already selected");
+
+        Stats.setPowerSource(characterId, powerSource);
+        emit PowerSourceSelected(characterId, powerSource);
+    }
+
+    /**
+     * @notice Choose starting armor type for a character (part of implicit class system)
+     * @param characterId The character to set armor type for
+     * @param armorType The chosen armor type (Cloth, Leather, Plate)
+     * @dev Applies armor-type specific stat modifiers:
+     *      - Cloth: INT +2, AGI +1, STR -1
+     *      - Leather: AGI +2, STR +1
+     *      - Plate: STR +2, HP +1, AGI -1
+     */
+    function chooseStartingArmor(bytes32 characterId, ArmorType armorType) public onlyOwner(characterId) {
+        require(!Characters.getLocked(characterId), "CHARACTERS: character already in game world");
+        require(armorType != ArmorType.None, "CHARACTERS: invalid armor type");
+        require(Stats.getStartingArmor(characterId) == ArmorType.None, "CHARACTERS: armor already selected");
+
+        StatsData memory stats = Stats.get(characterId);
+        stats.startingArmor = armorType;
+
+        // Apply armor-based stat modifiers
+        if (armorType == ArmorType.Cloth) {
+            stats.intelligence += 2;
+            stats.agility += 1;
+            stats.strength -= 1;
+        } else if (armorType == ArmorType.Leather) {
+            stats.agility += 2;
+            stats.strength += 1;
+        } else if (armorType == ArmorType.Plate) {
+            stats.strength += 2;
+            stats.maxHp += 1;
+            stats.agility -= 1;
+        }
+
+        Stats.set(characterId, stats);
+        emit ArmorTypeSelected(characterId, armorType);
+    }
+
+    /**
+     * @notice Get the power source for a character
+     */
+    function getPowerSource(bytes32 characterId) public view returns (PowerSource) {
+        return Stats.getPowerSource(characterId);
+    }
+
+    /**
+     * @notice Get the race for a character
+     */
+    function getRace(bytes32 characterId) public view returns (Race) {
+        return Stats.getRace(characterId);
+    }
+
+    /**
+     * @notice Get the starting armor type for a character
+     */
+    function getStartingArmor(bytes32 characterId) public view returns (ArmorType) {
+        return Stats.getStartingArmor(characterId);
+    }
+
+    /**
+     * @notice Get the advanced class for a character (only set at level 10+)
+     */
+    function getAdvancedClass(bytes32 characterId) public view returns (AdvancedClass) {
+        return Stats.getAdvancedClass(characterId);
+    }
+
+    /**
+     * @notice Select advanced class at level 10 (class crystallization)
+     * @dev The advanced class must be valid for the character's dominant stat and power source:
+     *      - STR + Divine = Paladin
+     *      - STR + Weave = Sorcerer
+     *      - STR + Physical = Warrior
+     *      - AGI + Divine = Druid
+     *      - AGI + Weave = Warlock
+     *      - AGI + Physical = Ranger
+     *      - INT + Divine = Cleric
+     *      - INT + Weave = Wizard
+     *      - INT + Physical = Rogue
+     * @param characterId The character selecting their advanced class
+     * @param advancedClass The chosen advanced class
+     */
+    function selectAdvancedClass(bytes32 characterId, AdvancedClass advancedClass) public onlyOwner(characterId) {
+        StatsData memory stats = Stats.get(characterId);
+
+        // Check requirements
+        require(stats.level >= 10, "CHARACTER SYSTEM: Must be level 10 to select advanced class");
+        require(!stats.hasSelectedAdvancedClass, "CHARACTER SYSTEM: Advanced class already selected");
+        require(advancedClass != AdvancedClass.None, "CHARACTER SYSTEM: Invalid advanced class");
+
+        // Validate class selection based on dominant stat and power source
+        require(_isValidAdvancedClass(stats, advancedClass), "CHARACTER SYSTEM: Invalid class for character build");
+
+        // Apply class-specific bonuses
+        stats = _applyAdvancedClassBonuses(stats, advancedClass);
+
+        // Mark as having selected advanced class
+        stats.advancedClass = advancedClass;
+        stats.hasSelectedAdvancedClass = true;
+
+        Stats.set(characterId, stats);
+
+        // Update base stats to include the new bonuses
+        Characters.setBaseStats(characterId, abi.encode(stats));
+
+        // Issue class-specific items
+        IWorld(_world()).UD__issueAdvancedClassItems(characterId, advancedClass);
+
+        emit AdvancedClassSelected(characterId, advancedClass);
+    }
+
+    /**
+     * @notice Validate that the advanced class is valid for the character's build
+     * @param stats Character's current stats
+     * @param advancedClass The class being validated
+     * @return isValid Whether the class is valid for this character
+     */
+    function _isValidAdvancedClass(StatsData memory stats, AdvancedClass advancedClass) internal pure returns (bool) {
+        // Determine dominant stat
+        bool strDominant = stats.strength >= stats.agility && stats.strength >= stats.intelligence;
+        bool agiDominant = !strDominant && stats.agility > stats.strength && stats.agility >= stats.intelligence;
+        bool intDominant = !strDominant && !agiDominant;
+
+        // Validate based on dominant stat + power source combination
+        if (strDominant) {
+            if (stats.powerSource == PowerSource.Divine && advancedClass == AdvancedClass.Paladin) return true;
+            if (stats.powerSource == PowerSource.Weave && advancedClass == AdvancedClass.Sorcerer) return true;
+            if (stats.powerSource == PowerSource.Physical && advancedClass == AdvancedClass.Warrior) return true;
+        } else if (agiDominant) {
+            if (stats.powerSource == PowerSource.Divine && advancedClass == AdvancedClass.Druid) return true;
+            if (stats.powerSource == PowerSource.Weave && advancedClass == AdvancedClass.Warlock) return true;
+            if (stats.powerSource == PowerSource.Physical && advancedClass == AdvancedClass.Ranger) return true;
+        } else if (intDominant) {
+            if (stats.powerSource == PowerSource.Divine && advancedClass == AdvancedClass.Cleric) return true;
+            if (stats.powerSource == PowerSource.Weave && advancedClass == AdvancedClass.Wizard) return true;
+            if (stats.powerSource == PowerSource.Physical && advancedClass == AdvancedClass.Rogue) return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @notice Apply stat bonuses when selecting an advanced class
+     * @param stats Current character stats
+     * @param advancedClass The selected advanced class
+     * @return Updated stats with class bonuses applied
+     */
+    function _applyAdvancedClassBonuses(StatsData memory stats, AdvancedClass advancedClass)
+        internal
+        pure
+        returns (StatsData memory)
+    {
+        // Each class gets unique bonuses that reinforce their playstyle
+        if (advancedClass == AdvancedClass.Paladin) {
+            // Divine tank - STR and HP focus
+            stats.strength += 2;
+            stats.maxHp += 5;
+        } else if (advancedClass == AdvancedClass.Sorcerer) {
+            // Battle mage - balanced STR/INT
+            stats.strength += 1;
+            stats.intelligence += 1;
+            stats.maxHp += 3;
+        } else if (advancedClass == AdvancedClass.Warrior) {
+            // Pure tank - STR and high HP
+            stats.strength += 2;
+            stats.maxHp += 7;
+        } else if (advancedClass == AdvancedClass.Druid) {
+            // Hybrid - AGI with some STR for shapeshifting
+            stats.agility += 1;
+            stats.strength += 1;
+            stats.maxHp += 3;
+        } else if (advancedClass == AdvancedClass.Warlock) {
+            // Dark caster - AGI/INT hybrid
+            stats.agility += 1;
+            stats.intelligence += 1;
+            stats.maxHp += 2;
+        } else if (advancedClass == AdvancedClass.Ranger) {
+            // Ranged specialist - pure AGI
+            stats.agility += 2;
+            stats.maxHp += 3;
+        } else if (advancedClass == AdvancedClass.Cleric) {
+            // Divine caster - INT with HP for survivability
+            stats.intelligence += 1;
+            stats.strength += 1;
+            stats.maxHp += 5;
+        } else if (advancedClass == AdvancedClass.Wizard) {
+            // Pure caster - INT focus, low HP
+            stats.intelligence += 2;
+            stats.maxHp += 2;
+        } else if (advancedClass == AdvancedClass.Rogue) {
+            // Tactical assassin - INT/STR for planning and execution
+            stats.intelligence += 1;
+            stats.strength += 1;
+            stats.maxHp += 4;
+        }
+
+        return stats;
+    }
+
+    /**
+     * @notice Get the valid advanced class for a character based on their build
+     * @dev Useful for UI to show which class the player can select
+     * @param characterId The character to check
+     * @return validClass The advanced class this character can select
+     */
+    function getValidAdvancedClass(bytes32 characterId) public view returns (AdvancedClass) {
+        StatsData memory stats = Stats.get(characterId);
+
+        // Determine dominant stat
+        bool strDominant = stats.strength >= stats.agility && stats.strength >= stats.intelligence;
+        bool agiDominant = !strDominant && stats.agility > stats.strength && stats.agility >= stats.intelligence;
+
+        if (strDominant) {
+            if (stats.powerSource == PowerSource.Divine) return AdvancedClass.Paladin;
+            if (stats.powerSource == PowerSource.Weave) return AdvancedClass.Sorcerer;
+            if (stats.powerSource == PowerSource.Physical) return AdvancedClass.Warrior;
+        } else if (agiDominant) {
+            if (stats.powerSource == PowerSource.Divine) return AdvancedClass.Druid;
+            if (stats.powerSource == PowerSource.Weave) return AdvancedClass.Warlock;
+            if (stats.powerSource == PowerSource.Physical) return AdvancedClass.Ranger;
+        } else {
+            // INT dominant
+            if (stats.powerSource == PowerSource.Divine) return AdvancedClass.Cleric;
+            if (stats.powerSource == PowerSource.Weave) return AdvancedClass.Wizard;
+            if (stats.powerSource == PowerSource.Physical) return AdvancedClass.Rogue;
+        }
+
+        return AdvancedClass.None;
     }
 
     function enterGame(bytes32 characterId) public onlyOwner(characterId) {
@@ -174,33 +484,26 @@ contract CharacterSystem is System {
         if (stats.level == MAX_LEVEL) {
             return;
         }
+
+        uint256 newLevel = stats.level + 1;
         int256 strChange = desiredStats.strength - stats.strength;
         int256 agiChange = desiredStats.agility - stats.agility;
         int256 intChange = desiredStats.intelligence - stats.intelligence;
-        // int256 hpChange = desiredStats.maxHp - stats.maxHp;
 
+        // Use diminishing returns system for stat points
+        int256 allowedStatPoints = StatCalculator.calculateStatPointsForLevel(newLevel);
         require(
-            (strChange + agiChange + intChange) == ABILITY_POINTS_PER_LEVEL, "CHARACTER SYSTEM: INVALID STAT CHANGE"
+            (strChange + agiChange + intChange) == allowedStatPoints, "CHARACTER SYSTEM: INVALID STAT CHANGE"
         );
-        // add an extra point for class stat
-        if (availableLevel % BONUS_POINT_LEVEL == 0) {
-            Classes characterClass = getClass(characterId);
-            if (characterClass == Classes.Warrior) {
-                ++desiredStats.strength;
-            } else if (characterClass == Classes.Rogue) {
-                ++desiredStats.agility;
-            } else if (characterClass == Classes.Mage) {
-                ++desiredStats.intelligence;
-            }
-        }
-        if (uint8(stats.class) == 0 && stats.level % 3 == 0) {
-            stats.maxHp += 3;
-        }
-        stats.maxHp += 3;
+
+        // Calculate HP gain using diminishing returns
+        int256 hpGain = StatCalculator.calculateHpForLevel(newLevel);
+        stats.maxHp += hpGain;
+
         stats.strength = desiredStats.strength;
         stats.agility = desiredStats.agility;
         stats.intelligence = desiredStats.intelligence;
-        stats.level += 1;
+        stats.level = newLevel;
 
         // set base stats
         Characters.setBaseStats(characterId, abi.encode(stats));

@@ -23,7 +23,7 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -294,43 +294,6 @@ declare const abi: [
   },
   {
     "type": "event",
-    "name": "Store_SetRecord",
-    "inputs": [
-      {
-        "name": "tableId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "keyTuple",
-        "type": "bytes32[]",
-        "indexed": false,
-        "internalType": "bytes32[]"
-      },
-      {
-        "name": "staticData",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      },
-      {
-        "name": "encodedLengths",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "EncodedLengths"
-      },
-      {
-        "name": "dynamicData",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Store_SpliceDynamicData",
     "inputs": [
       {
@@ -388,6 +351,11 @@ declare const abi: [
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "GamePaused",
+    "inputs": []
   },
   {
     "type": "error",
@@ -468,4 +436,6 @@ declare const abi: [
       }
     ]
   }
-]; export default abi;
+];
+
+export default abi;

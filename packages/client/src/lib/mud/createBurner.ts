@@ -18,6 +18,7 @@ import {
 import { createSystemCalls } from '../mud/createSystemCalls';
 import { type SetupNetworkResult } from '../mud/setupNetwork';
 import { DEFAULT_CHAIN_ID } from '../web3';
+
 import { createViemClientConfig } from './createViemClientConfig';
 import { getBurnerAccount } from './getBurnerAccount';
 
@@ -89,7 +90,7 @@ export function createBurner(
       console.info('[Dev Faucet]: Player address -> ', address);
 
       const faucetClient = createFaucetClient({
-        url: 'https://ultimate-dominion-faucet.onrender.com/trpc',
+        url: 'https://ultimate-dominion-faucet.vercel.app/trpc',
       });
 
       const requestDrip = async () => {
@@ -110,8 +111,8 @@ export function createBurner(
       };
 
       requestDrip();
-      // Request a drip every 20 seconds
-      setInterval(requestDrip, 20000);
+      // Note: No cleanup available here (not a React hook).
+      // Only runs on garnet chain, which is not the production chain.
     }
   }
 

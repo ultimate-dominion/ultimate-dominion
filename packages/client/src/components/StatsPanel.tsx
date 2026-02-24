@@ -2,9 +2,9 @@ import {
   Avatar,
   Box,
   Button,
+  Divider,
   HStack,
   Link,
-  Spacer,
   Spinner,
   Text,
   Tooltip,
@@ -15,7 +15,6 @@ import { useComponentValue } from '@latticexyz/react';
 import { Has, runQuery } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
-import { BsBackpack4Fill } from 'react-icons/bs';
 import {
   IoIosArrowForward,
   IoMdInformationCircleOutline,
@@ -26,14 +25,11 @@ import { hexToBigInt } from 'viem';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
-import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
+
 import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
 import { LeaderboardIconSvg, MarketplaceIconSvg } from './SVGs';
-import { PotionSvg } from './SVGs/PotionSvg';
-
-const MAX_EQUIPPED_ITEMS = MAX_EQUIPPED_ARMOR + MAX_EQUIPPED_WEAPONS;
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
@@ -41,13 +37,7 @@ export const StatsPanel = (): JSX.Element => {
   const {
     components: { Levels },
   } = useMUD();
-  const {
-    character,
-    equippedArmor,
-    equippedSpells,
-    equippedWeapons,
-    inventoryConsumables,
-  } = useCharacter();
+  const { character } = useCharacter();
 
   const maxLevelXpRequirement = useMemo(
     () =>
@@ -65,10 +55,10 @@ export const StatsPanel = (): JSX.Element => {
   const currentLevelXpRequirement =
     useComponentValue(
       Levels,
-      character
+      character && Number(character.level) > 0
         ? encodeEntity(
             { level: 'uint256' },
-            { level: BigInt(Number(character.level) - 1) },
+            { level: BigInt(Math.max(0, Number(character.level) - 1)) },
           )
         : undefined,
     )?.experience ?? BigInt(0);
@@ -93,11 +83,6 @@ export const StatsPanel = (): JSX.Element => {
       (100 * Number(xpEarnedSinceLastLevel)) / Number(xpNeededSinceLastLevel);
     return percent > 100 ? 100 : percent;
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
-
-  const allItems = useMemo(
-    () => [...equippedArmor, ...equippedSpells, ...equippedWeapons],
-    [equippedArmor, equippedSpells, equippedWeapons],
-  );
 
   const expiredEffectModifications: {
     agiModifier: bigint;
@@ -137,14 +122,6 @@ export const StatsPanel = (): JSX.Element => {
       strModifier,
     };
   }, [character]);
-
-  const consumablesInInventory = useMemo(() => {
-    return inventoryConsumables
-      .reduce((acc, item) => {
-        return acc + item.balance;
-      }, BigInt(0))
-      .toString();
-  }, [inventoryConsumables]);
 
   if (!character) {
     return (
@@ -209,7 +186,7 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">HP</Text>
-          <Text color="grey500" size="lg">
+          <Text color="grey500" fontFamily="mono" size="lg">
             {currentHpWithFloor.toString()}/{maxHp.toString()}
           </Text>
         </HStack>
@@ -227,7 +204,7 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">AGI</Text>
-          <Text color="grey500" size="lg">
+          <Text color="grey500" fontFamily="mono" size="lg">
             {(agility - expiredEffectModifications.agiModifier).toString()}
           </Text>
         </HStack>
@@ -245,7 +222,7 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">INT</Text>
-          <Text color="grey500" size="lg">
+          <Text color="grey500" fontFamily="mono" size="lg">
             {(intelligence - expiredEffectModifications.intModifier).toString()}
           </Text>
         </HStack>
@@ -263,7 +240,7 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">STR</Text>
-          <Text color="grey500" size="lg">
+          <Text color="grey500" fontFamily="mono" size="lg">
             {(strength - expiredEffectModifications.strModifier).toString()}
           </Text>
         </HStack>
@@ -275,6 +252,8 @@ export const StatsPanel = (): JSX.Element => {
         />
       </VStack>
 
+      <Divider borderColor="grey300" mt={4} />
+
       <HStack mt={4} px={4} w="100%">
         <Level
           currentLevel={character.level}
@@ -282,59 +261,77 @@ export const StatsPanel = (): JSX.Element => {
           maxed={maxed}
         />
       </HStack>
-
-      <HStack alignItems="start" mt={4} px={2} w="100%">
-        <HStack>
-          <Text color="yellow" fontWeight={700} size="lg">
-            {etherToFixedNumber(externalGoldBalance)} $GOLD
-          </Text>
-          <Tooltip
-            bg="#070D2A"
-            hasArrow
-            label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
-            placement="top"
-            shouldWrapChildren
-          >
-            <IoMdInformationCircleOutline />
-          </Tooltip>
-        </HStack>
-        <Spacer />
-        <Text color="gray500" fontWeight={500}>
-          <Text
-            as="span"
-            color={
-              BigInt(experience) >= nextLevelXpRequirement ? 'green' : 'black'
-            }
-            fontWeight={
-              BigInt(experience) >= nextLevelXpRequirement ? 'bold' : 'normal'
-            }
-          >
-            {experience.toString()}
-          </Text>
-          /{nextLevelXpRequirement.toString()} XP
+      <Text fontWeight={600} size="md" textAlign="center">
+        <Text
+          as="span"
+          color={
+            BigInt(experience) >= nextLevelXpRequirement ? 'green' : undefined
+          }
+          fontFamily="mono"
+          fontWeight={700}
+        >
+          {experience.toString()}
         </Text>
-      </HStack>
-      <HStack mt={1} px={2}>
-        <Text color="#3D4247" size="xs" fontWeight="bold" textAlign="start">
-          Adventure Escrow balance:{' '}
-          {etherToFixedNumber(character.escrowGoldBalance)} $GOLD{' '}
-          <Text as="span">
+        <Text as="span" color="grey500" fontFamily="mono">
+          {' / '}
+          {nextLevelXpRequirement.toString()}
+        </Text>{' '}
+        XP
+      </Text>
+
+      <Divider borderColor="grey300" mt={4} />
+
+      <VStack mt={4} px={2} spacing={1} w="100%">
+        <HStack justifyContent="space-between" w="100%">
+          <HStack>
+            <Text color="yellow" fontWeight={700} size="lg">
+              Gold
+            </Text>
             <Tooltip
               bg="#070D2A"
               hasArrow
-              label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+              label="Your Gold balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit Gold into your Adventure Escrow, visit 0,0 on the map."
               placement="top"
               shouldWrapChildren
             >
               <IoMdInformationCircleOutline />
             </Tooltip>
+          </HStack>
+          <Text color="yellow" fontFamily="mono" fontWeight={700} size="lg">
+            {etherToFixedNumber(
+              externalGoldBalance + character.escrowGoldBalance,
+            )}
           </Text>
-        </Text>
-      </HStack>
+        </HStack>
+        <HStack justifyContent="space-between" w="100%" px={2}>
+          <Text size="md">Spendable</Text>
+          <Text fontFamily="mono" fontWeight={700} size="md">
+            {etherToFixedNumber(externalGoldBalance)}
+          </Text>
+        </HStack>
+        <HStack justifyContent="space-between" w="100%" px={2}>
+          <HStack>
+            <Text size="md">Escrow</Text>
+            <Tooltip
+              bg="#070D2A"
+              hasArrow
+              label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
+              placement="top"
+              shouldWrapChildren
+            >
+              <IoMdInformationCircleOutline />
+            </Tooltip>
+          </HStack>
+          <Text fontFamily="mono" fontWeight={700} size="md">
+            {etherToFixedNumber(character.escrowGoldBalance)}
+          </Text>
+        </HStack>
+      </VStack>
 
       {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
         <Button
           alignSelf="center"
+          mt={2}
           onClick={() => navigate(`/characters/${character.id}`)}
           size="xs"
           variant="gold"
@@ -342,89 +339,6 @@ export const StatsPanel = (): JSX.Element => {
           Level Up!
         </Button>
       )}
-
-      <VStack align="stretch" alignItems="start" mt={6} spacing={1} w="100%">
-        <HStack fontWeight={700} mb={2} px={2} w="100%">
-          <Text size="lg">Equipped Items</Text>
-          <Tooltip
-            bg="#070D2A"
-            hasArrow
-            label="Visit the character page to equip items"
-            placement="top"
-          >
-            <Button
-              onClick={() => navigate(`/characters/${character.id}`)}
-              p="0 2px"
-              size="sm"
-              variant="ghost"
-            >
-              <BsBackpack4Fill size={12} />
-            </Button>
-          </Tooltip>
-          <Spacer />
-          <Text color="grey500" size="lg">
-            {allItems.length}/{MAX_EQUIPPED_ITEMS}
-          </Text>
-        </HStack>
-        {allItems.map((item, index) => (
-          <HStack
-            borderBottom="2px solid"
-            borderColor="white"
-            boxShadow="0px 0px 0px 0px #A2A9B0, 0px 0px 0px 0px #54545480, 5px 5px 10px 0px #54545440, -5px -5px 10px 0px #5454547D"
-            fontSize="xs"
-            justify="space-between"
-            key={`equipped-item-${index}`}
-            overflow="hidden"
-            px={2}
-            py={1}
-            w="100%"
-          >
-            <Text fontWeight={500}>{item.name}</Text>
-            <Box h={6} />
-          </HStack>
-        ))}
-        {Array.from({
-          length: MAX_EQUIPPED_ITEMS - allItems.length,
-        }).map((_, index) => (
-          <HStack
-            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
-            key={`empty-weapon-${index}`}
-            fontSize="xs"
-            justify="space-between"
-            px={2}
-            py={1}
-            w="100%"
-          >
-            <Text>Empty Slot</Text>
-            <Button
-              h={6}
-              onClick={() => navigate(`/characters/${character.id}`)}
-              p={0}
-              size="sm"
-              variant="ghost"
-              w={4}
-            >
-              +
-            </Button>
-          </HStack>
-        ))}
-        <HStack
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
-          fontSize="xs"
-          justify="space-between"
-          mt={2}
-          pl={2}
-          pr={5}
-          py={2}
-          w="100%"
-        >
-          <Text fontWeight={500}>Consumables</Text>
-          <HStack h={6}>
-            <Text fontWeight={700}>{consumablesInInventory}</Text>
-            <PotionSvg mb={0.5} theme="dark" />
-          </HStack>
-        </HStack>
-      </VStack>
 
       {isDesktop && (
         <HStack

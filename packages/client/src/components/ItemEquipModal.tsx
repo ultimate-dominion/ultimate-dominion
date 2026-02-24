@@ -1,5 +1,6 @@
 import {
   Button,
+  HStack,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -8,6 +9,7 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
+  VStack,
 } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +27,7 @@ import {
   type Spell,
   type Weapon,
 } from '../utils/types';
+
 import { ItemCard } from './ItemCard';
 import { PolygonalCard } from './PolygonalCard';
 
@@ -246,10 +249,36 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             <Text mb={6}>Do you want to make an offer for this item?</Text>
           )}
           <ItemCard {...item} />
-          {isMissingRequirements && isOwner && (
-            <Text color="red" fontWeight="bold" mt={4} size="sm">
-              You do not meet the requirements to equip this item.
-            </Text>
+          {isMissingRequirements && isOwner && character && (
+            <VStack align="start" mt={4} spacing={1}>
+              <Text color="red" fontWeight="bold" size="sm">
+                Missing requirements:
+              </Text>
+              {BigInt(character.level) < BigInt(item.minLevel) && (
+                <HStack>
+                  <Text color="red" size="sm">Level {item.minLevel.toString()} required</Text>
+                  <Text color="grey400" size="sm">(you: {character.level.toString()})</Text>
+                </HStack>
+              )}
+              {BigInt(character.baseStats.agility) < BigInt(item.statRestrictions.minAgility) && (
+                <HStack>
+                  <Text color="red" size="sm">AGI {item.statRestrictions.minAgility.toString()} required</Text>
+                  <Text color="grey400" size="sm">(you: {character.baseStats.agility.toString()})</Text>
+                </HStack>
+              )}
+              {BigInt(character.baseStats.intelligence) < BigInt(item.statRestrictions.minIntelligence) && (
+                <HStack>
+                  <Text color="red" size="sm">INT {item.statRestrictions.minIntelligence.toString()} required</Text>
+                  <Text color="grey400" size="sm">(you: {character.baseStats.intelligence.toString()})</Text>
+                </HStack>
+              )}
+              {BigInt(character.baseStats.strength) < BigInt(item.statRestrictions.minStrength) && (
+                <HStack>
+                  <Text color="red" size="sm">STR {item.statRestrictions.minStrength.toString()} required</Text>
+                  <Text color="grey400" size="sm">(you: {character.baseStats.strength.toString()})</Text>
+                </HStack>
+              )}
+            </VStack>
           )}
           {!!currentBattle && isNotGameBoard && isOwner && (
             <Text color="red" fontWeight="bold" mt={4} size="sm">

@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "format": "prettier --write \"{*,**/*}.{ts,tsx,js,jsx,json,yml,yaml,md}\"",
     "lint": "eslint --ext .ts,.tsx src",
+    "lint:fix": "eslint --ext .ts,.tsx src --fix",
     "test": "tsc --noEmit"
   },
   "dependencies": {
@@ -17,6 +18,7 @@
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@fontsource/fira-code": "^5.1.0",
+    "@fontsource/inter": "^5.2.8",
     "@latticexyz/common": "2.0.11",
     "@latticexyz/dev-tools": "2.0.11",
     "@latticexyz/faucet": "^2.1.1",
@@ -42,6 +44,7 @@
     "react-router-dom": "^6.23.1",
     "react-typist": "^2.0.5",
     "rxjs": "7.5.5",
+    "thirdweb": "^5.42.0",
     "viem": "2.9.20",
     "wagmi": "^2.9.6"
   },

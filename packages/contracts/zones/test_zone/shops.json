@@ -1,0 +1,18 @@
+{
+  "shops": [
+    {
+      "name": "Tal Carden",
+      "location": [9, 9],
+      "gold": 2000000000000000000000,
+      "maxGold": 2000000000000000000000,
+      "priceMarkdown": 5000,
+      "priceMarkup": 2000,
+      "restockTimestamp": 0,
+      "inventory": [
+        { "itemName": "Test Health Potion", "stock": 20, "restock": 20 },
+        { "itemName": "Iron Sword", "stock": 5, "restock": 5 },
+        { "itemName": "Iron Chainmail", "stock": 5, "restock": 5 }
+      ]
+    }
+  ]
+}

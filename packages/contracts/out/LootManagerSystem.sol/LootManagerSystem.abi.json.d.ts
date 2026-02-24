@@ -23,7 +23,7 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -34,25 +34,6 @@ declare const abi: [
         "name": "",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "calculateExpMultiplier",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_expMultiplier",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -95,74 +76,6 @@ declare const abi: [
         "name": "_balance",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "distributePveRewards",
-    "inputs": [
-      {
-        "name": "encounterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_expAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_goldAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_itemIdsDropped",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "distributePvpRewards",
-    "inputs": [
-      {
-        "name": "encounterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_expAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_goldAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_itemIdsDropped",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
       }
     ],
     "stateMutability": "nonpayable"
@@ -290,6 +203,24 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "issueAdvancedClassItems",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "advancedClass",
+        "type": "uint8",
+        "internalType": "enum AdvancedClass"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -482,43 +413,6 @@ declare const abi: [
   },
   {
     "type": "event",
-    "name": "Store_SetRecord",
-    "inputs": [
-      {
-        "name": "tableId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "keyTuple",
-        "type": "bytes32[]",
-        "indexed": false,
-        "internalType": "bytes32[]"
-      },
-      {
-        "name": "staticData",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      },
-      {
-        "name": "encodedLengths",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "EncodedLengths"
-      },
-      {
-        "name": "dynamicData",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Store_SpliceStaticData",
     "inputs": [
       {
@@ -547,6 +441,26 @@ declare const abi: [
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "GamePaused",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InsufficientBalance",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAtSpawn",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAuthorizedCaller",
+    "inputs": []
   },
   {
     "type": "error",
@@ -585,4 +499,6 @@ declare const abi: [
       }
     ]
   }
-]; export default abi;
+];
+
+export default abi;

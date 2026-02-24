@@ -26,6 +26,7 @@ import { useToast } from '../hooks/useToast';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { API_URL } from '../utils/constants';
 import { type Character } from '../utils/types';
+
 import { PolygonalCard } from './PolygonalCard';
 
 type EditCharacterModalProps = Character & {

@@ -7,6 +7,12 @@
     <title>Ultimate Dominion</title>
   </head>
   <body>
+    <script>
+      // Force light mode - clear any stale dark mode preference from localStorage
+      localStorage.setItem('chakra-ui-color-mode', 'light');
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.style.colorScheme = 'light';
+    </script>
     <div id="react-root"></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>

@@ -23,6 +23,7 @@ import {
   type Order,
   OrderStatus,
 } from '../utils/types';
+
 import { useMUD } from './MUDContext';
 
 type OrdersContextType = {
@@ -41,26 +42,32 @@ const OrdersContext = createContext<OrdersContextType>({
   refreshOrders: () => {},
 });
 
-export const OrdersProvider = ({
+// Inner component that uses the hooks - only rendered when components are ready
+const OrdersProviderInner = ({
   children,
+  components,
+  isSynced,
 }: {
   children: ReactNode;
+  components: any;
+  isSynced: boolean;
 }): JSX.Element => {
   const { renderError } = useToast();
-  const {
-    components: { Considerations, Offers, Orders, UltimateDominionConfig },
-    isSynced,
-  } = useMUD();
+
+  const { Considerations, Offers, Orders, UltimateDominion } = components;
 
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const { goldToken } = useComponentValue(
-    UltimateDominionConfig,
+  const configValue = useComponentValue(
+    UltimateDominion,
     singletonEntity,
-  ) ?? { goldToken: null };
+  );
+  const goldToken = configValue?.goldToken ?? null;
 
   const fetchOrders = useCallback(() => {
+    if (!Considerations || !Offers || !Orders) return;
+
     try {
       setIsLoading(true);
 
@@ -158,6 +165,45 @@ export const OrdersProvider = ({
     >
       {children}
     </OrdersContext.Provider>
+  );
+};
+
+export const OrdersProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}): JSX.Element => {
+  const { components, isSynced } = useMUD();
+
+  // Check if required components are available
+  const componentsReady = !!(
+    components?.Considerations &&
+    components?.Offers &&
+    components?.Orders &&
+    components?.UltimateDominion
+  );
+
+  // If components aren't ready, render with default context
+  if (!componentsReady) {
+    return (
+      <OrdersContext.Provider
+        value={{
+          activeOrders: [],
+          highestOffers: {},
+          isLoading: true,
+          lowestPrices: {},
+          refreshOrders: () => {},
+        }}
+      >
+        {children}
+      </OrdersContext.Provider>
+    );
+  }
+
+  return (
+    <OrdersProviderInner components={components} isSynced={isSynced}>
+      {children}
+    </OrdersProviderInner>
   );
 };
 

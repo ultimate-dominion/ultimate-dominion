@@ -1,6 +1,308 @@
 declare const abi: [
   {
     "type": "function",
+    "name": "UD__UD__calculateAccessoryBonuses",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "armorBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "strBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "agiBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "intBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "hpBonus",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__UD__checkAccessoryRequirements",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "accessoryId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "canEquip",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__UD__equipAccessory",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "accessoryId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__UD__getAccessoryStats",
+    "inputs": [
+      {
+        "name": "accessoryId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "accessoryStats",
+        "type": "tuple",
+        "internalType": "struct AccessoryStatsData",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "effects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__UD__getCurrentAvailableLevel",
+    "inputs": [
+      {
+        "name": "experience",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "currentAvailableLevel",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__UD__getEquippedAccessories",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "equippedAccessories",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__UD__isAccessoryEquipped",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "accessoryId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isEquipped",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__UD__levelCharacter",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "desiredStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__UD__unequipAccessory",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "accessoryId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__adminApplyStatusEffect",
     "inputs": [
       {
@@ -28,6 +330,250 @@ declare const abi: [
       }
     ],
     "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminCreateEffect",
+    "inputs": [
+      {
+        "name": "effectType",
+        "type": "uint8",
+        "internalType": "enum EffectType"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "effectStats",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminCreateItem",
+    "inputs": [
+      {
+        "name": "itemType",
+        "type": "uint8",
+        "internalType": "enum ItemType"
+      },
+      {
+        "name": "supply",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "dropChance",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "price",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "stats",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "itemMetadataURI",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminCreateItems",
+    "inputs": [
+      {
+        "name": "itemTypes",
+        "type": "uint8[]",
+        "internalType": "enum ItemType[]"
+      },
+      {
+        "name": "supply",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "dropChances",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "prices",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "stats",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      },
+      {
+        "name": "itemMetadataURIs",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminCreateMob",
+    "inputs": [
+      {
+        "name": "mobType",
+        "type": "uint8",
+        "internalType": "enum MobType"
+      },
+      {
+        "name": "stats",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "mobMetadataUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminCreateMobs",
+    "inputs": [
+      {
+        "name": "mobTypes",
+        "type": "uint8[]",
+        "internalType": "enum MobType[]"
+      },
+      {
+        "name": "stats",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      },
+      {
+        "name": "mobMetadataURIs",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminCreateShop",
+    "inputs": [
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "shopData",
+        "type": "tuple",
+        "internalType": "struct ShopsData",
+        "components": [
+          {
+            "name": "gold",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxGold",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "priceMarkup",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "priceMarkdown",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "restockTimestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "sellableItems",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "buyableItems",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "restock",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "stock",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          }
+        ]
+      },
+      {
+        "name": "shopMetadataUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -102,6 +648,24 @@ declare const abi: [
         "name": "entityId",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminResupplyLootManager",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "newSupply",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -270,6 +834,125 @@ declare const abi: [
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminSpawnMob",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminUpdateShop",
+    "inputs": [
+      {
+        "name": "shopEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "shopData",
+        "type": "tuple",
+        "internalType": "struct ShopsData",
+        "components": [
+          {
+            "name": "gold",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxGold",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "priceMarkup",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "priceMarkdown",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "restockTimestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "sellableItems",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "buyableItems",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "restock",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "stock",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
           }
         ]
       }
@@ -404,6 +1087,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__basicCharacterValidation",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isValid",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__buy",
     "inputs": [
       {
@@ -480,6 +1182,45 @@ declare const abi: [
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__calculateArmorBonuses",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "armorBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "strBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "agiBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "intBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "hpBonus",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -641,6 +1382,192 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__calculateFee",
+    "inputs": [
+      {
+        "name": "goldAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "feeAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "sellerAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__calculateLevelBonuses",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "statPoints",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "hpGain",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__calculateStatBonuses",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "statPoints",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "hpGain",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__calculateWeaponBonuses",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "bonuses",
+        "type": "tuple",
+        "internalType": "struct CharacterEquipmentData",
+        "components": [
+          {
+            "name": "strBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agiBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "equippedArmor",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "equippedWeapons",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "equippedSpells",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "equippedConsumables",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "equippedAccessories",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__canClaim",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__canEquipMoreWeapons",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "canEquip",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__canRestock",
     "inputs": [
       {
@@ -675,6 +1602,96 @@ declare const abi: [
         "internalType": "bool"
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__checkArmorRequirements",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "canEquip",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__checkCombatFragmentTriggers",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "defeated",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "tileX",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "tileY",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "defeatedAreMobs",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__checkCombatFragmentTriggersForGroup",
+    "inputs": [
+      {
+        "name": "winners",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "defeated",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "tileX",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "tileY",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "defeatedAreMobs",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -803,6 +1820,54 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__checkWeaponEffect",
+    "inputs": [
+      {
+        "name": "weaponId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "hasEffect",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__checkWeaponRequirements",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "weaponId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "canUse",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__checkWorldStatusEffects",
     "inputs": [
       {
@@ -812,6 +1877,84 @@ declare const abi: [
       }
     ],
     "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__choosePowerSource",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "powerSource",
+        "type": "uint8",
+        "internalType": "enum PowerSource"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__chooseRace",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "race",
+        "type": "uint8",
+        "internalType": "enum Race"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__chooseStartingArmor",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorType",
+        "type": "uint8",
+        "internalType": "enum ArmorType"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__claimFragment",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -1419,6 +2562,34 @@ declare const abi: [
         "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "starterWeaponId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "starterArmorId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__equipArmor",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -1437,6 +2608,24 @@ declare const abi: [
         "name": "itemIds",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__equipWeapon",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "weaponId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -1788,6 +2977,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getAdvancedClass",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum AdvancedClass"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getAppliedEffectInfo",
     "inputs": [
       {
@@ -1865,11 +3073,85 @@ declare const abi: [
             "name": "strModifier",
             "type": "int256",
             "internalType": "int256"
+          },
+          {
+            "name": "armorType",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
           }
         ]
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getArmorStatsData",
+    "inputs": [
+      {
+        "name": "armorId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "armorStats",
+        "type": "tuple",
+        "internalType": "struct ArmorStatsData",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorType",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getAvailableClasses",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8[9]",
+        "internalType": "enum AdvancedClass[9]"
+      }
+    ],
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -1926,6 +3208,31 @@ declare const abi: [
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -1944,9 +3251,28 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "_characterId",
+        "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getCharacterOwner",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -1995,9 +3321,48 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "_class",
+        "name": "",
         "type": "uint8",
         "internalType": "enum Classes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getClassMultipliers",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "physical",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "spell",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "healing",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "crit",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxHp",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -2171,7 +3536,7 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "currentAvailableLevel",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -2426,6 +3791,44 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getEquippedArmor",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "equippedArmor",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEquippedWeapons",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "weapons",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getEscrowBalance",
     "inputs": [
       {
@@ -2456,6 +3859,89 @@ declare const abi: [
     "outputs": [
       {
         "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getFragmentMetadata",
+    "inputs": [
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "narrative",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "hint",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getFragmentStatus",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "triggered",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "triggeredAt",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "triggerTileX",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "triggerTileY",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "claimed",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "claimedAt",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "tokenId",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -2546,6 +4032,25 @@ declare const abi: [
         "name": "_erc1155",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getLevel",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -2843,7 +4348,7 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "_name",
+        "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -3153,19 +4658,38 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getPlayerEntityId",
+    "name": "UD__getPowerSource",
     "inputs": [
-      {
-        "name": "characterTokenId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
       {
         "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum PowerSource"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getRace",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum Race"
       }
     ],
     "stateMutability": "view"
@@ -3191,41 +4715,18 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getSpellStats",
-    "inputs": [
-      {
-        "name": "itemId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "name": "UD__getStarterConsumables",
+    "inputs": [],
     "outputs": [
       {
-        "name": "_spellStats",
-        "type": "tuple",
-        "internalType": "struct SpellStatsData",
-        "components": [
-          {
-            "name": "minDamage",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "maxDamage",
-            "type": "int256",
-            "internalType": "int256"
-          },
-          {
-            "name": "minLevel",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "effects",
-            "type": "bytes32[]",
-            "internalType": "bytes32[]"
-          }
-        ]
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "amounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
       }
     ],
     "stateMutability": "view"
@@ -3257,6 +4758,25 @@ declare const abi: [
             "internalType": "uint256[]"
           }
         ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getStartingArmor",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum ArmorType"
       }
     ],
     "stateMutability": "view"
@@ -3316,6 +4836,31 @@ declare const abi: [
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -3418,6 +4963,25 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__getWeaponEffects",
+    "inputs": [
+      {
+        "name": "weaponId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "effects",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getWeaponStats",
     "inputs": [
       {
@@ -3429,6 +4993,67 @@ declare const abi: [
     "outputs": [
       {
         "name": "_weaponStats",
+        "type": "tuple",
+        "internalType": "struct WeaponStatsData",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "effects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getWeaponStatsData",
+    "inputs": [
+      {
+        "name": "weaponId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "weaponStats",
         "type": "tuple",
         "internalType": "struct WeaponStatsData",
         "components": [
@@ -3522,6 +5147,30 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__isArmorEquippedExt",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isEquipped",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__isAtPosition",
     "inputs": [
       {
@@ -3567,6 +5216,25 @@ declare const abi: [
     "outputs": [
       {
         "name": "_isAttacker",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isCharacterLocked",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
         "type": "bool",
         "internalType": "bool"
       }
@@ -3733,12 +5401,44 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__isPaused",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__isShop",
     "inputs": [
       {
         "name": "shopId",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isStarterItem",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -3911,6 +5611,48 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__isWeaponEquipped",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "weaponId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "equipped",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__issueAdvancedClassItems",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "advancedClass",
+        "type": "uint8",
+        "internalType": "enum AdvancedClass"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__issueStarterItems",
     "inputs": [
       {
@@ -4066,12 +5808,86 @@ declare const abi: [
             "name": "level",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__magicAttack",
+    "inputs": [
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "attackerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "defenderId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "hit",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "crit",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "damage",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -4140,6 +5956,129 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__pause",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__physicalAttack",
+    "inputs": [
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "attackerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "defenderId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "hit",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "crit",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "damage",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__previewAppliedEffectId",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "currentTurn",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__previewConsumableEffect",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isHealing",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "magnitude",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__previewExpire",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "expiredId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__removeEntitiesFromBoard",
     "inputs": [
       {
@@ -4203,6 +6142,24 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__rollBaseStats",
+    "inputs": [
+      {
+        "name": "userRandomNumber",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
     "name": "UD__rollStats",
     "inputs": [
       {
@@ -4223,6 +6180,24 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "UD__selectAdvancedClass",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "advancedClass",
+        "type": "uint8",
+        "internalType": "enum AdvancedClass"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -4272,6 +6247,34 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__setFragmentMetadata",
+    "inputs": [
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "narrative",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "hint",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__setGoldApproval",
     "inputs": [
       {
@@ -4314,6 +6317,42 @@ declare const abi: [
         "name": "newMax",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setStarterConsumables",
+    "inputs": [
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "amounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setStarterItemPool",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "isStarter",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "outputs": [],
@@ -4467,6 +6506,47 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__spawnMobs",
+    "inputs": [
+      {
+        "name": "mobIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__spawnOnTileEnter",
+    "inputs": [
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__supportsInterface",
     "inputs": [
       {
@@ -4504,6 +6584,58 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__triggerFragment",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "tileX",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "tileY",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__unequipArmor",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__unequipItem",
     "inputs": [
       {
@@ -4528,6 +6660,122 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__unequipWeapon",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "weaponId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__unpause",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__updateStats",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "newStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__updateTokenUri",
     "inputs": [
       {
@@ -4539,6 +6787,24 @@ declare const abi: [
         "name": "tokenUri",
         "type": "string",
         "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__useCombatConsumableItem",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -4566,6 +6832,236 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__validateConsumable",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__validateEquipment",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__validateLevelRequirements",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "desiredStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isValid",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__validateStatRequirements",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "requiredStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -6039,6 +8535,81 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "AccessorySystem_AlreadyEquipped",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AccessorySystem_CharacterNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AccessorySystem_ItemNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AccessorySystem_LevelTooLow",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AccessorySystem_NotAccessory",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AccessorySystem_NotEquipped",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AccessorySystem_RequirementsNotMet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_AlreadyEquipped",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_CharacterNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_ItemNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_LevelTooLow",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_NoArmorSlot",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_NotArmor",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_NotEquipped",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_RequirementsNotMet",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EncodedLengths_InvalidLength",
     "inputs": [
       {
@@ -6133,6 +8704,36 @@ declare const abi: [
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "LevelSystem_CharacterInCombat",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LevelSystem_CharacterNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LevelSystem_InsufficientExperience",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LevelSystem_InvalidLevel",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LevelSystem_InvalidStatChanges",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LevelSystem_MaxLevelReached",
+    "inputs": []
   },
   {
     "type": "error",
@@ -6597,4 +9198,6 @@ declare const abi: [
     "name": "World_UnlimitedDelegationNotAllowed",
     "inputs": []
   }
-]; export default abi;
+];
+
+export default abi;

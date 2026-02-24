@@ -23,7 +23,7 @@ declare const abi: [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -274,6 +274,11 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "GamePaused",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "Slice_OutOfBounds",
     "inputs": [
       {
@@ -350,21 +355,7 @@ declare const abi: [
         "internalType": "uint40"
       }
     ]
-  },
-  {
-    "type": "error",
-    "name": "World_AccessDenied",
-    "inputs": [
-      {
-        "name": "resource",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "caller",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
   }
-]; export default abi;
+];
+
+export default abi;

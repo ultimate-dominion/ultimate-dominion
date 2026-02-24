@@ -1,0 +1,21 @@
+{
+  "name": "Dark Cave",
+  "description": "A treacherous underground cavern teeming with dangerous creatures. New adventurers test their skills here before venturing deeper into the world.",
+  "version": "1.0.0",
+  "levelRange": {
+    "min": 1,
+    "max": 10
+  },
+  "mapConfig": {
+    "width": 10,
+    "height": 10,
+    "startPosition": [0, 0]
+  },
+  "dependencies": [],
+  "load": {
+    "effects": true,
+    "items": true,
+    "monsters": true,
+    "shops": true
+  }
+}

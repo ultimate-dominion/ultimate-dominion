@@ -6,6 +6,7 @@ import {IWorld} from "@world/IWorld.sol";
 import {Math, WAD} from "@libraries/Math.sol";
 import {LibChunks} from "@libraries/LibChunks.sol";
 import {ArrayManagers} from "@libraries/ArrayManagers.sol";
+import {CombatMath} from "@libraries/CombatMath.sol";
 import {
     Effects,
     EffectsData,
@@ -21,8 +22,8 @@ import {
     WeaponStats,
     Items,
     WeaponStatsData,
-    SpellStatsData,
-    SpellStats,
+    ConsumableStatsData,
+    ConsumableStats,
     PhysicalDamageStats,
     PhysicalDamageStatsData,
     MagicDamageStats,
@@ -30,7 +31,6 @@ import {
 } from "@codegen/index.sol";
 import {ResistanceStat, EffectType, ItemType} from "@codegen/common.sol";
 import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireAccess} from "../utils.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {
     DEFENSE_MODIFIER,
@@ -41,17 +41,98 @@ import {
     ATTACKER_HIT_DAMPENER,
     DEFENDER_HIT_DAMPENER
 } from "../../constants.sol";
+import {_requireSystemOrAdmin} from "../utils.sol";
 import "forge-std/console.sol";
 
 contract CombatSystem is System {
     using Math for uint256;
     using Math for int256;
 
+    // Combat triangle constants
+    uint256 constant COMBAT_TRIANGLE_BONUS_PER_STAT = WAD / 20; // 5% per stat point difference
+
+    /**
+     * @notice Determine the dominant stat for an entity
+     * @dev Returns 0 for STR, 1 for AGI, 2 for INT
+     * @param stats The entity's combat stats
+     * @return dominantStat The dominant stat type (0=STR, 1=AGI, 2=INT)
+     * @return dominantValue The value of the dominant stat
+     */
+    function _getDominantStat(AdjustedCombatStats memory stats)
+        internal
+        pure
+        returns (uint8 dominantStat, int256 dominantValue)
+    {
+        if (stats.strength >= stats.agility && stats.strength >= stats.intelligence) {
+            return (0, stats.strength); // STR dominant
+        } else if (stats.agility > stats.strength && stats.agility >= stats.intelligence) {
+            return (1, stats.agility); // AGI dominant
+        } else {
+            return (2, stats.intelligence); // INT dominant
+        }
+    }
+
+    /**
+     * @notice Calculate combat triangle advantage modifier
+     * @dev Combat Triangle: STR > AGI > INT > STR
+     *      When attacker has advantage, applies: 1 + (attackerDominant - defenderDominant) * 0.05
+     * @param attacker Attacker's combat stats
+     * @param defender Defender's combat stats
+     * @return damageModifier The damage modifier in WAD format (1e18 = 100%)
+     */
+    function _calculateCombatTriangleModifier(
+        AdjustedCombatStats memory attacker,
+        AdjustedCombatStats memory defender
+    ) internal pure returns (uint256 damageModifier) {
+        (uint8 attackerDominant, int256 attackerValue) = _getDominantStat(attacker);
+        (uint8 defenderDominant, int256 defenderValue) = _getDominantStat(defender);
+
+        // Check if attacker has combat triangle advantage
+        // STR (0) beats AGI (1), AGI (1) beats INT (2), INT (2) beats STR (0)
+        bool hasAdvantage = false;
+        if (attackerDominant == 0 && defenderDominant == 1) {
+            hasAdvantage = true; // STR > AGI
+        } else if (attackerDominant == 1 && defenderDominant == 2) {
+            hasAdvantage = true; // AGI > INT
+        } else if (attackerDominant == 2 && defenderDominant == 0) {
+            hasAdvantage = true; // INT > STR
+        }
+
+        if (hasAdvantage) {
+            // Calculate advantage bonus: 1 + (attackerStat - defenderStat) * 0.05
+            int256 statDifference = attackerValue - defenderValue;
+            if (statDifference < 0) statDifference = 0; // Floor at 0 to prevent penalty
+
+            uint256 bonus = uint256(statDifference) * COMBAT_TRIANGLE_BONUS_PER_STAT;
+            return WAD + bonus;
+        }
+
+        // No advantage - return 1.0 (no modification)
+        return WAD;
+    }
+
+    /**
+     * @notice Apply combat triangle modifier to damage
+     * @param baseDamage The base damage before modifier
+     * @param attacker Attacker's combat stats
+     * @param defender Defender's combat stats
+     * @return finalDamage Damage after combat triangle modifier applied
+     */
+    function _applyCombatTriangle(
+        int256 baseDamage,
+        AdjustedCombatStats memory attacker,
+        AdjustedCombatStats memory defender
+    ) internal pure returns (int256 finalDamage) {
+        uint256 damageModifier = _calculateCombatTriangleModifier(attacker, defender);
+        // Apply modifier: damage * damageModifier / WAD
+        finalDamage = (baseDamage * int256(damageModifier)) / int256(WAD);
+    }
+
     function executeAction(ActionOutcomeData memory actionOutcomeData, uint256 randomNumber)
         public
         returns (ActionOutcomeData memory)
     {
-        _requireAccess(address(this), _msgSender());
+        _requireSystemOrAdmin(_msgSender());
 
         // if the defender is alive and attacker is alive, execute the action
         if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
@@ -88,6 +169,7 @@ contract CombatSystem is System {
                     if (actionOutcomeData.hit[i]) {
                         int256 currentHp =
                             Stats.getCurrentHp(actionOutcomeData.defenderId) - int256(actionOutcomeData.damagePerHit[i]);
+                        if (currentHp < 0) currentHp = 0;
                         if (currentHp <= 0) actionOutcomeData.defenderDied = true;
                         Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
                     } else {
@@ -108,9 +190,9 @@ contract CombatSystem is System {
                     if (actionOutcomeData.hit[i]) {
                         int256 currentHp =
                             Stats.getCurrentHp(actionOutcomeData.defenderId) - int256(actionOutcomeData.damagePerHit[i]);
-
-                        Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
+                        if (currentHp < 0) currentHp = 0;
                         if (currentHp <= 0) actionOutcomeData.defenderDied = true;
+                        Stats.setCurrentHp(actionOutcomeData.defenderId, currentHp);
                     } else {
                         actionOutcomeData.miss[i] = true;
                     }
@@ -168,7 +250,7 @@ contract CombatSystem is System {
         PhysicalDamageStatsData memory attackStats = IWorld(_world()).UD__getPhysicalDamageStats(effectId);
         if (Stats.getCurrentHp(defenderId) > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
-            (hit, crit) = _calculateToHit(
+            (hit, crit) = CombatMath.calculateToHit(
                 uint256(rnChunks[0]),
                 attackStats.attackModifierBonus,
                 attackStats.critChanceBonus,
@@ -176,16 +258,16 @@ contract CombatSystem is System {
                 defender.agility
             );
             if (hit) {
-                damage = _calculateWeaponDamage(
+                damage = CombatMath.calculateWeaponDamage(
                     attackStats, attacker.strength, defender.strength, weapon, rnChunks[2], crit
-                ) - _calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
+                ) - CombatMath.calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
 
                 damage = damage < int256(0) ? int256(0) : damage;
 
-                if (crit) {
-                    damage = damage * int256(CRIT_MULTIPLIER);
-                    crit = true;
-                }
+                damage = CombatMath.applyCriticalHit(damage, crit);
+
+                // Apply combat triangle modifier (STR > AGI > INT > STR)
+                damage = _applyCombatTriangle(damage, attacker, defender);
             } else {
                 damage = 0;
                 hit = false;
@@ -197,124 +279,50 @@ contract CombatSystem is System {
         }
     }
 
-    function _calculateArmorModifier(int256 armor, int256 armorPenetration, int256 damage)
-        internal
-        pure
-        returns (int256 _totalArmorModifier)
-    {
-        if (armor - armorPenetration > 0) {
-            _totalArmorModifier = (armor - armorPenetration) * int256(DEFENSE_MODIFIER);
-        }
-        // if total armor is greater than damage then overall damage should be 0
-        if (damage - (int256(armor) - armorPenetration) < 0) {
-            _totalArmorModifier = damage;
-        }
-    }
 
-    function _calculateWeaponDamage(
-        PhysicalDamageStatsData memory attackStats,
-        int256 attackerStrength,
-        int256 defenderStrength,
-        WeaponStatsData memory weapon,
-        uint64 randomNumber,
-        bool crit
-    ) internal pure returns (int256 _damage) {
-        if (!crit) {
-            int256 randomness = Math.toInt(randomNumber ^ 4);
-            int256 baseDamage = (
-                attackStats.bonusDamage
-                    + int256(
-                        randomness % weapon.maxDamage + 1 <= weapon.minDamage
-                            ? weapon.minDamage
-                            : randomness % weapon.maxDamage + 1
-                    )
-            ) * int256(ATTACK_MODIFIER);
-            _damage = _addStatBonus(attackerStrength, defenderStrength, baseDamage);
-        } else {
-            _damage = _addStatBonus(attackerStrength, defenderStrength, weapon.maxDamage * int256(ATTACK_MODIFIER));
-        }
-    }
 
-    function _addStatBonus(int256 attackerStat, int256 defenderStat, int256 baseDamage)
-        internal
-        pure
-        returns (int256 _totalDamage)
-    {
-        int256 baseDifference = (attackerStat * int256(ATTACK_MODIFIER)) - (defenderStat * int256(WAD));
-        if (baseDifference > 0) {
-            // uint256 multiplier = uint256(Math.wmul(baseDamage * int256(WAD), (attackerStat * int256(WAD) / 200))) ;
-            int256 _unroundedDamage = baseDifference + baseDamage;
 
-            _totalDamage = Math.roundInt(_unroundedDamage, int256(WAD)) / int256(WAD);
-        } else if (
-            baseDamage > int256(0) && baseDifference < int256(0)
-                && Math.absolute(baseDifference / int256(WAD)) >= uint256(attackerStat)
-        ) {
-            // if the stat difference is equal to or greater than the attackers base stat subtract difference from damage
-            if (baseDamage + baseDifference > int256(0)) {
-                _totalDamage = (baseDamage + baseDifference) / int256(WAD);
-            } else {
-                // if damage is negative minimu damage is 1
-                _totalDamage = 1;
-            }
-        } else {
-            _totalDamage = baseDamage / int256(WAD);
-        }
-    }
 
-    function _calculateToHit(
-        uint256 attackRoll,
-        int256 attackModifierBonus,
-        int256 critChanceBonus,
-        int256 attackerStat,
-        int256 defenderStat
-    ) internal view returns (bool attackLands, bool crit) {
-        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-
-        uint256 hitDampener = (attackerStat > defenderStat ? ATTACKER_HIT_DAMPENER : DEFENDER_HIT_DAMPENER);
-
-        int256 startingProbability = STARTING_HIT_PROBABILITY
-            + int256(
-                (((attackerStat - defenderStat) + attackModifierBonus) * 1000)
-                    / int256(int256(Math.absolute(attackerStat - defenderStat) + hitDampener) * 10)
-            );
-
-        uint256 probability = uint256(uint256(startingProbability) > 98 ? 98 : uint256(startingProbability));
-
-        attackLands = (attackRoll % 100) + 1 <= probability;
-
-        if (attackLands) {
-            crit = ((int256(attackRoll % 100) - critChanceBonus) + 1) < 5;
-        }
-    }
-
-    function _getStatModifier(int256 stat, int256 modifierBonus) internal pure returns (uint256 multiplier) {
-        multiplier = (((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR)) > 0
-            ? uint256(((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR))
-            : WAD;
-    }
 
     function _calculateMagicEffect(
         bytes32 effectId,
         bytes32 attackerId,
         bytes32 defenderId,
-        uint256 spellId,
+        uint256 itemId,
         uint256 randomNumber
     ) internal returns (int256 damage, bool hit, bool crit) {
         // get attacker
         AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
         //get defender
         AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
-        // get spell data
-        SpellStatsData memory spell = IWorld(_world()).UD__getSpellStats(spellId);
 
-        require(IWorld(_world()).UD__checkItemEffect(spellId, effectId), "INVALID ACTION");
+        // Check item type - weapons with magic effects need different handling
+        ItemType itemType = Items.getItemType(itemId);
+        ConsumableStatsData memory magicItem;
+
+        if (itemType == ItemType.Weapon) {
+            // For weapons with magic effects (like monster Dark Magic), use weapon stats
+            WeaponStatsData memory weapon = IWorld(_world()).UD__getWeaponStats(itemId);
+            magicItem = ConsumableStatsData({
+                minDamage: weapon.minDamage,
+                maxDamage: weapon.maxDamage,
+                minLevel: weapon.minLevel,
+                effects: weapon.effects
+            });
+        } else if (itemType == ItemType.Consumable) {
+            // For consumables with magic effects
+            magicItem = IWorld(_world()).UD__getConsumableStats(itemId);
+        } else {
+            revert("COMBAT: Invalid magic item type");
+        }
+
+        require(IWorld(_world()).UD__checkItemEffect(itemId, effectId), "INVALID ACTION");
 
         MagicDamageStatsData memory attackStats = IWorld(_world()).UD__getMagicDamageStats(effectId);
 
         if (Stats.getCurrentHp(defenderId) > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
-            (hit, crit) = _calculateToHit(
+            (hit, crit) = CombatMath.calculateToHit(
                 uint256(rnChunks[0]),
                 attackStats.attackModifierBonus,
                 attackStats.critChanceBonus,
@@ -322,32 +330,15 @@ contract CombatSystem is System {
                 defender.intelligence
             );
             if (hit) {
-                damage = _calculateMagicDamage(
-                    attackStats, spell, rnChunks[2], attacker.intelligence, defender.intelligence, crit
+                damage = CombatMath.calculateMagicDamage(
+                    attackStats, magicItem, rnChunks[2], attacker.intelligence, defender.intelligence, crit
                 );
-                if (damage < 0) {
-                    int256 currentHp = Stats.getCurrentHp(defenderId);
-                    int256 maxHp = Stats.getMaxHp(defenderId);
+                int256 currentHp = Stats.getCurrentHp(defenderId);
+                int256 maxHp = Stats.getMaxHp(defenderId);
+                damage = CombatMath.calculateFinalMagicDamage(damage, currentHp, maxHp, crit);
 
-                    if (currentHp - damage > int256(maxHp)) {
-                        damage = -(maxHp - currentHp);
-                    }
-                }
-
-                if (crit) {
-                    damage = damage * int256(CRIT_MULTIPLIER);
-
-                    if (damage < 0) {
-                        int256 maxHp = Stats.getMaxHp(defenderId);
-                        int256 currentHp = Stats.getCurrentHp(defenderId);
-
-                        if (currentHp - damage > int256(maxHp)) {
-                            damage = -(maxHp - currentHp);
-                        }
-                    }
-
-                    crit = true;
-                }
+                // Apply combat triangle modifier (STR > AGI > INT > STR)
+                damage = _applyCombatTriangle(damage, attacker, defender);
             } else {
                 damage = 0;
                 hit = false;
@@ -359,34 +350,6 @@ contract CombatSystem is System {
         }
     }
 
-    function _calculateMagicDamage(
-        MagicDamageStatsData memory attackStats,
-        SpellStatsData memory equippedSpell,
-        uint64 rnChunk,
-        int256 attackerIntelligence,
-        int256 defenderIntelligence,
-        bool crit
-    ) internal pure returns (int256 _damage) {
-        // if (equippedSpell.minDamage > 0 && equippedSpell.maxDamage > 0) {
-        int256 baseDamage;
-        if (!crit) {
-            baseDamage = (
-                attackStats.bonusDamage
-                    + int256(
-                        uint256(rnChunk) % uint256(equippedSpell.maxDamage) + 1 <= uint256(equippedSpell.minDamage)
-                            ? equippedSpell.minDamage
-                            : int256(uint256(rnChunk) % uint256(equippedSpell.maxDamage) + 1)
-                    )
-            ) * int256(ATTACK_MODIFIER);
-        } else {
-            baseDamage = (equippedSpell.maxDamage + attackStats.bonusDamage) * int256(ATTACK_MODIFIER);
-        }
-        _damage = _addStatBonus(attackerIntelligence, defenderIntelligence, baseDamage);
-
-        if (_damage < int256(0) && equippedSpell.maxDamage > int256(0)) {
-            _damage = int256(0);
-        }
-    }
 
     function _calculateStatusEffect(
         bytes32 effectId,
@@ -411,28 +374,31 @@ contract CombatSystem is System {
             if (resistanceStat == ResistanceStat.None) {
                 hit = true;
             } else if (resistanceStat == ResistanceStat.Strength) {
-                (hit,) = _calculateToHit(
+                hit = CombatMath.calculateStatusEffectHit(
                     uint256(rnChunks[0]),
                     attackStats.attackModifierBonus,
                     attackStats.critChanceBonus,
                     attacker.strength,
-                    defender.strength
+                    defender.strength,
+                    resistanceStat
                 );
             } else if (resistanceStat == ResistanceStat.Agility) {
-                (hit,) = _calculateToHit(
+                hit = CombatMath.calculateStatusEffectHit(
                     uint256(rnChunks[0]),
                     attackStats.attackModifierBonus,
                     attackStats.critChanceBonus,
                     attacker.agility,
-                    defender.agility
+                    defender.agility,
+                    resistanceStat
                 );
             } else if (resistanceStat == ResistanceStat.Intelligence) {
-                (hit,) = _calculateToHit(
+                hit = CombatMath.calculateStatusEffectHit(
                     uint256(rnChunks[0]),
                     attackStats.attackModifierBonus,
                     attackStats.critChanceBonus,
                     attacker.intelligence,
-                    defender.intelligence
+                    defender.intelligence,
+                    resistanceStat
                 );
             } else {
                 revert("Unrecognized resistance stat");

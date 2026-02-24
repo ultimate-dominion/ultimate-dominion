@@ -12,10 +12,10 @@ import {
     MobStats,
     MobStatsData
 } from "@codegen/index.sol";
-import {MobType} from "@codegen/common.sol";
+import {MobType, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {MonsterStats, NPCStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireOwner, _requireAccess} from "../utils.sol";
 import {Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
+import {_requireOwner, _requireAccess, _requireAccessOrAdmin} from "../utils.sol";
 import {MAX_MONSTERS} from "../../constants.sol";
 
 contract MobSystem is System {
@@ -27,7 +27,7 @@ contract MobSystem is System {
      *  @return mobId, the identifier for this mob template
      */
     function createMob(MobType mobType, bytes memory stats, string memory mobMetadataUri) public returns (uint256) {
-        _requireAccess(address(this), _msgSender());
+        _requireAccessOrAdmin(address(this), _msgSender());
         uint256 mobId = _incrementMobId();
         require(mobId < type(uint32).max, "MOB SYSTEM: Max Monster types reached");
         Mobs.set(mobId, mobType, stats, mobMetadataUri);
@@ -46,8 +46,13 @@ contract MobSystem is System {
         }
     }
 
+    function spawnMobs(uint256[] memory mobIds, uint16 x, uint16 y) public {
+        for (uint256 i; i < mobIds.length; i++) {
+            spawnMob(mobIds[i], x, y);
+        }
+    }
+
     function spawnMob(uint256 mobId, uint16 x, uint16 y) public returns (bytes32 entityId) {
-        _requireAccess(address(this), _msgSender());
         require(Counters.getCounter(address(this), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
         entityId = bytes32(abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), x, y));
         MobsData memory stats = Mobs.get(mobId);
@@ -83,7 +88,12 @@ contract MobSystem is System {
                 class: monsterStats.class,
                 currentHp: monsterStats.hitPoints,
                 experience: monsterStats.experience,
-                level: monsterStats.level
+                level: monsterStats.level,
+                powerSource: PowerSource.None,
+                race: Race.None,
+                startingArmor: ArmorType.None,
+                advancedClass: AdvancedClass.None,
+                hasSelectedAdvancedClass: false
             });
             MobStatsData memory newMobStats =
                 MobStatsData({armor: monsterStats.armor, inventory: monsterStats.inventory});

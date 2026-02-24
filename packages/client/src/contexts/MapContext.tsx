@@ -35,6 +35,7 @@ import {
   type Shop,
   type WorldStatusEffect,
 } from '../utils/types';
+
 import { useCharacter } from './CharacterContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
@@ -186,24 +187,40 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               { tokenId: BigInt(tokenId) },
             );
 
-            const externalGoldBalance =
-              getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0);
-            const escrowGoldBalance =
-              getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0);
+            // These components may be undefined if tables are empty
+            const externalGoldBalance = GoldBalances
+              ? (getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0))
+              : BigInt(0);
+            const escrowGoldBalance = AdventureEscrow
+              ? (getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0))
+              : BigInt(0);
 
             const metadataURI = getComponentValueStrict(
               CharactersTokenURI,
               tokenIdEntity,
             ).tokenURI;
 
-            const fetachedMetadata = await fetchMetadataFromUri(
-              uriToHttp(`ipfs://${metadataURI}`)[0],
-            );
+            // Try to fetch metadata, but use defaults if it fails (e.g., test URIs)
+            let fetachedMetadata = {
+              name: '',
+              description: '',
+              image: '',
+            };
 
-            const { encounterId, pvpTimer } = getComponentValue(
-              EncounterEntity,
-              entity,
-            ) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) };
+            try {
+              // Skip fetch for obvious test/placeholder URIs
+              if (metadataURI && !metadataURI.startsWith('test') && metadataURI.length > 10) {
+                fetachedMetadata = await fetchMetadataFromUri(
+                  uriToHttp(`ipfs://${metadataURI}`)[0],
+                );
+              }
+            } catch (error) {
+              console.warn('Failed to fetch character metadata in MapContext, using defaults:', error);
+            }
+
+            const { encounterId, pvpTimer } = EncounterEntity
+              ? (getComponentValue(EncounterEntity, entity) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) })
+              : { encounterId: zeroHash, pvpTimer: BigInt(0) };
             const inBattle = !!encounterId && encounterId !== zeroHash;
 
             const isSpawned =
@@ -228,10 +245,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               decodedBaseStats = decodeBaseStats(characterData.baseStats);
             }
 
-            const worldStatusEffectsComponent = getComponentValue(
-              WorldStatusEffects,
-              entity,
-            );
+            // WorldStatusEffects and related components may be undefined
+            const worldStatusEffectsComponent = WorldStatusEffects
+              ? getComponentValue(WorldStatusEffects, entity)
+              : undefined;
 
             const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
               appliedStatusEffects: [],
@@ -241,51 +258,58 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               decodeAppliedStatusEffectId,
             );
 
+            // Only process status effects if the required components exist
             const worldStatusEffects: WorldStatusEffect[] =
-              decodedStatusEffects.map(effect => {
-                const paddedEffectId = effect.effectId.padEnd(
-                  66,
-                  '0',
-                ) as Entity;
-                const effectStats = getComponentValueStrict(
-                  StatusEffectStats,
-                  paddedEffectId,
-                );
+              (StatusEffectStats && StatusEffectValidity)
+                ? decodedStatusEffects.map(effect => {
+                    const paddedEffectId = effect.effectId.padEnd(
+                      66,
+                      '0',
+                    ) as Entity;
+                    const effectStats = getComponentValue(
+                      StatusEffectStats,
+                      paddedEffectId,
+                    );
+                    const validity = getComponentValue(
+                      StatusEffectValidity,
+                      paddedEffectId,
+                    );
 
-                const validity = getComponentValueStrict(
-                  StatusEffectValidity,
-                  paddedEffectId,
-                );
+                    if (!effectStats || !validity) return null;
 
-                const timestampEnd = effect.timestamp + validity.validTime;
-                const isActive =
-                  timestampEnd > BigInt(Date.now()) / BigInt(1000);
+                    const timestampEnd = effect.timestamp + validity.validTime;
+                    const isActive =
+                      timestampEnd > BigInt(Date.now()) / BigInt(1000);
 
-                const name =
+                    const name =
                   STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
 
-                return {
-                  active: isActive,
-                  agiModifier: effectStats.agiModifier,
-                  effectId: paddedEffectId,
-                  intModifier: effectStats.intModifier,
-                  maxStacks: validity.maxStacks,
-                  name,
-                  strModifier: effectStats.strModifier,
-                  timestampEnd,
-                  timestampStart: effect.timestamp,
-                };
-              });
+                    return {
+                      active: isActive,
+                      agiModifier: effectStats.agiModifier,
+                      effectId: paddedEffectId,
+                      intModifier: effectStats.intModifier,
+                      maxStacks: validity.maxStacks,
+                      name,
+                      strModifier: effectStats.strModifier,
+                      timestampEnd,
+                      timestampStart: effect.timestamp,
+                    };
+                  }).filter((effect): effect is WorldStatusEffect => effect !== null)
+                : [];
 
-            const worldEncounter = Array.from(
-              runQuery([
-                Has(WorldEncounter),
-                HasValue(WorldEncounter, { character: entity, end: BigInt(0) }),
-              ]),
-            ).map(worldEncounterEntity => ({
-              encounterId: worldEncounterEntity,
-              ...getComponentValueStrict(WorldEncounter, worldEncounterEntity),
-            }))[0];
+            // WorldEncounter may be undefined if table is empty
+            const worldEncounter = WorldEncounter
+              ? Array.from(
+                  runQuery([
+                    Has(WorldEncounter),
+                    HasValue(WorldEncounter, { character: entity, end: BigInt(0) }),
+                  ]),
+                ).map(worldEncounterEntity => ({
+                  encounterId: worldEncounterEntity,
+                  ...getComponentValueStrict(WorldEncounter, worldEncounterEntity),
+                }))[0]
+              : undefined;
 
             return {
               ...fetachedMetadata,

@@ -1,4 +1,4 @@
-import { Box, StackProps } from '@chakra-ui/react';
+import { Box, StackProps, useColorModeValue } from '@chakra-ui/react';
 import { ReactNode } from 'react';
 
 export const PolygonalCard = ({
@@ -14,9 +14,13 @@ export const PolygonalCard = ({
   clipPath?: string;
   isModal?: boolean;
 } & StackProps): JSX.Element => {
+  const outerBg = useColorModeValue('#1A244E', '#2a2a4e');
+  const innerBg = useColorModeValue(bgColor, '#1e1e3a');
+  const accentBg = useColorModeValue('#3B82C4', '#4a6fa5');
+
   return (
     <Box
-      bgColor="#1A244E"
+      bgColor={outerBg}
       clipPath={clipPath}
       h={h}
       position={isModal ? 'absolute' : 'static'}
@@ -25,7 +29,7 @@ export const PolygonalCard = ({
       w={w}
     >
       <Box
-        bgColor={bgColor}
+        bgColor={innerBg}
         clipPath={clipPath}
         h="100%"
         ml="6px"
@@ -33,7 +37,7 @@ export const PolygonalCard = ({
         w="calc(100% - 12px)"
       >
         <Box
-          bgColor="#3B82C4"
+          bgColor={accentBg}
           clipPath={clipPath}
           h="100%"
           ml="6px"
@@ -41,7 +45,7 @@ export const PolygonalCard = ({
           w="calc(100% - 12px)"
         >
           <Box
-            bgColor={bgColor}
+            bgColor={innerBg}
             clipPath={clipPath}
             h="100%"
             ml=".25px"

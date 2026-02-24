@@ -6,6 +6,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { getStatSymbol } from '../utils/helpers';
 import { type Character } from '../utils/types';
+
 import { HealthBar } from './HealthBar';
 import { PolygonalCard } from './PolygonalCard';
 
@@ -58,9 +59,25 @@ export const LevelingPanel = ({
 
   const [isLeveling, setIsLeveling] = useState(false);
 
+  // Calculate ability points based on diminishing returns system
+  // Levels 1-10: +1 stat point per level
+  // Levels 11-50: +1 stat point every 2 levels
+  // Levels 51-100: +1 stat point every 5 levels
+  const calculateAbilityPointsForLevel = useCallback((nextLevel: bigint): number => {
+    const level = Number(nextLevel);
+    if (level <= 10) {
+      return 1; // Early game: +1 per level
+    } else if (level <= 50) {
+      return level % 2 === 0 ? 1 : 0; // Mid game: +1 every 2 levels
+    } else {
+      return level % 5 === 0 ? 1 : 0; // Late game: +1 every 5 levels
+    }
+  }, []);
+
   useEffect(() => {
     if (canLevel) {
-      setAbilityPoints(2);
+      const nextLevel = character.level + BigInt(1);
+      setAbilityPoints(calculateAbilityPointsForLevel(nextLevel));
     } else {
       setAbilityPoints(0);
     }
@@ -68,10 +85,12 @@ export const LevelingPanel = ({
     setNewIntelligence(character.baseStats.intelligence);
     setNewStrength(character.baseStats.strength);
   }, [
+    calculateAbilityPointsForLevel,
     canLevel,
     character.baseStats.agility,
     character.baseStats.intelligence,
     character.baseStats.strength,
+    character.level,
   ]);
 
   const strengthIncreased = useMemo(
@@ -203,6 +222,12 @@ export const LevelingPanel = ({
         intelligence: newIntelligence,
         level: character.level,
         strength: newStrength,
+        // Implicit class system fields - preserve from baseStats
+        race: character.baseStats.race,
+        powerSource: character.baseStats.powerSource,
+        startingArmor: character.baseStats.startingArmor,
+        advancedClass: character.baseStats.advancedClass,
+        hasSelectedAdvancedClass: character.baseStats.hasSelectedAdvancedClass,
       };
 
       const { error, success } = await levelCharacter(character.id, newStats);
@@ -212,7 +237,14 @@ export const LevelingPanel = ({
       }
 
       await refreshCharacter();
-      renderSuccess('Character leveled up!');
+
+      // Check if this level up earned the Adventurer badge (level 3)
+      const newLevel = Number(character.level) + 1;
+      if (newLevel === 3) {
+        renderSuccess('Level 3! You earned the Adventurer Badge - Chat Unlocked!');
+      } else {
+        renderSuccess('Character leveled up!');
+      }
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to unequip item.', e);
     } finally {

@@ -15,11 +15,11 @@ import {
 export function createViemClientConfig(chain: MUDChain): {
   readonly chain: MUDChain;
   readonly transport: FallbackTransport;
-  readonly pollingInterval: 1000;
+  readonly pollingInterval: 4000;
 } {
   return {
     chain,
     transport: transportObserver(fallback([webSocket(), http()])),
-    pollingInterval: 1000,
+    pollingInterval: 4000,
   } as const satisfies ClientConfig;
 }

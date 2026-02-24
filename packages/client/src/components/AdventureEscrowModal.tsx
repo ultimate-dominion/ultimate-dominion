@@ -26,6 +26,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { etherToFixedNumber } from '../utils/helpers';
+
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
 import { PolygonalCard } from './PolygonalCard';
 
@@ -101,7 +102,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
       }
 
       if (parseEther(depositAmount) > character.externalGoldBalance) {
-        setDepositErrorMessage('Insufficient $GOLD in external wallet.');
+        setDepositErrorMessage('Insufficient Gold in external wallet.');
         return;
       }
 
@@ -121,10 +122,10 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
       }
 
       await refreshCharacter();
-      renderSuccess(`${depositAmount} $GOLD deposited successfully!`);
+      renderSuccess(`${depositAmount} Gold deposited successfully!`);
       onClose();
     } catch (e) {
-      renderError((e as Error)?.message ?? 'Error depositing $GOLD.', e);
+      renderError((e as Error)?.message ?? 'Error depositing Gold.', e);
     } finally {
       setIsDepositing(false);
     }
@@ -159,7 +160,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
       }
 
       if (parseEther(withdrawAmount) > character.escrowGoldBalance) {
-        setWithdrawErrorMessage('Insufficient $GOLD in escrow.');
+        setWithdrawErrorMessage('Insufficient Gold in escrow.');
         return;
       }
 
@@ -174,10 +175,10 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
       }
 
       await refreshCharacter();
-      renderSuccess(`${withdrawAmount} $GOLD withdrawn successfully!`);
+      renderSuccess(`${withdrawAmount} Gold withdrawn successfully!`);
       onClose();
     } catch (e) {
-      renderError((e as Error)?.message ?? 'Error withdrawing $GOLD.', e);
+      renderError((e as Error)?.message ?? 'Error withdrawing Gold.', e);
     } finally {
       setIsWithdrawing(false);
     }
@@ -224,29 +225,29 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
           textAlign="center"
         >
           <Text size={{ base: 'xs', sm: 'md' }}>
-            External wallet balance:{' '}
+            Spendable Gold:{' '}
             <Text as="span" fontWeight="bold">
-              {etherToFixedNumber(character.externalGoldBalance)} $GOLD
+              {etherToFixedNumber(character.externalGoldBalance)} Gold
             </Text>
           </Text>
           <Text mt={2} size={{ base: 'xs', sm: 'md' }}>
             Adventure Escrow balance:{' '}
             <Text as="span" fontWeight="bold">
-              {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
+              {etherToFixedNumber(character.escrowGoldBalance)} Gold
             </Text>
           </Text>
           <Text textAlign="center" fontSize="60px">
             💰
           </Text>
           <Text mt={4} size={{ base: 'xs', sm: 'sm' }}>
-            Your Adventure Escrow is where $GOLD goes when you win battles.
-            Leaving $GOLD in your escrow will help you level up faster, but in
+            Your Adventure Escrow is where Gold goes when you win battles.
+            Leaving Gold in your escrow will help you level up faster, but in
             the Outer Realms, you run the risk of losing it all against other
             players.
           </Text>
           <HStack mt={8}>
             <FormControl isInvalid={!!depositErrorMessage}>
-              <FormLabel fontSize="xs">Deposit to Adventure Escrow</FormLabel>
+              <FormLabel fontSize="xs">Add Gold to Escrow</FormLabel>
               {!!depositErrorMessage && (
                 <FormHelperText
                   color="red"
@@ -294,7 +295,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
           <HStack mt={4}>
             <FormControl isInvalid={!!withdrawErrorMessage}>
               <FormLabel fontSize="xs">
-                Withdraw from Adventure Escrow
+                Take Gold from Escrow
               </FormLabel>
               {!!withdrawErrorMessage && (
                 <FormHelperText
@@ -351,9 +352,9 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
         amount={depositAmount}
         heading="Allow Adventure Escrow"
         isOpen={isAllowanceModalOpen}
-        message="In order to deposit $GOLD to your Adventure Escrow, you must allow it to access your $GOLD."
+        message="In order to deposit Gold to your Adventure Escrow, you need to give permission to spend your Gold."
         onClose={onCloseAllowanceModal}
-        successMessage="You can now deposit $GOLD to your Adventure Escrow."
+        successMessage="You can now deposit Gold to your Adventure Escrow."
       />
     </Modal>
   );

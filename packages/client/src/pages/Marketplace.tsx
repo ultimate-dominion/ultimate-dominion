@@ -20,8 +20,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
-import { useAccount } from 'wagmi';
-
 import { CreateListingModal } from '../components/CreateListingModal';
 import { InfoModal } from '../components/InfoModal';
 import { MarketplaceRow } from '../components/MarketplaceRow';
@@ -30,6 +28,7 @@ import { PolygonalCard } from '../components/PolygonalCard';
 import { MarketplaceIconSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
@@ -57,7 +56,7 @@ const MARKETPLACE_INFO_SEEN_KEY = 'marketplace-info-seen';
 
 export const Marketplace = (): JSX.Element => {
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
+  const { isAuthenticated: isConnected } = useAuth();
 
   const { delegatorAddress, isSynced } = useMUD();
   const {
@@ -72,6 +71,7 @@ export const Marketplace = (): JSX.Element => {
     highestOffers,
     isLoading: isLoadingOrders,
     lowestPrices,
+    refreshOrders,
   } = useOrders();
   const { character, isRefreshing } = useCharacter();
 
@@ -110,7 +110,6 @@ export const Marketplace = (): JSX.Element => {
   useEffect(() => {
     if (!isConnected) {
       navigate(HOME_PATH);
-      window.location.reload();
       return;
     }
 
@@ -125,6 +124,8 @@ export const Marketplace = (): JSX.Element => {
       navigate(CHARACTER_CREATION_PATH);
       return;
     }
+
+    refreshOrders();
   }, [
     character,
     delegatorAddress,
@@ -132,6 +133,7 @@ export const Marketplace = (): JSX.Element => {
     isRefreshing,
     isSynced,
     navigate,
+    refreshOrders,
   ]);
 
   const unfilteredItems = useMemo(

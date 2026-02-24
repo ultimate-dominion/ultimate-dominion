@@ -20,6 +20,7 @@ import {
     WeaponStatsData,
     ArmorStats,
     ArmorStatsData,
+    ConsumableStatsData,
     StatRestrictions,
     StatRestrictionsData
 } from "@codegen/index.sol";
@@ -253,7 +254,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
     function test_unequipItem() public {
         vm.startPrank(alice);
         world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
-        world.UD__enterGame(alicesCharacterId);
+        world.UD__enterGame(alicesCharacterId, newWeaponId, newArmorId);
         vm.stopPrank();
         StatsData memory alicesStats = world.UD__getStats(alicesCharacterId);
         alicesStats.agility = 9;
@@ -297,14 +298,28 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
 
     function test_equipTooManyWeapons() public {
         AdjustedCombatStats memory startingStats = world.UD__getCombatStats(bobCharacterId);
+        // Create additional consumables for this test
+        ConsumableStatsData memory extraConsumable =
+            ConsumableStatsData({minDamage: 0, maxDamage: 0, minLevel: 0, effects: new bytes32[](0)});
+        StatRestrictionsData memory restrictions =
+            StatRestrictionsData({minAgility: 0, minIntelligence: 0, minStrength: 0});
+        vm.startPrank(deployer);
+        uint256 extraConsumableId1 = world.UD__createItem(
+            ItemType.Consumable, 10 ether, 100000000, 1 ether, abi.encode(extraConsumable, restrictions), "test_uri"
+        );
+        uint256 extraConsumableId2 = world.UD__createItem(
+            ItemType.Consumable, 10 ether, 100000000, 1 ether, abi.encode(extraConsumable, restrictions), "test_uri"
+        );
+        vm.stopPrank();
+
         uint256[] memory itemIds = new uint256[](5);
         uint256[] memory amounts = new uint256[](5);
         bytes32[] memory characterIds = new bytes32[](5);
         itemIds[0] = newWeaponId;
         itemIds[1] = alsoNewWeaponId;
         itemIds[2] = newConsumableId;
-        itemIds[3] = newSpellId;
-        itemIds[4] = alsoNewSpellId;
+        itemIds[3] = extraConsumableId1;
+        itemIds[4] = extraConsumableId2;
         amounts[0] = 1;
         amounts[1] = 1;
         amounts[2] = 1;
