@@ -57,19 +57,7 @@ export default defineConfig(({ command }) => {
       target: 'es2022',
       minify: true,
       sourcemap: false,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules/react-dom/') || id.includes('node_modules/react/')) {
-              return 'react';
-            }
-            if (id.includes('@chakra-ui/react')) return 'chakra';
-            if (id.includes('@latticexyz')) return 'mud';
-            if (id.includes('wagmi') || id.includes('@rainbow-me/rainbowkit') || id.includes('node_modules/viem/')) return 'web3';
-            if (id.includes('thirdweb')) return 'thirdweb';
-          },
-        },
-      },
+      rollupOptions: {},
       commonjsOptions: {
         // Handle 'use client' directives
         transformMixedEsModules: true,
