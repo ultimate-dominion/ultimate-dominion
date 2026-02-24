@@ -64,16 +64,51 @@ type MUDContextType = {
 
 const MUDContext = createContext<MUDContextType | null>(null);
 
-type Props = {
-  children: ReactNode;
-  setupResult: {
-    components: ComponentsResult;
-    network: NetworkResult;
-    systemCalls: SystemCallsResult;
-  };
+type SetupResult = {
+  components: ComponentsResult;
+  network: NetworkResult;
+  systemCalls: SystemCallsResult;
 };
 
-export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
+type Props = {
+  children: ReactNode;
+  setupPromise: Promise<SetupResult>;
+};
+
+export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
+  const [setupResult, setSetupResult] = useState<SetupResult | null>(null);
+  const [setupError, setSetupError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setupPromise
+      .then(result => {
+        if (!cancelled) setSetupResult(result);
+      })
+      .catch(err => {
+        if (!cancelled) setSetupError(err);
+      });
+    return () => { cancelled = true; };
+  }, [setupPromise]);
+
+  if (setupError) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white', flexDirection: 'column', gap: '1rem' }}>
+        <p>Failed to initialize game</p>
+        <p style={{ fontSize: '0.875rem', opacity: 0.7 }}>{setupError.message}</p>
+      </div>
+    );
+  }
+
+  if (!setupResult) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '1rem' }}>
+        <img src="/images/ultimate-dominion-logo.svg" alt="Ultimate Dominion" style={{ width: '200px', opacity: 0.8 }} />
+        <p style={{ color: 'white', fontSize: '1.125rem' }}>Loading...</p>
+      </div>
+    );
+  }
+
   const { authMethod, embeddedWalletClient, ownerAddress } = useAuth();
   const { data: externalWalletClient } = useWalletClient();
 
@@ -286,7 +321,7 @@ export const MUDProvider = ({ children, setupResult }: Props): JSX.Element => {
     if (!activeWalletAddress) return () => {};
     getBurnerBalance();
 
-    const interval = setInterval(getBurnerBalance, 5000);
+    const interval = setInterval(getBurnerBalance, 30000);
     return () => clearInterval(interval);
   }, [activeWalletAddress, getBurnerBalance]);
 

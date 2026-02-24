@@ -243,19 +243,12 @@ export const ActionsPanel = (): JSX.Element => {
     }
 
     const interval = setInterval(() => {
-      if (turnEndTime - Date.now() < 0) {
-        setTurnTimeLeft(0);
-        return;
-      }
-      setTurnTimeLeft(prev => prev - 1);
+      const remaining = Math.floor((turnEndTime - Date.now()) / 1000);
+      setTurnTimeLeft(remaining > 0 ? remaining : 0);
     }, 1000);
 
-    if (currentBattle?.encounterType === EncounterType.PvE) {
-      return () => clearInterval(interval);
-    }
-
     return () => clearInterval(interval);
-  }, [currentBattle, turnEndTime, turnTimeLeft]);
+  }, [currentBattle, turnEndTime]);
 
   const canAttack = useMemo(() => {
     if (!currentBattle) return false;

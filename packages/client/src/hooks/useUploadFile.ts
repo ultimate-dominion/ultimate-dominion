@@ -43,7 +43,7 @@ export const useUploadFile = ({
       formData.set(fileName, file);
 
       const response = await fetch(
-        `${API_URL}/api/upload-file?name=${fileName}`,
+        `${API_URL}/api/uploadFile?name=${fileName}`,
         {
           method: 'POST',
           body: formData,

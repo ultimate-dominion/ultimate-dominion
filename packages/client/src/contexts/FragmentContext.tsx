@@ -82,43 +82,19 @@ export const FragmentProvider = ({
     FragmentProgress ? [Has(FragmentProgress)] : [],
   );
 
-  // Debug: log all entities found
-  console.log('[FragmentContext] All FragmentProgress entities:', allFragmentEntities.length);
-  allFragmentEntities.forEach(entity => {
-    const progress = FragmentProgress ? getComponentValue(FragmentProgress, entity) : null;
-    console.log('[FragmentContext] Entity:', entity, 'Data:', progress);
-  });
-
   // Filter to only this character's fragments
   // Note: characterId is part of the entity KEY, not the value
   // Entity format: characterId (64 chars) + fragmentType (64 chars) = 128 hex chars + '0x' prefix
   const fragmentEntities = allFragmentEntities.filter(entity => {
     if (!character?.id) return false;
-    // Entity key starts with characterId (first 66 chars including 0x prefix)
     const entityCharacterId = entity.slice(0, 66);
-    const matches = entityCharacterId.toLowerCase() === character.id.toLowerCase();
-    console.log('[FragmentContext] Comparing:', { entityCharacterId, characterId: character.id, matches });
-    return matches;
+    return entityCharacterId.toLowerCase() === character.id.toLowerCase();
   });
 
   const fragments = useMemo(() => {
-    console.log('[FragmentContext] Building fragments:', {
-      hasCharacter: !!character,
-      characterId: character?.id,
-      hasFragmentProgress: !!FragmentProgress,
-      fragmentEntitiesCount: fragmentEntities.length,
-      position,
-    });
-
     if (!character || !FragmentProgress) {
       return [];
     }
-
-    // Debug: log all fragment entities found
-    fragmentEntities.forEach(entity => {
-      const progress = getComponentValue(FragmentProgress, entity);
-      console.log('[FragmentContext] Found entity:', entity, 'progress:', progress);
-    });
 
     const fragmentStatuses: FragmentStatus[] = [];
 
@@ -161,31 +137,15 @@ export const FragmentProvider = ({
 
   // Check if there's a pending echo on the current tile
   const pendingEcho = useMemo(() => {
-    console.log('[FragmentContext] Checking pendingEcho:', {
-      position,
-      fragmentsCount: fragments.length,
-      triggeredFragments: fragments.filter(f => f.triggered).map(f => ({
-        type: f.fragmentType,
-        name: f.name,
-        triggered: f.triggered,
-        claimed: f.claimed,
-        triggerTileX: f.triggerTileX,
-        triggerTileY: f.triggerTileY,
-      })),
-    });
-
     if (!position) return null;
 
-    const echo = fragments.find(
+    return fragments.find(
       f =>
         f.triggered &&
         !f.claimed &&
         f.triggerTileX === position.x &&
         f.triggerTileY === position.y,
     ) ?? null;
-
-    console.log('[FragmentContext] pendingEcho result:', echo);
-    return echo;
   }, [fragments, position]);
 
   const claimFragment = useCallback(

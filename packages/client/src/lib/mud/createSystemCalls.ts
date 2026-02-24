@@ -330,18 +330,6 @@ export function createSystemCalls(
         },
       ];
 
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [
-          encounterId.toString() as `0x${string}`,
-          playerId.toString() as `0x${string}`,
-          actions,
-        ],
-        functionName: 'UD__endTurn',
-      });
-
       const tx = await worldContract.write.UD__endTurn(
         [
           encounterId.toString() as `0x${string}`,
@@ -646,14 +634,6 @@ export function createSystemCalls(
     x: number,
     y: number,
   ): SystemCallReturn => {
-    await publicClient.simulateContract({
-      abi: worldContract.abi,
-      account: delegatorAddress,
-      address: worldContract.address,
-      args: [characterEntity.toString() as `0x${string}`, x, y],
-      functionName: 'UD__move',
-    });
-
     const positionId = uuid();
     Position.addOverride(positionId, {
       entity: characterEntity,

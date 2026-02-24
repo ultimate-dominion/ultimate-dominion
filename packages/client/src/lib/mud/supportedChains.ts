@@ -73,13 +73,12 @@ const getSupportedChains = () => {
     ? Number(import.meta.env.VITE_CHAIN_ID)
     : 31337;
 
-  if (import.meta.env.DEV) {
-    return POSSIBLE_SUPPORTED_CHAINS.filter(chain => chain.id === chainId);
-  }
+  // Filter to the chain matching the configured chain ID
+  const matched = POSSIBLE_SUPPORTED_CHAINS.filter(chain => chain.id === chainId);
+  if (matched.length > 0) return matched;
 
-  return [
-    Number(import.meta.env.VITE_CHAIN_ID) === pyrope.id ? pyrope : garnet,
-  ];
+  // Fallback for production if no match
+  return [baseSepolia];
 };
 
 /*

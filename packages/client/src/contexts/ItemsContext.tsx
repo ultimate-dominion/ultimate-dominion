@@ -282,10 +282,10 @@ export const ItemsProvider = ({
             { itemId: spellId },
           );
 
-          const statRestrictions = getComponentValueStrict(
+          const statRestrictions = getComponentValue(
             StatRestrictions,
             itemIdEntity,
-          );
+          ) ?? { minAgility: 0, minIntelligence: 0, minStrength: 0 };
           const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
 
           const spellStats = getComponentValueStrict(SpellStats, itemIdEntity);
@@ -420,82 +420,62 @@ export const ItemsProvider = ({
       if (!isSynced) return;
 
       try {
-        console.log('[DEBUG ItemsContext] isSynced:', isSynced);
-        console.log('[DEBUG ItemsContext] Items component:', Items);
-
         const allItemEntities = Array.from(runQuery([Has(Items)]));
-        console.log('[DEBUG ItemsContext] All item entities count:', allItemEntities.length);
 
         const allItemIds = allItemEntities.map(entity => {
           const itemTemplate = getComponentValueStrict(Items, entity);
           const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
-          // Convert itemType to number to handle potential bigint or string values from MUD
           const itemTypeNum = Number(itemTemplate.itemType);
-          console.log('[DEBUG ItemsContext] Item:', {
-            entity,
-            itemId: itemId.toString(),
-            itemType: itemTemplate.itemType,
-            itemTypeNum,
-            itemTypeTypeof: typeof itemTemplate.itemType,
-            isWeapon: itemTypeNum === ItemType.Weapon,
-            isArmor: itemTypeNum === ItemType.Armor,
-          });
           return {
             itemType: itemTypeNum,
             itemId,
           };
         });
 
-        console.log('[DEBUG ItemsContext] Total items found:', allItemIds.length);
-
         if (allItemIds.length > 0) {
-          // Fetch each item type independently so one failure doesn't block others
+          const allArmorIds = allItemIds
+            .filter(({ itemType }) => itemType === ItemType.Armor)
+            .map(({ itemId }) => itemId);
+          const allWeaponIds = allItemIds
+            .filter(({ itemType }) => itemType === ItemType.Weapon)
+            .map(({ itemId }) => itemId);
+          const allConsumableIds = allItemIds
+            .filter(({ itemType }) => itemType === ItemType.Consumable)
+            .map(({ itemId }) => itemId);
+          const allSpellIds = allItemIds
+            .filter(({ itemType }) => itemType === ItemType.Spell)
+            .map(({ itemId }) => itemId);
 
-          // Armor
-          try {
-            const allArmorIds = allItemIds
-              .filter(({ itemType }) => itemType === ItemType.Armor)
-              .map(({ itemId }) => itemId);
-            console.log('[DEBUG ItemsContext] Armor IDs:', allArmorIds.length, allArmorIds.map(id => id.toString()));
-            const _armor = await fetchAllArmor(allArmorIds);
-            setArmorTemplates(_armor);
-          } catch (armorError) {
-            console.error('[DEBUG ItemsContext] Error fetching armor:', armorError);
+          const [armorResult, weaponResult, consumableResult, spellResult] =
+            await Promise.allSettled([
+              fetchAllArmor(allArmorIds),
+              fetchAllWeapons(allWeaponIds),
+              fetchAllConsumables(allConsumableIds),
+              fetchAllSpells(allSpellIds),
+            ]);
+
+          if (armorResult.status === 'fulfilled') {
+            setArmorTemplates(armorResult.value);
+          } else {
+            console.error('[ItemsContext] Error fetching armor:', armorResult.reason);
           }
 
-          // Weapons - fetch BEFORE consumables since consumables are failing
-          try {
-            const allWeaponIds = allItemIds
-              .filter(({ itemType }) => itemType === ItemType.Weapon)
-              .map(({ itemId }) => itemId);
-            console.log('[DEBUG ItemsContext] Weapon IDs:', allWeaponIds.length, allWeaponIds.map(id => id.toString()));
-            const _weapons = await fetchAllWeapons(allWeaponIds);
-            console.log('[DEBUG ItemsContext] Weapons fetched successfully:', _weapons.length);
-            setWeaponTemplates(_weapons);
-          } catch (weaponError) {
-            console.error('[DEBUG ItemsContext] Error fetching weapons:', weaponError);
+          if (weaponResult.status === 'fulfilled') {
+            setWeaponTemplates(weaponResult.value);
+          } else {
+            console.error('[ItemsContext] Error fetching weapons:', weaponResult.reason);
           }
 
-          // Consumables
-          try {
-            const allConsumableIds = allItemIds
-              .filter(({ itemType }) => itemType === ItemType.Consumable)
-              .map(({ itemId }) => itemId);
-            const _consumables = await fetchAllConsumables(allConsumableIds);
-            setConsumableTemplates(_consumables);
-          } catch (consumableError) {
-            console.error('[DEBUG ItemsContext] Error fetching consumables:', consumableError);
+          if (consumableResult.status === 'fulfilled') {
+            setConsumableTemplates(consumableResult.value);
+          } else {
+            console.error('[ItemsContext] Error fetching consumables:', consumableResult.reason);
           }
 
-          // Spells
-          try {
-            const allSpellIds = allItemIds
-              .filter(({ itemType }) => itemType === ItemType.Spell)
-              .map(({ itemId }) => itemId);
-            const _spells = await fetchAllSpells(allSpellIds);
-            setSpellTemplates(_spells);
-          } catch (spellError) {
-            console.error('[DEBUG ItemsContext] Error fetching spells:', spellError);
+          if (spellResult.status === 'fulfilled') {
+            setSpellTemplates(spellResult.value);
+          } else {
+            console.error('[ItemsContext] Error fetching spells:', spellResult.reason);
           }
         }
       } catch (e) {

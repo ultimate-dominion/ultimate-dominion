@@ -49,10 +49,15 @@ contract MapSpawnSystem is System {
         uint32[] memory rng;
         rng = LibChunks.get8Chunks(block.prevrandao);
 
-        for (uint256 i; i < (rng[0] % 6); i++) {
+        uint256 spawnCount = rng[0] % 4;
+        if (spawnCount > 0) {
+            uint256[] memory mobIdsToSpawn = new uint256[](spawnCount);
+            for (uint256 i; i < spawnCount; i++) {
+                mobIdsToSpawn[i] = availableMonsters[uint256(rng[i] % availableMonsters.length)];
+            }
             SystemSwitch.call(
                 abi.encodeCall(
-                    IMobSystem.UD__spawnMob, (availableMonsters[uint256(rng[i] % availableMonsters.length)], x, y)
+                    IMobSystem.UD__spawnMobs, (mobIdsToSpawn, x, y)
                 )
             );
         }

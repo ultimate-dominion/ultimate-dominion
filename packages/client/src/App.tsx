@@ -128,7 +128,8 @@ const AppInner = (): JSX.Element => {
       };
       requestDrip();
       // Request a drip every 20 seconds
-      setInterval(requestDrip, 20000);
+      const intervalId = setInterval(requestDrip, 20000);
+      return () => clearInterval(intervalId);
     }
   }, [ownerAddress, network]);
 

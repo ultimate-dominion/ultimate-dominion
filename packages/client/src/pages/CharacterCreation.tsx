@@ -304,7 +304,7 @@ const CharacterCreationInner = (): JSX.Element => {
         debug.log('Using API URL', API_URL);
         debug.log('Uploading character metadata', characterMetadata);
 
-        const uploadUrl = `${API_URL}/api/upload?name=characterMetadata.json`;
+        const uploadUrl = `${API_URL}/api/uploadMetadata?name=characterMetadata.json`;
         debug.log('Full upload URL', uploadUrl);
 
         try {

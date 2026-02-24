@@ -20,7 +20,8 @@ const connectors = connectorsForWallets(wallets, {
 
 const transports = Object.fromEntries(
   SUPPORTED_CHAINS.map(chain => {
-    return [chain.id, http()];
+    const rpcUrl = chain.rpcUrls?.default?.http?.[0];
+    return [chain.id, http(rpcUrl)];
   }),
 );
 

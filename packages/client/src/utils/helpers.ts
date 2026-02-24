@@ -199,6 +199,31 @@ export const isTextOnlyUri = (uri: string): boolean => {
   return ['text', 'monster', 'item', 'armor', 'weapon', 'spell', 'consumable', 'accessory'].includes(protocol);
 };
 
+const METADATA_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+const getCachedMetadata = (uri: string): Metadata | null => {
+  try {
+    const raw = localStorage.getItem('metadata:' + uri);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > METADATA_CACHE_TTL) {
+      localStorage.removeItem('metadata:' + uri);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+const setCachedMetadata = (uri: string, data: Metadata): void => {
+  try {
+    localStorage.setItem('metadata:' + uri, JSON.stringify({ data, ts: Date.now() }));
+  } catch {
+    // localStorage full or unavailable — ignore
+  }
+};
+
 export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
   // Handle empty or invalid URIs
   if (!uri || uri.trim() === '') {
@@ -218,6 +243,10 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
       image: '',
     };
   }
+
+  // Check localStorage cache for non-text URIs
+  const cached = getCachedMetadata(uri);
+  if (cached) return cached;
 
   // Check if it's a local development URI
   if (import.meta.env.DEV && uri.includes('local-')) {
@@ -246,6 +275,7 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
         metadata.image = uriToHttp(metadata.image)[0] || '';
       }
 
+      setCachedMetadata(uri, metadata);
       return metadata;
     } catch (error) {
       console.error('Error fetching from local API:', error);
@@ -281,6 +311,7 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
       metadata.description = metadata.description || '';
       metadata.image = uriToHttp(metadata.image)[0] || '';
 
+      setCachedMetadata(uri, metadata);
       return metadata;
     } catch (error) {
       lastError = error as Error;

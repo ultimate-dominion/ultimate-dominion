@@ -75,11 +75,8 @@ export async function setupNetwork() {
   const isDev = import.meta.env.DEV;
   const rawIndexerUrl =
     (import.meta.env.VITE_INDEXER_URL as string) ?? undefined;
-  const indexerUrl = isDev
-    ? rawIndexerUrl?.replace(
-        'https://indexer.mud.garnetchain.com',
-        '/mud-indexer',
-      )
+  const indexerUrl = isDev && rawIndexerUrl
+    ? rawIndexerUrl.replace(/https?:\/\/[^/]+/, '/mud-indexer')
     : rawIndexerUrl;
 
   debug.log('Using indexer URL', { isDev, rawIndexerUrl, indexerUrl });

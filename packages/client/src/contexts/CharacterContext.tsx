@@ -94,28 +94,8 @@ export const CharacterProvider = ({
     components?.Stats
   );
 
-  console.log('[CharacterProvider] Wrapper check:', { componentsReady, isSynced, hasComponents: !!components });
-  console.log('[CharacterProvider] ALL available components:', components ? Object.keys(components) : []);
-  console.log('[CharacterProvider] Essential components:', {
-    Characters: !!components?.Characters,
-    CharactersTokenURI: !!components?.CharactersTokenURI,
-    Stats: !!components?.Stats,
-  });
-  console.log('[CharacterProvider] Optional components:', {
-    AdventureEscrow: !!components?.AdventureEscrow,
-    CharacterEquipme: !!components?.CharacterEquipme,
-    EncounterEntity: !!components?.EncounterEntity,
-    GoldBalances: !!components?.GoldBalances,
-    ItemsOwners: !!components?.ItemsOwners,
-    StatusEffectStat: !!components?.StatusEffectStat,
-    StatusEffectVali: !!components?.StatusEffectVali,
-    WorldEncounter: !!components?.WorldEncounter,
-    WorldStatusEffec: !!components?.WorldStatusEffec,
-  });
-
   // If components aren't ready, render with default context
   if (!componentsReady) {
-    console.log('[CharacterProvider] Components not ready, using default context');
     return (
       <CharacterContext.Provider
         value={{
@@ -137,7 +117,6 @@ export const CharacterProvider = ({
     );
   }
 
-  console.log('[CharacterProvider] Rendering inner component');
   return (
     <CharacterProviderInner components={components} isSynced={isSynced}>
       {children}
@@ -176,7 +155,6 @@ const CharacterProviderInner = ({
     network: { publicClient, worldContract },
   } = useMUD();
 
-  console.log('[CharacterProviderInner] delegatorAddress:', delegatorAddress);
   const { renderError } = useToast();
   const {
     armorTemplates,
@@ -201,15 +179,6 @@ const CharacterProviderInner = ({
 
   const fetchCharacterData = useCallback(async (): Promise<boolean> => {
     if (!(delegatorAddress && publicClient && worldContract)) return false;
-
-    // Debug: Log available characters
-    const allCharacters = Array.from(runQuery([Has(Characters)]));
-    console.log('[CharacterContext] All characters in RECS:', allCharacters.length);
-    allCharacters.forEach(entity => {
-      const data = getComponentValueStrict(Characters, entity);
-      console.log('[CharacterContext] Character owner:', data.owner);
-    });
-    console.log('[CharacterContext] Looking for owner:', delegatorAddress);
 
     // Find character by owner - try exact match first, then lowercase match
     // MUD may store addresses in different cases depending on how they were set
@@ -239,9 +208,7 @@ const CharacterProviderInner = ({
         const data = getComponentValue(Characters, entity);
         return data?.owner?.toLowerCase() === delegatorAddress.toLowerCase();
       });
-      if (characterEntities.length > 0) {
-        console.log('[CharacterContext] Found character via manual lowercase comparison');
-      }
+      // Found via manual lowercase comparison
     }
 
     const partialCharacter: CharacterData & EntityStats = characterEntities.map(entity => {
@@ -375,7 +342,6 @@ const CharacterProviderInner = ({
     })[0];
 
     if (!partialCharacter) {
-      console.log('[CharacterContext] No character found in RECS store');
       return false;
     }
     const { tokenId } = partialCharacter;
@@ -420,7 +386,6 @@ const CharacterProviderInner = ({
       description: fetchedMetadata.description || '',
       image: fetchedMetadata.image || '',
     });
-    console.log('[CharacterContext] Character found and set');
     return true;
   }, [
     AdventureEscrow,
@@ -450,12 +415,10 @@ const CharacterProviderInner = ({
         const found = await fetchCharacterData();
 
         if (found) {
-          console.log(`[CharacterContext] Character found on attempt ${retries + 1}`);
           break;
         }
 
         retries++;
-        console.log(`[CharacterContext] Refresh attempt ${retries}/${maxRetries} - waiting for MUD sync...`);
         await new Promise(resolve => setTimeout(resolve, baseDelay));
       }
 
@@ -470,15 +433,8 @@ const CharacterProviderInner = ({
   }, [fetchCharacterData, renderError]);
 
   useEffect(() => {
-    console.log('[CharacterProviderInner] useEffect check:', {
-      delegatorAddress,
-      isSynced,
-      hasPublicClient: !!publicClient,
-      hasWorldContract: !!worldContract
-    });
     if (!(delegatorAddress && isSynced && publicClient && worldContract))
       return;
-    console.log('[CharacterProviderInner] Calling refreshCharacter');
     refreshCharacter();
   }, [
     delegatorAddress,
@@ -498,7 +454,6 @@ const CharacterProviderInner = ({
       try {
         // If ItemsOwners component doesn't exist, skip item fetching
         if (!ItemsOwners) {
-          console.log('[CharacterContext] ItemsOwners component not available, skipping items');
           return;
         }
 

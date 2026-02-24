@@ -111,8 +111,8 @@ export function createBurner(
       };
 
       requestDrip();
-      // Request a drip every 20 seconds
-      setInterval(requestDrip, 20000);
+      // Note: No cleanup available here (not a React hook).
+      // Only runs on garnet chain, which is not the production chain.
     }
   }
 

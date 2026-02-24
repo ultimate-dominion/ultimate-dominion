@@ -30,30 +30,29 @@ const rootElement = document.getElementById('react-root');
 if (!rootElement) throw new Error('React root not found');
 const root = createRoot(rootElement);
 
-// TODO: figure out if we actually want this to be async or if we should render something else in the meantime
-setup().then(async result => {
-  root.render(
-    <ChakraProvider resetCSS theme={theme}>
-      <Global styles={globalStyles} />
-      <Web3Provider>
-        <AuthProvider>
-          <MUDProvider setupResult={result}>
-            <ItemsProvider>
-              <MonstersProvider>
-                <OrdersProvider>
-                  <CharacterProvider>
-                    <AllowanceProvider>
-                      <App />
-                    </AllowanceProvider>
-                  </CharacterProvider>
-                </OrdersProvider>
-              </MonstersProvider>
-            </ItemsProvider>
-            {/* DevTools temporarily disabled - causes error with undefined table values */}
-            {/* {import.meta.env.DEV && <DevTools />} */}
-          </MUDProvider>
-        </AuthProvider>
-      </Web3Provider>
-    </ChakraProvider>,
-  );
-});
+const setupPromise = setup();
+
+root.render(
+  <ChakraProvider resetCSS theme={theme}>
+    <Global styles={globalStyles} />
+    <Web3Provider>
+      <AuthProvider>
+        <MUDProvider setupPromise={setupPromise}>
+          <ItemsProvider>
+            <MonstersProvider>
+              <OrdersProvider>
+                <CharacterProvider>
+                  <AllowanceProvider>
+                    <App />
+                  </AllowanceProvider>
+                </CharacterProvider>
+              </OrdersProvider>
+            </MonstersProvider>
+          </ItemsProvider>
+          {/* DevTools temporarily disabled - causes error with undefined table values */}
+          {/* {import.meta.env.DEV && <DevTools />} */}
+        </MUDProvider>
+      </AuthProvider>
+    </Web3Provider>
+  </ChakraProvider>,
+);

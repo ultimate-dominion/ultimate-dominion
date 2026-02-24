@@ -1,135 +1,36 @@
-# Ultimate Dominion: Economics & Launch Strategy
+# Ultimate Dominion: Launch Strategy
 
-This document captures design thinking around game economics, launch strategy, human verification, and viral growth mechanics.
+Operational playbook for the first 3 months — phased rollout, player cap, invite system, queue, founder system, human verification, viral growth, and shareable UI.
 
 ---
 
 ## Table of Contents
 
-1. [Economic Model](#economic-model)
-2. [Launch Strategy](#launch-strategy)
-3. [Human Verification](#human-verification)
-4. [Founder System](#founder-system)
-5. [Viral Growth & Social Proof](#viral-growth--social-proof)
-6. [Shareable UI Patterns](#shareable-ui-patterns)
+1. [Phased Approach](#phased-approach)
+2. [Player Cap System](#player-cap-system)
+3. [Invite System](#invite-system)
+4. [Human Verification](#human-verification)
+5. [Founder System](#founder-system)
+6. [Viral Growth & Social Proof](#viral-growth--social-proof)
+7. [Shareable UI Patterns](#shareable-ui-patterns)
+8. [The Virtuous Cycle](#the-virtuous-cycle)
 
 ---
 
-## Economic Model
-
-### Philosophy
-
-- **Infinite gold supply** with sinks designed to outstrip creation over time
-- **Gold is the medium of exchange**, rare items are the actual value
-- **Marketplace is the core economic engine** - 2.5% fee on trades
-- **DEX liquidity** provided initially, creating real-world value for gold
-
-### Gold Generation
-
-Gold drops from monster kills based on mob level:
-
-| Mob Level | Gold Range | Average |
-|-----------|------------|---------|
-| 1 | 0.05 - 5 | ~2.5 gold |
-| 2 | 0.05 - 10 | ~5 gold |
-| 5 | 0.05 - 25 | ~12.5 gold |
-| 10 | 0.05 - 50 | ~25 gold |
-
-**Key constraint:** If player is 5+ levels above mob, no gold drops (prevents high-level farming of easy content).
-
-### Gold Creation at Scale
-
-Assuming 20 kills/hour, 2 hours/day average per player:
-
-| Players | Avg Level | Daily Gold Created |
-|---------|-----------|-------------------|
-| 100 | 5 | 50,000 gold |
-| 1,000 | 5 | 500,000 gold |
-| 10,000 | 5 | 5,000,000 gold |
-
-### Gold Sinks (Required for Deflationary Pressure)
-
-| Sink | Type | Notes |
-|------|------|-------|
-| Marketplace fee | 2.5% per trade | Primary revenue source |
-| Item repairs | 5-10% of item value | Ongoing drain |
-| Respec | Flat fee (100-1000 gold) | Occasional |
-| Cosmetics | Various | Pure sink, no resale |
-| Guild creation | 5,000+ gold | One-time |
-| Death penalty | 10% of carried gold | PvE and PvP |
-| Crafting/Upgrading | Consumes gold + items | Removes both |
-
-**Key insight:** The 2.5% marketplace fee is a compounding sink. Every time an item changes hands, 2.5% disappears. A legendary that trades 10 times removes 25% of its value in gold from circulation.
-
-### Item Drop Rates (Recommended)
-
-Current rates flood the market. Suggested adjustments:
-
-| Rarity | Current | Recommended | Expected Supply (10k players, 1 month) |
-|--------|---------|-------------|----------------------------------------|
-| Common | 25% | 10% | Millions |
-| Uncommon | 20% | 5% | ~240,000 |
-| Rare | 15% | 0.5% | ~60,000 |
-| Very Rare | 10% | 0.05% | ~6,000 |
-| Legendary | 5% | 0.005% | ~600 |
-| Unique | N/A | 1 total ever | 1 |
-
-### Item Sinks (Critical for Rarity)
-
-Items must leave circulation:
-
-- **Durability** - Items break after X uses
-- **PvP drops** - Die in PvP, lose equipped items
-- **Upgrading** - Sacrifice 3 rares to make 1 epic
-- **Rerolling** - Destroy item to reroll stats
-- **Salvage** - Destroy for crafting materials
-
-Without destruction, "rare" items flood the market over time.
-
-### DEX Integration
-
-Gold tradeable on decentralized exchange:
-
-```
-Players EARN gold (selling pressure)
-     ↓
-DEX Price
-     ↑
-Buyers SPEND gold (buying pressure)
-```
-
-**Demand drivers:**
-1. **Utility** - Need gold to buy items on marketplace
-2. **Speculation** - Betting on player growth
-3. **Yield** - Staking/LP rewards (if implemented)
-
-**Target:** Slight deflation - rewards players, keeps buyers coming.
-
-### Marketplace Revenue Model
-
-| Daily Trading Volume | 2.5% Fee Revenue |
-|---------------------|------------------|
-| 10,000 gold | 250 gold |
-| 100,000 gold | 2,500 gold |
-| 1,000,000 gold | 25,000 gold |
-
-Real USD revenue depends on gold price on DEX.
-
----
-
-## Launch Strategy
-
-### Phased Approach
+## Phased Approach
 
 | Phase | Duration | Players | Focus |
 |-------|----------|---------|-------|
 | **Phase 0: Pre-launch** | Week -4 to 0 | 0 | Deploy token, seed DEX liquidity, build hype |
-| **Phase 1: Soft launch** | Week 1-2 | 20 cap | Invite-only, test economy, low drop rates |
-| **Phase 2: Expand** | Week 3-4 | 50 cap | Open waitlist, monitor sell pressure |
-| **Phase 3: Public launch** | Week 5+ | 100+ cap | Full open, marketplace active |
-| **Phase 4: Growth** | Month 2+ | Uncapped | Monitor, adjust rates and sinks |
+| **Phase 1: Observation** | Week 1-2 | 10 cap | Pure observation, test economy, founders only |
+| **Phase 2: Early economy** | Week 3-4 | 20 cap | Marketplace starts forming, invite system live |
+| **Phase 3: Expand** | Week 5-8 | 50 cap | Real economy emerging, queue growing |
+| **Phase 4: Public launch** | Month 2+ | 100+ cap | Scale based on economic indicators, not time |
+| **Phase 5: Growth** | Month 3+ | 250+ | Remove cap or keep soft limit |
 
-### Player Cap System
+---
+
+## Player Cap System
 
 Limit concurrent players to control gold creation and test economics:
 
@@ -155,13 +56,13 @@ Check active player count
 
 ### Scaling the Cap
 
-| Week | Player Cap | Expected Daily Gold | Notes |
-|------|------------|---------------------|-------|
-| 1-2 | 20 | ~8,000 | Tiny, close monitoring |
-| 3-4 | 50 | ~20,000 | Still manageable |
-| 5-6 | 100 | ~40,000 | Real economy emerging |
-| 7-8 | 250 | ~100,000 | Marketplace velocity up |
-| 9+ | 500+ | ~200,000+ | Remove cap or keep soft limit |
+| Phase | Player Cap | Expected Daily Gold | Notes |
+|-------|------------|---------------------|-------|
+| 1 | 10 | ~4,000 | Pure observation, know every player |
+| 2 | 20 | ~8,000 | Marketplace forming, invite system live |
+| 3 | 50 | ~20,000 | Real economy, queue is growing |
+| 4 | 100 | ~40,000 | Scale on economic indicators |
+| 5 | 250+ | ~100,000+ | Remove cap or keep soft limit |
 
 **Increase cap when:**
 - Sinks are absorbing creation
@@ -169,17 +70,148 @@ Check active player count
 - No major exploits found
 - Gold price is stable on DEX
 
-### Initial Liquidity
+---
 
-Seed DEX pool yourself:
+## Invite System
 
-| Budget | Gold in Pool | Approx Market Cap |
-|--------|--------------|-------------------|
-| $10k | 500,000 gold | ~$5k |
-| $25k | 1,250,000 gold | ~$12.5k |
-| $50k | 2,500,000 gold | ~$25k |
+### Core Mechanic
 
-Start small-medium. Some volatility attracts speculators, but not so wild it looks like a scam.
+Invites skip the **queue**, not the **cap**. If 10/10 slots are full, an invite code moves you from position #47 to position #3 — you still wait for a slot to open. This preserves economic controls while making invites feel valuable.
+
+```
+Player A is in the game, reaches Level 3
+    → Receives 1 invite code
+    → Sends code to Friend B
+    → Friend B joins queue with code → jumps to near-front
+    → Friend B reaches Level 5 (activation threshold)
+    → Player A gets: 100 gold + 1 bonus invite code
+    → Friend B got: queue priority + 50 gold starting bonus
+```
+
+### Code Generation (Scarcity-Driven)
+
+Codes are earned through gameplay, not given at signup:
+
+| Milestone | Codes Earned |
+|-----------|-------------|
+| Reach Level 3 | 1 code |
+| Reach Level 10 | 1 code |
+| Reach Level 20 | 1 code |
+| Each successful activation (invitee hits Level 5) | 1 bonus code |
+
+A dedicated player who invites real players generates ~5-6 codes over weeks. A casual player gets 1-2. Nobody gets unlimited.
+
+### Activation Threshold
+
+The invitee must reach **Level 5** before the referrer gets credit. This is the anti-abuse lever:
+- Level 5 requires real engagement — combat, maybe a shop visit, real time invested
+- Fast enough that the referrer gets feedback within a day or two
+- Slow enough that alts require actual effort
+
+### Rewards
+
+Keep meaningful but not economy-breaking:
+
+**Referrer rewards:**
+
+| Activations | Reward |
+|-------------|--------|
+| 1 | 100 gold + "Recruiter" title |
+| 3 | 100 gold + "Herald" title |
+| 5 | 100 gold + exclusive cosmetic + "Kingmaker" title |
+
+**Invitee rewards:**
+- Queue priority (near-front, not absolute front)
+- 50 gold starting bonus (enough for a health potion, not enough to distort economy)
+
+Titles are the real reward. In a 10-20 person world, being "Kingmaker" is visible status that costs nothing economically.
+
+### Queue Experience
+
+The queue should not be a dead screen. It should create FOMO and drive invite sharing:
+
+```
+┌─────────────────────────────────────────────────┐
+│  QUEUE POSITION: #12 of 47                      │
+│                                                 │
+│  Estimated wait: ~45 minutes                    │
+│  Players in-game right now: 10/10               │
+│                                                 │
+│  ── Live Feed ──────────────────────────────── │
+│  → PlayerX just found a Rare Shadowblade        │
+│  → PlayerY defeated PlayerZ in PvP              │
+│  → A Legendary item was listed for 5,000 gold   │
+│                                                 │
+│  You have 2 invite codes remaining.             │
+│  Share a code to move up the queue.             │
+│                                                 │
+│  [Copy Invite Link]  [Share to X]               │
+└─────────────────────────────────────────────────┘
+```
+
+**Key design decisions:**
+- Live feed shows what's happening in-game (creates urgency to get in)
+- Invite codes displayed right when frustration is highest (maximizes conversion)
+- Queue position + player count visible (social proof)
+- Sharing pre-fills a tweet/post with the invite link
+
+### Queue-Skip Mechanics
+
+When invitee B uses player A's code:
+- B joins queue at position #3 (near front, not absolute front — preserves some fairness for long-waiters)
+- If A is still in queue, A moves up 5 positions
+- If A is in-game and later disconnects, A gets priority re-entry
+
+Both sides benefit from every invite.
+
+### Abuse Scenarios
+
+At 10-20 players, abuse doesn't scale. The cap itself is the anti-abuse mechanism.
+
+| Scenario | Impact | Response |
+|----------|--------|----------|
+| Player makes 3 email alts for codes | Each alt needs Level 3 to generate codes (~3+ hours each). At 10 players, you notice. | Let it slide. They're playing 3x. |
+| Player sells invite codes on Twitter | Buyer still waits for cap slot. Seller gets credit only if buyer hits Level 5. | This is marketing. Encourage it. |
+| Player invites bots | Bots need Level 5 for activation. At 10-20 players, bot behavior is visible. | Manual ban if needed. You're watching everything. |
+| Two players trade invites to boost | Each gets 1 bonus code and 100 gold. Total impact: 200 gold. | Irrelevant at any scale. |
+| Someone builds an invite farming ring | Needs 5+ real accounts all reaching Level 5. That's half the server at 10-player cap. | Physically impossible to do quietly. |
+
+**Key insight:** By the time you're at 100+ players and abuse could actually matter, you'll have data on patterns to watch for and can tighten the system.
+
+### Technical Implementation
+
+Invite codes and queue are **off-chain** (API server). Rewards are **on-chain** (game assets).
+
+- **Invite codes**: Generated and tracked by API server
+- **Queue position**: Managed server-side (Redis or in-memory at this scale)
+- **Activation tracking**: API watches for invitee's character reaching Level 5 on-chain, then credits referrer
+- **Rewards**: Gold bonus and titles settle on-chain as in-game assets
+
+This keeps gas costs zero for the social/queue layer while actual game rewards are on-chain.
+
+### Growth Projection
+
+```
+DAY 1: 10 player cap, no queue yet
+  Players trickle in from r/MUD, Farcaster, MUD directories
+
+WEEK 1-2: Word spreads, queue forms
+  10 in-game, 15 in queue
+  Players at Level 3+ start getting invite codes
+  Queue screen shows live feed + invite CTA
+
+WEEK 3-4: Queue grows, invites accelerate
+  10-20 in-game, 40 in queue
+  Invite codes become socially valuable
+  "I have an Ultimate Dominion invite code" posts appear
+  Increase cap to 20 based on economic health
+
+MONTH 2: Controlled growth
+  20-50 in-game, 100+ in queue
+  Founders (first 60 days) get express queue
+  Invite system generating 5-10 new signups per day organically
+  Scale cap based on economic indicators
+```
 
 ---
 
@@ -355,7 +387,7 @@ When rare+ item drops:
 
 ```
 ┌─────────────────────────────────┐
-│  ⚔️ LEGENDARY DROP              │
+│  LEGENDARY DROP                 │
 │                                 │
 │  [Item image]                   │
 │                                 │
@@ -374,7 +406,7 @@ When rare+ item drops:
 
 ```
 ┌─────────────────────────────────┐
-│  🎉 LEVEL 50                    │
+│  LEVEL 50                       │
 │                                 │
 │  [Character portrait]           │
 │                                 │
@@ -394,7 +426,7 @@ When rare+ item drops:
 
 ```
 ┌─────────────────────────────────┐
-│  ⚔️ VICTORY                     │
+│  VICTORY                        │
 │                                 │
 │  [Your char]  VS  [Their char]  │
 │                                 │
@@ -402,7 +434,7 @@ When rare+ item drops:
 │  Lvl 34          Lvl 37         │
 │                                 │
 │  +250 Gold | +150 XP            │
-│  Win Streak: 7 🔥               │
+│  Win Streak: 7                  │
 │                                 │
 │  [Share Victory]  [Rematch]     │
 └─────────────────────────────────┘
@@ -412,13 +444,13 @@ When rare+ item drops:
 
 ```
 ┌─────────────────────────────────┐
-│  💰 SOLD                        │
+│  SOLD                           │
 │                                 │
 │  [Item image]                   │
 │  Shadowsteel Armor              │
 │                                 │
 │  Sold for: 5,000 GOLD           │
-│  ≈ $47.50 USD                   │
+│  ~ $47.50 USD                   │
 │                                 │
 │  Buyer: 0xabc...def             │
 │                                 │
@@ -432,7 +464,7 @@ When rare+ item drops:
 
 ```
 ┌─────────────────────────────────┐
-│  🏆 ACHIEVEMENT UNLOCKED        │
+│  ACHIEVEMENT UNLOCKED           │
 │                                 │
 │  [Achievement icon]             │
 │                                 │
@@ -454,11 +486,11 @@ When rare+ item drops:
 │  CRYPTOKNIGHT                   │
 │  Level 50 Warrior | Founder     │
 │                                 │
-│  ⚔️ 89 STR   🏃 45 AGI          │
-│  🧠 23 INT   ❤️ 340 HP          │
+│  89 STR   45 AGI                │
+│  23 INT   340 HP                │
 │                                 │
-│  💀 1,247 Kills | 👑 #47 Rank   │
-│  💰 12,400 Gold earned          │
+│  1,247 Kills | #47 Rank         │
+│  12,400 Gold earned             │
 │                                 │
 │  [Share Card]  [View Full]      │
 └─────────────────────────────────┘
@@ -488,7 +520,7 @@ Player shares image + link
 
 **Example Tweet Output:**
 ```
-🗡️ Just dropped a BLADE OF THE VOID in @UltimateDominion
+Just dropped a BLADE OF THE VOID in @UltimateDominion
 
 +45 STR | +20 AGI
 Drop rate: 0.01%
@@ -526,7 +558,7 @@ Total friction: 1 tap + confirm
 
 ---
 
-## Summary: The Virtuous Cycle
+## The Virtuous Cycle
 
 ```
 Controlled launch (player cap)
@@ -554,13 +586,10 @@ Sustainable economy
 
 ## Open Questions
 
-- [ ] Final drop rate numbers after testing
-- [ ] Exact sink rates to balance creation
 - [ ] Founder window duration (30 days? 60 days?)
-- [ ] Initial DEX liquidity amount
 - [ ] Verification provider choice (Worldcoin vs Gitcoin vs other)
 - [ ] Player cap scaling schedule
 
 ---
 
-*Last updated: January 2026*
+*Last updated: February 2026*

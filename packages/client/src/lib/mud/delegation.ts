@@ -3,6 +3,7 @@ import {
   type Account,
   type Address,
   type Chain,
+  encodeFunctionData,
   type Hex,
   parseGwei,
   type Transport,
@@ -48,12 +49,18 @@ export async function setupDelegation(
           gas: 200000n,
         };
 
-    const delegationTx = await externalWalletClient.writeContract({
-      account: externalWalletClient.account,
-      address: network.worldContract.address,
+    // Pre-encode the calldata and use sendTransaction to minimize
+    // RPC calls MetaMask needs to make (no eth_call simulation)
+    const data = encodeFunctionData({
       abi: IWorldAbi,
       functionName: 'registerDelegation',
       args: [delegateeAddress, delegationControlId, '0x'],
+    });
+
+    const delegationTx = await externalWalletClient.sendTransaction({
+      account: externalWalletClient.account,
+      to: network.worldContract.address,
+      data,
       ...gasConfig,
     });
 
@@ -84,12 +91,16 @@ export async function revokeDelegation(
         gas: 200000n,
       };
 
-  const txHash = await externalWalletClient.writeContract({
-    account: externalWalletClient.account,
-    address: network.worldContract.address,
+  const data = encodeFunctionData({
     abi: IWorldAbi,
     functionName: 'unregisterDelegation',
     args: [delegateeAddress],
+  });
+
+  const txHash = await externalWalletClient.sendTransaction({
+    account: externalWalletClient.account,
+    to: network.worldContract.address,
+    data,
     ...gasConfig,
   });
 

@@ -95,28 +95,34 @@ export const BattleProvider = ({
   const [isFleeing, setIsFleeing] = useState<boolean>(false);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
 
-  const allBattles = useEntityQuery([Has(CombatEncounter)])
-    .map(entity => {
-      const encounter = getComponentValueStrict(CombatEncounter, entity);
+  const battleEntities = useEntityQuery([Has(CombatEncounter)]);
 
-      return {
-        attackers: encounter.attackers as Entity[],
-        currentTurn: encounter.currentTurn,
-        currentTurnTimer: encounter.currentTurnTimer,
-        defenders: encounter.defenders as Entity[],
-        encounterId: entity,
-        encounterType: encounter.encounterType,
-        end: encounter.end,
-        maxTurns: encounter.maxTurns,
-        start: encounter.start,
-      };
-    })
-    .filter(
-      encounter =>
-        character &&
-        (encounter?.attackers.includes(character.id) ||
-          encounter?.defenders.includes(character.id)),
-    );
+  const allBattles = useMemo(
+    () =>
+      battleEntities
+        .map(entity => {
+          const encounter = getComponentValueStrict(CombatEncounter, entity);
+
+          return {
+            attackers: encounter.attackers as Entity[],
+            currentTurn: encounter.currentTurn,
+            currentTurnTimer: encounter.currentTurnTimer,
+            defenders: encounter.defenders as Entity[],
+            encounterId: entity,
+            encounterType: encounter.encounterType,
+            end: encounter.end,
+            maxTurns: encounter.maxTurns,
+            start: encounter.start,
+          };
+        })
+        .filter(
+          encounter =>
+            character &&
+            (encounter?.attackers.includes(character.id) ||
+              encounter?.defenders.includes(character.id)),
+        ),
+    [battleEntities, CombatEncounter, character],
+  );
 
   const onContinueToBattleOutcome = useCallback((cont: boolean) => {
     setContinueToBattleOutcome(cont);
@@ -206,44 +212,50 @@ export const BattleProvider = ({
     return allCharacters.find(char => char.id === character.id) ?? null;
   }, [allCharacters, character]);
 
-  const allAttackOutcomes = useEntityQuery([Has(ActionOutcome)])
-    .map(entity => {
-      const _attackOutcome = getComponentValueStrict(ActionOutcome, entity);
+  const attackOutcomeEntities = useEntityQuery([Has(ActionOutcome)]);
 
-      const { encounterId, currentTurn, attackNumber } = decodeEntity(
-        {
-          encounterId: 'bytes32',
-          currentTurn: 'uint256',
-          attackNumber: 'uint256',
-        },
-        entity,
-      );
+  const allAttackOutcomes = useMemo(
+    () =>
+      attackOutcomeEntities
+        .map(entity => {
+          const _attackOutcome = getComponentValueStrict(ActionOutcome, entity);
 
-      return {
-        attackerDamageDelt: _attackOutcome.attackerDamageDelt,
-        attackerDied: _attackOutcome.attackerDied,
-        attackerId: _attackOutcome.attackerId,
-        attackNumber: attackNumber,
-        blockNumber: _attackOutcome.blockNumber,
-        crit: _attackOutcome.crit,
-        currentTurn: currentTurn,
-        damagePerHit: _attackOutcome.damagePerHit,
-        defenderDamageDelt: _attackOutcome.defenderDamageDelt,
-        defenderDied: _attackOutcome.defenderDied,
-        defenderId: _attackOutcome.defenderId,
-        effectIds: _attackOutcome.effectIds,
-        encounterId: encounterId,
-        hit: _attackOutcome.hit,
-        itemId: _attackOutcome.itemId.toString(),
-        miss: _attackOutcome.miss,
-        timestamp: _attackOutcome.timestamp,
-      } as AttackOutcomeType;
-    })
-    .filter(
-      attack =>
-        attack.attackerId === character?.id ||
-        attack.defenderId === character?.id,
-    );
+          const { encounterId, currentTurn, attackNumber } = decodeEntity(
+            {
+              encounterId: 'bytes32',
+              currentTurn: 'uint256',
+              attackNumber: 'uint256',
+            },
+            entity,
+          );
+
+          return {
+            attackerDamageDelt: _attackOutcome.attackerDamageDelt,
+            attackerDied: _attackOutcome.attackerDied,
+            attackerId: _attackOutcome.attackerId,
+            attackNumber: attackNumber,
+            blockNumber: _attackOutcome.blockNumber,
+            crit: _attackOutcome.crit,
+            currentTurn: currentTurn,
+            damagePerHit: _attackOutcome.damagePerHit,
+            defenderDamageDelt: _attackOutcome.defenderDamageDelt,
+            defenderDied: _attackOutcome.defenderDied,
+            defenderId: _attackOutcome.defenderId,
+            effectIds: _attackOutcome.effectIds,
+            encounterId: encounterId,
+            hit: _attackOutcome.hit,
+            itemId: _attackOutcome.itemId.toString(),
+            miss: _attackOutcome.miss,
+            timestamp: _attackOutcome.timestamp,
+          } as AttackOutcomeType;
+        })
+        .filter(
+          attack =>
+            attack.attackerId === character?.id ||
+            attack.defenderId === character?.id,
+        ),
+    [attackOutcomeEntities, ActionOutcome, character],
+  );
 
   const currentBattleAttackOutcomes = useMemo(
     () =>
@@ -396,23 +408,39 @@ export const BattleProvider = ({
     renderSuccess,
   ]);
 
+  const contextValue = useMemo(
+    () => ({
+      attackOutcomes: currentBattleAttackOutcomes,
+      attackingItemId,
+      continueToBattleOutcome,
+      currentBattle,
+      isFleeing,
+      lastestBattleOutcome,
+      onAttack,
+      onContinueToBattleOutcome,
+      onFleePvp,
+      opponent,
+      statusEffectActions,
+      userCharacterForBattleRendering,
+    }),
+    [
+      currentBattleAttackOutcomes,
+      attackingItemId,
+      continueToBattleOutcome,
+      currentBattle,
+      isFleeing,
+      lastestBattleOutcome,
+      onAttack,
+      onContinueToBattleOutcome,
+      onFleePvp,
+      opponent,
+      statusEffectActions,
+      userCharacterForBattleRendering,
+    ],
+  );
+
   return (
-    <BattleContext.Provider
-      value={{
-        attackOutcomes: currentBattleAttackOutcomes,
-        attackingItemId,
-        continueToBattleOutcome,
-        currentBattle,
-        isFleeing,
-        lastestBattleOutcome,
-        onAttack,
-        onContinueToBattleOutcome,
-        onFleePvp,
-        opponent,
-        statusEffectActions,
-        userCharacterForBattleRendering,
-      }}
-    >
+    <BattleContext.Provider value={contextValue}>
       {children}
     </BattleContext.Provider>
   );

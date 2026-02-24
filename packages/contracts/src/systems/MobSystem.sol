@@ -46,6 +46,12 @@ contract MobSystem is System {
         }
     }
 
+    function spawnMobs(uint256[] memory mobIds, uint16 x, uint16 y) public {
+        for (uint256 i; i < mobIds.length; i++) {
+            spawnMob(mobIds[i], x, y);
+        }
+    }
+
     function spawnMob(uint256 mobId, uint16 x, uint16 y) public returns (bytes32 entityId) {
         require(Counters.getCounter(address(this), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
         entityId = bytes32(abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), x, y));

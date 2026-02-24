@@ -49,12 +49,14 @@ export default defineConfig(({ command }) => {
     build: {
       target: 'es2022',
       minify: true,
-      sourcemap: true,
+      sourcemap: false,
       rollupOptions: {
-        // Ensure Chakra UI components are properly bundled
         output: {
           manualChunks: {
             chakra: ['@chakra-ui/react'],
+            mud: ['@latticexyz/recs', '@latticexyz/react', '@latticexyz/store-sync'],
+            web3: ['viem', 'wagmi', '@rainbow-me/rainbowkit'],
+            thirdweb: ['thirdweb'],
           },
         },
       },

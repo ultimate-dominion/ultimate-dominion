@@ -1,9 +1,9 @@
 // Third-party imports
 import { garnet } from '@latticexyz/common/chains';
-import { anvil, baseSepolia, Chain } from 'wagmi/chains';
+import { anvil, Chain } from 'wagmi/chains';
 
 // Local imports
-import { pyrope } from '../mud/supportedChains';
+import { baseSepolia, pyrope } from '../mud/supportedChains';
 
 export const WALLET_CONNECT_PROJECT_ID = import.meta.env
   .VITE_WALLET_CONNECT_PROJECT_ID;
@@ -40,9 +40,9 @@ const getSupportedChains = (): readonly [Chain, ...Chain[]] => {
     ) as unknown as [Chain];
   }
 
-  return [
-    Number(import.meta.env.VITE_CHAIN_ID) === pyrope.id ? pyrope : garnet,
-  ] as const;
+  const chainId = Number(import.meta.env.VITE_CHAIN_ID);
+  const matched = POSSIBLE_SUPPORTED_CHAINS.find(c => c.id === chainId);
+  return [matched ?? baseSepolia] as const;
 };
 
 export const SUPPORTED_CHAINS: readonly [Chain, ...Chain[]] =

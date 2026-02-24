@@ -141,9 +141,15 @@
 - [ ] Multiple concurrent users
 
 ### 12. Launch Strategy
-- [ ] Define target audience
-- [ ] Marketing plan and timeline
-- [ ] Community building (Discord, social media)
+- [x] Define target audience ✓ MUD players, old-school MMO vets, LitRPG readers, browser game players, web3 gamers, OSR/TTRPG crossover
+- [x] Marketing plan and timeline ✓ Full go-to-market in GO_TO_MARKET.md (community channels, content marketing, press, priority action plan)
+- [x] Community platform decision ✓ Self-hosted Discourse (no Discord). SIWE plugin for wallet auth, DiscourseConnect SSO for Thirdweb bridge
+- [x] Distribution channels mapped ✓ 40+ directories, forums, and communities identified (web3 + non-crypto). See GO_TO_MARKET.md
+- [x] SEO audit completed ✓ Critical gaps identified (no meta tags, no SSR, no sitemap). Quick wins documented.
+- [ ] Implement SEO quick wins (react-helmet-async, robots.txt, OG tags, sitemap)
+- [ ] Create press kit (PressKitty)
+- [ ] Set up Discourse forum
+- [ ] Submit to game directories (MUD Connector, PBBG.com, IndieDB, itch.io, DappRadar, etc.)
 - [ ] Beta testing program
 - [ ] Launch date and milestones
 - [ ] Post-launch support plan

@@ -129,7 +129,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
           : characterMetadata.image;
 
         const res = await fetch(
-          `${API_URL}/api/upload?name=characterMetadata.json`,
+          `${API_URL}/api/uploadMetadata?name=characterMetadata.json`,
           {
             method: 'POST',
             body: JSON.stringify(characterMetadata),

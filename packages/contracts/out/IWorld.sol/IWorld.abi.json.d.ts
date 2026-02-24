@@ -6506,6 +6506,29 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__spawnMobs",
+    "inputs": [
+      {
+        "name": "mobIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__spawnOnTileEnter",
     "inputs": [
       {
