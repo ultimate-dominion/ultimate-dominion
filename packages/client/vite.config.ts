@@ -59,11 +59,14 @@ export default defineConfig(({ command }) => {
       sourcemap: false,
       rollupOptions: {
         output: {
-          manualChunks: {
-            chakra: ['@chakra-ui/react'],
-            mud: ['@latticexyz/recs', '@latticexyz/react', '@latticexyz/store-sync'],
-            web3: ['viem', 'wagmi', '@rainbow-me/rainbowkit'],
-            thirdweb: ['thirdweb'],
+          manualChunks(id) {
+            if (id.includes('node_modules/react-dom/') || id.includes('node_modules/react/')) {
+              return 'react';
+            }
+            if (id.includes('@chakra-ui/react')) return 'chakra';
+            if (id.includes('@latticexyz')) return 'mud';
+            if (id.includes('wagmi') || id.includes('@rainbow-me/rainbowkit') || id.includes('node_modules/viem/')) return 'web3';
+            if (id.includes('thirdweb')) return 'thirdweb';
           },
         },
       },
