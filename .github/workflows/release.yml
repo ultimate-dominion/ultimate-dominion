@@ -1,0 +1,26 @@
+name: Release — Post Changelog to Discourse
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  post-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for git log between tags
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Post changelog to Discourse
+        run: node scripts/changelog.mjs --no-changelog
+        env:
+          DISCOURSE_URL: ${{ secrets.DISCOURSE_URL }}
+          DISCOURSE_API_KEY: ${{ secrets.DISCOURSE_API_KEY }}
+          DISCOURSE_API_USERNAME: system
+          DISCOURSE_PATCH_NOTES_CATEGORY_ID: ${{ secrets.DISCOURSE_PATCH_NOTES_CATEGORY_ID }}

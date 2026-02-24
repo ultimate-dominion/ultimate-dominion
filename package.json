@@ -14,7 +14,9 @@
     "mud:up": "pnpm mud set-version --tag main && pnpm install",
     "format:client": "pnpm --filter 'client' run format",
     "lint:client": "pnpm --filter 'client' run lint",
-    "test": "pnpm --filter client run lint"
+    "test": "pnpm --filter client run lint",
+    "changelog": "node scripts/changelog.mjs",
+    "changelog:dry": "node scripts/changelog.mjs --dry-run"
   },
   "foundry": {
     "version": "0.3.0"

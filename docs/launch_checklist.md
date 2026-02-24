@@ -126,9 +126,12 @@ These must be ready before inviting the first public player:
 - [ ] Set `sourcemap: false` in `vite.config.ts` for production
 
 **Community Channels**
-- [ ] Launch Discourse forum at forum.ultimatedominion.com (live from day one)
-  - Seed categories: Announcements, Game Discussion, Guides, Community, Support
-  - Configure SIWE or DiscourseConnect SSO for wallet auth
+- [~] Launch Discourse forum at tavern.ultimatedominion.com (live from day one)
+  - [x] Setup runbook written (`docs/processes/discourse-setup.md`)
+  - [x] Changelog automation script (`scripts/changelog.mjs`) + GitHub Action
+  - [ ] Provision Hetzner VPS and install Discourse
+  - [ ] Seed categories: Announcements, Game Discussion, Guides, Community, Support
+  - [ ] Configure DiscourseConnect SSO for wallet auth (Phase 2)
 - [ ] Create X/Twitter account, pre-write first 5 posts (see GO_TO_MARKET.md)
 - [ ] Create Farcaster/Warpcast account
 - [ ] Set up email capture on landing page (Buttondown or Discourse mailing list)
