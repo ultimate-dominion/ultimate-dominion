@@ -56,7 +56,7 @@ export default defineConfig(({ command }) => {
     build: {
       target: 'es2022',
       minify: true,
-      sourcemap: true,
+      sourcemap: false,
       rollupOptions: {},
       commonjsOptions: {
         // Handle 'use client' directives

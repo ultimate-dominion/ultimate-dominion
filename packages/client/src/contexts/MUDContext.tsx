@@ -75,6 +75,8 @@ type Props = {
   setupPromise: Promise<SetupResult>;
 };
 
+// Outer component: resolves setupPromise, shows loading/error states.
+// No hooks that depend on setupResult live here — they're all in MUDProviderInner.
 export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
   const [setupResult, setSetupResult] = useState<SetupResult | null>(null);
   const [setupError, setSetupError] = useState<Error | null>(null);
@@ -109,6 +111,19 @@ export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
     );
   }
 
+  // setupResult is guaranteed non-null from here — hand off to inner component
+  // where ALL hooks are called unconditionally on every render.
+  return <MUDProviderInner setupResult={setupResult}>{children}</MUDProviderInner>;
+};
+
+// Inner component: setupResult is always defined, so all hooks run unconditionally.
+const MUDProviderInner = ({
+  children,
+  setupResult,
+}: {
+  children: ReactNode;
+  setupResult: SetupResult;
+}): JSX.Element => {
   const { authMethod, embeddedWalletClient, ownerAddress } = useAuth();
   const { data: externalWalletClient } = useWalletClient();
 
@@ -118,7 +133,7 @@ export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
     onClose: onCloseWalletDetailsModal,
   } = useDisclosure();
 
-  // --- External path state (unchanged) ---
+  // --- External path state ---
   const [burner, setBurner] = useState<Burner | null>(null);
   const [burnerBalance, setBurnerBalance] = useState<string>('0');
   const [burnerBalanceFetched, setBurnerBalanceFetched] = useState(false);
@@ -372,8 +387,6 @@ export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
   // Build context value
   // =============================================
   const value = useMemo(() => {
-    if (!setupResult) return null;
-
     const noopRevoke = async () => {};
 
     // EMBEDDED PATH: use embedded wallet directly, no delegation needed
