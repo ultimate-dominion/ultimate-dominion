@@ -7,6 +7,26 @@
     }
   },
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "methods": ["OPTIONS"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+      },
+      "status": 204
+    },
+    {
+      "src": "/health",
+      "methods": ["OPTIONS"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      },
+      "status": 204
+    },
     { "src": "/api/upload", "dest": "/api/uploadMetadata.ts" },
     { "src": "/api/upload-file", "dest": "/api/uploadFile.ts" },
     { "src": "/api/session", "dest": "/api/sessionBooting.ts" },
