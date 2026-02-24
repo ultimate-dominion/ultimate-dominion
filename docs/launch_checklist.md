@@ -10,7 +10,7 @@ Organized into three phases: Beta Launch (Base Sepolia), Mainnet Launch (Base), 
 
 Get the game playable with real users on testnet. Rough edges acceptable — the goal is real player feedback.
 
-> **Current status**: Game deployed and working on Base Sepolia. Gasless transactions (sponsored gas for new players) in progress — critical for onboarding non-crypto users who don't have testnet ETH.
+> **Current status**: Game live at beta.ultimatedominion.com (Base Sepolia) and ultimatedominion.com. Fresh redeploy complete with Dark Cave balance overhaul. Gasless transactions nearly done — last onboarding blocker.
 
 ### 1.1 Core Gameplay (Must Work)
 
@@ -67,13 +67,13 @@ Get the game playable with real users on testnet. Rough edges acceptable — the
 - [x] Seed game data (items, monsters, shops via zone loader or SeedGameData) ✓
 - [ ] Configure badge token and fragment NFTs
 - [ ] Verify all contracts on block explorer
-- [ ] Record deployed WORLD_ADDRESS and INITIAL_BLOCK_NUMBER
+- [x] Record deployed WORLD_ADDRESS and INITIAL_BLOCK_NUMBER ✓
 - [x] Test all system calls against live testnet (mint, move, combat, shop, marketplace) ✓ Game working on Sepolia
 - [ ] Validate MUD indexer sync (latency, missed events, reorgs)
 
 **API Server**
-- [ ] Deploy API to Vercel
-- [ ] Configure environment variables (PINATA_JWT, WORLD_ADDRESS, RPC URLs, INITIAL_BLOCK_NUMBER)
+- [x] Deploy API to Vercel ✓
+- [x] Configure environment variables (WORLD_ADDRESS, RPC URLs, INITIAL_BLOCK_NUMBER) ✓
 - [ ] Set up Pinata IPFS for character metadata (replace local dev-storage)
 - [ ] Verify /api/upload, /api/upload-file, /api/session endpoints
 - [ ] Set up health check monitoring (/health endpoint)
@@ -81,19 +81,19 @@ Get the game playable with real users on testnet. Rough edges acceptable — the
 - [x] API rate limiting ✓ express-rate-limit: 100 req/15min
 
 **Client**
-- [ ] Build client for production (`pnpm build`)
-- [ ] Deploy to Vercel (vercel.json SPA rewrite configured)
-- [ ] Configure production .env (CHAIN_ID, RPC URLs, INDEXER_URL, API_URL, THIRDWEB_CLIENT_ID)
-- [ ] Set up beta.ultimatedominion.com domain and SSL
-- [ ] Verify Thirdweb embedded wallet on production domain (allowlisted origins)
+- [x] Build client for production (`pnpm build`) ✓
+- [x] Deploy to Vercel (vercel.json SPA rewrite configured) ✓
+- [x] Configure production .env (CHAIN_ID, RPC URLs, INDEXER_URL, API_URL, THIRDWEB_CLIENT_ID) ✓
+- [x] Set up beta.ultimatedominion.com domain and SSL ✓
+- [x] Verify Thirdweb embedded wallet on production domain (allowlisted origins) ✓
 - [ ] Verify WalletConnect on production domain
 - [ ] Test MUD indexer proxy / direct indexer URL in production
 - [ ] Verify Vite build output (bundle size, code splitting, no dev artifacts)
 
 **Infrastructure**
-- [ ] Set up RPC provider (public node or dedicated — Alchemy/Infura)
+- [x] Set up RPC provider ✓
 - [ ] MUD indexer reachable and syncing for Base Sepolia
-- [ ] DNS: beta.ultimatedominion.com → Vercel
+- [x] DNS: beta.ultimatedominion.com → Vercel ✓
 - [ ] Set up error monitoring (Sentry or similar)
 - [ ] Set up uptime monitoring for API and client
 - [ ] Push Protocol chat — verify on production domain (CORS issue on localhost)
@@ -189,10 +189,10 @@ All security items must be complete before touching real money:
 - [x] Gas onboarding system ✓ GasStationSystem, Thirdweb paymaster, OutOfResourcesModal
 
 **Item Drops**
-- [ ] Review drop rates for all monsters
-- [ ] Balance loot tables by level/zone
-- [ ] Rare item drop rate tuning
-- [ ] Test item scarcity/abundance
+- [x] Review drop rates for all monsters ✓ Beta rates: starters 60%, common 50%, uncommon 40%, rare 25%
+- [x] Balance loot tables by level/zone ✓ Staggered weapon/armor stat gates, consumable distribution per combat triangle
+- [ ] Rare item drop rate tuning (post-beta feedback)
+- [ ] Test item scarcity/abundance (post-beta feedback)
 
 **Stats & Leveling**
 - [ ] Starting stat point allocation balance
@@ -345,17 +345,21 @@ New zones, items, and monsters can be added live via AdminTuning + zone loader w
 
 A consolidated view of all completed items across phases:
 
-**Auth & Onboarding**: Google sign-in, MetaMask, session persistence, delegation flow, delegation revoke
+**Auth & Onboarding**: Google sign-in, MetaMask, session persistence, delegation flow, delegation revoke, Thirdweb embedded wallet verified on production domain
 
-**UI/UX**: Full 6-phase overhaul, mobile responsive, accessibility, loading states, crypto abstraction, hybrid fonts, dark mode
+**UI/UX**: Full 6-phase overhaul, mobile responsive, accessibility, loading states, crypto abstraction, hybrid fonts, dark mode, manifesto page linked from welcome screen
 
 **Security**: Access control, reentrancy, overflow checks, input validation, rate limiting, key management, frontend security, API security, dependency audit, emergency pause
 
 **Economy**: Gas onboarding (GasStationSystem + paymaster), buy/sell flow, HP/damage scaling
 
+**Game Balance**: Dark Cave monsters trimmed to 10 (one per level, staggered combat triangle), weapon/armor stat-only gating with inverse staggering, consumable distribution for class balance, beta drop rates set
+
 **Narrative**: Story arc, FragmentSystem, lore triggers, badge system
 
-**Infrastructure**: CORS, API rate limiting
+**Infrastructure**: API on Vercel, RPC provider, DNS (beta.ultimatedominion.com + ultimatedominion.com), CORS, API rate limiting
+
+**Deployment**: MUD World on Base Sepolia, FullPostDeploy, game data seeded, WORLD_ADDRESS + INITIAL_BLOCK_NUMBER recorded, client built and deployed to Vercel
 
 **GTM**: Target audience defined, marketing plan drafted, messaging by segment, Founding Player badge
 
