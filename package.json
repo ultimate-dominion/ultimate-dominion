@@ -1,6 +1,7 @@
 {
   "name": "ultimate-dominion",
   "private": true,
+  "packageManager": "pnpm@9.15.5",
   "scripts": {
     "build": "pnpm recursive run build",
     "build:client": "pnpm --filter 'client' run build",
