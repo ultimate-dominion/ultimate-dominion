@@ -112,6 +112,7 @@ contract CharacterSystem is System {
         public
         returns (bytes32 characterId)
     {
+        require(CharacterOwner.getCharacterTokenId(_msgSender()) == 0, "CHARACTERS: Already has a character");
         uint256 characterTokenId = _incrementCharacterCounter();
         require(characterTokenId < type(uint96).max, "CHARACATERS: Max characters reached");
         IWorld(_world()).call(

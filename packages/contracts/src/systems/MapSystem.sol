@@ -22,13 +22,13 @@ import {
     UltimateDominionConfig
 } from "../codegen/index.sol";
 import {SystemRegistry} from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
-import {SESSION_TIMEOUT, FRAGMENT_CENTER_X, FRAGMENT_CENTER_Y} from "../../constants.sol";
+import {SESSION_TIMEOUT, FRAGMENT_CENTER_X, FRAGMENT_CENTER_Y, MOVE_COOLDOWN} from "../../constants.sol";
 import {FragmentProgress} from "@codegen/index.sol";
 import {FragmentType} from "@codegen/common.sol";
 import {_requireAccess} from "../utils.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
 import {UNLIMITED_DELEGATION} from "@latticexyz/world/src/constants.sol";
-import {OnlyCharacters, Unauthorized, NotSpawned, AlreadySpawned, InEncounter, OutOfBounds, InvalidMove, MaxPlayers, EntityNotAtPosition, UseFleeFunction, SessionNotTimedOut} from "../Errors.sol";
+import {OnlyCharacters, Unauthorized, NotSpawned, AlreadySpawned, InEncounter, OutOfBounds, InvalidMove, MaxPlayers, EntityNotAtPosition, UseFleeFunction, SessionNotTimedOut, MoveTooFast} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
 contract MapSystem is System {
@@ -53,6 +53,8 @@ contract MapSystem is System {
         if (!_isOwnerOrDelegated(owner)) revert Unauthorized();
         if (!Spawned.getSpawned(entityId)) revert NotSpawned();
         if (EncounterEntity.getEncounterId(entityId) != bytes32(0)) revert InEncounter();
+        uint256 lastAction = SessionTimer.get(entityId);
+        if (lastAction != 0 && block.timestamp < lastAction + MOVE_COOLDOWN) revert MoveTooFast();
 
         (uint16 currentX, uint16 currentY) = Position.get(entityId);
         (uint16 height, uint16 width) = MapConfig.get();

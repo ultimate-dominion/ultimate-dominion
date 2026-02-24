@@ -42,6 +42,7 @@ error InvalidWorldLocation();
 error InvalidShopEncounter();
 error AlreadyInEncounter();
 error InvalidCombatEntity();
+error InvalidGroupSize();
 
 // Map
 error OnlyCharacters();
@@ -55,6 +56,7 @@ error NoMonsters();
 error EntityNotAtPosition();
 error UseFleeFunction();
 error SessionNotTimedOut();
+error MoveTooFast();
 
 // Items
 error ArrayMismatch();

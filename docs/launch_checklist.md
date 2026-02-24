@@ -76,10 +76,10 @@
 ### 10. Security Review
 - [ ] Smart contract audit (external or internal review)
 - [x] Access control verification (admin functions, namespace permissions) ✓ 6 admin systems locked (openAccess:false), _requireSystemOrAdmin() on LootManager/PveReward/PvpReward/CombatSystem/MobSystem, marketplace counter bug fixed
-- [ ] Reentrancy protection on all external calls
-- [ ] Integer overflow/underflow checks
+- [x] Reentrancy protection on all external calls ✓ PvpRewardSystem: fixed missing rewardsDistributed flag (double-claim bug), ShopSystem: added nonReentrant to buy()/sell()
+- [x] Integer overflow/underflow checks ✓ CombatMath: clamped negative hit probability (5-98%), PveRewardSystem: guarded mobLevel==0 division-by-zero
 - [x] Input validation on all user-facing functions ✓ Negative stat validation in StatCalculator, HP clamping in CombatSystem
-- [ ] Rate limiting and anti-griefing measures
+- [x] Rate limiting and anti-griefing measures ✓ 1s move cooldown (MapSystem), one character per account (CharacterSystem), MAX_PARTY_SIZE=10 (EncounterSystem)
 - [ ] Private key management for deployment accounts
 - [ ] Frontend security (XSS, CSRF protection)
 - [ ] API authentication and authorization

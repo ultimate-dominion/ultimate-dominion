@@ -5,6 +5,7 @@ bytes14 constant GOLD_NAMESPACE = "Gold";
 bytes14 constant CHARACTERS_NAMESPACE = "Characters";
 bytes14 constant ITEMS_NAMESPACE = "Items";
 bytes14 constant BADGES_NAMESPACE = "Badges";
+bytes14 constant FRAGMENTS_NAMESPACE = "Fragments";
 bytes14 constant WORLD_NAMESPACE = "UD";
 
 // Badge Token IDs
@@ -54,3 +55,17 @@ uint256 constant PVP_GOLD_DENOMINATOR = 2;
 
 uint256 constant PVP_TIMER = 30 seconds;
 uint256 constant MAX_MONSTERS = 20;
+uint256 constant MOVE_COOLDOWN = 1; // 1 second between moves
+uint256 constant MAX_PARTY_SIZE = 10;
+
+// Fragment system constants
+uint16 constant FRAGMENT_CENTER_X = 5;
+uint16 constant FRAGMENT_CENTER_Y = 5;
+uint16 constant TAL_SHOP_X = 9;
+uint16 constant TAL_SHOP_Y = 9;
+
+// Fragment-triggering mob IDs (assigned at deploy time based on creation order)
+// These must match the mob IDs assigned when zone content is loaded
+uint256 constant DARK_WISP_MOB_ID = 13;
+uint256 constant VOID_WHISPER_MOB_ID = 22;
+uint256 constant LICH_ACOLYTE_MOB_ID = 25;

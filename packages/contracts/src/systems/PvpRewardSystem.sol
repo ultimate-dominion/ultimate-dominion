@@ -53,5 +53,6 @@ contract PvpRewardSystem is System {
                 AdventureEscrow.set(encounterData.defenders[i], (currentBalance + toDistribute));
             }
         }
+        CombatEncounter.setRewardsDistributed(encounterId, true);
     }
 }

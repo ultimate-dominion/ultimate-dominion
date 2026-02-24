@@ -103,6 +103,7 @@ contract PveRewardSystem is System {
 
     function _calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) internal view returns (uint256 dropAmount) {
         this;
+        if (mobLevel == 0) mobLevel = 1;
         dropAmount = (randomNumber % (BASE_GOLD_DROP * mobLevel)) + 0.05 ether;
     }
 

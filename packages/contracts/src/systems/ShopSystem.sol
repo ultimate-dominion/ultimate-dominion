@@ -37,7 +37,7 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param itemIndex the index of the item in the buyableItems array
      * @param characterId the id of the character buying
      */
-    function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public {
+    function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public nonReentrant {
         PauseLib.requireNotPaused();
         bytes32 encounterId = EncounterEntity.getEncounterId(characterId);
         WorldEncounterData memory worldData = WorldEncounter.get(encounterId);
@@ -95,7 +95,7 @@ contract ShopSystem is System, ReentrancyGuard {
      * @param itemIndex the index of the item in the sellableItems array
      * @param characterId the characterId of the character selling
      */
-    function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public {
+    function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public nonReentrant {
         PauseLib.requireNotPaused();
         bytes32 encounterId = EncounterEntity.getEncounterId(characterId);
         WorldEncounterData memory worldData = WorldEncounter.get(encounterId);
