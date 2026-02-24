@@ -31,7 +31,7 @@ import {
   runQuery,
 } from '@latticexyz/recs';
 import { decodeEntity, encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -45,6 +45,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { DEFAULT_CHAIN_ID, EXPLORER_URLS } from '../lib/web3';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
@@ -173,17 +174,38 @@ const CharacterCreationInner = (): JSX.Element => {
   const [selectedRace, setSelectedRace] = useState<Race>(Race.None);
   const [selectedPowerSource, setSelectedPowerSource] = useState<PowerSource>(PowerSource.None);
   const [creationStep, setCreationStep] = useState<'race' | 'powerSource' | 'stats' | 'starterItems'>('race');
-  const [isChoosingRace, setIsChoosingRace] = useState(false);
-  const [isChoosingPowerSource, setIsChoosingPowerSource] = useState(false);
-
   // Starter item selection state
   const [selectedStarterWeaponId, setSelectedStarterWeaponId] = useState<bigint | null>(null);
   const [selectedStarterArmorId, setSelectedStarterArmorId] = useState<bigint | null>(null);
 
   const [isCreating, setIsCreating] = useState(false);
   const [showError, setShowError] = useState(false);
-  const [isRollingStats, setIsRollingStats] = useState(false);
-  const [isEnteringGame, setIsEnteringGame] = useState(false);
+
+  const raceTx = useTransaction({
+    actionName: 'choose race',
+    maxAttempts: 3,
+    showSuccessToast: true,
+  });
+
+  const powerSourceTx = useTransaction({
+    actionName: 'choose power source',
+    maxAttempts: 3,
+    showSuccessToast: true,
+  });
+
+  const rollStatsTx = useTransaction({
+    actionName: 'roll stats',
+    maxAttempts: 3,
+    showSuccessToast: true,
+    successMessage: 'Stats rolled!',
+  });
+
+  const enterGameTx = useTransaction({
+    actionName: 'enter game',
+    maxAttempts: 3,
+    showSuccessToast: true,
+    successMessage: 'Your character has awakened!',
+  });
 
   const { characterToken } = useComponentValue(
     UltimateDominion,
@@ -392,136 +414,45 @@ const CharacterCreationInner = (): JSX.Element => {
 
   // === Implicit Class System Callbacks ===
 
-  const raceInFlight = useRef(false);
-  const powerSourceInFlight = useRef(false);
-
   const onChooseRace = useCallback(async (race: Race) => {
-    if (raceInFlight.current) return;
-    raceInFlight.current = true;
+    if (!delegatorAddress || !character) return;
 
-    const MAX_RETRIES = 2;
-    let attempt = 0;
+    setSelectedRace(race);
 
-    try {
-      setIsChoosingRace(true);
-      setSelectedRace(race);
+    const result = await raceTx.execute(() => chooseRace(character.id, race));
 
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
-
-      if (!character) {
-        throw new Error('Character not found.');
-      }
-
-      while (attempt <= MAX_RETRIES) {
-        const { error, success } = await chooseRace(character.id, race);
-
-        if (success) {
-          await refreshCharacter();
-          setCreationStep('powerSource');
-          renderSuccess(`Race selected: ${RACE_INFO[race].name}`);
-          return;
-        }
-
-        attempt++;
-        if (attempt > MAX_RETRIES) {
-          throw new Error(error ?? 'Failed to choose race.');
-        }
-
-        // Wait before retrying
-        renderWarning(`Transaction slow, retrying... (${attempt}/${MAX_RETRIES})`);
-        await new Promise(r => setTimeout(r, 2000));
-      }
-    } catch (e) {
+    if (result) {
+      await refreshCharacter();
+      setCreationStep('powerSource');
+    } else {
       setSelectedRace(Race.None);
-      renderError((e as Error)?.message ?? 'Failed to choose race. Please try again.', e);
-    } finally {
-      raceInFlight.current = false;
-      setIsChoosingRace(false);
     }
-  }, [character, chooseRace, delegatorAddress, refreshCharacter, renderError, renderSuccess, renderWarning]);
+  }, [character, chooseRace, delegatorAddress, raceTx, refreshCharacter]);
 
   const onChoosePowerSource = useCallback(async (powerSource: PowerSource) => {
-    if (powerSourceInFlight.current) return;
-    powerSourceInFlight.current = true;
+    if (!delegatorAddress || !character) return;
 
-    const MAX_RETRIES = 2;
-    let attempt = 0;
+    setSelectedPowerSource(powerSource);
 
-    try {
-      setIsChoosingPowerSource(true);
-      setSelectedPowerSource(powerSource);
+    const result = await powerSourceTx.execute(() => choosePowerSource(character.id, powerSource));
 
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
-
-      if (!character) {
-        throw new Error('Character not found.');
-      }
-
-      while (attempt <= MAX_RETRIES) {
-        const { error, success } = await choosePowerSource(character.id, powerSource);
-
-        if (success) {
-          await refreshCharacter();
-          setCreationStep('stats');
-          renderSuccess(`Power source selected: ${POWER_SOURCE_INFO[powerSource].name}`);
-          return;
-        }
-
-        attempt++;
-        if (attempt > MAX_RETRIES) {
-          throw new Error(error ?? 'Failed to choose power source.');
-        }
-
-        renderWarning(`Transaction slow, retrying... (${attempt}/${MAX_RETRIES})`);
-        await new Promise(r => setTimeout(r, 2000));
-      }
-    } catch (e) {
+    if (result) {
+      await refreshCharacter();
+      setCreationStep('stats');
+    } else {
       setSelectedPowerSource(PowerSource.None);
-      renderError((e as Error)?.message ?? 'Failed to choose power source. Please try again.', e);
-    } finally {
-      powerSourceInFlight.current = false;
-      setIsChoosingPowerSource(false);
     }
-  }, [character, choosePowerSource, delegatorAddress, refreshCharacter, renderError, renderSuccess, renderWarning]);
+  }, [character, choosePowerSource, delegatorAddress, powerSourceTx, refreshCharacter]);
 
   const onRollStats = useCallback(async () => {
-    try {
-      setIsRollingStats(true);
+    if (!delegatorAddress || !character) return;
 
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
+    const result = await rollStatsTx.execute(() => rollBaseStats(character.id));
 
-      if (!character) {
-        throw new Error('Character not found.');
-      }
-
-      // Use the new rollBaseStats for the implicit class system
-      const { error, success } = await rollBaseStats(character.id);
-
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result) {
       await refreshCharacter();
-      renderSuccess('Stats rolled!');
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to roll stats.', e);
-    } finally {
-      setIsRollingStats(false);
     }
-  }, [
-    character,
-    delegatorAddress,
-    refreshCharacter,
-    renderError,
-    renderSuccess,
-    rollBaseStats,
-  ]);
+  }, [character, delegatorAddress, refreshCharacter, rollBaseStats, rollStatsTx]);
 
   const rolledOnce = useMemo(() => {
     if (!character) return false;
@@ -529,56 +460,41 @@ const CharacterCreationInner = (): JSX.Element => {
   }, [character]);
 
   const onEnterGame = useCallback(async () => {
-    try {
-      setIsEnteringGame(true);
+    if (!character) return;
 
-      if (!rolledOnce) {
-        setShowError(true);
-        return;
-      }
+    if (!rolledOnce) {
+      setShowError(true);
+      return;
+    }
 
-      if (!character) {
-        throw new Error('Character not found.');
-      }
+    if (!selectedStarterWeaponId || !selectedStarterArmorId) {
+      renderWarning('Please select both a starter weapon and armor.');
+      return;
+    }
 
-      if (!selectedStarterWeaponId || !selectedStarterArmorId) {
-        throw new Error('Please select both a starter weapon and armor.');
-      }
+    const result = await enterGameTx.execute(() =>
+      enterGame(character.id, selectedStarterWeaponId, selectedStarterArmorId),
+    );
 
-      const { error, success } = await enterGame(
-        character.id,
-        selectedStarterWeaponId,
-        selectedStarterArmorId
-      );
-
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result) {
       await refreshCharacter();
-
-      renderSuccess('Your character has awakened!');
       navigate(GAME_BOARD_PATH);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to enter game.', e);
-    } finally {
-      setIsEnteringGame(false);
     }
   }, [
     character,
     enterGame,
+    enterGameTx,
     navigate,
     refreshCharacter,
-    renderError,
-    renderSuccess,
+    renderWarning,
     rolledOnce,
     selectedStarterWeaponId,
     selectedStarterArmorId,
   ]);
 
   const isDisabled = useMemo(() => {
-    return !character || isCreating || isEnteringGame || isRollingStats || isChoosingRace || isChoosingPowerSource;
-  }, [character, isCreating, isEnteringGame, isRollingStats, isChoosingRace, isChoosingPowerSource]);
+    return !character || isCreating || enterGameTx.isLoading || rollStatsTx.isLoading || raceTx.isLoading || powerSourceTx.isLoading;
+  }, [character, isCreating, enterGameTx.isLoading, rollStatsTx.isLoading, raceTx.isLoading, powerSourceTx.isLoading]);
 
   // Check if race and power source have been chosen (armor is chosen via starter item selection)
   const hasCompletedChoices = useMemo(() => {
@@ -949,7 +865,7 @@ const CharacterCreationInner = (): JSX.Element => {
                       bgColor={selectedRace === race ? 'grey500' : undefined}
                       color={selectedRace === race ? 'white' : undefined}
                       isDisabled={isDisabled}
-                      isLoading={isChoosingRace && selectedRace === race}
+                      isLoading={raceTx.isLoading && selectedRace === race}
                       onClick={() => onChooseRace(race)}
                       size="sm"
                       variant="white"
@@ -991,7 +907,7 @@ const CharacterCreationInner = (): JSX.Element => {
                       bgColor={selectedPowerSource === ps ? 'grey500' : undefined}
                       color={selectedPowerSource === ps ? 'white' : undefined}
                       isDisabled={isDisabled}
-                      isLoading={isChoosingPowerSource && selectedPowerSource === ps}
+                      isLoading={powerSourceTx.isLoading && selectedPowerSource === ps}
                       onClick={() => onChoosePowerSource(ps)}
                       size="sm"
                       variant="white"
@@ -1052,7 +968,7 @@ const CharacterCreationInner = (): JSX.Element => {
               {creationStep === 'stats' && (
                 <Button
                   isDisabled={isDisabled || !hasCompletedChoices}
-                  isLoading={isRollingStats}
+                  isLoading={rollStatsTx.isLoading}
                   loadingText="Rolling..."
                   onClick={onRollStats}
                   size="sm"
@@ -1224,7 +1140,7 @@ const CharacterCreationInner = (): JSX.Element => {
             {creationStep === 'starterItems' && (
               <Button
                 isDisabled={isDisabled || !selectedStarterWeaponId || !selectedStarterArmorId}
-                isLoading={isEnteringGame}
+                isLoading={enterGameTx.isLoading}
                 loadingText="Waking..."
                 onClick={onEnterGame}
                 size="sm"

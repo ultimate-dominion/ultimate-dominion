@@ -14,11 +14,10 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 
-import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import {
   BATTLE_OUTCOME_SEEN_KEY,
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
@@ -43,6 +42,7 @@ import { useMUD } from './MUDContext';
 type BattleContextType = {
   attackOutcomes: AttackOutcomeType[];
   attackingItemId: null | string;
+  attackStatusMessage: string;
   continueToBattleOutcome: boolean;
   currentBattle: CombatDetails | null;
   isFleeing: boolean;
@@ -58,6 +58,7 @@ type BattleContextType = {
 const BattleContext = createContext<BattleContextType>({
   attackOutcomes: [],
   attackingItemId: null,
+  attackStatusMessage: '',
   continueToBattleOutcome: false,
   currentBattle: null,
   isFleeing: false,
@@ -77,7 +78,6 @@ export type BattleProviderProps = {
 export const BattleProvider = ({
   children,
 }: BattleProviderProps): JSX.Element => {
-  const { renderError, renderSuccess } = useToast();
   const {
     components: {
       ActionOutcome,
@@ -93,9 +93,21 @@ export const BattleProvider = ({
   const { allMonsters, allCharacters } = useMap();
 
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
-  const attackInFlight = useRef(false);
-  const [isFleeing, setIsFleeing] = useState<boolean>(false);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
+
+  const attackTx = useTransaction({
+    actionName: 'attack',
+    maxAttempts: 2,
+    backoffMs: 1500,
+  });
+
+  const fleeTx = useTransaction({
+    actionName: 'flee',
+    maxAttempts: 2,
+    backoffMs: 1500,
+    showSuccessToast: true,
+    successMessage: 'Successfully fled the battle.',
+  });
 
   const battleEntities = useEntityQuery([Has(CombatEncounter)]);
 
@@ -318,109 +330,59 @@ export const BattleProvider = ({
 
   const onAttack = useCallback(
     async (itemId: string) => {
-      if (attackInFlight.current) return;
-      attackInFlight.current = true;
+      if (!delegatorAddress || !character || !currentBattle || !opponent) return;
 
-      try {
-        setAttackingItemId(itemId);
+      setAttackingItemId(itemId);
 
-        if (!delegatorAddress) {
-          throw new Error('Missing delegation.');
-        }
-
-        if (!character) {
-          throw new Error('Character not found.');
-        }
-
-        if (!currentBattle) {
-          throw new Error('Battle not found.');
-        }
-
-        if (!opponent) {
-          throw new Error('Opponent not found.');
-        }
-
-        const { error, success } = await endTurn(
+      const result = await attackTx.execute(() =>
+        endTurn(
           currentBattle.encounterId,
           character.id,
           opponent.id,
           itemId,
-        );
+        ),
+      );
 
-        if (error && !success) {
-          throw new Error(error);
-        }
-
+      if (result) {
         localStorage.removeItem(CURRENT_BATTLE_OPPONENT_TURN_KEY);
         localStorage.removeItem(CURRENT_BATTLE_USER_TURN_KEY);
-
         refreshCharacter();
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to attack.', e);
-      } finally {
-        attackInFlight.current = false;
-        setAttackingItemId(null);
       }
+
+      setAttackingItemId(null);
     },
     [
+      attackTx,
       character,
       currentBattle,
       delegatorAddress,
       endTurn,
       opponent,
       refreshCharacter,
-      renderError,
     ],
   );
 
   const onFleePvp = useCallback(async () => {
-    try {
-      setIsFleeing(true);
+    if (!character || !delegatorAddress || !currentBattle) return;
+    if (currentBattle.encounterType !== EncounterType.PvP) return;
 
-      if (!character) {
-        throw new Error('No character found.');
-      }
-
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
-
-      if (!currentBattle) {
-        throw new Error('No battle found.');
-      }
-
-      if (currentBattle.encounterType !== EncounterType.PvP) {
-        throw new Error('Cannot flee from a PvE battle.');
-      }
-
-      const { error, success } = await fleePvp(character.id);
-
-      if (error && !success) {
-        throw new Error(error);
-      }
-
-      renderSuccess('Successfully fled the battle.');
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error fleeing from battle.', e);
-    } finally {
-      setIsFleeing(false);
-    }
+    await fleeTx.execute(() => fleePvp(character.id));
   }, [
     character,
     currentBattle,
     delegatorAddress,
     fleePvp,
-    renderError,
-    renderSuccess,
+    fleeTx,
   ]);
 
   const contextValue = useMemo(
     () => ({
       attackOutcomes: currentBattleAttackOutcomes,
       attackingItemId,
+      attackStatusMessage: attackTx.statusMessage || 'Attacking...',
       continueToBattleOutcome,
       currentBattle,
-      isFleeing,
+      isFleeing: fleeTx.isLoading,
       lastestBattleOutcome,
       onAttack,
       onContinueToBattleOutcome,
@@ -432,9 +394,10 @@ export const BattleProvider = ({
     [
       currentBattleAttackOutcomes,
       attackingItemId,
+      attackTx.statusMessage,
       continueToBattleOutcome,
       currentBattle,
-      isFleeing,
+      fleeTx.isLoading,
       lastestBattleOutcome,
       onAttack,
       onContinueToBattleOutcome,

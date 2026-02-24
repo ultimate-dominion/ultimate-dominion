@@ -21,6 +21,7 @@ import {
 import { hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { STATUS_EFFECT_NAME_MAPPING } from '../utils/constants';
 import {
   decodeAppliedStatusEffectId,
@@ -84,7 +85,7 @@ export type MapProviderProps = {
 };
 
 export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
-  const { renderError, renderSuccess } = useToast();
+  const { renderError } = useToast();
   const {
     components: {
       AdventureEscrow,
@@ -109,7 +110,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const { monsterTemplates } = useMonsters();
   const { character, refreshCharacter } = useCharacter();
 
-  const [isSpawning, setIsSpawning] = useState(false);
+  const spawnTx = useTransaction({
+    actionName: 'spawn',
+    showSuccessToast: true,
+    successMessage: 'Spawned!',
+  });
   const [isFetchingEntities, setIsFetchingEntities] = useState(true);
 
   const [allCharacters, setAllCharacters] = useState<Character[]>([]);
@@ -544,37 +549,19 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   ]);
 
   const onSpawn = useCallback(async () => {
-    try {
-      setIsSpawning(true);
+    if (!delegatorAddress || !character) return;
 
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
+    const result = await spawnTx.execute(() => spawn(character.id));
 
-      if (!character) {
-        throw new Error('Character not found.');
-      }
-
-      const { error, success } = await spawn(character.id);
-
-      if (error && !success) {
-        throw new Error(error);
-      }
-
-      renderSuccess('Spawned!');
+    if (result) {
       await refreshCharacter();
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to spawn.', e);
-    } finally {
-      setIsSpawning(false);
     }
   }, [
     character,
     delegatorAddress,
     refreshCharacter,
-    renderError,
-    renderSuccess,
     spawn,
+    spawnTx,
   ]);
 
   return (
@@ -586,7 +573,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         inSafetyZone,
         isFetchingEntities,
         isSpawned,
-        isSpawning,
+        isSpawning: spawnTx.isLoading,
         monstersOnTile,
         onSpawn,
         otherCharactersOnTile,
