@@ -13,8 +13,10 @@ import { Marketplace } from './pages/Marketplace';
 import { MarketplaceItem } from './pages/MarketplaceItem';
 import { Shop } from './pages/Shop';
 import { Welcome } from './pages/Welcome';
+import { Manifesto } from './pages/Manifesto';
 
 export const HOME_PATH = '/';
+export const MANIFESTO_PATH = '/manifesto';
 export const CHARACTER_CREATION_PATH = '/character-creation';
 export const GAME_BOARD_PATH = '/game-board';
 export const CHARACTERS_PATH = '/characters';
@@ -50,6 +52,7 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path={HOME_PATH} element={<Welcome />} />
+      <Route path={MANIFESTO_PATH} element={<Manifesto />} />
       <Route path={CHARACTER_CREATION_PATH} element={<CharacterCreation />} />
       <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
       <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
