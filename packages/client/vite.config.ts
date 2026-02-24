@@ -1,3 +1,4 @@
+import path from 'path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
@@ -25,6 +26,12 @@ const stripImportAttributes = {
 export default defineConfig(({ command }) => {
   return {
     plugins: [react()],
+    resolve: {
+      alias: {
+        react: path.resolve(__dirname, 'node_modules/react'),
+        'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      },
+    },
     server: {
       port: 3000, // Use port 3000 for client to avoid conflict with API on 3001
       fs: {
