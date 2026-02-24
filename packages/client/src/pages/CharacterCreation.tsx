@@ -5,11 +5,13 @@ import {
   ButtonGroup,
   Center,
   FormControl,
+  FormLabel,
   FormHelperText,
   Heading,
   HStack,
   Input,
   Link,
+  Select,
   Stack,
   Text,
   Textarea,
@@ -38,6 +40,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { EXPLORER_URLS } from '../lib/web3';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
@@ -50,6 +53,38 @@ import {
   StatsClasses,
   type Weapon,
 } from '../utils/types';
+
+// --- Enum Definitions (Mirroring Contract) ---
+// Note: Ensure these string values match exactly what the API expects,
+// and we'll map them to numbers later for the contract call.
+const POWER_SOURCES = ['Physical', 'Arcane', 'Divine'];
+const RACES = ['Human', 'Elf', 'Gnome', 'Dwarf'];
+const STARTING_ARMORS = ['Cloth', 'Leather', 'Plate'];
+
+// --- Mappings from String -> Contract Enum Value ---
+// IMPORTANT: These assume the enum order in CharacterSystem.sol is:
+// None=0, Physical=1, Arcane=2, Divine=3, Natural=4
+// None=0, Human=1, Elf=2, Gnome=3, Dwarf=4
+// None=0, Cloth=1, Leather=2, Plate=3
+const powerSourceMap: Record<string, number> = {
+  Physical: 1,
+  Arcane: 2,
+  Divine: 3,
+};
+
+const raceMap: Record<string, number> = {
+  Human: 1,
+  Elf: 2,
+  Gnome: 3,
+  Dwarf: 4,
+};
+
+const startingArmorMap: Record<string, number> = {
+  Cloth: 1,
+  Leather: 2,
+  Plate: 3,
+};
+// ---
 
 export const CharacterCreation = (): JSX.Element => {
   const navigate = useNavigate();
@@ -86,10 +121,30 @@ export const CharacterCreation = (): JSX.Element => {
     (Armor | Spell | Weapon)[][] | null
   >(null);
 
+  // --- State for Foundational Choices ---
+  const [powerSource, setPowerSource] = useState<string>(POWER_SOURCES[0]);
+  const [race, setRace] = useState<string>(RACES[0]);
+  const [startingArmor, setStartingArmor] = useState<string>(
+    STARTING_ARMORS[0],
+  );
+  // ---
+
   const [isCreating, setIsCreating] = useState(false);
   const [showError, setShowError] = useState(false);
-  const [isRollingStats, setIsRollingStats] = useState(false);
-  const [isEnteringGame, setIsEnteringGame] = useState(false);
+
+  const rollStatsTx = useTransaction({
+    actionName: 'roll stats',
+    maxAttempts: 3,
+    showSuccessToast: true,
+    successMessage: 'Stats rolled!',
+  });
+
+  const enterGameTx = useTransaction({
+    actionName: 'enter game',
+    maxAttempts: 3,
+    showSuccessToast: true,
+    successMessage: 'Your character has awakened!',
+  });
 
   const { characterToken } = useComponentValue(
     UltimateDominionConfig,
@@ -99,7 +154,7 @@ export const CharacterCreation = (): JSX.Element => {
   // Reset showError state when any of the form fields change
   useEffect(() => {
     setShowError(false);
-  }, [avatar, description, name]);
+  }, [avatar, description, name, powerSource, race, startingArmor]);
 
   useEffect(() => {
     if (isLoadingItemTemplates) return;
@@ -179,6 +234,15 @@ export const CharacterCreation = (): JSX.Element => {
           return;
         }
 
+        // Validate foundational choices (ensure they are selected)
+        if (!powerSource || !race || !startingArmor) {
+          setShowError(true);
+          renderWarning(
+            'Please select Power Source, Race, and Starting Armor.',
+          );
+          return;
+        }
+
         let image = `https://effigy.im/a/${delegatorAddress}.svg`;
 
         if (avatar) {
@@ -197,17 +261,24 @@ export const CharacterCreation = (): JSX.Element => {
           image,
         };
 
+        const characterMetadataWithChoices = {
+          ...characterMetadata,
+          powerSource,
+          race,
+          startingArmor,
+        };
+
         debug.log('=== VERCEL TEST 2025-02-21 12:37 ===');
         debug.log('Using API URL', API_URL);
-        debug.log('Uploading character metadata', characterMetadata);
+        debug.log('Uploading character metadata', characterMetadataWithChoices);
 
-        const uploadUrl = `${API_URL}/api/upload?name=characterMetadata.json`;
+        const uploadUrl = `${API_URL}/api/upload`;
         debug.log('Full upload URL', uploadUrl);
 
         try {
           const res = await fetch(uploadUrl, {
             method: 'POST',
-            body: JSON.stringify(characterMetadata),
+            body: JSON.stringify(characterMetadataWithChoices),
             headers: {
               'Content-Type': 'application/json',
             },
@@ -254,6 +325,9 @@ export const CharacterCreation = (): JSX.Element => {
             delegatorAddress,
             name,
             cid,
+            powerSourceMap[powerSource], // Map string to number
+            raceMap[race], // Map string to number
+            startingArmorMap[startingArmor], // Map string to number
           );
 
           if (error && !success) {
@@ -279,46 +353,33 @@ export const CharacterCreation = (): JSX.Element => {
       mintCharacter,
       name,
       onUpload,
+      powerSource,
+      race,
       refreshCharacter,
       renderError,
       renderSuccess,
       renderWarning,
+      startingArmor,
     ],
   );
 
   const onRollStats = useCallback(async () => {
-    try {
-      setIsRollingStats(true);
+    if (!delegatorAddress || !character) return;
 
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
+    const result = await rollStatsTx.execute(() =>
+      rollStats(character.id, characterClass),
+    );
 
-      if (!character) {
-        throw new Error('Character not found.');
-      }
-
-      const { error, success } = await rollStats(character.id, characterClass);
-
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result) {
       await refreshCharacter();
-      renderSuccess('Stats rolled!');
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to roll stats.', e);
-    } finally {
-      setIsRollingStats(false);
     }
   }, [
     character,
     characterClass,
     delegatorAddress,
     refreshCharacter,
-    renderError,
-    renderSuccess,
     rollStats,
+    rollStatsTx,
   ]);
 
   const rolledOnce = useMemo(() => {
@@ -327,46 +388,31 @@ export const CharacterCreation = (): JSX.Element => {
   }, [character]);
 
   const onEnterGame = useCallback(async () => {
-    try {
-      setIsEnteringGame(true);
+    if (!rolledOnce) {
+      setShowError(true);
+      return;
+    }
 
-      if (!rolledOnce) {
-        setShowError(true);
-        return;
-      }
+    if (!character) return;
 
-      if (!character) {
-        throw new Error('Character not found.');
-      }
+    const result = await enterGameTx.execute(() => enterGame(character.id));
 
-      const { error, success } = await enterGame(character.id);
-
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result) {
       await refreshCharacter();
-
-      renderSuccess('Your character has awakend!');
       navigate(GAME_BOARD_PATH);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to enter game.', e);
-    } finally {
-      setIsEnteringGame(false);
     }
   }, [
     character,
     enterGame,
+    enterGameTx,
     navigate,
     refreshCharacter,
-    renderError,
-    renderSuccess,
     rolledOnce,
   ]);
 
   const isDisabled = useMemo(() => {
-    return !character || isCreating || isEnteringGame || isRollingStats;
-  }, [character, isCreating, isEnteringGame, isRollingStats]);
+    return !character || isCreating || enterGameTx.isLoading || rollStatsTx.isLoading;
+  }, [character, isCreating, enterGameTx.isLoading, rollStatsTx.isLoading]);
 
   useEffect(() => {
     if (!isConnected) {
@@ -506,7 +552,7 @@ export const CharacterCreation = (): JSX.Element => {
           w={{ base: '100%', lg: '50%' }}
         >
           <Box
-            h={{ base: 'auto', lg: '100%' }}
+            h="auto"
             position="relative"
             px={{ base: 4, sm: 10 }}
             py={{ base: 4, sm: 6 }}
@@ -529,6 +575,7 @@ export const CharacterCreation = (): JSX.Element => {
                 {UploadedAvatar}
                 <VStack w="100%">
                   <FormControl isInvalid={showError && !name}>
+                    <FormLabel>Name</FormLabel>
                     <Input
                       isDisabled={isCreating}
                       maxLength={15}
@@ -539,7 +586,7 @@ export const CharacterCreation = (): JSX.Element => {
                     />
                     {showError && !name && (
                       <FormHelperText color="red">
-                        Name is required
+                        Name is required.
                       </FormHelperText>
                     )}
                   </FormControl>
@@ -577,9 +624,71 @@ export const CharacterCreation = (): JSX.Element => {
                   value={description}
                 />
                 {showError && !description && (
-                  <FormHelperText color="red">Bio is required</FormHelperText>
+                  <FormHelperText color="red">
+                    Description is required.
+                  </FormHelperText>
                 )}
               </FormControl>
+              {/* --- Foundational Choices Selects --- */}
+              <FormControl isInvalid={showError && !powerSource}>
+                <FormLabel>Power Source</FormLabel>
+                <Select
+                  isDisabled={isCreating || character?.tokenId != null}
+                  onChange={e => setPowerSource(e.target.value)}
+                  value={powerSource}
+                  variant="dark"
+                >
+                  {POWER_SOURCES.map(ps => (
+                    <option key={ps} value={ps}>
+                      {ps}
+                    </option>
+                  ))}
+                </Select>
+                {showError && !powerSource && (
+                  <FormHelperText color="red">
+                    Power Source is required.
+                  </FormHelperText>
+                )}
+              </FormControl>
+              <FormControl isInvalid={showError && !race}>
+                <FormLabel>Race</FormLabel>
+                <Select
+                  isDisabled={isCreating || character?.tokenId != null}
+                  onChange={e => setRace(e.target.value)}
+                  value={race}
+                  variant="dark"
+                >
+                  {RACES.map(r => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </Select>
+                {showError && !race && (
+                  <FormHelperText color="red">Race is required.</FormHelperText>
+                )}
+              </FormControl>
+              <FormControl isInvalid={showError && !startingArmor}>
+                <FormLabel>Starting Armor</FormLabel>
+                <Select
+                  isDisabled={isCreating || character?.tokenId != null}
+                  onChange={e => setStartingArmor(e.target.value)}
+                  value={startingArmor}
+                  variant="dark"
+                >
+                  {STARTING_ARMORS.map(sa => (
+                    <option key={sa} value={sa}>
+                      {sa}
+                    </option>
+                  ))}
+                </Select>
+                {showError && !startingArmor && (
+                  <FormHelperText color="red">
+                    Starting Armor is required.
+                  </FormHelperText>
+                )}
+              </FormControl>
+              {/* --- End Foundational Choices --- */}
             </VStack>
             {!isSmallScreen && (
               <Box bottom={6} left={0} position="absolute" px={10} right={0}>
@@ -738,8 +847,8 @@ export const CharacterCreation = (): JSX.Element => {
               </Heading>
               <Button
                 isDisabled={isDisabled}
-                isLoading={isRollingStats}
-                loadingText="Rolling..."
+                isLoading={rollStatsTx.isLoading}
+                loadingText={rollStatsTx.statusMessage || 'Rolling...'}
                 onClick={onRollStats}
                 size="sm"
               >
@@ -834,8 +943,8 @@ export const CharacterCreation = (): JSX.Element => {
             )}
             <Button
               isDisabled={isDisabled}
-              isLoading={isEnteringGame}
-              loadingText="Waking..."
+              isLoading={enterGameTx.isLoading}
+              loadingText={enterGameTx.statusMessage || 'Waking...'}
               onClick={onEnterGame}
               size="sm"
               type="button"

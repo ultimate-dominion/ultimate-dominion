@@ -50,6 +50,7 @@ export const ActionsPanel = (): JSX.Element => {
   const {
     attackOutcomes,
     attackingItemId,
+    attackStatusMessage,
     currentBattle,
     isFleeing,
     lastestBattleOutcome,
@@ -388,7 +389,7 @@ export const ActionsPanel = (): JSX.Element => {
                       }
                       isLoading={attackingItemId === item.tokenId}
                       key={`equipped-item-${index}`}
-                      loadingText="Attacking..."
+                      loadingText={attackStatusMessage}
                       onClick={() => onAttack(item.tokenId)}
                       ref={getButtonRef(index)}
                       fontSize={
@@ -417,7 +418,7 @@ export const ActionsPanel = (): JSX.Element => {
                         }
                         isLoading={attackingItemId === item.tokenId}
                         key={`equipped-item-${index + 2}`}
-                        loadingText="Attacking..."
+                        loadingText={attackStatusMessage}
                         onClick={() => onAttack(item.tokenId)}
                         ref={getButtonRef(index + 2)}
                         size={{ base: 'xs', sm: 'sm', lg: 'md' }}

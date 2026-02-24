@@ -11,7 +11,7 @@ import { IoIosWarning } from 'react-icons/io';
 import { Link, useLocation } from 'react-router-dom';
 
 import { InfoModal } from '../components/InfoModal';
-import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { GAME_BOARD_PATH } from '../Routes';
 
 import { useBattle } from './BattleContext';
@@ -42,7 +42,6 @@ export const MovementProvider = ({
   children,
 }: MovementProviderProps): JSX.Element => {
   const { pathname } = useLocation();
-  const { renderError } = useToast();
   const {
     delegatorAddress,
     systemCalls: { move },
@@ -59,8 +58,15 @@ export const MovementProvider = ({
   const { currentBattle } = useBattle();
   const { isMessageInputFocused } = useChat();
 
-  const [isMoving, setIsMoving] = useState(false);
   const [isMovementDisabled, setIsMovementDisabled] = useState(false);
+
+  const moveTx = useTransaction({
+    actionName: 'move',
+    silent: true,
+    maxAttempts: 2,
+    backoffMs: 1000,
+    showErrorToast: true,
+  });
 
   const onSetIsMovementDisabled = useCallback((isDisabled: boolean) => {
     setIsMovementDisabled(isDisabled);
@@ -68,78 +74,58 @@ export const MovementProvider = ({
 
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
-      try {
-        if (isMovementDisabled) return;
-        if (isMoving) return;
-        if (!isSpawned) return;
-        if (currentBattle) return;
-        if (isMessageInputFocused) return;
+      if (isMovementDisabled) return;
+      if (moveTx.isLoading) return;
+      if (!isSpawned) return;
+      if (currentBattle) return;
+      if (isMessageInputFocused) return;
 
-        setIsMoving(true);
+      if (!delegatorAddress) return;
+      if (!position) return;
+      if (!character) return;
 
-        if (!delegatorAddress) {
-          throw new Error('Burner not found.');
-        }
+      const { x, y } = position;
 
-        if (!position) {
-          throw new Error('Position not found.');
-        }
+      if (
+        (direction === 'up' && position.y === 9) ||
+        (direction === 'down' && position.y === 0) ||
+        (direction === 'left' && position.x === 0) ||
+        (direction === 'right' && position.x === 9)
+      ) {
+        return;
+      }
 
-        if (!character) {
-          throw new Error('Character not found.');
-        }
-
-        const { x, y } = position;
-
+      if (!isMoveEquipped) {
         if (
-          (direction === 'up' && position.y === 9) ||
-          (direction === 'down' && position.y === 0) ||
-          (direction === 'left' && position.x === 0) ||
-          (direction === 'right' && position.x === 9)
+          (direction === 'up' && position.y === 4) ||
+          (direction === 'right' && position.x === 4)
         ) {
+          onOpenNoMoveEquippedModal();
           return;
         }
-
-        if (!isMoveEquipped) {
-          if (
-            (direction === 'up' && position.y === 4) ||
-            (direction === 'right' && position.x === 4)
-          ) {
-            onOpenNoMoveEquippedModal();
-            return;
-          }
-        }
-
-        let newX = x;
-        let newY = y;
-
-        switch (direction) {
-          case 'up':
-            newY = y + 1;
-            break;
-          case 'down':
-            newY = y - 1;
-            break;
-          case 'left':
-            newX = x - 1;
-            break;
-          case 'right':
-            newX = x + 1;
-            break;
-          default:
-            break;
-        }
-
-        const { error, success } = await move(character.id, newX, newY);
-
-        if (error && !success) {
-          throw new Error(error);
-        }
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to move.', e);
-      } finally {
-        setIsMoving(false);
       }
+
+      let newX = x;
+      let newY = y;
+
+      switch (direction) {
+        case 'up':
+          newY = y + 1;
+          break;
+        case 'down':
+          newY = y - 1;
+          break;
+        case 'left':
+          newX = x - 1;
+          break;
+        case 'right':
+          newX = x + 1;
+          break;
+        default:
+          break;
+      }
+
+      await moveTx.execute(() => move(character.id, newX, newY));
     },
     [
       character,
@@ -148,12 +134,11 @@ export const MovementProvider = ({
       isMessageInputFocused,
       isMoveEquipped,
       isMovementDisabled,
-      isMoving,
       isSpawned,
       move,
+      moveTx,
       onOpenNoMoveEquippedModal,
       position,
-      renderError,
     ],
   );
 
@@ -166,7 +151,7 @@ export const MovementProvider = ({
       }
 
       if (isMovementDisabled) return;
-      if (isMoving) return;
+      if (moveTx.isLoading) return;
       if (!isSpawned) return;
       if (currentBattle) return;
       if (isMessageInputFocused) return;
@@ -208,7 +193,7 @@ export const MovementProvider = ({
     currentBattle,
     isMessageInputFocused,
     isMovementDisabled,
-    isMoving,
+    moveTx.isLoading,
     isSpawned,
     onMove,
     pathname,
@@ -217,7 +202,7 @@ export const MovementProvider = ({
   return (
     <MovementContext.Provider
       value={{
-        isRefreshing: isFetchingEntities || isMoving,
+        isRefreshing: isFetchingEntities || moveTx.isLoading,
         onMove,
         onSetIsMovementDisabled,
       }}
