@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /game-board
+Disallow: /character-creation
+Disallow: /characters/
+Disallow: /shops/
+
+Sitemap: https://ultimatedominion.com/sitemap.xml

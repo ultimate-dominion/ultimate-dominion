@@ -9,6 +9,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { IoNavigate } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PolygonalCard } from '../components/PolygonalCard';
@@ -205,6 +206,9 @@ export const Shop = (): JSX.Element => {
 
   return (
     <Box>
+      <Helmet>
+        <title>Shop | Ultimate Dominion</title>
+      </Helmet>
       <HStack bgColor="#1A244E" color="white" h="68px" px={6}>
         <ShopSvg />
         <Heading size={{ base: 'sm', md: 'md' }}>{shop.name}</Heading>

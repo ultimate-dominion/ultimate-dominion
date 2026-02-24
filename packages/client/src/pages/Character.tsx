@@ -24,6 +24,7 @@ import {
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { FaMedal } from 'react-icons/fa';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
@@ -361,6 +362,9 @@ export const CharacterPage = (): JSX.Element => {
 
   return (
     <Box>
+      <Helmet>
+        <title>{character ? `${character.name} | Ultimate Dominion` : 'Character | Ultimate Dominion'}</title>
+      </Helmet>
       {character ? (
         <Grid
           gap={2}

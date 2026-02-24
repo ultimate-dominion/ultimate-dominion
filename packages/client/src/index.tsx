@@ -12,6 +12,7 @@ import '@rainbow-me/rainbowkit/styles.css';
 import { ChakraProvider } from '@chakra-ui/react';
 import { Global } from '@emotion/react';
 import { createRoot } from 'react-dom/client';
+import { HelmetProvider } from 'react-helmet-async';
 
 import { App } from './App';
 import { DevTools } from './components/DevTools';
@@ -33,9 +34,10 @@ const root = createRoot(rootElement);
 const setupPromise = setup();
 
 root.render(
-  <ChakraProvider resetCSS theme={theme}>
-    <Global styles={globalStyles} />
-    <Web3Provider>
+  <HelmetProvider>
+    <ChakraProvider resetCSS theme={theme}>
+      <Global styles={globalStyles} />
+      <Web3Provider>
       <AuthProvider>
         <MUDProvider setupPromise={setupPromise}>
           <ItemsProvider>
@@ -54,5 +56,6 @@ root.render(
         </MUDProvider>
       </AuthProvider>
     </Web3Provider>
-  </ChakraProvider>,
+  </ChakraProvider>
+  </HelmetProvider>,
 );

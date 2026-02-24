@@ -16,6 +16,7 @@ import {
 } from '@chakra-ui/react';
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
@@ -157,6 +158,9 @@ export const Leaderboard = (): JSX.Element => {
 
   return (
     <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
+      <Helmet>
+        <title>Leaderboard | Ultimate Dominion</title>
+      </Helmet>
       <VStack>
         <HStack bgColor="blue500" h="66px" px="20px" width="100%">
           <LeaderboardIconSvg />

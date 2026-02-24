@@ -14,6 +14,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { IoIosWarning } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -164,6 +165,10 @@ export const GameBoard = (): JSX.Element => {
   if (!character?.locked) return <Box />;
 
   return (
+    <>
+    <Helmet>
+      <title>Play | Ultimate Dominion</title>
+    </Helmet>
     <Grid
       gap={2}
       h={{ base: 'auto', md: 'calc(100vh - 125px)' }}
@@ -286,5 +291,6 @@ export const GameBoard = (): JSX.Element => {
         />
       )}
     </Grid>
+    </>
   );
 };
