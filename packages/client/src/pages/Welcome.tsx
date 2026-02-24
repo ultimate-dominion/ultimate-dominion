@@ -11,13 +11,13 @@ import { useComponentValue } from '@latticexyz/react';
 import { SyncStep } from '@latticexyz/store-sync';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH } from '../Routes';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, MANIFESTO_PATH } from '../Routes';
 
 export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
@@ -80,13 +80,23 @@ export const Welcome = (): JSX.Element => {
           px={{ base: 2, sm: 12, md: 20 }}
           spacing={{ base: 12, md: 16 }}
         >
-          <Heading
-            size={{ base: 'md', md: 'lg' }}
-            textAlign="center"
-            textTransform="uppercase"
-          >
-            Welcome to Ultimate Dominion
-          </Heading>
+          <VStack spacing={4}>
+            <Heading
+              size={{ base: 'md', md: 'lg' }}
+              textAlign="center"
+              textTransform="uppercase"
+            >
+              Welcome to Ultimate Dominion
+            </Heading>
+            <Button
+              as={RouterLink}
+              to={MANIFESTO_PATH}
+              variant="outline"
+              size="sm"
+            >
+              Read the Manifesto
+            </Button>
+          </VStack>
           <VStack fontWeight={500} maxW="850px" spacing={6} textAlign="center">
             <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
               As you awaken, your eyes flutter open to the stark, eerie ambiance
