@@ -1,8 +1,23 @@
-# Ultimate Dominion - Game Design Document
+# Ultimate Dominion — Game Design Document
 
-## Overview
+The canonical reference for all game mechanics. If something conflicts with this document, this document wins.
 
-Ultimate Dominion is an on-chain RPG where **items are the primary source of power**. Leveling provides meaningful progression, but players must acquire good gear to tackle higher-level content.
+---
+
+## Table of Contents
+
+1. [Core Design Principles](#core-design-principles)
+2. [Character Creation](#character-creation)
+3. [Leveling & Progression](#leveling--progression)
+4. [Advanced Classes](#advanced-classes)
+5. [Combat System](#combat-system)
+6. [Items & Equipment](#items--equipment)
+7. [Economy](#economy)
+8. [Map & Zones](#map--zones)
+9. [PvP](#pvp)
+10. [Lore Fragments](#lore-fragments)
+11. [Badge System](#badge-system)
+12. [Class Abilities](#class-abilities)
 
 ---
 
@@ -11,15 +26,15 @@ Ultimate Dominion is an on-chain RPG where **items are the primary source of pow
 1. **Items = Power**: ~60% of character power comes from equipment
 2. **Leveling = Access**: Levels unlock content, item tiers, and provide modest stat gains
 3. **Classes = Identity**: Classes provide % damage multipliers that scale with gear
-4. **Player Choice**: Players can choose any advanced class regardless of build
+4. **Player Choice**: Any advanced class can be selected regardless of build — no locked paths
 
 ---
 
 ## Character Creation
 
-### Step 1: Choose Race
+Character creation uses an **implicit class system**. Players make thematic choices that shape their starting stats, then select an advanced class at Level 10. There is no upfront "pick a class" screen.
 
-Races provide small starting stat adjustments.
+### Step 1: Choose Race
 
 | Race | STR | AGI | INT | HP | Flavor |
 |------|-----|-----|-----|----|--------|
@@ -29,19 +44,15 @@ Races provide small starting stat adjustments.
 
 ### Step 2: Choose Power Source
 
-Power source is thematic and affects available abilities/spells.
+Thematic choice affecting flavor and future abilities. Does **NOT** restrict class selection.
 
 | Power Source | Theme | Typical Playstyle |
-|--------------|-------|-------------------|
+|-------------|-------|-------------------|
 | Divine | Holy/Nature magic | Healing, buffs, smiting |
 | Weave | Arcane magic | Raw damage, control |
 | Physical | Martial prowess | Weapons, tactics |
 
-**Note:** Power source does NOT restrict advanced class selection.
-
 ### Step 3: Choose Starting Armor
-
-Starting armor provides early stat adjustments.
 
 | Armor | STR | AGI | INT | HP | Playstyle |
 |-------|-----|-----|-----|----|-----------|
@@ -49,47 +60,71 @@ Starting armor provides early stat adjustments.
 | Leather | +1 | +2 | — | — | Agility-focused |
 | Plate | +2 | -1 | — | +1 | Strength-focused |
 
-### Step 4: Roll Stats & Enter Game
+### Step 4: Roll Stats
 
-Base stats are generated, then race/armor modifiers are applied.
+Base stats are randomly generated then race/armor modifiers applied.
 
-**Base Stats:** STR 10, AGI 10, INT 10, HP 50
+- **Stat pool**: 19 total points distributed across STR, AGI, INT
+- **Range per stat**: 3–10
+- **Base HP**: 18 (before race/armor modifiers)
+- **Resulting starting HP**: ~15–20 depending on race/armor choices
+
+**Example**: A Dwarf in Plate rolls STR 7, AGI 5, INT 7. After modifiers: STR 11 (+2 race, +2 plate), AGI 3 (-1 plate), INT 7, HP 20 (+1 race, +1 plate).
 
 ---
 
-## Leveling System
+## Leveling & Progression
+
+### Zone-Based Progression
+
+Content is organized into zones of 10 levels each. The current level cap in code is 100, but the design intent is **10 levels per zone with new zones added over time**.
+
+| Zone | Levels | Status |
+|------|--------|--------|
+| Dark Cave | 1–10 | `[IMPLEMENTED]` — testnet launch content |
+| Zone 2 | 1–10 | `[PLANNED]` — mainnet launch |
+| Zone 3 | 1–10 | `[PLANNED]` — mainnet launch |
+| Future zones | 10 each | `[PLANNED]` — post-launch expansions |
 
 ### Stat Points Per Level
 
-Stat point gains **diminish** as you level, encouraging reliance on items.
+Stat gains diminish as you level, encouraging reliance on items.
 
 | Level Range | Stat Points | Rate |
 |-------------|-------------|------|
-| 1-10 | +1 per level | Every level |
-| 11-50 | +1 every 2 levels | Slowing down |
-| 51-100 | +1 every 5 levels | Items essential |
+| 1–10 | +1 per level | Every level |
+| 11–50 | +1 every 2 levels | Even levels only |
+| 51–100 | +1 every 5 levels | Levels divisible by 5 |
 
 **Total stat points (Level 1 → 100):** ~40 points
 
 ### HP Per Level
 
-HP gains are modest; armor and vitality items provide bulk of survivability.
-
-| Level Range | HP Per Level |
-|-------------|--------------|
-| 1-10 | +2 |
-| 11-50 | +1 |
-| 51-100 | +1 every 2 levels |
+| Level Range | HP Gain |
+|-------------|---------|
+| 1–10 | +2 per level |
+| 11–50 | +1 per level |
+| 51–100 | +1 every 2 levels (even levels) |
 
 **Total HP from leveling (Level 1 → 100):** ~65 HP
 
+### XP Requirements
+
+| Level | XP Required | Notes |
+|-------|-------------|-------|
+| 1 | 300 | |
+| 2 | 900 | |
+| 3 | 2,700 | Badge unlock (Adventurer) |
+| 5 | 14,000 | |
+| 10 | 85,000 | Advanced class selection |
+| 11+ | prev + (level × 5,000) | Mid-game scaling |
+| 51+ | prev + (level × 15,000) | Late-game scaling |
+
 ### Level Unlocks
 
-Levels primarily unlock:
-- Higher-tier item equipping (level requirements)
-- New areas and dungeons
-- Boss encounters
-- Advanced class selection (Level 10)
+- **Level 3**: Adventurer badge (unlocks chat)
+- **Level 10**: Advanced class selection + class-specific starter gear
+- **Higher levels**: Item tier requirements, new zone access
 
 ---
 
@@ -97,171 +132,269 @@ Levels primarily unlock:
 
 ### Selection
 
-At **Level 10**, players choose their advanced class.
+At **Level 10**, players choose one of 9 advanced classes. **Any class can be selected regardless of race, power source, or stats.** This allows creative builds and player expression.
 
-**Any class can be selected regardless of race, power source, or stats.** This allows for creative builds and player expression.
+### Class Bonuses
 
-### Class List & Bonuses
+Each class provides flat stat bonuses (one-time) and percentage multipliers (scales with gear). Multipliers stored as basis points (1000 = 100%).
 
-Each class provides:
-1. **Flat stat bonuses** (one-time addition)
-2. **% damage/healing multipliers** (scales with gear)
+| Class | Flat Bonuses | Phys Dmg | Spell Dmg | Healing | Crit Dmg | Max HP |
+|-------|-------------|----------|-----------|---------|----------|--------|
+| **Warrior** | +3 STR, +10 HP | 110% | 100% | 100% | 100% | 100% |
+| **Paladin** | +2 STR, +15 HP | 105% | 100% | 105% | 100% | 100% |
+| **Ranger** | +3 AGI | 110% | 100% | 100% | 100% | 100% |
+| **Rogue** | +2 AGI, +1 INT | 100% | 100% | 100% | 115% | 100% |
+| **Druid** | +2 AGI, +2 STR | 105% | 105% | 100% | 100% | 105% |
+| **Warlock** | +2 AGI, +2 INT | 100% | 110% | 100% | 100% | 100% |
+| **Wizard** | +3 INT | 100% | 115% | 100% | 100% | 100% |
+| **Cleric** | +2 INT, +10 HP | 100% | 100% | 110% | 100% | 100% |
+| **Sorcerer** | +2 STR, +2 INT | 100% | 108% | 100% | 100% | 105% |
 
-| Class | Flat Bonus | % Multiplier | Role |
-|-------|------------|--------------|------|
-| **Warrior** | +3 STR, +10 HP | +10% physical damage | Melee DPS/Tank |
-| **Paladin** | +2 STR, +15 HP | +5% damage, +5% healing received | Tank/Support |
-| **Ranger** | +3 AGI | +10% ranged damage | Ranged DPS |
-| **Rogue** | +2 AGI, +1 INT | +15% critical damage | Burst DPS |
-| **Druid** | +2 AGI, +2 STR | +5% all damage, +5% max HP | Hybrid |
-| **Warlock** | +2 AGI, +2 INT | +10% damage over time | Sustained DPS |
-| **Wizard** | +3 INT | +15% spell damage | Burst Caster |
-| **Cleric** | +2 INT, +10 HP | +10% healing done | Healer |
-| **Sorcerer** | +2 STR, +2 INT | +8% spell damage, +5% max HP | Battle Mage |
+### How Multipliers Work
 
-### How % Multipliers Work
-
-**Formula (Option A - Final Damage):**
 ```
 finalDamage = (baseDamage + itemDamage) × classMultiplier
 ```
 
-**Example:**
-- Warrior with 50 STR and +100 damage weapon
+A Warrior with 50 STR and a +100 damage weapon:
 - Base calculation: 50 + 100 = 150 damage
-- With +10% physical: 150 × 1.10 = **165 damage**
+- With 110% physical: 150 × 1.10 = **165 damage**
 
-**Why this matters:**
-- Better items = bigger multiplier benefit
-- Classes feel impactful at all levels
-- Rewards both leveling AND gear acquisition
+Better items = bigger multiplier benefit. Classes stay relevant at all levels.
 
----
+### Class-Power Source Combinations
 
-## Power Distribution
+While any class can be chosen, thematic combinations exist:
 
-### By Source (at Level 50)
+| Power Source | Natural Fits |
+|-------------|-------------|
+| Divine | Paladin, Cleric, Druid |
+| Weave | Wizard, Warlock, Sorcerer |
+| Physical | Warrior, Ranger, Rogue |
 
-| Source | Stat Contribution | HP Contribution | % of Total Power |
-|--------|-------------------|-----------------|------------------|
-| Base | 10 | 50 | ~10% |
-| Race/Armor | 3-5 | 0-2 | ~5% |
-| Leveling | ~25 | ~50 | ~20% |
-| Class (flat) | 3-5 | 0-15 | ~5% |
-| **Items** | 40-80 | 100-200 | **~60%** |
-
-### Gear Dependency by Level
-
-```
-Level 1-10:   Leveling feels impactful, basic gear sufficient
-Level 11-30:  Good gear provides noticeable advantage
-Level 31-50:  Great gear required for challenging content
-Level 51+:    Best gear essential for progression
-```
+These are flavor guidelines, not restrictions.
 
 ---
 
-## Items
+## Combat System
 
-### Item Power Budget
+### Overview
 
-Items are the primary source of character power.
+Turn-based combat with a max of **15 turns** per encounter. Both PvE and PvP use the same core system.
 
-| Slot | Typical Stat Range | HP Range |
-|------|-------------------|----------|
-| Weapon | +10 to +100 primary stat | — |
-| Armor | +5 to +50 stats | +20 to +200 HP |
-| Accessory | +3 to +30 any stat | +10 to +100 HP |
+### Hit Probability
 
-### Item Tiers
+- **Base**: 90%
+- Modified by attacker/defender stat comparison
+- **Min**: 5%, **Max**: 98%
+- Dampeners prevent extreme swings (attacker dampener: 95, defender dampener: 30)
 
-| Tier | Level Req | Power Level | Drop Source |
-|------|-----------|-------------|-------------|
-| Common | 1+ | Low | Everywhere |
-| Uncommon | 10+ | Moderate | Dungeons |
-| Rare | 25+ | Good | Bosses |
-| Epic | 50+ | High | Raids |
-| Legendary | 75+ | Very High | World Bosses |
-
-### Set Bonuses
-
-Equipping multiple items from a set provides additional bonuses:
-- 2-piece: Minor bonus (+5% stat or effect)
-- 4-piece: Major bonus (+15% or unique effect)
-
----
-
-## Combat
-
-### Damage Formula
+### Damage Calculation
 
 ```
-rawDamage = (primaryStat × statMultiplier) + weaponDamage + bonusDamage
-finalDamage = rawDamage × classMultiplier × (1 + critBonus if crit)
+weaponDamage = random(minDamage, maxDamage)
+statBonus = primaryStat / 20
+rawDamage = (weaponDamage + statBonus) × 1.2 (attack modifier)
+defense = armorValue × 1.0 (defense modifier)
+damage = (rawDamage - defense) × classMultiplier × triangleBonus
 ```
+
+On critical hit: damage × 2
 
 ### Combat Triangle
 
-Stats have advantages against each other:
-- **STR > AGI**: +5% damage per point difference
-- **AGI > INT**: +5% damage per point difference
-- **INT > STR**: +5% damage per point difference
+STR beats AGI beats INT beats STR.
 
-This encourages diverse builds and tactical choices.
+- **Bonus**: +5% damage per stat point difference when you have advantage
+- Encourages diverse builds and creates natural counters in PvP
 
----
+### Status Effects
 
-## Progression Summary
+| Effect | Description |
+|--------|-------------|
+| ToHitModifier | Alters hit probability |
+| DoT | Damage over time each turn |
+| HitPointMod | Direct HP modification |
+| ArmorMod | Temporarily changes armor value |
+| WeaponMod | Temporarily changes weapon damage |
+| Stun | Skip turn |
 
-### Early Game (Level 1-10)
-- Learn mechanics
-- Choose race, power source, armor
-- Roll stats
-- Select advanced class at level 10
-- Basic gear from quests/shops
+### Flee Mechanics
 
-### Mid Game (Level 11-50)
-- Stat gains slow down
-- Farm dungeons for better gear
-- Class % bonuses become more valuable
-- Build specialization matters
-
-### Late Game (Level 51-100+)
-- Minimal stat gains from leveling
-- Chase epic/legendary items
-- Class multipliers + best gear = peak power
-- Raid content requires optimized builds
+- Attacker can flee on **turn 1**
+- Defender can flee on **turn 2**
+- PvP flee incurs **25% gold penalty** from escrow
 
 ---
 
-## Design Rationale
+## Items & Equipment
 
-### Why Items > Levels?
+### Item Types
 
-1. **Engagement**: Players always have something to chase (better loot)
-2. **Economy**: Items have trade value, creating player markets
-3. **Catch-up**: New players can gear up without grinding 100 levels
-4. **Variety**: Many valid builds based on item combinations
+| Type | Description | Key Stats |
+|------|-------------|-----------|
+| Weapon | Physical/magic damage dealers | minDamage, maxDamage, stat bonuses, effects |
+| Armor | Defensive equipment | armorModifier, stat bonuses, armor type |
+| Accessory | Mixed utility | stat bonuses, armor, effects |
+| Consumable | One-time use items | damage, effects |
+| Spell | Magic damage items | minDamage, maxDamage, effects |
+| QuestItem | Special/story items | Varies |
 
-### Why Free Class Choice?
+### Equipment Slots
 
-1. **Player Expression**: Be any class regardless of starting choices
-2. **Experimentation**: Try "off-meta" builds
-3. **Replayability**: Same race can play different classes
-4. **No Regret**: Early choices don't lock you out
+Characters can equip multiple items per category:
 
-### Why % Multipliers?
+- Weapons (multiple slots)
+- Armor (multiple slots)
+- Accessories (multiple slots)
+- Consumables (multiple slots)
+- Spells (multiple slots)
 
-1. **Scaling**: Stay relevant at all levels
-2. **Item Synergy**: Better gear = bigger class benefit
-3. **Identity**: Classes feel distinct in combat
-4. **Balance**: Easy to tune without reworking systems
+### Item Stats
+
+All items can provide: STR bonus, AGI bonus, INT bonus, HP bonus, armor value, and special effects. Items have minimum stat requirements (STR/AGI/INT) and minimum level requirements.
+
+### Rarity Tiers
+
+Items have rarity tiers that determine drop frequency and power level:
+
+| Rarity | Drop Frequency | Power Level |
+|--------|---------------|-------------|
+| Common | Frequent | Low |
+| Uncommon | Moderate | Moderate |
+| Rare | Infrequent | Good |
+| Very Rare | Scarce | High |
+| Legendary | Extremely rare | Very high |
+| Unique | One-of-a-kind | Exceptional |
+
+*Note: Drop rates need tuning during game testing. See ECONOMICS.md for rate targets.*
+
+### Starter Equipment
+
+New characters receive starter gear based on their race and armor type selection. At Level 10, characters receive additional class-specific equipment.
+
+### Power Distribution (at Level 50)
+
+| Source | % of Total Power |
+|--------|-----------------|
+| Base stats + race/armor | ~15% |
+| Leveling | ~20% |
+| Class bonuses | ~5% |
+| **Items** | **~60%** |
 
 ---
 
-## Version History
+## Economy
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2026-01-20 | Initial implicit class system design |
+See [ECONOMICS.md](./ECONOMICS.md) for detailed economy design.
 
+**Key points:**
+- **Gold**: ERC20 token, primary currency
+- **Marketplace**: Player-to-player trading with fee (2.5–3%, under review)
+- **Shops**: NPC buy/sell with markup/markdown, 12-hour restock cycle
+- **Gold generation**: From mob kills, scales with mob level (exact formula TBD — needs game testing)
+- **Gold sinks**: Marketplace fees, shop purchases, more planned post-launch
+
+---
+
+## Map & Zones
+
+### Map Structure
+
+- **Grid-based**: 2D tile map, configurable dimensions
+- **Movement**: 1 tile per action (Manhattan distance), 1-second cooldown
+- **Home spawn**: Position (0, 0)
+
+### Zone Layout
+
+| Area | Coordinates | Content |
+|------|------------|---------|
+| Safe zone | x < 5 or y < 5 | PvE only, lower-level mobs |
+| Danger zone | x ≥ 5 and y ≥ 5 | PvP enabled, higher-level mobs |
+| Shop (Tal) | (9, 9) | NPC shop |
+| Fragment center | (5, 5) | Lore trigger location |
+
+### Mob Spawning
+
+- **Near home** (distance < 5 tiles): Level 1–6 mobs
+- **Far from home** (distance ≥ 5 tiles): Level 6–11 mobs
+- **Spawn count**: 0–5 mobs per tile (random)
+- Distance calculated using Chebyshev distance from (0, 0)
+
+---
+
+## PvP
+
+### Rules
+
+- **Location**: Only in danger zone (x ≥ 5, y ≥ 5)
+- **Cooldown**: 30 seconds between PvP engagements
+- **Escrow**: Portion of player's gold held during combat
+- **Flee penalty**: 25% of escrow gold (minimum 4 gold to trigger)
+- **Rewards**: Winner gets loser's escrow gold, split among team members
+- **Group PvP**: Supports multiple attackers vs multiple defenders
+
+### Flow
+
+```
+Player A initiates PvP against Player B (both in danger zone)
+    ↓
+Both players' gold placed in escrow
+    ↓
+Turn-based combat (same system as PvE)
+    ↓
+├── Player A wins → Gets Player B's escrow gold + XP
+├── Player B wins → Gets Player A's escrow gold + XP
+├── Player A flees (turn 1) → Loses 25% escrow to Player B
+└── Player B flees (turn 2) → Loses 25% escrow to Player A
+```
+
+---
+
+## Lore Fragments
+
+8 collectible narrative NFTs ("Fragments of the Fallen") that tell the story of Noctum's death and the gods' deicide.
+
+| # | Fragment | Trigger | Status |
+|---|----------|---------|--------|
+| 1 | The Awakening | First spawn | `[IMPLEMENTED]` |
+| 2 | The Quartermaster | Visit shop at (9,9) | `[IMPLEMENTED]` |
+| 3 | The Restless | First monster kill | `[IMPLEMENTED]` |
+| 4 | Souls That Linger | Kill Dark Wisp (mob #13) | `[IMPLEMENTED]` |
+| 5 | The Wound | Reach center tile (5,5) | `[IMPLEMENTED]` |
+| 6 | Death of Death God | Kill Lich Acolyte (mob #25) | `[IMPLEMENTED]` |
+| 7 | Betrayer's Truth | Kill Void Whisper (mob #22) | `[IMPLEMENTED]` |
+| 8 | Blood Price | First PvP kill | `[IMPLEMENTED]` |
+
+Each fragment mints as an ERC721 NFT with unique token ID per character.
+
+See [LORE_NFT_FRAGMENTS.md](./LORE_NFT_FRAGMENTS.md) for full narrative content.
+
+---
+
+## Badge System
+
+Soulbound badges (ERC1155) awarded for milestones.
+
+| Badge | ID | Requirement | Purpose |
+|-------|----|-------------|---------|
+| Adventurer | 1 | Reach Level 3 | Unlocks chat access |
+| Founder | 50 | Play during launch window | Permanent recognition |
+
+Badges are minted to the character owner's address with unique token IDs per character.
+
+See [BADGE_SYSTEM.md](./BADGE_SYSTEM.md) for full badge details.
+
+---
+
+## Class Abilities
+
+`[PLANNED]` — Post-Level 10 feature, not yet designed.
+
+Players will earn class-specific abilities after Level 10. The ability system design is pending — it will build on the power source and advanced class choices to give each class a distinct gameplay identity.
+
+This section will be expanded once the ability system is designed.
+
+---
+
+*Last updated: February 2026*

@@ -2,6 +2,21 @@
 
 This document details the collectible lore NFTs that reveal the story setup in the Dark Cave (Zone 1).
 
+**Implementation status**: FragmentSystem.sol is `[IMPLEMENTED]`. Minted as ERC721 NFTs. Token ID = `(fragmentType × 1,000,000) + characterTokenId`.
+
+### Trigger Summary (from code)
+
+| # | Fragment | Trigger | Mob ID |
+|---|----------|---------|--------|
+| 1 | The Awakening | First spawn | — |
+| 2 | The Quartermaster | Visit shop at (9,9) | — |
+| 3 | The Restless | First monster kill | — |
+| 4 | Souls That Linger | Kill Dark Wisp | 13 |
+| 5 | The Wound | Reach tile (5,5) | — |
+| 6 | Death of Death God | Kill Lich Acolyte | 25 |
+| 7 | Betrayer's Truth | Kill Void Whisper | 22 |
+| 8 | Blood Price | First PvP kill | — |
+
 ---
 
 ## Overview

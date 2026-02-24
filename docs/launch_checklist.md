@@ -90,7 +90,7 @@
 
 ### 11. Testnet Deployment
 #### Smart Contracts
-- [ ] Deploy MUD World to testnet (Garnet/Base Sepolia)
+- [ ] Deploy MUD World to Base Sepolia testnet
 - [ ] Run FullPostDeploy (ERC20 Gold, ERC721 Characters, ERC1155 Items, core config)
 - [ ] Seed game data (items, monsters, shops via zone loader or SeedGameData)
 - [ ] Configure badge token and fragment NFTs
@@ -141,12 +141,15 @@
 - [ ] Multiple concurrent users
 
 ### 12. Launch Strategy
-- [ ] Define target audience
-- [ ] Marketing plan and timeline
-- [ ] Community building (Discord, social media)
+- [x] Define target audience ✓ See GO_TO_MARKET.md — messaging by audience segment
+- [x] Marketing plan and timeline ✓ See GO_TO_MARKET.md — priority action plan
+- [ ] Community building (Discourse forum, Farcaster — see GO_TO_MARKET.md)
 - [ ] Beta testing program
 - [ ] Launch date and milestones
 - [ ] Post-launch support plan
+- [ ] Queue/invite system implementation (see LAUNCH_STRATEGY.md)
+- [ ] DEX liquidity setup (see ECONOMICS.md)
+- [ ] Human verification system (see LAUNCH_STRATEGY.md)
 
 ---
 

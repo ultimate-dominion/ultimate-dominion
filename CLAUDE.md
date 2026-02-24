@@ -1,15 +1,24 @@
 # Ultimate Dominion - Project Memory
 
 ## Tech Stack
-- **Framework**: MUD (Lattice) for on-chain game development
-- **Contracts**: Solidity 0.8.24+, deployed via MUD World
-- **Frontend**: React, Tailwind, shadcn/ui, RainbowKit
-- **Testing**: Forge (Foundry)
+- **Framework**: MUD (Lattice) v2 for on-chain game development
+- **Contracts**: Solidity 0.8.24+, deployed via MUD World, tested with Forge (Foundry)
+- **Frontend**: React 18, Chakra UI, Thirdweb + RainbowKit, viem/wagmi
+- **API**: Express on Vercel serverless, Pinata IPFS
+- **Chain**: Base Sepolia (testnet) → Base (mainnet)
 
 ## Key Documentation
 - `docs/launch_checklist.md` - Launch readiness tracking
-- `docs/combat-stats/combat_system_analysis.md` - Combat system design
-- `docs/combat-stats/stat_progression_model.md` - Level 1-60 progression
+- `docs/GAME_DESIGN.md` - Canonical game mechanics reference
+- `docs/ECONOMICS.md` - Token economy and gold balance
+- `docs/architecture/TECH_STACK.md` - Full tech stack details
+- `docs/architecture/SYSTEM_ARCHITECTURE.md` - Smart contract systems
+- `docs/architecture/FRONTEND_GUIDELINES.md` - UI design system
+- `docs/combat-stats/COMBAT_SYSTEM.md` - Combat formulas and constants
+- `docs/combat-stats/COMBAT_BALANCE.md` - Balance issues and tuning
+- `docs/APP_FLOW.md` - User-facing app flow
+- `docs/LAUNCH_STRATEGY.md` - Launch plan and anti-abuse
+- `docs/GO_TO_MARKET.md` - Marketing and distribution
 
 ## Reminders
 
