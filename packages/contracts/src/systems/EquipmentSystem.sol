@@ -32,7 +32,6 @@ import {ERC1155MetadataURI} from "@erc1155/tables/ERC1155MetadataURI.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
-import {UNLIMITED_DELEGATION} from "@latticexyz/world/src/constants.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
@@ -49,7 +48,7 @@ contract EquipmentSystem is System {
         address caller = _msgSender();
         // Check direct ownership or delegation
         bool isOwner = characterOwner == caller;
-        bool hasDelegation = ResourceId.unwrap(UserDelegationControl.getDelegationControlId(characterOwner, caller)) == ResourceId.unwrap(UNLIMITED_DELEGATION);
+        bool hasDelegation = ResourceId.unwrap(UserDelegationControl.getDelegationControlId(characterOwner, caller)) != bytes32(0);
         require(isOwner || hasDelegation, "EQUIPMENT: Not Character Owner");
         require(!IWorld(_world()).UD__isInEncounter(characterId), "Cannot equip items in combat");
         uint256 itemId;
@@ -213,7 +212,7 @@ contract EquipmentSystem is System {
         address caller = _msgSender();
         // Check direct ownership or delegation
         bool isOwner = characterOwner == caller;
-        bool hasDelegation = ResourceId.unwrap(UserDelegationControl.getDelegationControlId(characterOwner, caller)) == ResourceId.unwrap(UNLIMITED_DELEGATION);
+        bool hasDelegation = ResourceId.unwrap(UserDelegationControl.getDelegationControlId(characterOwner, caller)) != bytes32(0);
         require(isOwner || hasDelegation, "EQUIPMENT: Not Character Owner");
         require(isEquipped(characterId, itemId), "EQUIPMENT: NOT EQUIPPED");
         require(!IWorld(_world()).UD__isInEncounter(characterId), "Cannot un-equip items in combat");

@@ -69,3 +69,12 @@ uint16 constant TAL_SHOP_Y = 9;
 uint256 constant DARK_WISP_MOB_ID = 13;
 uint256 constant VOID_WHISPER_MOB_ID = 22;
 uint256 constant LICH_ACOLYTE_MOB_ID = 25;
+
+// GameDelegation constants
+bytes16 constant GAME_DELEGATION_NAME = "GameDelegation";
+
+// GasStation constants
+uint256 constant DEFAULT_ETH_PER_GOLD = 1e12;         // 0.000001 ETH per Gold (1 Gold = 1e18 units)
+uint256 constant DEFAULT_MAX_GOLD_PER_SWAP = 500e18;   // 500 Gold max per swap
+uint256 constant DEFAULT_GAS_COOLDOWN = 60;            // 60 seconds between swaps
+uint256 constant GAS_STATION_MIN_LEVEL = 3;            // Must be level 3+ to use GasStation

@@ -12,10 +12,25 @@ import {
 
 import { type SetupNetworkResult } from '../mud/setupNetwork';
 
-// Use built-in unlimited delegation control - this is available without any modules
-// Hardcoded to match MUD's UNLIMITED_DELEGATION constant from @latticexyz/world/src/constants.sol
+// Old unlimited delegation (kept for backwards compat detection)
 // Format: RESOURCE_SYSTEM (2 bytes "sy") + ROOT_NAMESPACE (14 zero bytes) + name (16 bytes "unlimited" padded)
 const UNLIMITED_DELEGATION: Hex = '0x73790000000000000000000000000000756e6c696d6974656400000000000000';
+
+// New GameDelegationControl - restricts burner to whitelisted gameplay systems only
+// Format: RESOURCE_SYSTEM (2 bytes "sy") + namespace "UD" (14 bytes padded) + name "GameDelegation" (16 bytes padded)
+// "sy" = 0x7379, "UD" = 0x5544 + 12 zero bytes, "GameDelegation" = 0x47616d6544656c65676174696f6e + 2 zero bytes
+const GAME_DELEGATION: Hex = '0x73795544000000000000000000000000' + '47616d6544656c65676174696f6e0000' as Hex;
+
+// ABI for GameDelegationControl.initDelegation(address)
+const GAME_DELEGATION_ABI = [
+  {
+    name: 'initDelegation',
+    type: 'function',
+    inputs: [{ name: 'delegatee', type: 'address' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+] as const;
 
 export async function setupDelegation(
   network: SetupNetworkResult,
@@ -25,12 +40,19 @@ export async function setupDelegation(
   console.log('Setting up delegation with:', {
     delegateeAddress,
     worldAddress: network.worldContract.address,
-    unlimitedDelegation: UNLIMITED_DELEGATION,
+    gameDelegation: GAME_DELEGATION,
   });
 
   try {
-    // Use the built-in unlimited delegation control ID
-    const delegationControlId = UNLIMITED_DELEGATION;
+    const delegationControlId = GAME_DELEGATION;
+
+    // Encode initDelegation(delegateeAddress) as the init calldata
+    const initCallData = encodeFunctionData({
+      abi: GAME_DELEGATION_ABI,
+      functionName: 'initDelegation',
+      args: [delegateeAddress as Address],
+    });
+
     console.log('Using delegation control ID:', delegationControlId);
 
     // Check if we're on a local chain (chainId 31337)
@@ -54,7 +76,7 @@ export async function setupDelegation(
     const data = encodeFunctionData({
       abi: IWorldAbi,
       functionName: 'registerDelegation',
-      args: [delegateeAddress, delegationControlId, '0x'],
+      args: [delegateeAddress, delegationControlId, initCallData],
     });
 
     const delegationTx = await externalWalletClient.sendTransaction({
@@ -114,5 +136,9 @@ export function clearBurnerWallet(): void {
 export function isDelegated(
   delegation: { delegationControlId: Hex } | undefined,
 ): boolean {
-  return delegation?.delegationControlId === UNLIMITED_DELEGATION;
+  // Accept both old unlimited delegation and new game delegation (backwards compat)
+  return (
+    delegation?.delegationControlId === GAME_DELEGATION ||
+    delegation?.delegationControlId === UNLIMITED_DELEGATION
+  );
 }

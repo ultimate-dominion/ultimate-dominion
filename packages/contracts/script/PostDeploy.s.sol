@@ -20,7 +20,8 @@ import {_erc721SystemId} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {_erc20SystemId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {_erc1155SystemId} from "../src/utils.sol";
 import {BEFORE_CALL_SYSTEM} from "@latticexyz/world/src/systemHookTypes.sol";
-import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, BADGES_NAMESPACE, FRAGMENTS_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, TOKEN_URI, WORLD_NAMESPACE} from "../constants.sol";
+import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, BADGES_NAMESPACE, FRAGMENTS_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, TOKEN_URI, WORLD_NAMESPACE, DEFAULT_ETH_PER_GOLD, DEFAULT_MAX_GOLD_PER_SWAP, DEFAULT_GAS_COOLDOWN, GAME_DELEGATION_NAME} from "../constants.sol";
+import {GasStationConfig, AllowedGameSystems} from "@codegen/index.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {StandardDelegationsModule} from "@latticexyz/world-modules/src/modules/std-delegations/StandardDelegationsModule.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
@@ -167,7 +168,13 @@ contract PostDeploy is Script {
         console.log(">>> Seeding Game Data <<<");
         _seedGameData();
 
-        // Step 9: Transfer Items namespace ownership to World (must happen AFTER items are minted)
+        // Step 9: Configure GasStation
+        _configureGasStation();
+
+        // Step 9.5: Configure GameDelegationControl whitelist
+        _configureGameDelegation();
+
+        // Step 10: Transfer Items namespace ownership to World (must happen AFTER items are minted)
         _transferItemsOwnership();
 
         vm.stopBroadcast();
@@ -761,6 +768,74 @@ contract PostDeploy is Script {
         // 300 basis points = 3%
         UltimateDominionConfig.setFeePercent(300);
         console.log("  Fee percent: 3% (300 basis points)");
+    }
+
+    function _configureGasStation() internal {
+        console.log("Configuring GasStation...");
+
+        // Look up the GasStation system address
+        ResourceId gasStationSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "GasStationSys");
+        address gasStationAddress = Systems.getSystem(gasStationSystemId);
+        console.log("  GasStationSystem address:", gasStationAddress);
+
+        // Grant GasStation access to Gold:Balances table for direct writes
+        ResourceId goldBalancesTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Balances");
+        try world.grantAccess(goldBalancesTableId, gasStationAddress) {
+            console.log("  Granted Gold:Balances table access to GasStation");
+        } catch {
+            console.log("  Gold:Balances table access grant to GasStation failed");
+        }
+
+        // Grant GasStation access to Gold:TotalSupply table for direct writes
+        ResourceId goldTotalSupplyTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "TotalSupply");
+        try world.grantAccess(goldTotalSupplyTableId, gasStationAddress) {
+            console.log("  Granted Gold:TotalSupply table access to GasStation");
+        } catch {
+            console.log("  Gold:TotalSupply table access grant to GasStation failed");
+        }
+
+        // Set default configuration
+        GasStationConfig.set(DEFAULT_ETH_PER_GOLD, DEFAULT_MAX_GOLD_PER_SWAP, DEFAULT_GAS_COOLDOWN, true);
+        console.log("  GasStation config set (ethPerGold:", DEFAULT_ETH_PER_GOLD, ")");
+
+        // NOTE: Fund the treasury post-deployment by calling UD__fundGasTreasury() with ETH value
+        console.log("  Remember to fund the GasStation treasury with ETH!");
+    }
+
+    function _configureGameDelegation() internal {
+        console.log("Configuring GameDelegationControl whitelist...");
+
+        bytes14 ns = "UD";
+
+        // Whitelist all safe gameplay systems (25 systems)
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "CharacterCore"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "StatSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "LevelSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "ImplicitClassSys"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "EquipmentCore"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "EquipmentSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "WeaponSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "ArmorSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "AccessorySystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "ConsumableSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "MapSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "MapSpawnSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "CombatSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "PvESystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "PvPSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "EncounterSys"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "ShopSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "MarketplaceSys"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "GasStationSys"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "LootManagerSyste"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "PveRewardSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "PvpRewardSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "WorldActionSys"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "FragmentSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "UtilsSystem"), true);
+
+        console.log("  25 gameplay systems whitelisted");
+        console.log("  Blocked: AdminSystem, AdminShopSys, PauseSystem, UDConfigSys, ItemCreationSys, etc.");
     }
 
     function _transferItemsOwnership() internal {

@@ -170,6 +170,14 @@ export default defineWorld({
       name: "UtilsSystem",
       openAccess: true,
     },
+    GasStationSystem: {
+      name: "GasStationSys",
+      openAccess: true,
+    },
+    GameDelegationControl: {
+      name: "GameDelegation",
+      openAccess: true,
+    },
   },
   enums: {
     // Legacy class enum - kept for backward compatibility
@@ -837,6 +845,45 @@ export default defineWorld({
       },
       key: ["encounterId"],
       type: "offchainTable",
+    },
+    ///////////////////////////////////// DELEGATION CONTROL ///////////////////////////////////
+    /**
+     * Whitelist of game systems allowed through GameDelegationControl.
+     * Only systems in this table can be called via delegated burner wallets.
+     */
+    AllowedGameSystems: {
+      key: ["systemId"],
+      schema: {
+        systemId: "ResourceId",
+        allowed: "bool",
+      },
+    },
+    ///////////////////////////////////// GAS STATION ///////////////////////////////////
+    /**
+     * Singleton config for the GasStation system.
+     * ethPerGold: exchange rate (wei per 1e18 gold units)
+     * maxGoldPerSwap: max gold burnable in one swap
+     * cooldownSeconds: minimum time between swaps per player
+     * enabled: pause flag for gas station specifically
+     */
+    GasStationConfig: {
+      key: [],
+      schema: {
+        ethPerGold: "uint256",
+        maxGoldPerSwap: "uint256",
+        cooldownSeconds: "uint256",
+        enabled: "bool",
+      },
+    },
+    /**
+     * Per-player cooldown tracking for GasStation swaps.
+     */
+    GasStationCooldown: {
+      key: ["player"],
+      schema: {
+        player: "address",
+        lastSwap: "uint256",
+      },
     },
     ///////////////////////////////////// FRAGMENTS (Lore NFTs) ///////////////////////////////////
     // Track trigger progress and claims per character

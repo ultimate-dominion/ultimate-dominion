@@ -27,7 +27,6 @@ import {FragmentProgress} from "@codegen/index.sol";
 import {FragmentType} from "@codegen/common.sol";
 import {_requireAccess} from "../utils.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
-import {UNLIMITED_DELEGATION} from "@latticexyz/world/src/constants.sol";
 import {OnlyCharacters, Unauthorized, NotSpawned, AlreadySpawned, InEncounter, OutOfBounds, InvalidMove, MaxPlayers, EntityNotAtPosition, UseFleeFunction, SessionNotTimedOut, MoveTooFast} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
@@ -41,9 +40,9 @@ contract MapSystem is System {
         if (_msgSender() == owner) {
             return true;
         }
-        // Check if caller has unlimited delegation from owner
+        // Check if caller has any delegation from owner (unlimited or game delegation)
         ResourceId delegationId = UserDelegationControl.getDelegationControlId(owner, _msgSender());
-        return ResourceId.unwrap(delegationId) == ResourceId.unwrap(UNLIMITED_DELEGATION);
+        return ResourceId.unwrap(delegationId) != bytes32(0);
     }
 
     function move(bytes32 entityId, uint16 x, uint16 y) public {

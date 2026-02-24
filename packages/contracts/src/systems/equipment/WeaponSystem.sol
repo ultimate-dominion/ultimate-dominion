@@ -20,7 +20,6 @@ import {ItemType} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
-import {UNLIMITED_DELEGATION} from "@latticexyz/world/src/constants.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 
 contract WeaponSystem is System {
@@ -35,7 +34,7 @@ contract WeaponSystem is System {
         address caller = _msgSender();
         // Check direct ownership or delegation
         bool isOwner = characterOwner == caller;
-        bool hasDelegation = ResourceId.unwrap(UserDelegationControl.getDelegationControlId(characterOwner, caller)) == ResourceId.unwrap(UNLIMITED_DELEGATION);
+        bool hasDelegation = ResourceId.unwrap(UserDelegationControl.getDelegationControlId(characterOwner, caller)) != bytes32(0);
         require(isOwner || hasDelegation, "WEAPON: Not Character Owner");
         _;
     }
