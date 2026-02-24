@@ -213,6 +213,17 @@ All security items must be complete before touching real money:
 - [ ] Validate all system calls on mainnet
 - [ ] Document deployment runbook (step-by-step for future deploys/resets)
 
+**Live Operations Tooling**
+- [ ] Build `AdminTuning.s.sol` — forge script for surgical live updates without redeployment
+  - Item tuning: update stats (damage, armor, modifiers), drop rates, prices, stat requirements
+  - Monster tuning: update stats (HP, STR, AGI, INT, armor, XP), add/remove inventory items
+  - Shop tuning: update prices, stock, restock rates
+  - Economy tuning: gold rewards, marketplace fees
+  - Content additions: add new items/monsters/shops without touching existing data
+  - Retirement: set dropChance to 0 and remove from shops (existing player copies become legacy items)
+- [ ] Test AdminTuning against Sepolia — verify each tuning function works without side effects
+- [ ] Document live update runbook (what can be changed hot vs what requires `mud deploy`)
+
 **Infrastructure**
 - [ ] Production RPC provider (dedicated, not public node)
 - [ ] MUD indexer for Base mainnet
@@ -291,19 +302,25 @@ Ongoing after mainnet is live. Focus shifts from building to growing and sustain
 
 ### 3.3 Ongoing Balance & Tuning
 
+All tuning changes below use `AdminTuning.s.sol` (built in 2.3) — single-transaction admin calls, no downtime, no redeployment. Changes are instant and affect all players (items are referenced by ID, stats live in shared tables).
+
 - [ ] Monitor gold inflation/deflation (on-chain metrics)
 - [ ] Adjust drop rates based on player data
 - [ ] PvP meta monitoring — nerf/buff as needed
 - [ ] Experience curve adjustments based on average time-to-level
 - [ ] Shop pricing adjustments based on marketplace data
+- [ ] Retire underused items (set dropChance to 0, remove from shops — existing copies stay as legacy)
+- [ ] Establish patch cadence: data-only hotfixes (AdminTuning) vs system upgrades (`mud deploy`)
 
 ### 3.4 Feature Expansion
 
-- [ ] New zones and monsters
-- [ ] New items and equipment tiers
-- [ ] Guild system
-- [ ] Advanced class abilities
-- [ ] Seasonal events and limited-time content
+New zones, items, and monsters can be added live via AdminTuning + zone loader without redeployment. System-level features (guild, abilities) require `mud deploy`.
+
+- [ ] New zones and monsters (zone loader + AdminTuning for wiring drops/shops)
+- [ ] New items and equipment tiers (AdminTuning — counter increments, new IDs, wire to drops/shops)
+- [ ] Guild system (`mud deploy` — new system + tables)
+- [ ] Advanced class abilities (`mud deploy` — combat system changes)
+- [ ] Seasonal events and limited-time content (AdminTuning for temp items/monsters, retire after event)
 - [ ] Fragment artwork (replace placeholders with final art)
 
 ### 3.5 Retention & Re-engagement
