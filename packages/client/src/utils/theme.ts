@@ -367,7 +367,7 @@ const Tooltip = {
 };
 
 export const theme = extendTheme({
-  config: { initialColorMode: 'dark', useSystemColorMode: true },
+  config: { initialColorMode: 'light', useSystemColorMode: false },
   fonts: {
     body: `'Inter', -apple-system, BlinkMacSystemFont, sans-serif`,
     heading: `'Inter', -apple-system, BlinkMacSystemFont, sans-serif`,
