@@ -14,6 +14,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -92,6 +93,7 @@ export const BattleProvider = ({
   const { allMonsters, allCharacters } = useMap();
 
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
+  const attackInFlight = useRef(false);
   const [isFleeing, setIsFleeing] = useState<boolean>(false);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
 
@@ -316,6 +318,9 @@ export const BattleProvider = ({
 
   const onAttack = useCallback(
     async (itemId: string) => {
+      if (attackInFlight.current) return;
+      attackInFlight.current = true;
+
       try {
         setAttackingItemId(itemId);
 
@@ -353,6 +358,7 @@ export const BattleProvider = ({
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to attack.', e);
       } finally {
+        attackInFlight.current = false;
         setAttackingItemId(null);
       }
     },
