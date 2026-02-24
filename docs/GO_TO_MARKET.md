@@ -1,6 +1,6 @@
 # Ultimate Dominion — Go-to-Market
 
-Marketing plan — SEO, community platform, distribution channels, content strategy, press, and priority action plan.
+Marketing plan — SEO, owned channels, distribution, content strategy, press, and priority action plan.
 
 > **Status Key**: `[IMPLEMENTED]` = done, `[PLANNED]` = designed but not built
 
@@ -8,24 +8,32 @@ Marketing plan — SEO, community platform, distribution channels, content strat
 
 ## Table of Contents
 
-1. [Community Platform](#community-platform)
-2. [SEO Audit](#seo-audit-current-state)
-3. [Distribution Channels](#distribution-channels)
+1. [Owned Channels Strategy](#owned-channels-strategy)
+2. [Public Documentation Site](#public-documentation-site)
+3. [SEO Audit & Action Plan](#seo-audit--action-plan)
 4. [Content Marketing Strategy](#content-marketing-strategy)
-5. [Messaging by Audience](#messaging-by-audience)
-6. [Press & Influencers](#press--influencers)
-7. [Priority Action Plan](#priority-action-plan)
+5. [Distribution Channels](#distribution-channels)
+6. [Messaging by Audience](#messaging-by-audience)
+7. [Press & Influencers](#press--influencers)
+8. [Metrics & Success Criteria](#metrics--success-criteria)
+9. [Priority Action Plan](#priority-action-plan)
 
 ---
 
-## Community Platform `[PLANNED]`
+## Owned Channels Strategy
 
-### Decision: Self-Hosted Discourse (No Discord)
+**Core principle**: Build on platforms you own first. Rented audiences (Reddit, Twitter followers) can disappear. Owned channels compound.
 
-Communication channels: **public forum (Discourse) + in-game chat + email**. No Discord.
+### 1. Public Docs Site (`docs.ultimatedominion.com`) `[PLANNED]`
+
+See [Public Documentation Site](#public-documentation-site) section below. This is the highest-ROI SEO investment — dozens of indexable pages from content that already exists.
+
+### 2. Discourse Forum (`forum.ultimatedominion.com`) `[PLANNED]`
+
+**When to launch**: Day one — available from the start alongside the beta. Seed it with announcements, patch notes, and a beginner's guide so it doesn't feel empty. Early players who see an active forum with developer presence are more likely to post.
 
 **Why Discourse:**
-- Server-rendered HTML fallback for crawlers — strong SEO out of the box
+- Server-rendered HTML — strong SEO out of the box
 - Built-in sitemap generation, clean URLs, structured data
 - Sign-In with Ethereum (SIWE) plugin: https://github.com/spruceid/discourse-siwe-auth
 - DiscourseConnect SSO can bridge Thirdweb auth for embedded wallet users
@@ -39,7 +47,7 @@ Communication channels: **public forum (Discourse) + in-game chat + email**. No 
 - Flarum: Too young, relies on extensions for basic SEO
 - Custom Next.js forum: 3–6 months build time — not worth the opportunity cost
 
-### Forum Structure
+**Forum Structure** (seed categories at launch, expand as needed):
 
 ```
 ULTIMATE DOMINION FORUMS
@@ -47,7 +55,6 @@ ULTIMATE DOMINION FORUMS
 |-- Announcements & News
 |   |-- Patch Notes
 |   |-- Developer Blogs
-|   |-- Events & Tournaments
 |
 |-- Game Discussion
 |   |-- General Discussion
@@ -58,18 +65,10 @@ ULTIMATE DOMINION FORUMS
 |
 |-- Guides & Knowledge Base
 |   |-- Beginner's Guide
-|   |-- Advanced Tutorials
-|   |-- Economy & Crafting Guides
+|   |-- Economy & Trading Guides
 |   |-- Wiki-style Collaborative Posts
 |
-|-- On-Chain & Economy
-|   |-- Marketplace Discussion
-|   |-- Smart Contract Discussion
-|   |-- Governance Proposals
-|   |-- Bug Bounties
-|
 |-- Community
-|   |-- Guild Recruitment & Alliances
 |   |-- PvP Rankings & Leaderboard Discussion
 |   |-- Fan Art & Creative Content
 |   |-- Off-Topic / The Tavern
@@ -77,43 +76,212 @@ ULTIMATE DOMINION FORUMS
 |-- Support
 |   |-- Bug Reports
 |   |-- Technical Support
-|   |-- Account Issues
 ```
+
+**Complementary channels** (alongside the forum):
+- In-game chat (Push Protocol, badge-gated) `[IMPLEMENTED]`
+- Email list for patch notes and announcements
+
+### 3. X/Twitter `[PLANNED]`
+
+Primary social channel. See [Content Marketing Strategy](#content-marketing-strategy) for cadence and content plan.
+
+### 4. Farcaster / Warpcast `[PLANNED]`
+
+Secondary social channel. Built on Base — massive overlap with target audience.
+- DEGEN tipping token rewards creators
+- Farcaster Frames for inline game interaction
+- URL: https://warpcast.com/
+
+### 5. In-Game Chat `[IMPLEMENTED]`
+
+Push Protocol integration, badge-gated (Level 3 = Adventurer badge). This is where early community forms before external channels exist.
+
+### 6. Email List `[PLANNED]`
+
+Capture emails on the landing page for patch notes, events, and re-engagement. Critical for bringing back lapsed players. Options: Buttondown (free tier, developer-friendly), Resend, or Discourse's built-in mailing list.
 
 ---
 
-## SEO Audit (Current State)
+## Public Documentation Site `[PLANNED]`
+
+### Why This Matters for SEO
+
+The game client is a React SPA — Google sees a blank page. A public docs site is **server-rendered HTML by default**, meaning every page is immediately indexable. The content already exists in the `docs/` markdown files.
+
+### What to Publish vs Keep Internal
+
+**Public (player-facing):**
+
+| Source Doc | Public Page | SEO Keywords |
+|-----------|-------------|--------------|
+| GAME_DESIGN.md (classes) | Classes & Builds Guide | "browser MMORPG classes", "fantasy RPG class builds" |
+| GAME_DESIGN.md (combat) | Combat System Guide | "browser game combat system", "PvP combat mechanics" |
+| GAME_DESIGN.md (items) | Items & Equipment | "MMORPG item rarity tiers", "fantasy RPG equipment" |
+| ECONOMICS.md | Economy Guide | "game economy design", "player marketplace" |
+| COMBAT_SYSTEM.md | Combat Formulas | "RPG damage formula", "combat triangle system" |
+| BADGE_SYSTEM.md | Achievements & Badges | "game achievement system", "badge unlocks" |
+| LORE_BIBLE.md | World Lore | "fantasy game lore", "dark fantasy worldbuilding" |
+| LORE_NFT_FRAGMENTS.md | Lore Fragments Guide | "collectible lore system", "story fragments" |
+| (new) Beginner's Guide | Getting Started | "free browser MMORPG", "how to play Ultimate Dominion" |
+| (new) FAQ | Frequently Asked Questions | "Ultimate Dominion FAQ", "browser MMO help" |
+| Manifesto | Our Manifesto | "indie MMORPG manifesto", "player-owned game" |
+
+**Internal (keep in repo only):**
+- architecture/ (SYSTEM_ARCHITECTURE, TECH_STACK, FRONTEND_GUIDELINES)
+- combat-stats/COMBAT_BALANCE.md (internal tuning data)
+- LAUNCH_STRATEGY.md (anti-abuse mechanisms)
+- launch_checklist.md
+- processes/
+
+### Recommended Tool: Docusaurus
+
+| Tool | Pros | Cons |
+|------|------|------|
+| **Docusaurus** | React-based (matches stack), excellent SEO, versioning, search, MDX support | Slightly heavier than alternatives |
+| Nextra | Next.js-based, clean, lightweight | Smaller ecosystem |
+| Mintlify | Beautiful out of the box, hosted | Paid for custom domains |
+| VitePress | Vue-based, fast | Different ecosystem from React |
+| Starlight (Astro) | Fastest builds, great SEO | Less React integration |
+
+**Recommendation**: Docusaurus. It's React-based (matches the game client stack), has built-in search (Algolia DocSearch is free for open-source), generates a sitemap automatically, and supports MDX so you can embed interactive components later.
+
+### Setup Plan
+
+1. Create `packages/docs` in the monorepo
+2. Install Docusaurus, configure for `docs.ultimatedominion.com`
+3. Copy and adapt public-facing docs from `docs/` — rewrite for player audience (remove technical jargon, add examples, add screenshots)
+4. Add Beginner's Guide and FAQ as new pages
+5. Deploy to Vercel, add `docs` CNAME in Cloudflare
+6. Submit sitemap to Google Search Console
+
+### Content Expansion (Ongoing)
+
+Every new game feature should ship with a docs page:
+- New zone → zone guide with maps, mob list, level recommendations
+- New items → item database entries with stats, drop locations, rarity
+- New class abilities → class build guides
+- Balance changes → patch notes on both forum and docs
+
+---
+
+## SEO Audit & Action Plan
 
 The client is a pure CSR React SPA (Vite + React 18 + Chakra UI). Crawlers see a blank page until JS loads.
 
-| Issue | Severity | Status |
-|-------|----------|--------|
-| No meta description, OG tags, or Twitter cards | HIGH | Missing |
-| No robots.txt or sitemap.xml | HIGH | Missing |
-| No SSR/prerendering | CRITICAL | Missing |
-| No dynamic meta tags (every page has identical title) | HIGH | Missing |
-| No structured data (JSON-LD/schema.org) | MEDIUM | Missing |
-| Large JS bundle | MEDIUM | Needs optimization |
-| No react-helmet or equivalent | HIGH | Missing |
-| Source maps shipped to production | MEDIUM | Should disable |
-| URL structure | OK | Clean: /marketplace, /characters/:id, /leaderboard |
-| Vercel Analytics | OK | `[IMPLEMENTED]` |
+| Issue | Severity | Status | Action |
+|-------|----------|--------|--------|
+| No meta description, OG tags, or Twitter cards | HIGH | Missing | Do before first public post |
+| No robots.txt or sitemap.xml | HIGH | Missing | Do before first public post |
+| No SSR/prerendering | CRITICAL | Missing | Docs site solves this for public pages |
+| No dynamic meta tags (every page has identical title) | HIGH | Missing | Add react-helmet-async |
+| No structured data (JSON-LD/schema.org) | MEDIUM | Missing | Add Game + Organization schema |
+| Large JS bundle | MEDIUM | Needs optimization | Lazy-load routes, tree-shake |
+| No react-helmet or equivalent | HIGH | Missing | Add react-helmet-async |
+| Source maps shipped to production | MEDIUM | Should disable | Set `sourcemap: false` in vite.config.ts |
+| URL structure | OK | Clean | /marketplace, /characters/:id, /leaderboard |
+| Vercel Analytics | OK | `[IMPLEMENTED]` | — |
+| No landing page for link sharing | HIGH | Missing | Build landing page or enhance Welcome |
 
-### SEO Quick Wins (Priority Order)
+### Pre-Launch SEO Checklist (Do Before Any Public Post)
 
-1. Add `react-helmet-async` for per-route meta tags (title, description, OG, Twitter cards)
-2. Add `robots.txt` and `sitemap.xml` to `public/`
-3. Create a 1200x630px OG image for social sharing
-4. Add JSON-LD structured data (Game schema, Organization)
-5. Disable source maps in production build (`sourcemap: false` in vite.config.ts)
-6. Add canonical URL tags
-7. Add alt tags to all images
+These are 1–2 hours of work total. Every future link share benefits from them:
+
+- [ ] Add `react-helmet-async` — per-route title, description, OG image, Twitter card
+- [ ] Add `robots.txt` to `public/` (allow all, link to sitemap)
+- [ ] Add `sitemap.xml` to `public/` (static for now: /, /manifesto, /leaderboard, /marketplace)
+- [ ] Create 1200x630px OG image for social sharing
+- [ ] Add JSON-LD structured data (VideoGame schema, Organization)
+- [ ] Set `sourcemap: false` in `vite.config.ts` for production builds
+- [ ] Add canonical URL tags (`<link rel="canonical">`)
+- [ ] Add alt tags to all images
+- [ ] Build landing page or enhance Welcome page with game description + screenshots
 
 ### Longer-Term SEO
 
-- Implement prerendering for public pages (Welcome, Leaderboard, Character profiles, Marketplace items)
-- Build a game wiki (either on Discourse or a dedicated subdomain)
-- Dynamic OG image generation for character/item cards (API endpoint using Canvas/Sharp — Sharp already in API dependencies)
+- Public docs site at `docs.ultimatedominion.com` (see above)
+- Discourse forum at `forum.ultimatedominion.com` (server-rendered, auto-indexed)
+- Dynamic OG image generation for character/item cards (API endpoint using Sharp — already in dependencies)
+- Prerendering for Leaderboard, Character profiles, Marketplace items (via Vercel ISR or prerender.io)
+- Submit to Google Search Console once docs site is live
+
+### SEO Guerilla Tactics
+
+- **Docs site**: Every page is a long-tail keyword target (item database, class builds, combat guides)
+- **Quora/Arqade answers**: Answer "What are the best browser MMORPGs?" with genuine helpful answers that link to docs
+- **Comparison pages**: "On-Chain Games Like Dark Forest" or "Best Browser MMORPGs in 2026" (publish on docs site blog)
+- **Directory backlinks**: Every listing (PBBG, IndieDB, DappRadar, etc.) is a backlink improving domain authority
+- **Forum threads**: Discourse threads get indexed — "Classes & Builds" discussions become organic search results
+
+---
+
+## Content Marketing Strategy
+
+### Owned Channel Priority
+
+1. **Docs site** — permanent, indexable, compounds over time
+2. **Discourse forum** — community-generated content, auto-indexed
+3. **X/Twitter** — distribution and engagement
+4. **Farcaster** — web3 audience overlap
+5. **Medium/blog** — cross-posted long-form content
+
+### X/Twitter Strategy `[PLANNED]`
+
+**Cadence:**
+
+| Day | Hashtag | Content |
+|-----|---------|---------|
+| Wednesday | #WIPWednesday | Work-in-progress shots |
+| Saturday | #ScreenshotSaturday | Gameplay GIF (6–15 seconds) |
+| Anytime | #gamedev #indiedev #web3gaming | Technical threads, bug showcases, milestone posts |
+
+**First 10 Posts** (pre-write these before launching the account):
+
+1. Introduction thread: "I'm building a browser MMORPG where everything is permanent..." (link to manifesto)
+2. #ScreenshotSaturday: Combat GIF showing PvP with gold stakes
+3. Technical thread: "How I designed a combat system entirely on-chain"
+4. Lore teaser: First fragment text with atmospheric screenshot
+5. Dev log: "Week 1 update — what I shipped, what broke, what's next"
+6. Class system explainer with visual of the 9 advanced classes
+7. #WIPWednesday: Map exploration GIF
+8. Thread: "Why I chose no Discord" (contrarian take, high engagement potential)
+9. Marketplace/economy screenshot with "everything you see is player-owned"
+10. Milestone post: "X players have created characters" (once live)
+
+**Thread formats that perform well:**
+- "I built X. Here's what I learned." (dev retrospective)
+- "Here's a game mechanic most MMOs get wrong..." (contrarian take)
+- Before/after comparisons (UI polish, balance changes)
+- Short gameplay clips with context (15 seconds max)
+
+### Dev Logs
+
+**What to post:**
+- Weekly/biweekly dev updates with screenshots/GIFs
+- "How I solved X" technical posts
+- Design decision retrospectives
+- Monthly progress summaries with before/after
+- Honest posts about challenges (perform BETTER than success stories)
+
+**Where to cross-post:**
+- Own Discourse forum → Medium → IndieDB → itch.io → Reddit (subreddit-appropriate)
+
+### Blog/Article Ideas
+
+**Gameplay-first** (for MUD/MMO/gaming audiences):
+- "I'm Building a Browser MMORPG Where Your Choices Actually Matter"
+- "Designing a PvP Economy That Doesn't Collapse"
+- "What MUDs Got Right That Modern MMOs Forgot"
+- "Solo Dev MMORPG: Month X Update"
+- "Why Permadeath and Risk Make Games Better"
+
+**Technical/crypto** (for Hacker News, Farcaster, web3 audiences):
+- "Why I'm Building an MMORPG Entirely On-Chain"
+- "The MUD Framework: Building Autonomous Worlds on Ethereum"
+- "How Smart Contracts Replace Game Servers"
+- "PvP Economy Design: Lessons from 20 Years of MUDs"
+
+**Publish on**: Medium (cross-posted to Discourse blog category), link from Twitter threads.
 
 ---
 
@@ -125,12 +293,6 @@ The client is a pure CSR React SPA (Vite + React 18 + Chakra UI). Crawlers see a
 - Base Builder Grants: https://docs.base.org/get-started/get-funded (2 ETH weekly rewards, 1–5 ETH grants)
 - Base Batches 2026: https://batches.base.org/ (top teams get $10K–$50K)
 - Tag @base on X/Twitter and Farcaster for amplification
-
-**Farcaster / Warpcast:**
-- Built on Base, massive overlap with target audience
-- DEGEN tipping token rewards creators
-- Farcaster Frames for inline game interaction
-- URL: https://warpcast.com/
 
 **Lattice / MUD Community:**
 - MUD Discord — other on-chain game devs
@@ -268,52 +430,6 @@ The client is a pure CSR React SPA (Vite + React 18 + Chakra UI). Crawlers see a
 
 ---
 
-## Content Marketing Strategy
-
-### Dev Logs (Most Powerful Strategy for Solo Dev)
-
-**What to post:**
-- Weekly/biweekly dev updates with screenshots/GIFs
-- "How I solved X" technical posts
-- Design decision retrospectives
-- Monthly progress summaries with before/after
-- Honest posts about challenges (perform BETTER than success stories)
-
-**Where to cross-post:**
-- Own Discourse forum → Medium → IndieDB → itch.io → Reddit (subreddit-appropriate)
-
-### Twitter/X Cadence
-
-| Day | Hashtag | Content |
-|-----|---------|---------|
-| Wednesday | #WIPWednesday | Work-in-progress shots |
-| Saturday | #ScreenshotSaturday | Gameplay GIF (6–15 seconds) |
-| Anytime | #gamedev #indiedev #web3gaming | Technical threads, bug showcases, milestone posts |
-
-### High-Value Blog/Medium Articles
-
-- "Why I'm Building an MMORPG Entirely On-Chain"
-- "The MUD Framework: Building Autonomous Worlds on Ethereum"
-- "PvP Economy Design: Lessons from 20 Years of MUDs"
-- "Solo Dev MMORPG: Month X Update"
-- "How Smart Contracts Replace Game Servers"
-
-### YouTube Content
-
-- Dev log videos (5–15 min)
-- 60–90 sec gameplay trailers
-- "How on-chain combat actually works" explainers
-- PvP highlight reels
-
-### SEO Guerilla Tactics
-
-- **Game wiki**: Item database, class builds, quest guides — every page is a long-tail keyword target
-- **Quora/Arqade answers**: Answer "What are the best browser MMORPGs?" with genuine helpful answers
-- **Comparison pages**: "On-Chain Games Like Dark Forest" or "Best Browser MMORPGs in 2026"
-- **Directory backlinks**: Every listing is a backlink improving domain authority
-
----
-
 ## Messaging by Audience
 
 | Audience | Lead With |
@@ -342,17 +458,10 @@ Create using PressKitty (https://impress.games/press-kitty). Include:
 - Fact sheet (platform, genre, tech stack)
 - Contact email + social links
 
-### YouTubers to Contact
-
-| Channel | Why |
-|---------|-----|
-| Josh Strife Hayes | 1M+ subs, covers niche/indie MMOs |
-| TheLazyPeon | Reviews every MMORPG, covers niche titles |
-| MMOHut / FreeMMOStation | Dedicated F2P/browser MMO reviews |
-| Nookrium | Spotlights in-development indie games |
-
 ### Press/Blogs
 
+- MMORPG.com Indie MMO Spotlight: https://www.mmorpg.com/ (weekly column, actively scouts indie MMOs)
+- Massively Overpowered: https://massivelyop.com/ (most respected indie MMO journalism)
 - Bio Break: https://biobreak.wordpress.com/ (also writes for Massively OP)
 - Dog Water Gaming: https://dogwatergaming.com/ (publishes "Top 10 Indie MMOs" lists)
 - The Indie Informer: https://the-indie-in-former.com/
@@ -363,47 +472,98 @@ Create using PressKitty (https://impress.games/press-kitty). Include:
 
 ---
 
+## Metrics & Success Criteria `[PLANNED]`
+
+### What to Track
+
+| Metric | Tool | Why |
+|--------|------|-----|
+| Daily Active Users (DAU) | On-chain (unique wallets with tx/day) | Core health metric |
+| New characters created / day | On-chain (CharacterSystem mint events) | Growth rate |
+| Retention (Day 1, Day 7, Day 30) | On-chain (wallet activity over time) | Are players coming back? |
+| Time-to-first-combat | On-chain (time between character mint and first encounter) | Onboarding friction |
+| Session length | Vercel Analytics / custom events | Engagement depth |
+| Channel attribution | UTM parameters on inbound links | Which channels drive signups |
+| Docs site traffic | Google Search Console + Vercel Analytics | SEO performance |
+| Forum posts / week | Discourse admin metrics | Community health |
+| Twitter impressions / engagement | X Analytics | Social reach |
+
+### Success Milestones
+
+| Milestone | Target | Indicator |
+|-----------|--------|-----------|
+| Proof of life | 10 DAU | People are playing and coming back |
+| Community forming | 25 DAU, 5+ forum posts/week | Players are talking to each other |
+| Growth mode | 50 DAU, organic signups > 50% | Word of mouth is working |
+| Sustainability | 100 DAU, marketplace active daily | Economy is self-sustaining |
+
+### Review Cadence
+
+- **Weekly**: Check DAU, new signups, channel attribution
+- **Monthly**: Review retention curves, content performance, adjust strategy
+- **Quarterly**: Full GTM strategy review, reallocate effort to winning channels
+
+---
+
 ## Priority Action Plan
 
+### Before First Public Post (Do Now)
+
+1. SEO quick wins: react-helmet, robots.txt, sitemap.xml, OG image (1–2 hours)
+2. Build or enhance landing page / Welcome page with game description + screenshots
+3. Pre-write first 5 X/Twitter posts (see Content Strategy above)
+4. Pre-write r/MUD introduction post
+5. Pre-write Farcaster introduction thread
+
 ### This Week
-1. Apply for Base Builder Grants (free money, ecosystem visibility)
-2. Create Farcaster account, start posting dev updates
-3. List on MUD directories (MUD Connector, MudVerse, MudListings, Top Mud Sites)
-4. Post on r/MUD — introduce the game
-5. Submit to PBBG.com and BrowserMMORPG.com
+
+6. Apply for Base Builder Grants (free money, ecosystem visibility)
+7. Create X/Twitter account, publish first posts
+8. Create Farcaster account, start posting dev updates
+9. List on MUD directories (MUD Connector, MudVerse, MudListings, Top Mud Sites)
+10. Post on r/MUD — introduce the game
+11. Submit to PBBG.com and BrowserMMORPG.com
 
 ### This Month
-6. Create press kit using PressKitty
-7. Set up IndieDB and itch.io game pages with dev logs
-8. Start #ScreenshotSaturday on Twitter/X
-9. Write first Medium article
-10. Submit to DappRadar, ChainPlay, PlayToEarn, GAM3S.GG
-11. Email MMORPG.com Indie MMO Spotlight columnist
-12. Email Massively Overpowered
+
+12. Create press kit using PressKitty
+13. Set up IndieDB and itch.io game pages with dev logs
+14. Start #ScreenshotSaturday on X/Twitter
+15. Write first Medium article (gameplay-first: "What MUDs Got Right That Modern MMOs Forgot")
+16. Submit to DappRadar, ChainPlay, PlayToEarn, GAM3S.GG
+17. Email MMORPG.com Indie MMO Spotlight columnist
+18. Email Massively Overpowered
+19. Set up Google Search Console for ultimatedominion.com
+20. Begin building docs site (Docusaurus at docs.ultimatedominion.com)
 
 ### Next 2–3 Months
-13. Show HN post (once browser experience is friction-free)
-14. Email 10 indie game YouTubers with press kits
-15. Build in-game referral system
-16. Start game wiki and populate with content
-17. Post on Royal Road (serialized lore or forum posts)
-18. Apply to Base Batches 2026
-19. Reach out to gaming guilds (YGG, Merit Circle, Avocado DAO)
-20. Engage LitRPG communities
+
+21. Launch public docs site with 10+ pages
+22. Show HN post (once browser experience is friction-free)
+23. Discourse forum already live (launched with beta)
+24. Build in-game referral system
+25. Post on Royal Road (serialized lore or forum posts)
+26. Apply to Base Batches 2026
+27. Reach out to gaming guilds (YGG, Merit Circle, Avocado DAO)
+28. Engage LitRPG communities
+29. Set up email capture and re-engagement flow
 
 ### Getting First 100 Players
 
 | Phase | Target | Actions |
 |-------|--------|---------|
 | Inner Circle | 1–25 | r/MUD, MUD directories, Lattice/MUD community, Farcaster |
-| Expansion | 25–50 | Show HN, r/IndieGaming, r/playmygame, MMORPG.com Spotlight, Twitter |
-| Viral Push | 50–100 | YouTuber outreach, Medium articles, Base Grants, aggregator listings |
+| Expansion | 25–50 | Show HN, r/IndieGaming, r/playmygame, MMORPG.com Spotlight, X/Twitter |
+| Viral Push | 50–100 | Press outreach, Medium articles, Base Grants, aggregator listings, docs site SEO |
 
 ### Retention Drivers
+
 - Responsive developer (players who get questions answered stay 45% vs 17%)
-- Visible changelogs and patch notes
+- Visible changelogs and patch notes (on Discourse + docs site)
 - In-game referral system (double-sided rewards, leaderboard)
 - "Founding Player" badge for first 100 accounts — never available again `[IMPLEMENTED]` (Founder badge #50)
+- Email re-engagement for lapsed players (patch notes, new content alerts)
+- Public docs site showing depth of the game (convinces "maybe later" players to return)
 
 ---
 

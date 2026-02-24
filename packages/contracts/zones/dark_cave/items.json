@@ -3,7 +3,7 @@
     {
       "name": "Tattered Cloth",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 60,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:tattered_cloth",
       "price": 5000000000000000000,
@@ -14,7 +14,7 @@
         "armorModifier": 1,
         "hpModifier": 0,
         "intModifier": 1,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
@@ -26,7 +26,7 @@
     {
       "name": "Worn Leather Vest",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 60,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:worn_leather_vest",
       "price": 5000000000000000000,
@@ -37,7 +37,7 @@
         "armorModifier": 2,
         "hpModifier": 0,
         "intModifier": 0,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": -1
       },
       "statRestrictions": {
@@ -49,7 +49,7 @@
     {
       "name": "Rusty Chainmail",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 60,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:rusty_chainmail",
       "price": 5000000000000000000,
@@ -60,7 +60,7 @@
         "armorModifier": 3,
         "hpModifier": 0,
         "intModifier": 0,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
@@ -72,7 +72,7 @@
     {
       "name": "Padded Armor",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:padded_armor",
       "price": 15000000000000000000,
@@ -83,19 +83,19 @@
         "armorModifier": 3,
         "hpModifier": 0,
         "intModifier": 0,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 1
       },
       "statRestrictions": {
         "minAgility": 0,
         "minIntelligence": 0,
-        "minStrength": 6
+        "minStrength": 8
       }
     },
     {
       "name": "Leather Jerkin",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:leather_jerkin",
       "price": 15000000000000000000,
@@ -106,11 +106,11 @@
         "armorModifier": 2,
         "hpModifier": 0,
         "intModifier": 0,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
-        "minAgility": 6,
+        "minAgility": 5,
         "minIntelligence": 0,
         "minStrength": 0
       }
@@ -118,7 +118,7 @@
     {
       "name": "Apprentice Robes",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:apprentice_robes",
       "price": 15000000000000000000,
@@ -129,19 +129,19 @@
         "armorModifier": 1,
         "hpModifier": 0,
         "intModifier": 1,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 6,
+        "minIntelligence": 7,
         "minStrength": 0
       }
     },
     {
       "name": "Studded Leather",
       "rarity": 2,
-      "dropChance": 15,
+      "dropChance": 40,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:studded_leather",
       "price": 35000000000000000000,
@@ -152,7 +152,7 @@
         "armorModifier": 5,
         "hpModifier": 5,
         "intModifier": 0,
-        "minLevel": 5,
+        "minLevel": 0,
         "strModifier": 1
       },
       "statRestrictions": {
@@ -164,7 +164,7 @@
     {
       "name": "Scout Armor",
       "rarity": 2,
-      "dropChance": 15,
+      "dropChance": 40,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:scout_armor",
       "price": 35000000000000000000,
@@ -175,11 +175,11 @@
         "armorModifier": 4,
         "hpModifier": 0,
         "intModifier": 0,
-        "minLevel": 5,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
-        "minAgility": 8,
+        "minAgility": 10,
         "minIntelligence": 0,
         "minStrength": 0
       }
@@ -187,7 +187,7 @@
     {
       "name": "Acolyte Vestments",
       "rarity": 2,
-      "dropChance": 15,
+      "dropChance": 40,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:acolyte_vestments",
       "price": 35000000000000000000,
@@ -198,19 +198,19 @@
         "armorModifier": 2,
         "hpModifier": 0,
         "intModifier": 2,
-        "minLevel": 5,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 8,
+        "minIntelligence": 7,
         "minStrength": 0
       }
     },
     {
       "name": "Chainmail Shirt",
       "rarity": 3,
-      "dropChance": 10,
+      "dropChance": 25,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:chainmail_shirt",
       "price": 80000000000000000000,
@@ -221,7 +221,7 @@
         "armorModifier": 8,
         "hpModifier": 8,
         "intModifier": 0,
-        "minLevel": 10,
+        "minLevel": 0,
         "strModifier": 2
       },
       "statRestrictions": {
@@ -233,7 +233,7 @@
     {
       "name": "Ranger Leathers",
       "rarity": 3,
-      "dropChance": 10,
+      "dropChance": 25,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:ranger_leathers",
       "price": 80000000000000000000,
@@ -244,11 +244,11 @@
         "armorModifier": 6,
         "hpModifier": 0,
         "intModifier": 0,
-        "minLevel": 10,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
-        "minAgility": 12,
+        "minAgility": 11,
         "minIntelligence": 0,
         "minStrength": 0
       }
@@ -256,7 +256,7 @@
     {
       "name": "Mage Robes",
       "rarity": 3,
-      "dropChance": 10,
+      "dropChance": 25,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:mage_robes",
       "price": 80000000000000000000,
@@ -267,12 +267,12 @@
         "armorModifier": 4,
         "hpModifier": 0,
         "intModifier": 3,
-        "minLevel": 10,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 12,
+        "minIntelligence": 14,
         "minStrength": 0
       }
     }
@@ -281,7 +281,7 @@
     {
       "name": "Broken Sword",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 60,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:broken_sword",
       "price": 5000000000000000000,
@@ -293,7 +293,7 @@
         "intModifier": 0,
         "maxDamage": 4,
         "minDamage": 2,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 1
       },
       "statRestrictions": {
@@ -305,7 +305,7 @@
     {
       "name": "Worn Shortbow",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 60,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:worn_shortbow",
       "price": 5000000000000000000,
@@ -317,7 +317,7 @@
         "intModifier": 0,
         "maxDamage": 4,
         "minDamage": 2,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
@@ -329,7 +329,7 @@
     {
       "name": "Cracked Wand",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 60,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:cracked_wand",
       "price": 5000000000000000000,
@@ -341,7 +341,7 @@
         "intModifier": 1,
         "maxDamage": 4,
         "minDamage": 2,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
@@ -353,7 +353,7 @@
     {
       "name": "Iron Axe",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:iron_axe",
       "price": 15000000000000000000,
@@ -365,19 +365,19 @@
         "intModifier": 0,
         "maxDamage": 8,
         "minDamage": 4,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 1
       },
       "statRestrictions": {
         "minAgility": 0,
         "minIntelligence": 0,
-        "minStrength": 6
+        "minStrength": 5
       }
     },
     {
       "name": "Hunting Bow",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:hunting_bow",
       "price": 15000000000000000000,
@@ -389,11 +389,11 @@
         "intModifier": 0,
         "maxDamage": 7,
         "minDamage": 4,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
-        "minAgility": 6,
+        "minAgility": 8,
         "minIntelligence": 0,
         "minStrength": 0
       }
@@ -401,7 +401,7 @@
     {
       "name": "Apprentice Staff",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:apprentice_staff",
       "price": 15000000000000000000,
@@ -413,7 +413,7 @@
         "intModifier": 1,
         "maxDamage": 6,
         "minDamage": 3,
-        "minLevel": 1,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
@@ -425,7 +425,7 @@
     {
       "name": "Steel Mace",
       "rarity": 2,
-      "dropChance": 15,
+      "dropChance": 40,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:steel_mace",
       "price": 40000000000000000000,
@@ -436,19 +436,19 @@
         "intModifier": 0,
         "maxDamage": 14,
         "minDamage": 8,
-        "minLevel": 5,
+        "minLevel": 0,
         "strModifier": 2
       },
       "statRestrictions": {
         "minAgility": 0,
         "minIntelligence": 0,
-        "minStrength": 8
+        "minStrength": 9
       }
     },
     {
       "name": "Recurve Bow",
       "rarity": 2,
-      "dropChance": 15,
+      "dropChance": 40,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:recurve_bow",
       "price": 40000000000000000000,
@@ -459,11 +459,11 @@
         "intModifier": 0,
         "maxDamage": 12,
         "minDamage": 7,
-        "minLevel": 5,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
-        "minAgility": 8,
+        "minAgility": 7,
         "minIntelligence": 0,
         "minStrength": 0
       }
@@ -471,7 +471,7 @@
     {
       "name": "Channeling Rod",
       "rarity": 2,
-      "dropChance": 15,
+      "dropChance": 40,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:channeling_rod",
       "price": 40000000000000000000,
@@ -482,19 +482,19 @@
         "intModifier": 2,
         "maxDamage": 10,
         "minDamage": 6,
-        "minLevel": 5,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 8,
+        "minIntelligence": 10,
         "minStrength": 0
       }
     },
     {
       "name": "Runesword",
       "rarity": 2,
-      "dropChance": 12,
+      "dropChance": 40,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:runesword",
       "price": 50000000000000000000,
@@ -505,7 +505,7 @@
         "intModifier": 1,
         "maxDamage": 11,
         "minDamage": 7,
-        "minLevel": 5,
+        "minLevel": 0,
         "strModifier": 1
       },
       "statRestrictions": {
@@ -517,7 +517,7 @@
     {
       "name": "Warhammer",
       "rarity": 3,
-      "dropChance": 10,
+      "dropChance": 25,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:warhammer",
       "price": 100000000000000000000,
@@ -528,19 +528,19 @@
         "intModifier": 0,
         "maxDamage": 25,
         "minDamage": 15,
-        "minLevel": 10,
+        "minLevel": 0,
         "strModifier": 3
       },
       "statRestrictions": {
         "minAgility": 0,
         "minIntelligence": 0,
-        "minStrength": 12
+        "minStrength": 13
       }
     },
     {
       "name": "Longbow",
       "rarity": 3,
-      "dropChance": 10,
+      "dropChance": 25,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:longbow",
       "price": 100000000000000000000,
@@ -551,11 +551,11 @@
         "intModifier": 0,
         "maxDamage": 22,
         "minDamage": 13,
-        "minLevel": 10,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
-        "minAgility": 12,
+        "minAgility": 15,
         "minIntelligence": 0,
         "minStrength": 0
       }
@@ -563,7 +563,7 @@
     {
       "name": "Mage Staff",
       "rarity": 3,
-      "dropChance": 10,
+      "dropChance": 25,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:mage_staff",
       "price": 100000000000000000000,
@@ -574,12 +574,12 @@
         "intModifier": 3,
         "maxDamage": 18,
         "minDamage": 12,
-        "minLevel": 10,
+        "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 12,
+        "minIntelligence": 11,
         "minStrength": 0
       }
     },
@@ -759,7 +759,7 @@
     {
       "name": "Minor Health Potion",
       "rarity": 1,
-      "dropChance": 30,
+      "dropChance": 60,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:minor_health_potion",
       "price": 10000000000000000000,
@@ -779,7 +779,7 @@
     {
       "name": "Health Potion",
       "rarity": 2,
-      "dropChance": 20,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:health_potion",
       "price": 25000000000000000000,
@@ -798,7 +798,7 @@
     {
       "name": "Greater Health Potion",
       "rarity": 3,
-      "dropChance": 10,
+      "dropChance": 40,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:greater_health_potion",
       "price": 60000000000000000000,
@@ -817,7 +817,7 @@
     {
       "name": "Fortifying Stew",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:fortifying_stew",
       "price": 20000000000000000000,
@@ -836,7 +836,7 @@
     {
       "name": "Quickening Berries",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:quickening_berries",
       "price": 20000000000000000000,
@@ -855,7 +855,7 @@
     {
       "name": "Focusing Tea",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:focusing_tea",
       "price": 20000000000000000000,
@@ -874,7 +874,7 @@
     {
       "name": "Antidote",
       "rarity": 1,
-      "dropChance": 15,
+      "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:antidote",
       "price": 15000000000000000000,
@@ -893,7 +893,7 @@
     {
       "name": "Smoke Bomb",
       "rarity": 2,
-      "dropChance": 10,
+      "dropChance": 35,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:smoke_bomb",
       "price": 35000000000000000000,
