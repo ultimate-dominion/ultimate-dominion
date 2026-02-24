@@ -12,6 +12,29 @@
 
 import { garnet, MUDChain, mudFoundry } from '@latticexyz/common/chains';
 
+export const base = {
+  name: 'Base',
+  id: 8453,
+  network: 'Base',
+  nativeCurrency: { decimals: 18, name: 'Ether', symbol: 'ETH' },
+  rpcUrls: {
+    default: {
+      http: [import.meta.env.VITE_HTTPS_RPC_URL || 'https://mainnet.base.org'],
+      webSocket: [import.meta.env.VITE_WS_RPC_URL || 'wss://base-rpc.publicnode.com'],
+    },
+    public: {
+      http: [import.meta.env.VITE_HTTPS_RPC_URL || 'https://mainnet.base.org'],
+      webSocket: [import.meta.env.VITE_WS_RPC_URL || 'wss://base-rpc.publicnode.com'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'BaseScan',
+      url: 'https://basescan.org',
+    },
+  },
+};
+
 export const baseSepolia = {
   name: 'Base Sepolia',
   id: 84532,
@@ -19,12 +42,12 @@ export const baseSepolia = {
   nativeCurrency: { decimals: 18, name: 'Ether', symbol: 'ETH' },
   rpcUrls: {
     default: {
-      http: [import.meta.env.VITE_HTTPS_RPC_URL],
-      webSocket: [import.meta.env.VITE_WS_RPC_URL],
+      http: [import.meta.env.VITE_HTTPS_RPC_URL || 'https://base-sepolia-rpc.publicnode.com'],
+      webSocket: [import.meta.env.VITE_WS_RPC_URL || 'wss://base-sepolia-rpc.publicnode.com'],
     },
     public: {
-      http: [import.meta.env.VITE_HTTPS_RPC_URL],
-      webSocket: [import.meta.env.VITE_WS_RPC_URL],
+      http: [import.meta.env.VITE_HTTPS_RPC_URL || 'https://base-sepolia-rpc.publicnode.com'],
+      webSocket: [import.meta.env.VITE_WS_RPC_URL || 'wss://base-sepolia-rpc.publicnode.com'],
     },
   },
   blockExplorers: {
@@ -65,7 +88,7 @@ export const pyrope = {
   },
 };
 
-const POSSIBLE_SUPPORTED_CHAINS = [baseSepolia, garnet, mudFoundry, pyrope];
+const POSSIBLE_SUPPORTED_CHAINS = [base, baseSepolia, garnet, mudFoundry, pyrope];
 
 const getSupportedChains = () => {
   // Get the chain ID from environment or use 31337 (Anvil) as default for development
@@ -73,12 +96,15 @@ const getSupportedChains = () => {
     ? Number(import.meta.env.VITE_CHAIN_ID)
     : 31337;
 
-  // Filter to the chain matching the configured chain ID
-  const matched = POSSIBLE_SUPPORTED_CHAINS.filter(chain => chain.id === chainId);
-  if (matched.length > 0) return matched;
+  if (import.meta.env.DEV) {
+    return POSSIBLE_SUPPORTED_CHAINS.filter(chain => chain.id === chainId);
+  }
 
-  // Fallback for production if no match
-  return [baseSepolia];
+  const prodChainId = Number(import.meta.env.VITE_CHAIN_ID);
+  if (prodChainId === base.id) return [base];
+  if (prodChainId === baseSepolia.id) return [baseSepolia];
+  if (prodChainId === pyrope.id) return [pyrope];
+  return [garnet];
 };
 
 /*

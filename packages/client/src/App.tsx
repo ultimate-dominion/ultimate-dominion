@@ -4,6 +4,7 @@ import {
   Grid,
   ScaleFade,
   useBreakpointValue,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { garnet } from '@latticexyz/common/chains';
 import { createClient as createFaucetClient } from '@latticexyz/faucet';
@@ -16,14 +17,17 @@ import { parseEther } from 'viem';
 import { ChatBox } from './components/ChatBox';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
+import { OutOfResourcesModal } from './components/OutOfResourcesModal';
 import { WalletDetailsModal } from './components/WalletDetailsModal';
 import { useAuth } from './contexts/AuthContext';
 import { BattleProvider } from './contexts/BattleContext';
+import { useCharacter } from './contexts/CharacterContext';
 import { ChatProvider, useChat } from './contexts/ChatContext';
 import { FragmentProvider } from './contexts/FragmentContext';
 import { MapProvider, useMap } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
+import { useGasStation } from './hooks/useGasStation';
 import { DEFAULT_CHAIN_ID } from './lib/web3';
 import AppRoutes, { CHARACTER_CREATION_PATH, HOME_PATH } from './Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from './utils/constants';
@@ -70,7 +74,7 @@ const CHAT_NOT_ALLOWED_PATHS = [CHARACTER_CREATION_PATH, HOME_PATH];
 const AppInner = (): JSX.Element => {
   const { pathname } = useLocation();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const { ownerAddress } = useAuth();
+  const { authMethod, ownerAddress } = useAuth();
   const {
     burnerBalance,
     burnerBalanceFetched,
@@ -82,22 +86,57 @@ const AppInner = (): JSX.Element => {
   } = useMUD();
   const { isSpawned } = useMap();
   const { isOpen: isChatBoxOpen, onOpen: onOpenChatBox } = useChat();
+  const { character } = useCharacter();
+
+  // Activate GasStation auto-swap hook
+  useGasStation();
+
+  // OutOfResources modal state (level 3+, 0 ETH, 0 Gold)
+  const {
+    isOpen: isOutOfResourcesOpen,
+    onOpen: onOpenOutOfResources,
+    onClose: onCloseOutOfResources,
+  } = useDisclosure();
 
   useEffect(() => {
     if (pathname === HOME_PATH) return;
+    if (!burnerBalanceFetched || !isSynced) return;
+    if (DEFAULT_CHAIN_ID === garnet.id) return;
 
-    if (
-      burnerBalanceFetched &&
-      burnerBalance === '0' &&
-      isSynced &&
-      DEFAULT_CHAIN_ID !== garnet.id
-    ) {
-      onOpenWalletDetailsModal();
+    // Embedded users: paymaster or GasStation handles gas — don't show wallet modal
+    if (authMethod === 'embedded') {
+      // Check if level 3+ with 0 ETH and 0 Gold → show OutOfResources
+      if (
+        character &&
+        character.level >= 3n &&
+        burnerBalance === '0' &&
+        character.externalGoldBalance === 0n
+      ) {
+        onOpenOutOfResources();
+      }
+      return;
+    }
+
+    // External users: show wallet modal if balance is 0
+    if (burnerBalance === '0') {
+      // Level 3+ with no Gold either → OutOfResources modal instead
+      if (
+        character &&
+        character.level >= 3n &&
+        character.externalGoldBalance === 0n
+      ) {
+        onOpenOutOfResources();
+      } else {
+        onOpenWalletDetailsModal();
+      }
     }
   }, [
+    authMethod,
     burnerBalance,
     burnerBalanceFetched,
+    character,
     isSynced,
+    onOpenOutOfResources,
     onOpenWalletDetailsModal,
     pathname,
   ]);
@@ -195,6 +234,12 @@ const AppInner = (): JSX.Element => {
       <WalletDetailsModal
         isOpen={isWalletDetailsModalOpen}
         onClose={onCloseWalletDetailsModal}
+      />
+
+      <OutOfResourcesModal
+        isOpen={isOutOfResourcesOpen}
+        onClose={onCloseOutOfResources}
+        onOpenWalletDetails={onOpenWalletDetailsModal}
       />
     </Grid>
   );

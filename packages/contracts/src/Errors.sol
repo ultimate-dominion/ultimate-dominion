@@ -78,3 +78,12 @@ error NotEffectType();
 error InvalidRewardState();
 error NotAtSpawn();
 error InsufficientBalance();
+
+// GasStation
+error GasStationDisabled();
+error GasStationCooldownActive();
+error GasStationMaxSwapExceeded();
+error GasStationInsufficientTreasury();
+error GasStationBelowMinLevel();
+error GasStationTransferFailed();
+error GasStationZeroAmount();

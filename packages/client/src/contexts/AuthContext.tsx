@@ -101,11 +101,22 @@ export const AuthProvider = ({
     [],
   );
 
+  // Smart account config for gasless transactions (levels 1-3)
+  const smartAccountConfig = useMemo(
+    () => ({
+      chain: thirdwebChain,
+      sponsorGas: true,
+    }),
+    [],
+  );
+
   // Auto-reconnect persisted Thirdweb session on mount
   useEffect(() => {
     const tryReconnect = async () => {
       try {
-        const wallet = inAppWallet();
+        const wallet = inAppWallet({
+          smartAccount: smartAccountConfig,
+        });
         const connected = await wallet.autoConnect({
           client: thirdwebClient,
         });
@@ -117,12 +128,14 @@ export const AuthProvider = ({
       }
     };
     tryReconnect();
-  }, [initEmbeddedClient]);
+  }, [initEmbeddedClient, smartAccountConfig]);
 
   const connectWithGoogle = useCallback(async () => {
     setIsConnecting(true);
     try {
-      const wallet = inAppWallet();
+      const wallet = inAppWallet({
+        smartAccount: smartAccountConfig,
+      });
       await wallet.connect({
         client: thirdwebClient,
         chain: thirdwebChain,
@@ -135,7 +148,7 @@ export const AuthProvider = ({
     } finally {
       setIsConnecting(false);
     }
-  }, [initEmbeddedClient]);
+  }, [initEmbeddedClient, smartAccountConfig]);
 
   const disconnect = useCallback(async () => {
     if (embeddedWallet) {

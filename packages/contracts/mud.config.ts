@@ -174,10 +174,6 @@ export default defineWorld({
       name: "GasStationSys",
       openAccess: true,
     },
-    GameDelegationControl: {
-      name: "GameDelegation",
-      openAccess: true,
-    },
   },
   enums: {
     // Legacy class enum - kept for backward compatibility

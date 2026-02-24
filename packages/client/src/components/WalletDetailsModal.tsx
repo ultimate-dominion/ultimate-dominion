@@ -357,13 +357,22 @@ export const WalletDetailsModal = ({
                     <FormLabel fontSize="xs">
                       Withdraw to main account
                     </FormLabel>
+                    {character && character.level < 3n && (
+                      <FormHelperText color="orange" fontSize="xs" mb={2}>
+                        Withdrawals are locked until level 3. Your game account
+                        ETH covers gas fees during early gameplay.
+                      </FormHelperText>
+                    )}
                     {!!withdrawErrorMessage && (
                       <FormHelperText color="red" fontSize="xs" mb={2}>
                         {withdrawErrorMessage}
                       </FormHelperText>
                     )}
                     <Input
-                      isDisabled={isWithdrawing}
+                      isDisabled={
+                        isWithdrawing ||
+                        (!!character && character.level < 3n)
+                      }
                       onChange={e => setWithdrawAmount(e.target.value)}
                       placeholder="Amount"
                       type="number"
@@ -372,6 +381,7 @@ export const WalletDetailsModal = ({
                   </FormControl>
                   <Button
                     alignSelf="end"
+                    isDisabled={!!character && character.level < 3n}
                     isLoading={isWithdrawing}
                     onClick={onWithdraw}
                     size="sm"

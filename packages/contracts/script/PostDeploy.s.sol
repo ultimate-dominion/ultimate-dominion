@@ -26,6 +26,7 @@ import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetM
 import {StandardDelegationsModule} from "@latticexyz/world-modules/src/modules/std-delegations/StandardDelegationsModule.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {RngSystem} from "../src/systems/RngSystem.sol";
+import {GameDelegationControl} from "../src/systems/GameDelegationControl.sol";
 import {System} from "@latticexyz/world/src/System.sol";
 import {registerERC1155} from "@erc1155/registerERC1155.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
@@ -803,7 +804,18 @@ contract PostDeploy is Script {
     }
 
     function _configureGameDelegation() internal {
-        console.log("Configuring GameDelegationControl whitelist...");
+        console.log("Configuring GameDelegationControl...");
+
+        // Register the delegation control system manually (excluded from MUD worldgen)
+        GameDelegationControl gameDelegation = new GameDelegationControl();
+        ResourceId gameDelegationId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", GAME_DELEGATION_NAME);
+        try world.registerSystem(gameDelegationId, System(address(gameDelegation)), true) {
+            console.log("  GameDelegationControl registered at:", address(gameDelegation));
+        } catch {
+            console.log("  GameDelegationControl already registered, skipping");
+        }
+
+        console.log("Configuring whitelist...");
 
         bytes14 ns = "UD";
 

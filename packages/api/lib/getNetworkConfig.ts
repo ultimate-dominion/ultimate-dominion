@@ -20,25 +20,25 @@ if (!INITIAL_BLOCK_NUMBER) {
   );
 }
 
-// Define Base Sepolia chain
-const baseSepolia: MUDChain = {
-  name: "Base Sepolia",
-  id: 84532,
+// Define Base mainnet chain
+const base: MUDChain = {
+  name: "Base",
+  id: 8453,
   nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
   rpcUrls: {
     default: {
-      http: [(process.env.RPC_HTTP_URL || "https://base-sepolia-rpc.publicnode.com") as string],
-      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : [],
+      http: [(process.env.RPC_HTTP_URL || "https://mainnet.base.org") as string],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://base-rpc.publicnode.com"],
     },
     public: {
-      http: [(process.env.RPC_HTTP_URL || "https://base-sepolia-rpc.publicnode.com") as string],
-      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : [],
+      http: [(process.env.RPC_HTTP_URL || "https://mainnet.base.org") as string],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://base-rpc.publicnode.com"],
     },
   },
   blockExplorers: {
     default: {
-      name: "BaseScan Sepolia",
-      url: "https://sepolia.basescan.org",
+      name: "BaseScan",
+      url: "https://basescan.org",
     },
   },
 };
@@ -68,7 +68,7 @@ const pyrope: MUDChain = {
   indexerUrl: process.env.INDEXER_URL || "https://indexer.mud.pyropechain.com",
 };
 
-const SUPPORTED_CHAINS = [mudFoundry, baseSepolia, pyrope];
+const SUPPORTED_CHAINS = [mudFoundry, pyrope, base];
 
 export async function getNetworkConfig(): Promise<{
   privateKey: `0x${string}`;
@@ -77,16 +77,16 @@ export async function getNetworkConfig(): Promise<{
   worldAddress: string;
   initialBlockNumber: number | bigint;
 }> {
-  // Use CHAIN_ID env var to select chain. Defaults to Base Sepolia in production, Foundry locally.
+  // In production, use CHAIN_ID env var (defaults to Base mainnet)
+  // In development, use CHAIN_ID if set, otherwise use local Foundry chain
   let chainId: number;
-  if (process.env.CHAIN_ID) {
-    chainId = Number(process.env.CHAIN_ID);
-  } else if (process.env.NODE_ENV === "production") {
-    chainId = Number(baseSepolia.id);
+  if (process.env.NODE_ENV === "production") {
+    chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : Number(base.id);
+    console.log(`[getNetworkConfig] Using chain ${chainId} in production`);
   } else {
-    chainId = Number(mudFoundry.id);
+    chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : Number(mudFoundry.id);
+    console.log(`[getNetworkConfig] Using chain ID: ${chainId}`);
   }
-  console.log(`[getNetworkConfig] Using chain ID: ${chainId}`);
 
   const chainIndex = SUPPORTED_CHAINS.findIndex((c) => c.id === chainId);
   const chain = SUPPORTED_CHAINS[chainIndex];

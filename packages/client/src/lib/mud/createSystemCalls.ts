@@ -1292,8 +1292,35 @@ export function createSystemCalls(
     }
   };
 
+  const buyGas = async (
+    characterId: string,
+    goldAmount: bigint,
+  ): SystemCallReturn => {
+    try {
+      const tx = await worldContract.write.UD__buyGas([
+        characterId as `0x${string}`,
+        goldAmount,
+      ]);
+      const txResult = await waitForTransaction(tx);
+      const { status } = txResult;
+
+      const success = status === 'success';
+
+      return {
+        error: success ? undefined : 'Failed to swap gold for gas.',
+        success: !!success,
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
   return {
     buy,
+    buyGas,
     cancelOrder,
     chooseRace,
     choosePowerSource,

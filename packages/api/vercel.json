@@ -1,17 +1,19 @@
 {
+  "version": 2,
   "functions": {
     "api/**/*.ts": {
       "runtime": "@vercel/node@3.1.7",
       "maxDuration": 60
     }
   },
-  "rewrites": [
-    { "source": "/api/upload", "destination": "/api/uploadMetadata" },
-    { "source": "/api/upload-file", "destination": "/api/uploadFile" },
-    { "source": "/api/session", "destination": "/api/sessionBooting" },
-    { "source": "/api/session_lite", "destination": "/api/session_lite" },
-    { "source": "/files/:path*", "destination": "/api/index?file=:path*" },
-    { "source": "/health", "destination": "/api/health" },
-    { "source": "/api/:path*", "destination": "/api/:path*" }
+  "routes": [
+    { "src": "/api/upload", "dest": "/api/uploadMetadata.ts" },
+    { "src": "/api/upload-file", "dest": "/api/uploadFile.ts" },
+    { "src": "/api/session", "dest": "/api/sessionBooting.ts" },
+    { "src": "/api/session_lite", "dest": "/api/session_lite.ts" },
+    { "src": "/files/(.*)", "dest": "/api/index.ts?file=$1" },
+    { "src": "/health", "dest": "/api/health.ts" },
+    { "src": "/api/paymasterWebhook", "dest": "/api/paymasterWebhook.ts" },
+    { "src": "/api/(.*)", "dest": "/api/$1.ts" }
   ]
 }
