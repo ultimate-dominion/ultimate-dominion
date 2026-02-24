@@ -1,6 +1,8 @@
-# Ultimate Dominion: Go-to-Market
+# Ultimate Dominion — Go-to-Market
 
 Marketing plan — SEO, community platform, distribution channels, content strategy, press, and priority action plan.
+
+> **Status Key**: `[IMPLEMENTED]` = done, `[PLANNED]` = designed but not built
 
 ---
 
@@ -16,7 +18,7 @@ Marketing plan — SEO, community platform, distribution channels, content strat
 
 ---
 
-## Community Platform
+## Community Platform `[PLANNED]`
 
 ### Decision: Self-Hosted Discourse (No Discord)
 
@@ -29,13 +31,13 @@ Communication channels: **public forum (Discourse) + in-game chat + email**. No 
 - DiscourseConnect SSO can bridge Thirdweb auth for embedded wallet users
 - One-click updates from admin panel (solo dev friendly)
 - Trust levels auto-moderate new users (reduces moderation burden)
-- Cost: ~$12-24/month self-hosted on DigitalOcean/Hetzner
+- Cost: ~$12–24/month self-hosted on DigitalOcean/Hetzner
 
 **Alternatives considered:**
 - XenForo: Best raw SEO (pure PHP server-render), $160 license, no web3 plugins
 - NodeBB: Good Node.js option, smaller ecosystem, no web3 plugins
 - Flarum: Too young, relies on extensions for basic SEO
-- Custom Next.js forum: 3-6 months build time — not worth the opportunity cost
+- Custom Next.js forum: 3–6 months build time — not worth the opportunity cost
 
 ### Forum Structure
 
@@ -82,7 +84,7 @@ ULTIMATE DOMINION FORUMS
 
 ## SEO Audit (Current State)
 
-The client is a pure CSR React SPA. Crawlers see a blank page until JS loads.
+The client is a pure CSR React SPA (Vite + React 18 + Chakra UI). Crawlers see a blank page until JS loads.
 
 | Issue | Severity | Status |
 |-------|----------|--------|
@@ -91,11 +93,11 @@ The client is a pure CSR React SPA. Crawlers see a blank page until JS loads.
 | No SSR/prerendering | CRITICAL | Missing |
 | No dynamic meta tags (every page has identical title) | HIGH | Missing |
 | No structured data (JSON-LD/schema.org) | MEDIUM | Missing |
-| 4.3 MB main JS bundle | MEDIUM | Needs optimization |
+| Large JS bundle | MEDIUM | Needs optimization |
 | No react-helmet or equivalent | HIGH | Missing |
 | Source maps shipped to production | MEDIUM | Should disable |
 | URL structure | OK | Clean: /marketplace, /characters/:id, /leaderboard |
-| Vercel Analytics | OK | Integrated |
+| Vercel Analytics | OK | `[IMPLEMENTED]` |
 
 ### SEO Quick Wins (Priority Order)
 
@@ -111,7 +113,7 @@ The client is a pure CSR React SPA. Crawlers see a blank page until JS loads.
 
 - Implement prerendering for public pages (Welcome, Leaderboard, Character profiles, Marketplace items)
 - Build a game wiki (either on Discourse or a dedicated subdomain)
-- Dynamic OG image generation for character/item cards (API endpoint using Canvas/Sharp)
+- Dynamic OG image generation for character/item cards (API endpoint using Canvas/Sharp — Sharp already in API dependencies)
 
 ---
 
@@ -120,8 +122,8 @@ The client is a pure CSR React SPA. Crawlers see a blank page until JS loads.
 ### Web3 Channels
 
 **Base Chain Ecosystem:**
-- Base Builder Grants: https://docs.base.org/get-started/get-funded (2 ETH weekly rewards, 1-5 ETH grants)
-- Base Batches 2026: https://batches.base.org/ (top teams get $10K-$50K)
+- Base Builder Grants: https://docs.base.org/get-started/get-funded (2 ETH weekly rewards, 1–5 ETH grants)
+- Base Batches 2026: https://batches.base.org/ (top teams get $10K–$50K)
 - Tag @base on X/Twitter and Farcaster for amplification
 
 **Farcaster / Warpcast:**
@@ -174,7 +176,7 @@ The client is a pure CSR React SPA. Crawlers see a blank page until JS loads.
 - https://slack.mudcoders.com/
 - Small, passionate dev community. Great for playtesters and advocates.
 
-**r/MUD** (~20-30K members)
+**r/MUD** (~20–30K members)
 - Post genuine developer introduction. Most receptive subreddit.
 
 **MMORPG.com — Indie MMO Spotlight**
@@ -256,7 +258,7 @@ The client is a pure CSR React SPA. Crawlers see a blank page until JS loads.
 
 **Hacker News — Show HN:**
 - HIGH potential. "I built a fully on-chain MUD-style MMORPG on Base" is exactly what HN loves.
-- Post Tue-Thu, 8-10 AM EST. Technical language, no marketing speak.
+- Post Tue–Thu, 8–10 AM EST. Technical language, no marketing speak.
 - URL: https://news.ycombinator.com/show
 
 **Other Platforms:**
@@ -285,7 +287,7 @@ The client is a pure CSR React SPA. Crawlers see a blank page until JS loads.
 | Day | Hashtag | Content |
 |-----|---------|---------|
 | Wednesday | #WIPWednesday | Work-in-progress shots |
-| Saturday | #ScreenshotSaturday | Gameplay GIF (6-15 seconds) |
+| Saturday | #ScreenshotSaturday | Gameplay GIF (6–15 seconds) |
 | Anytime | #gamedev #indiedev #web3gaming | Technical threads, bug showcases, milestone posts |
 
 ### High-Value Blog/Medium Articles
@@ -298,8 +300,8 @@ The client is a pure CSR React SPA. Crawlers see a blank page until JS loads.
 
 ### YouTube Content
 
-- Dev log videos (5-15 min)
-- 60-90 sec gameplay trailers
+- Dev log videos (5–15 min)
+- 60–90 sec gameplay trailers
 - "How on-chain combat actually works" explainers
 - PvP highlight reels
 
@@ -329,7 +331,7 @@ The client is a pure CSR React SPA. Crawlers see a blank page until JS loads.
 
 ## Press & Influencers
 
-### Press Kit
+### Press Kit `[PLANNED]`
 
 Create using PressKitty (https://impress.games/press-kitty). Include:
 - Game summary + detailed description
@@ -379,7 +381,7 @@ Create using PressKitty (https://impress.games/press-kitty). Include:
 11. Email MMORPG.com Indie MMO Spotlight columnist
 12. Email Massively Overpowered
 
-### Next 2-3 Months
+### Next 2–3 Months
 13. Show HN post (once browser experience is friction-free)
 14. Email 10 indie game YouTubers with press kits
 15. Build in-game referral system
@@ -393,15 +395,15 @@ Create using PressKitty (https://impress.games/press-kitty). Include:
 
 | Phase | Target | Actions |
 |-------|--------|---------|
-| Inner Circle | 1-25 | r/MUD, MUD directories, Lattice/MUD community, Farcaster |
-| Expansion | 25-50 | Show HN, r/IndieGaming, r/playmygame, MMORPG.com Spotlight, Twitter |
-| Viral Push | 50-100 | YouTuber outreach, Medium articles, Base Grants, aggregator listings |
+| Inner Circle | 1–25 | r/MUD, MUD directories, Lattice/MUD community, Farcaster |
+| Expansion | 25–50 | Show HN, r/IndieGaming, r/playmygame, MMORPG.com Spotlight, Twitter |
+| Viral Push | 50–100 | YouTuber outreach, Medium articles, Base Grants, aggregator listings |
 
 ### Retention Drivers
 - Responsive developer (players who get questions answered stay 45% vs 17%)
 - Visible changelogs and patch notes
 - In-game referral system (double-sided rewards, leaderboard)
-- "Founding Player" badge for first 100 accounts — never available again
+- "Founding Player" badge for first 100 accounts — never available again `[IMPLEMENTED]` (Founder badge #50)
 
 ---
 

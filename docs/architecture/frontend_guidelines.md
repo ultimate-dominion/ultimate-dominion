@@ -1,398 +1,262 @@
 # Ultimate Dominion - Frontend Guidelines
 
-## Design Philosophy
+Design system, component patterns, and UI conventions for the game client.
 
-Ultimate Dominion's design focuses on creating an immersive medieval fantasy experience while keeping the interface clean and intuitive. We use a dark theme with accent colors to create a mystical atmosphere, and maintain consistent spacing and typography to ensure everything is easy to read and use.
+> **Status Key**: `[IMPLEMENTED]` = in code, `[PLANNED]` = designed but not built
 
-## Color Palette
+---
 
-### Primary Colors
+## Design System
+
+### Color Palette
+
+**Primary (Blue)**:
+| Token | Hex | Usage |
+|-------|-----|-------|
+| blue.300 | #1633B6 | Accent, links |
+| blue.400 | #0A2187 | Interactive elements |
+| blue.500 | #0C1539 | Dark backgrounds |
+| blue.600 | #131832 | Deepest backgrounds |
+
+**Grey**:
+| Token | Hex | Usage |
+|-------|-----|-------|
+| grey.100 | #D0D0D0 | Light text |
+| grey.200 | #A8ADB2 | Secondary text |
+| grey.300 | #A2A9B0 | Borders, dividers |
+| grey.400 | #7E848A | Muted text |
+| grey.500 | #3D4247 | Dark text on light |
+
+**Rarity Colors** `[IMPLEMENTED]`:
+| Rarity | Hex | Display |
+|--------|-----|---------|
+| Worn | #9d9d9d | Grey |
+| Common | #ffffff | White |
+| Uncommon | #1eff00 | Green |
+| Rare | #0070dd | Blue |
+| Epic | #a335ee | Purple |
+| Legendary | #ff8000 | Orange |
+
+**Semantic**:
+- Green: #008F07 (success, healing, gold gain)
+- Red: #AF0D08 (error, damage, danger)
+- Yellow: #EFD31C (warnings, XP, level-up)
+
+**Backgrounds**:
+- Body: #A2A9B0
+- Card/panel: dark blue gradient (blue.500 to blue.600)
+- Modal overlay: blackAlpha.600
+
+---
+
+### Typography
+
+| Role | Font | Source |
+|------|------|--------|
+| Body & Headings | Inter | @fontsource/inter |
+| Stats & Numbers | Fira Code | @fontsource/fira-code |
+| Fallback | -apple-system, BlinkMacSystemFont, sans-serif | System |
+
+**Text Sizes** (custom Chakra tokens):
+
+| Token | Size |
+|-------|------|
+| 4xs | 6px |
+| 3xs | 8px |
+| 2xs | 10px |
+| xs | 12px |
+| sm | 14px |
+| md | 16px |
+| lg | 18px |
+| xl | 24px |
+| 2xl | 32px |
+
+**Convention**: Use Fira Code (`fontFamily="mono"`) for all numeric displays — HP, gold, XP, stats, coordinates, item quantities.
+
+---
+
+### Component Variants
+
+**Button** variants:
+| Variant | Usage |
+|---------|-------|
+| `dark` | Primary actions |
+| `gold` | Gold-related actions (buy, sell) |
+| `outline` | Secondary actions |
+| `blue` | Navigation, info |
+| `white` | Light backgrounds |
+
+**Progress** variants:
+| Variant | Usage |
+|---------|-------|
+| `filling` | Default progress bar |
+| `filled` | Completed state |
+| `maxed` | Max level/XP |
+| `timer` | Countdown timers |
+
+**Modal** styling:
+- Custom clip-path polygon (40px corner cutouts)
+- Dark theme (blue.500/blue.600 backgrounds)
+- Full-screen on mobile (`size="full"` at `base` breakpoint)
+
+**Input/Textarea**:
+- Neumorphic inset shadow style
+- `outline` variant for form fields
+
+---
+
+## Layout Patterns
+
+### Game Board (Main Game View) `[IMPLEMENTED]`
+
+4-panel grid layout:
 ```
-+------------------+----------------------+------------------+
-|    Navy Blue     |     Royal Blue      |    Steel Blue   |
-|    #0A0F2D      |      #1A237E        |     #4A5568     |
-| Main Background  |    Primary Actions  | Secondary Text   |
-+------------------+----------------------+------------------+
-```
-
-### Secondary Colors
-```
-+------------------+----------------------+------------------+
-|    Gold          |     Bronze          |    Silver       |
-|    #FFD700      |      #CD7F32        |     #C0C0C0     |
-| Special Actions  |    Achievements     |  Disabled State  |
-+------------------+----------------------+------------------+
-```
-
-### Status Colors
-```
-+------------------+----------------------+------------------+
-|    Success       |     Warning         |     Danger      |
-|    #48BB78      |      #F6AD55        |     #E53E3E     |
-|  Positive Events | Caution Required    | Critical Actions |
-+------------------+----------------------+------------------+
-```
-
-### UI Element Colors
-```
-+------------------+----------------------+------------------+
-|    Background    |     Surface         |    Border       |
-|    #1A1F3D      |      #2D3748        |     #4A5568     |
-| Card Background  |    Input Fields     |  Separators     |
-+------------------+----------------------+------------------+
-```
-
-## Typography
-
-### Main Fonts
-```
-Primary Font: 'MedievalSharp'
-Used for: Headings, Important Labels
-Example: "Ultimate Dominion"
-
-Secondary Font: 'Roboto'
-Used for: Body Text, UI Elements
-Example: "Health Points: 100/100"
-
-Monospace Font: 'Fira Code'
-Used for: Statistics, Numerical Values
-Example: "DMG: 15-20"
-```
-
-### Font Sizes
-```
-Headings:
-H1: 2.5rem (40px)  - Main Titles
-H2: 2rem   (32px)  - Section Headers
-H3: 1.5rem (24px)  - Subsection Headers
-H4: 1.25rem (20px) - Card Titles
-
-Body Text:
-Large: 1.125rem (18px) - Important Information
-Regular: 1rem (16px)   - Standard Text
-Small: 0.875rem (14px) - Secondary Information
-Tiny: 0.75rem (12px)   - Tooltips
-```
-
-## Icons and Visual Elements
-
-### Game-Specific Icons
-```
-Combat Actions
-Defense/Armor
-Currency/Gold
-Inventory Items
-Movement/Speed
-Weapons
-Magic/Spells
-Health/Life
-Energy/Mana
-```
-
-### UI Icons
-```
-Back/Previous
-Next/Forward
-Add/Create
-Confirm/Success
-Close/Cancel
-Settings
-Search
-Refresh
-More Options
-```
-
-### Status Icons
-```
-New Item/Feature
-Favorite/Special
-Warning
-Error
-Success
-Locked
-Unlocked
-```
-
-## Component Design
-
-### Buttons
-```
-+------------------+
-|    Primary       |    Background: #1A237E
-|    Button        |    Text: White
-+------------------+    Hover: Lighten 10%
-
-+------------------+
-|    Secondary     |    Background: #4A5568
-|    Button        |    Text: White
-+------------------+    Hover: Lighten 10%
-
-+------------------+
-|    Danger        |    Background: #E53E3E
-|    Button        |    Text: White
-+------------------+    Hover: Lighten 10%
++------------------+------------------+
+|    MapPanel      |   StatsPanel     |
+|  (exploration)   | (character info) |
++------------------+------------------+
+|  ActionsPanel    |   EventPanel     |
+|  (combat/shop)   |  (game log)      |
++------------------+------------------+
 ```
 
-### Input Fields
-```
-+------------------+
-|  Input Field     |    Background: #2D3748
-|                  |    Border: #4A5568
-+------------------+    Focus: #1A237E
+- Grid uses `auto` height to fill viewport
+- Mobile: single-column stack, Stats panel becomes a drawer
 
-+------------------+
-|  Search Field    |    Background: #2D3748
-|  |    Icon Color: #4A5568
-+------------------+    
-```
+### PolygonalCard
 
-### Cards
-```
-+------------------+
-|    Card Title    |    Background: #1A1F3D
-|                  |    Border: #4A5568
-|    Content       |    Shadow: 0 2px 4px rgba(0,0,0,0.1)
-|                  |
-+------------------+
-```
+Custom card component with clipped corners (polygon clip-path). Used for character display, item cards, and modals. Supports dark mode via `useColorModeValue`.
 
-## Layout Guidelines
-
-### Grid System
-```
-Desktop Layout (1200px+)
-+--------+--------+--------+
-|   1/3  |   1/3  |   1/3  |
-+--------+--------+--------+
-
-Tablet Layout (768px - 1199px)
-+--------+--------+
-|   1/2  |   1/2  |
-+--------+--------+
-
-Mobile Layout (<768px)
-+----------------+
-|      Full      |
-+----------------+
-```
-
-### Spacing Scale
-```
-4px  - Minimal spacing
-8px  - Default spacing
-16px - Component spacing
-24px - Section spacing
-32px - Large section spacing
-48px - Page spacing
-```
-
-## Animation Guidelines
-
-### Transitions
-- Duration: 200ms
-- Timing: ease-in-out
-- Use for: Hover states, expanding/collapsing elements
-
-### Loading States
-```
-+------------------+
-|    Loading...    |
-|    |      |
-+------------------+
-```
-
-## Accessibility Guidelines
-
-### Color Contrast
-- Minimum contrast ratio: 4.5:1
-- Large text contrast ratio: 3:1
-- Use color blind safe palette
-
-### Focus States
-```
-+------------------+
-|    Focused       |    Border: 2px solid #1A237E
-|    Element       |    Outline: none
-+------------------+    Ring: 0 0 0 3px rgba(26,35,126,0.5)
-```
+---
 
 ## Responsive Design
 
-### Breakpoints
-```
-Mobile: < 768px
-Tablet: 768px - 1199px
-Desktop: >= 1200px
-```
+### Breakpoints (Chakra UI defaults)
 
-### Mobile-First Approach
-- Design for mobile first
-- Progressively enhance for larger screens
-- Keep touch targets at least 44x44px
+| Token | Width | Target |
+|-------|-------|--------|
+| `base` | 0px | Mobile |
+| `sm` | 640px | Large phone |
+| `md` | 768px | Tablet |
+| `lg` | 1024px | Desktop |
+| `xl` | 1280px | Large desktop |
+| `2xl` | 1536px | Ultra-wide |
 
-## Performance Guidelines
+### Mobile Adaptations `[IMPLEMENTED]`
 
-### Image Optimization
-- Use WebP format with PNG fallback
-- Lazy load images below the fold
-- Implement responsive images
+- GameBoard: auto height, single-column stack
+- MapPanel: compass resized for small screens
+- StatsPanel: drawer on mobile (slide from right)
+- Modals: full-screen at `base` breakpoint
+- Grids: responsive columns (`templateColumns={{ base: "1fr", md: "1fr 1fr" }}`)
+- Touch targets: minimum 44px for all interactive elements
 
-### Loading States
-- Show skeleton screens for content
-- Implement progressive loading
-- Cache frequently used assets
+### Responsive Patterns
 
-## API Integration Guidelines
+```tsx
+// Responsive props (preferred)
+<Box px={{ base: 2, md: 4, lg: 6 }} />
+<Text fontSize={{ base: "sm", md: "md" }} />
 
-### Edge API Integration
+// Conditional rendering
+<Box display={{ base: "none", md: "block" }} />
 
-When integrating with our Vercel Edge Functions:
-
-1. **Base URL Configuration**
-```typescript
-// Use relative path in production
-const apiBase = import.meta.env.PROD ? '/api' : import.meta.env.VITE_API_URL;
+// useBreakpointValue hook (for non-style logic)
+const columns = useBreakpointValue({ base: 1, md: 2, lg: 3 });
 ```
 
-2. **Error Handling**
-```typescript
-try {
-  const response = await fetch(`${apiBase}/endpoint`);
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
-  }
-  const data = await response.json();
-} catch (error) {
-  // Handle network/API errors
-}
+---
+
+## Authentication UI
+
+### Dual-Path Flow `[IMPLEMENTED]`
+
+**Embedded wallet (Google sign-in)**:
+- Single "Sign in with Google" button
+- Wallet created invisibly — no crypto terminology
+- No delegation step required
+
+**External wallet (MetaMask)**:
+- "Connect Wallet" button (only visible when `window.ethereum` detected)
+- Delegation flow: "Authorize & Play" (not "delegate" in UI)
+- Allowance modals labeled "Permissions" (not "allowance")
+
+### Crypto Abstraction `[IMPLEMENTED]`
+
+All blockchain terminology replaced with game-friendly language:
+
+| Crypto Term | Game Term |
+|-------------|-----------|
+| Wallet | Account |
+| Delegation | Authorize |
+| Allowance | Permission |
+| $GOLD token | Gold |
+| Transaction | Action |
+| Mint | Create |
+| Burn | Destroy |
+| Smart contract | Game system |
+
+---
+
+## Accessibility `[IMPLEMENTED]`
+
+- `aria-label` on all icon-only buttons
+- `role="alert"` on error messages
+- `focus-visible` styles on all interactive elements
+- Keyboard shortcut hints in battle UI (`[1-4]`)
+- Character creation step indicator
+- Item requirement per-stat breakdown on hover
+
+---
+
+## Animation Guidelines
+
+**Framer Motion** for all animations:
+
+| Context | Animation |
+|---------|-----------|
+| Page transitions | Fade in/out |
+| Modal entry | Scale + fade |
+| Combat actions | Slide + shake |
+| Level-up | Golden card reveal |
+| Loot drops | Scale bounce |
+| Loading | Spinner (Chakra) |
+
+**Performance**: Prefer `transform` and `opacity` animations. Avoid animating `width`, `height`, or layout-triggering properties.
+
+---
+
+## Conventions
+
+### File Organization
+
+```
+src/
+├── components/     # Reusable UI components
+├── contexts/       # React contexts (Auth, MUD, Battle)
+├── hooks/          # Custom hooks
+├── pages/          # Route-level components
+├── theme.ts        # Chakra UI theme configuration
+├── mud/            # MUD client setup and system calls
+└── utils/          # Pure utility functions
 ```
 
-3. **Request Headers**
-```typescript
-const headers = {
-  'Content-Type': 'application/json',
-  // Add any auth headers here
-};
-```
+### Component Patterns
 
-4. **Response Types**
-- Define TypeScript interfaces for all API responses
-- Use zod for runtime type validation
-- Handle edge cases and loading states
+- Use Chakra layout primitives (`Box`, `Flex`, `VStack`, `HStack`, `Grid`) over raw HTML
+- Prefer Chakra's responsive props over media queries
+- Use `useDisclosure` for modal/drawer state
+- Use `useToast` for transient user feedback
+- Wrap async actions with loading states and error toasts
 
-5. **Performance Best Practices**
-- Implement request caching where appropriate
-- Use SWR or React Query for data fetching
-- Add retry logic for failed requests
-- Monitor response times and errors
+### Naming
 
-## Best Practices
+- Components: PascalCase (`StatsPanel.tsx`)
+- Hooks: camelCase with `use` prefix (`useAuth.ts`)
+- Contexts: PascalCase with `Context` suffix (`BattleContext.tsx`)
+- Constants: UPPER_SNAKE_CASE
+- Types/Interfaces: PascalCase
 
-### Component Structure
-- Keep components small and focused
-- Use composition over inheritance
-- Implement proper error boundaries
+---
 
-### State Management
-- Use Zustand for global state
-- Keep local state in components
-- Implement proper state updates
-- Handle side effects in useEffect
-
-### Code Style
-- Use TypeScript for type safety
-- Follow ESLint configuration
-- Implement proper error handling
-
-## Common Patterns
-
-### 1. Modal Pattern
-```typescript
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
-  if (!isOpen) return null
-  
-  return (
-    <div className="modal">
-      {children}
-      <button onClick={onClose}>Close</button>
-    </div>
-  )
-}
-```
-
-### 2. Form Pattern
-```typescript
-const Form: React.FC<FormProps> = ({ onSubmit }) => {
-  const [formData, setFormData] = useState({})
-  
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData)
-  }
-  
-  return (
-    <form onSubmit={handleSubmit}>
-      {/* Form fields */}
-    </form>
-  )
-}
-```
-
-### 3. List Pattern
-```typescript
-const List: React.FC<ListProps> = ({ items }) => {
-  return (
-    <ul>
-      {items.map(item => (
-        <li key={item.id}>
-          {/* Item content */}
-        </li>
-      ))}
-    </ul>
-  )
-}
-```
-
-## Deployment Checklist
-
-### Pre-deployment
-- Run all tests
-- Check bundle size
-- Verify environment variables
-- Test in staging environment
-
-### Post-deployment
-- Verify routes work
-- Check performance metrics
-- Monitor error rates
-- Test critical flows
-
-## Version Control
-
-### Branch Naming
-- feature/feature-name
-- bugfix/bug-description
-- hotfix/issue-description
-
-### Commit Messages
-```
-feat: add new game component
-fix: resolve inventory display issue
-docs: update component documentation
-```
-
-## Resources
-
-### Official Documentation
-- [React Documentation](https://reactjs.org/)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [TailwindCSS Documentation](https://tailwindcss.com/docs)
-- [MUD Documentation](https://mud.dev/)
-
-### Tools
-- VS Code Extensions
-- Chrome DevTools
-- React Developer Tools
-- Performance Monitoring Tools
-
-Remember to update these guidelines as new patterns and best practices emerge in the project.
+*Last updated: February 2026*

@@ -90,7 +90,7 @@
 
 ### 11. Testnet Deployment
 #### Smart Contracts
-- [ ] Deploy MUD World to testnet (Garnet/Base Sepolia)
+- [ ] Deploy MUD World to Base Sepolia testnet
 - [ ] Run FullPostDeploy (ERC20 Gold, ERC721 Characters, ERC1155 Items, core config)
 - [ ] Seed game data (items, monsters, shops via zone loader or SeedGameData)
 - [ ] Configure badge token and fragment NFTs
@@ -141,18 +141,15 @@
 - [ ] Multiple concurrent users
 
 ### 12. Launch Strategy
-- [x] Define target audience ✓ MUD players, old-school MMO vets, LitRPG readers, browser game players, web3 gamers, OSR/TTRPG crossover
-- [x] Marketing plan and timeline ✓ Full go-to-market in GO_TO_MARKET.md (community channels, content marketing, press, priority action plan)
-- [x] Community platform decision ✓ Self-hosted Discourse (no Discord). SIWE plugin for wallet auth, DiscourseConnect SSO for Thirdweb bridge
-- [x] Distribution channels mapped ✓ 40+ directories, forums, and communities identified (web3 + non-crypto). See GO_TO_MARKET.md
-- [x] SEO audit completed ✓ Critical gaps identified (no meta tags, no SSR, no sitemap). Quick wins documented.
-- [ ] Implement SEO quick wins (react-helmet-async, robots.txt, OG tags, sitemap)
-- [ ] Create press kit (PressKitty)
-- [ ] Set up Discourse forum
-- [ ] Submit to game directories (MUD Connector, PBBG.com, IndieDB, itch.io, DappRadar, etc.)
+- [x] Define target audience ✓ See GO_TO_MARKET.md — messaging by audience segment
+- [x] Marketing plan and timeline ✓ See GO_TO_MARKET.md — priority action plan
+- [ ] Community building (Discourse forum, Farcaster — see GO_TO_MARKET.md)
 - [ ] Beta testing program
 - [ ] Launch date and milestones
 - [ ] Post-launch support plan
+- [ ] Queue/invite system implementation (see LAUNCH_STRATEGY.md)
+- [ ] DEX liquidity setup (see ECONOMICS.md)
+- [ ] Human verification system (see LAUNCH_STRATEGY.md)
 
 ---
 

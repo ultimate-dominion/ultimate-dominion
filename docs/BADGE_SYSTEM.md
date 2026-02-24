@@ -1,15 +1,19 @@
 # Badge System Design
 
-Soulbound (non-transferable) ERC721 badges that recognize player achievements and gate features.
+Soulbound (non-transferable) ERC1155 badges that recognize player achievements and gate features.
 
-## Implemented Badges
+> **Status Key**: `[IMPLEMENTED]` = in code, `[PLANNED]` = designed but not built
+
+## Implemented Badges `[IMPLEMENTED]`
 
 | Token ID | Badge | Requirement | Unlocks |
 |----------|-------|-------------|---------|
-| 1 | Adventurer | Reach level 3 | Global chat access |
-| 50 | Founder | Play during launch window | Cosmetic recognition |
+| 1 | Adventurer | Reach Level 3 | Chat access |
+| 50 | Founder | Play during launch window (configurable) | Cosmetic recognition |
 
-## Future Badges
+Unique token ID per character: `(BADGE_ID × 1,000,000) + characterTokenId`
+
+## Future Badges `[PLANNED]`
 
 ### Progression
 | Token ID | Badge | Requirement |
@@ -77,13 +81,14 @@ Soulbound (non-transferable) ERC721 badges that recognize player achievements an
 ## Technical Implementation
 
 ### Contract
-- ERC721 deployed via MUD `erc721-puppet` module
-- Namespace: `Badges`
-- Soulbound: Override `transferFrom` to revert (non-transferable)
+- **ERC1155** deployed via MUD `erc1155-puppet` module (NOT ERC721)
+- Namespace: `BADGES`
+- Soulbound: non-transferable
+- Address stored in `UltimateDominionConfig` table
 
 ### Minting Triggers
-- **Adventurer (1)**: Minted in `LevelSystem.processLevelUp()` when level reaches 3
-- **Founder (50)**: Minted in `CharacterCore.createCharacter()` during launch window
+- **Adventurer (1)**: Minted in `LevelSystem` when character reaches Level 3 (`ADVENTURER_BADGE_LEVEL = 3`)
+- **Founder (50)**: Minted during launch window (`founderWindowEnd` timestamp)
 
 ### Token ID Ranges
 - 1-9: Progression badges
@@ -94,9 +99,9 @@ Soulbound (non-transferable) ERC721 badges that recognize player achievements an
 - 50-59: Special/Limited badges
 - 60-69: Social badges
 
-### Push Protocol Integration
-- Chat group gated by Adventurer badge (Token ID 1)
-- Group created with `rules.entry.conditions` checking badge ownership
+### Chat Gating
+- Chat access gated by Adventurer badge (Token ID 1)
+- Players must reach Level 3 before participating in chat
 
 ## Adding New Badges
 

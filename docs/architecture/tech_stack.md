@@ -1,245 +1,232 @@
-# Ultimate Dominion Technical Stack
+# Ultimate Dominion - Tech Stack
 
-## Overview
+Complete technology reference for the project.
 
-Ultimate Dominion represents a sophisticated blend of modern web technologies and blockchain infrastructure, architected as a monorepo using pnpm workspaces. The project is divided into three primary packages: client, contracts, and api, each serving distinct but interconnected purposes in the game's ecosystem.
+> **Status Key**: `[IMPLEMENTED]` = in code, `[PLANNED]` = designed but not built
 
-```ascii
-Ultimate Dominion Architecture
-┌────────────────────────────────────────────────────────┐
-│                     Client Layer                       │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   React 18  │  │  TailwindCSS │  │  Chakra UI   │  │
-│  └─────────────┘  └──────────────┘  └──────────────┘  │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │ TypeScript  │  │   Vite       │  │  RainbowKit  │  │
-│  └─────────────┘  └──────────────┘  └──────────────┘  │
-└───────────────────────────┬────────────────────────────┘
-                           │
-┌───────────────────────────┴────────────────────────────┐
-│                     API Layer                          │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  Express    │  │   MongoDB    │  │    Redis     │  │
-│  └─────────────┘  └──────────────┘  └──────────────┘  │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  Node.js    │  │    JWT       │  │   Winston    │  │
-│  └─────────────┘  └──────────────┘  └──────────────┘  │
-└───────────────────────────┬────────────────────────────┘
-                           │
-┌───────────────────────────┴────────────────────────────┐
-│                  Blockchain Layer                       │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │ Solidity    │  │     MUD      │  │  Hardhat     │  │
-│  └─────────────┘  └──────────────┘  └──────────────┘  │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │ OpenZeppelin│  │   Ethers     │  │    Wagmi     │  │
-│  └─────────────┘  └──────────────┘  └──────────────┘  │
-└────────────────────────────────────────────────────────┘
+---
+
+## Monorepo Structure
+
+| Package | Purpose |
+|---------|---------|
+| `packages/contracts` | Solidity smart contracts (MUD World) |
+| `packages/client` | React SPA (game frontend) |
+| `packages/api` | Express API (metadata, file uploads) |
+
+- **Package Manager**: pnpm >=8.0.0
+- **Node Version**: v18.20.2 (`.nvmrc`)
+- **Workspace**: pnpm-workspace.yaml
+
+---
+
+## Smart Contracts (`packages/contracts`)
+
+| Tool | Version |
+|------|---------|
+| Solidity | 0.8.24 |
+| MUD Framework | 2.2.23 |
+| OpenZeppelin | 5.0.2 (pinned) |
+| Foundry | 0.3.0 |
+
+**Foundry Config** (`foundry.toml`):
+- EVM target: Cancun
+- Optimizer: enabled, 10 runs, `via_ir = true`
+- FFI: disabled
+- Fuzz runs: 256
+
+**Key Dependencies**:
+- `@latticexyz/cli`, `store`, `world`, `world-modules`, `schema-type` (all ^2.2.23)
+- `@openzeppelin/contracts` 5.0.2
+- `forge-std`, `ds-test` (Foundry test libraries)
+
+**Dev Tools**: solhint + MUD plugins, prettier-plugin-solidity
+
+---
+
+## Frontend (`packages/client`)
+
+### Core
+
+| Tool | Version |
+|------|---------|
+| React | 18.2.0 |
+| Vite | ^4.2.1 |
+| TypeScript | 5.3.3 |
+| Build target | ES2022 |
+
+### UI Framework
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Chakra UI | ^2.8.2 | Component library (primary) |
+| Emotion | ^11.11.4 | CSS-in-JS (Chakra dependency) |
+| Framer Motion | ^11.2.6 | Animations |
+
+**No Tailwind CSS** — styling is entirely Chakra UI + Emotion.
+
+### Fonts
+
+| Font | Package | Usage |
+|------|---------|-------|
+| Inter | @fontsource/inter ^5.2.8 | Body text, headings |
+| Fira Code | @fontsource/fira-code ^5.1.0 | Stats, numbers, monospace |
+
+Loaded via `@fontsource` packages (not Google Fonts CDN).
+
+### Web3 & Wallet
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Thirdweb | ^5.42.0 | Embedded wallet (Google sign-in), wallet adapter |
+| RainbowKit | ^2.1.1 | External wallet connection UI (MetaMask) |
+| wagmi | ^2.9.6 | Wallet client management |
+| viem | 2.9.20 | Blockchain interactions |
+
+**Dual-path authentication**:
+- Embedded: Thirdweb (Google OAuth) — wallet created invisibly
+- External: RainbowKit (MetaMask) — requires delegation
+
+### MUD Client Libraries
+
+All at version 2.0.11:
+- `@latticexyz/common` — shared utilities
+- `@latticexyz/react` — React hooks for RECS
+- `@latticexyz/recs` — reactive ECS (Entity Component System)
+- `@latticexyz/store-sync` — indexer sync
+- `@latticexyz/world` — World client interface
+- `@latticexyz/faucet` ^2.1.1 — testnet faucet
+
+### Other Frontend Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| react-router-dom ^6.23.1 | Client-side routing |
+| @tanstack/react-query ^5.37.1 | Server state management |
+| react-icons ^5.2.1 | Icon library |
+| rxjs 7.5.5 | Reactive streams (MUD sync) |
+| fuzzy-search ^3.2.1 | Search filtering |
+| react-typist ^2.0.5 | Typing animation |
+| @pushprotocol/restapi ^1.7.25 | In-game chat |
+| @vercel/analytics ^1.3.1 | Analytics |
+
+### Vite Build Config
+
+- React plugin enabled
+- Manual chunks: Chakra UI bundled separately
+- Chakra UI CommonJS transformation enabled
+- Dev server: port 3000
+- MUD indexer proxy at `/mud-indexer`
+- Top-level await support
+
+---
+
+## API (`packages/api`)
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Express | ^4.19.2 | HTTP server |
+| cors | ^2.8.5 | Cross-origin support |
+| express-rate-limit | ^7.1.5 | Rate limiting (100 req/15min) |
+| formidable | ^3.5.1 | File upload parsing |
+| sharp | ^0.33.4 | Image processing |
+| @pinata/sdk | ^2.1.0 | IPFS pinning (character metadata) |
+| @vercel/node | ^3.1.7 | Vercel serverless deployment |
+| viem | 2.9.20 | On-chain reads |
+
+**Deployment**: Vercel serverless functions (not a long-running Express server in production).
+
+---
+
+## Supported Chains
+
+| Chain | ID | Environment |
+|-------|-----|-------------|
+| Anvil | 31337 | Local development |
+| Base Sepolia | 84532 | Testnet |
+| Base | 8453 | Mainnet (launch target) |
+
+---
+
+## Environment Variables
+
+### Client (`packages/client/.env`)
+
+| Variable | Purpose |
+|----------|---------|
+| `VITE_THIRDWEB_CLIENT_ID` | Thirdweb embedded wallet client ID |
+| `VITE_WALLET_CONNECT_PROJECT_ID` | WalletConnect v2 project ID |
+| `VITE_CHAIN_ID` | Target chain (default: 31337) |
+| `VITE_HTTPS_RPC_URL` | HTTPS RPC endpoint |
+| `VITE_WS_RPC_URL` | WebSocket RPC endpoint |
+
+### API (`packages/api/.env`)
+
+| Variable | Purpose |
+|----------|---------|
+| `PINATA_JWT` | Pinata IPFS authentication |
+| `WORLD_ADDRESS` | Deployed World contract address |
+| `CORS_ORIGINS` | Comma-separated allowed origins |
+| `INITIAL_BLOCK_NUMBER` | Block to start indexer sync from |
+
+### Contracts (`packages/contracts/.env`)
+
+| Variable | Purpose |
+|----------|---------|
+| `PRIVATE_KEY` | Deployer private key (never hardcoded) |
+
+---
+
+## Local Development
+
+### Ports
+
+| Service | Port |
+|---------|------|
+| Anvil (local chain) | 8545 |
+| Client (Vite dev) | 3000 |
+| API | 3001 |
+| MUD Indexer | proxied via client |
+
+### Commands
+
+```bash
+# Start everything (from root)
+pnpm dev
+
+# Contracts only
+cd packages/contracts && pnpm dev
+
+# Client only
+cd packages/client && pnpm dev
+
+# API only
+cd packages/api && pnpm dev
+
+# Deploy contracts to testnet
+cd packages/contracts && pnpm mud deploy --rpc <RPC_URL>
+
+# Run contract tests
+cd packages/contracts && forge test
 ```
 
-## Client Application Architecture
+---
 
-The client application builds upon React 18 with TypeScript, leveraging Vite's powerful build tooling and development server capabilities. The frontend's visual presentation combines TailwindCSS's utility-first approach with Chakra UI's accessible component library, creating a responsive and engaging user interface. Blockchain interactions are handled through a combination of Ethers.js and Wagmi hooks, with RainbowKit providing a seamless wallet connection experience.
+## Code Quality
 
-```ascii
-Client Architecture
-┌──────────────────────────────────────────────────┐
-│                  Components                       │
-├──────────────────────────────────────────────────┤
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │   Pages     │ │   Layouts   │ │   Shared    │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ │
-├──────────────────────────────────────────────────┤
-│                State Management                   │
-├──────────────────────────────────────────────────┤
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ MUD State   │ │React Query  │ │   Context   │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ │
-├──────────────────────────────────────────────────┤
-│               Web3 Integration                    │
-├──────────────────────────────────────────────────┤
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ RainbowKit  │ │   Wagmi     │ │   Ethers    │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ │
-└──────────────────────────────────────────────────┘
-```
+### ESLint (client)
+- Extends: eslint:recommended, typescript-eslint, react, react-hooks, import, prettier
+- Import ordering: builtin > external > internal > parent > sibling > index (alphabetized)
+- React: `react-in-jsx-scope` off (React 18 JSX transform)
 
-State management in the client application employs a multi-layered approach. MUD's built-in sync system handles blockchain state synchronization, while React Query manages API data caching and synchronization. Local state management utilizes React Context, with LocalStorage handling session persistence. This comprehensive approach ensures efficient state handling across all aspects of the application.
+### Prettier
+- Single quotes, trailing commas, 2-space tabs, 80 char width, no parens on single arrow params
 
-The development environment is enhanced by a robust set of tools including ESLint with TypeScript configuration, Prettier for consistent code formatting, and Husky for git hooks. Testing is handled through a combination of Jest and React Testing Library for unit tests, with Cypress managing end-to-end testing scenarios.
+### TypeScript
+- Strict mode enabled
+- Target: ESNext (client), ES2020 (API)
+- Module resolution: Node (client), NodeNext (API)
 
-The client application's key dependencies include:
-```json
-{
-  "@chakra-ui/react": "^2.8.0",
-  "@latticexyz/react": "^2.0.0",
-  "@rainbow-me/rainbowkit": "^1.0.8",
-  "@wagmi/core": "^1.3.9",
-  "ethers": "^5.7.2",
-  "react": "^18.2.0",
-  "react-query": "^3.39.3",
-  "tailwindcss": "^3.3.3",
-  "typescript": "^5.1.6",
-  "vite": "^4.4.9",
-  "wagmi": "^1.3.9"
-}
-```
+---
 
-## API Server Infrastructure
-
-The API server is built on Node.js 18+, utilizing Express.js as its framework backbone. TypeScript ensures type safety throughout the codebase, while MongoDB handles persistent storage needs and Redis manages caching and session requirements. This foundation supports a RESTful API design with comprehensive features including JWT authentication, rate limiting, request validation, and sophisticated error handling middleware.
-
-```ascii
-API Server Architecture
-┌──────────────────────────────────────────────────┐
-│                  API Routes                       │
-├──────────┬─────────────┬───────────┬────────────┤
-│ /auth    │ /players    │ /game     │ /market    │
-└──────────┴─────────────┴───────────┴────────────┘
-           │
-┌──────────────────────────────────────────────────┐
-│               Middleware Layer                    │
-├──────────┬─────────────┬───────────┬────────────┤
-│  Auth    │   Rate      │  Input    │  Error     │
-│  Check   │   Limit     │  Valid    │  Handler   │
-└──────────┴─────────────┴───────────┴────────────┘
-           │
-┌──────────────────────────────────────────────────┐
-│               Service Layer                       │
-├──────────┬─────────────┬───────────┬────────────┤
-│ Business │  Data       │ Cache     │ External   │
-│  Logic   │  Access     │ Manager   │   APIs     │
-└──────────┴─────────────┴───────────┴────────────┘
-           │
-┌──────────────────────────────────────────────────┐
-│               Storage Layer                       │
-├──────────┬─────────────┬───────────┬────────────┤
-│ MongoDB  │   Redis     │  IPFS     │ Blockchain │
-└──────────┴─────────────┴───────────┴────────────┘
-```
-
-The API's development workflow is streamlined through tools like Nodemon for development, Jest and Supertest for testing, and OpenAPI/Swagger for documentation. This setup ensures maintainable, well-tested code with clear documentation for all endpoints and functionality.
-
-Essential API dependencies include:
-```json
-{
-  "express": "^4.18.2",
-  "mongoose": "^7.4.3",
-  "redis": "^4.6.7",
-  "jsonwebtoken": "^9.0.1",
-  "winston": "^3.10.0",
-  "cors": "^2.8.5",
-  "helmet": "^7.0.0",
-  "express-rate-limit": "^6.9.0",
-  "typescript": "^5.1.6"
-}
-```
-
-## Smart Contract Architecture
-
-The smart contract layer utilizes Solidity 0.8.17 and the MUD Framework for game systems implementation. The contract architecture is organized around a central World.sol contract, with separate directories for components, systems, tables, and custom type definitions. This modular approach allows for clear separation of concerns and easier maintenance.
-
-Development of smart contracts is supported by Hardhat's comprehensive development environment, with additional tools including Slither for security analysis, Solhint for linting, and detailed gas reporting for optimization. OpenZeppelin contracts provide battle-tested implementations of common standards and patterns.
-
-Core contract dependencies include:
-```json
-{
-  "@latticexyz/cli": "^2.0.0",
-  "@latticexyz/world": "^2.0.0",
-  "@openzeppelin/contracts": "^4.9.3",
-  "@nomiclabs/hardhat-ethers": "^2.2.3",
-  "hardhat": "^2.17.1",
-  "solidity-coverage": "^0.8.4"
-}
-```
-
-## Infrastructure and Deployment
-
-The infrastructure utilizes a modern, distributed approach with Vercel hosting the client application, Vercel managing the API server, and IPFS/Pinata handling decentralized storage needs. Database services are provided by MongoDB Atlas, with Redis Labs managing caching requirements. This distributed architecture ensures high availability and scalability.
-
-```ascii
-Deployment Architecture
-┌─────────────────────┐      ┌─────────────────────┐
-│    GitHub Actions   │─────►│      Docker Hub     │
-└─────────────────────┘      └─────────────────────┘
-          │                           │
-          ▼                           ▼
-┌─────────────────────┐      ┌─────────────────────┐
-│   Quality Gates     │      │    Container Reg    │
-└─────────────────────┘      └─────────────────────┘
-          │                           │
-          ▼                           ▼
-┌─────────────────────┐      ┌─────────────────────┐
-│   Security Scan     │      │     Deployment      │
-└─────────────────────┘      └─────────────────────┘
-          │                           │
-          └───────────────┬──────────┘
-                         ▼
-┌───────────────────────────────────────────┐
-│              Production                    │
-├────────────────┬────────────┬─────────────┤
-│    Vercel      │   Vercel   │    IPFS     │
-│   (Frontend)   │   (API)    │  (Storage)  │
-└────────────────┴────────────┴─────────────┘
-```
-
-DevOps processes are automated through GitHub Actions for CI/CD, with Docker handling containerization needs. Package management is handled efficiently through pnpm, while environment configuration is managed via dotenv. Monitoring solutions include Sentry for error tracking, DataDog for performance monitoring, and EtherscanAPI for transaction oversight.
-
-## Environment Configuration
-
-The environment configuration is carefully structured across all system components. The client environment variables manage blockchain interactions and API connections:
-```
-VITE_CHAIN_ID=17069
-VITE_WALLET_CONNECT_PROJECT_ID=xxxxx
-VITE_HTTPS_RPC_URL=https://rpc.garnetchain.com
-VITE_WS_RPC_URL=wss://rpc.garnetchain.com
-VITE_API_URL=https://ud-api.vercel.app
-VITE_INDEXER_URL=https://indexer.mud.garnetchain.com
-```
-
-The API environment configuration manages server settings and external service connections:
-```
-NODE_ENV=production
-PORT=3000
-MONGODB_URI=mongodb+srv://xxx
-REDIS_URL=redis://xxx
-JWT_SECRET=xxx
-PINATA_API_KEY=xxx
-PINATA_SECRET_KEY=xxx
-```
-
-The blockchain configuration is specifically tailored for the Garnet Testnet, utilizing chain ID 17069 with appropriate RPC and indexer endpoints.
-
-## Security Implementation
-
-Security measures are implemented comprehensively across all layers of the application. The client side implements wallet connection security, local storage encryption, and various XSS and CSRF protections. API security includes rate limiting, JWT validation, and robust input sanitization. Smart contract security focuses on access control, reentrancy protection, and emergency pause functionality.
-
-## Monitoring and Security
-
-```ascii
-Monitoring Stack
-┌─────────────────────────────────────────────┐
-│              Observability                   │
-├───────────────┬─────────────┬───────────────┤
-│    Metrics    │    Logs     │    Traces     │
-├───────────────┼─────────────┼───────────────┤
-│   DataDog     │   Winston   │    Sentry     │
-└───────────────┴─────────────┴───────────────┘
-         │             │             │
-         ▼             ▼             ▼
-┌─────────────────────────────────────────────┐
-│              Alerting                       │
-├───────────────┬─────────────┬───────────────┤
-│    PagerDuty  │    Slack    │    Email      │
-└───────────────┴─────────────┴───────────────┘
-```
-
-## Development Workflow
-
-The development process follows industry best practices, utilizing Git for version control with a feature branch workflow and conventional commits. Testing is comprehensive, covering unit tests for components, integration tests for the API, and thorough contract test coverage. The deployment process follows a structured approach, moving through development and staging environments before production deployment.
-
-## Documentation Strategy
-
-Documentation is maintained across all aspects of the project, with OpenAPI/Swagger handling API documentation, NatSpec covering smart contract documentation, and Storybook managing component documentation. Additional documentation includes detailed architecture diagrams, setup guides, and comprehensive developer resources covering local setup, contribution guidelines, and deployment procedures.
-
-This technical stack represents a carefully considered balance of modern tools and practices, creating a robust foundation for Ultimate Dominion's gaming experience while ensuring maintainability and scalability for future growth.
+*Last updated: February 2026*

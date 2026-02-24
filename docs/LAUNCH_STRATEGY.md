@@ -1,6 +1,8 @@
-# Ultimate Dominion: Launch Strategy
+# Ultimate Dominion — Launch Strategy
 
 Operational playbook for the first 3 months — phased rollout, player cap, invite system, queue, founder system, human verification, viral growth, and shareable UI.
+
+> **Status Key**: `[IMPLEMENTED]` = in code, `[PLANNED]` = designed but not built
 
 ---
 
@@ -22,17 +24,17 @@ Operational playbook for the first 3 months — phased rollout, player cap, invi
 | Phase | Duration | Players | Focus |
 |-------|----------|---------|-------|
 | **Phase 0: Pre-launch** | Week -4 to 0 | 0 | Deploy token, seed DEX liquidity, build hype |
-| **Phase 1: Observation** | Week 1-2 | 10 cap | Pure observation, test economy, founders only |
-| **Phase 2: Early economy** | Week 3-4 | 20 cap | Marketplace starts forming, invite system live |
-| **Phase 3: Expand** | Week 5-8 | 50 cap | Real economy emerging, queue growing |
+| **Phase 1: Observation** | Week 1–2 | 10 cap | Pure observation, test economy, founders only |
+| **Phase 2: Early economy** | Week 3–4 | 20 cap | Marketplace starts forming, invite system live |
+| **Phase 3: Expand** | Week 5–8 | 50 cap | Real economy emerging, queue growing |
 | **Phase 4: Public launch** | Month 2+ | 100+ cap | Scale based on economic indicators, not time |
 | **Phase 5: Growth** | Month 3+ | 250+ | Remove cap or keep soft limit |
 
 ---
 
-## Player Cap System
+## Player Cap System `[PLANNED]`
 
-Limit concurrent players to control gold creation and test economics:
+Limit concurrent players to control gold creation and test economics.
 
 ```
 Player tries to join
@@ -72,7 +74,7 @@ Check active player count
 
 ---
 
-## Invite System
+## Invite System `[PLANNED]`
 
 ### Core Mechanic
 
@@ -99,18 +101,16 @@ Codes are earned through gameplay, not given at signup:
 | Reach Level 20 | 1 code |
 | Each successful activation (invitee hits Level 5) | 1 bonus code |
 
-A dedicated player who invites real players generates ~5-6 codes over weeks. A casual player gets 1-2. Nobody gets unlimited.
+A dedicated player who invites real players generates ~5–6 codes over weeks. A casual player gets 1–2. Nobody gets unlimited.
 
 ### Activation Threshold
 
-The invitee must reach **Level 5** before the referrer gets credit. This is the anti-abuse lever:
+The invitee must reach **Level 5** before the referrer gets credit:
 - Level 5 requires real engagement — combat, maybe a shop visit, real time invested
 - Fast enough that the referrer gets feedback within a day or two
 - Slow enough that alts require actual effort
 
 ### Rewards
-
-Keep meaningful but not economy-breaking:
 
 **Referrer rewards:**
 
@@ -124,7 +124,7 @@ Keep meaningful but not economy-breaking:
 - Queue priority (near-front, not absolute front)
 - 50 gold starting bonus (enough for a health potion, not enough to distort economy)
 
-Titles are the real reward. In a 10-20 person world, being "Kingmaker" is visible status that costs nothing economically.
+Titles are the real reward. In a 10–20 person world, being "Kingmaker" is visible status that costs nothing economically.
 
 ### Queue Experience
 
@@ -158,7 +158,7 @@ The queue should not be a dead screen. It should create FOMO and drive invite sh
 ### Queue-Skip Mechanics
 
 When invitee B uses player A's code:
-- B joins queue at position #3 (near front, not absolute front — preserves some fairness for long-waiters)
+- B joins queue at position #3 (near front, not absolute front)
 - If A is still in queue, A moves up 5 positions
 - If A is in-game and later disconnects, A gets priority re-entry
 
@@ -166,13 +166,13 @@ Both sides benefit from every invite.
 
 ### Abuse Scenarios
 
-At 10-20 players, abuse doesn't scale. The cap itself is the anti-abuse mechanism.
+At 10–20 players, abuse doesn't scale. The cap itself is the anti-abuse mechanism.
 
 | Scenario | Impact | Response |
 |----------|--------|----------|
-| Player makes 3 email alts for codes | Each alt needs Level 3 to generate codes (~3+ hours each). At 10 players, you notice. | Let it slide. They're playing 3x. |
+| Player makes 3 email alts for codes | Each alt needs Level 3 (~3+ hours each). At 10 players, you notice. | Let it slide. They're playing 3x. |
 | Player sells invite codes on Twitter | Buyer still waits for cap slot. Seller gets credit only if buyer hits Level 5. | This is marketing. Encourage it. |
-| Player invites bots | Bots need Level 5 for activation. At 10-20 players, bot behavior is visible. | Manual ban if needed. You're watching everything. |
+| Player invites bots | Bots need Level 5 for activation. At 10–20 players, bot behavior is visible. | Manual ban if needed. You're watching everything. |
 | Two players trade invites to boost | Each gets 1 bonus code and 100 gold. Total impact: 200 gold. | Irrelevant at any scale. |
 | Someone builds an invite farming ring | Needs 5+ real accounts all reaching Level 5. That's half the server at 10-player cap. | Physically impossible to do quietly. |
 
@@ -215,12 +215,12 @@ MONTH 2: Controlled growth
 
 ---
 
-## Human Verification
+## Human Verification `[PLANNED]`
 
 ### Two Verification Points
 
-1. **Queue entry** - Prove you're human to get in line
-2. **Periodic check** - Prove you're still human while playing
+1. **Queue entry** — Prove you're human to get in line
+2. **Periodic check** — Prove you're still human while playing
 
 ### Queue Entry Verification
 
@@ -264,6 +264,7 @@ Every 30-60 minutes (randomized):
 - Can gamify it: "+10 XP for correct answer"
 
 **Trust decay system:**
+
 | Trust Level | Check Frequency |
 |-------------|-----------------|
 | New | Every 20 min |
@@ -279,16 +280,29 @@ Trust builds by passing checks, drops if failed.
 |---------|------------|
 | Self-referral (alts) | Different IP/device fingerprint or Worldcoin |
 | Mass bot referrals | Level requirement, verification checks |
-| Slot squatting | Session timeout kicks idle players |
+| Slot squatting | Session timeout kicks idle players (10 min) `[IMPLEMENTED]` |
 | Alt accounts | Wallet age/stake requirements |
 
 ---
 
-## Founder System
+## Founder System `[PARTIALLY IMPLEMENTED]`
 
-### Philosophy
+### What's Built
 
-Reward early players with permanent benefits. They took the risk, built the community, deserve recognition.
+- **Founder badge** (Badge #50): ERC1155 soulbound token `[IMPLEMENTED]`
+- **Mint window**: Configurable time window set at deployment `[IMPLEMENTED]`
+
+### What's Planned `[PLANNED]`
+
+| Benefit | Description | Status |
+|---------|-------------|--------|
+| **Founder badge** | Visible next to name | `[IMPLEMENTED]` |
+| **Express queue** | Skip the line (near-instant access) | `[PLANNED]` |
+| **Reduced checks** | Verify every 3 hours instead of 30 min | `[PLANNED]` |
+| **Exclusive title** | "Founding Adventurer" | `[PLANNED]` |
+| **Unique cosmetic** | Cape, aura, or pet | `[PLANNED]` |
+| **Founders-only chat** | Private channel | `[PLANNED]` |
+| **Input on decisions** | Polls, feedback priority | `[PLANNED]` |
 
 ### Qualification
 
@@ -299,18 +313,6 @@ Reward early players with permanent benefits. They took the risk, built the comm
 
 **After window closes:** No one else can ever become a Founder.
 
-### Founder Benefits
-
-| Benefit | Description |
-|---------|-------------|
-| **Express queue** | Skip the line (near-instant access) |
-| **Reduced checks** | Verify every 3 hours instead of 30 min |
-| **Founder badge** | Visible next to name |
-| **Exclusive title** | "Founding Adventurer" |
-| **Unique cosmetic** | Cape, aura, or pet |
-| **Founders-only chat** | Private channel |
-| **Input on decisions** | Polls, feedback priority |
-
 ### Simple Two-Tier System
 
 | Tier | Who | Queue Access |
@@ -320,28 +322,20 @@ Reward early players with permanent benefits. They took the risk, built the comm
 
 No complex scoring. Early = priority. Forever.
 
-### Fairness Argument
-
-> "Players who took the risk when the game was unproven deserve priority. Late players get a more polished game and still get in - they just wait a bit longer."
-
-This is standard practice (Kickstarter backers, beta testers, early investors).
-
 ---
 
-## Viral Growth & Social Proof
+## Viral Growth & Social Proof `[PLANNED]`
 
 ### Philosophy
 
-No explicit referral codes or "recruit your friends" prompts. Instead: **make cool things happen and make them easy to share.**
-
-The game markets itself through players showing off.
+No explicit "recruit your friends" prompts beyond the invite system. Instead: **make cool things happen and make them easy to share.**
 
 ### Shareable Moments
 
 | Moment | Emotion | Share Impulse |
 |--------|---------|---------------|
 | Legendary drop | Excitement | "LOOK WHAT I GOT" |
-| Level milestone | Pride | "Finally hit 50" |
+| Level milestone | Pride | "Finally hit Level 10" |
 | PvP victory | Dominance | "Get rekt" |
 | Big sale | Validation | "Made $200 today" |
 | Rare achievement | Status | "First to kill X" |
@@ -350,11 +344,11 @@ The game markets itself through players showing off.
 
 ### Key Design Principles
 
-1. **Auto-generate beautiful images** - Don't make players screenshot
-2. **One-tap sharing** - Pre-filled tweet + image + game link
-3. **Include social proof** - "Only 0.3% have this", "Top 3% of players"
-4. **Show real value** - "$47.50 USD" next to gold amounts
-5. **Include branding** - Every shared image has game logo/link
+1. **Auto-generate beautiful images** — Don't make players screenshot
+2. **One-tap sharing** — Pre-filled tweet + image + game link
+3. **Include social proof** — "Only 0.3% have this", "Top 3% of players"
+4. **Show real value** — "$47.50 USD" next to gold amounts
+5. **Include branding** — Every shared image has game logo/link
 
 ### Passive Virality Features
 
@@ -379,11 +373,9 @@ The game markets itself through players showing off.
 
 ---
 
-## Shareable UI Patterns
+## Shareable UI Patterns `[PLANNED]`
 
 ### 1. Drop Card
-
-When rare+ item drops:
 
 ```
 ┌─────────────────────────────────┐
@@ -396,7 +388,7 @@ When rare+ item drops:
 │  Drop Rate: 0.01%               │
 │                                 │
 │  Found by: CryptoKnight.eth     │
-│  Zone: Shadow Caverns           │
+│  Zone: Dark Cave                │
 │                                 │
 │  [Share to X]  [Copy Image]     │
 └─────────────────────────────────┘
@@ -406,15 +398,15 @@ When rare+ item drops:
 
 ```
 ┌─────────────────────────────────┐
-│  LEVEL 50                       │
+│  LEVEL 10                       │
 │                                 │
 │  [Character portrait]           │
 │                                 │
 │  CryptoKnight.eth               │
-│  Warrior | 142 hours played     │
+│  Warrior | 12 hours played      │
 │                                 │
-│  STR: 89  AGI: 45               │
-│  INT: 23  HP: 340               │
+│  STR: 18  AGI: 12               │
+│  INT: 8   HP: 38                │
 │                                 │
 │  Top 3% of all players          │
 │                                 │
@@ -431,10 +423,10 @@ When rare+ item drops:
 │  [Your char]  VS  [Their char]  │
 │                                 │
 │  CryptoKnight    DeathDealer    │
-│  Lvl 34          Lvl 37         │
+│  Lvl 8           Lvl 9         │
 │                                 │
 │  +250 Gold | +150 XP            │
-│  Win Streak: 7                  │
+│  Win Streak: 3                  │
 │                                 │
 │  [Share Victory]  [Rematch]     │
 └─────────────────────────────────┘
@@ -458,8 +450,6 @@ When rare+ item drops:
 └─────────────────────────────────┘
 ```
 
-**The USD equivalent is key** - shows real money being made.
-
 ### 5. Achievement Card
 
 ```
@@ -477,20 +467,20 @@ When rare+ item drops:
 └─────────────────────────────────┘
 ```
 
-### 6. Character/Profile Card
+### 6. Character Card
 
 ```
 ┌─────────────────────────────────┐
 │  [Full character art]           │
 │                                 │
 │  CRYPTOKNIGHT                   │
-│  Level 50 Warrior | Founder     │
+│  Level 10 Warrior | Founder     │
 │                                 │
-│  89 STR   45 AGI                │
-│  23 INT   340 HP                │
+│  18 STR   12 AGI                │
+│  8 INT    38 HP                 │
 │                                 │
-│  1,247 Kills | #47 Rank         │
-│  12,400 Gold earned             │
+│  247 Kills | #7 Rank            │
+│  2,400 Gold earned              │
 │                                 │
 │  [Share Card]  [View Full]      │
 └─────────────────────────────────┘
@@ -513,21 +503,9 @@ Player shares image + link
 
 **Open Graph Tags:**
 ```html
-<meta property="og:title" content="CryptoKnight | Level 50 Warrior" />
-<meta property="og:image" content="https://game.com/cards/0x123.png" />
-<meta property="og:description" content="Top 3% player | 1,247 kills" />
-```
-
-**Example Tweet Output:**
-```
-Just dropped a BLADE OF THE VOID in @UltimateDominion
-
-+45 STR | +20 AGI
-Drop rate: 0.01%
-
-[Auto-generated card image]
-
-Play free: ultimatedominion.com
+<meta property="og:title" content="CryptoKnight | Level 10 Warrior" />
+<meta property="og:image" content="https://ultimatedominion.com/cards/0x123.png" />
+<meta property="og:description" content="Top 3% player | 247 kills" />
 ```
 
 ### The Share Flow
@@ -589,6 +567,7 @@ Sustainable economy
 - [ ] Founder window duration (30 days? 60 days?)
 - [ ] Verification provider choice (Worldcoin vs Gitcoin vs other)
 - [ ] Player cap scaling schedule
+- [ ] Queue/invite technical implementation details
 
 ---
 
