@@ -1,3 +1,13 @@
+// React duplicate detection — remove after debugging
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+const _ri = (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+const _rdi = (ReactDOM as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+console.log('[React Debug] React version:', React.version);
+console.log('[React Debug] ReactDOM version:', (ReactDOM as any).version);
+console.log('[React Debug] Same internals?', _ri === _rdi);
+console.log('[React Debug] Dispatcher:', _ri?.ReactCurrentDispatcher);
+
 import '@fontsource/fira-code/300.css';
 import '@fontsource/fira-code/400.css';
 import '@fontsource/fira-code/500.css';
