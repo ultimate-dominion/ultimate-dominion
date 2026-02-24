@@ -254,7 +254,7 @@ export const BattleProvider = ({
   );
 
   const statusEffectActions: StatusAction[] = useMemo(() => {
-    if (!currentBattle) return [];
+    if (!currentBattle || !StatusEffectValidity) return [];
 
     const encounterEntities = Array.from(
       runQuery([
@@ -274,10 +274,11 @@ export const BattleProvider = ({
 
         const _statusEffectActions = statusEffects.map(effect => {
           const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
-          const validity = getComponentValueStrict(
+          const validity = getComponentValue(
             StatusEffectValidity,
             paddedEffectId,
           );
+          if (!validity) return null;
 
           const isActive =
             BigInt(currentBattle.currentTurn) <=
@@ -297,7 +298,8 @@ export const BattleProvider = ({
 
         return _statusEffectActions;
       })
-      .flat();
+      .flat()
+      .filter((action): action is StatusAction => action !== null);
   }, [currentBattle, EncounterEntity, StatusEffectValidity]);
 
   const onAttack = useCallback(

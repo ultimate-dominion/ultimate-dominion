@@ -18,6 +18,7 @@
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@fontsource/fira-code": "^5.1.0",
+    "@fontsource/inter": "^5.2.8",
     "@latticexyz/common": "2.0.11",
     "@latticexyz/dev-tools": "2.0.11",
     "@latticexyz/faucet": "^2.1.1",

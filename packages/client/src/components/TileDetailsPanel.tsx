@@ -177,11 +177,6 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const onInitiateCombat = useCallback(
     async (opponent: Character | Monster, encounterType: EncounterType) => {
-      console.log('[DEBUG] onInitiateCombat called:', {
-        characterId: character?.id,
-        opponentId: opponent.id,
-        encounterType,
-      });
       try {
         setIsInitiating(true);
 
@@ -193,14 +188,11 @@ export const TileDetailsPanel = (): JSX.Element => {
           throw new Error('Missing delegation.');
         }
 
-        console.log('[DEBUG] Calling createEncounter...');
         const { error, success } = await createEncounter(
           encounterType,
           [character.id],
           [opponent.id],
         );
-
-        console.log('[DEBUG] createEncounter result:', { error, success });
 
         if (error && !success) {
           throw new Error(error);
@@ -209,7 +201,6 @@ export const TileDetailsPanel = (): JSX.Element => {
         renderSuccess('Battle has begun!');
         refreshCharacter();
       } catch (e) {
-        console.error('[DEBUG] onInitiateCombat error:', e);
         renderError((e as Error)?.message ?? 'Failed to initiate battle.', e);
       } finally {
         setIsInitiating(false);
@@ -497,8 +488,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text size={{ base: '2xs', lg: 'sm' }}>AGI</Text>
-                    <Text size={{ base: '2xs', lg: 'sm' }}>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>AGI</Text>
+                    <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
                       {(
                         userCharacterForBattleRendering.agility -
                         expiredUserEffectModifications.agiModifier
@@ -512,8 +503,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text size={{ base: '2xs', lg: 'sm' }}>INT</Text>
-                    <Text size={{ base: '2xs', lg: 'sm' }}>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>INT</Text>
+                    <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
                       {(
                         userCharacterForBattleRendering.intelligence -
                         expiredUserEffectModifications.intModifier
@@ -527,8 +518,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text size={{ base: '2xs', lg: 'sm' }}>STR</Text>
-                    <Text size={{ base: '2xs', lg: 'sm' }}>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>STR</Text>
+                    <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
                       {(
                         userCharacterForBattleRendering.strength -
                         expiredUserEffectModifications.strModifier
@@ -626,9 +617,9 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text size={{ base: '2xs', lg: 'sm' }}>AGI</Text>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>AGI</Text>
                     {!!opponent.agility && (
-                      <Text size={{ base: '2xs', lg: 'sm' }}>
+                      <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
                         {(
                           opponent.agility -
                           expiredOpponentEffectModifications.agiModifier
@@ -643,9 +634,9 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text size={{ base: '2xs', lg: 'sm' }}>INT</Text>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>INT</Text>
                     {!!opponent.intelligence && (
-                      <Text size={{ base: '2xs', lg: 'sm' }}>
+                      <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
                         {(
                           opponent.intelligence -
                           expiredOpponentEffectModifications.intModifier
@@ -660,9 +651,9 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text size={{ base: '2xs', lg: 'sm' }}>STR</Text>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>STR</Text>
                     {!!opponent.strength && (
-                      <Text size={{ base: '2xs', lg: 'sm' }}>
+                      <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
                         {(
                           opponent.strength -
                           expiredOpponentEffectModifications.strModifier
@@ -752,17 +743,18 @@ export const TileDetailsPanel = (): JSX.Element => {
             <VStack alignItems="start" h="76px" p={2}>
               <HStack>
                 <Text
+                  fontFamily="mono"
                   fontSize={{ base: '3xs', sm: 'xs' }}
                   fontWeight={700}
                   textAlign="start"
                 >
                   Adventure Escrow balance:{' '}
-                  {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
+                  {etherToFixedNumber(character.escrowGoldBalance)} Gold
                 </Text>
                 <Tooltip
                   bg="#070D2A"
                   hasArrow
-                  label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+                  label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
                   placement="top"
                   shouldWrapChildren
                 >
@@ -776,7 +768,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                   size="xs"
                   variant="outline"
                 >
-                  Move $GOLD
+                  Move Gold
                 </Button>
               )}
             </VStack>
@@ -844,11 +836,6 @@ export const TileDetailsPanel = (): JSX.Element => {
                   <OpponentRow
                     encounterType={EncounterType.PvE}
                     onClick={() => {
-                      console.log('[DEBUG] Monster click:', {
-                        isMoveEquipped,
-                        monsterId: monster.id,
-                        monsterName: monster.name,
-                      });
                       if (isMoveEquipped) {
                         onInitiateCombat(monster, EncounterType.PvE);
                       } else {

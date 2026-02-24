@@ -151,7 +151,7 @@ export const AdvancedClassModal = ({
   }, [characterId, selectedClass, onClassSelected, onClose, renderError, renderSuccess, selectAdvancedClass]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered size="4xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} isCentered size={{ base: 'full', md: '4xl' }} scrollBehavior="inside">
       <ModalOverlay bg="blackAlpha.700" />
       <ModalContent bg="grey100" borderRadius="lg" maxH="90vh">
         <ModalHeader textAlign="center">
@@ -162,7 +162,7 @@ export const AdvancedClassModal = ({
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+          <Grid templateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }} gap={4}>
             {ALL_CLASSES.map((advClass) => {
               const info = ADVANCED_CLASS_INFO[advClass];
               const isSelected = selectedClass === advClass;

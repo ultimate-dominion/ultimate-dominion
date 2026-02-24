@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Divider,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -204,19 +203,19 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
               {winner === character.id ? (
                 <Text>
                   You earned{' '}
-                  <Text as="span" color="gold" fontWeight="bold">
+                  <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
                     {etherToFixedNumber(goldDropped)}
                   </Text>{' '}
-                  $GOLD.
+                  Gold.
                 </Text>
               ) : (
                 <Text>
-                  Fleeing causes you to drop 25% of the $GOLD in your Adventure
+                  Fleeing causes you to drop 25% of the Gold in your Adventure
                   Escrow. You lost{' '}
-                  <Text as="span" color="gold" fontWeight="bold">
+                  <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
                     {etherToFixedNumber(goldDropped)}
                   </Text>{' '}
-                  $GOLD.
+                  Gold.
                 </Text>
               )}
             </VStack>
@@ -262,10 +261,10 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                   currentBattle.encounterType === EncounterType.PvP && (
                     <Text>
                       You lost{' '}
-                      <Text as="span" color="gold" fontWeight="bold">
+                      <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
                         {etherToFixedNumber(goldDropped)}
                       </Text>{' '}
-                      $GOLD from your Adventure Escrow.
+                      Gold from your Adventure Escrow.
                     </Text>
                   )}
                 {winner !== character.id && (
@@ -277,14 +276,14 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 {winner === character.id && (
                   <Text>
                     You earned{' '}
-                    <Text as="span" color="green" fontWeight="bold">
+                    <Text as="span" color="green" fontFamily="mono" fontWeight="bold">
                       {expDropped.toString()}
                     </Text>{' '}
                     experience and your Adventure Escrow gained{' '}
-                    <Text as="span" color="gold" fontWeight="bold">
+                    <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
                       {etherToFixedNumber(goldDropped)}
                     </Text>{' '}
-                    $GOLD.
+                    Gold.
                   </Text>
                 )}
                 {isLoadingItems ? (
@@ -342,33 +341,40 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
               </VStack>
             )}
             {canLevel && (
-              <VStack alignItems="center" pb={8} spacing={4}>
-                <Divider />
-                <Text fontWeight="bold">
-                  You have enough experience to level up!
+              <VStack
+                alignItems="center"
+                pb={8}
+                spacing={4}
+                border="2px solid"
+                borderColor="yellow"
+                borderRadius="md"
+                p={4}
+                boxShadow="0 0 15px rgba(239, 211, 28, 0.3)"
+                bg="rgba(239, 211, 28, 0.05)"
+              >
+                <Text fontWeight="bold" color="yellow" fontSize="lg">
+                  Ready to Level Up!
                 </Text>
                 <Text>
-                  Leveling involves spending{' '}
+                  You can reach{' '}
+                  <Text as="span" fontWeight="bold">
+                    Level {(Number(character.level) + 1).toString()}
+                  </Text>
+                  ! Spend{' '}
                   <Text as="span" fontWeight="bold">
                     2 ability points
                   </Text>{' '}
-                  on your character&apos;s stats.
+                  on your stats.
                 </Text>
-                <Text>
-                  To level up, visit your{' '}
-                  <Text
-                    as={Link}
-                    color="blue"
-                    to={`/characters/${character?.id}`}
-                    onClick={onAcknowledge}
-                    _hover={{
-                      textDecoration: 'underline',
-                    }}
-                  >
-                    character page
-                  </Text>
-                  .
-                </Text>
+                <Button
+                  as={Link}
+                  to={`/characters/${character?.id}`}
+                  onClick={onAcknowledge}
+                  variant="gold"
+                  size="sm"
+                >
+                  Level Up Now
+                </Button>
               </VStack>
             )}
           </ModalBody>

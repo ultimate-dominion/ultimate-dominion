@@ -186,7 +186,7 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">HP</Text>
-          <Text color="grey500" size="lg">
+          <Text color="grey500" fontFamily="mono" size="lg">
             {currentHpWithFloor.toString()}/{maxHp.toString()}
           </Text>
         </HStack>
@@ -204,7 +204,7 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">AGI</Text>
-          <Text color="grey500" size="lg">
+          <Text color="grey500" fontFamily="mono" size="lg">
             {(agility - expiredEffectModifications.agiModifier).toString()}
           </Text>
         </HStack>
@@ -222,7 +222,7 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">INT</Text>
-          <Text color="grey500" size="lg">
+          <Text color="grey500" fontFamily="mono" size="lg">
             {(intelligence - expiredEffectModifications.intModifier).toString()}
           </Text>
         </HStack>
@@ -240,7 +240,7 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">STR</Text>
-          <Text color="grey500" size="lg">
+          <Text color="grey500" fontFamily="mono" size="lg">
             {(strength - expiredEffectModifications.strModifier).toString()}
           </Text>
         </HStack>
@@ -267,11 +267,12 @@ export const StatsPanel = (): JSX.Element => {
           color={
             BigInt(experience) >= nextLevelXpRequirement ? 'green' : undefined
           }
+          fontFamily="mono"
           fontWeight={700}
         >
           {experience.toString()}
         </Text>
-        <Text as="span" color="grey500">
+        <Text as="span" color="grey500" fontFamily="mono">
           {' / '}
           {nextLevelXpRequirement.toString()}
         </Text>{' '}
@@ -284,19 +285,19 @@ export const StatsPanel = (): JSX.Element => {
         <HStack justifyContent="space-between" w="100%">
           <HStack>
             <Text color="yellow" fontWeight={700} size="lg">
-              $GOLD
+              Gold
             </Text>
             <Tooltip
               bg="#070D2A"
               hasArrow
-              label="Your $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
+              label="Your Gold balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit Gold into your Adventure Escrow, visit 0,0 on the map."
               placement="top"
               shouldWrapChildren
             >
               <IoMdInformationCircleOutline />
             </Tooltip>
           </HStack>
-          <Text color="yellow" fontWeight={700} size="lg">
+          <Text color="yellow" fontFamily="mono" fontWeight={700} size="lg">
             {etherToFixedNumber(
               externalGoldBalance + character.escrowGoldBalance,
             )}
@@ -304,7 +305,7 @@ export const StatsPanel = (): JSX.Element => {
         </HStack>
         <HStack justifyContent="space-between" w="100%" px={2}>
           <Text size="md">Spendable</Text>
-          <Text fontWeight={700} size="md">
+          <Text fontFamily="mono" fontWeight={700} size="md">
             {etherToFixedNumber(externalGoldBalance)}
           </Text>
         </HStack>
@@ -314,14 +315,14 @@ export const StatsPanel = (): JSX.Element => {
             <Tooltip
               bg="#070D2A"
               hasArrow
-              label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+              label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
               placement="top"
               shouldWrapChildren
             >
               <IoMdInformationCircleOutline />
             </Tooltip>
           </HStack>
-          <Text fontWeight={700} size="md">
+          <Text fontFamily="mono" fontWeight={700} size="md">
             {etherToFixedNumber(character.escrowGoldBalance)}
           </Text>
         </HStack>

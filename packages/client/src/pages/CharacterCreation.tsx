@@ -1,4 +1,9 @@
 import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
   Avatar,
   Box,
   Button,
@@ -191,26 +196,12 @@ const CharacterCreationInner = (): JSX.Element => {
 
   // Load available starter items from StarterItemPool
   useEffect(() => {
-    console.log('[CharacterCreation] useEffect triggered:', {
-      isSynced,
-      isLoadingItemTemplates,
-      hasStarterItemPool: !!StarterItemPool,
-      weaponTemplatesCount: weaponTemplates.length,
-      armorTemplatesCount: armorTemplates.length,
-      weaponTemplateIds: weaponTemplates.map(w => w.tokenId),
-      armorTemplateIds: armorTemplates.map(a => a.tokenId),
-    });
-
     if (!isSynced || isLoadingItemTemplates || !StarterItemPool) {
-      console.log('[CharacterCreation] Waiting for sync...', { isSynced, isLoadingItemTemplates, hasStarterItemPool: !!StarterItemPool });
       return;
     }
 
     // Query StarterItemPool for items that are starters
     const starterPoolEntities = Array.from(runQuery([Has(StarterItemPool)]));
-    console.log('[CharacterCreation] StarterItemPool entities found:', starterPoolEntities.length);
-    console.log('[CharacterCreation] Weapon templates available:', weaponTemplates.length);
-    console.log('[CharacterCreation] Armor templates available:', armorTemplates.length);
 
     const starterWeapons: Weapon[] = [];
     const starterArmors: Armor[] = [];
@@ -222,12 +213,10 @@ const CharacterCreationInner = (): JSX.Element => {
       // The itemId is encoded in the entity (it's the table key)
       const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
       const itemIdStr = itemId.toString();
-      console.log('[CharacterCreation] Checking starter item:', itemIdStr);
 
       // Check if it's a weapon
       const weapon = weaponTemplates.find(w => w.tokenId === itemIdStr);
       if (weapon) {
-        console.log('[CharacterCreation] Found starter weapon:', weapon.name);
         starterWeapons.push({
           ...weapon,
           balance: BigInt(1),
@@ -240,7 +229,6 @@ const CharacterCreationInner = (): JSX.Element => {
       // Check if it's an armor
       const armor = armorTemplates.find(a => a.tokenId === itemIdStr);
       if (armor) {
-        console.log('[CharacterCreation] Found starter armor:', armor.name);
         starterArmors.push({
           ...armor,
           balance: BigInt(1),
@@ -250,7 +238,6 @@ const CharacterCreationInner = (): JSX.Element => {
       }
     });
 
-    console.log('[CharacterCreation] Starter weapons:', starterWeapons.length, ', Starter armors:', starterArmors.length);
     setAvailableStarterWeapons(starterWeapons);
     setAvailableStarterArmors(starterArmors);
   }, [
@@ -637,15 +624,7 @@ const CharacterCreationInner = (): JSX.Element => {
   }, [avatar, delegatorAddress]);
 
   // Show loading state while syncing or loading item templates
-  console.log('[CharacterCreation] Inner component check:', {
-    isSynced,
-    isLoadingItemTemplates,
-    hasCharacter: !!character,
-    delegatorAddress,
-  });
-
   if (!isSynced || isLoadingItemTemplates) {
-    console.log('[CharacterCreation] Inner showing spinner:', { isSynced, isLoadingItemTemplates });
     return (
       <Center h="100vh">
         <Spinner size="xl" />
@@ -672,43 +651,53 @@ const CharacterCreationInner = (): JSX.Element => {
             <Center>
               <Avatar size={{ base: 'lg', sm: 'xl' }} src={character.image} />
             </Center>
-            <HStack spacing={4}>
-              <Text fontSize={{ base: 'xs', md: 'sm' }}>
-                Address:{' '}
-                {chainId && EXPLORER_URLS[chainId] ? (
-                  <Link
-                    color="blue"
-                    fontWeight={700}
-                    href={`${EXPLORER_URLS[chainId]}/token/${characterToken}`}
-                    isExternal
-                  >
-                    {shortenAddress(characterToken)}
-                  </Link>
-                ) : (
-                  <Text as="span" fontWeight={700}>
-                    {shortenAddress(characterToken)}
-                  </Text>
-                )}
-              </Text>
-              <Text>|</Text>
-              <Text fontSize={{ base: 'xs', md: 'sm' }}>
-                Token ID:{' '}
-                {chainId && EXPLORER_URLS[chainId] ? (
-                  <Link
-                    color="blue"
-                    fontWeight={700}
-                    href={`${EXPLORER_URLS[chainId]}/token/${characterToken}/instance/${character.tokenId}`}
-                    isExternal
-                  >
-                    {character.tokenId.toString()}
-                  </Link>
-                ) : (
-                  <Text as="span" fontWeight={700}>
-                    {character.tokenId.toString()}
-                  </Text>
-                )}
-              </Text>
-            </HStack>
+            <Accordion allowToggle w="100%">
+              <AccordionItem border="none">
+                <AccordionButton justifyContent="center" px={0}>
+                  <Text fontSize="xs" color="grey400">Advanced Details</Text>
+                  <AccordionIcon ml={1} />
+                </AccordionButton>
+                <AccordionPanel pb={2}>
+                  <HStack spacing={4} justifyContent="center">
+                    <Text fontSize={{ base: 'xs', md: 'sm' }}>
+                      Address:{' '}
+                      {chainId && EXPLORER_URLS[chainId] ? (
+                        <Link
+                          color="blue"
+                          fontWeight={700}
+                          href={`${EXPLORER_URLS[chainId]}/token/${characterToken}`}
+                          isExternal
+                        >
+                          {shortenAddress(characterToken)}
+                        </Link>
+                      ) : (
+                        <Text as="span" fontWeight={700}>
+                          {shortenAddress(characterToken)}
+                        </Text>
+                      )}
+                    </Text>
+                    <Text>|</Text>
+                    <Text fontSize={{ base: 'xs', md: 'sm' }}>
+                      Character ID:{' '}
+                      {chainId && EXPLORER_URLS[chainId] ? (
+                        <Link
+                          color="blue"
+                          fontWeight={700}
+                          href={`${EXPLORER_URLS[chainId]}/token/${characterToken}/instance/${character.tokenId}`}
+                          isExternal
+                        >
+                          {character.tokenId.toString()}
+                        </Link>
+                      ) : (
+                        <Text as="span" fontWeight={700}>
+                          {character.tokenId.toString()}
+                        </Text>
+                      )}
+                    </Text>
+                  </HStack>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
             <VStack>
               <Heading>{character.name}</Heading>
               <Text textAlign="center">{character.description}</Text>
@@ -769,7 +758,7 @@ const CharacterCreationInner = (): JSX.Element => {
                       value={name}
                     />
                     {showError && !name && (
-                      <FormHelperText color="red">
+                      <FormHelperText color="red" role="alert">
                         Name is required
                       </FormHelperText>
                     )}
@@ -808,7 +797,7 @@ const CharacterCreationInner = (): JSX.Element => {
                   value={description}
                 />
                 {showError && !description && (
-                  <FormHelperText color="red">Bio is required</FormHelperText>
+                  <FormHelperText color="red" role="alert">Bio is required</FormHelperText>
                 )}
               </FormControl>
             </VStack>
@@ -849,6 +838,50 @@ const CharacterCreationInner = (): JSX.Element => {
         w={{ base: '100%', lg: '50%' }}
       >
         <Box position="relative" py={{ base: 4, sm: 6 }}>
+          <HStack px={{ base: 4, sm: 10 }} mb={4} justifyContent="center" spacing={0} w="100%">
+            {['Race', 'Power', 'Stats', 'Equip'].map((label, index) => {
+              const steps = ['race', 'powerSource', 'stats', 'starterItems'];
+              const currentIndex = steps.indexOf(creationStep);
+              const isCompleted = index < currentIndex;
+              const isCurrent = index === currentIndex;
+              return (
+                <HStack key={label} spacing={0} flex={1}>
+                  <VStack spacing={0} flex={0}>
+                    <Box
+                      w={6}
+                      h={6}
+                      borderRadius="50%"
+                      bg={isCompleted ? 'green' : isCurrent ? 'blue400' : 'grey200'}
+                      color="white"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      fontSize="xs"
+                      fontWeight={700}
+                    >
+                      {isCompleted ? '\u2713' : index + 1}
+                    </Box>
+                    <Text
+                      fontSize="2xs"
+                      fontWeight={isCurrent ? 700 : 400}
+                      color={isCompleted ? 'green' : isCurrent ? 'blue400' : 'grey500'}
+                      mt={0.5}
+                    >
+                      {label}
+                    </Text>
+                  </VStack>
+                  {index < 3 && (
+                    <Box
+                      flex={1}
+                      h="2px"
+                      bg={isCompleted ? 'green' : 'grey200'}
+                      mb={4}
+                    />
+                  )}
+                </HStack>
+              );
+            })}
+          </HStack>
           {/* Step 1: Race Selection */}
           {creationStep === 'race' && (
             <VStack alignItems="left" spacing={4}>
@@ -997,7 +1030,7 @@ const CharacterCreationInner = (): JSX.Element => {
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">HP - Hit Points</Text>
-                <Text color="grey500" size="lg">
+                <Text color="grey500" fontFamily="mono" size="lg">
                   {character?.maxHp.toString() ?? '0'}
                 </Text>
               </HStack>
@@ -1009,7 +1042,7 @@ const CharacterCreationInner = (): JSX.Element => {
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">STR - Strength</Text>
-                <Text color="grey500" size="lg">
+                <Text color="grey500" fontFamily="mono" size="lg">
                   {character?.strength.toString() ?? '0'}
                 </Text>
               </HStack>
@@ -1021,7 +1054,7 @@ const CharacterCreationInner = (): JSX.Element => {
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">AGI - Agility</Text>
-                <Text color="grey500" size="lg">
+                <Text color="grey500" fontFamily="mono" size="lg">
                   {character?.agility.toString() ?? '0'}
                 </Text>
               </HStack>
@@ -1033,7 +1066,7 @@ const CharacterCreationInner = (): JSX.Element => {
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">INT - Intelligence</Text>
-                <Text color="grey500" size="lg">
+                <Text color="grey500" fontFamily="mono" size="lg">
                   {character?.intelligence.toString() ?? '0'}
                 </Text>
               </HStack>
@@ -1041,10 +1074,10 @@ const CharacterCreationInner = (): JSX.Element => {
           </VStack>
           <VStack mt={4} spacing={2}>
             <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-              <Text color="yellow" fontWeight={700} size="lg">
-                5 $GOLD
+              <Text color="yellow" fontFamily="mono" fontWeight={700} size="lg">
+                5 Gold
               </Text>
-              <Text color="grey500" fontWeight={500} size="lg">
+              <Text color="grey500" fontFamily="mono" fontWeight={500} size="lg">
                 0 / {nextLevelXpRequirement.toString()} XP
               </Text>
             </HStack>
@@ -1133,7 +1166,7 @@ const CharacterCreationInner = (): JSX.Element => {
           </VStack>
           <Box mt={4} px={{ base: 4, sm: 10 }}>
             {character && !rolledOnce && showError && creationStep === 'stats' && (
-              <Text color="red" fontSize="sm" mb={2} textAlign="center">
+              <Text color="red" fontSize="sm" mb={2} role="alert" textAlign="center">
                 You must roll stats at least once before continuing.
               </Text>
             )}

@@ -6,6 +6,7 @@ import {
   Spinner,
   Stack,
   Text,
+  useBreakpointValue,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
@@ -85,6 +86,7 @@ export const ActionsPanel = (): JSX.Element => {
     onOpen: onOpenConsumeModal,
     onClose: onCloseConsumeModal,
   } = useDisclosure();
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
   const [selectedConsumable, setSelectedConsumable] =
     useState<Consumable | null>(null);
 
@@ -433,7 +435,14 @@ export const ActionsPanel = (): JSX.Element => {
                       variant="outline"
                       w="100%"
                     >
-                      {item.name}
+                      <>
+                        {isDesktop && (
+                          <Text as="span" fontSize="2xs" fontFamily="mono" opacity={0.6} mr={1}>
+                            [{index + 1}]
+                          </Text>
+                        )}
+                        {item.name}
+                      </>
                     </Button>
                   ))}
                 </HStack>
@@ -462,13 +471,25 @@ export const ActionsPanel = (): JSX.Element => {
                         variant="outline"
                         w="100%"
                       >
-                        {item.name}
+                        <>
+                          {isDesktop && (
+                            <Text as="span" fontSize="2xs" fontFamily="mono" opacity={0.6} mr={1}>
+                              [{index + 3}]
+                            </Text>
+                          )}
+                          {item.name}
+                        </>
                       </Button>
                     ))}
                   </HStack>
                 )}
               </Stack>
             </HStack>
+            {isDesktop && equippedSpellsAndWeapons.length > 0 && (
+              <Text fontSize="2xs" color="grey400" textAlign="center" mt={1}>
+                Use 1-{Math.min(equippedSpellsAndWeapons.length, 4)} keys to attack
+              </Text>
+            )}
             {combatConsumables.length > 0 && (
               <HStack spacing={0} w="100%">
                 {combatConsumables.map((consumable, index) => (
@@ -508,7 +529,7 @@ export const ActionsPanel = (): JSX.Element => {
                   You can only flee on your first turn.
                 </Text>
                 <Text size="xs" textAlign="center">
-                  By fleeing, you will lose 25% of the $GOLD in your Adventure
+                  By fleeing, you will lose 25% of the Gold in your Adventure
                   Escrow.
                 </Text>
               </VStack>
@@ -689,7 +710,7 @@ export const ActionsPanel = (): JSX.Element => {
                         {opponent.name}
                       </Text>{' '}
                       with {itemName} for{' '}
-                      <Text as="span" color="red">
+                      <Text as="span" color="red" fontFamily="mono">
                         {attack.attackerDamageDelt.toString()}
                       </Text>{' '}
                       damage.
@@ -704,7 +725,7 @@ export const ActionsPanel = (): JSX.Element => {
                         {opponent.name}
                       </Text>{' '}
                       attacked you with {itemName} for{' '}
-                      <Text as="span" color="red">
+                      <Text as="span" color="red" fontFamily="mono">
                         {attack.attackerDamageDelt.toString()}
                       </Text>{' '}
                       damage.
