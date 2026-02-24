@@ -25,6 +25,7 @@ import { useComponentValue } from '@latticexyz/react';
 import { getComponentValue } from '@latticexyz/recs';
 import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Address, parseEther } from 'viem';
@@ -458,6 +459,9 @@ const MarketplaceItemInner = (): JSX.Element => {
 
   return (
     <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
+      <Helmet>
+        <title>{`${removeEmoji(selectedItem.name)} | Ultimate Dominion`}</title>
+      </Helmet>
       <VStack>
         <HStack
           bgColor="blue500"

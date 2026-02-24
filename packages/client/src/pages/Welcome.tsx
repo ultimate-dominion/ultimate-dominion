@@ -11,6 +11,7 @@ import { useComponentValue } from '@latticexyz/react';
 import { SyncStep } from '@latticexyz/store-sync';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
@@ -72,6 +73,9 @@ export const Welcome = (): JSX.Element => {
 
   return (
     <Box border="6px solid #1A244E" p={1.5}>
+      <Helmet>
+        <title>Ultimate Dominion — A Persistent On-Chain World</title>
+      </Helmet>
       <Box border="0.5px solid #1A244E">
         <VStack
           justifyContent="center"

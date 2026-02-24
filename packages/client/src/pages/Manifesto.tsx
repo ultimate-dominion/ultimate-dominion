@@ -1,4 +1,5 @@
 import { Box, Button, Heading, Text, VStack } from '@chakra-ui/react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 
 import { HOME_PATH } from '../Routes';
@@ -8,6 +9,9 @@ export const Manifesto = (): JSX.Element => {
 
   return (
     <Box border="6px solid #1A244E" p={1.5}>
+      <Helmet>
+        <title>Manifesto | Ultimate Dominion</title>
+      </Helmet>
       <Box border="0.5px solid #1A244E">
         <VStack
           justifyContent="center"

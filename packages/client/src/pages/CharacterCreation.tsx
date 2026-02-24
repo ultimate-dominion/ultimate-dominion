@@ -32,6 +32,7 @@ import {
 } from '@latticexyz/recs';
 import { decodeEntity, encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
@@ -640,6 +641,9 @@ const CharacterCreationInner = (): JSX.Element => {
       mx="auto"
       w="100%"
     >
+      <Helmet>
+        <title>Create Character | Ultimate Dominion</title>
+      </Helmet>
       {character && characterToken ? (
         <PolygonalCard
           clipPath="none"
