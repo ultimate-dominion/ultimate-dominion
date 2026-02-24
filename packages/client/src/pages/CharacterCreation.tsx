@@ -31,7 +31,7 @@ import {
   runQuery,
 } from '@latticexyz/recs';
 import { decodeEntity, encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -392,7 +392,16 @@ const CharacterCreationInner = (): JSX.Element => {
 
   // === Implicit Class System Callbacks ===
 
+  const raceInFlight = useRef(false);
+  const powerSourceInFlight = useRef(false);
+
   const onChooseRace = useCallback(async (race: Race) => {
+    if (raceInFlight.current) return;
+    raceInFlight.current = true;
+
+    const MAX_RETRIES = 2;
+    let attempt = 0;
+
     try {
       setIsChoosingRace(true);
       setSelectedRace(race);
@@ -405,24 +414,41 @@ const CharacterCreationInner = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const { error, success } = await chooseRace(character.id, race);
+      while (attempt <= MAX_RETRIES) {
+        const { error, success } = await chooseRace(character.id, race);
 
-      if (error && !success) {
-        throw new Error(error);
+        if (success) {
+          await refreshCharacter();
+          setCreationStep('powerSource');
+          renderSuccess(`Race selected: ${RACE_INFO[race].name}`);
+          return;
+        }
+
+        attempt++;
+        if (attempt > MAX_RETRIES) {
+          throw new Error(error ?? 'Failed to choose race.');
+        }
+
+        // Wait before retrying
+        renderWarning(`Transaction slow, retrying... (${attempt}/${MAX_RETRIES})`);
+        await new Promise(r => setTimeout(r, 2000));
       }
-
-      await refreshCharacter();
-      setCreationStep('powerSource');
-      renderSuccess(`Race selected: ${RACE_INFO[race].name}`);
     } catch (e) {
       setSelectedRace(Race.None);
-      renderError((e as Error)?.message ?? 'Failed to choose race.', e);
+      renderError((e as Error)?.message ?? 'Failed to choose race. Please try again.', e);
     } finally {
+      raceInFlight.current = false;
       setIsChoosingRace(false);
     }
-  }, [character, chooseRace, delegatorAddress, refreshCharacter, renderError, renderSuccess]);
+  }, [character, chooseRace, delegatorAddress, refreshCharacter, renderError, renderSuccess, renderWarning]);
 
   const onChoosePowerSource = useCallback(async (powerSource: PowerSource) => {
+    if (powerSourceInFlight.current) return;
+    powerSourceInFlight.current = true;
+
+    const MAX_RETRIES = 2;
+    let attempt = 0;
+
     try {
       setIsChoosingPowerSource(true);
       setSelectedPowerSource(powerSource);
@@ -435,22 +461,32 @@ const CharacterCreationInner = (): JSX.Element => {
         throw new Error('Character not found.');
       }
 
-      const { error, success } = await choosePowerSource(character.id, powerSource);
+      while (attempt <= MAX_RETRIES) {
+        const { error, success } = await choosePowerSource(character.id, powerSource);
 
-      if (error && !success) {
-        throw new Error(error);
+        if (success) {
+          await refreshCharacter();
+          setCreationStep('stats');
+          renderSuccess(`Power source selected: ${POWER_SOURCE_INFO[powerSource].name}`);
+          return;
+        }
+
+        attempt++;
+        if (attempt > MAX_RETRIES) {
+          throw new Error(error ?? 'Failed to choose power source.');
+        }
+
+        renderWarning(`Transaction slow, retrying... (${attempt}/${MAX_RETRIES})`);
+        await new Promise(r => setTimeout(r, 2000));
       }
-
-      await refreshCharacter();
-      setCreationStep('stats');
-      renderSuccess(`Power source selected: ${POWER_SOURCE_INFO[powerSource].name}`);
     } catch (e) {
       setSelectedPowerSource(PowerSource.None);
-      renderError((e as Error)?.message ?? 'Failed to choose power source.', e);
+      renderError((e as Error)?.message ?? 'Failed to choose power source. Please try again.', e);
     } finally {
+      powerSourceInFlight.current = false;
       setIsChoosingPowerSource(false);
     }
-  }, [character, choosePowerSource, delegatorAddress, refreshCharacter, renderError, renderSuccess]);
+  }, [character, choosePowerSource, delegatorAddress, refreshCharacter, renderError, renderSuccess, renderWarning]);
 
   const onRollStats = useCallback(async () => {
     try {
