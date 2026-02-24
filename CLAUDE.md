@@ -43,6 +43,49 @@ The manifesto (`packages/client/src/pages/Manifesto.tsx`) defines the game's ide
 - **Dependencies**: Pin versions. Run `pnpm audit` before adding new packages. Prefer well-maintained packages with small surface area.
 - When in doubt, add the security check. A false alarm costs minutes; a vulnerability costs everything.
 
+### Testing Before Shipping
+- Run `forge test` before committing any contract changes.
+- Run `pnpm build` in packages/client before pushing to verify no build errors.
+- Verify function selectors after any `mud deploy`.
+- Never deploy to mainnet without testnet verification first.
+
+### Environment Separation
+- `beta.ultimatedominion.com` = Base Sepolia (testnet)
+- `ultimatedominion.com` = Base mainnet (production)
+- NEVER mix testnet/mainnet configs. Double-check CHAIN_ID, RPC URLs, and WORLD_ADDRESS before any deploy.
+
+### MUD Deploy Safety
+- `mud deploy` with nonce errors can silently skip transactions — always verify function selectors after deploy.
+- System upgrades create NEW contract addresses — data keyed by `address(this)` is orphaned at the old address.
+- Always run PostDeploy seed/config scripts after a fresh deploy.
+- Backup world state before mainnet upgrades.
+
+### Backwards Compatibility / Migrations
+- Before modifying any MUD table schema: check if live player data exists in that table.
+- If yes: write a migration script or add a new table instead of modifying the existing one.
+- Never delete a table with live data without a migration plan.
+
+### Scope Control
+- Keep changes focused — one feature or fix per branch/commit.
+- Don't bundle unrelated work together.
+- If a change touches more than 3 systems, plan it first.
+
+### Git Workflow
+- Commit style: conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`).
+- Only commit what was worked on in the current session — don't sweep in unrelated uncommitted changes.
+- Don't push without asking.
+
+### Learn From Mistakes
+- After any error that takes more than one attempt to fix, write the root cause and solution to memory (`~/.claude/projects/-Users-michaelorourke/memory/MEMORY.md`) before moving on.
+- Check memory at the start of every session. Past mistakes must not repeat.
+
+### Session State Persistence
+- Maintain `~/.claude/projects/-Users-michaelorourke/memory/SESSION.md` as a working scratchpad.
+- **Update it** when: starting a new task, completing a task, hitting a blocker, making a commit, or any significant state change.
+- **Read it first** at the start of every session to resume where we left off.
+- Track: current branch, what just happened, uncommitted changes, pending items, recently resolved items.
+- Clean up resolved items as they're completed. Keep only the last 1-2 sessions of context.
+
 ## Tech Stack
 - **Framework**: MUD (Lattice) v2 for on-chain game development
 - **Contracts**: Solidity 0.8.24+, deployed via MUD World, tested with Forge (Foundry)
