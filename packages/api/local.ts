@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 import { config } from "dotenv";
 import * as path from "path";
 import * as fs from "fs";
@@ -11,7 +12,20 @@ import sessionBooting from "./api/sessionBooting.js";
 config();
 
 const app = express();
-app.use(cors());
+
+// CORS - restrict to allowed origins
+const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000").split(",");
+app.use(cors({ origin: allowedOrigins }));
+
+// Rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/", apiLimiter);
+
 app.use(express.json());
 
 // Set up local storage directory path for development mode
@@ -32,9 +46,16 @@ app.get("/files/:filename", (req, res) => {
     filename = filename.substring(6); // Remove 'local-' prefix
   }
   
-  const filePath = path.join(LOCAL_STORAGE_DIR, filename);
+  const resolvedPath = path.resolve(LOCAL_STORAGE_DIR, filename);
+
+  // Prevent path traversal
+  if (!resolvedPath.startsWith(path.resolve(LOCAL_STORAGE_DIR))) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const filePath = resolvedPath;
   console.log(`Attempting to serve file: ${filePath}`);
-  
+
   // Check if file exists
   if (!fs.existsSync(filePath)) {
     console.error(`File not found: ${filePath}`);

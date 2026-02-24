@@ -29,7 +29,6 @@ type DiagnosticResults = {
   error: {
     step: string;
     message: string;
-    stack?: string;
   } | null;
 };
 
@@ -117,7 +116,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     diagnosticResults.error = {
       step: diagnosticResults.step,
       message: error.message,
-      stack: error.stack
     };
     res.status(500).json(diagnosticResults);
   }

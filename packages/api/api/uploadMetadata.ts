@@ -5,10 +5,6 @@ export default async function uploadMetadata(
   req: Request,
   res: Response
 ) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
   if (!(req.method === "POST" || req.method == "OPTIONS")) {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -19,9 +15,11 @@ export default async function uploadMetadata(
 
   try {
     const jsonData = req.body;
-    console.log('Received metadata:', jsonData);
-    console.log('Environment:', process.env.NODE_ENV);
-    console.log('Using PINATA_JWT:', process.env.PINATA_JWT ? 'Yes (length: ' + process.env.PINATA_JWT.length + ')' : 'No');
+
+    // Validate metadata schema
+    if (!jsonData || typeof jsonData !== 'object' || !jsonData.name) {
+      return res.status(400).json({ error: "Invalid metadata: 'name' field is required" });
+    }
 
     // Generate a filename based on character name or timestamp
     const fileName = jsonData.name ? 

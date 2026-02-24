@@ -11,9 +11,6 @@ export default async function uploadFile(
   req: Request,
   res: Response
 ) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
-
   if (!(req.method === "POST" || req.method == "OPTIONS")) {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -23,7 +20,13 @@ export default async function uploadFile(
   }
 
   const fileName = req.query.name as string;
-  const form = formidable({});
+
+  // Validate fileName: alphanumeric, hyphens, dots only
+  if (!fileName || !/^[a-zA-Z0-9._-]+$/.test(fileName)) {
+    return res.status(400).json({ error: "Invalid file name" });
+  }
+
+  const form = formidable({ maxFileSize: 1 * 1024 * 1024 }); // 1MB limit
 
   try {
     const [fields, files] = await form.parse(req);
@@ -36,11 +39,11 @@ export default async function uploadFile(
     }
 
     const file = fileArray[0];
-    console.log('File details:', {
-      filepath: file.filepath,
-      originalFilename: file.originalFilename,
-      mimetype: file.mimetype
-    });
+
+    // Validate mimetype is an image
+    if (!file.mimetype || !file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ error: "Only image files are allowed" });
+    }
 
     // Process image with sharp
     const processedImageBuffer = await sharp(file.filepath)
