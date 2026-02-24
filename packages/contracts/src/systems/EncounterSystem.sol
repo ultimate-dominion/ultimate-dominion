@@ -186,7 +186,6 @@ contract EncounterSystem is System {
                     if (!IWorld(_world()).UD__isParticipant(playerId, encounterId)) {
                         revert Unauthorized();
                     }
-                    // if playerId is of a defender added 1 to current turn
                     // if player is attacker add +1 to current turn
                     if (IWorld(_world()).UD__isParticipant(playerAddress, encounterData.defenders)) {
                         encounterData.currentTurn += 1;
@@ -207,13 +206,8 @@ contract EncounterSystem is System {
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         if (CombatEncounter.getEnd(encounterId) != 0) revert EncounterAlreadyOver();
 
-        if (block.chainid == 31337) {
-            CombatEncounter.setEnd(encounterId, block.number);
-            encounterData.end = block.number;
-        } else {
-            CombatEncounter.setEnd(encounterId, block.timestamp);
-            encounterData.end = block.timestamp;
-        }
+        CombatEncounter.setEnd(encounterId, block.timestamp);
+        encounterData.end = block.timestamp;
 
         uint256 expAmount;
         uint256 goldAmount;
@@ -242,9 +236,7 @@ contract EncounterSystem is System {
 
         for (uint256 i; i < encounterData.attackers.length; i++) {
             entityTemp = encounterData.attackers[i];
-            // clear encounterId
             EncounterEntity.setEncounterId(entityTemp, bytes32(0));
-            // remove combat status effects
             EncounterEntity.setAppliedStatusEffects(entityTemp, emptyArray);
             if (EncounterEntity.getDied(entityTemp)) {
                 IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
@@ -255,15 +247,11 @@ contract EncounterSystem is System {
 
         for (uint256 i; i < encounterData.defenders.length; i++) {
             entityTemp = encounterData.defenders[i];
-            // clear encounter id
             EncounterEntity.setEncounterId(entityTemp, bytes32(0));
-            // remove combat status effects
             EncounterEntity.setAppliedStatusEffects(entityTemp, emptyArray);
             if (EncounterEntity.getDied(entityTemp)) {
                 IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
-                // removing entity from the board resets died to false so set it again here.
                 EncounterEntity.setDied(entityTemp, true);
-                // if entity died remove world stat bonuses
                 WorldStatusEffects.setAppliedStatusEffects(entityTemp, emptyArray);
             }
         }
@@ -313,7 +301,6 @@ contract EncounterSystem is System {
         int256 group1TotalAgi;
         int256 group2TotalAgi;
 
-        // add up group1 agi
         for (uint256 i; i < _group1.length; i++) {
             group1TotalAgi += Stats.getAgility(_group1[i]);
         }
@@ -322,10 +309,7 @@ contract EncounterSystem is System {
             group2TotalAgi += Stats.getAgility(_group2[i]);
         }
 
-        if (group1TotalAgi > group2TotalAgi) {
-            _attackers = _group1;
-            _defenders = _group2;
-        } else if (group2TotalAgi > group1TotalAgi) {
+        if (group2TotalAgi > group1TotalAgi) {
             _attackers = _group2;
             _defenders = _group1;
         } else {
