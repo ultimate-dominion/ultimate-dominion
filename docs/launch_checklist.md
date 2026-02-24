@@ -25,9 +25,7 @@ Get the game playable with real users on testnet. Rough edges acceptable — the
 
 **Gasless Transactions (Onboarding Blocker)**
 - [x] Gas onboarding system designed ✓ GasStationSystem (Gold→ETH swap for level 3+), Thirdweb paymaster (levels 1-3)
-- [~] Gasless transactions implementation — in progress (separate session)
-  - Sponsored gas so new players don't need testnet ETH to play
-  - Without this, non-crypto users hit a wall immediately after sign-in
+- [x] Gasless transactions implementation ✓ GasStation funded, working on Sepolia
 
 **Combat & Progression**
 - [x] PvE combat working ✓ Full combat loop with loot drops

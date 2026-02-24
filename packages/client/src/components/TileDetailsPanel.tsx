@@ -36,7 +36,7 @@ import {
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
-import { type Character, EncounterType, type Monster } from '../utils/types';
+import { type Character, EncounterType, type Monster, StatsClasses } from '../utils/types';
 
 import { getRomanNumeral } from '../utils/fragmentNarratives';
 
@@ -843,6 +843,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                       }
                     }}
                     opponent={monster}
+                    playerClass={character?.entityClass ?? StatsClasses.Warrior}
+                    playerLevel={character?.level ?? 1n}
                   />
                   <Box
                     backgroundColor="#F5F5FA1F"
@@ -901,6 +903,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                       : onInitiateCombat(player, EncounterType.PvP)
                   }
                   opponent={player}
+                  playerClass={character?.entityClass ?? StatsClasses.Warrior}
+                  playerLevel={character?.level ?? 1n}
                 />
                 <Box
                   backgroundColor="#F5F5FA1F"
@@ -983,19 +987,55 @@ export const TileDetailsPanel = (): JSX.Element => {
   );
 };
 
-const OPPONENT_COLORS = {
-  [0]: 'red',
-  [1]: 'yellow',
-  [2]: 'green',
+/**
+ * Determine combat advantage color based on the combat triangle.
+ * STR (Warrior) beats AGI (Rogue) beats INT (Mage) beats STR (Warrior).
+ * Also factors in level difference for the final color.
+ *
+ * Returns: 'green' (advantage), 'yellow' (even), 'red' (disadvantage)
+ */
+const getAdvantageColor = (
+  playerClass: StatsClasses,
+  playerLevel: bigint,
+  opponentClass: StatsClasses,
+  opponentLevel: bigint,
+): string => {
+  // Combat triangle: Warrior(0) > Rogue(1) > Mage(2) > Warrior(0)
+  const BEATS: Record<number, number> = {
+    [StatsClasses.Warrior]: StatsClasses.Rogue,
+    [StatsClasses.Rogue]: StatsClasses.Mage,
+    [StatsClasses.Mage]: StatsClasses.Warrior,
+  };
+
+  const levelDiff = Number(playerLevel) - Number(opponentLevel);
+  const hasTriangleAdvantage = BEATS[playerClass] === opponentClass;
+  const hasTriangleDisadvantage = BEATS[opponentClass] === playerClass;
+
+  // Strong advantage: triangle advantage OR same class but significantly higher level
+  if (hasTriangleAdvantage && levelDiff >= -2) return 'green.400';
+  if (hasTriangleAdvantage && levelDiff < -2) return 'yellow.400'; // advantage but underleveled
+
+  // Strong disadvantage: triangle disadvantage OR significantly lower level
+  if (hasTriangleDisadvantage && levelDiff <= 2) return 'red.400';
+  if (hasTriangleDisadvantage && levelDiff > 2) return 'yellow.400'; // disadvantage but overleveled
+
+  // Same class — level determines it
+  if (levelDiff >= 3) return 'green.400';
+  if (levelDiff <= -3) return 'red.400';
+  return 'yellow.400';
 };
 
 const OpponentRow = ({
   encounterType,
   opponent,
+  playerClass,
+  playerLevel,
   onClick,
 }: {
   encounterType: EncounterType;
   opponent: Character | Monster;
+  playerClass: StatsClasses;
+  playerLevel: bigint;
   onClick: () => void;
 }) => {
   const { inBattle, level, name } = opponent;
@@ -1008,6 +1048,13 @@ const OpponentRow = ({
   }, [opponent]);
 
   const disableRow = inBattle || inCooldown;
+
+  const nameColor = getAdvantageColor(
+    playerClass,
+    playerLevel,
+    opponent.entityClass,
+    level ?? 0n,
+  );
 
   return (
     <HStack
@@ -1039,7 +1086,7 @@ const OpponentRow = ({
       >
         <HStack justifyContent="start" spacing={4}>
           <Text
-            color={OPPONENT_COLORS[opponent.entityClass]}
+            color={nameColor}
             filter={disableRow ? 'grayscale(100%)' : 'none'}
             size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
           >

@@ -2,6 +2,7 @@ import {
   Box,
   Grid,
   GridItem,
+  keyframes,
   Text,
   Tooltip,
   useDisclosure,
@@ -9,6 +10,29 @@ import {
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { FaCheck, FaQuestion } from 'react-icons/fa';
+
+const fragmentGlow = keyframes`
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(255, 215, 0, 0.4),
+      0 0 16px rgba(255, 215, 0, 0.2),
+      inset 0 0 8px rgba(255, 215, 0, 0.1);
+    border-color: rgba(234, 179, 8, 0.7);
+  }
+  50% {
+    box-shadow:
+      0 0 14px rgba(255, 215, 0, 0.7),
+      0 0 28px rgba(255, 215, 0, 0.4),
+      0 0 42px rgba(255, 215, 0, 0.15),
+      inset 0 0 12px rgba(255, 215, 0, 0.2);
+    border-color: rgba(250, 204, 21, 1);
+  }
+`;
+
+const fragmentPulse = keyframes`
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+`;
 
 import {
   useFragments,
@@ -147,11 +171,19 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
               : 'transparent'
         }
         transition="all 0.2s"
+        animation={
+          isTriggered && !isClaimed
+            ? `${fragmentGlow} 2s ease-in-out infinite, ${fragmentPulse} 2s ease-in-out infinite`
+            : undefined
+        }
         _hover={
           isClickable
             ? {
-                transform: 'scale(1.05)',
+                transform: 'scale(1.08)',
                 borderColor: isClaimed ? 'green.400' : 'yellow.400',
+                boxShadow: isTriggered
+                  ? '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4)'
+                  : undefined,
               }
             : {}
         }
@@ -170,14 +202,22 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
           <>
             <Box
               color="yellow.400"
-              animation="pulse 2s infinite"
               mb={1}
             >
-              <Text fontSize="xl" fontWeight="bold">
+              <Text
+                fontSize="xl"
+                fontWeight="bold"
+                textShadow="0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4)"
+              >
                 !
               </Text>
             </Box>
-            <Text fontSize="xs" color="yellow.300" fontWeight="bold">
+            <Text
+              fontSize="xs"
+              color="yellow.300"
+              fontWeight="bold"
+              textShadow="0 0 6px rgba(255, 215, 0, 0.5)"
+            >
               {getRomanNumeral(fragment.fragmentType)}
             </Text>
           </>
@@ -190,19 +230,6 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
               {getRomanNumeral(fragment.fragmentType)}
             </Text>
           </>
-        )}
-
-        {/* Pulse animation for triggered but unclaimed */}
-        {isTriggered && !isClaimed && (
-          <Box
-            position="absolute"
-            inset={0}
-            borderRadius="md"
-            border="2px solid"
-            borderColor="yellow.400"
-            animation="ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite"
-            opacity={0.5}
-          />
         )}
       </Box>
     </Tooltip>
