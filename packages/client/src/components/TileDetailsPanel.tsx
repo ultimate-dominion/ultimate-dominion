@@ -36,6 +36,7 @@ import {
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
+import { getMonsterImage } from '../utils/monsterImages';
 import { type Character, EncounterType, type Monster } from '../utils/types';
 
 import { getRomanNumeral } from '../utils/fragmentNarratives';
@@ -537,21 +538,24 @@ export const TileDetailsPanel = (): JSX.Element => {
                       mb={{ base: 1, lg: 2 }}
                       opacity={isMonsterHit ? 0 : 1}
                       size={{ base: '2xs', lg: 'md' }}
-                      name=" "
+                      src={getMonsterImage(opponent.name)}
+                      name={opponent.name}
                     >
-                      <Text
-                        animation={
-                          isMonsterHit ? 'flicker .7s infinite' : 'none'
-                        }
-                        fontSize="36px"
-                      >
-                        {getEmoji(opponent.name)}
-                      </Text>
+                      {!getMonsterImage(opponent.name) && (
+                        <Text
+                          animation={
+                            isMonsterHit ? 'flicker .7s infinite' : 'none'
+                          }
+                          fontSize="36px"
+                        >
+                          {getEmoji(opponent.name)}
+                        </Text>
+                      )}
                     </Avatar>
                   )}
                   <HStack>
                     <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
-                      {isDesktop ? removeEmoji(opponent.name) : opponent.name}
+                      {opponent.name}
                     </Text>
                     <ClassSymbol
                       entityClass={opponent.entityClass}
@@ -1111,6 +1115,14 @@ const OpponentRow = ({
         }}
       >
         <HStack justifyContent="start" spacing={4}>
+          {(encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image) && (
+            <Avatar
+              filter={disableRow ? 'grayscale(100%)' : 'none'}
+              size={{ base: '2xs', md: 'xs' }}
+              src={encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image}
+              name={name}
+            />
+          )}
           <Text
             color={nameColor}
             filter={disableRow ? 'grayscale(100%)' : 'none'}
@@ -1118,13 +1130,6 @@ const OpponentRow = ({
           >
             {name}
           </Text>
-          {encounterType === EncounterType.PvP && (
-            <Avatar
-              filter={disableRow ? 'grayscale(100%)' : 'none'}
-              size={{ base: '2xs', md: 'xs' }}
-              src={opponent.image}
-            />
-          )}
         </HStack>
         {!disableRow && !!level && (
           <Text fontWeight={500} size={{ base: '3xs', sm: '2xs', md: 'sm' }}>
