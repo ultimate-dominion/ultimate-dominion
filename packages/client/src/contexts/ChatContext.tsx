@@ -2,11 +2,9 @@ import { Text, useDisclosure } from '@chakra-ui/react';
 import { useEntityQuery } from '@latticexyz/react';
 import { getComponentValueStrict, Has } from '@latticexyz/recs';
 import { decodeEntity } from '@latticexyz/store-sync/recs';
-import {
-  CONSTANTS,
+import type {
   GroupDTO,
   MessageEvent,
-  MessageEventType,
   PushAPI,
 } from '@pushprotocol/restapi';
 import {
@@ -35,9 +33,8 @@ import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
 
 // Push Protocol environment: 'prod' for deployed sites, 'staging' for localhost
-const PUSH_ENV = import.meta.env.VITE_PUSH_ENV === 'prod'
-  ? CONSTANTS.ENV.PROD
-  : CONSTANTS.ENV.STAGING;
+// Values match @pushprotocol/restapi CONSTANTS.ENV — inlined to avoid static import
+const PUSH_ENV = import.meta.env.VITE_PUSH_ENV === 'prod' ? 'prod' : 'staging';
 
 // Group chat ID — differs between staging and prod environments
 const GROUP_CHAT_ID = import.meta.env.VITE_PUSH_GROUP_CHAT_ID ||
@@ -369,7 +366,10 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
       setIsLoggingIn(true);
 
-      const _user = await PushAPI.initialize(data, {
+      // Lazy-load Push Protocol SDK — only when user actually opens chat
+      const { PushAPI: PushSDK, CONSTANTS } = await import('@pushprotocol/restapi');
+
+      const _user = await PushSDK.initialize(data, {
         env: PUSH_ENV,
       });
 
@@ -405,7 +405,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       });
 
       stream.on(CONSTANTS.STREAM.CHAT, (message: MessageEvent) => {
-        if (message.event.split('.')[1] === MessageEventType.Message) {
+        if (message.event.split('.')[1] === 'Message') {
           // Update delivered status of the last message sent by the user
           const from = message.from.split(':')[1];
           if (from === _user.account) {

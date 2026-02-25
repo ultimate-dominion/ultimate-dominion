@@ -34,8 +34,12 @@ Get the game playable with real users on testnet. Rough edges acceptable — the
 - [ ] Basic PvP balance pass — ensure no class/build is completely dominant
 - [ ] Edge case testing (disconnects, timeouts during combat)
 
+**Survivability**
+- [ ] Free healing mechanic — players need a way to recover HP without buying consumables (e.g. rest action, passive regen in safe zones, heal-on-level-up, campfire tile)
+
 **Economy & Shop**
 - [x] Buy/sell flow ✓ Fixed ERC1155MissingApprovalForAll bug
+- [ ] Gold withdrawal from session wallet — design how players move earned gold out of the embedded/burner wallet (impacts onboarding, UX, and security)
 - [ ] Shop inventory and pricing — verify all items purchasable and prices reasonable
 - [ ] Shop UI/UX improvements
 - [ ] Verify marketplace list/buy/cancel flows work end-to-end

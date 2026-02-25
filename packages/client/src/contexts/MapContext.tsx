@@ -118,14 +118,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [isFetchingEntities, setIsFetchingEntities] = useState(true);
 
   const [allCharacters, setAllCharacters] = useState<Character[]>([]);
-  const [otherCharactersOnTile, setOtherCharactersOnTile] = useState<
-    Character[]
-  >([]);
   const [allMonsters, setAllMonsters] = useState<Monster[]>([]);
-  const [monstersOnTile, setMonstersOnTile] = useState<Monster[]>([]);
-
   const [allShops, setAllShops] = useState<Shop[]>([]);
-  const [shopsOnTile, setShopsOnTile] = useState<Shop[]>([]);
 
   const [refreshCounter, setRefreshCounter] = useState(0);
 
@@ -470,6 +464,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
       setAllMonsters(_monsters);
       setAllShops(_shops);
+      setIsFetchingEntities(false);
     })();
   }, [
     allCharacterEntities,
@@ -482,71 +477,33 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     refreshCounter,
   ]);
 
-  useEffect(() => {
-    if (!position || (position.x === 0 && position.y === 0)) {
-      setOtherCharactersOnTile([]);
-      setMonstersOnTile([]);
-      setShopsOnTile([]);
-    }
+  const monstersOnTile = useMemo(() => {
+    if (!position || (position.x === 0 && position.y === 0)) return [];
+    return allMonsters.filter(
+      m =>
+        Number(m.currentHp) > 0 &&
+        m.position.x === position.x &&
+        m.position.y === position.y,
+    );
+  }, [allMonsters, position]);
 
-    if (allMonsters.length > 0 && position) {
-      setMonstersOnTile(
-        (
-          allMonsters as (Monster & {
-            isSpawned: boolean;
-            position: { x: number; y: number };
-          })[]
-        ).filter(
-          m =>
-            Number(m.currentHp) > 0 &&
-            m.position.x === position.x &&
-            m.position.y === position.y,
-        ),
-      );
-    }
-    if (allShops.length > 0 && position) {
-      setShopsOnTile(
-        (
-          allShops as (Shop & {
-            isSpawned: boolean;
-            position: { x: number; y: number };
-          })[]
-        ).filter(
-          m => m.position.x === position.x && m.position.y === position.y,
-        ),
-      );
-    }
+  const shopsOnTile = useMemo(() => {
+    if (!position || (position.x === 0 && position.y === 0)) return [];
+    return allShops.filter(
+      m => m.position.x === position.x && m.position.y === position.y,
+    );
+  }, [allShops, position]);
 
-    if (allCharacters.length > 0 && position) {
-      const _otherPlayersOnTile = (
-        allCharacters as (Character & {
-          isSpawned: boolean;
-          position: { x: number; y: number };
-        })[]
-      ).filter(
-        (
-          c: Character & {
-            isSpawned: boolean;
-            position: { x: number; y: number };
-          },
-        ) =>
-          c.position.x === position.x &&
-          c.position.y === position.y &&
-          c.owner !== delegatorAddress &&
-          c.isSpawned,
-      );
-      setOtherCharactersOnTile(_otherPlayersOnTile as Character[]);
-    }
-
-    setIsFetchingEntities(false);
-  }, [
-    allCharacters,
-    allMonsters,
-    allShops,
-    character,
-    delegatorAddress,
-    position,
-  ]);
+  const otherCharactersOnTile = useMemo(() => {
+    if (!position || (position.x === 0 && position.y === 0)) return [];
+    return allCharacters.filter(
+      (c: any) =>
+        c.position.x === position.x &&
+        c.position.y === position.y &&
+        c.owner !== delegatorAddress &&
+        c.isSpawned,
+    ) as Character[];
+  }, [allCharacters, delegatorAddress, position]);
 
   const onSpawn = useCallback(async () => {
     if (!delegatorAddress || !character) return;
