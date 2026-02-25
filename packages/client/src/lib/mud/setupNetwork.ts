@@ -154,7 +154,7 @@ export async function setupNetwork() {
           debug.log(
             `waitForTransaction retry ${attempt + 1}/${maxRetries} for ${tx}`,
           );
-          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
           continue;
         }
         throw e;

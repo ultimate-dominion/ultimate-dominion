@@ -749,7 +749,7 @@ export function createSystemCalls(
 
         let currentBlockNumber = await publicClient.getBlockNumber();
         while (currentBlockNumber < blockToWaitFor) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 250));
           currentBlockNumber = await publicClient.getBlockNumber();
         }
       }
@@ -1157,7 +1157,7 @@ export function createSystemCalls(
 
         let currentBlockNumber = await publicClient.getBlockNumber();
         while (currentBlockNumber < blockToWaitFor) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 250));
           currentBlockNumber = await publicClient.getBlockNumber();
         }
       }
