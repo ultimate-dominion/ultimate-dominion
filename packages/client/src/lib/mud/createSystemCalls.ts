@@ -9,7 +9,6 @@
 import {
   Entity,
   getComponentValue,
-  getComponentValueStrict,
 } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { uuid } from '@latticexyz/utils';
@@ -31,7 +30,6 @@ import {
   EncounterType,
   type EntityStats,
   type NewOrder,
-  OrderStatus,
   PowerSource,
   Race,
   StatsClasses,
@@ -85,13 +83,9 @@ export function createSystemCalls(
     worldContract,
   }: SetupNetworkResult & { delegatorAddress?: Address },
   {
-    CharacterEquipment,
     Characters,
-    CharactersTokenURI,
     Orders,
     Position,
-    Spawned,
-    Stats,
   }: ClientComponents,
   options?: { skipSimulation?: boolean },
 ) {
@@ -148,18 +142,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const success =
-        getComponentValue(
-          Orders,
-          encodeEntity(
-            { orderHash: 'bytes32' },
-            { orderHash: orderHash as Hash },
-          ),
-        )?.orderStatus === OrderStatus.Canceled;
-
       return {
-        error: success ? undefined : 'Failed to cancel order.',
-        success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
@@ -393,10 +378,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const success = !!getComponentValue(Characters, characterEntity)?.locked;
       return {
-        error: success ? undefined : 'Failed to enter game.',
-        success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
@@ -431,29 +415,8 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      // CharacterEquipment component may not be synced yet, so use non-strict get
-      const characterEquipment = CharacterEquipment
-        ? getComponentValue(CharacterEquipment, characterEntity)
-        : undefined;
-
-      // If component data is available, verify equip succeeded
-      if (characterEquipment) {
-        const { equippedArmor, equippedSpells, equippedWeapons } =
-          characterEquipment;
-
-        const success =
-          equippedArmor?.some(id => itemIds.includes(id.toString())) ||
-          equippedSpells?.some(id => itemIds.includes(id.toString())) ||
-          equippedWeapons?.some(id => itemIds.includes(id.toString()));
-
-        return {
-          error: success ? undefined : 'Failed to equip items.',
-          success: !!success,
-        };
-      }
-
-      // If component not available, trust the transaction succeeded
       return {
+        error: undefined,
         success: true,
       };
     } catch (e) {
@@ -515,18 +478,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const success =
-        getComponentValue(
-          Orders,
-          encodeEntity(
-            { orderHash: 'bytes32' },
-            { orderHash: orderHash as Hash },
-          ),
-        )?.orderStatus === OrderStatus.Fulfilled;
-
       return {
-        error: success ? undefined : 'Failed to fulfill order.',
-        success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
@@ -678,16 +632,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const { x: newX, y: newY } = getComponentValueStrict(
-        Position,
-        characterEntity,
-      );
-
-      const success = x === newX && y === newY;
-
       return {
-        error: success ? undefined : 'Failed to move.',
-        success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       Position.removeOverride(positionId);
@@ -721,15 +668,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const position = getComponentValue(Position, entity);
-      const spawned = getComponentValue(Spawned, entity);
-
-      const success =
-        position?.x === 0 && position?.y === 0 && !spawned?.spawned;
-
       return {
-        error: success ? undefined : 'Failed to remove entity from board.',
-        success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
@@ -813,12 +754,9 @@ export function createSystemCalls(
         }
       }
 
-      const stats = getComponentValue(Stats, characterEntity);
-      const success = stats && stats.maxHp > BigInt(0);
-
       return {
-        error: success ? undefined : 'Failed to roll stats.',
-        success: !!success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
@@ -883,11 +821,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const success = !!getComponentValue(Spawned, characterEntity)?.spawned;
-
       return {
-        error: success ? undefined : 'Failed to spawn.',
-        success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
@@ -919,28 +855,8 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      // CharacterEquipment component may not be synced yet, so use non-strict get
-      const characterEquipment = CharacterEquipment
-        ? getComponentValue(CharacterEquipment, characterEntity)
-        : undefined;
-
-      // If component data is available, verify unequip succeeded
-      if (characterEquipment) {
-        const { equippedArmor, equippedWeapons } = characterEquipment;
-
-        const success = !(
-          equippedArmor?.includes(BigInt(itemId)) ||
-          equippedWeapons?.includes(BigInt(itemId))
-        );
-
-        return {
-          error: success ? undefined : 'Failed to unequip item.',
-          success,
-        };
-      }
-
-      // If component not available, trust the transaction succeeded
       return {
+        error: undefined,
         success: true,
       };
     } catch (e) {
@@ -974,21 +890,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const tokenIdEntity = encodeEntity(
-        { tokenId: 'uint256' },
-        { tokenId: BigInt(tokenId) },
-      );
-
-      const newMetadataURI = getComponentValueStrict(
-        CharactersTokenURI,
-        tokenIdEntity,
-      ).tokenURI;
-
-      const success = newMetadataURI === characterMetadataCid;
-
       return {
-        error: success ? undefined : 'Failed to update token URI.',
-        success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
@@ -1173,12 +1077,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const stats = getComponentValue(Stats, characterEntity);
-      const success = stats && stats.race === race;
-
       return {
-        error: success ? undefined : 'Failed to choose race.',
-        success: !!success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
@@ -1210,12 +1111,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const stats = getComponentValue(Stats, characterEntity);
-      const success = stats && stats.powerSource === powerSource;
-
       return {
-        error: success ? undefined : 'Failed to choose power source.',
-        success: !!success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
@@ -1264,12 +1162,9 @@ export function createSystemCalls(
         }
       }
 
-      const stats = getComponentValue(Stats, characterEntity);
-      const success = stats && stats.maxHp > BigInt(0);
-
       return {
-        error: success ? undefined : 'Failed to roll base stats.',
-        success: !!success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
@@ -1301,12 +1196,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const stats = getComponentValue(Stats, characterEntity);
-      const success = stats && stats.advancedClass === advancedClass && stats.hasSelectedAdvancedClass;
-
       return {
-        error: success ? undefined : 'Failed to select advanced class.',
-        success: !!success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {

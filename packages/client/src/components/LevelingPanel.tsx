@@ -233,6 +233,7 @@ export const LevelingPanel = ({
     const result = await levelTx.execute(async () => {
       const { error, success } = await levelCharacter(character.id, newStats);
       if (error && !success) throw new Error(error);
+      return true;
     });
 
     if (result !== undefined) {

@@ -67,6 +67,7 @@ export const StatsPanel = (): JSX.Element => {
     const result = await restTx.execute(async () => {
       const { error, success } = await rest(character.id);
       if (error && !success) throw new Error(error);
+      return true;
     });
     if (result !== undefined) {
       // Poll MUD Stats component until HP reflects the rest
