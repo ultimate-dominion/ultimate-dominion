@@ -13,7 +13,7 @@ import {
 } from "@codegen/index.sol";
 import {FragmentType} from "@codegen/common.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
-import {DARK_WISP_MOB_ID, VOID_WHISPER_MOB_ID, LICH_ACOLYTE_MOB_ID} from "../../constants.sol";
+import {CRYSTAL_ELEMENTAL_MOB_ID, SHADOW_STALKER_MOB_ID, LICH_ACOLYTE_MOB_ID} from "../../constants.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
 /**
@@ -220,16 +220,16 @@ contract FragmentSystem is System {
             if (defeatedAreMobs) {
                 uint256 mobId = IWorld(_world()).UD__getMobId(defeatedId);
 
-                // Fragment IV: Souls That Linger - kill Dark Wisp
-                if (mobId == DARK_WISP_MOB_ID) {
+                // Fragment IV: Souls That Linger - kill Crystal Elemental
+                if (mobId == CRYSTAL_ELEMENTAL_MOB_ID) {
                     IWorld(_world()).UD__triggerFragment(characterId, 4, tileX, tileY);
                 }
                 // Fragment VI: Death of the Death God - kill Lich Acolyte
                 else if (mobId == LICH_ACOLYTE_MOB_ID) {
                     IWorld(_world()).UD__triggerFragment(characterId, 6, tileX, tileY);
                 }
-                // Fragment VII: Betrayer's Truth - kill Void Whisper
-                else if (mobId == VOID_WHISPER_MOB_ID) {
+                // Fragment VII: Betrayer's Truth - kill Shadow Stalker
+                else if (mobId == SHADOW_STALKER_MOB_ID) {
                     IWorld(_world()).UD__triggerFragment(characterId, 7, tileX, tileY);
                 }
             } else {

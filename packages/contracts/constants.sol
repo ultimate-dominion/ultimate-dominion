@@ -66,9 +66,12 @@ uint16 constant TAL_SHOP_Y = 9;
 
 // Fragment-triggering mob IDs (assigned at deploy time based on creation order)
 // These must match the mob IDs assigned when zone content is loaded
-uint256 constant DARK_WISP_MOB_ID = 13;
-uint256 constant VOID_WHISPER_MOB_ID = 22;
-uint256 constant LICH_ACOLYTE_MOB_ID = 25;
+// Dark Cave roster (10 monsters): 1=Cave Rat, 2=Fungal Shaman, 3=Cavern Brute,
+// 4=Crystal Elemental, 5=Cave Troll, 6=Phase Spider, 7=Lich Acolyte,
+// 8=Stone Giant, 9=Shadow Stalker, 10=Shadow Dragon
+uint256 constant CRYSTAL_ELEMENTAL_MOB_ID = 4;   // Fragment IV: Souls That Linger
+uint256 constant LICH_ACOLYTE_MOB_ID = 7;         // Fragment VI: Death of the Death God
+uint256 constant SHADOW_STALKER_MOB_ID = 9;       // Fragment VII: Betrayer's Truth
 
 // GameDelegation constants
 bytes16 constant GAME_DELEGATION_NAME = "GameDelegation";

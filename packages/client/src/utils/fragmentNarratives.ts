@@ -38,7 +38,7 @@ He laughs, a dry sound like bones rattling.
 
 "I've been selling to the lost ones for... longer than I can remember. They come, they fight, they fall. And still the cave hungers."
 
-He slides something across the counter. "Take this. You'll need it where you're going. As for answers - the wisps remember. The wisps always remember."`,
+He slides something across the counter. "Take this. You'll need it where you're going. As for answers - the crystals remember. They trapped the old souls inside, you know. Shatter one, and maybe it'll talk."`,
     hint: 'Speak with Tal Carden at his shop.',
   },
   3: {
@@ -62,22 +62,22 @@ What makes you any different from them?`,
   4: {
     id: 4,
     name: 'Souls That Linger',
-    narrative: `The Dark Wisp floats before you, a constellation of pale light.
+    narrative: `The Crystal Elemental shatters, and from within its fractured core, a constellation of pale light spills free.
 
-Unlike the other creatures, it doesn't attack. It hovers, waiting, and you hear a voice like wind through empty halls:
+Unlike the shards that scatter and fade, these motes hover, waiting, and you hear a voice like wind through empty halls:
 
 *"You seek the truth. They all did, once."*
 
 Images flood your mind: A great ritual. Hooded figures around a pit of absolute darkness. Power being summoned - and something going terribly, horribly wrong.
 
-*"We were the witnesses. We are all that remains of the world before."*
+*"We were the witnesses. We are all that remains of the world before. Trapped in crystal, waiting to be freed."*
 
-The Wisp begins to fade.
+The light begins to fade.
 
 *"Find the Wound at the center. There, you will understand what we became."*
 
 And then it's gone, leaving only the echo of ancient sorrow.`,
-    hint: 'Encounter and defeat a Dark Wisp.',
+    hint: 'Defeat a Crystal Elemental.',
   },
   5: {
     id: 5,
@@ -124,7 +124,7 @@ And somewhere in its depths, the god's corpse still holds power.`,
   7: {
     id: 7,
     name: "Betrayer's Truth",
-    narrative: `As the Void Whisper dissolves, its final message burns into your mind:
+    narrative: `As the Shadow Stalker dissolves into the darkness it once commanded, its final message burns into your mind:
 
 *"There was one among them who knew the truth. Who tried to stop it."*
 
@@ -141,7 +141,7 @@ The voice fades, but not before whispering one last thing:
 The merchant with blind eyes. The quartermaster who never leaves.
 
 How long has he truly been waiting?`,
-    hint: 'Defeat the Void Whisper.',
+    hint: 'Defeat the Shadow Stalker.',
   },
   8: {
     id: 8,
