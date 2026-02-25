@@ -113,6 +113,7 @@ Run through every core flow before inviting players:
 - [ ] Visit shop, buy/sell items
 - [ ] List item on marketplace, buy from marketplace
 - [ ] Level up, allocate stats
+- [ ] Select advanced class at level 10, verify spell item received and usable in combat
 - [x] Chat (Push Protocol) ✓ CORS fix + EOA signer for smart accounts
 - [ ] Mobile browser — full flow
 - [ ] Multiple concurrent users (at least 2-3 testers simultaneously)
@@ -122,7 +123,7 @@ Run through every core flow before inviting players:
 These must be ready before inviting the first public player:
 
 **Before First Public Post**
-- [ ] SEO quick wins: `react-helmet-async`, `robots.txt`, `sitemap.xml`, OG image (1-2 hours)
+- [x] SEO quick wins: `react-helmet-async`, `robots.txt`, `sitemap.xml`, OG image ✓ Player guide site live at /guide (13 pages, full JSON-LD, OG tags)
 - [ ] Build or enhance landing page / Welcome page with game description + screenshots
 - [ ] Create 1200x630px OG image for social sharing
 - [ ] Add JSON-LD structured data (VideoGame schema)

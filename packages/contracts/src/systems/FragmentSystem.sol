@@ -7,12 +7,13 @@ import {
     FragmentMetadata,
     CharacterFirstActions,
     Characters,
-    UltimateDominionConfig,
     Admin
 } from "@codegen/index.sol";
 import {FragmentType} from "@codegen/common.sol";
-import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
-import {CRYSTAL_ELEMENTAL_MOB_ID, SHADOW_STALKER_MOB_ID, LICH_ACOLYTE_MOB_ID} from "../../constants.sol";
+import {Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
+import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
+import {_ownersTableId, _balancesTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
+import {CRYSTAL_ELEMENTAL_MOB_ID, SHADOW_STALKER_MOB_ID, LICH_ACOLYTE_MOB_ID, FRAGMENTS_NAMESPACE} from "../../constants.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
 /**
@@ -85,10 +86,13 @@ contract FragmentSystem is System {
         uint256 characterTokenId = Characters.getTokenId(characterId);
         tokenId = uint256(fragmentType) * 1_000_000 + characterTokenId;
 
-        // Mint the NFT
-        address fragmentToken = UltimateDominionConfig.getFragmentToken();
-        require(fragmentToken != address(0), "Fragment token not configured");
-        IERC721Mintable(fragmentToken).mint(owner, tokenId);
+        // Mint the NFT by writing directly to ERC721 tables.
+        // Bypasses the puppet's callFrom flow which has access control issues
+        // when called from within a system's delegatecall context.
+        require(Owners.get(_ownersTableId(FRAGMENTS_NAMESPACE), tokenId) == address(0), "Token already minted");
+        Owners.set(_ownersTableId(FRAGMENTS_NAMESPACE), tokenId, owner);
+        uint256 currentBalance = Balances.get(_balancesTableId(FRAGMENTS_NAMESPACE), owner);
+        Balances.set(_balancesTableId(FRAGMENTS_NAMESPACE), owner, currentBalance + 1);
 
         // Update claimed state
         FragmentProgress.setClaimed(characterId, fType, true);

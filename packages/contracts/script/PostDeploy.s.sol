@@ -526,15 +526,33 @@ contract PostDeploy is Script {
                 console.log("  Fragments:ERC721System access grant to FragmentSystem failed");
             }
 
-            // Transfer Fragments namespace ownership to FragmentSystem (like Characters -> CharacterCore)
-            // This allows FragmentSystem to mint tokens without access control issues
-            try world.transferOwnership(fragmentsNamespaceId, fragmentSystemAddress) {
-                console.log("  Transferred Fragments namespace ownership to FragmentSystem");
-            } catch {
-                console.log("  Fragments namespace ownership transfer failed");
-            }
+            // NOTE: Do NOT transfer namespace ownership to the FragmentSystem contract.
+            // System upgrades create new contract addresses, which orphans the namespace
+            // ownership at the old address and locks out the deployer permanently.
+            // Instead, keep the deployer as namespace owner and rely on the grantAccess
+            // calls above for FragmentSystem to mint tokens.
         } else {
             console.log("  Fragment token already configured, skipping");
+        }
+
+        // Grant FragmentSystem access to Fragments ERC721 tables for direct writes.
+        // Must run on every deploy since system addresses change on upgrade.
+        ResourceId fragmentSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "FragmentSystem");
+        address fragmentSystemAddress = Systems.getSystem(fragmentSystemId);
+        console.log("  FragmentSystem address:", fragmentSystemAddress);
+
+        ResourceId fragmentsOwnersTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, FRAGMENTS_NAMESPACE, "Owners");
+        try world.grantAccess(fragmentsOwnersTableId, fragmentSystemAddress) {
+            console.log("  Granted Fragments:Owners table access to FragmentSystem");
+        } catch {
+            console.log("  Fragments:Owners table access already granted");
+        }
+
+        ResourceId fragmentsBalancesTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, FRAGMENTS_NAMESPACE, "Balances");
+        try world.grantAccess(fragmentsBalancesTableId, fragmentSystemAddress) {
+            console.log("  Granted Fragments:Balances table access to FragmentSystem");
+        } catch {
+            console.log("  Fragments:Balances table access already granted");
         }
     }
 
