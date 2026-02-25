@@ -34,8 +34,13 @@ import { useMap } from './MapContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
 
-// TODO: Update these after deploying badges and creating new group
-const GROUP_CHAT_ID =
+// Push Protocol environment: 'prod' for deployed sites, 'staging' for localhost
+const PUSH_ENV = import.meta.env.VITE_PUSH_ENV === 'prod'
+  ? CONSTANTS.ENV.PROD
+  : CONSTANTS.ENV.STAGING;
+
+// Group chat ID — differs between staging and prod environments
+const GROUP_CHAT_ID = import.meta.env.VITE_PUSH_GROUP_CHAT_ID ||
   '20ca5a940d23fae1191bcf39a7f02cafd02d5427b7f6aa8a1b882c8641239475';
 
 // Badge contract address - set after deployment
@@ -365,7 +370,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       setIsLoggingIn(true);
 
       const _user = await PushAPI.initialize(data, {
-        env: CONSTANTS.ENV.STAGING,
+        env: PUSH_ENV,
       });
 
       const groupChatInfo = (await _user.chat.group.info(

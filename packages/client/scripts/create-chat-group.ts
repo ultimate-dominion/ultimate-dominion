@@ -5,19 +5,21 @@
  * the Adventurer badge (Token ID 1xxx...) to join.
  *
  * Usage:
- *   PRIVATE_KEY=0x... BADGE_CONTRACT=0x... CHAIN_ID=31337 npx ts-node scripts/create-chat-group.ts
+ *   PRIVATE_KEY=0x... PUSH_ENV=prod CHAIN_ID=84532 npx ts-node scripts/create-chat-group.ts
  *
- * After running, update GROUP_CHAT_ID in src/contexts/ChatContext.tsx
+ * PUSH_ENV: 'prod' for production Push backend, 'staging' (default) for dev
+ * After running, set VITE_PUSH_GROUP_CHAT_ID env var to the output chat ID
  */
 
 import { CONSTANTS, PushAPI } from '@pushprotocol/restapi';
 import { createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { anvil, baseSepolia, garnet } from 'viem/chains';
+import { anvil, baseSepolia } from 'viem/chains';
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
 const BADGE_CONTRACT = process.env.BADGE_CONTRACT;
 const CHAIN_ID = process.env.CHAIN_ID || '31337';
+const PUSH_ENV = process.env.PUSH_ENV === 'prod' ? CONSTANTS.ENV.PROD : CONSTANTS.ENV.STAGING;
 
 if (!PRIVATE_KEY) {
   console.error('Please set PRIVATE_KEY environment variable');
@@ -28,7 +30,6 @@ if (!PRIVATE_KEY) {
 const chains: Record<string, typeof anvil> = {
   '31337': anvil,
   '84532': baseSepolia,
-  '695569': garnet,
 };
 
 async function createTokenGatedGroup() {
@@ -44,10 +45,11 @@ async function createTokenGatedGroup() {
   console.log('Initializing Push Protocol...');
   console.log('  Account:', account.address);
   console.log('  Chain ID:', CHAIN_ID);
+  console.log('  Push Env:', PUSH_ENV === CONSTANTS.ENV.PROD ? 'PROD' : 'STAGING');
   console.log('  Badge Contract:', BADGE_CONTRACT || 'Not set (public group)');
 
   const user = await PushAPI.initialize(walletClient, {
-    env: CONSTANTS.ENV.STAGING,
+    env: PUSH_ENV,
   });
 
   console.log('\nCreating chat group...');
