@@ -167,9 +167,10 @@ interface MonstersJson {
 enum ItemType {
   Weapon = 0,
   Armor = 1,
-  Consumable = 2,
-  QuestItem = 3,
-  Accessory = 4,
+  Spell = 2,
+  Consumable = 3,
+  QuestItem = 4,
+  Accessory = 5,
 }
 
 enum MobType {
