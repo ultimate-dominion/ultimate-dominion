@@ -187,13 +187,27 @@ contract EncounterSystem is System {
 
         CombatOutcome.set(encounterId, combatOutcome);
 
-        // Check combat fragment triggers for the winning side
-        // Last param = defeatedAreMobs: when attackers win, the defeated are defenders (opposite of attackersAreMobs)
+        // Check combat fragment triggers for the winning side (non-critical, must not break combat).
+        // Uses low-level call: the ERC-4337 bundler's gas estimate can undercount conditional code
+        // paths (like first-time fragment triggers), causing OutOfGas. A bare IWorld call would
+        // propagate the revert and break combat. Low-level call swallows the failure gracefully.
         (uint16 currentX, uint16 currentY) = Position.get(encounterData.attackers[0]);
         if (attackersWin) {
-            IWorld(_world()).UD__checkCombatFragmentTriggersForGroup(encounterData.attackers, encounterData.defenders, currentX, currentY, !encounterData.attackersAreMobs);
+            // solhint-disable-next-line avoid-low-level-calls
+            address(_world()).call(
+                abi.encodeWithSelector(
+                    IWorld(_world()).UD__checkCombatFragmentTriggersForGroup.selector,
+                    encounterData.attackers, encounterData.defenders, currentX, currentY, !encounterData.attackersAreMobs
+                )
+            );
         } else {
-            IWorld(_world()).UD__checkCombatFragmentTriggersForGroup(encounterData.defenders, encounterData.attackers, currentX, currentY, encounterData.attackersAreMobs);
+            // solhint-disable-next-line avoid-low-level-calls
+            address(_world()).call(
+                abi.encodeWithSelector(
+                    IWorld(_world()).UD__checkCombatFragmentTriggersForGroup.selector,
+                    encounterData.defenders, encounterData.attackers, currentX, currentY, encounterData.attackersAreMobs
+                )
+            );
         }
     }
 
