@@ -166,6 +166,25 @@ contract EncounterSystem is System {
         CombatEncounter.setEnd(encounterId, block.timestamp);
         encounterData.end = block.timestamp;
 
+        // Fragment triggers: run early while gas is plentiful (before rewards/cleanup).
+        // Position data is still intact at this point.
+        // delegatecall keeps World context → StoreSwitch uses StoreCore (direct SSTORE).
+        // Return value ignored — delegatecall failure is non-fatal.
+        {
+            (uint16 currentX, uint16 currentY) = Position.get(encounterData.attackers[0]);
+            address fSys;
+            assembly { fSys := shr(96, sload(FRAGMENT_SYSTEM_SLOT)) }
+            if (attackersWin) {
+                // solhint-disable-next-line avoid-low-level-calls
+                fSys.delegatecall(abi.encodeWithSelector(FRAGMENT_CHECK_SELECTOR,
+                    encounterData.attackers, encounterData.defenders, currentX, currentY, !encounterData.attackersAreMobs));
+            } else {
+                // solhint-disable-next-line avoid-low-level-calls
+                fSys.delegatecall(abi.encodeWithSelector(FRAGMENT_CHECK_SELECTOR,
+                    encounterData.defenders, encounterData.attackers, currentX, currentY, encounterData.attackersAreMobs));
+            }
+        }
+
         uint256 expAmount;
         uint256 goldAmount;
         uint256[] memory itemsDropped;
@@ -192,25 +211,6 @@ contract EncounterSystem is System {
         _cleanupEntities(encounterData.defenders);
 
         CombatOutcome.set(encounterId, combatOutcome);
-
-        // Fragment triggers: non-critical, skip if gas is tight after combat resolution.
-        // Gas guard prevents OOG in setup code from reverting the entire combat.
-        // delegatecall keeps World context so StoreSwitch → StoreCore (direct storage).
-        // Return value ignored — delegatecall failure is non-fatal.
-        if (gasleft() > 200_000) {
-            (uint16 currentX, uint16 currentY) = Position.get(encounterData.attackers[0]);
-            address fSys;
-            assembly { fSys := shr(96, sload(FRAGMENT_SYSTEM_SLOT)) }
-            if (attackersWin) {
-                // solhint-disable-next-line avoid-low-level-calls
-                fSys.delegatecall(abi.encodeWithSelector(FRAGMENT_CHECK_SELECTOR,
-                    encounterData.attackers, encounterData.defenders, currentX, currentY, !encounterData.attackersAreMobs));
-            } else {
-                // solhint-disable-next-line avoid-low-level-calls
-                fSys.delegatecall(abi.encodeWithSelector(FRAGMENT_CHECK_SELECTOR,
-                    encounterData.defenders, encounterData.attackers, currentX, currentY, encounterData.attackersAreMobs));
-            }
-        }
     }
 
     function _endWorldEncounter(bytes32 encounterId) internal {

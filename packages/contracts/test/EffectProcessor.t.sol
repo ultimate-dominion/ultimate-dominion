@@ -146,6 +146,7 @@ contract EffectProcessorTest is Test {
             intModifier: 0,
             resistanceStat: ResistanceStat.None,
             strModifier: 0
+
         });
 
         int256 totalDamage = EffectProcessor.calculateDamageOverTime(effectStats, 3);
@@ -168,6 +169,7 @@ contract EffectProcessorTest is Test {
             intModifier: 0,
             resistanceStat: ResistanceStat.None,
             strModifier: 0
+
         });
 
         // Time-based effect, not in combat
@@ -246,6 +248,7 @@ contract EffectProcessorTest is Test {
             intModifier: 2,
             resistanceStat: ResistanceStat.None,
             strModifier: 5
+
         });
 
         uint256 priority = EffectProcessor.calculateEffectPriority(effectStats);

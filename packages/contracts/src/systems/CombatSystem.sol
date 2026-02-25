@@ -143,11 +143,8 @@ contract CombatSystem is System {
 
                 EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
                 require(effectData.effectExists, "action does not exist");
-                // if actor is a character.  require item is equipped
-                if (
-                    IWorld(_world()).UD__isValidCharacterId(actionOutcomeData.attackerId)
-                        && Items.getItemType(actionOutcomeData.itemId) != ItemType.Consumable
-                ) {
+                // if actor is a character, require item is equipped
+                if (IWorld(_world()).UD__isValidCharacterId(actionOutcomeData.attackerId)) {
                     require(
                         IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId),
                         "Item not equipped"
