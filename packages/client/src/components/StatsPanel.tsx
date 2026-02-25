@@ -14,7 +14,7 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { Has, runQuery } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   IoIosArrowForward,
   IoMdInformationCircleOutline,
@@ -24,6 +24,7 @@ import { hexToBigInt } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useTransaction } from '../hooks/useTransaction';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
 
@@ -36,8 +37,26 @@ export const StatsPanel = (): JSX.Element => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
     components: { Levels },
+    systemCalls: { rest },
   } = useMUD();
-  const { character } = useCharacter();
+  const { character, refreshCharacter } = useCharacter();
+
+  const restTx = useTransaction({
+    actionName: 'Resting',
+    showSuccessToast: true,
+    successMessage: 'You rested and recovered your HP!',
+  });
+
+  const onRest = useCallback(async () => {
+    if (!character) return;
+    const result = await restTx.execute(async () => {
+      const { error, success } = await rest(character.id);
+      if (error && !success) throw new Error(error);
+    });
+    if (result !== undefined) {
+      await refreshCharacter();
+    }
+  }, [character, rest, restTx, refreshCharacter]);
 
   const maxLevelXpRequirement = useMemo(
     () =>
@@ -339,6 +358,23 @@ export const StatsPanel = (): JSX.Element => {
           Level Up!
         </Button>
       )}
+
+      {!character.inBattle &&
+        currentHp > BigInt(0) &&
+        currentHp < maxHp && (
+          <Button
+            alignSelf="center"
+            isDisabled={restTx.isLoading}
+            isLoading={restTx.isLoading}
+            loadingText="Resting..."
+            mt={2}
+            onClick={onRest}
+            size="xs"
+            variant="outline"
+          >
+            Rest (Heal to Full)
+          </Button>
+        )}
 
       {isDesktop && (
         <HStack

@@ -278,6 +278,11 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "CombatantHpZero",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EncodedLengths_InvalidLength",
     "inputs": [
       {

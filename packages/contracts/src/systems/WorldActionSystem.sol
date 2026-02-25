@@ -4,6 +4,7 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {
+    CharacterEquipment,
     EncounterEntity,
     Effects,
     Stats,
@@ -15,6 +16,8 @@ import {
     ActionOutcomeData
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
+import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
+import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
@@ -111,6 +114,28 @@ contract WorldActionSystem is System {
         stats.currentHp -= _heal;
 
         Stats.setCurrentHp(receivingEntity, stats.currentHp);
+    }
+
+    /**
+     * @dev Rest to restore HP to full. Free, but only usable outside combat.
+     * @param characterId The character to heal
+     */
+    function rest(bytes32 characterId) public {
+        PauseLib.requireNotPaused();
+        address owner = IWorld(_world()).UD__getOwner(characterId);
+        require(_isOwnerOrDelegated(owner), "not character owner");
+        require(EncounterEntity.getEncounterId(characterId) == bytes32(0), "cannot rest during combat");
+        require(Stats.getCurrentHp(characterId) > 0, "character is dead");
+
+        int256 maxHp = Stats.getMaxHp(characterId) + CharacterEquipment.getHpBonus(characterId);
+        if (maxHp < 1) maxHp = 1;
+        Stats.setCurrentHp(characterId, maxHp);
+    }
+
+    function _isOwnerOrDelegated(address owner) internal view returns (bool) {
+        if (_msgSender() == owner) return true;
+        ResourceId delegationId = UserDelegationControl.getDelegationControlId(owner, _msgSender());
+        return ResourceId.unwrap(delegationId) != bytes32(0);
     }
 
     /**

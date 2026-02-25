@@ -6143,6 +6143,19 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "UD__rest",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__restock",
     "inputs": [
       {

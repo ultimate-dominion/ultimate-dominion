@@ -1008,6 +1008,35 @@ export function createSystemCalls(
     }
   };
 
+  const rest = async (entity: Entity): SystemCallReturn => {
+    try {
+      const characterId = entity.toString() as `0x${string}`;
+
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterId],
+          functionName: 'UD__rest',
+        });
+      }
+
+      const tx = await worldContract.write.UD__rest([characterId]);
+      const txResult = await waitForTransaction(tx);
+
+      return {
+        error: txResult.status === 'success' ? undefined : 'Failed to rest.',
+        success: txResult.status === 'success',
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
   const useWorldConsumableItem = async (
     entity: Entity,
     tokenId: string,
@@ -1411,6 +1440,7 @@ export function createSystemCalls(
     mintCharacter,
     move,
     removeEntityFromBoard,
+    rest,
     restock,
     rollBaseStats,
     rollStats,

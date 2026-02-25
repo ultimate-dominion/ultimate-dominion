@@ -114,33 +114,28 @@ contract PveRewardSystem is System {
         uint256 mobId = IWorld(_world()).UD__getMobId(entityId);
         MonsterStats memory monsterStats = abi.decode(Mobs.getMobStats(mobId), (MonsterStats));
 
-        uint256[] memory itemIdsDropped = new uint256[](monsterStats.inventory.length);
-        uint256 totalItemsDropped;
-        uint256 tempItemId;
+        // Roll each item independently, then pick at most 1 winner
+        uint256[] memory candidates = new uint256[](monsterStats.inventory.length);
+        uint256 numCandidates;
         for (uint256 i; i < monsterStats.inventory.length; i++) {
-            tempItemId = monsterStats.inventory[i];
+            uint256 tempItemId = monsterStats.inventory[i];
             uint256 dropChance = Items.getDropChance(tempItemId);
-            if (randomNumber % 100_000_000 < (dropChance * 1000000)) {
-                IWorld(_world()).UD__dropItem(characterId, tempItemId, 1);
-                itemIdsDropped[i] = tempItemId;
-                totalItemsDropped++;
+            // Each item gets its own independent roll (hash with index)
+            uint256 roll = uint256(keccak256(abi.encodePacked(randomNumber, i))) % 100;
+            if (roll < dropChance) {
+                candidates[numCandidates] = tempItemId;
+                numCandidates++;
             }
         }
 
-        uint256[] memory itemsDropped = new uint256[](totalItemsDropped);
-        if (totalItemsDropped > 0) {
-            uint256 itemsAdded;
-            for (uint256 i; i < itemIdsDropped.length;) {
-                if (itemIdsDropped[i] != 0) {
-                    itemsDropped[itemsAdded] = itemIdsDropped[i];
-                    itemsAdded++;
-                }
-                if (itemsAdded == totalItemsDropped) break;
-                {
-                    i++;
-                }
-            }
-        }
-        return itemsDropped;
+        if (numCandidates == 0) return new uint256[](0);
+
+        // Pick one random winner from candidates
+        uint256 winnerId = candidates[randomNumber % numCandidates];
+        IWorld(_world()).UD__dropItem(characterId, winnerId, 1);
+
+        uint256[] memory result = new uint256[](1);
+        result[0] = winnerId;
+        return result;
     }
 }

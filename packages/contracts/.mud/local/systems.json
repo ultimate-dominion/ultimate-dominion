@@ -178,6 +178,7 @@
       "abi": [
         "error AlreadyInEncounter()",
         "error CannotEndTurn()",
+        "error CombatantHpZero()",
         "error EncounterAlreadyOver()",
         "error ExpiredEncounter()",
         "error GamePaused()",
@@ -199,6 +200,7 @@
       "worldAbi": [
         "error AlreadyInEncounter()",
         "error CannotEndTurn()",
+        "error CombatantHpZero()",
         "error EncounterAlreadyOver()",
         "error ExpiredEncounter()",
         "error GamePaused()",
@@ -810,12 +812,14 @@
       "abi": [
         "error GamePaused()",
         "function executeWorldRngActions(uint256 randomNumber, bytes32 givingEntity, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] actions)",
+        "function rest(bytes32 characterId)",
         "function useCombatConsumableItem(bytes32 characterId, uint256 itemId)",
         "function useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId)"
       ],
       "worldAbi": [
         "error GamePaused()",
         "function UD__executeWorldRngActions(uint256 randomNumber, bytes32 givingEntity, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] actions)",
+        "function UD__rest(bytes32 characterId)",
         "function UD__useCombatConsumableItem(bytes32 characterId, uint256 itemId)",
         "function UD__useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId)"
       ]
@@ -1148,5 +1152,5 @@
       ]
     }
   ],
-  "createdAt": 1771964713832
+  "createdAt": 1772021855658
 }
