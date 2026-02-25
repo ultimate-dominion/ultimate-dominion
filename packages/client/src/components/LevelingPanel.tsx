@@ -61,13 +61,14 @@ export const LevelingPanel = ({
   const [newStrength, setNewStrength] = useState(character.baseStats.strength);
 
   // Calculate ability points based on diminishing returns system
-  // Levels 1-10: +1 stat point per level
-  // Levels 11-50: +1 stat point every 2 levels
-  // Levels 51-100: +1 stat point every 5 levels
+  // Must match StatCalculator.calculateStatPointsForLevel in contracts
+  // Levels 1-10: +2 stat points per level (STAT_POINTS_EARLY)
+  // Levels 11-50: +1 stat point every 2 levels (STAT_POINTS_MID)
+  // Levels 51-100: +1 stat point every 5 levels (STAT_POINTS_LATE)
   const calculateAbilityPointsForLevel = useCallback((nextLevel: bigint): number => {
     const level = Number(nextLevel);
     if (level <= 10) {
-      return 1; // Early game: +1 per level
+      return 2; // Early game: +2 per level
     } else if (level <= 50) {
       return level % 2 === 0 ? 1 : 0; // Mid game: +1 every 2 levels
     } else {
