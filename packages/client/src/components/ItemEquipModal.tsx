@@ -11,7 +11,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useBattle } from '../contexts/BattleContext';
@@ -19,6 +19,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { GAME_BOARD_PATH, ITEM_PATH } from '../Routes';
 import {
   type Armor,
@@ -44,7 +45,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   ...item
 }): JSX.Element => {
   const navigate = useNavigate();
-  const { renderError, renderSuccess } = useToast();
+  const { renderSuccess } = useToast();
   const {
     delegatorAddress,
     systemCalls: { equipItems, unequipItem },
@@ -54,74 +55,51 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   const { inSafetyZone, isSpawned } = useMap();
   const { currentBattle } = useBattle();
 
-  const [isEquipping, setIsEquipping] = useState(false);
+  const equipTx = useTransaction({ actionName: 'equip item', showSuccessToast: false });
+  const unequipTx = useTransaction({ actionName: 'unequip item', showSuccessToast: false });
 
   const isOwner = useMemo(() => {
     return character?.owner === item.owner;
   }, [character, item.owner]);
 
   const onEquipItem = useCallback(async () => {
-    try {
-      setIsEquipping(true);
+    if (!character) return;
+    if (!delegatorAddress) return;
 
-      if (!character) {
-        throw new Error('Character not found.');
-      }
-
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
-
+    const result = await equipTx.execute(async () => {
       const { error, success } = await equipItems(character.id, [item.tokenId]);
+      if (error && !success) throw new Error(error);
+    });
 
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result !== undefined) {
       await refreshCharacter();
       renderSuccess(`${item.name} equipped successfully!`);
       onClose();
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to equip item.', e);
-    } finally {
-      setIsEquipping(false);
     }
   }, [
     character,
     delegatorAddress,
     equipItems,
+    equipTx,
     item,
     onClose,
     refreshCharacter,
-    renderError,
     renderSuccess,
   ]);
 
   const onUnequipItem = useCallback(async () => {
-    try {
-      setIsEquipping(true);
+    if (!character) return;
+    if (!delegatorAddress) return;
 
-      if (!character) {
-        throw new Error('Character not found.');
-      }
-
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
-
+    const result = await unequipTx.execute(async () => {
       const { error, success } = await unequipItem(character.id, item.tokenId);
+      if (error && !success) throw new Error(error);
+    });
 
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result !== undefined) {
       await refreshCharacter();
       renderSuccess(`${item.name} unequipped successfully!`);
       onClose();
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to unequip item.', e);
-    } finally {
-      setIsEquipping(false);
     }
   }, [
     character,
@@ -129,8 +107,8 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     item,
     onClose,
     refreshCharacter,
-    renderError,
     renderSuccess,
+    unequipTx,
     unequipItem,
   ]);
 
@@ -207,7 +185,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             )}
           </ModalBody>
           <ModalFooter>
-            <Button isDisabled={isEquipping} onClick={onClose} variant="ghost">
+            <Button isDisabled={equipTx.isLoading || unequipTx.isLoading} onClick={onClose} variant="ghost">
               No
             </Button>
             <Button
@@ -216,7 +194,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
                 isNotGameBoard &&
                 isOwner
               }
-              isLoading={isEquipping}
+              isLoading={unequipTx.isLoading}
               loadingText="Unequipping..."
               mr={3}
               onClick={() =>
@@ -287,7 +265,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
           )}
         </ModalBody>
         <ModalFooter gap={3}>
-          <Button isDisabled={isEquipping} onClick={onClose} variant="ghost">
+          <Button isDisabled={equipTx.isLoading || unequipTx.isLoading} onClick={onClose} variant="ghost">
             No
           </Button>
           <Button
@@ -296,7 +274,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               isNotGameBoard &&
               (isMissingRequirements || !!currentBattle)
             }
-            isLoading={isEquipping}
+            isLoading={equipTx.isLoading}
             loadingText="Equipping..."
             onClick={() =>
               isOwner

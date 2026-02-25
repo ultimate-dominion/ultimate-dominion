@@ -28,6 +28,7 @@ import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import {
   etherToFixedNumber,
   getEmoji,
@@ -88,9 +89,10 @@ export const ShopItemRow = ({
     onClose: onAllowanceClose,
   } = useDisclosure();
 
+  const shopTx = useTransaction({ actionName: 'shop', showSuccessToast: false });
+
   const [amount, setAmount] = useState(1);
   const [showError, setShowError] = useState(false);
-  const [isTxPending, setIsTxPending] = useState(false);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -147,19 +149,16 @@ export const ShopItemRow = ({
         return;
       }
 
-      try {
-        setIsTxPending(true);
-        if (orderType == OrderType.Buying && goldShopAllowance < price) {
-          onAllowanceOpen();
-          setIsTxPending(false);
-          return;
-        }
-        if (orderType == OrderType.Selling && !itemsShopAllowance) {
-          onAllowanceOpen();
-          setIsTxPending(false);
-          return;
-        }
+      if (orderType == OrderType.Buying && goldShopAllowance < price) {
+        onAllowanceOpen();
+        return;
+      }
+      if (orderType == OrderType.Selling && !itemsShopAllowance) {
+        onAllowanceOpen();
+        return;
+      }
 
+      const result = await shopTx.execute(async () => {
         if (orderType == OrderType.Buying) {
           const { error, success } = await buy(
             BigInt(amount),
@@ -167,11 +166,7 @@ export const ShopItemRow = ({
             itemIndex,
             characterId,
           );
-          if (error && !success) {
-            throw new Error(error);
-          }
-
-          renderSuccess('Item purchased successfully!');
+          if (error && !success) throw new Error(error);
         } else {
           const { error, success } = await sell(
             BigInt(amount),
@@ -179,19 +174,19 @@ export const ShopItemRow = ({
             itemIndex,
             characterId,
           );
-          if (error && !success) {
-            throw new Error(error);
-          }
-          renderSuccess('Item sold successfully!');
+          if (error && !success) throw new Error(error);
         }
+      });
 
+      if (result !== undefined) {
+        renderSuccess(
+          orderType == OrderType.Buying
+            ? 'Item purchased successfully!'
+            : 'Item sold successfully!',
+        );
         onAllowanceClose();
         onClose();
         refreshCharacter();
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Shop transaction failed', e);
-      } finally {
-        setIsTxPending(false);
       }
     },
     [
@@ -209,10 +204,10 @@ export const ShopItemRow = ({
       orderType,
       price,
       refreshCharacter,
-      renderError,
       renderSuccess,
       sell,
       shop.shopId,
+      shopTx,
       unsellableError,
     ],
   );
@@ -300,7 +295,7 @@ export const ShopItemRow = ({
             ? `Allowance was successful! You can now buy ${name}`
             : `Allowance was successful! You can now sell ${name}`
         }
-        isCompleting={isTxPending}
+        isCompleting={shopTx.isLoading}
         isOpen={isAllowanceOpen}
         itemName={name}
         onClose={onAllowanceClose}
@@ -567,7 +562,7 @@ export const ShopItemRow = ({
                   <Button
                     type="submit"
                     isLoading={
-                      isApprovingGold || isApprovingItems || isTxPending
+                      isApprovingGold || isApprovingItems || shopTx.isLoading
                     }
                   >
                     Approve
@@ -577,7 +572,7 @@ export const ShopItemRow = ({
                   <Button
                     type="submit"
                     isLoading={
-                      isApprovingGold || isApprovingItems || isTxPending
+                      isApprovingGold || isApprovingItems || shopTx.isLoading
                     }
                   >
                     Approve
@@ -588,7 +583,7 @@ export const ShopItemRow = ({
                     <Button
                       type="submit"
                       isLoading={
-                        isApprovingGold || isApprovingItems || isTxPending
+                        isApprovingGold || isApprovingItems || shopTx.isLoading
                       }
                     >
                       Buy
@@ -598,7 +593,7 @@ export const ShopItemRow = ({
                   <Button
                     type="submit"
                     isLoading={
-                      isApprovingGold || isApprovingItems || isTxPending
+                      isApprovingGold || isApprovingItems || shopTx.isLoading
                     }
                   >
                     Sell

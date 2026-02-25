@@ -23,6 +23,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { useUploadFile } from '../hooks/useUploadFile';
 import { API_URL } from '../utils/constants';
 import { type Character } from '../utils/types';
@@ -93,6 +94,12 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
     );
   }, [avatar, image]);
 
+  const updateTx = useTransaction({
+    actionName: 'update character',
+    showSuccessToast: true,
+    successMessage: 'Character updated!',
+  });
+
   const [isUpdating, setIsUpdating] = useState(false);
 
   const onEditCharacter = useCallback(
@@ -149,19 +156,19 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
             'Something went wrong uploading your character metadata',
           );
 
-        const { error, success } = await updateTokenUri(
-          id,
-          characterMetadataCid,
-          tokenId,
-        );
+        const result = await updateTx.execute(async () => {
+          const { error, success } = await updateTokenUri(
+            id,
+            characterMetadataCid,
+            tokenId,
+          );
+          if (error && !success) throw new Error(error);
+        });
 
-        if (error && !success) {
-          throw new Error(error);
+        if (result !== undefined) {
+          await refreshCharacter();
+          onClose();
         }
-
-        await refreshCharacter();
-        renderSuccess('Character updated!');
-        onClose();
       } catch (e) {
         renderError('Failed to update character.', e);
       } finally {
@@ -181,10 +188,10 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
       onUpload,
       refreshCharacter,
       renderError,
-      renderSuccess,
       renderWarning,
       tokenId,
       updateTokenUri,
+      updateTx,
     ],
   );
 

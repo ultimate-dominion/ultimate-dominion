@@ -10,7 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { useEntityQuery } from '@latticexyz/react';
 import { getComponentValueStrict, Has, HasValue } from '@latticexyz/recs';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { BiPurchaseTagAlt } from 'react-icons/bi';
 import { FaTimes } from 'react-icons/fa';
 import { hexToString } from 'viem';
@@ -18,7 +18,7 @@ import { hexToString } from 'viem';
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import {
   etherToFixedNumber,
   getEmoji,
@@ -48,7 +48,6 @@ export const OrderRow = ({
   order,
   refreshOrders,
 }: OrderRowProps): JSX.Element => {
-  const { renderError, renderSuccess } = useToast();
   const {
     components: { Characters },
     systemCalls: { cancelOrder, fulfillOrder },
@@ -57,8 +56,8 @@ export const OrderRow = ({
   const { goldMarketplaceAllowance, itemsMarketplaceAllowance } =
     useAllowance();
 
-  const [isCancelling, setIsCancelling] = useState(false);
-  const [isFilling, setIsFilling] = useState(false);
+  const cancelTx = useTransaction({ actionName: 'cancel listing', showSuccessToast: true, successMessage: 'Listing removed successfully!' });
+  const fillTx = useTransaction({ actionName: 'fill order', showSuccessToast: true, successMessage: 'Order filled successfully!' });
 
   const {
     isOpen: isAllowanceModalOpen,
@@ -75,31 +74,16 @@ export const OrderRow = ({
   })[0];
 
   const onCancelOrder = useCallback(async () => {
-    try {
-      setIsCancelling(true);
-
+    const result = await cancelTx.execute(async () => {
       const { error, success } = await cancelOrder(order.orderHash);
+      if (error && !success) throw new Error(error);
+    });
 
-      if (error && !success) {
-        throw new Error(error);
-      }
-
-      renderSuccess('Listing removed successfully!');
+    if (result !== undefined) {
       refreshCharacter();
       refreshOrders();
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error cancelling order.', e);
-    } finally {
-      setIsCancelling(false);
     }
-  }, [
-    cancelOrder,
-    order,
-    refreshCharacter,
-    refreshOrders,
-    renderError,
-    renderSuccess,
-  ]);
+  }, [cancelOrder, cancelTx, order, refreshCharacter, refreshOrders]);
 
   const insufficientGold = useMemo(() => {
     if (!character) return false;
@@ -108,45 +92,36 @@ export const OrderRow = ({
   }, [character, order]);
 
   const onFulfillOrder = useCallback(async () => {
-    try {
-      setIsFilling(true);
+    if (insufficientGold) return;
 
-      if (insufficientGold) {
-        throw new Error('Insufficient gold balance.');
-      }
+    if (
+      order.consideration.tokenType === TokenType.ERC20 &&
+      goldMarketplaceAllowance < order.consideration.amount
+    ) {
+      onOpenAllowanceModal();
+      return;
+    }
 
-      if (
-        order.consideration.tokenType === TokenType.ERC20 &&
-        goldMarketplaceAllowance < order.consideration.amount
-      ) {
-        onOpenAllowanceModal();
-        return;
-      }
+    if (
+      order.offer.tokenType === TokenType.ERC20 &&
+      !itemsMarketplaceAllowance
+    ) {
+      onOpenAllowanceModal();
+      return;
+    }
 
-      if (
-        order.offer.tokenType === TokenType.ERC20 &&
-        !itemsMarketplaceAllowance
-      ) {
-        onOpenAllowanceModal();
-        return;
-      }
-
+    const result = await fillTx.execute(async () => {
       const { error, success } = await fulfillOrder(order.orderHash);
+      if (error && !success) throw new Error(error);
+    });
 
-      if (error && !success) {
-        throw new Error(error);
-      }
-
-      renderSuccess('Order filled successfully!');
+    if (result !== undefined) {
       onCloseAllowanceModal();
       refreshCharacter();
       refreshOrders();
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error cancelling order.', e);
-    } finally {
-      setIsFilling(false);
     }
   }, [
+    fillTx,
     fulfillOrder,
     goldMarketplaceAllowance,
     insufficientGold,
@@ -156,8 +131,6 @@ export const OrderRow = ({
     order,
     refreshCharacter,
     refreshOrders,
-    renderError,
-    renderSuccess,
   ]);
 
   const isOfferer = useMemo(
@@ -218,7 +191,7 @@ export const OrderRow = ({
             placement="top"
           >
             <Button
-              isLoading={isFilling}
+              isLoading={fillTx.isLoading}
               p={2}
               onClick={onFulfillOrder}
               size="sm"
@@ -239,7 +212,7 @@ export const OrderRow = ({
             <Button
               bgColor="red"
               color="white"
-              isLoading={isCancelling}
+              isLoading={cancelTx.isLoading}
               onClick={onCancelOrder}
               p={2}
               size="sm"
@@ -255,7 +228,7 @@ export const OrderRow = ({
 
       <MarketplaceAllowanceModal
         completeMessage="Allowance was successful! You can now complete the order."
-        isCompleting={isFilling}
+        isCompleting={fillTx.isLoading}
         isOpen={isAllowanceModalOpen}
         itemName={item.name}
         onClose={onCloseAllowanceModal}

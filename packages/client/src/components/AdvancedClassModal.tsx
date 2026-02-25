@@ -17,6 +17,7 @@ import { useCallback, useState } from 'react';
 
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { AdvancedClass } from '../utils/types';
 
 // Advanced class info with descriptions and bonuses
@@ -119,36 +120,29 @@ export const AdvancedClassModal = ({
   characterId,
   onClassSelected,
 }: AdvancedClassModalProps): JSX.Element => {
-  const { renderError, renderSuccess } = useToast();
+  const { renderSuccess } = useToast();
   const {
     systemCalls: { selectAdvancedClass },
   } = useMUD();
 
-  const [isSelecting, setIsSelecting] = useState(false);
+  const selectClassTx = useTransaction({ actionName: 'select class', showSuccessToast: false });
   const [selectedClass, setSelectedClass] = useState<AdvancedClass | null>(null);
 
   const onConfirmClass = useCallback(async () => {
     if (!selectedClass) return;
 
-    try {
-      setIsSelecting(true);
-
+    const result = await selectClassTx.execute(async () => {
       const { error, success } = await selectAdvancedClass(characterId, selectedClass);
+      if (error && !success) throw new Error(error);
+    });
 
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result !== undefined) {
       const classInfo = ADVANCED_CLASS_INFO[selectedClass];
       renderSuccess(`Congratulations! You are now a ${classInfo.name}!`);
       onClassSelected();
       onClose();
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to select advanced class.', e);
-    } finally {
-      setIsSelecting(false);
     }
-  }, [characterId, selectedClass, onClassSelected, onClose, renderError, renderSuccess, selectAdvancedClass]);
+  }, [characterId, selectedClass, onClassSelected, onClose, renderSuccess, selectAdvancedClass, selectClassTx]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered size={{ base: 'full', md: '4xl' }} scrollBehavior="inside">
@@ -212,7 +206,7 @@ export const AdvancedClassModal = ({
           <Button
             w="100%"
             onClick={onConfirmClass}
-            isLoading={isSelecting}
+            isLoading={selectClassTx.isLoading}
             loadingText="Selecting..."
             isDisabled={!selectedClass}
           >

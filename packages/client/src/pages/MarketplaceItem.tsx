@@ -42,6 +42,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import {
@@ -73,7 +74,7 @@ export const MarketplaceItem = (): JSX.Element => {
 };
 
 const MarketplaceItemInner = (): JSX.Element => {
-  const { renderError, renderSuccess, renderWarning } = useToast();
+  const { renderWarning } = useToast();
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
   const [searchParams] = useSearchParams();
@@ -114,8 +115,13 @@ const MarketplaceItemInner = (): JSX.Element => {
 
   const tabsRef = useRef<HTMLDivElement>(null);
 
+  const createOrderTx = useTransaction({
+    actionName: 'create listing',
+    showSuccessToast: true,
+    successMessage: 'Listing created!',
+  });
+
   const [showError, setShowError] = useState(false);
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderType, setOrderType] = useState(OrderType.None);
   const [orderPrice, setOrderPrice] = useState('');
   const [tabIndex, setTabIndex] = useState(0);
@@ -232,124 +238,113 @@ const MarketplaceItemInner = (): JSX.Element => {
     async (e: React.FormEvent) => {
       e.preventDefault();
 
-      try {
-        setIsCreatingOrder(true);
+      if (!userCharacter) return;
+      if (!selectedItem) return;
+      if (!goldTokenAddress || !itemsAddress) return;
 
-        if (!userCharacter) throw new Error('Character not found.');
-        if (!selectedItem) throw new Error('Item not found.');
-        if (!goldTokenAddress || !itemsAddress) {
-          throw new Error('Token contracts not found.');
-        }
+      if (invalidOrderPrice) {
+        setShowError(true);
+        return;
+      }
 
-        if (invalidOrderPrice) {
-          setShowError(true);
-          return;
-        }
+      if (insufficientGold) {
+        setShowError(true);
+        return;
+      }
 
-        if (insufficientGold) {
-          setShowError(true);
-          return;
-        }
+      const equippedItemTokenIds = [
+        ...equippedArmor,
+        ...equippedSpells,
+        ...equippedWeapons,
+      ].map(equippedItem => equippedItem.tokenId);
 
-        const equippedItemTokenIds = [
-          ...equippedArmor,
-          ...equippedSpells,
-          ...equippedWeapons,
-        ].map(equippedItem => equippedItem.tokenId);
+      const isItemEquipped = equippedItemTokenIds.includes(
+        selectedItem.tokenId,
+      );
 
-        const isItemEquipped = equippedItemTokenIds.includes(
-          selectedItem.tokenId,
+      if (
+        userItemBalance === '1' &&
+        isItemEquipped &&
+        orderType === OrderType.Selling
+      ) {
+        renderWarning(
+          `You cannot sell an item that is currently equipped. Please unequip the ${selectedItem.name} first.`,
         );
+        return;
+      }
 
-        if (
-          userItemBalance === '1' &&
-          isItemEquipped &&
-          orderType === OrderType.Selling
-        ) {
-          renderWarning(
-            `You cannot sell an item that is currently equipped. Please unequip the ${selectedItem.name} first.`,
-          );
-          return;
-        }
+      if (
+        orderType === OrderType.Buying &&
+        goldMarketplaceAllowance < parseEther(orderPrice)
+      ) {
+        onOpenAllowanceModal();
+        return;
+      }
 
-        if (
-          orderType === OrderType.Buying &&
-          goldMarketplaceAllowance < parseEther(orderPrice)
-        ) {
-          onOpenAllowanceModal();
-          return;
-        }
+      if (orderType === OrderType.Selling && !itemsMarketplaceAllowance) {
+        onOpenAllowanceModal();
+        return;
+      }
 
-        if (orderType === OrderType.Selling && !itemsMarketplaceAllowance) {
-          onOpenAllowanceModal();
-          return;
-        }
+      if (orderType === OrderType.Selling && Number(userItemBalance) < 1) {
+        return;
+      }
 
-        if (orderType === OrderType.Selling && Number(userItemBalance) < 1) {
-          throw new Error(
-            `You do not have enough ${selectedItem.name} to sell.`,
-          );
-        }
+      const _order = {
+        consideration: {
+          amount:
+            orderType === OrderType.Selling
+              ? parseEther(orderPrice)
+              : BigInt('1'),
+          identifier:
+            orderType === OrderType.Selling
+              ? 0n
+              : BigInt(selectedItem.tokenId),
+          recipient: userCharacter.owner as Address,
+          token: (orderType === OrderType.Selling
+            ? goldTokenAddress
+            : itemsAddress) as Address,
+          tokenType:
+            orderType === OrderType.Selling
+              ? TokenType.ERC20
+              : TokenType.ERC1155,
+        },
+        offer: {
+          amount:
+            orderType === OrderType.Buying
+              ? parseEther(orderPrice)
+              : BigInt('1'),
+          identifier:
+            orderType === OrderType.Buying
+              ? 0n
+              : BigInt(selectedItem.tokenId),
+          token: (orderType === OrderType.Buying
+            ? goldTokenAddress
+            : itemsAddress) as Address,
+          tokenType:
+            orderType === OrderType.Buying
+              ? TokenType.ERC20
+              : TokenType.ERC1155,
+        },
+        offerer: userCharacter.owner as Address,
+        signature: '' as Address,
+      };
 
-        const _order = {
-          consideration: {
-            amount:
-              orderType === OrderType.Selling
-                ? parseEther(orderPrice)
-                : BigInt('1'),
-            identifier:
-              orderType === OrderType.Selling
-                ? 0n
-                : BigInt(selectedItem.tokenId),
-            recipient: userCharacter.owner as Address,
-            token: (orderType === OrderType.Selling
-              ? goldTokenAddress
-              : itemsAddress) as Address,
-            tokenType:
-              orderType === OrderType.Selling
-                ? TokenType.ERC20
-                : TokenType.ERC1155,
-          },
-          offer: {
-            amount:
-              orderType === OrderType.Buying
-                ? parseEther(orderPrice)
-                : BigInt('1'),
-            identifier:
-              orderType === OrderType.Buying
-                ? 0n
-                : BigInt(selectedItem.tokenId),
-            token: (orderType === OrderType.Buying
-              ? goldTokenAddress
-              : itemsAddress) as Address,
-            tokenType:
-              orderType === OrderType.Buying
-                ? TokenType.ERC20
-                : TokenType.ERC1155,
-          },
-          offerer: userCharacter.owner as Address,
-          signature: '' as Address,
-        };
-
+      const result = await createOrderTx.execute(async () => {
         const { error, success } = await createOrder(_order);
+        if (error && !success) throw new Error(error);
+      });
 
-        if (error && !success) {
-          throw new Error(error);
-        }
-
-        renderSuccess('Order placed successfully!');
+      if (result !== undefined) {
         refreshCharacter();
         refreshOrders();
         onCloseAllowanceModal();
         onOpenConfirmationModal();
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to create order.', e);
-      } finally {
-        setIsCreatingOrder(false);
       }
     },
     [
       createOrder,
+      createOrderTx,
       equippedArmor,
       equippedSpells,
       equippedWeapons,
@@ -366,8 +361,6 @@ const MarketplaceItemInner = (): JSX.Element => {
       orderType,
       refreshCharacter,
       refreshOrders,
-      renderError,
-      renderSuccess,
       renderWarning,
       selectedItem,
       userCharacter,
@@ -738,7 +731,7 @@ const MarketplaceItemInner = (): JSX.Element => {
                     <InputGroup>
                       <InputLeftAddon>$GOLD</InputLeftAddon>
                       <Input
-                        isDisabled={isCreatingOrder}
+                        isDisabled={createOrderTx.isLoading}
                         onChange={e => setOrderPrice(e.target.value)}
                         placeholder="0.00"
                         py={0}
@@ -759,7 +752,7 @@ const MarketplaceItemInner = (): JSX.Element => {
                   </FormControl>
                   <Button
                     fontSize={{ base: 'xs', sm: 'sm' }}
-                    isLoading={isCreatingOrder}
+                    isLoading={createOrderTx.isLoading}
                     size="sm"
                     type="submit"
                     w="100%"
@@ -798,7 +791,7 @@ const MarketplaceItemInner = (): JSX.Element => {
                     <InputGroup>
                       <InputLeftAddon>$GOLD</InputLeftAddon>
                       <Input
-                        isDisabled={isCreatingOrder}
+                        isDisabled={createOrderTx.isLoading}
                         onChange={e => setOrderPrice(e.target.value)}
                         placeholder="0.00"
                         py={0}
@@ -814,7 +807,7 @@ const MarketplaceItemInner = (): JSX.Element => {
                   </FormControl>
                   <Button
                     fontSize={{ base: 'xs', sm: 'sm' }}
-                    isLoading={isCreatingOrder}
+                    isLoading={createOrderTx.isLoading}
                     size="sm"
                     type="submit"
                     w="100%"
@@ -975,7 +968,7 @@ const MarketplaceItemInner = (): JSX.Element => {
 
         <MarketplaceAllowanceModal
           completeMessage="Allowance was successful! You can now complete your listing."
-          isCompleting={isCreatingOrder}
+          isCompleting={createOrderTx.isLoading}
           isOpen={isAllowanceModalOpen}
           itemName={selectedItem.name}
           onClose={onCloseAllowanceModal}

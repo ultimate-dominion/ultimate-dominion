@@ -15,7 +15,7 @@ import {
   Stack,
   useDisclosure,
 } from '@chakra-ui/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 // import { FaDiscord } from 'react-icons/fa';
 // import { FaXTwitter } from 'react-icons/fa6';
 import { IoMdMenu } from 'react-icons/io';
@@ -23,7 +23,7 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import {
   CHARACTER_CREATION_PATH,
   CHARACTERS_PATH,
@@ -52,53 +52,37 @@ export const Header = ({
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { renderError } = useToast();
   const {
     delegatorAddress,
     systemCalls: { endShopEncounter },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
 
-  const [isExiting, setIsExiting] = useState(false);
+  const exitShopTx = useTransaction({ actionName: 'exit shop' });
 
   const onEndShopEncounter = useCallback(async () => {
-    try {
-      setIsExiting(true);
+    if (!character) return;
+    if (!character.worldEncounter) return;
+    if (!delegatorAddress) return;
 
-      if (!character) {
-        throw new Error('Character not found.');
-      }
-
-      if (!character.worldEncounter) {
-        throw new Error('Not in a shop.');
-      }
-
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
-
+    const result = await exitShopTx.execute(async () => {
       const { error, success } = await endShopEncounter(
-        character.worldEncounter.encounterId,
+        character.worldEncounter!.encounterId,
       );
+      if (error && !success) throw new Error(error);
+    });
 
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result !== undefined) {
       await refreshCharacter();
       onClose();
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to exit shop.', e);
-    } finally {
-      setIsExiting(false);
     }
   }, [
     character,
     delegatorAddress,
     endShopEncounter,
+    exitShopTx,
     onClose,
     refreshCharacter,
-    renderError,
   ]);
 
   const onBack = useCallback(async () => {
@@ -171,7 +155,7 @@ export const Header = ({
             {showBackButton && (
               <Button
                 fontSize="xs"
-                isLoading={isExiting}
+                isLoading={exitShopTx.isLoading}
                 leftIcon={<BackCaretSvg />}
                 onClick={onBack}
                 p={4}
