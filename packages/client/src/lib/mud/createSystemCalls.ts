@@ -1326,6 +1326,31 @@ export function createSystemCalls(
     }
   };
 
+  const checkCombatFragmentTriggers = async (
+    winners: string[],
+    defeated: string[],
+    tileX: number,
+    tileY: number,
+    defeatedAreMobs: boolean,
+  ): SystemCallReturn => {
+    try {
+      const tx = await worldContract.write.UD__checkCombatFragmentTriggersForGroup([
+        winners as `0x${string}`[],
+        defeated as `0x${string}`[],
+        tileX,
+        tileY,
+        defeatedAreMobs,
+      ]);
+      const txResult = await waitForTransaction(tx);
+      return {
+        error: txResult.status === 'reverted' ? 'Fragment check reverted' : undefined,
+        success: txResult.status === 'success',
+      };
+    } catch (e) {
+      return { error: getContractError(e), success: false };
+    }
+  };
+
   // Manual trigger for testing - normally called by contract systems
   const triggerFragment = async (
     characterId: string,
@@ -1423,6 +1448,7 @@ export function createSystemCalls(
     buy,
     buyGas,
     cancelOrder,
+    checkCombatFragmentTriggers,
     chooseRace,
     choosePowerSource,
     claimFragment,

@@ -24,6 +24,7 @@ const RETRYABLE_PATTERNS = [
   'internal json-rpc error',
   'replacement transaction underpriced',
   'already known',
+  'userop failed',
 ];
 
 const NON_RETRYABLE_PATTERNS = [

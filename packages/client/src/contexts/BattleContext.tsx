@@ -13,7 +13,9 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -87,17 +89,17 @@ export const BattleProvider = ({
       StatusEffectValidity,
     },
     delegatorAddress,
-    systemCalls: { endTurn, fleePvp },
+    systemCalls: { checkCombatFragmentTriggers, endTurn, fleePvp },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
-  const { allMonsters, allCharacters } = useMap();
+  const { allMonsters, allCharacters, position } = useMap();
 
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
 
   const attackTx = useTransaction({
     actionName: 'attack',
-    maxAttempts: 2,
+    maxAttempts: 3,
     backoffMs: 1500,
   });
 
@@ -196,6 +198,33 @@ export const BattleProvider = ({
       winner,
     };
   }, [allBattles, CombatOutcome]);
+
+  const lastProcessedEncounterRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!lastestBattleOutcome || !character || !position) return;
+    if (lastProcessedEncounterRef.current === lastestBattleOutcome.encounterId) return;
+
+    lastProcessedEncounterRef.current = lastestBattleOutcome.encounterId;
+
+    const { attackers, defenders, winner } = lastestBattleOutcome;
+    const attackersWon = attackers.includes(winner);
+    const winners = attackersWon ? attackers : defenders;
+    const defeated = attackersWon ? defenders : attackers;
+
+    if (!winners.includes(character.id)) return;
+
+    const battle = allBattles.find(b => b.encounterId === lastestBattleOutcome.encounterId);
+    const defeatedAreMobs = battle?.encounterType === EncounterType.PvE;
+
+    checkCombatFragmentTriggers(
+      winners as string[],
+      defeated as string[],
+      position.x,
+      position.y,
+      defeatedAreMobs,
+    ).catch(() => {});
+  }, [lastestBattleOutcome, character, position, allBattles, checkCombatFragmentTriggers]);
 
   const opponent = useMemo(() => {
     if (!(character && currentBattle)) return null;
