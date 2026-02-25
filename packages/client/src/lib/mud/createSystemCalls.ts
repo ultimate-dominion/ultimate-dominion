@@ -613,40 +613,26 @@ export function createSystemCalls(
         },
       );
 
-      if (options?.skipSimulation) {
-        // Fire-and-forget for embedded path — confirm in background
-        waitForTransaction(tx)
-          .then(receipt => {
-            if (receipt.status !== 'success') {
-              Position.removeOverride(positionId);
-            }
-          })
-          .catch(() => {
+      // Fire-and-forget — optimistic update already applied, confirm in background
+      waitForTransaction(tx)
+        .then(receipt => {
+          if (receipt.status !== 'success') {
             Position.removeOverride(positionId);
-          })
-          .finally(() => {
-            Position.removeOverride(positionId);
-          });
-        return { success: true };
-      }
-
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+          }
+        })
+        .catch(() => {
+          Position.removeOverride(positionId);
+        })
+        .finally(() => {
+          Position.removeOverride(positionId);
+        });
+      return { success: true };
     } catch (e) {
       Position.removeOverride(positionId);
       return {
         error: getContractError(e),
         success: false,
       };
-    } finally {
-      // For blocking path, clean up override after wait completes
-      if (!options?.skipSimulation) {
-        Position.removeOverride(positionId);
-      }
     }
   };
 
