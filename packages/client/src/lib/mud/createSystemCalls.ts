@@ -577,19 +577,9 @@ export function createSystemCalls(
 
       await waitForTransaction(tx);
 
-      const newLevel = getComponentValueStrict(
-        Stats,
-        encodeEntity(
-          { characterId: 'uint256' },
-          { characterId: BigInt(characterId) },
-        ),
-      ).level;
-
-      const success = newLevel === formattedNewStats.level;
-
       return {
-        error: success ? undefined : 'Failed to level character.',
-        success,
+        error: undefined,
+        success: true,
       };
     } catch (e) {
       return {
