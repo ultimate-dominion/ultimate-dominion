@@ -202,6 +202,8 @@ interface ShopInventoryItem {
   itemName: string;
   stock: number;
   restock: number;
+  /** If true, shop only buys this item from players — does not sell it */
+  buyOnly?: boolean;
 }
 
 interface ShopTemplate {
@@ -905,9 +907,11 @@ Available zones:
           const itemId = itemIdsByName.get(inv.itemName);
           if (itemId !== undefined) {
             buyableItems.push(itemId);
-            sellableItems.push(itemId);
-            stock.push(BigInt(inv.stock));
-            restock.push(BigInt(inv.restock));
+            if (!inv.buyOnly) {
+              sellableItems.push(itemId);
+              stock.push(BigInt(inv.stock));
+              restock.push(BigInt(inv.restock));
+            }
           } else {
             console.warn(`    Warning: Item "${inv.itemName}" not found, skipping`);
           }

@@ -17,15 +17,18 @@
         { "itemName": "Focusing Tea", "stock": 10, "restock": 10 },
         { "itemName": "Antidote", "stock": 15, "restock": 15 },
         { "itemName": "Smoke Bomb", "stock": 5, "restock": 5 },
-        { "itemName": "Tattered Cloth", "stock": 5, "restock": 5 },
-        { "itemName": "Worn Leather Vest", "stock": 5, "restock": 5 },
-        { "itemName": "Apprentice Robes", "stock": 5, "restock": 5 },
-        { "itemName": "Broken Sword", "stock": 5, "restock": 5 },
-        { "itemName": "Worn Shortbow", "stock": 5, "restock": 5 },
-        { "itemName": "Cracked Wand", "stock": 5, "restock": 5 },
-        { "itemName": "Heal", "stock": 3, "restock": 3 },
-        { "itemName": "Ice Shard", "stock": 2, "restock": 2 },
-        { "itemName": "Fireball", "stock": 2, "restock": 2 }
+        { "itemName": "Padded Armor", "stock": 3, "restock": 3 },
+        { "itemName": "Leather Jerkin", "stock": 3, "restock": 3 },
+        { "itemName": "Apprentice Robes", "stock": 3, "restock": 3 },
+        { "itemName": "Iron Axe", "stock": 3, "restock": 3 },
+        { "itemName": "Hunting Bow", "stock": 3, "restock": 3 },
+        { "itemName": "Apprentice Staff", "stock": 3, "restock": 3 },
+        { "itemName": "Tattered Cloth", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Worn Leather Vest", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Rusty Chainmail", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Broken Sword", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Worn Shortbow", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Cracked Wand", "stock": 0, "restock": 0, "buyOnly": true }
       ]
     }
   ]
