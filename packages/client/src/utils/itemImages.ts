@@ -7,6 +7,7 @@ const ITEM_IMAGES: Record<string, string> = {
   'Worn Shortbow': '/images/items/worn-shortbow.png',
   'Cracked Wand': '/images/items/cracked-wand.png',
   'Hunting Bow': '/images/items/hunting-bow.png',
+  'Iron Axe': '/images/items/iron-axe.png',
   'Apprentice Staff': '/images/items/apprentice-staff.png',
   'Steel Mace': '/images/items/steel-mace.png',
   'Recurve Bow': '/images/items/recurve-bow.png',
