@@ -1,4 +1,5 @@
 import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
+import { getComponentValue } from '@latticexyz/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -46,6 +47,7 @@ export const LevelingPanel = ({
 }): JSX.Element => {
   const { renderSuccess, renderWarning } = useToast();
   const {
+    components: { Stats },
     delegatorAddress,
     systemCalls: { levelCharacter },
   } = useMUD();
@@ -234,6 +236,13 @@ export const LevelingPanel = ({
     });
 
     if (result !== undefined) {
+      // Poll MUD Stats component until level reflects the change
+      const prevLevel = character.level;
+      for (let i = 0; i < 30; i++) {
+        const stats = getComponentValue(Stats, character.id);
+        if (stats && stats.level !== prevLevel) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
       await refreshCharacter();
 
       const newLevel = Number(character.level) + 1;
@@ -255,6 +264,7 @@ export const LevelingPanel = ({
     refreshCharacter,
     renderSuccess,
     renderWarning,
+    Stats,
   ]);
 
   const expiredEffectModifications: {
