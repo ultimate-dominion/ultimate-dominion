@@ -36,7 +36,7 @@ import {
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
-import { type Character, EncounterType, type Monster, StatsClasses } from '../utils/types';
+import { type Character, EncounterType, type Monster } from '../utils/types';
 
 import { getRomanNumeral } from '../utils/fragmentNarratives';
 
@@ -833,8 +833,11 @@ export const TileDetailsPanel = (): JSX.Element => {
                       }
                     }}
                     opponent={monster}
-                    playerClass={character?.entityClass ?? StatsClasses.Warrior}
-                    playerLevel={character?.level ?? 1n}
+                    playerStats={{
+                      strength: character?.strength ?? 0n,
+                      agility: character?.agility ?? 0n,
+                      intelligence: character?.intelligence ?? 0n,
+                    }}
                   />
                   <Box
                     backgroundColor="#F5F5FA1F"
@@ -893,8 +896,11 @@ export const TileDetailsPanel = (): JSX.Element => {
                       : onInitiateCombat(player, EncounterType.PvP)
                   }
                   opponent={player}
-                  playerClass={character?.entityClass ?? StatsClasses.Warrior}
-                  playerLevel={character?.level ?? 1n}
+                  playerStats={{
+                    strength: character?.strength ?? 0n,
+                    agility: character?.agility ?? 0n,
+                    intelligence: character?.intelligence ?? 0n,
+                  }}
                 />
                 <Box
                   backgroundColor="#F5F5FA1F"
@@ -978,54 +984,76 @@ export const TileDetailsPanel = (): JSX.Element => {
 };
 
 /**
- * Determine combat advantage color based on the combat triangle.
- * STR (Warrior) beats AGI (Rogue) beats INT (Mage) beats STR (Warrior).
- * Also factors in level difference for the final color.
+ * Get the dominant stat (highest of STR/AGI/INT) — mirrors the on-chain
+ * _getDominantStat logic in CombatSystem.sol.
+ *
+ * Returns: [dominantIndex (0=STR, 1=AGI, 2=INT), dominantValue]
+ */
+const getDominantStat = (
+  stats: { strength: bigint; agility: bigint; intelligence: bigint },
+): [number, bigint] => {
+  if (stats.strength >= stats.agility && stats.strength >= stats.intelligence) {
+    return [0, stats.strength];
+  }
+  if (stats.agility > stats.strength && stats.agility >= stats.intelligence) {
+    return [1, stats.agility];
+  }
+  return [2, stats.intelligence];
+};
+
+/**
+ * Determine combat advantage color by comparing dominant stats and the
+ * combat triangle, mirroring the on-chain CombatSystem logic.
+ *
+ * Triangle: STR(0) > AGI(1) > INT(2) > STR(0)
  *
  * Returns: 'green' (advantage), 'yellow' (even), 'red' (disadvantage)
  */
 const getAdvantageColor = (
-  playerClass: StatsClasses,
-  playerLevel: bigint,
-  opponentClass: StatsClasses,
-  opponentLevel: bigint,
+  player: { strength: bigint; agility: bigint; intelligence: bigint },
+  opponent: { strength: bigint; agility: bigint; intelligence: bigint },
 ): string => {
-  // Combat triangle: Warrior(0) > Rogue(1) > Mage(2) > Warrior(0)
-  const BEATS: Record<number, number> = {
-    [StatsClasses.Warrior]: StatsClasses.Rogue,
-    [StatsClasses.Rogue]: StatsClasses.Mage,
-    [StatsClasses.Mage]: StatsClasses.Warrior,
-  };
+  const [playerDom, playerVal] = getDominantStat(player);
+  const [opponentDom, opponentVal] = getDominantStat(opponent);
 
-  const levelDiff = Number(playerLevel) - Number(opponentLevel);
-  const hasTriangleAdvantage = BEATS[playerClass] === opponentClass;
-  const hasTriangleDisadvantage = BEATS[opponentClass] === playerClass;
+  // Triangle: 0 beats 1, 1 beats 2, 2 beats 0
+  const playerBeatsOpponent =
+    (playerDom === 0 && opponentDom === 1) ||
+    (playerDom === 1 && opponentDom === 2) ||
+    (playerDom === 2 && opponentDom === 0);
 
-  // Strong advantage: triangle advantage OR same class but significantly higher level
-  if (hasTriangleAdvantage && levelDiff >= -2) return 'green.400';
-  if (hasTriangleAdvantage && levelDiff < -2) return 'yellow.400'; // advantage but underleveled
+  const opponentBeatsPlayer =
+    (opponentDom === 0 && playerDom === 1) ||
+    (opponentDom === 1 && playerDom === 2) ||
+    (opponentDom === 2 && playerDom === 0);
 
-  // Strong disadvantage: triangle disadvantage OR significantly lower level
-  if (hasTriangleDisadvantage && levelDiff <= 2) return 'red.400';
-  if (hasTriangleDisadvantage && levelDiff > 2) return 'yellow.400'; // disadvantage but overleveled
+  const statDiff = Number(playerVal) - Number(opponentVal);
 
-  // Same class — level determines it
-  if (levelDiff >= 3) return 'green.400';
-  if (levelDiff <= -3) return 'red.400';
+  if (playerBeatsOpponent) {
+    // You have triangle advantage — green unless heavily outstatted
+    return statDiff >= -3 ? 'green.400' : 'yellow.400';
+  }
+
+  if (opponentBeatsPlayer) {
+    // They have triangle advantage — red unless you heavily outstat them
+    return statDiff <= 3 ? 'red.400' : 'yellow.400';
+  }
+
+  // Same dominant stat — pure stat comparison
+  if (statDiff >= 3) return 'green.400';
+  if (statDiff <= -3) return 'red.400';
   return 'yellow.400';
 };
 
 const OpponentRow = ({
   encounterType,
   opponent,
-  playerClass,
-  playerLevel,
+  playerStats,
   onClick,
 }: {
   encounterType: EncounterType;
   opponent: Character | Monster;
-  playerClass: StatsClasses;
-  playerLevel: bigint;
+  playerStats: { strength: bigint; agility: bigint; intelligence: bigint };
   onClick: () => void;
 }) => {
   const { inBattle, level, name } = opponent;
@@ -1039,12 +1067,11 @@ const OpponentRow = ({
 
   const disableRow = inBattle || inCooldown;
 
-  const nameColor = getAdvantageColor(
-    playerClass,
-    playerLevel,
-    opponent.entityClass,
-    level ?? 0n,
-  );
+  const nameColor = getAdvantageColor(playerStats, {
+    strength: opponent.strength,
+    agility: opponent.agility,
+    intelligence: opponent.intelligence,
+  });
 
   return (
     <HStack
