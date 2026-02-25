@@ -188,11 +188,12 @@ contract EncounterSystem is System {
         CombatOutcome.set(encounterId, combatOutcome);
 
         // Check combat fragment triggers for the winning side
+        // Last param = defeatedAreMobs: when attackers win, the defeated are defenders (opposite of attackersAreMobs)
         (uint16 currentX, uint16 currentY) = Position.get(encounterData.attackers[0]);
         if (attackersWin) {
-            IWorld(_world()).UD__checkCombatFragmentTriggersForGroup(encounterData.attackers, encounterData.defenders, currentX, currentY, encounterData.attackersAreMobs);
+            IWorld(_world()).UD__checkCombatFragmentTriggersForGroup(encounterData.attackers, encounterData.defenders, currentX, currentY, !encounterData.attackersAreMobs);
         } else {
-            IWorld(_world()).UD__checkCombatFragmentTriggersForGroup(encounterData.defenders, encounterData.attackers, currentX, currentY, !encounterData.attackersAreMobs);
+            IWorld(_world()).UD__checkCombatFragmentTriggersForGroup(encounterData.defenders, encounterData.attackers, currentX, currentY, encounterData.attackersAreMobs);
         }
     }
 
