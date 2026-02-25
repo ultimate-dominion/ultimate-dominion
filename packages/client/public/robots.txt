@@ -6,3 +6,4 @@ Disallow: /characters/
 Disallow: /shops/
 
 Sitemap: https://ultimatedominion.com/sitemap.xml
+Sitemap: https://ultimatedominion.com/guide/sitemap-index.xml

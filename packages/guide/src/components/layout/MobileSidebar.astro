@@ -1,0 +1,89 @@
+---
+import { navigation } from '../../data/navigation';
+
+const currentPath = Astro.url.pathname;
+
+function isActive(href: string): boolean {
+  if (href === '/guide/' || href === '/guide') {
+    return currentPath === '/guide/' || currentPath === '/guide';
+  }
+  return currentPath.startsWith(href);
+}
+---
+
+<!-- Mobile menu button (placed in header via slot or inline) -->
+<div id="mobile-sidebar-overlay" class="fixed inset-0 z-40 hidden lg:hidden">
+  <!-- Backdrop -->
+  <div id="mobile-sidebar-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+  <!-- Drawer -->
+  <div class="absolute left-0 top-0 bottom-0 w-72 bg-sidebar border-r border-border overflow-y-auto p-4">
+    <div class="flex items-center justify-between mb-6">
+      <span class="text-white font-bold">Guide Navigation</span>
+      <button id="mobile-sidebar-close" class="text-text-secondary hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <ul class="space-y-1">
+      {navigation.map((item) => (
+        item.children ? (
+          <li class="pt-4 first:pt-0">
+            <span class="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2 px-3">
+              {item.title}
+            </span>
+            <ul class="space-y-0.5">
+              {item.children.map((child) => (
+                <li>
+                  <a
+                    href={child.href}
+                    class:list={[
+                      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all no-underline',
+                      isActive(child.href)
+                        ? 'bg-blue-primary/20 text-accent font-medium'
+                        : 'text-text-primary hover:bg-surface hover:text-white',
+                    ]}
+                  >
+                    {child.icon && <span class="text-base w-5 text-center">{child.icon}</span>}
+                    <span>{child.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ) : item.href !== '#' ? (
+          <li>
+            <a
+              href={item.href}
+              class:list={[
+                'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all no-underline',
+                isActive(item.href)
+                  ? 'bg-blue-primary/20 text-accent'
+                  : 'text-text-primary hover:bg-surface hover:text-white',
+              ]}
+            >
+              {item.icon && <span class="text-base w-5 text-center">{item.icon}</span>}
+              <span>{item.title}</span>
+            </a>
+          </li>
+        ) : null
+      ))}
+    </ul>
+  </div>
+</div>
+
+<script>
+  const overlay = document.getElementById('mobile-sidebar-overlay');
+  const backdrop = document.getElementById('mobile-sidebar-backdrop');
+  const closeBtn = document.getElementById('mobile-sidebar-close');
+  const openBtn = document.getElementById('mobile-menu-trigger');
+
+  function open() { overlay?.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+  function close() { overlay?.classList.add('hidden'); document.body.style.overflow = ''; }
+
+  openBtn?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  backdrop?.addEventListener('click', close);
+</script>

@@ -1,0 +1,93 @@
+---
+import { allPages } from '../../data/navigation';
+---
+
+<div id="search-modal" class="fixed inset-0 z-50 hidden">
+  <div id="search-backdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+  <div class="relative max-w-xl mx-auto mt-[15vh] px-4">
+    <div class="bg-sidebar border border-border rounded-xl shadow-2xl overflow-hidden">
+      <!-- Search input -->
+      <div class="flex items-center gap-3 px-4 border-b border-border">
+        <svg class="w-5 h-5 text-text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search the guide..."
+          class="w-full bg-transparent text-white py-4 outline-none placeholder:text-text-secondary"
+          autocomplete="off"
+        />
+        <kbd class="text-xs border border-border rounded px-1.5 py-0.5 text-text-secondary font-mono shrink-0">ESC</kbd>
+      </div>
+
+      <!-- Results -->
+      <div id="search-results" class="max-h-80 overflow-y-auto p-2">
+        <div id="search-empty" class="text-center text-text-secondary py-8 text-sm">
+          Type to search pages, classes, items, and more...
+        </div>
+        <div id="search-list" class="hidden space-y-1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ pages: allPages }}>
+  const modal = document.getElementById('search-modal');
+  const backdrop = document.getElementById('search-backdrop');
+  const input = document.getElementById('search-input');
+  const trigger = document.getElementById('search-trigger');
+  const resultsEmpty = document.getElementById('search-empty');
+  const resultsList = document.getElementById('search-list');
+
+  function openSearch() {
+    modal?.classList.remove('hidden');
+    input?.focus();
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSearch() {
+    modal?.classList.add('hidden');
+    if (input) input.value = '';
+    if (resultsEmpty) resultsEmpty.classList.remove('hidden');
+    if (resultsList) { resultsList.classList.add('hidden'); resultsList.innerHTML = ''; }
+    document.body.style.overflow = '';
+  }
+
+  trigger?.addEventListener('click', openSearch);
+  backdrop?.addEventListener('click', closeSearch);
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+    if (e.key === 'Escape') closeSearch();
+  });
+
+  input?.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    if (!query) {
+      resultsEmpty?.classList.remove('hidden');
+      resultsList?.classList.add('hidden');
+      return;
+    }
+
+    const matches = pages.filter((p) =>
+      p.title.toLowerCase().includes(query) || p.href.toLowerCase().includes(query)
+    );
+
+    if (matches.length === 0) {
+      resultsEmpty.textContent = 'No results found.';
+      resultsEmpty?.classList.remove('hidden');
+      resultsList?.classList.add('hidden');
+      return;
+    }
+
+    resultsEmpty?.classList.add('hidden');
+    resultsList?.classList.remove('hidden');
+    resultsList.innerHTML = matches.map((p) => `
+      <a href="${p.href}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface text-text-primary hover:text-white transition-colors no-underline">
+        <span class="text-base w-5 text-center">${p.icon || '📄'}</span>
+        <span class="text-sm">${p.title}</span>
+      </a>
+    `).join('');
+  });
+</script>

@@ -1,0 +1,26 @@
+---
+interface Props {
+  headers: string[];
+  class?: string;
+  compact?: boolean;
+}
+
+const { headers, class: className = '', compact = false } = Astro.props;
+---
+
+<div class:list={['overflow-x-auto rounded-lg border border-border my-6 not-prose', className]}>
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="bg-sidebar">
+        {headers.map((h) => (
+          <th class:list={['text-left text-white font-semibold border-b border-border', compact ? 'px-3 py-2 text-xs' : 'px-4 py-3']}>
+            {h}
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-border/50">
+      <slot />
+    </tbody>
+  </table>
+</div>

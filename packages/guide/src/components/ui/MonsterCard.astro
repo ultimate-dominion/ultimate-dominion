@@ -1,0 +1,65 @@
+---
+interface Props {
+  name: string;
+  level: number;
+  monsterClass: 'Warrior' | 'Rogue' | 'Mage';
+  hp: number;
+  str: number;
+  agi: number;
+  int: number;
+  armor: number;
+  drops: string[];
+}
+
+const { name, level, monsterClass, hp, str, agi, int, armor, drops } = Astro.props;
+
+const classColors = {
+  Warrior: 'border-red/50 bg-red/5',
+  Rogue: 'border-green/50 bg-green/5',
+  Mage: 'border-blue-bright/50 bg-blue-bright/5',
+};
+
+const classIcons = { Warrior: '⚔️', Rogue: '🗡️', Mage: '🔮' };
+---
+
+<div class:list={['guide-card border-l-4', classColors[monsterClass]]}>
+  <div class="flex items-start justify-between mb-3">
+    <div>
+      <h4 class="text-white font-bold m-0">{name}</h4>
+      <span class="text-xs text-text-secondary">Level {level} {classIcons[monsterClass]} {monsterClass}</span>
+    </div>
+    <div class="text-right">
+      <span class="font-mono text-sm text-accent">{hp} HP</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-4 gap-2 text-center mb-3">
+    <div>
+      <div class="text-xs text-text-secondary">STR</div>
+      <div class="font-mono text-sm text-red">{str}</div>
+    </div>
+    <div>
+      <div class="text-xs text-text-secondary">AGI</div>
+      <div class="font-mono text-sm text-green">{agi}</div>
+    </div>
+    <div>
+      <div class="text-xs text-text-secondary">INT</div>
+      <div class="font-mono text-sm text-blue-bright">{int}</div>
+    </div>
+    <div>
+      <div class="text-xs text-text-secondary">Armor</div>
+      <div class="font-mono text-sm text-text-primary">{armor}</div>
+    </div>
+  </div>
+
+  {drops.length > 0 && (
+    <div class="border-t border-border pt-2">
+      <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">Notable Drops</div>
+      <div class="flex flex-wrap gap-1">
+        {drops.map((d) => (
+          <span class="text-xs bg-surface border border-border rounded px-2 py-0.5 text-text-primary">{d}</span>
+        ))}
+      </div>
+    </div>
+  )}
+</div>

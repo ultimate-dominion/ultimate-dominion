@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-page text-text-primary font-sans;
+  }
+
+  h1, h2, h3, h4 {
+    @apply text-white font-bold;
+  }
+
+  h1 {
+    text-shadow: 0 0 30px rgba(22, 51, 182, 0.3);
+  }
+
+  h2 {
+    text-shadow: 0 0 20px rgba(22, 51, 182, 0.2);
+  }
+
+  a {
+    @apply text-blue-bright transition-colors duration-200;
+  }
+
+  a:hover {
+    @apply text-accent;
+  }
+
+  ::selection {
+    background: rgba(239, 211, 28, 0.25);
+    color: #fff;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-page;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-secondary;
+  }
+}
+
+@layer components {
+  .clip-corner {
+    clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%);
+  }
+
+  .clip-corner-sm {
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  }
+
+  .guide-card {
+    @apply bg-surface border border-border rounded-lg p-6 shadow-card;
+  }
+
+  .guide-card-hover {
+    @apply guide-card transition-all duration-300;
+  }
+
+  .guide-card-hover:hover {
+    @apply border-accent/30 shadow-glow-gold -translate-y-1;
+  }
+
+  .stat-number {
+    @apply font-mono text-sm tabular-nums;
+  }
+
+  .rarity-glow-worn { box-shadow: 0 0 8px rgba(157, 157, 157, 0.3); }
+  .rarity-glow-common { box-shadow: 0 0 8px rgba(255, 255, 255, 0.2); }
+  .rarity-glow-uncommon { box-shadow: 0 0 12px rgba(30, 255, 0, 0.3); }
+  .rarity-glow-rare { box-shadow: 0 0 12px rgba(0, 112, 221, 0.4); }
+  .rarity-glow-epic { box-shadow: 0 0 16px rgba(163, 53, 238, 0.4); }
+  .rarity-glow-legendary { box-shadow: 0 0 20px rgba(255, 128, 0, 0.5); }
+}

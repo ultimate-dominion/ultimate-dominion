@@ -1,0 +1,161 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import CombatTriangle from '../components/ui/CombatTriangle.astro';
+import Callout from '../components/ui/Callout.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+
+const headings = [
+  { depth: 2, slug: 'turn-structure', text: 'Turn Structure' },
+  { depth: 2, slug: 'hit-chance', text: 'Hit Chance' },
+  { depth: 2, slug: 'damage-calculation', text: 'Damage Calculation' },
+  { depth: 3, slug: 'physical-damage', text: 'Physical Damage' },
+  { depth: 3, slug: 'magic-damage', text: 'Magic Damage' },
+  { depth: 2, slug: 'critical-hits', text: 'Critical Hits' },
+  { depth: 2, slug: 'the-combat-triangle', text: 'The Combat Triangle' },
+  { depth: 2, slug: 'armor', text: 'Armor' },
+  { depth: 2, slug: 'status-effects', text: 'Status Effects' },
+  { depth: 2, slug: 'combat-constants', text: 'Combat Constants' },
+];
+---
+
+<GuideLayout
+  title="The Art of Survival"
+  description="Complete combat guide for Ultimate Dominion. Hit formulas, damage calculation, the combat triangle, critical hits, armor, status effects, and turn mechanics explained."
+  breadcrumbs={[{ label: 'Combat' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'Article',
+    headline: 'The Art of Survival — Ultimate Dominion Combat Guide',
+    description: 'How combat works in Ultimate Dominion: hit chance, damage formulas, the combat triangle, and status effects.',
+  }} slot="head" />
+
+  <h1>The Art of Survival</h1>
+  <p class="text-lg text-text-secondary">
+    Combat in Ultimate Dominion is turn-based, tactical, and lethal. Understanding the math behind every swing gives you the edge between victory and death.
+  </p>
+
+  <h2 id="turn-structure">Turn Structure</h2>
+  <p>
+    Each combat encounter follows a strict turn order:
+  </p>
+  <ul>
+    <li>Combatants alternate turns — <strong>the attacker (initiator) acts first</strong>.</li>
+    <li>Each turn has a <strong>30-second timer</strong>. If you don't act, the other side can force-advance the turn.</li>
+    <li>Battles last a maximum of <strong>15 turns</strong>. If no one wins by then, the fight ends in a draw (no rewards, no penalties).</li>
+    <li>On your turn: select a weapon or spell, then confirm your attack. You can also use consumable items.</li>
+  </ul>
+
+  <h2 id="hit-chance">Hit Chance</h2>
+  <p>
+    Every attack rolls against the target's evasion to determine a hit. The formula:
+  </p>
+  <ul>
+    <li><strong>Base hit chance: 90%</strong></li>
+    <li>Physical attacks compare your AGI vs target's AGI</li>
+    <li>Magical attacks compare your INT vs target's INT</li>
+    <li>Minimum hit chance: <strong>5%</strong> (you can always hit)</li>
+    <li>Maximum hit chance: <strong>98%</strong> (you can always miss)</li>
+  </ul>
+
+  <Callout type="info">
+    Higher AGI makes you harder to hit with physical attacks <em>and</em> makes your physical attacks more accurate. INT does the same for magic. This is why stat investment matters — even a few points of AGI can swing hit rates significantly.
+  </Callout>
+
+  <h2 id="damage-calculation">Damage Calculation</h2>
+
+  <h3 id="physical-damage">Physical Damage</h3>
+  <p>Physical damage from weapons follows this pipeline:</p>
+  <ol>
+    <li><strong>Base roll</strong> — random value between your weapon's min and max damage.</li>
+    <li><strong>&times; 1.2</strong> attack modifier (attacker's advantage).</li>
+    <li><strong>+ Stat bonus</strong> — <code>(your STR &times; 1.2) - (target STR &times; 1.0)</code>.</li>
+    <li><strong>- Armor</strong> — target's armor &times; 1.0 reduces the damage.</li>
+    <li><strong>&times; Crit multiplier</strong> — &times;2 on critical hits.</li>
+    <li><strong>&times; Combat triangle bonus</strong> — if your dominant stat beats theirs.</li>
+    <li><strong>&times; Class multiplier</strong> — your class's physical damage percentage.</li>
+  </ol>
+
+  <h3 id="magic-damage">Magic Damage</h3>
+  <p>Spell damage uses INT instead of STR and ignores armor:</p>
+  <ol>
+    <li><strong>Base roll</strong> — between spell's min and max damage.</li>
+    <li><strong>&times; 1.2</strong> attack modifier.</li>
+    <li><strong>+ Stat bonus</strong> — <code>(your INT &times; 1.2) - (target INT &times; 1.0)</code>.</li>
+    <li><strong>&times; Crit multiplier</strong> — &times;2 on crit.</li>
+    <li><strong>&times; Combat triangle bonus</strong>.</li>
+    <li><strong>&times; Class multiplier</strong> — your class's spell damage percentage.</li>
+  </ol>
+
+  <Callout type="tip" title="Armor does not block magic">
+    Spells bypass armor entirely. Against heavily armored targets (like Warrior-class monsters with high armor values), magic is often more efficient than physical attacks.
+  </Callout>
+
+  <h2 id="critical-hits">Critical Hits</h2>
+  <p>
+    Critical hits deal <strong>&times;2 damage</strong> and always use your weapon's <strong>maximum damage</strong> as the base roll (instead of a random value). The base crit chance is approximately <strong>5%</strong>, modified by your class's crit multiplier.
+  </p>
+  <p>
+    The <a href="/guide/classes">Rogue</a> class has a 115% crit multiplier — the highest in the game — making critical hits their defining mechanic.
+  </p>
+
+  <h2 id="the-combat-triangle">The Combat Triangle</h2>
+  <p>
+    The combat triangle is the rock-paper-scissors of Ultimate Dominion. Your <strong>dominant stat</strong> (whichever of STR, AGI, or INT is highest) determines your side:
+  </p>
+
+  <CombatTriangle />
+
+  <ul>
+    <li><strong>STR beats AGI</strong> — brute force overwhelms finesse.</li>
+    <li><strong>AGI beats INT</strong> — speed disrupts spellcasting.</li>
+    <li><strong>INT beats STR</strong> — magic bypasses muscle.</li>
+  </ul>
+  <p>
+    The bonus is <strong>+5% damage per stat point</strong> of advantage (on the winning side only — the losing side takes no extra penalty). This means a Warrior with 15 STR fighting a Rogue with 10 AGI gains a +25% damage bonus.
+  </p>
+
+  <Callout type="tip" title="Check the bestiary">
+    Every <a href="/guide/bestiary">monster</a> has a class type. Before engaging, check whether your build has the triangle advantage. Retreating to find a more favorable matchup is often smarter than brute-forcing a bad one.
+  </Callout>
+
+  <h2 id="armor">Armor</h2>
+  <p>
+    Armor reduces incoming <strong>physical</strong> damage by a flat amount per hit. The formula:
+  </p>
+  <p>
+    <code>Damage reduction = (armor - penetration) &times; 1.0</code>
+  </p>
+  <p>
+    Armor has <strong>no effect</strong> on magic damage. Against spell-heavy enemies, armor is less valuable than raw HP or INT for resistance.
+  </p>
+
+  <h2 id="status-effects">Status Effects</h2>
+  <p>
+    Some abilities and consumables apply temporary effects that alter combat:
+  </p>
+
+  <DataTable headers={['Effect', 'Description']}>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Hit Modifier</td><td class="px-4 py-3 text-text-primary">Alters hit probability — makes you more or less likely to connect</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Damage over Time</td><td class="px-4 py-3 text-text-primary">Deals damage at the start of each turn for a duration</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">HP Modification</td><td class="px-4 py-3 text-text-primary">Directly adds or removes HP (healing potions, drain effects)</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Armor Modifier</td><td class="px-4 py-3 text-text-primary">Temporarily increases or decreases armor</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Weapon Modifier</td><td class="px-4 py-3 text-text-primary">Temporarily changes weapon damage values</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Stun</td><td class="px-4 py-3 text-text-primary">Causes the affected combatant to skip their turn</td></tr>
+  </DataTable>
+
+  <h2 id="combat-constants">Combat Constants</h2>
+  <DataTable headers={['Constant', 'Value']}>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Base hit chance</td><td class="px-4 py-3 font-mono text-sm">90%</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Min / Max hit chance</td><td class="px-4 py-3 font-mono text-sm">5% / 98%</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Base crit chance</td><td class="px-4 py-3 font-mono text-sm">~5%</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Crit damage multiplier</td><td class="px-4 py-3 font-mono text-sm">&times;2</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Attack modifier</td><td class="px-4 py-3 font-mono text-sm">&times;1.2</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Defense modifier</td><td class="px-4 py-3 font-mono text-sm">&times;1.0</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Combat triangle bonus</td><td class="px-4 py-3 font-mono text-sm">+5% per stat point</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Max turns</td><td class="px-4 py-3 font-mono text-sm">15</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Turn timer</td><td class="px-4 py-3 font-mono text-sm">30 seconds</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Max party size</td><td class="px-4 py-3 font-mono text-sm">10</td></tr>
+  </DataTable>
+</GuideLayout>

@@ -1,0 +1,54 @@
+---
+import JsonLd from '../seo/JsonLd.astro';
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+}
+
+const { items } = Astro.props;
+
+const breadcrumbSchema = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://ultimatedominion.com' },
+    { '@type': 'ListItem', position: 2, name: 'Guide', item: 'https://ultimatedominion.com/guide/' },
+    ...items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 3,
+      name: item.label,
+      ...(item.href ? { item: `https://ultimatedominion.com${item.href}` } : {}),
+    })),
+  ],
+};
+---
+
+<JsonLd schema={breadcrumbSchema} />
+
+<nav aria-label="Breadcrumb" class="mb-6">
+  <ol class="flex items-center gap-2 text-sm text-text-secondary">
+    <li>
+      <a href="https://ultimatedominion.com" class="hover:text-white transition-colors no-underline text-text-secondary">Home</a>
+    </li>
+    <li class="text-border">/</li>
+    <li>
+      <a href="/guide/" class="hover:text-white transition-colors no-underline text-text-secondary">Guide</a>
+    </li>
+    {items.map((item) => (
+      <>
+        <li class="text-border">/</li>
+        <li>
+          {item.href ? (
+            <a href={item.href} class="hover:text-white transition-colors no-underline text-text-secondary">{item.label}</a>
+          ) : (
+            <span class="text-text-primary">{item.label}</span>
+          )}
+        </li>
+      </>
+    ))}
+  </ol>
+</nav>

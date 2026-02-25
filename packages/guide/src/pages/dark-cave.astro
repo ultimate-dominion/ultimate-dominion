@@ -1,0 +1,152 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import Callout from '../components/ui/Callout.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+
+const headings = [
+  { depth: 2, slug: 'map-layout', text: 'Map Layout' },
+  { depth: 2, slug: 'safe-and-danger-zones', text: 'Safe and Danger Zones' },
+  { depth: 2, slug: 'monster-spawning', text: 'Monster Spawning' },
+  { depth: 2, slug: 'key-locations', text: 'Key Locations' },
+  { depth: 2, slug: 'navigation-tips', text: 'Navigation Tips' },
+];
+---
+
+<GuideLayout
+  title="Noctum's Wound"
+  description="Map guide for the Dark Cave in Ultimate Dominion. Zone layout, safe areas, danger zones, monster spawn levels, key NPC locations, and navigation strategy."
+  breadcrumbs={[{ label: 'The Dark Cave' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'Article',
+    headline: "Noctum's Wound — Dark Cave Map Guide",
+    description: 'Complete map guide for the Dark Cave zone in Ultimate Dominion.',
+  }} slot="head" />
+
+  <h1>Noctum's Wound</h1>
+  <p class="text-lg text-text-secondary">
+    The Dark Cave is the first zone in Ultimate Dominion — a wound torn in reality by the death of Noctum, the god of death. It's a 10&times;10 grid of tunnels, caverns, and darkness. Here's how to navigate it.
+  </p>
+
+  <h2 id="map-layout">Map Layout</h2>
+  <p>
+    The Dark Cave is a <strong>10&times;10 tile grid</strong>. Coordinates run from (0,0) in the northwest corner to (9,9) in the southeast. You move one tile at a time using arrow keys or on-screen buttons.
+  </p>
+
+  <!-- ASCII map -->
+  <div class="not-prose my-6 overflow-x-auto">
+    <div class="bg-sidebar border border-border rounded-lg p-4 font-mono text-xs leading-relaxed min-w-[400px]">
+      <div class="text-text-secondary mb-2 text-center">← Northwest &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Southeast →</div>
+      <div class="grid grid-cols-[auto_1fr] gap-2">
+        <div class="text-text-secondary text-right pr-1">y\x</div>
+        <div class="grid grid-cols-10 gap-0.5 text-center text-text-secondary">
+          <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
+        </div>
+        {Array.from({ length: 10 }, (_, y) => (
+          <>
+            <div class="text-text-secondary text-right pr-1">{y}</div>
+            <div class="grid grid-cols-10 gap-0.5">
+              {Array.from({ length: 10 }, (_, x) => {
+                const isSpawn = x === 0 && y === 0;
+                const isShop = x === 9 && y === 9;
+                const isFragment = x === 5 && y === 5;
+                const isDanger = x >= 5 && y >= 5;
+                const isSafe = x < 5 || y < 5;
+
+                let bg = 'bg-green/10 text-green/60';
+                let label = '·';
+                if (isDanger) { bg = 'bg-red/10 text-red/60'; label = '·'; }
+                if (isSpawn) { bg = 'bg-accent/20 text-accent'; label = 'S'; }
+                if (isShop) { bg = 'bg-accent/20 text-accent'; label = 'T'; }
+                if (isFragment) { bg = 'bg-blue-bright/20 text-blue-bright'; label = 'F'; }
+
+                return <span class:list={['w-full aspect-square flex items-center justify-center rounded-sm text-[10px] font-bold', bg]}>{label}</span>;
+              })}
+            </div>
+          </>
+        ))}
+      </div>
+      <div class="flex items-center gap-4 mt-3 text-text-secondary justify-center flex-wrap">
+        <span><span class="text-accent">S</span> = Spawn</span>
+        <span><span class="text-accent">T</span> = Tal's Shop</span>
+        <span><span class="text-blue-bright">F</span> = Fragment Center</span>
+        <span class="text-green/60">Green = Safe</span>
+        <span class="text-red/60">Red = Danger</span>
+      </div>
+    </div>
+  </div>
+
+  <h2 id="safe-and-danger-zones">Safe and Danger Zones</h2>
+  <p>
+    The map is divided into two zones based on coordinates:
+  </p>
+
+  <DataTable headers={['Zone', 'Condition', 'PvP', 'Monster Levels']}>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3 text-green font-medium">Safe Zone</td>
+      <td class="px-4 py-3 text-sm">x &lt; 5 or y &lt; 5</td>
+      <td class="px-4 py-3 text-sm text-green">Disabled</td>
+      <td class="px-4 py-3 text-sm">1–6 (lower-level)</td>
+    </tr>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3 text-red font-medium">Danger Zone</td>
+      <td class="px-4 py-3 text-sm">x &ge; 5 and y &ge; 5</td>
+      <td class="px-4 py-3 text-sm text-red">Enabled</td>
+      <td class="px-4 py-3 text-sm">6–10 (higher-level)</td>
+    </tr>
+  </DataTable>
+
+  <Callout type="warning" title="Entering the danger zone">
+    Stepping past the boundary puts you at risk of player attacks. Deposit gold in Adventure Escrow first — see the <a href="/guide/pvp">PvP guide</a>. Better drops, higher risk.
+  </Callout>
+
+  <h2 id="monster-spawning">Monster Spawning</h2>
+  <p>
+    Monster level is determined by distance from the spawn point (0,0), measured using Chebyshev distance (the greater of horizontal and vertical distance):
+  </p>
+  <ul>
+    <li><strong>Distance &lt; 5</strong> — spawns level 1–5 monsters (lower-level <a href="/guide/bestiary">bestiary</a> creatures).</li>
+    <li><strong>Distance &ge; 5</strong> — spawns level 6–10 monsters (including the Shadow Dragon).</li>
+  </ul>
+  <p>
+    Each tile can hold <strong>0 to 5 monsters</strong> at any time. Monsters spawn randomly — the same tile won't always have the same creatures.
+  </p>
+
+  <h2 id="key-locations">Key Locations</h2>
+
+  <DataTable headers={['Location', 'Coordinates', 'Purpose']}>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3 text-white font-medium">Spawn Point / Escrow</td>
+      <td class="px-4 py-3 font-mono text-sm">(0, 0)</td>
+      <td class="px-4 py-3 text-sm text-text-primary">Where you enter the world. Deposit/withdraw gold for Adventure Escrow here.</td>
+    </tr>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3 text-white font-medium">Fragment Center</td>
+      <td class="px-4 py-3 font-mono text-sm">(5, 5)</td>
+      <td class="px-4 py-3 text-sm text-text-primary">Reaching this tile triggers a <a href="/guide/lore">lore fragment</a>. In the heart of the danger zone.</td>
+    </tr>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3 text-white font-medium">Tal's Shop</td>
+      <td class="px-4 py-3 font-mono text-sm">(9, 9)</td>
+      <td class="px-4 py-3 text-sm text-text-primary">NPC shop — buy and sell weapons, armor, consumables. Deep in the danger zone.</td>
+    </tr>
+  </DataTable>
+
+  <Callout type="info" title="Shop is in the danger zone">
+    Tal's Shop is located at (9,9) — deep in the danger zone. Getting there and back safely is a mini-adventure in itself. Plan your route and keep an eye out for other players.
+  </Callout>
+
+  <h2 id="navigation-tips">Navigation Tips</h2>
+  <ul>
+    <li><strong>Hug the edges</strong> — traveling along x=0 or y=0 keeps you in the safe zone the entire trip. Only cut diagonally into the danger zone when you're ready.</li>
+    <li><strong>Level by distance</strong> — you can roughly control monster difficulty by staying close to or far from the spawn point.</li>
+    <li><strong>Retreat to safety</strong> — if you're low on HP or potions, head back toward the northwest. The safe zone border is your lifeline.</li>
+    <li><strong>Watch the tile</strong> — before moving, check the tile detail panel to see what monsters (and players) are on adjacent tiles.</li>
+  </ul>
+
+  <Callout type="lore">
+    This place was not always a cave. Before Noctum fell, it was a cathedral — the grandest temple to the god of death ever built. When the god died within its walls, the structure collapsed inward, swallowing everything. Now the tunnels twist in ways that defy geometry, and the darkness has weight.
+  </Callout>
+</GuideLayout>

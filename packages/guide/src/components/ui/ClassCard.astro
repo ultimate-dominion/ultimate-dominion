@@ -1,0 +1,62 @@
+---
+interface Props {
+  name: string;
+  bonuses: string;
+  phys: string;
+  spell: string;
+  heal: string;
+  crit: string;
+  maxHp: string;
+  spellName: string;
+  spellDesc: string;
+  archetype: 'str' | 'agi' | 'int' | 'hybrid';
+}
+
+const { name, bonuses, phys, spell, heal, crit, maxHp, spellName, spellDesc, archetype } = Astro.props;
+
+const archetypeColors = {
+  str: 'border-red/40',
+  agi: 'border-green/40',
+  int: 'border-blue-bright/40',
+  hybrid: 'border-accent/40',
+};
+---
+
+<div class:list={['guide-card border-l-4', archetypeColors[archetype]]}>
+  <div class="flex items-start justify-between mb-3">
+    <h3 class="text-lg font-bold text-white m-0">{name}</h3>
+  </div>
+
+  <p class="text-sm text-accent font-mono mb-3">{bonuses}</p>
+
+  <div class="grid grid-cols-5 gap-2 mb-4 text-center">
+    <div>
+      <div class="text-xs text-text-secondary">Phys</div>
+      <div class:list={['font-mono text-sm', phys !== '100%' ? 'text-white font-semibold' : 'text-text-secondary']}>{phys}</div>
+    </div>
+    <div>
+      <div class="text-xs text-text-secondary">Spell</div>
+      <div class:list={['font-mono text-sm', spell !== '100%' ? 'text-white font-semibold' : 'text-text-secondary']}>{spell}</div>
+    </div>
+    <div>
+      <div class="text-xs text-text-secondary">Heal</div>
+      <div class:list={['font-mono text-sm', heal !== '100%' ? 'text-white font-semibold' : 'text-text-secondary']}>{heal}</div>
+    </div>
+    <div>
+      <div class="text-xs text-text-secondary">Crit</div>
+      <div class:list={['font-mono text-sm', crit !== '100%' ? 'text-white font-semibold' : 'text-text-secondary']}>{crit}</div>
+    </div>
+    <div>
+      <div class="text-xs text-text-secondary">Max HP</div>
+      <div class:list={['font-mono text-sm', maxHp !== '100%' ? 'text-white font-semibold' : 'text-text-secondary']}>{maxHp}</div>
+    </div>
+  </div>
+
+  <div class="border-t border-border pt-3">
+    <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">Class Ability</div>
+    <div class="text-sm">
+      <span class="text-accent font-medium">{spellName}</span>
+      <span class="text-text-secondary"> — {spellDesc}</span>
+    </div>
+  </div>
+</div>

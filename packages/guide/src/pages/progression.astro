@@ -1,0 +1,133 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import Callout from '../components/ui/Callout.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+import { xpTable, progressionRules } from '../data/xp-table';
+
+const headings = [
+  { depth: 2, slug: 'how-leveling-works', text: 'How Leveling Works' },
+  { depth: 2, slug: 'stat-growth', text: 'Stat Growth' },
+  { depth: 2, slug: 'hp-growth', text: 'HP Growth' },
+  { depth: 2, slug: 'milestone-unlocks', text: 'Milestone Unlocks' },
+  { depth: 2, slug: 'power-distribution', text: 'Power Distribution' },
+];
+
+const statRows = [
+  ...progressionRules.statPointsPerLevel.map((r) => ({ col1: r.range, col2: r.rate, highlight: false })),
+  { col1: 'Total (Level 100)', col2: progressionRules.totalFromLeveling.statPoints, highlight: true },
+];
+
+const hpRows = [
+  ...progressionRules.hpPerLevel.map((r) => ({ col1: r.range, col2: r.rate, highlight: false })),
+  { col1: 'Total (Level 100)', col2: progressionRules.totalFromLeveling.hp, highlight: true },
+];
+
+const powerRows = [
+  { source: 'Base stats + race/armor', pct: '~15%', accent: false },
+  { source: 'Leveling (stat points + HP)', pct: '~20%', accent: false },
+  { source: 'Class bonuses + multipliers', pct: '~5%', accent: false },
+  { source: 'Items (equipment)', pct: '~60%', accent: true },
+];
+---
+
+<GuideLayout
+  title="The Long Road"
+  description="Progression guide for Ultimate Dominion. XP requirements, stat point allocation, HP growth rates, milestone unlocks, and how power scales across levels."
+  breadcrumbs={[{ label: 'Progression' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'Article',
+    headline: 'The Long Road — Ultimate Dominion Progression Guide',
+    description: 'How leveling, stat growth, and HP scaling work in Ultimate Dominion.',
+  }} slot="head" />
+
+  <h1>The Long Road</h1>
+  <p class="text-lg text-text-secondary">
+    Progression in Ultimate Dominion is designed to be slow and meaningful. Every level earned, every stat point placed, every milestone reached — it should feel <em>earned</em>, not given.
+  </p>
+
+  <h2 id="how-leveling-works">How Leveling Works</h2>
+  <p>
+    Experience points (XP) are earned primarily by defeating monsters. Each level requires progressively more experience — early levels come quickly, but the climb steepens as you advance.
+  </p>
+
+  <Callout type="info">
+    When you have enough XP, you must manually press the <strong>Level Up</strong> button on your character page. Leveling is not automatic — you choose when to advance.
+  </Callout>
+
+  <h2 id="stat-growth">Stat Growth</h2>
+  <p>
+    Each level grants stat points that you can allocate to STR, AGI, or INT. The rate slows as you advance:
+  </p>
+
+  <DataTable headers={['Level Range', 'Stat Points']}>
+    {statRows.map((r) => (
+      <tr class={r.highlight ? 'bg-sidebar' : 'hover:bg-surface/50'}>
+        <td class={r.highlight ? 'px-4 py-3 text-accent font-medium' : 'px-4 py-3 text-white font-medium'}>{r.col1}</td>
+        <td class={r.highlight ? 'px-4 py-3 font-mono text-sm text-accent' : 'px-4 py-3 font-mono text-sm'}>{r.col2}</td>
+      </tr>
+    ))}
+  </DataTable>
+
+  <Callout type="tip" title="Stat allocation strategy">
+    Early stat points have the most impact — they unlock better equipment and shift the combat triangle. Consider focusing on your primary stat to reach key weapon/armor thresholds, then diversify later.
+  </Callout>
+
+  <h2 id="hp-growth">HP Growth</h2>
+  <p>
+    HP grows automatically with each level, but the rate diminishes over time:
+  </p>
+
+  <DataTable headers={['Level Range', 'HP Per Level']}>
+    {hpRows.map((r) => (
+      <tr class={r.highlight ? 'bg-sidebar' : 'hover:bg-surface/50'}>
+        <td class={r.highlight ? 'px-4 py-3 text-accent font-medium' : 'px-4 py-3 text-white font-medium'}>{r.col1}</td>
+        <td class={r.highlight ? 'px-4 py-3 font-mono text-sm text-accent' : 'px-4 py-3 font-mono text-sm'}>{r.col2}</td>
+      </tr>
+    ))}
+  </DataTable>
+
+  <p>
+    Combined with your base HP of 18 (modified by race), a max-level character will have significantly more health — but it's a gradual climb, not an exponential spike.
+  </p>
+
+  <h2 id="milestone-unlocks">Milestone Unlocks</h2>
+  <p>
+    Certain levels unlock new features:
+  </p>
+
+  <DataTable headers={['Level', 'Unlock']}>
+    <tr>
+      <td class="px-4 py-3 font-mono text-accent font-bold">3</td>
+      <td class="px-4 py-3 text-text-primary"><a href="/guide/badges">Adventurer Badge</a> + Chat access — you can now communicate with other players</td>
+    </tr>
+    <tr>
+      <td class="px-4 py-3 font-mono text-accent font-bold">10</td>
+      <td class="px-4 py-3 text-text-primary"><a href="/guide/classes">Advanced Class</a> selection + Class Ability — permanent specialization and a unique combat skill</td>
+    </tr>
+  </DataTable>
+
+  <h2 id="power-distribution">Power Distribution</h2>
+  <p>
+    By mid-game (around level 50), your total power comes from multiple sources. Understanding the balance helps you prioritize:
+  </p>
+
+  <DataTable headers={['Source', 'Approximate Power %']}>
+    {powerRows.map((r) => (
+      <tr class="hover:bg-surface/50">
+        <td class={r.accent ? 'px-4 py-3 text-accent font-bold' : 'px-4 py-3 text-white font-medium'}>{r.source}</td>
+        <td class={r.accent ? 'px-4 py-3 font-mono text-sm text-accent font-bold' : 'px-4 py-3 font-mono text-sm'}>{r.pct}</td>
+      </tr>
+    ))}
+  </DataTable>
+
+  <Callout type="warning" title="Items are king">
+    Equipment accounts for roughly 60% of a character's power. A well-equipped level 20 can outperform a poorly-equipped level 40. Never neglect your gear — check <a href="/guide/items">the item guide</a> and the <a href="/guide/economy">marketplace</a>.
+  </Callout>
+
+  <Callout type="lore">
+    The cave teaches patience. Those who rush deeper before they are ready become food for the creatures that dwell there. Those who linger too long in the shallows never grow strong enough to face what waits below.
+  </Callout>
+</GuideLayout>

@@ -1,0 +1,117 @@
+---
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import SearchModal from '../components/ui/SearchModal.astro';
+import MobileSidebar from '../components/layout/MobileSidebar.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+
+const sections = [
+  { title: 'Getting Started', desc: 'Create your character and take your first steps into the world.', href: '/guide/getting-started', icon: '🗡️' },
+  { title: 'Character Creation', desc: 'Races, power sources, stat rolls, and starter equipment.', href: '/guide/character-creation', icon: '⚔️' },
+  { title: 'Paths of Power', desc: 'Nine advanced classes, each with unique multipliers and abilities.', href: '/guide/classes', icon: '🛡️' },
+  { title: 'The Art of Survival', desc: 'Hit formulas, damage calculation, the combat triangle, and status effects.', href: '/guide/combat', icon: '⚔️' },
+  { title: 'Blood in the Dark', desc: 'Danger zones, gold escrow, flee penalties, and group PvP.', href: '/guide/pvp', icon: '💀' },
+  { title: 'Tools of the Trade', desc: 'Every weapon, armor, consumable, and spell — with stats and rarity.', href: '/guide/items', icon: '🎒' },
+  { title: "Noctum's Wound", desc: 'The Dark Cave — map layout, safe zones, danger zones, and mob spawns.', href: '/guide/dark-cave', icon: '🕳️' },
+  { title: 'Creatures of the Wound', desc: 'All monsters with stats, classes, drops, and combat tips.', href: '/guide/bestiary', icon: '🐉' },
+  { title: 'Gold and Greed', desc: 'How gold flows — monster drops, shops, the marketplace, and fees.', href: '/guide/economy', icon: '💰' },
+  { title: 'The Long Road', desc: 'XP requirements, stat growth, HP scaling, and milestone unlocks.', href: '/guide/progression', icon: '📈' },
+  { title: 'The Gods Are Dead', desc: 'Dead gods, factions, survivors, and the mystery of the Fragments.', href: '/guide/lore', icon: '📖' },
+  { title: 'Marks of Distinction', desc: 'Badges you can earn, what they unlock, and how to get them.', href: '/guide/badges', icon: '🏅' },
+];
+---
+
+<BaseLayout
+  title="Adventurer's Codex"
+  description="The complete player guide for Ultimate Dominion. Master character creation, combat, classes, items, monsters, PvP, and more in this on-chain dark fantasy MUD."
+>
+  <JsonLd schema={{
+    '@type': 'WebSite',
+    name: 'Ultimate Dominion Guide',
+    url: 'https://ultimatedominion.com/guide/',
+    description: 'The complete player guide for Ultimate Dominion — an on-chain dark fantasy MUD.',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://ultimatedominion.com/guide/?q={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  }} slot="head" />
+
+  <Header />
+  <MobileSidebar />
+
+  <main>
+    <!-- Hero -->
+    <section class="relative overflow-hidden border-b border-border">
+      <div class="absolute inset-0 bg-gradient-to-b from-blue-primary/10 to-transparent"></div>
+      <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 text-center">
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
+          Adventurer's Codex
+        </h1>
+        <p class="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-8">
+          Everything you need to survive, fight, and conquer in the world of Ultimate Dominion.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="/guide/getting-started"
+            class="inline-flex items-center gap-2 bg-accent text-page font-semibold px-6 py-3 rounded-lg hover:bg-accent/90 transition-colors no-underline"
+          >
+            Start Here
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+          <button
+            id="hero-search"
+            class="inline-flex items-center gap-2 border border-border text-text-primary px-6 py-3 rounded-lg hover:border-text-secondary hover:text-white transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Search the Guide
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Guide Grid -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {sections.map((s) => (
+          <a href={s.href} class="guide-card-hover group no-underline block">
+            <div class="flex items-start gap-3">
+              <span class="text-2xl mt-0.5">{s.icon}</span>
+              <div>
+                <h2 class="text-base font-bold text-white mb-1 group-hover:text-accent transition-colors m-0">{s.title}</h2>
+                <p class="text-sm text-text-secondary m-0 leading-relaxed">{s.desc}</p>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- Quick Info -->
+    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div class="guide-card text-center">
+        <p class="text-text-secondary italic text-sm mb-4">
+          "You wake in a cave with no memory and no name. Everything after that is yours."
+        </p>
+        <p class="text-text-secondary text-sm">
+          Ultimate Dominion is a persistent on-chain dark fantasy MUD. Every character, item, and piece of gold exists permanently on the blockchain.
+          No downloads — just open your browser and <a href="https://ultimatedominion.com" class="text-accent hover:text-accent/80">enter the world</a>.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+  <SearchModal />
+
+  <script>
+    document.getElementById('hero-search')?.addEventListener('click', () => {
+      document.getElementById('search-trigger')?.click();
+    });
+  </script>
+</BaseLayout>

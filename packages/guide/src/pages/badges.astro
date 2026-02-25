@@ -1,0 +1,91 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import Callout from '../components/ui/Callout.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+
+const headings = [
+  { depth: 2, slug: 'what-are-badges', text: 'What Are Badges' },
+  { depth: 2, slug: 'current-badges', text: 'Current Badges' },
+  { depth: 2, slug: 'chat-unlock', text: 'Chat Unlock' },
+  { depth: 2, slug: 'future-badges', text: 'Future Badges' },
+];
+---
+
+<GuideLayout
+  title="Marks of Distinction"
+  description="Badge guide for Ultimate Dominion. How badges work, how to earn the Adventurer and Founder badges, chat unlock requirements, and planned future badges."
+  breadcrumbs={[{ label: 'Badges' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'Article',
+    headline: 'Marks of Distinction — Ultimate Dominion Badge Guide',
+    description: 'How badges work in Ultimate Dominion: earning them, what they unlock, and what\'s planned.',
+  }} slot="head" />
+
+  <h1>Marks of Distinction</h1>
+  <p class="text-lg text-text-secondary">
+    Badges are permanent marks of achievement bound to your character. They prove what you've done, unlock features, and — once earned — can never be taken away.
+  </p>
+
+  <h2 id="what-are-badges">What Are Badges</h2>
+  <p>
+    Badges are soulbound tokens — permanently attached to your character. They cannot be traded, sold, or transferred. Each badge represents an accomplishment or status:
+  </p>
+  <ul>
+    <li>Badges are earned automatically when you meet the requirements.</li>
+    <li>Some badges unlock game features (like chat).</li>
+    <li>All badges are visible on your character profile.</li>
+  </ul>
+
+  <h2 id="current-badges">Current Badges</h2>
+
+  <DataTable headers={['Badge', 'Requirement', 'What It Unlocks']}>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3">
+        <span class="text-white font-bold">Adventurer</span>
+      </td>
+      <td class="px-4 py-3 text-text-primary">Reach Level 3</td>
+      <td class="px-4 py-3 text-accent">Chat access</td>
+    </tr>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3">
+        <span class="text-accent font-bold">Founder</span>
+      </td>
+      <td class="px-4 py-3 text-text-primary">Play during the launch window</td>
+      <td class="px-4 py-3 text-text-secondary">Prestige — proof you were here from the beginning</td>
+    </tr>
+  </DataTable>
+
+  <h2 id="chat-unlock">Chat Unlock</h2>
+  <p>
+    Chat is locked behind the <strong>Adventurer badge</strong> (Level 3). This serves two purposes:
+  </p>
+  <ul>
+    <li><strong>Anti-spam</strong> — creating a character takes time and effort. Requiring Level 3 prevents throwaway accounts from flooding chat.</li>
+    <li><strong>Community quality</strong> — by the time you can chat, you've invested in the game. You have context, opinions, and something to say beyond noise.</li>
+  </ul>
+
+  <Callout type="tip" title="Reach Level 3 quickly">
+    Fight Cave Rats and Fungal Shamans near the spawn. Their combined XP (45 + 80 = 125 per pair) gets you to Level 3 in a handful of fights.
+  </Callout>
+
+  <h2 id="future-badges">Future Badges</h2>
+  <p>
+    More badges are planned as the game expands. Potential categories include:
+  </p>
+  <ul>
+    <li><strong>Combat milestones</strong> — first PvP kill, total monsters slain, boss defeats.</li>
+    <li><strong>Exploration achievements</strong> — discovering new zones, collecting all fragments.</li>
+    <li><strong>Economy markers</strong> — first marketplace trade, total gold earned.</li>
+    <li><strong>Community badges</strong> — event participation, contest winners.</li>
+  </ul>
+  <p>
+    Badge requirements and rewards will be announced as they're added.
+  </p>
+
+  <Callout type="lore">
+    In the old world, marks of distinction were granted by the gods themselves — brands seared into flesh or woven into the soul. Now there are no gods to grant them. The badges come from the world itself, as if the cave is keeping score.
+  </Callout>
+</GuideLayout>

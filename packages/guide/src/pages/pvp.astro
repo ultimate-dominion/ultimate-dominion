@@ -1,0 +1,130 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import Callout from '../components/ui/Callout.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+
+const headings = [
+  { depth: 2, slug: 'danger-zones', text: 'Danger Zones' },
+  { depth: 2, slug: 'gold-escrow', text: 'Gold Escrow' },
+  { depth: 2, slug: 'initiating-pvp', text: 'Initiating PvP' },
+  { depth: 2, slug: 'fleeing', text: 'Fleeing' },
+  { depth: 2, slug: 'rewards-and-penalties', text: 'Rewards and Penalties' },
+  { depth: 2, slug: 'group-pvp', text: 'Group PvP' },
+  { depth: 2, slug: 'pvp-strategy', text: 'PvP Strategy' },
+];
+---
+
+<GuideLayout
+  title="Blood in the Dark"
+  description="PvP guide for Ultimate Dominion. Danger zones, gold escrow mechanics, flee penalties, combat rewards, and player-vs-player strategy."
+  breadcrumbs={[{ label: 'PvP' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'Article',
+    headline: 'Blood in the Dark — Ultimate Dominion PvP Guide',
+    description: 'How player-vs-player combat works in Ultimate Dominion: danger zones, gold escrow, flee penalties, and strategic advice.',
+  }} slot="head" />
+
+  <h1>Blood in the Dark</h1>
+  <p class="text-lg text-text-secondary">
+    In the deeper reaches of the cave, the monsters aren't the only threat. Other adventurers carry gold, grudges, and ambition — and in the danger zone, combat between players is always an option.
+  </p>
+
+  <h2 id="danger-zones">Danger Zones</h2>
+  <p>
+    The world map is divided into <strong>safe zones</strong> and <strong>danger zones</strong>:
+  </p>
+  <ul>
+    <li><strong>Safe zone</strong> — the outer edges of the map, near the cave entrance. PvP is disabled here. Only monsters can attack you.</li>
+    <li><strong>Danger zone</strong> — deeper in the cave. Both PvE and PvP are active. Any player on the same tile can attack you.</li>
+  </ul>
+
+  <Callout type="warning" title="Entering the danger zone is a choice">
+    The danger zone contains tougher monsters with better drops — but also other players who may be hunting for your gold. The higher rewards come with real risk.
+  </Callout>
+
+  <p>
+    The <a href="/guide/dark-cave">Dark Cave map</a> shows exactly which tiles are safe and which are dangerous.
+  </p>
+
+  <h2 id="gold-escrow">Gold Escrow</h2>
+  <p>
+    Before entering the danger zone, you must deposit gold into <strong>Adventure Escrow</strong> at the cave entrance tile. This gold is what's at stake in PvP:
+  </p>
+  <ul>
+    <li>Only escrowed gold can be lost or won in PvP — gold in your main balance is always safe.</li>
+    <li>You can deposit or withdraw at the entrance at any time.</li>
+    <li>You need escrowed gold to participate in PvP combat.</li>
+  </ul>
+
+  <h2 id="initiating-pvp">Initiating PvP</h2>
+  <p>
+    To attack another player, you must be on the same tile in a danger zone. Select the player and choose to attack. Rules:
+  </p>
+  <ul>
+    <li>There is a <strong>30-second cooldown</strong> between PvP encounters.</li>
+    <li>The attacker always goes first (turn 1).</li>
+    <li>Standard <a href="/guide/combat">combat rules</a> apply — same hit formulas, damage calculations, combat triangle, and turn limits.</li>
+  </ul>
+
+  <h2 id="fleeing">Fleeing</h2>
+  <p>
+    Either side can attempt to flee, but it comes at a cost:
+  </p>
+
+  <DataTable headers={['Who', 'Can Flee On', 'Penalty']}>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3 text-white font-medium">Attacker</td>
+      <td class="px-4 py-3 font-mono text-sm">Turn 1</td>
+      <td class="px-4 py-3 text-red">25% of escrowed gold</td>
+    </tr>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3 text-white font-medium">Defender</td>
+      <td class="px-4 py-3 font-mono text-sm">Turn 2</td>
+      <td class="px-4 py-3 text-red">25% of escrowed gold</td>
+    </tr>
+  </DataTable>
+
+  <p>
+    The flee penalty is <strong>25% of your escrowed gold</strong>, paid to the other player. This discourages hit-and-run tactics while still giving an escape route when you're outmatched.
+  </p>
+
+  <Callout type="tip" title="Know when to run">
+    If you're clearly outmatched — wrong side of the combat triangle, lower level, worse gear — fleeing on your first available turn and losing 25% is often better than fighting and losing 50%.
+  </Callout>
+
+  <h2 id="rewards-and-penalties">Rewards and Penalties</h2>
+  <p>
+    When PvP combat ends decisively:
+  </p>
+  <ul>
+    <li><strong>Winner</strong> receives half of the loser's escrowed gold.</li>
+    <li><strong>Loser</strong> loses half of their escrowed gold.</li>
+    <li>If the fight draws (15-turn limit), neither side gains or loses.</li>
+  </ul>
+
+  <h2 id="group-pvp">Group PvP</h2>
+  <p>
+    Multiple players can occupy the same tile. In group scenarios:
+  </p>
+  <ul>
+    <li>PvP is always <strong>1v1</strong> — you select a single target.</li>
+    <li>Other players on the tile are not affected by your fight.</li>
+    <li>After your fight ends, you can engage another opponent (after the 30-second cooldown).</li>
+  </ul>
+
+  <h2 id="pvp-strategy">PvP Strategy</h2>
+  <ul>
+    <li><strong>Know the triangle</strong> — check your opponent's stats or class before attacking. A Warrior attacking a Mage is walking into a disadvantage.</li>
+    <li><strong>Control your escrow</strong> — only bring what you're willing to risk. Deposit small amounts while learning.</li>
+    <li><strong>Consumables matter</strong> — a well-timed <a href="/guide/items">Smoke Bomb</a> or stat buff can swing a close fight.</li>
+    <li><strong>Positioning</strong> — if you see a dangerous player on a tile, go around. The cave has multiple paths.</li>
+    <li><strong>Class abilities</strong> — <a href="/guide/classes">Rogue's Shadowstep</a> and Warlock's Soul Drain are particularly strong in PvP due to burst and debuffs.</li>
+  </ul>
+
+  <Callout type="lore">
+    The old rules died with the gods. In the deep dark, there is no law but what you carry in your sword hand. Every adventurer knows the risk. Some come for the gold. Others come for the sport.
+  </Callout>
+</GuideLayout>

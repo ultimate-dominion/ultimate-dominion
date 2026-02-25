@@ -1,0 +1,29 @@
+---
+import RarityBadge from './RarityBadge.astro';
+
+interface Props {
+  name: string;
+  rarity: 'worn' | 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  type: 'weapon' | 'armor' | 'consumable' | 'spell';
+  stats?: string;
+  requirements?: string;
+  effect?: string;
+}
+
+const { name, rarity, type, stats, requirements, effect } = Astro.props;
+
+const glowClass = `rarity-glow-${rarity}`;
+---
+
+<div class:list={['guide-card', glowClass]}>
+  <div class="flex items-start justify-between mb-2">
+    <h4 class="text-white font-semibold text-sm m-0">{name}</h4>
+    <RarityBadge rarity={rarity} />
+  </div>
+
+  <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">{type}</div>
+
+  {stats && <p class="font-mono text-sm text-text-primary mt-2">{stats}</p>}
+  {effect && <p class="text-sm text-accent mt-1">{effect}</p>}
+  {requirements && <p class="text-xs text-text-secondary mt-2">Requires: {requirements}</p>}
+</div>

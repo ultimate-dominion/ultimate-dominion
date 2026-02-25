@@ -1,0 +1,147 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import RarityBadge from '../components/ui/RarityBadge.astro';
+import Callout from '../components/ui/Callout.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+import { weapons, armors, consumables, type Rarity } from '../data/items';
+
+const headings = [
+  { depth: 2, slug: 'rarity-tiers', text: 'Rarity Tiers' },
+  { depth: 2, slug: 'weapons', text: 'Weapons' },
+  { depth: 2, slug: 'armor', text: 'Armor' },
+  { depth: 2, slug: 'consumables', text: 'Consumables' },
+  { depth: 2, slug: 'equipment-requirements', text: 'Equipment Requirements' },
+  { depth: 2, slug: 'finding-items', text: 'Finding Items' },
+];
+
+function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
+---
+
+<GuideLayout
+  title="Tools of the Trade"
+  description="Complete item guide for Ultimate Dominion. All weapons, armor, consumables, and spells with stats, rarity tiers, and equipment requirements."
+  breadcrumbs={[{ label: 'Items' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'ItemList',
+    name: 'Ultimate Dominion Items',
+    description: 'All weapons, armor, and consumables in Ultimate Dominion.',
+    numberOfItems: weapons.length + armors.length + consumables.length,
+  }} slot="head" />
+
+  <h1>Tools of the Trade</h1>
+  <p class="text-lg text-text-secondary">
+    Items account for roughly 60% of your character's power. The right weapon or armor can mean the difference between dominating the cave and becoming food for it.
+  </p>
+
+  <h2 id="rarity-tiers">Rarity Tiers</h2>
+  <p>Items come in six rarity tiers, each progressively more powerful and harder to find:</p>
+  <div class="flex flex-wrap gap-3 my-4 not-prose">
+    <RarityBadge rarity="worn" />
+    <RarityBadge rarity="common" />
+    <RarityBadge rarity="uncommon" />
+    <RarityBadge rarity="rare" />
+    <RarityBadge rarity="epic" />
+    <RarityBadge rarity="legendary" />
+  </div>
+  <p>
+    Higher rarity items have better stats, more stat bonuses, and higher requirements. Legendary items are exceedingly rare and represent the pinnacle of power.
+  </p>
+
+  <h2 id="weapons">Weapons</h2>
+  <p>
+    Weapons determine your base damage and often grant bonus stats. There are three weapon families:
+  </p>
+  <ul>
+    <li><strong>Strength weapons</strong> — swords, axes, maces, hammers. Require STR to equip.</li>
+    <li><strong>Agility weapons</strong> — bows, crossbows. Require AGI to equip.</li>
+    <li><strong>Intelligence weapons</strong> — staves, wands, rods, scepters. Require INT to equip.</li>
+  </ul>
+
+  <DataTable headers={['Name', 'Rarity', 'Damage', 'STR', 'AGI', 'INT', 'HP', 'Requires']}>
+    {weapons.map((w) => (
+      <tr class="hover:bg-surface/50 transition-colors">
+        <td class="px-4 py-2.5 text-white font-medium text-sm">{w.name}</td>
+        <td class="px-4 py-2.5"><RarityBadge rarity={w.rarity} /></td>
+        <td class="px-4 py-2.5 font-mono text-sm">{w.damage}</td>
+        <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(w.str)}</td>
+        <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(w.agi)}</td>
+        <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(w.int)}</td>
+        <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(w.hp)}</td>
+        <td class="px-4 py-2.5 text-xs text-text-secondary">
+          {w.minStr > 0 ? `${w.minStr} STR` : w.minAgi > 0 ? `${w.minAgi} AGI` : w.minInt > 0 ? `${w.minInt} INT` : 'None'}
+        </td>
+      </tr>
+    ))}
+  </DataTable>
+
+  <h2 id="armor">Armor</h2>
+  <p>
+    Armor reduces incoming physical damage and often provides stat bonuses. Higher armor values mean less damage taken per hit from physical attacks.
+  </p>
+
+  <DataTable headers={['Name', 'Rarity', 'Armor', 'STR', 'AGI', 'INT', 'HP', 'Requires']}>
+    {armors.map((a) => (
+      <tr class="hover:bg-surface/50 transition-colors">
+        <td class="px-4 py-2.5 text-white font-medium text-sm">{a.name}</td>
+        <td class="px-4 py-2.5"><RarityBadge rarity={a.rarity} /></td>
+        <td class="px-4 py-2.5 font-mono text-sm text-center">{a.armor}</td>
+        <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(a.str)}</td>
+        <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(a.agi)}</td>
+        <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(a.int)}</td>
+        <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(a.hp)}</td>
+        <td class="px-4 py-2.5 text-xs text-text-secondary">
+          {a.minStr > 0 ? `${a.minStr} STR` : a.minAgi > 0 ? `${a.minAgi} AGI` : a.minInt > 0 ? `${a.minInt} INT` : 'None'}
+        </td>
+      </tr>
+    ))}
+  </DataTable>
+
+  <Callout type="tip" title="Armor is for physical only">
+    Armor reduces physical damage but has <strong>no effect on magic</strong>. If you're fighting Mage-class monsters, HP and INT are more valuable than armor. See the <a href="/guide/combat">combat guide</a>.
+  </Callout>
+
+  <h2 id="consumables">Consumables</h2>
+  <p>
+    Consumables are single-use items that provide healing, stat buffs, or other effects during combat. Use them wisely — they're gone after one use.
+  </p>
+
+  <DataTable headers={['Name', 'Rarity', 'Effect']}>
+    {consumables.map((c) => (
+      <tr class="hover:bg-surface/50 transition-colors">
+        <td class="px-4 py-2.5 text-white font-medium text-sm">{c.name}</td>
+        <td class="px-4 py-2.5"><RarityBadge rarity={c.rarity} /></td>
+        <td class="px-4 py-2.5 text-text-primary text-sm">{c.effect}</td>
+      </tr>
+    ))}
+  </DataTable>
+
+  <h2 id="equipment-requirements">Equipment Requirements</h2>
+  <p>
+    Most items above Worn rarity require minimum stat thresholds to equip. These requirements are based on <strong>stats only</strong> — there are no level requirements for items.
+  </p>
+  <ul>
+    <li><strong>STR weapons/armor</strong> — require minimum Strength.</li>
+    <li><strong>AGI weapons/armor</strong> — require minimum Agility.</li>
+    <li><strong>INT weapons/armor</strong> — require minimum Intelligence.</li>
+  </ul>
+  <p>
+    You cannot equip an item unless your stats meet the requirement. This means stat allocation (from <a href="/guide/progression">leveling</a>) directly determines which gear you can use.
+  </p>
+
+  <h2 id="finding-items">Finding Items</h2>
+  <p>
+    Items enter the game through three channels:
+  </p>
+  <ul>
+    <li><strong>Monster drops</strong> — defeat <a href="/guide/bestiary">monsters</a> for a chance at loot. Higher-level creatures drop rarer items.</li>
+    <li><strong>Shops</strong> — NPC <a href="/guide/economy">shops</a> sell items at markup prices. Stock is limited and refreshes periodically.</li>
+    <li><strong>Marketplace</strong> — buy directly from other players on the <a href="/guide/economy">player marketplace</a>. Prices are set by supply and demand.</li>
+  </ul>
+
+  <Callout type="lore">
+    The weapons found in the cave were not placed there. They were <em>left</em> — by those who came before, who ventured too deep and never returned. Every blade has a story. Most end in silence.
+  </Callout>
+</GuideLayout>

@@ -1,0 +1,10 @@
+{
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/guide/", "destination": "/index.html" },
+    { "source": "/guide/:path*", "destination": "/:path*" },
+    { "source": "/guide", "destination": "/index.html" }
+  ],
+  "trailingSlash": false
+}

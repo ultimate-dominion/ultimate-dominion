@@ -1,0 +1,116 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import ClassCard from '../components/ui/ClassCard.astro';
+import Callout from '../components/ui/Callout.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+import { classes } from '../data/classes';
+
+const headings = [
+  { depth: 2, slug: 'unlocking-classes', text: 'Unlocking Classes' },
+  { depth: 2, slug: 'multiplier-reference', text: 'Multiplier Reference' },
+  { depth: 2, slug: 'all-classes', text: 'All Classes' },
+  { depth: 3, slug: 'strength-classes', text: 'Strength Classes' },
+  { depth: 3, slug: 'agility-classes', text: 'Agility Classes' },
+  { depth: 3, slug: 'intelligence-classes', text: 'Intelligence Classes' },
+  { depth: 3, slug: 'hybrid-classes', text: 'Hybrid Classes' },
+  { depth: 2, slug: 'choosing-a-class', text: 'Choosing a Class' },
+];
+---
+
+<GuideLayout
+  title="Paths of Power"
+  description="All 9 advanced classes in Ultimate Dominion — Warrior, Paladin, Ranger, Rogue, Druid, Warlock, Wizard, Cleric, and Sorcerer. Multipliers, abilities, and build advice."
+  breadcrumbs={[{ label: 'Classes' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'FAQPage',
+    mainEntity: [
+      { '@type': 'Question', name: 'When do I unlock advanced classes in Ultimate Dominion?', acceptedAnswer: { '@type': 'Answer', text: 'Advanced classes unlock at Level 10. Any class can be chosen regardless of race, stats, or power source.' } },
+      { '@type': 'Question', name: 'What is the best class in Ultimate Dominion?', acceptedAnswer: { '@type': 'Answer', text: 'There is no single best class. Warriors and Rangers deal the most physical damage (110%), Wizards have the highest spell damage (115%), Rogues have the highest crit chance (115%), and Clerics are the best healers (110%). Choose based on your stat build and playstyle.' } },
+      { '@type': 'Question', name: 'Can I change my class?', acceptedAnswer: { '@type': 'Answer', text: 'Class selection is a permanent choice. Choose carefully at Level 10 based on your build and preferred playstyle.' } },
+    ],
+  }} slot="head" />
+
+  <h1>Paths of Power</h1>
+  <p class="text-lg text-text-secondary">
+    At Level 10, you choose an advanced class — a permanent specialization that amplifies your strengths through damage multipliers, stat bonuses, and a unique class ability.
+  </p>
+
+  <h2 id="unlocking-classes">Unlocking Classes</h2>
+  <p>
+    Advanced classes unlock at <strong>Level 10</strong>. When you reach this milestone:
+  </p>
+  <ul>
+    <li>You can choose <strong>any class</strong> regardless of your race, stats, or power source.</li>
+    <li>The class grants <strong>permanent flat stat bonuses</strong> (added to your character immediately).</li>
+    <li>All your damage and healing are multiplied by <strong>class multipliers</strong> from that point forward.</li>
+    <li>You receive a <strong>unique class ability</strong> — a special skill only your class can use in combat.</li>
+  </ul>
+
+  <Callout type="warning" title="Permanent choice">
+    Class selection cannot be undone. Consider your stat build, preferred combat style, and the items you plan to use before committing.
+  </Callout>
+
+  <h2 id="multiplier-reference">Multiplier Reference</h2>
+
+  <DataTable headers={['Class', 'Phys', 'Spell', 'Heal', 'Crit', 'Max HP']}>
+    {classes.map((c) => (
+      <tr class="hover:bg-surface/50 transition-colors">
+        <td class="px-4 py-3 text-white font-medium">{c.name}</td>
+        <td class:list={['px-4 py-3 font-mono text-sm text-center', c.phys !== '100%' ? 'text-white font-semibold' : 'text-text-secondary']}>{c.phys}</td>
+        <td class:list={['px-4 py-3 font-mono text-sm text-center', c.spell !== '100%' ? 'text-white font-semibold' : 'text-text-secondary']}>{c.spell}</td>
+        <td class:list={['px-4 py-3 font-mono text-sm text-center', c.heal !== '100%' ? 'text-white font-semibold' : 'text-text-secondary']}>{c.heal}</td>
+        <td class:list={['px-4 py-3 font-mono text-sm text-center', c.crit !== '100%' ? 'text-white font-semibold' : 'text-text-secondary']}>{c.crit}</td>
+        <td class:list={['px-4 py-3 font-mono text-sm text-center', c.maxHp !== '100%' ? 'text-white font-semibold' : 'text-text-secondary']}>{c.maxHp}</td>
+      </tr>
+    ))}
+  </DataTable>
+  <p class="text-sm text-text-secondary">
+    Values above 100% are highlighted. Only the highlighted multipliers differ from baseline.
+  </p>
+
+  <h2 id="all-classes">All Classes</h2>
+
+  <h3 id="strength-classes">Strength Classes</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose my-4">
+    {classes.filter(c => c.archetype === 'str').map((c) => (
+      <ClassCard {...c} />
+    ))}
+  </div>
+
+  <h3 id="agility-classes">Agility Classes</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose my-4">
+    {classes.filter(c => c.archetype === 'agi').map((c) => (
+      <ClassCard {...c} />
+    ))}
+  </div>
+
+  <h3 id="intelligence-classes">Intelligence Classes</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose my-4">
+    {classes.filter(c => c.archetype === 'int').map((c) => (
+      <ClassCard {...c} />
+    ))}
+  </div>
+
+  <h3 id="hybrid-classes">Hybrid Classes</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose my-4">
+    {classes.filter(c => c.archetype === 'hybrid').map((c) => (
+      <ClassCard {...c} />
+    ))}
+  </div>
+
+  <h2 id="choosing-a-class">Choosing a Class</h2>
+  <p>Consider these factors:</p>
+  <ul>
+    <li><strong>Your dominant stat</strong> — if you rolled high STR, Warrior/Paladin maximize your existing advantage. If high INT, Wizard gives you the biggest spell boost.</li>
+    <li><strong>Your playstyle</strong> — want burst damage? Wizard or Rogue. Want to outlast opponents? Paladin or Cleric. Want flexibility? Druid or Sorcerer.</li>
+    <li><strong>Your item plan</strong> — classes that boost physical damage benefit more from high-tier STR weapons. Spell classes scale better with INT gear and purchased spells.</li>
+    <li><strong>PvP vs PvE</strong> — Rogues and Warlocks shine in PvP where burst and debuffs matter. Warriors and Paladins are reliable PvE grinders who rarely lose.</li>
+  </ul>
+
+  <Callout type="lore">
+    The survivors whisper of these paths — old disciplines from before the gods fell. No one teaches them anymore. The knowledge surfaces unbidden, as if the body remembers what the world forgot.
+  </Callout>
+</GuideLayout>

@@ -1,0 +1,28 @@
+---
+import SEOHead from '../seo/SEOHead.astro';
+import '../../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  ogImage?: string;
+}
+
+const { title, description, canonical, ogImage } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" href="/favicon.ico" />
+    <SEOHead title={title} description={description} canonical={canonical} ogImage={ogImage} />
+    <slot name="head" />
+  </head>
+  <body class="min-h-screen">
+    <slot />
+  </body>
+</html>

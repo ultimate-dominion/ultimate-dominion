@@ -1,0 +1,126 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import Callout from '../components/ui/Callout.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+
+const headings = [
+  { depth: 2, slug: 'the-world', text: 'The World' },
+  { depth: 2, slug: 'the-dead-gods', text: 'The Dead Gods' },
+  { depth: 2, slug: 'factions', text: 'Factions' },
+  { depth: 2, slug: 'survivors', text: 'Survivors' },
+  { depth: 2, slug: 'the-fragments', text: 'The Fragments' },
+  { depth: 2, slug: 'the-decay', text: 'The Decay' },
+];
+---
+
+<GuideLayout
+  title="The Gods Are Dead"
+  description="Lore guide for Ultimate Dominion. The dead gods, warring factions, key survivors, mysterious lore fragments, and the Decay eating the world."
+  breadcrumbs={[{ label: 'Lore' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'Article',
+    headline: 'The Gods Are Dead — Ultimate Dominion Lore',
+    description: 'The mythology, factions, NPCs, and mysteries behind the world of Ultimate Dominion.',
+  }} slot="head" />
+
+  <h1>The Gods Are Dead</h1>
+  <p class="text-lg text-text-secondary">
+    You wake in a cave with no memory and no name. The world above is broken. The gods that once held it together are dead — every last one. What remains is a wound in reality, and you are in it.
+  </p>
+
+  <h2 id="the-world">The World</h2>
+  <p>
+    The central question of Ultimate Dominion is simple: <em>The gods are dead. What fills the void?</em>
+  </p>
+  <p>
+    Before the Fall, seven gods maintained reality through their existence alone. They were not worshipped for miracles — they were worshipped because without them, the world would unravel. And when they died, it did.
+  </p>
+  <p>
+    Each god's death tore a <strong>Wound</strong> in the fabric of the world. The Dark Cave — the zone you explore — is <strong>Noctum's Wound</strong>, the scar left by the death of the god of death himself. This is why the creatures within are twisted, why the dead don't stay dead, and why you woke with no memory.
+  </p>
+
+  <h2 id="the-dead-gods">The Dead Gods</h2>
+  <p>
+    Seven gods once held dominion over reality. None survived.
+  </p>
+
+  <DataTable headers={['God', 'Domain', 'Their Wound']}>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-accent font-medium">Auros</td><td class="px-4 py-3">Truth and Sun</td><td class="px-4 py-3 text-text-secondary italic">Unknown</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-accent font-medium">Velith</td><td class="px-4 py-3">Fate</td><td class="px-4 py-3 text-text-secondary italic">Unknown</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-accent font-medium">Korrath</td><td class="px-4 py-3">War</td><td class="px-4 py-3 text-text-secondary italic">Unknown</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-accent font-medium">Miren</td><td class="px-4 py-3">The Sea</td><td class="px-4 py-3 text-text-secondary italic">Unknown</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-accent font-medium">Thessa</td><td class="px-4 py-3">Civilization</td><td class="px-4 py-3 text-text-secondary italic">Unknown</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-bold">Noctum</td><td class="px-4 py-3 text-white">Death</td><td class="px-4 py-3 text-white">The Dark Cave</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-text-secondary font-medium">The Seventh</td><td class="px-4 py-3 text-text-secondary">Unknown — erased</td><td class="px-4 py-3 text-text-secondary italic">Unknown</td></tr>
+  </DataTable>
+
+  <Callout type="lore">
+    When the god of death died, death itself became... unreliable. Things that should stay dead don't. Things that should live decay. The rules broke when their author did.
+  </Callout>
+
+  <h2 id="factions">Factions</h2>
+  <p>
+    The surviving mortals split into two factions, divided by a fundamental disagreement:
+  </p>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 not-prose my-6">
+    <div class="guide-card border-l-4 border-accent/50">
+      <h3 class="text-accent font-bold text-sm mb-1">The Covenant</h3>
+      <p class="text-xs text-text-secondary italic mb-2">"Faith Endures"</p>
+      <p class="text-sm text-text-primary">They believe the gods can be restored — that worship, ritual, and sacrifice can bring them back. They preserve the old ways, maintain the temples, and search for fragments of divine power.</p>
+    </div>
+    <div class="guide-card border-l-4 border-blue-bright/50">
+      <h3 class="text-blue-bright font-bold text-sm mb-1">The Unbound</h3>
+      <p class="text-xs text-text-secondary italic mb-2">"We Save Ourselves"</p>
+      <p class="text-sm text-text-primary">They believe the gods are gone forever — and good riddance. Mortals must seize what power remains and forge their own destiny. They experiment with divine artifacts, unconcerned with blasphemy.</p>
+    </div>
+  </div>
+
+  <h2 id="survivors">Survivors</h2>
+  <p>
+    A handful of named NPCs have survived the Fall and now occupy key positions in the world:
+  </p>
+  <ul>
+    <li><strong>Tal Carden</strong> — the Quartermaster. Runs the shop at <a href="/guide/dark-cave">(9,9)</a>. A former baker's apprentice who learned to trade in the aftermath. Optimistic, practical, the first friendly face you'll meet.</li>
+    <li><strong>Vel Morrow</strong> — the Blade. A deserter from the Covenant who now trains fighters. Cynical but effective. She's seen too many adventurers die to waste words on pleasantries.</li>
+    <li><strong>Edric Thorne</strong> — the Mender. An acolyte who questioned the old faith even before the gods died. Now he heals whom he can and asks uncomfortable questions about what the gods actually were.</li>
+    <li><strong>Senna Blackwood</strong> — the Broker. Half-elf, sharp-tongued, and well-connected. Deals in information, rumors, and things that shouldn't be for sale. If something is happening in the world, Senna knows about it first.</li>
+  </ul>
+
+  <h2 id="the-fragments">The Fragments</h2>
+  <p>
+    Scattered throughout the world are <strong>Fragments of the Fallen</strong> — shards of memory left behind by the dead gods. They manifest as visions triggered by your actions.
+  </p>
+
+  <Callout type="warning" title="Spoiler warning">
+    Fragment triggers are intentionally left vague here. Discovering them is part of the experience. Below are only hints — not exact trigger conditions.
+  </Callout>
+
+  <p>
+    There are <strong>8 Fragments</strong> in the current game. Each is a unique, permanent collectible tied to your character. They contain prose fragments — glimpses of what the world was before the Fall, what the gods were, and why they died.
+  </p>
+  <ul>
+    <li>Some trigger from exploration — visiting certain places.</li>
+    <li>Some trigger from combat — defeating specific enemies.</li>
+    <li>Some trigger from milestones — your first steps in the world.</li>
+    <li>One triggers from conflict between players.</li>
+  </ul>
+  <p>
+    Collect all 8 to piece together the full story — or as much of it as the dead gods left behind.
+  </p>
+
+  <h2 id="the-decay">The Decay</h2>
+  <p>
+    With the gods dead, the world is slowly unraveling. The Wounds aren't just scars — they're spreading. The fabric of reality is thinning, and things from the spaces between are leaking through.
+  </p>
+  <p>
+    This isn't background flavor. The Decay is a living system. As time passes and players act (or fail to act), the world changes. New threats emerge. Old certainties break. The question isn't whether the world will end — it's whether anyone will be strong enough to hold it together when it tries.
+  </p>
+
+  <Callout type="lore">
+    The survivors have a saying: "The cave remembers what we forget." They're not sure what it means. Neither are you. But the deeper you go, the more you suspect it's not a metaphor.
+  </Callout>
+</GuideLayout>

@@ -1,0 +1,128 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import Callout from '../components/ui/Callout.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+
+const headings = [
+  { depth: 2, slug: 'gold', text: 'Gold' },
+  { depth: 2, slug: 'earning-gold', text: 'Earning Gold' },
+  { depth: 2, slug: 'shops', text: 'Shops' },
+  { depth: 2, slug: 'the-marketplace', text: 'The Marketplace' },
+  { depth: 3, slug: 'listing-items', text: 'Listing Items' },
+  { depth: 3, slug: 'buying', text: 'Buying' },
+  { depth: 3, slug: 'fees', text: 'Fees' },
+  { depth: 2, slug: 'gold-sinks', text: 'Gold Sinks' },
+];
+---
+
+<GuideLayout
+  title="Gold and Greed"
+  description="Economy guide for Ultimate Dominion. How gold is earned, spent, and traded — monster rewards, NPC shops, the player marketplace, fees, and gold sinks."
+  breadcrumbs={[{ label: 'Economy' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'Article',
+    headline: 'Gold and Greed — Ultimate Dominion Economy Guide',
+    description: 'How the economy works in Ultimate Dominion: earning gold, NPC shops, the player marketplace, and where gold goes.',
+  }} slot="head" />
+
+  <h1>Gold and Greed</h1>
+  <p class="text-lg text-text-secondary">
+    Gold is the lifeblood of Ultimate Dominion. It buys gear, fuels the marketplace, and stakes PvP encounters. Understanding how it flows gives you an edge over every other adventurer in the cave.
+  </p>
+
+  <h2 id="gold">Gold</h2>
+  <p>
+    Gold is the sole currency. It exists permanently — once earned, it's yours until you spend or lose it. Your gold is stored in two places:
+  </p>
+  <ul>
+    <li><strong>Main balance</strong> — safe, stored on your account. Can be used for shops and marketplace.</li>
+    <li><strong>Adventure Escrow</strong> — deposited at the cave entrance. At risk in <a href="/guide/pvp">PvP encounters</a>.</li>
+  </ul>
+
+  <h2 id="earning-gold">Earning Gold</h2>
+  <p>
+    Gold enters the economy primarily through monster kills. Higher-level creatures yield more gold. Other sources include:
+  </p>
+  <ul>
+    <li><strong>Monster kills</strong> — every defeated monster drops gold. Stronger monsters drop more.</li>
+    <li><strong>PvP victories</strong> — win a fight to claim a portion of the loser's escrowed gold.</li>
+    <li><strong>Marketplace sales</strong> — sell items to other players for gold.</li>
+  </ul>
+
+  <Callout type="tip" title="Optimize your farming">
+    Fight the highest-level monsters you can reliably beat without burning through consumables. The sweet spot is where each fight earns more in gold and drops than it costs in potions.
+  </Callout>
+
+  <h2 id="shops">Shops</h2>
+  <p>
+    NPC shops buy and sell items at fixed prices. The first shop, run by <strong>Tal</strong>, is located at <a href="/guide/dark-cave">(9,9) in the Dark Cave</a>.
+  </p>
+  <ul>
+    <li><strong>Buying</strong> — items cost a markup over their base value. Rarer items cost significantly more.</li>
+    <li><strong>Selling</strong> — you receive a markdown from the base value. Selling always pays less than buying.</li>
+    <li><strong>Stock</strong> — shops have limited inventory that refreshes periodically. If an item is sold out, check back later.</li>
+    <li><strong>Gold reserve</strong> — shops have a limited gold pool. If you sell too much, the shop may run out of gold until it restocks.</li>
+  </ul>
+
+  <h2 id="the-marketplace">The Marketplace</h2>
+  <p>
+    The player marketplace is where the real economy lives. Players set their own prices, creating a supply-and-demand market for every item in the game.
+  </p>
+
+  <h3 id="listing-items">Listing Items</h3>
+  <ul>
+    <li>Navigate to the <strong>Marketplace</strong> from the main menu.</li>
+    <li>Select an item from your inventory and set a gold price.</li>
+    <li>Your item is listed for other players to see and purchase.</li>
+    <li>You cannot list items that are currently equipped.</li>
+    <li>You can cancel a listing at any time to reclaim your item.</li>
+  </ul>
+
+  <h3 id="buying">Buying</h3>
+  <ul>
+    <li>Browse listings by category, sort by price or level.</li>
+    <li>You can also place <strong>gold offers</strong> — name your price for an item you want.</li>
+    <li>When a seller accepts your offer (or you buy at listing price), gold transfers and the item is delivered instantly.</li>
+  </ul>
+
+  <h3 id="fees">Fees</h3>
+  <p>
+    The marketplace charges a small fee on every completed trade:
+  </p>
+
+  <DataTable headers={['Metric', 'Value']}>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3 text-white font-medium">Marketplace fee</td>
+      <td class="px-4 py-3 font-mono text-sm">~3%</td>
+    </tr>
+    <tr class="hover:bg-surface/50">
+      <td class="px-4 py-3 text-white font-medium">Fee source</td>
+      <td class="px-4 py-3 text-sm text-text-primary">Deducted from the gold payment before the seller receives it</td>
+    </tr>
+  </DataTable>
+
+  <Callout type="info">
+    The fee is a gold sink — it removes gold from the economy on every trade, keeping inflation in check over the long term.
+  </Callout>
+
+  <h2 id="gold-sinks">Gold Sinks</h2>
+  <p>
+    Gold is created every time a monster dies, which would cause inflation without counterbalances. The game removes gold through:
+  </p>
+  <ul>
+    <li><strong>Marketplace fees</strong> — ~3% of every player-to-player trade.</li>
+    <li><strong>Shop purchases</strong> — buying from NPC shops removes gold from circulation.</li>
+    <li><strong>PvP flee penalty</strong> — 25% of escrow gold is lost when fleeing, partially removed from the economy.</li>
+  </ul>
+
+  <Callout type="tip" title="The marketplace is your friend">
+    NPC shops charge fixed markup prices. Player listings are often cheaper — especially for common items that everyone farms. Check the marketplace before buying from Tal.
+  </Callout>
+
+  <Callout type="lore">
+    Gold in the cave predates the adventurers. It was here when the first survivors woke — coins minted by a civilization that no one remembers, with faces that no one recognizes. Somehow, everyone agrees on its value. Perhaps that's the last gift of the dead gods: a shared delusion.
+  </Callout>
+</GuideLayout>

@@ -1,0 +1,131 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import StatTable from '../components/ui/StatTable.astro';
+import Callout from '../components/ui/Callout.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+
+const headings = [
+  { depth: 2, slug: 'races', text: 'Races' },
+  { depth: 2, slug: 'power-sources', text: 'Power Sources' },
+  { depth: 2, slug: 'stat-roll', text: 'The Stat Roll' },
+  { depth: 2, slug: 'starter-armor', text: 'Starter Armor' },
+  { depth: 2, slug: 'example-builds', text: 'Example Builds' },
+];
+---
+
+<GuideLayout
+  title="Forging an Identity"
+  description="Complete guide to character creation in Ultimate Dominion. Understand races, power sources, stat allocation, starter armor, and optimal build strategies."
+  breadcrumbs={[{ label: 'Character Creation' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'FAQPage',
+    mainEntity: [
+      { '@type': 'Question', name: 'What races can I choose in Ultimate Dominion?', acceptedAnswer: { '@type': 'Answer', text: 'Human (+1 STR, +1 AGI, +1 INT), Elf (-1 STR, +2 AGI, +1 INT, -1 HP), and Dwarf (+2 STR, -1 AGI, +1 HP).' } },
+      { '@type': 'Question', name: 'How do stats work in Ultimate Dominion?', acceptedAnswer: { '@type': 'Answer', text: 'You have 19 stat points distributed across STR, AGI, and INT (range 3–10 each). Base HP is 18. Stats determine combat effectiveness, item eligibility, and combat triangle positioning.' } },
+      { '@type': 'Question', name: 'Does power source matter?', acceptedAnswer: { '@type': 'Answer', text: 'Power source (Divine, Weave, Physical) is flavor only. It does not restrict your abilities, equipment, or class options.' } },
+    ],
+  }} slot="head" />
+
+  <h1>Forging an Identity</h1>
+  <p class="text-lg text-text-secondary">
+    Your race and stats shape every fight, every item you can wield, and every edge you hold in battle. Choose carefully — or re-roll until the numbers align.
+  </p>
+
+  <h2 id="races">Races</h2>
+  <p>
+    Each race grants permanent stat modifiers applied on top of your rolled stats. These cannot be changed later.
+  </p>
+
+  <StatTable
+    title="Race Modifiers"
+    rows={[
+      { name: 'Human', str: '+1', agi: '+1', int: '+1', hp: '—', extra: 'Balanced — no weaknesses' },
+      { name: 'Elf', str: '-1', agi: '+2', int: '+1', hp: '-1', extra: 'Fast and sharp, but fragile' },
+      { name: 'Dwarf', str: '+2', agi: '-1', int: '—', hp: '+1', extra: 'Tough and strong, but slow' },
+    ]}
+  />
+
+  <Callout type="tip" title="Race choice matters most early">
+    At level 1, a +2 modifier is a 20-30% boost to that stat. As you level and acquire items, race modifiers become a smaller portion of your total power — but they never stop mattering for stat thresholds on equipment.
+  </Callout>
+
+  <h2 id="power-sources">Power Sources</h2>
+  <p>
+    Your power source defines your character's flavor — how they explain their abilities to the world. It has <strong>no mechanical effect</strong>.
+  </p>
+  <ul>
+    <li><strong>Divine</strong> — your strength comes from the remnants of dead gods. Healing and protection.</li>
+    <li><strong>Weave</strong> — you tap into raw arcane energy. Pure magical power.</li>
+    <li><strong>Physical</strong> — no magic, no prayers. Just skill, muscle, and steel.</li>
+  </ul>
+
+  <Callout type="info">
+    Power source does not restrict your equipment, class, or abilities. A Physical character can still use spells. A Divine character can still swing a greatsword.
+  </Callout>
+
+  <h2 id="stat-roll">The Stat Roll</h2>
+  <p>
+    When you create a character, 19 points are randomly distributed across three stats:
+  </p>
+  <ul>
+    <li><strong>Strength (STR)</strong> — physical damage, armor penetration, combat triangle position vs AGI</li>
+    <li><strong>Agility (AGI)</strong> — hit chance, dodge chance, combat triangle position vs INT</li>
+    <li><strong>Intelligence (INT)</strong> — spell damage, magical resistance, combat triangle position vs STR</li>
+  </ul>
+  <p>
+    Each stat ranges from <strong>3 to 10</strong>. Your base HP starts at <strong>18</strong>, modified by race.
+    You can re-roll as many times as you like before confirming — the cost is only your patience.
+  </p>
+
+  <Callout type="warning" title="Stats are permanent">
+    Once confirmed, your base stats are locked. You'll gain stat points as you level (see <a href="/guide/progression">Progression</a>), but your starting roll sets the foundation.
+  </Callout>
+
+  <h2 id="starter-armor">Starter Armor</h2>
+  <p>
+    After rolling, you choose one starter armor. Each type shifts your stats further:
+  </p>
+
+  <StatTable
+    title="Starter Armor Modifiers"
+    rows={[
+      { name: 'Cloth', str: '-1', agi: '+1', int: '+2', extra: 'Best for INT builds' },
+      { name: 'Leather', str: '+1', agi: '+2', int: '—', extra: 'Best for AGI builds' },
+      { name: 'Plate', str: '+2', agi: '-1', int: '—', hp: '+1', extra: 'Best for STR builds' },
+    ]}
+  />
+
+  <h2 id="example-builds">Example Builds</h2>
+  <p>
+    Combine race + armor to push a stat as high as possible, or balance across multiple stats. Here are some starting archetypes:
+  </p>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 not-prose my-6">
+    <div class="guide-card border-l-4 border-red/50">
+      <h3 class="text-white font-bold text-sm mb-1">The Bruiser</h3>
+      <p class="text-xs text-text-secondary mb-2">Dwarf + Plate</p>
+      <p class="text-sm text-text-primary">+4 STR, -2 AGI, +2 HP. Maximum physical damage from turn one. Aim for STR-scaling weapons and heavy armor. Dominates Rogue-class monsters via the combat triangle.</p>
+    </div>
+    <div class="guide-card border-l-4 border-green/50">
+      <h3 class="text-white font-bold text-sm mb-1">The Shadow</h3>
+      <p class="text-xs text-text-secondary mb-2">Elf + Leather</p>
+      <p class="text-sm text-text-primary">-1 STR, +4 AGI, +1 INT, -1 HP. Extremely evasive. Harder to hit, crits more often. Counters Mage-class enemies. Glass cannon — avoid prolonged fights.</p>
+    </div>
+    <div class="guide-card border-l-4 border-blue-bright/50">
+      <h3 class="text-white font-bold text-sm mb-1">The Arcanist</h3>
+      <p class="text-xs text-text-secondary mb-2">Elf + Cloth</p>
+      <p class="text-sm text-text-primary">-2 STR, +3 AGI, +3 INT, -1 HP. Maximum spell damage. Crushes Warrior-class monsters. Fragile — needs healing items to survive tougher fights.</p>
+    </div>
+    <div class="guide-card border-l-4 border-accent/50">
+      <h3 class="text-white font-bold text-sm mb-1">The Generalist</h3>
+      <p class="text-xs text-text-secondary mb-2">Human + Leather</p>
+      <p class="text-sm text-text-primary">+2 STR, +3 AGI, +1 INT. Balanced with a slight AGI lean. Can equip a wide range of items. Flexible path to any <a href="/guide/classes" class="text-accent">advanced class</a> at level 10.</p>
+    </div>
+  </div>
+
+  <Callout type="lore">
+    No one remembers who they were before waking in the cave. Race is felt in the bones — an instinct, not a memory. The body remembers what the mind has lost.
+  </Callout>
+</GuideLayout>

@@ -1,0 +1,48 @@
+---
+interface StatRow {
+  name: string;
+  str: string;
+  agi: string;
+  int: string;
+  hp?: string;
+  extra?: string;
+}
+
+interface Props {
+  title?: string;
+  headers?: string[];
+  rows: StatRow[];
+}
+
+const { title, headers = ['Name', 'STR', 'AGI', 'INT', 'HP'], rows } = Astro.props;
+const showHP = rows.some((r) => r.hp !== undefined);
+const showExtra = rows.some((r) => r.extra !== undefined);
+---
+
+<div class="overflow-x-auto rounded-lg border border-border my-6 not-prose">
+  {title && <div class="px-4 py-2 bg-sidebar border-b border-border text-white font-semibold text-sm">{title}</div>}
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="bg-sidebar/50">
+        <th class="text-left text-white font-semibold px-4 py-3 border-b border-border">{headers[0]}</th>
+        <th class="text-center text-red font-semibold px-4 py-3 border-b border-border">{headers[1]}</th>
+        <th class="text-center text-green font-semibold px-4 py-3 border-b border-border">{headers[2]}</th>
+        <th class="text-center text-blue-bright font-semibold px-4 py-3 border-b border-border">{headers[3]}</th>
+        {showHP && <th class="text-center text-accent font-semibold px-4 py-3 border-b border-border">{headers[4] || 'HP'}</th>}
+        {showExtra && <th class="text-center text-text-secondary font-semibold px-4 py-3 border-b border-border">Notes</th>}
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-border/50">
+      {rows.map((row) => (
+        <tr class="hover:bg-surface/50 transition-colors">
+          <td class="px-4 py-3 text-white font-medium">{row.name}</td>
+          <td class="px-4 py-3 text-center font-mono text-sm">{row.str}</td>
+          <td class="px-4 py-3 text-center font-mono text-sm">{row.agi}</td>
+          <td class="px-4 py-3 text-center font-mono text-sm">{row.int}</td>
+          {showHP && <td class="px-4 py-3 text-center font-mono text-sm">{row.hp || '—'}</td>}
+          {showExtra && <td class="px-4 py-3 text-center text-text-secondary text-sm">{row.extra || ''}</td>}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

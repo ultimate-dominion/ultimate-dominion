@@ -1,0 +1,104 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import MonsterCard from '../components/ui/MonsterCard.astro';
+import Callout from '../components/ui/Callout.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+import { darkCaveMonsters } from '../data/monsters';
+
+const headings = [
+  { depth: 2, slug: 'monster-classes', text: 'Monster Classes' },
+  { depth: 2, slug: 'dark-cave-monsters', text: 'Dark Cave Monsters' },
+  { depth: 2, slug: 'stat-comparison', text: 'Stat Comparison' },
+  { depth: 2, slug: 'hunting-tips', text: 'Hunting Tips' },
+];
+---
+
+<GuideLayout
+  title="Creatures of the Wound"
+  description="Complete bestiary for Ultimate Dominion's Dark Cave. All 10 monsters with stats, combat classes, drop tables, and tactical advice for every encounter."
+  breadcrumbs={[{ label: 'Bestiary' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'ItemList',
+    name: 'Ultimate Dominion Bestiary — Dark Cave',
+    description: 'All creatures found in the Dark Cave zone.',
+    numberOfItems: darkCaveMonsters.length,
+    itemListElement: darkCaveMonsters.map((m, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: `${m.name} (Level ${m.level} ${m.monsterClass})`,
+    })),
+  }} slot="head" />
+
+  <h1>Creatures of the Wound</h1>
+  <p class="text-lg text-text-secondary">
+    The Dark Cave pulses with hostile life — creatures twisted by the death of the god Noctum. Ten species stalk the tunnels, each with distinct combat styles, weaknesses, and rewards.
+  </p>
+
+  <h2 id="monster-classes">Monster Classes</h2>
+  <p>
+    Every monster belongs to one of three <a href="/guide/combat">combat classes</a>, determining its dominant stat and how the combat triangle applies:
+  </p>
+  <ul>
+    <li><strong>Warrior (STR)</strong> — high HP and armor, hits hard. Weak to INT-based attackers.</li>
+    <li><strong>Rogue (AGI)</strong> — fast and evasive, but fragile. Weak to STR-based attackers.</li>
+    <li><strong>Mage (INT)</strong> — powerful magic, often ignoring armor. Weak to AGI-based attackers.</li>
+  </ul>
+
+  <Callout type="tip" title="Use the triangle">
+    Before engaging, check the monster's class and compare it to your dominant stat. Fighting with the triangle advantage gives you +5% damage per stat point — this adds up fast.
+  </Callout>
+
+  <h2 id="dark-cave-monsters">Dark Cave Monsters</h2>
+  <p>
+    Ten creatures inhabit the Dark Cave, one per level from 1 to 10. The class sequence alternates irregularly — there's no simple pattern to exploit.
+  </p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose my-6">
+    {darkCaveMonsters.map((m) => (
+      <MonsterCard
+        name={m.name}
+        level={m.level}
+        monsterClass={m.monsterClass}
+        hp={m.hp}
+        str={m.str}
+        agi={m.agi}
+        int={m.int}
+        armor={m.armor}
+        drops={m.drops}
+      />
+    ))}
+  </div>
+
+  <h2 id="stat-comparison">Stat Comparison</h2>
+
+  <DataTable headers={['Monster', 'Lvl', 'Class', 'HP', 'STR', 'AGI', 'INT', 'Armor']} compact>
+    {darkCaveMonsters.map((m) => (
+      <tr class="hover:bg-surface/50">
+        <td class="px-3 py-2 text-white font-medium text-sm">{m.name}</td>
+        <td class="px-3 py-2 font-mono text-xs text-center">{m.level}</td>
+        <td class="px-3 py-2 text-xs text-center">{m.monsterClass}</td>
+        <td class="px-3 py-2 font-mono text-xs text-center text-accent">{m.hp}</td>
+        <td class="px-3 py-2 font-mono text-xs text-center text-red">{m.str}</td>
+        <td class="px-3 py-2 font-mono text-xs text-center text-green">{m.agi}</td>
+        <td class="px-3 py-2 font-mono text-xs text-center text-blue-bright">{m.int}</td>
+        <td class="px-3 py-2 font-mono text-xs text-center">{m.armor}</td>
+      </tr>
+    ))}
+  </DataTable>
+
+  <h2 id="hunting-tips">Hunting Tips</h2>
+  <ul>
+    <li><strong>Start with Cave Rats</strong> — level 1, low HP, drops starter gear. Perfect for your first fights.</li>
+    <li><strong>Farm the Stone Giant</strong> — level 8 Warrior drops two different weapons (Steel Mace and Warhammer), making it one of the best farming targets for weapon upgrades.</li>
+    <li><strong>Shadow Dragon is the boss</strong> — level 10, 48 HP, 20 INT, and armor. Come prepared with your best gear and a full stack of potions. Drops two rare armors.</li>
+    <li><strong>Consumable prep</strong> — buff consumables drop from specific monsters. Stock up on Fortifying Stew (STR buff) before fighting Mage-class creatures, or Quickening Berries (AGI buff) before Warrior-class.</li>
+    <li><strong>Watch the class pattern</strong> — the cave alternates monster classes (R, M, W, M, W, R, M, W, R, M). Plan your consumable usage around upcoming encounters.</li>
+  </ul>
+
+  <Callout type="lore">
+    The creatures were not always here. When Noctum fell, his death ripped a wound in reality. Things that should not exist crawled through — not from another place, but from the space between places. They do not eat, they do not sleep. They simply are.
+  </Callout>
+</GuideLayout>

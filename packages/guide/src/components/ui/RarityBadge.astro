@@ -1,0 +1,24 @@
+---
+interface Props {
+  rarity: 'worn' | 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  class?: string;
+}
+
+const { rarity, class: className = '' } = Astro.props;
+
+const colors: Record<string, { bg: string; text: string; border: string }> = {
+  worn:      { bg: 'bg-rarity-worn/10', text: 'text-rarity-worn', border: 'border-rarity-worn/30' },
+  common:    { bg: 'bg-white/5', text: 'text-rarity-common', border: 'border-white/20' },
+  uncommon:  { bg: 'bg-rarity-uncommon/10', text: 'text-rarity-uncommon', border: 'border-rarity-uncommon/30' },
+  rare:      { bg: 'bg-rarity-rare/10', text: 'text-rarity-rare', border: 'border-rarity-rare/30' },
+  epic:      { bg: 'bg-rarity-epic/10', text: 'text-rarity-epic', border: 'border-rarity-epic/30' },
+  legendary: { bg: 'bg-rarity-legendary/10', text: 'text-rarity-legendary', border: 'border-rarity-legendary/30' },
+};
+
+const c = colors[rarity];
+const label = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+---
+
+<span class:list={['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border', c.bg, c.text, c.border, className]}>
+  {label}
+</span>

@@ -1,7 +1,11 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/guide/:path*",
+      "destination": "https://ud-guide.vercel.app/guide/:path*"
+    },
+    {
+      "source": "/((?!guide).*)",
       "destination": "/index.html"
     }
   ]

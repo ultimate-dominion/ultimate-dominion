@@ -1,0 +1,102 @@
+---
+import GuideLayout from '../components/layout/GuideLayout.astro';
+import Callout from '../components/ui/Callout.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
+
+const headings = [
+  { depth: 2, slug: 'sign-in', text: 'Sign In' },
+  { depth: 2, slug: 'create-your-character', text: 'Create Your Character' },
+  { depth: 2, slug: 'your-first-fight', text: 'Your First Fight' },
+  { depth: 2, slug: 'using-shops', text: 'Using Shops' },
+  { depth: 2, slug: 'whats-next', text: "What's Next" },
+];
+---
+
+<GuideLayout
+  title="Your First Steps"
+  description="A beginner's guide to Ultimate Dominion. Learn how to sign in, create a character, fight your first monster, and start your journey in this dark fantasy MUD."
+  breadcrumbs={[{ label: 'Getting Started' }]}
+  headings={headings}
+>
+  <JsonLd schema={{
+    '@type': 'HowTo',
+    name: 'Getting Started with Ultimate Dominion',
+    description: 'A step-by-step guide to creating your first character and entering the world.',
+    step: [
+      { '@type': 'HowToStep', name: 'Sign In', text: 'Sign in with your Google account or connect an existing crypto wallet.' },
+      { '@type': 'HowToStep', name: 'Create Character', text: 'Choose a race, power source, roll stats, and pick starter equipment.' },
+      { '@type': 'HowToStep', name: 'Enter the World', text: 'Spawn into the world and fight your first monster.' },
+      { '@type': 'HowToStep', name: 'Visit a Shop', text: 'Find a shop to buy better equipment with your earned gold.' },
+    ],
+  }} slot="head" />
+
+  <h1>Your First Steps</h1>
+  <p class="text-lg text-text-secondary">
+    You wake in darkness with nothing but a name. Here's how to carve your path.
+  </p>
+
+  <h2 id="sign-in">Sign In</h2>
+  <p>
+    Open <a href="https://ultimatedominion.com">ultimatedominion.com</a> in any browser. No downloads, no installs.
+    Click <strong>Sign In</strong> and choose your preferred method:
+  </p>
+  <ul>
+    <li><strong>Google account</strong> (recommended) — one click, no setup required. An account is created for you automatically behind the scenes.</li>
+    <li><strong>Existing crypto account</strong> — connect through the account selector if you already have one. A temporary session key is created so you don't need to approve every action.</li>
+  </ul>
+
+  <Callout type="tip" title="No crypto knowledge needed">
+    Ultimate Dominion handles all the technical details. Your gold, items, and character are stored permanently and securely — you just play.
+  </Callout>
+
+  <h2 id="create-your-character">Create Your Character</h2>
+  <p>
+    After signing in, you'll walk through character creation in four steps:
+  </p>
+  <ol>
+    <li><strong>Choose a Race</strong> — Human, Elf, or Dwarf. Each gives different stat bonuses. See the <a href="/guide/character-creation">Character Creation</a> page for details.</li>
+    <li><strong>Choose a Power Source</strong> — Divine, Weave, or Physical. This is flavor — it doesn't restrict your abilities.</li>
+    <li><strong>Roll Stats</strong> — Your Strength, Agility, and Intelligence are randomly distributed from a pool of 19 points (3–10 per stat). Re-roll until you're satisfied.</li>
+    <li><strong>Pick Starter Gear</strong> — Choose one weapon and one piece of armor from the available pool. Your stat requirements determine what you can equip.</li>
+  </ol>
+
+  <Callout type="info" title="Your stats matter">
+    Stats determine which items you can equip, how hard you hit, how often you dodge, and which side of the <a href="/guide/combat">combat triangle</a> you're on. Choose wisely — or re-roll until fortune smiles.
+  </Callout>
+
+  <h2 id="your-first-fight">Your First Fight</h2>
+  <p>
+    After entering the world, you'll spawn at the cave entrance. From here:
+  </p>
+  <ol>
+    <li><strong>Move</strong> using arrow keys or the on-screen directional buttons. Each move takes you one tile.</li>
+    <li><strong>Find a monster</strong> — creatures roam the cave tiles. When you step onto a tile with monsters, you'll see them listed in the tile details panel.</li>
+    <li><strong>Attack</strong> — select your weapon or a spell, then hit Attack. Combat is turn-based with a 30-second timer per turn.</li>
+    <li><strong>Win</strong> — defeating a monster earns you gold, experience, and possibly item drops.</li>
+  </ol>
+
+  <Callout type="tip" title="Start close to the entrance">
+    Monsters near the cave entrance (the northwest corner) are lower level. Venture deeper as you grow stronger. The <a href="/guide/dark-cave">Dark Cave map</a> shows where different level ranges spawn.
+  </Callout>
+
+  <h2 id="using-shops">Using Shops</h2>
+  <p>
+    Shops are scattered throughout the world. The first one you'll find is <strong>Tal's shop</strong>. Walk to the shop tile and interact to open the trading screen.
+  </p>
+  <ul>
+    <li><strong>Buy</strong> — spend gold on weapons, armor, and consumables. Rarer items cost more.</li>
+    <li><strong>Sell</strong> — trade your unwanted items for gold (at a lower price than buying).</li>
+  </ul>
+  <p>
+    Shops have limited stock that refreshes periodically. If what you need isn't in stock, check back later or try the <a href="/guide/economy">player marketplace</a>.
+  </p>
+
+  <h2 id="whats-next">What's Next</h2>
+  <p>Your immediate goals:</p>
+  <ul>
+    <li><strong>Level 3</strong> — earn the <a href="/guide/badges">Adventurer badge</a> and unlock chat.</li>
+    <li><strong>Level 10</strong> — choose an <a href="/guide/classes">advanced class</a> and receive your class ability.</li>
+    <li><strong>Explore deeper</strong> — the <a href="/guide/dark-cave">danger zone</a> holds tougher monsters, better loot, and the threat of <a href="/guide/pvp">other players</a>.</li>
+    <li><strong>Collect Fragments</strong> — mysterious <a href="/guide/lore">lore fragments</a> are scattered throughout the world, triggered by your actions.</li>
+  </ul>
+</GuideLayout>
