@@ -24,6 +24,7 @@ import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS, MAX_PARTY_SIZE} from "../../constants.sol";
 import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize, CombatantHpZero} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {BoardCleanupLib} from "../libraries/BoardCleanupLib.sol";
 
 contract EncounterSystem is System {
     function createEncounter(EncounterType encounterType, bytes32[] memory group1, bytes32[] memory group2)
@@ -187,10 +188,11 @@ contract EncounterSystem is System {
             itemsDropped: itemsDropped
         });
 
-        _cleanupEntities(encounterData.attackers);
-        _cleanupEntities(encounterData.defenders);
-
         CombatOutcome.set(encounterId, combatOutcome);
+
+        bool isPvE = encounterData.encounterType == EncounterType.PvE;
+        _cleanupEntities(encounterData.attackers, !isPvE || !encounterData.attackersAreMobs);
+        _cleanupEntities(encounterData.defenders, !isPvE || encounterData.attackersAreMobs);
     }
 
     function _endWorldEncounter(bytes32 encounterId) internal {
@@ -228,14 +230,14 @@ contract EncounterSystem is System {
         }
     }
 
-    function _cleanupEntities(bytes32[] memory entities) internal {
+    function _cleanupEntities(bytes32[] memory entities, bool areCharacters) internal {
         bytes32[] memory emptyArray = new bytes32[](0);
         for (uint256 i; i < entities.length; i++) {
             bytes32 entityId = entities[i];
             EncounterEntity.setEncounterId(entityId, bytes32(0));
             EncounterEntity.setAppliedStatusEffects(entityId, emptyArray);
             if (EncounterEntity.getDied(entityId)) {
-                IWorld(_world()).UD__removeEntityFromBoard(entityId);
+                BoardCleanupLib.removeFromBoard(entityId, areCharacters);
                 EncounterEntity.setDied(entityId, true);
                 WorldStatusEffects.setAppliedStatusEffects(entityId, emptyArray);
             }
