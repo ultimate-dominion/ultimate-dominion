@@ -108,9 +108,12 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const {
     authMethod,
+    embeddedWallet,
     embeddedWalletClient,
     externalWalletClient,
     ownerAddress: address,
+    thirdwebClient,
+    thirdwebChain,
   } = useAuth();
   const publicClient = usePublicClient();
   // Use the appropriate wallet client for Push Protocol
@@ -369,7 +372,22 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       // Lazy-load Push Protocol SDK — only when user actually opens chat
       const { PushAPI: PushSDK, CONSTANTS } = await import('@pushprotocol/restapi');
 
-      const _user = await PushSDK.initialize(data, {
+      // For embedded wallets, use the admin (EOA) account for Push Protocol.
+      // Smart account signatures don't verify via ecrecover, causing 400 errors.
+      let pushSigner = data;
+      if (authMethod === 'embedded' && embeddedWallet?.getAdminAccount) {
+        const adminAccount = embeddedWallet.getAdminAccount();
+        if (adminAccount) {
+          const { viemAdapter } = await import('thirdweb/adapters/viem');
+          pushSigner = viemAdapter.walletClient.toViem({
+            client: thirdwebClient,
+            chain: thirdwebChain,
+            account: adminAccount,
+          });
+        }
+      }
+
+      const _user = await PushSDK.initialize(pushSigner, {
         env: PUSH_ENV,
       });
 
@@ -444,7 +462,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     } finally {
       setIsLoggingIn(false);
     }
-  }, [data, isOpen, renderError, user]);
+  }, [authMethod, data, embeddedWallet, isOpen, renderError, thirdwebChain, thirdwebClient, user]);
 
   // Cleanup Push Protocol stream on unmount
   useEffect(() => {

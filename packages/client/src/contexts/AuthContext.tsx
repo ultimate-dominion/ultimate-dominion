@@ -26,6 +26,7 @@ type AuthContextType = {
   authMethod: AuthMethod;
   connectWithGoogle: () => Promise<void>;
   disconnect: () => Promise<void>;
+  embeddedWallet: Wallet | null;
   embeddedWalletClient: WalletClient | null;
   externalWalletClient: WalletClient | null;
   hasInjectedWallet: boolean;
@@ -176,6 +177,7 @@ export const AuthProvider = ({
         authMethod: 'embedded',
         connectWithGoogle,
         disconnect,
+        embeddedWallet,
         embeddedWalletClient,
         externalWalletClient: null,
         hasInjectedWallet,
@@ -193,6 +195,7 @@ export const AuthProvider = ({
         authMethod: 'external',
         connectWithGoogle,
         disconnect,
+        embeddedWallet: null,
         embeddedWalletClient: null,
         externalWalletClient: wagmiWalletClient,
         hasInjectedWallet,
@@ -209,6 +212,7 @@ export const AuthProvider = ({
       authMethod: null,
       connectWithGoogle,
       disconnect,
+      embeddedWallet: null,
       embeddedWalletClient: null,
       externalWalletClient: null,
       hasInjectedWallet,
@@ -222,6 +226,7 @@ export const AuthProvider = ({
     connectWithGoogle,
     disconnect,
     embeddedAddress,
+    embeddedWallet,
     embeddedWalletClient,
     hasInjectedWallet,
     isConnecting,
