@@ -39,16 +39,28 @@ contract EncounterSystem is System {
         }
         (uint16 x, uint16 y) = Position.get(group1[0]);
 
-        if (encounterType == EncounterType.PvE) {
-            // higher agi attacks first
+        if (encounterType == EncounterType.PvE || encounterType == EncounterType.PvP) {
             (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
 
-            (bool isValidPvE, bool attackersAreMobs) = IWorld(_world()).UD__isValidPvE(attackers, defenders, x, y);
-            if (!isValidPvE) revert InvalidPvE();
+            bool attackersAreMobs;
+            if (encounterType == EncounterType.PvE) {
+                bool isValidPvE;
+                (isValidPvE, attackersAreMobs) = IWorld(_world()).UD__isValidPvE(attackers, defenders, x, y);
+                if (!isValidPvE) revert InvalidPvE();
+            } else {
+                if (!IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y)) revert InvalidPvP();
+                for (uint256 i; i < attackers.length; i++) {
+                    if (Stats.getCurrentHp(attackers[i]) <= 0) revert CombatantHpZero();
+                }
+                for (uint256 i; i < defenders.length; i++) {
+                    if (Stats.getCurrentHp(defenders[i]) <= 0) revert CombatantHpZero();
+                }
+            }
+
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
 
-            CombatEncounterData memory combatData = CombatEncounterData({
+            CombatEncounter.set(encounterId, CombatEncounterData({
                 encounterType: encounterType,
                 start: startTime,
                 end: 0,
@@ -59,40 +71,7 @@ contract EncounterSystem is System {
                 attackersAreMobs: attackersAreMobs,
                 defenders: defenders,
                 attackers: attackers
-            });
-
-            CombatEncounter.set(encounterId, combatData);
-        } else if (encounterType == EncounterType.PvP) {
-            // higher agi attacks first
-            (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
-
-            if (!IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y)) revert InvalidPvP();
-
-            // Validate all combatants have HP > 0
-            for (uint256 i; i < attackers.length; i++) {
-                if (Stats.getCurrentHp(attackers[i]) <= 0) revert CombatantHpZero();
-            }
-            for (uint256 i; i < defenders.length; i++) {
-                if (Stats.getCurrentHp(defenders[i]) <= 0) revert CombatantHpZero();
-            }
-
-            uint256 startTime = block.timestamp;
-            encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
-
-            CombatEncounterData memory combatData = CombatEncounterData({
-                encounterType: encounterType,
-                start: startTime,
-                end: 0,
-                rewardsDistributed: false,
-                currentTurn: 1,
-                currentTurnTimer: block.timestamp,
-                maxTurns: DEFAULT_MAX_TURNS,
-                attackersAreMobs: false,
-                defenders: defenders,
-                attackers: attackers
-            });
-
-            CombatEncounter.set(encounterId, combatData);
+            }));
         } else if (encounterType == EncounterType.World) {
             (uint16 group1X, uint16 group1Y) = IWorld(_world()).UD__getEntityPosition(group1[0]);
 
@@ -126,29 +105,8 @@ contract EncounterSystem is System {
             revert InvalidEncounterType();
         }
 
-        EncounterEntityData memory tempEncounterEntityData;
-
-        // set encounterId for group1
-        for (uint256 i; i < group1.length; i++) {
-            tempEncounterEntityData = EncounterEntity.get(group1[i]);
-            // check that entity is not already in an encounter and is not dead
-            if (tempEncounterEntityData.encounterId != bytes32(0) || tempEncounterEntityData.died) {
-                revert InvalidCombatEntity();
-            }
-            tempEncounterEntityData.encounterId = encounterId;
-            EncounterEntity.set(group1[i], tempEncounterEntityData);
-        }
-
-        // set encounterId for group2
-        for (uint256 i; i < group2.length; i++) {
-            tempEncounterEntityData = EncounterEntity.get(group2[i]);
-            // check that entity is not already in an encounter and is not dead
-            if (tempEncounterEntityData.encounterId != bytes32(0) || tempEncounterEntityData.died) {
-                revert InvalidCombatEntity();
-            }
-            tempEncounterEntityData.encounterId = encounterId;
-            EncounterEntity.set(group2[i], tempEncounterEntityData);
-        }
+        _registerEntities(group1, encounterId);
+        _registerEntities(group2, encounterId);
     }
 
     /**
@@ -170,41 +128,26 @@ contract EncounterSystem is System {
 
         // is pvp
         if (encounterData.encounterType == EncounterType.PvP) {
-            // should be defender turn
+            // Determine active team based on turn parity (even = defenders, odd = attackers)
+            bytes32[] memory activeTeam;
+            bytes32[] memory otherTeam;
             if (encounterData.currentTurn % 2 == 0) {
-                // if timestamp is less than timeout
-                if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
-                    if (!IWorld(_world()).UD__isParticipant(playerId, encounterId)) {
-                        revert Unauthorized();
-                    }
-                    // if player is attacker add +1 to current turn
-                    if (IWorld(_world()).UD__isParticipant(playerAddress, encounterData.attackers)) {
-                        encounterData.currentTurn += 1;
-                        CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
-                    }
-                } else {
-                    if (!IWorld(_world()).UD__isParticipant(playerAddress, encounterData.defenders)) {
-                        revert CannotEndTurn();
-                    }
+                activeTeam = encounterData.defenders;
+                otherTeam = encounterData.attackers;
+            } else {
+                activeTeam = encounterData.attackers;
+                otherTeam = encounterData.defenders;
+            }
+
+            if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
+                // Timer expired — allow either player; skip turn if other team acts
+                if (IWorld(_world()).UD__isParticipant(playerAddress, otherTeam)) {
+                    encounterData.currentTurn += 1;
+                    CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
                 }
             } else {
-                // should be attacker turn unless defender has timed out
-                if (encounterData.currentTurnTimer + 30 <= block.timestamp) {
-                    // allow either player to end the turn.
-                    if (!IWorld(_world()).UD__isParticipant(playerId, encounterId)) {
-                        revert Unauthorized();
-                    }
-                    // if player is attacker add +1 to current turn
-                    if (IWorld(_world()).UD__isParticipant(playerAddress, encounterData.defenders)) {
-                        encounterData.currentTurn += 1;
-                        CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
-                    }
-                } else {
-                    // check that player action is for attacker
-                    if (!IWorld(_world()).UD__isParticipant(playerAddress, encounterData.attackers)) {
-                        revert CannotEndTurn();
-                    }
-                }
+                // Active team must act
+                if (!IWorld(_world()).UD__isParticipant(playerAddress, activeTeam)) revert CannotEndTurn();
             }
         }
         _queueActions(encounterId, attacks);
@@ -239,30 +182,8 @@ contract EncounterSystem is System {
             itemsDropped: itemsDropped
         });
 
-        bytes32 entityTemp;
-        bytes32[] memory emptyArray = new bytes32[](0);
-
-        for (uint256 i; i < encounterData.attackers.length; i++) {
-            entityTemp = encounterData.attackers[i];
-            EncounterEntity.setEncounterId(entityTemp, bytes32(0));
-            EncounterEntity.setAppliedStatusEffects(entityTemp, emptyArray);
-            if (EncounterEntity.getDied(entityTemp)) {
-                IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
-                EncounterEntity.setDied(entityTemp, true);
-                WorldStatusEffects.setAppliedStatusEffects(entityTemp, emptyArray);
-            }
-        }
-
-        for (uint256 i; i < encounterData.defenders.length; i++) {
-            entityTemp = encounterData.defenders[i];
-            EncounterEntity.setEncounterId(entityTemp, bytes32(0));
-            EncounterEntity.setAppliedStatusEffects(entityTemp, emptyArray);
-            if (EncounterEntity.getDied(entityTemp)) {
-                IWorld(_world()).UD__removeEntityFromBoard(entityTemp);
-                EncounterEntity.setDied(entityTemp, true);
-                WorldStatusEffects.setAppliedStatusEffects(entityTemp, emptyArray);
-            }
-        }
+        _cleanupEntities(encounterData.attackers);
+        _cleanupEntities(encounterData.defenders);
 
         CombatOutcome.set(encounterId, combatOutcome);
 
@@ -299,6 +220,29 @@ contract EncounterSystem is System {
         SystemSwitch.call(
             abi.encodeCall(IRngSystem.getRng, (encounterId, RngRequestType.Combat, abi.encode(encounterId, attacks)))
         );
+    }
+
+    function _registerEntities(bytes32[] memory group, bytes32 encounterId) internal {
+        for (uint256 i; i < group.length; i++) {
+            EncounterEntityData memory data = EncounterEntity.get(group[i]);
+            if (data.encounterId != bytes32(0) || data.died) revert InvalidCombatEntity();
+            data.encounterId = encounterId;
+            EncounterEntity.set(group[i], data);
+        }
+    }
+
+    function _cleanupEntities(bytes32[] memory entities) internal {
+        bytes32[] memory emptyArray = new bytes32[](0);
+        for (uint256 i; i < entities.length; i++) {
+            bytes32 entityId = entities[i];
+            EncounterEntity.setEncounterId(entityId, bytes32(0));
+            EncounterEntity.setAppliedStatusEffects(entityId, emptyArray);
+            if (EncounterEntity.getDied(entityId)) {
+                IWorld(_world()).UD__removeEntityFromBoard(entityId);
+                EncounterEntity.setDied(entityId, true);
+                WorldStatusEffects.setAppliedStatusEffects(entityId, emptyArray);
+            }
+        }
     }
 
     function _orderGroupsByAgi(bytes32[] memory _group1, bytes32[] memory _group2)
