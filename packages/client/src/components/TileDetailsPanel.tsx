@@ -30,7 +30,7 @@ import { useFragments } from '../contexts/FragmentContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import {
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
@@ -50,7 +50,6 @@ import { ShopRow } from './ShopRow';
 const ROW_HEIGHT = { base: 5, md: 8 };
 
 export const TileDetailsPanel = (): JSX.Element => {
-  const { renderError, renderSuccess } = useToast();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
     isOpen: isSafetyZoneInfoModalOpen,
@@ -101,7 +100,12 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useBattle();
   const { isRefreshing, moveStatusMessage } = useMovement();
 
-  const [isInitiating, setIsInitiating] = useState(false);
+  const encounterTx = useTransaction({
+    actionName: 'initiate battle',
+    showSuccessToast: true,
+    successMessage: 'Battle has begun!',
+  });
+
   const [isUserHit, setIsUserHit] = useState(false);
   const [isMonsterHit, setIsMonsterHit] = useState(false);
 
@@ -177,42 +181,28 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const onInitiateCombat = useCallback(
     async (opponent: Character | Monster, encounterType: EncounterType) => {
-      try {
-        setIsInitiating(true);
+      if (!character) return;
+      if (!delegatorAddress) return;
 
-        if (!character) {
-          throw new Error('Character not found.');
-        }
-
-        if (!delegatorAddress) {
-          throw new Error('Missing delegation.');
-        }
-
+      const result = await encounterTx.execute(async () => {
         const { error, success } = await createEncounter(
           encounterType,
           [character.id],
           [opponent.id],
         );
+        if (error && !success) throw new Error(error);
+      });
 
-        if (error && !success) {
-          throw new Error(error);
-        }
-
-        renderSuccess('Battle has begun!');
+      if (result !== undefined) {
         refreshCharacter();
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to initiate battle.', e);
-      } finally {
-        setIsInitiating(false);
       }
     },
     [
       character,
       createEncounter,
       delegatorAddress,
+      encounterTx,
       refreshCharacter,
-      renderError,
-      renderSuccess,
     ],
   );
 
@@ -676,12 +666,12 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (isInitiating) {
+  if (encounterTx.isLoading) {
     return (
       <Box h="100%">
         <VStack h="100%" justifyContent="center" spacing={8}>
           <Text fontWeight={700} size={{ base: 'md', lg: 'xl' }}>
-            Initiating battle!
+            {encounterTx.statusMessage || 'Initiating battle!'}
           </Text>
           <Spinner color="red" size="xl" />
         </VStack>

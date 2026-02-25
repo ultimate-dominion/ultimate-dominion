@@ -25,6 +25,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { etherToFixedNumber } from '../utils/helpers';
 
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
@@ -39,7 +40,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
   isOpen,
   onClose,
 }): JSX.Element => {
-  const { renderError, renderSuccess } = useToast();
+  const { renderSuccess } = useToast();
   const {
     delegatorAddress,
     systemCalls: { depositToEscrow, withdrawFromEscrow },
@@ -54,14 +55,15 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
     onClose: onCloseAllowanceModal,
   } = useDisclosure();
 
+  const depositTx = useTransaction({ actionName: 'deposit gold', showSuccessToast: false });
+  const withdrawTx = useTransaction({ actionName: 'withdraw gold', showSuccessToast: false });
+
   const [depositAmount, setDepositAmount] = useState<string>('');
-  const [isDepositing, setIsDepositing] = useState(false);
   const [depositErrorMessage, setDepositErrorMessage] = useState<string | null>(
     null,
   );
 
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawErrorMessage, setWithdrawErrorMessage] = useState<
     string | null
   >(null);
@@ -85,112 +87,88 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
   }, [isOpen, onSetIsMovementDisabled, refreshCharacter]);
 
   const onDeposit = useCallback(async () => {
-    try {
-      setIsDepositing(true);
+    if (!character) return;
+    if (!delegatorAddress) return;
 
-      if (!character) {
-        throw new Error('No character found.');
-      }
+    if (!depositAmount || parseEther(depositAmount) <= 0) {
+      setDepositErrorMessage('Amount must be greater than 0.');
+      return;
+    }
 
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
+    if (parseEther(depositAmount) > character.externalGoldBalance) {
+      setDepositErrorMessage('Insufficient Gold in external wallet.');
+      return;
+    }
 
-      if (!depositAmount || parseEther(depositAmount) <= 0) {
-        setDepositErrorMessage('Amount must be greater than 0.');
-        return;
-      }
+    if (parseEther(depositAmount) > goldLootManagerAllowance) {
+      onOpenAllowanceModal();
+      return;
+    }
 
-      if (parseEther(depositAmount) > character.externalGoldBalance) {
-        setDepositErrorMessage('Insufficient Gold in external wallet.');
-        return;
-      }
-
-      if (parseEther(depositAmount) > goldLootManagerAllowance) {
-        onOpenAllowanceModal();
-        return;
-      }
-
+    const result = await depositTx.execute(async () => {
       const { error, success } = await depositToEscrow(
         character.id,
         character.escrowGoldBalance,
         parseEther(depositAmount),
       );
+      if (error && !success) throw new Error(error);
+    });
 
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result !== undefined) {
       await refreshCharacter();
       renderSuccess(`${depositAmount} Gold deposited successfully!`);
       onClose();
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error depositing Gold.', e);
-    } finally {
-      setIsDepositing(false);
     }
   }, [
     character,
     delegatorAddress,
     depositAmount,
     depositToEscrow,
+    depositTx,
     goldLootManagerAllowance,
     onClose,
     onOpenAllowanceModal,
     refreshCharacter,
-    renderError,
     renderSuccess,
   ]);
 
   const onWithdraw = useCallback(async () => {
-    try {
-      setIsWithdrawing(true);
+    if (!character) return;
+    if (!delegatorAddress) return;
 
-      if (!character) {
-        throw new Error('No character found.');
-      }
+    if (!withdrawAmount || parseEther(withdrawAmount) <= 0) {
+      setWithdrawErrorMessage('Amount must be greater than 0.');
+      return;
+    }
 
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
+    if (parseEther(withdrawAmount) > character.escrowGoldBalance) {
+      setWithdrawErrorMessage('Insufficient Gold in escrow.');
+      return;
+    }
 
-      if (!withdrawAmount || parseEther(withdrawAmount) <= 0) {
-        setWithdrawErrorMessage('Amount must be greater than 0.');
-        return;
-      }
-
-      if (parseEther(withdrawAmount) > character.escrowGoldBalance) {
-        setWithdrawErrorMessage('Insufficient Gold in escrow.');
-        return;
-      }
-
+    const result = await withdrawTx.execute(async () => {
       const { error, success } = await withdrawFromEscrow(
         character.id,
         character.escrowGoldBalance,
         parseEther(withdrawAmount),
       );
+      if (error && !success) throw new Error(error);
+    });
 
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result !== undefined) {
       await refreshCharacter();
       renderSuccess(`${withdrawAmount} Gold withdrawn successfully!`);
       onClose();
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error withdrawing Gold.', e);
-    } finally {
-      setIsWithdrawing(false);
     }
   }, [
     character,
     delegatorAddress,
     onClose,
     refreshCharacter,
-    renderError,
     renderSuccess,
     withdrawAmount,
     withdrawFromEscrow,
+    withdrawTx,
   ]);
 
   if (!character) {
@@ -260,7 +238,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
               )}
               <InputGroup>
                 <Input
-                  isDisabled={isDepositing}
+                  isDisabled={depositTx.isLoading}
                   onChange={e => setDepositAmount(e.target.value)}
                   placeholder="Amount"
                   type="number"
@@ -285,7 +263,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
             </FormControl>
             <Button
               alignSelf="end"
-              isLoading={isDepositing}
+              isLoading={depositTx.isLoading}
               onClick={onDeposit}
               size="sm"
             >
@@ -309,7 +287,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
               )}
               <InputGroup>
                 <Input
-                  isDisabled={isWithdrawing}
+                  isDisabled={withdrawTx.isLoading}
                   onChange={e => setWithdrawAmount(e.target.value)}
                   placeholder="Amount"
                   type="number"
@@ -334,7 +312,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
             </FormControl>
             <Button
               alignSelf="end"
-              isLoading={isWithdrawing}
+              isLoading={withdrawTx.isLoading}
               onClick={onWithdraw}
               size="sm"
             >

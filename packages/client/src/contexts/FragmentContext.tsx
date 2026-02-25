@@ -15,6 +15,7 @@ import {
 } from 'react';
 
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import {
   FRAGMENT_NARRATIVES,
   getFragmentInfo,
@@ -64,7 +65,7 @@ export type FragmentProviderProps = {
 export const FragmentProvider = ({
   children,
 }: FragmentProviderProps): JSX.Element => {
-  const { renderError, renderSuccess } = useToast();
+  const { renderSuccess } = useToast();
   const {
     components,
     systemCalls: { claimFragment: claimFragmentCall },
@@ -72,7 +73,7 @@ export const FragmentProvider = ({
   const { character } = useCharacter();
   const { position } = useMap();
 
-  const [isClaiming, setIsClaiming] = useState(false);
+  const claimTx = useTransaction({ actionName: 'claim fragment', showSuccessToast: false });
   const [refreshKey, setRefreshKey] = useState(0);
 
   const FragmentProgress = components?.FragmentProgress;
@@ -150,36 +151,24 @@ export const FragmentProvider = ({
 
   const claimFragment = useCallback(
     async (fragmentType: number) => {
-      try {
-        setIsClaiming(true);
+      if (!character) return;
+      if (!claimFragmentCall) return;
 
-        if (!character) {
-          throw new Error('No character found.');
-        }
-
-        if (!claimFragmentCall) {
-          throw new Error('Claim function not available.');
-        }
-
+      const result = await claimTx.execute(async () => {
         const { error, success } = await claimFragmentCall(
           character.id,
           fragmentType,
         );
+        if (error && !success) throw new Error(error);
+      });
 
-        if (error && !success) {
-          throw new Error(error);
-        }
-
+      if (result !== undefined) {
         const info = getFragmentInfo(fragmentType);
         renderSuccess(`Fragment claimed: ${info?.name ?? 'Unknown'}`);
         setRefreshKey(k => k + 1);
-      } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to claim fragment.', e);
-      } finally {
-        setIsClaiming(false);
       }
     },
-    [character, claimFragmentCall, renderError, renderSuccess],
+    [character, claimFragmentCall, claimTx, renderSuccess],
   );
 
   const refreshFragments = useCallback(() => {
@@ -194,7 +183,7 @@ export const FragmentProvider = ({
         fragments,
         pendingEcho,
         isLoading,
-        isClaiming,
+        isClaiming: claimTx.isLoading,
         claimFragment,
         refreshFragments,
       }}

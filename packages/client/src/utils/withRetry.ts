@@ -1,29 +1,41 @@
-import { getFriendlyError } from './errors';
+/**
+ * Pure retry utility with exponential backoff and error classification.
+ *
+ * - Classifies errors as retryable (network, nonce, timeout) vs non-retryable (user denied, revert)
+ * - Exponential backoff: 1s, 2s, 4s...
+ * - Status callbacks for progressive UI feedback
+ * - "Confirming..." transition after 3s on final attempt
+ */
 
-export type TransactionStatus =
-  | 'idle'
-  | 'submitting'
-  | 'confirming'
-  | 'retrying'
-  | 'success'
-  | 'error';
-
-export type StatusUpdate = {
-  status: TransactionStatus;
-  message: string;
-};
-
-export type WithRetryOptions = {
-  actionName: string;
-  maxAttempts?: number;
-  backoffMs?: number;
-  onStatusChange?: (update: StatusUpdate) => void;
-};
+const RETRYABLE_PATTERNS = [
+  'nonce',
+  'timeout',
+  'network',
+  'econnrefused',
+  'econnreset',
+  'socket hang up',
+  'fetch failed',
+  'failed to fetch',
+  'rate limit',
+  '429',
+  '502',
+  '503',
+  '504',
+  'internal json-rpc error',
+  'replacement transaction underpriced',
+  'already known',
+];
 
 const NON_RETRYABLE_PATTERNS = [
   'user denied',
   'user rejected',
+  'user cancelled',
   'insufficient funds',
+  'execution reverted',
+  'revert',
+  'missing delegation',
+  'character not found',
+  'not in a shop',
   'not owner',
   'already spawned',
   'cooldown',
@@ -32,8 +44,6 @@ const NON_RETRYABLE_PATTERNS = [
   'max players',
   'not in battle',
   'no character',
-  'character not found',
-  'missing delegation',
   'burner not found',
   'position not found',
   'battle not found',
@@ -47,99 +57,71 @@ const NON_RETRYABLE_PATTERNS = [
   'locked',
 ];
 
+export type RetryStatus = 'pending' | 'executing' | 'confirming' | 'retrying' | 'error' | 'success';
+
+export type RetryOptions = {
+  maxAttempts?: number;
+  onStatusChange?: (status: RetryStatus, message: string) => void;
+  actionName?: string;
+};
+
 function isRetryable(error: unknown): boolean {
-  const message =
-    (error instanceof Error ? error.message : String(error)).toLowerCase();
+  const message = ((error as Error)?.message ?? '').toLowerCase();
 
-  return !NON_RETRYABLE_PATTERNS.some(pattern => message.includes(pattern));
-}
-
-function getActionMessage(
-  actionName: string,
-  status: TransactionStatus,
-  attempt?: number,
-  maxAttempts?: number,
-): string {
-  const capitalizedAction =
-    actionName.charAt(0).toUpperCase() + actionName.slice(1);
-
-  switch (status) {
-    case 'submitting':
-      return `${capitalizedAction}...`;
-    case 'confirming':
-      return 'Almost there...';
-    case 'retrying':
-      return `Trying again... (${attempt}/${maxAttempts})`;
-    case 'success':
-      return `${capitalizedAction} complete!`;
-    case 'error':
-      return `${capitalizedAction} failed.`;
-    default:
-      return '';
+  for (const pattern of NON_RETRYABLE_PATTERNS) {
+    if (message.includes(pattern)) return false;
   }
+
+  for (const pattern of RETRYABLE_PATTERNS) {
+    if (message.includes(pattern)) return true;
+  }
+
+  // Default: don't retry unknown errors
+  return false;
 }
 
-export async function withRetry<T extends { success: boolean; error?: string }>(
+export async function withRetry<T>(
   fn: () => Promise<T>,
-  options: WithRetryOptions,
+  options: RetryOptions = {},
 ): Promise<T> {
-  const {
-    actionName,
-    maxAttempts = 3,
-    backoffMs = 2000,
-    onStatusChange,
-  } = options;
-
-  const notify = (status: TransactionStatus, message?: string) => {
-    onStatusChange?.({
-      status,
-      message:
-        message ?? getActionMessage(actionName, status),
-    });
-  };
+  const { maxAttempts = 3, onStatusChange, actionName = 'action' } = options;
 
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      notify('submitting');
+      if (attempt === 1) {
+        onStatusChange?.('executing', `${actionName}...`);
+      } else {
+        onStatusChange?.('retrying', `Retrying ${actionName}... (attempt ${attempt}/${maxAttempts})`);
+      }
 
-      // After 3s of waiting, transition to "confirming"
-      const confirmingTimer = setTimeout(() => {
-        notify('confirming');
-      }, 3000);
+      // Set a timer to transition to "confirming" after 3s
+      let confirmingTimer: ReturnType<typeof setTimeout> | undefined;
+      if (attempt === maxAttempts || maxAttempts === 1) {
+        confirmingTimer = setTimeout(() => {
+          onStatusChange?.('confirming', `Confirming ${actionName}...`);
+        }, 3000);
+      }
 
       const result = await fn();
 
-      clearTimeout(confirmingTimer);
-
-      if (result.error && !result.success) {
-        throw new Error(result.error);
-      }
-
-      notify('success');
+      if (confirmingTimer) clearTimeout(confirmingTimer);
+      onStatusChange?.('success', 'Done!');
       return result;
-    } catch (e) {
-      lastError = e;
+    } catch (error) {
+      lastError = error;
 
-      if (!isRetryable(e)) {
-        const friendly = getFriendlyError(e);
-        notify('error', friendly);
-        throw e;
-      }
-
-      if (attempt < maxAttempts) {
-        notify(
-          'retrying',
-          getActionMessage(actionName, 'retrying', attempt, maxAttempts),
-        );
-        const delay = backoffMs * Math.pow(2, attempt - 1);
+      if (attempt < maxAttempts && isRetryable(error)) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
         await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
       }
+
+      break;
     }
   }
 
-  const friendly = getFriendlyError(lastError);
-  notify('error', friendly);
+  onStatusChange?.('error', 'Failed');
   throw lastError;
 }

@@ -19,6 +19,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { ITEM_PATH } from '../Routes';
 import { type Consumable, OrderType } from '../utils/types';
 
@@ -45,7 +46,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   ...item
 }): JSX.Element => {
   const navigate = useNavigate();
-  const { renderError, renderSuccess } = useToast();
+  const { renderSuccess } = useToast();
   const {
     delegatorAddress,
     systemCalls: { useCombatConsumableItem, useWorldConsumableItem },
@@ -61,8 +62,9 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     onClose: onCloseAllowanceModal,
   } = useDisclosure();
 
+  const consumeTx = useTransaction({ actionName: 'use item', showSuccessToast: false });
+
   const [itemBalance, setItemBalance] = useState(item.balance);
-  const [isConsuming, setIsConsuming] = useState(false);
   const [isConsumed, setIsConsumed] = useState(false);
 
   const isOwner = useMemo(
@@ -71,52 +73,36 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   );
 
   const onUseConsumable = useCallback(async () => {
-    try {
-      setIsConsuming(true);
+    if (!character) return;
+    if (!delegatorAddress) return;
 
-      if (!character) {
-        throw new Error('Character not found.');
-      }
+    if (!itemsLootManagerAllowance) {
+      onOpenAllowanceModal();
+      return;
+    }
 
-      if (!delegatorAddress) {
-        throw new Error('Delegator address not found.');
-      }
-
-      if (!item) {
-        throw new Error('Consumable item not found.');
-      }
-
-      if (!itemsLootManagerAllowance) {
-        onOpenAllowanceModal();
-        return;
-      }
-
-      // Use combat consumable function when in battle, otherwise use world consumable
+    const result = await consumeTx.execute(async () => {
       const { error, success } = currentBattle
         ? await useCombatConsumableItem(character.id, item.tokenId)
         : await useWorldConsumableItem(character.id, item.tokenId);
+      if (error && !success) throw new Error(error);
+    });
 
-      if (error && !success) {
-        throw new Error(error);
-      }
+    if (result !== undefined) {
       await refreshCharacter();
       renderSuccess(`${item.name} was consumed!`);
       setItemBalance(prev => prev - BigInt(1));
       setIsConsumed(true);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to consume item.', e);
-    } finally {
-      setIsConsuming(false);
     }
   }, [
     character,
+    consumeTx,
     currentBattle,
     delegatorAddress,
     item,
     itemsLootManagerAllowance,
     onOpenAllowanceModal,
     refreshCharacter,
-    renderError,
     renderSuccess,
     useCombatConsumableItem,
     useWorldConsumableItem,
@@ -246,7 +232,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
         {isConsumed ? (
           <ModalFooter>
             <Button
-              isDisabled={isConsuming}
+              isDisabled={consumeTx.isLoading}
               onClick={onClose}
               size="sm"
               variant="ghost"
@@ -256,12 +242,12 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
           </ModalFooter>
         ) : (
           <ModalFooter gap={3}>
-            <Button isDisabled={isConsuming} onClick={onClose} variant="ghost">
+            <Button isDisabled={consumeTx.isLoading} onClick={onClose} variant="ghost">
               No
             </Button>
             <Button
               isDisabled={isDisabled}
-              isLoading={isConsuming}
+              isLoading={consumeTx.isLoading}
               loadingText="Consuming..."
               mr={3}
               onClick={() =>

@@ -2,129 +2,113 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useToast } from './useToast';
 import { getFriendlyError } from '../utils/errors';
-import {
-  withRetry,
-  type StatusUpdate,
-  type TransactionStatus,
-} from '../utils/withRetry';
+import { withRetry, type RetryStatus } from '../utils/withRetry';
 
 type UseTransactionOptions = {
   actionName: string;
   maxAttempts?: number;
-  backoffMs?: number;
-  silent?: boolean;
   showSuccessToast?: boolean;
-  showErrorToast?: boolean;
   successMessage?: string;
+  /** Silent mode: no toasts at all (e.g. movement) */
+  silent?: boolean;
 };
 
 type UseTransactionReturn = {
-  execute: <T extends { success: boolean; error?: string }>(
-    fn: () => Promise<T>,
-  ) => Promise<T | null>;
-  status: TransactionStatus;
-  statusMessage: string;
+  /** Execute a transaction with retry and in-flight guard */
+  execute: <T>(fn: () => Promise<T>) => Promise<T | undefined>;
+  /** Whether a transaction is currently in flight */
   isLoading: boolean;
-  reset: () => void;
+  /** Progressive status message for UI display */
+  statusMessage: string;
+  /** Current retry status */
+  status: RetryStatus | 'idle';
 };
 
-export function useTransaction(
-  options: UseTransactionOptions,
-): UseTransactionReturn {
+/**
+ * React hook for executing on-chain transactions with:
+ * - In-flight guard (prevents double-submit)
+ * - Auto-retry with exponential backoff
+ * - Progressive status messages
+ * - Toast integration (error toasts auto, success toasts optional)
+ * - Auto-reset after 2s
+ */
+export function useTransaction(options: UseTransactionOptions): UseTransactionReturn {
   const {
     actionName,
     maxAttempts = 3,
-    backoffMs = 2000,
-    silent = false,
     showSuccessToast = false,
-    showErrorToast = true,
     successMessage,
+    silent = false,
   } = options;
 
-  const { renderError, renderWarning, renderSuccess } = useToast();
-
-  const [status, setStatus] = useState<TransactionStatus>('idle');
-  const [statusMessage, setStatusMessage] = useState('');
-  const inFlightRef = useRef(false);
+  const { renderError, renderSuccess } = useToast();
+  const inFlight = useRef(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [status, setStatus] = useState<RetryStatus | 'idle'>('idle');
+
+  // Clean up reset timer on unmount
   useEffect(() => {
     return () => {
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
     };
   }, []);
 
-  const reset = useCallback(() => {
-    setStatus('idle');
-    setStatusMessage('');
-  }, []);
-
   const execute = useCallback(
-    async <T extends { success: boolean; error?: string }>(
-      fn: () => Promise<T>,
-    ): Promise<T | null> => {
-      if (inFlightRef.current) return null;
-      inFlightRef.current = true;
+    async <T>(fn: () => Promise<T>): Promise<T | undefined> => {
+      if (inFlight.current) return undefined;
+      inFlight.current = true;
+      setIsLoading(true);
+      setStatus('executing');
+      setStatusMessage(`${actionName}...`);
 
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
 
-      const onStatusChange = (update: StatusUpdate) => {
-        setStatus(update.status);
-        setStatusMessage(update.message);
-
-        if (!silent && update.status === 'retrying') {
-          renderWarning(`Hang tight, trying again...`);
-        }
-      };
-
       try {
         const result = await withRetry(fn, {
-          actionName,
           maxAttempts,
-          backoffMs,
-          onStatusChange,
+          actionName,
+          onStatusChange: (newStatus, message) => {
+            setStatus(newStatus);
+            setStatusMessage(message);
+          },
         });
 
-        if (!silent && showSuccessToast) {
-          const capitalizedAction =
-            actionName.charAt(0).toUpperCase() + actionName.slice(1);
-          renderSuccess(successMessage ?? `${capitalizedAction} complete!`);
+        if (showSuccessToast && !silent && successMessage) {
+          renderSuccess(successMessage);
         }
 
-        resetTimerRef.current = setTimeout(reset, 2000);
+        // Auto-reset after 2s
+        resetTimerRef.current = setTimeout(() => {
+          setStatus('idle');
+          setStatusMessage('');
+        }, 2000);
+
         return result;
-      } catch (e) {
-        if (!silent && showErrorToast) {
-          const friendly = getFriendlyError(e);
-          renderError(friendly, e);
+      } catch (error) {
+        if (!silent) {
+          const friendlyMessage = getFriendlyError(error);
+          if (friendlyMessage) {
+            renderError(friendlyMessage, error);
+          }
         }
 
-        resetTimerRef.current = setTimeout(reset, 2000);
-        return null;
+        // Auto-reset after 2s
+        resetTimerRef.current = setTimeout(() => {
+          setStatus('idle');
+          setStatusMessage('');
+        }, 2000);
+
+        return undefined;
       } finally {
-        inFlightRef.current = false;
+        setIsLoading(false);
+        inFlight.current = false;
       }
     },
-    [
-      actionName,
-      backoffMs,
-      maxAttempts,
-      renderError,
-      renderSuccess,
-      renderWarning,
-      reset,
-      showErrorToast,
-      showSuccessToast,
-      silent,
-      successMessage,
-    ],
+    [actionName, maxAttempts, renderError, renderSuccess, showSuccessToast, silent, successMessage],
   );
 
-  return {
-    execute,
-    isLoading: status === 'submitting' || status === 'confirming' || status === 'retrying',
-    reset,
-    status,
-    statusMessage,
-  };
+  return { execute, isLoading, statusMessage, status };
 }

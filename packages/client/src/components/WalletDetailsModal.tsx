@@ -31,6 +31,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { shortenAddress } from '../utils/helpers';
 
 import { CopyText } from './CopyText';
@@ -62,7 +63,7 @@ export const WalletDetailsModal = ({
   const { character } = useCharacter();
   const { isSpawned } = useMap();
 
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const logoutTx = useTransaction({ actionName: 'sign out', showSuccessToast: false });
 
   const [depositAmount, setDepositAmount] = useState<string>('0');
   const [isDepositing, setIsDepositing] = useState(false);
@@ -108,15 +109,15 @@ export const WalletDetailsModal = ({
   }, [handleRevokeDelegation, renderError, renderSuccess]);
 
   const onLogout = useCallback(async () => {
-    try {
-      setIsLoggingOut(true);
-      if (character?.locked && isSpawned) {
+    if (character?.locked && isSpawned) {
+      const result = await logoutTx.execute(async () => {
         const { error, success } = await removeEntityFromBoard(character.id);
+        if (error && !success) throw new Error(error);
+      });
+      if (result === undefined) return;
+    }
 
-        if (error && !success) {
-          throw new Error(error);
-        }
-      }
+    try {
       // Best-effort revoke delegation before disconnecting
       if (authMethod === 'external') {
         await handleLogoutRevoke();
@@ -129,8 +130,6 @@ export const WalletDetailsModal = ({
       );
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error disconnecting.', e);
-    } finally {
-      setIsLoggingOut(false);
     }
   }, [
     authMethod,
@@ -138,6 +137,7 @@ export const WalletDetailsModal = ({
     disconnect,
     handleLogoutRevoke,
     isSpawned,
+    logoutTx,
     removeEntityFromBoard,
     renderError,
     renderSuccess,
@@ -248,7 +248,7 @@ export const WalletDetailsModal = ({
               <Text size="sm">Balance: {burnerBalance}</Text>
               <Button
                 isDisabled={character?.inBattle}
-                isLoading={isLoggingOut}
+                isLoading={logoutTx.isLoading}
                 onClick={onLogout}
                 size="sm"
               >
@@ -305,7 +305,7 @@ export const WalletDetailsModal = ({
                 </Text>
                 <Button
                   isDisabled={character?.inBattle}
-                  isLoading={isLoggingOut}
+                  isLoading={logoutTx.isLoading}
                   onClick={onLogout}
                   size="sm"
                 >

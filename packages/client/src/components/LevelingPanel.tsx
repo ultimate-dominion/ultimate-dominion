@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import { getStatSymbol } from '../utils/helpers';
 import { type Character } from '../utils/types';
 
@@ -43,12 +44,14 @@ export const LevelingPanel = ({
   canLevel: boolean;
   character: Character;
 }): JSX.Element => {
-  const { renderError, renderSuccess, renderWarning } = useToast();
+  const { renderSuccess, renderWarning } = useToast();
   const {
     delegatorAddress,
     systemCalls: { levelCharacter },
   } = useMUD();
   const { refreshCharacter } = useCharacter();
+
+  const levelTx = useTransaction({ actionName: 'level up', showSuccessToast: false });
 
   const [abilityPoints, setAbilityPoints] = useState(0);
   const [newAgility, setNewAgility] = useState(character.baseStats.agility);
@@ -56,8 +59,6 @@ export const LevelingPanel = ({
     character.baseStats.intelligence,
   );
   const [newStrength, setNewStrength] = useState(character.baseStats.strength);
-
-  const [isLeveling, setIsLeveling] = useState(false);
 
   // Calculate ability points based on diminishing returns system
   // Levels 1-10: +1 stat point per level
@@ -110,7 +111,7 @@ export const LevelingPanel = ({
 
   const onDecrementStat = useCallback(
     (stat: 'str' | 'agi' | 'int') => {
-      if (isLeveling) return;
+      if (levelTx.isLoading) return;
 
       let replenishAbilityPoint = false;
 
@@ -167,7 +168,7 @@ export const LevelingPanel = ({
       character.baseStats.intelligence,
       character.baseStats.strength,
       intelligenceIncreased,
-      isLeveling,
+      levelTx.isLoading,
       newAgility,
       newIntelligence,
       newStrength,
@@ -178,7 +179,7 @@ export const LevelingPanel = ({
 
   const onIncrementStat = useCallback(
     (stat: 'str' | 'agi' | 'int') => {
-      if (isLeveling) return;
+      if (levelTx.isLoading) return;
       if (abilityPoints <= 0) {
         renderWarning('You do not have enough ability points.');
         return;
@@ -199,43 +200,39 @@ export const LevelingPanel = ({
 
       setAbilityPoints(prev => prev - 1);
     },
-    [abilityPoints, isLeveling, renderWarning],
+    [abilityPoints, levelTx.isLoading, renderWarning],
   );
 
   const onLevelCharacter = useCallback(async () => {
-    try {
-      setIsLeveling(true);
-      if (abilityPoints > 0) {
-        renderWarning('You have unused ability points');
-        return;
-      }
-      if (!delegatorAddress) {
-        throw new Error('Missing delegation.');
-      }
+    if (abilityPoints > 0) {
+      renderWarning('You have unused ability points');
+      return;
+    }
+    if (!delegatorAddress) return;
 
-      const newStats = {
-        agility: newAgility,
-        maxHp: character.maxHp,
-        currentHp: character.currentHp,
-        class: character.entityClass,
-        experience: character.experience,
-        intelligence: newIntelligence,
-        level: character.level,
-        strength: newStrength,
-        // Implicit class system fields - preserve from baseStats
-        race: character.baseStats.race,
-        powerSource: character.baseStats.powerSource,
-        startingArmor: character.baseStats.startingArmor,
-        advancedClass: character.baseStats.advancedClass,
-        hasSelectedAdvancedClass: character.baseStats.hasSelectedAdvancedClass,
-      };
+    const newStats = {
+      agility: newAgility,
+      maxHp: character.maxHp,
+      currentHp: character.currentHp,
+      class: character.entityClass,
+      experience: character.experience,
+      intelligence: newIntelligence,
+      level: character.level,
+      strength: newStrength,
+      // Implicit class system fields - preserve from baseStats
+      race: character.baseStats.race,
+      powerSource: character.baseStats.powerSource,
+      startingArmor: character.baseStats.startingArmor,
+      advancedClass: character.baseStats.advancedClass,
+      hasSelectedAdvancedClass: character.baseStats.hasSelectedAdvancedClass,
+    };
 
+    const result = await levelTx.execute(async () => {
       const { error, success } = await levelCharacter(character.id, newStats);
+      if (error && !success) throw new Error(error);
+    });
 
-      if (error && !success) {
-        throw new Error(error);
-      }
-
+    if (result !== undefined) {
       await refreshCharacter();
 
       // Check if this level up earned the Adventurer badge (level 3)
@@ -245,21 +242,17 @@ export const LevelingPanel = ({
       } else {
         renderSuccess('Character leveled up!');
       }
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to unequip item.', e);
-    } finally {
-      setIsLeveling(false);
     }
   }, [
     abilityPoints,
     character,
     delegatorAddress,
     levelCharacter,
+    levelTx,
     newAgility,
     newIntelligence,
     newStrength,
     refreshCharacter,
-    renderError,
     renderSuccess,
     renderWarning,
   ]);
@@ -599,7 +592,7 @@ export const LevelingPanel = ({
 
         {canLevel && (
           <Button
-            isLoading={isLeveling}
+            isLoading={levelTx.isLoading}
             mt={8}
             onClick={onLevelCharacter}
             size="sm"
