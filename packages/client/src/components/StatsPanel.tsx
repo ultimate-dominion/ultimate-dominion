@@ -12,7 +12,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { Has, runQuery } from '@latticexyz/recs';
+import { getComponentValue, Has, runQuery } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useMemo } from 'react';
 import {
@@ -46,7 +46,7 @@ export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
-    components: { Levels },
+    components: { Levels, Stats },
     systemCalls: { rest },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
@@ -63,15 +63,22 @@ export const StatsPanel = (): JSX.Element => {
 
   const onRest = useCallback(async () => {
     if (!character) return;
+    const prevHp = character.currentHp;
     const result = await restTx.execute(async () => {
       const { error, success } = await rest(character.id);
       if (error && !success) throw new Error(error);
     });
     if (result !== undefined) {
+      // Poll MUD Stats component until HP reflects the rest
+      for (let i = 0; i < 30; i++) {
+        const stats = getComponentValue(Stats, character.id);
+        if (stats && stats.currentHp !== prevHp) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
       await refreshCharacter();
       renderSuccess(REST_FLAVOR[Math.floor(Math.random() * REST_FLAVOR.length)]);
     }
-  }, [character, rest, restTx, refreshCharacter, renderSuccess]);
+  }, [character, rest, restTx, Stats, refreshCharacter, renderSuccess]);
 
   const maxLevelXpRequirement = useMemo(
     () =>
@@ -362,29 +369,24 @@ export const StatsPanel = (): JSX.Element => {
         </HStack>
       </VStack>
 
-      {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
-        <Button
-          alignSelf="center"
-          mt={2}
-          onClick={() => navigate(`/characters/${character.id}`)}
-          size="xs"
-          variant="gold"
-        >
-          Level Up!
-        </Button>
-      )}
-
       {!character.inBattle &&
         currentHp > BigInt(0) &&
         currentHp < maxHp &&
         isAtFire && (
-          <VStack mt={3} spacing={1}>
+          <VStack
+            bg="rgba(0, 0, 0, 0.45)"
+            borderRadius="md"
+            mt={3}
+            mx={2}
+            px={3}
+            py={2}
+            spacing={1}
+          >
             <Text
               color="orange.300"
               fontFamily="mono"
               fontSize="xs"
               fontStyle="italic"
-              px={4}
               textAlign="center"
             >
               A fire crackles nearby. You could rest here.
@@ -405,6 +407,18 @@ export const StatsPanel = (): JSX.Element => {
             </Button>
           </VStack>
         )}
+
+      {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
+        <Button
+          alignSelf="center"
+          mt={2}
+          onClick={() => navigate(`/characters/${character.id}`)}
+          size="xs"
+          variant="gold"
+        >
+          Level Up!
+        </Button>
+      )}
 
       {isDesktop && (
         <HStack
