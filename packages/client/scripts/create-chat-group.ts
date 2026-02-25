@@ -14,7 +14,7 @@
 import { CONSTANTS, PushAPI } from '@pushprotocol/restapi';
 import { createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { anvil, baseSepolia } from 'viem/chains';
+import { anvil, base, baseSepolia } from 'viem/chains';
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
 const BADGE_CONTRACT = process.env.BADGE_CONTRACT;
@@ -29,6 +29,7 @@ if (!PRIVATE_KEY) {
 // Map chain IDs to viem chains
 const chains: Record<string, typeof anvil> = {
   '31337': anvil,
+  '8453': base,
   '84532': baseSepolia,
 };
 

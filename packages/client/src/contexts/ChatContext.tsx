@@ -34,11 +34,14 @@ import { useMUD } from './MUDContext';
 
 // Push Protocol environment: 'prod' for deployed sites, 'staging' for localhost
 // Values match @pushprotocol/restapi CONSTANTS.ENV — inlined to avoid static import
-const PUSH_ENV = import.meta.env.VITE_PUSH_ENV === 'prod' ? 'prod' : 'staging';
+const PUSH_ENV = import.meta.env.VITE_PUSH_ENV === 'prod' ? 'prod'
+  : import.meta.env.DEV ? 'staging' : 'prod';
 
 // Group chat ID — differs between staging and prod environments
+const PROD_GROUP_CHAT_ID = '0e66a86ac97a353b068c556612f949f223101ce9a52a3b5ec8f305f989d917f8';
+const STAGING_GROUP_CHAT_ID = '20ca5a940d23fae1191bcf39a7f02cafd02d5427b7f6aa8a1b882c8641239475';
 const GROUP_CHAT_ID = import.meta.env.VITE_PUSH_GROUP_CHAT_ID ||
-  '20ca5a940d23fae1191bcf39a7f02cafd02d5427b7f6aa8a1b882c8641239475';
+  (PUSH_ENV === 'prod' ? PROD_GROUP_CHAT_ID : STAGING_GROUP_CHAT_ID);
 
 // Badge contract address - set after deployment
 // Get from UltimateDominion.getBadgeToken() or worlds.json deployment
