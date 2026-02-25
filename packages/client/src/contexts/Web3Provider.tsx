@@ -7,7 +7,7 @@ import {
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createConfig, http, WagmiProvider } from 'wagmi';
+import { createConfig, fallback, http, WagmiProvider } from 'wagmi';
 
 import { SUPPORTED_CHAINS, WALLET_CONNECT_PROJECT_ID } from '../lib/web3';
 
@@ -20,8 +20,9 @@ const connectors = connectorsForWallets(wallets, {
 
 const transports = Object.fromEntries(
   SUPPORTED_CHAINS.map(chain => {
-    const rpcUrl = chain.rpcUrls?.default?.http?.[0];
-    return [chain.id, http(rpcUrl)];
+    const httpUrls = chain.rpcUrls?.default?.http ?? [];
+    const httpTransports = httpUrls.map(url => http(url, { retryCount: 2, timeout: 10_000 }));
+    return [chain.id, httpTransports.length > 1 ? fallback(httpTransports) : http(httpUrls[0])];
   }),
 );
 

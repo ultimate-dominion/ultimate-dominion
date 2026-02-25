@@ -12,6 +12,31 @@
 
 import { garnet, MUDChain, mudFoundry } from '@latticexyz/common/chains';
 
+// Primary RPC from env, plus public fallbacks
+const baseHttpRpcs = [
+  import.meta.env.VITE_HTTPS_RPC_URL,
+  'https://mainnet.base.org',
+  'https://base-rpc.publicnode.com',
+  'https://base.drpc.org',
+].filter(Boolean) as string[];
+
+const baseWsRpcs = [
+  import.meta.env.VITE_WS_RPC_URL,
+  'wss://base-rpc.publicnode.com',
+].filter(Boolean) as string[];
+
+const baseSepoliaHttpRpcs = [
+  import.meta.env.VITE_HTTPS_RPC_URL,
+  'https://base-sepolia-rpc.publicnode.com',
+  'https://sepolia.base.org',
+  'https://base-sepolia.drpc.org',
+].filter(Boolean) as string[];
+
+const baseSepoliaWsRpcs = [
+  import.meta.env.VITE_WS_RPC_URL,
+  'wss://base-sepolia-rpc.publicnode.com',
+].filter(Boolean) as string[];
+
 export const base = {
   name: 'Base',
   id: 8453,
@@ -19,12 +44,12 @@ export const base = {
   nativeCurrency: { decimals: 18, name: 'Ether', symbol: 'ETH' },
   rpcUrls: {
     default: {
-      http: [import.meta.env.VITE_HTTPS_RPC_URL || 'https://mainnet.base.org'],
-      webSocket: [import.meta.env.VITE_WS_RPC_URL || 'wss://base-rpc.publicnode.com'],
+      http: baseHttpRpcs,
+      webSocket: baseWsRpcs,
     },
     public: {
-      http: [import.meta.env.VITE_HTTPS_RPC_URL || 'https://mainnet.base.org'],
-      webSocket: [import.meta.env.VITE_WS_RPC_URL || 'wss://base-rpc.publicnode.com'],
+      http: baseHttpRpcs,
+      webSocket: baseWsRpcs,
     },
   },
   blockExplorers: {
@@ -42,12 +67,12 @@ export const baseSepolia = {
   nativeCurrency: { decimals: 18, name: 'Ether', symbol: 'ETH' },
   rpcUrls: {
     default: {
-      http: [import.meta.env.VITE_HTTPS_RPC_URL || 'https://base-sepolia-rpc.publicnode.com'],
-      webSocket: [import.meta.env.VITE_WS_RPC_URL || 'wss://base-sepolia-rpc.publicnode.com'],
+      http: baseSepoliaHttpRpcs,
+      webSocket: baseSepoliaWsRpcs,
     },
     public: {
-      http: [import.meta.env.VITE_HTTPS_RPC_URL || 'https://base-sepolia-rpc.publicnode.com'],
-      webSocket: [import.meta.env.VITE_WS_RPC_URL || 'wss://base-sepolia-rpc.publicnode.com'],
+      http: baseSepoliaHttpRpcs,
+      webSocket: baseSepoliaWsRpcs,
     },
   },
   blockExplorers: {
