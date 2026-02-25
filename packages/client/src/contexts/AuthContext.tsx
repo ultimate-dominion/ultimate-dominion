@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { type Address, toHex, type WalletClient } from 'viem';
+import { type Address, type WalletClient } from 'viem';
 import { useAccount, useDisconnect, useWalletClient } from 'wagmi';
 import {
   createThirdwebClient,
@@ -103,81 +103,10 @@ export const AuthProvider = ({
   );
 
   // Smart account config for gasless transactions (levels 1-3)
-  // Custom paymaster wrapper adds gas buffer: the default Thirdweb paymaster
-  // estimates callGasLimit tightly, but conditional code paths (e.g. fragment
-  // triggers after combat) can use more gas than the estimate → OutOfGas.
   const smartAccountConfig = useMemo(
     () => ({
       chain: thirdwebChain,
       sponsorGas: true,
-      overrides: {
-        paymaster: async (userOp: Record<string, unknown>) => {
-          // Hexlify UserOp values for the JSON-RPC call
-          const hexOp = Object.fromEntries(
-            Object.entries(userOp).map(([key, val]) => [
-              key,
-              val === undefined ||
-              val === null ||
-              (typeof val === 'string' && val.startsWith('0x'))
-                ? val
-                : toHex(val as bigint),
-            ]),
-          );
-
-          const ENTRYPOINT_V06 =
-            '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789';
-          const bundlerUrl = `https://${thirdwebChain.id}.bundler.thirdweb.com/v2`;
-
-          const response = await fetch(bundlerUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-client-id': THIRDWEB_CLIENT_ID,
-            },
-            body: JSON.stringify({
-              id: 1,
-              jsonrpc: '2.0',
-              method: 'pm_sponsorUserOperation',
-              params: [hexOp, ENTRYPOINT_V06],
-            }),
-          });
-
-          if (!response.ok) {
-            const text = await response.text();
-            throw new Error(
-              `Paymaster error: ${response.status} - ${text}`,
-            );
-          }
-
-          const res = await response.json();
-          if (!res.result) {
-            throw new Error(
-              `Paymaster error: ${res.error?.message || 'unknown'}`,
-            );
-          }
-
-          const result =
-            typeof res.result === 'string'
-              ? { paymasterAndData: res.result }
-              : res.result;
-
-          // Add 50% gas buffer to callGasLimit for conditional code paths
-          const GAS_BUFFER = 150n; // 150% = 50% buffer
-          const buffered = (hex: string | undefined) =>
-            hex ? (BigInt(hex) * GAS_BUFFER) / 100n : undefined;
-
-          return {
-            paymasterAndData: result.paymasterAndData,
-            callGasLimit: buffered(result.callGasLimit),
-            verificationGasLimit: result.verificationGasLimit
-              ? BigInt(result.verificationGasLimit)
-              : undefined,
-            preVerificationGas: result.preVerificationGas
-              ? BigInt(result.preVerificationGas)
-              : undefined,
-          };
-        },
-      },
     }),
     [],
   );
