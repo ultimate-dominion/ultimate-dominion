@@ -23,10 +23,20 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { hexToBigInt } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
+import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
+
+const REST_FLAVOR = [
+  'The fire crackles softly as warmth seeps into your bones. Your wounds begin to close.',
+  'You sit by the flames and let the heat chase away the cold. Strength returns.',
+  'Embers dance in the dark. The world feels far away. You breathe deep, and heal.',
+  'The fire hisses and pops. For a moment, the dangers beyond feel like a distant memory.',
+  'Sparks drift upward like tiny stars. When you rise, the pain is gone.',
+];
 
 import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
@@ -40,12 +50,16 @@ export const StatsPanel = (): JSX.Element => {
     systemCalls: { rest },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
+  const { position } = useMap();
+
+  const isAtFire = position?.x === 0 && position?.y === 0;
 
   const restTx = useTransaction({
-    actionName: 'Resting',
-    showSuccessToast: true,
-    successMessage: 'You rested and recovered your HP!',
+    actionName: 'Resting by the fire',
+    showSuccessToast: false,
   });
+
+  const { renderSuccess } = useToast();
 
   const onRest = useCallback(async () => {
     if (!character) return;
@@ -55,8 +69,9 @@ export const StatsPanel = (): JSX.Element => {
     });
     if (result !== undefined) {
       await refreshCharacter();
+      renderSuccess(REST_FLAVOR[Math.floor(Math.random() * REST_FLAVOR.length)]);
     }
-  }, [character, rest, restTx, refreshCharacter]);
+  }, [character, rest, restTx, refreshCharacter, renderSuccess]);
 
   const maxLevelXpRequirement = useMemo(
     () =>
@@ -361,19 +376,34 @@ export const StatsPanel = (): JSX.Element => {
 
       {!character.inBattle &&
         currentHp > BigInt(0) &&
-        currentHp < maxHp && (
-          <Button
-            alignSelf="center"
-            isDisabled={restTx.isLoading}
-            isLoading={restTx.isLoading}
-            loadingText="Resting..."
-            mt={2}
-            onClick={onRest}
-            size="xs"
-            variant="outline"
-          >
-            Rest (Heal to Full)
-          </Button>
+        currentHp < maxHp &&
+        isAtFire && (
+          <VStack mt={3} spacing={1}>
+            <Text
+              color="orange.300"
+              fontFamily="mono"
+              fontSize="xs"
+              fontStyle="italic"
+              px={4}
+              textAlign="center"
+            >
+              A fire crackles nearby. You could rest here.
+            </Text>
+            <Button
+              alignSelf="center"
+              isDisabled={restTx.isLoading}
+              isLoading={restTx.isLoading}
+              loadingText="Resting by the fire..."
+              onClick={onRest}
+              size="xs"
+              variant="outline"
+              color="orange.200"
+              borderColor="orange.400"
+              _hover={{ bg: 'orange.900', borderColor: 'orange.300' }}
+            >
+              Rest by the Fire
+            </Button>
+          </VStack>
         )}
 
       {isDesktop && (

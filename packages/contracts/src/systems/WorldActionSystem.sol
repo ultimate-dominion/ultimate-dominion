@@ -117,7 +117,8 @@ contract WorldActionSystem is System {
     }
 
     /**
-     * @dev Rest to restore HP to full. Free, but only usable outside combat.
+     * @dev Rest by the crackling fire at the crossroads to restore HP to full.
+     *      Free, but only usable at position (0,0) and outside combat.
      * @param characterId The character to heal
      */
     function rest(bytes32 characterId) public {
@@ -126,6 +127,9 @@ contract WorldActionSystem is System {
         require(_isOwnerOrDelegated(owner), "not character owner");
         require(EncounterEntity.getEncounterId(characterId) == bytes32(0), "cannot rest during combat");
         require(Stats.getCurrentHp(characterId) > 0, "character is dead");
+
+        (uint16 x, uint16 y) = IWorld(_world()).UD__getEntityPosition(characterId);
+        require(x == 0 && y == 0, "you must return to the fire to rest");
 
         int256 maxHp = Stats.getMaxHp(characterId) + CharacterEquipment.getHpBonus(characterId);
         if (maxHp < 1) maxHp = 1;
