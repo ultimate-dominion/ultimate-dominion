@@ -99,7 +99,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     statusEffectActions,
     userCharacterForBattleRendering,
   } = useBattle();
-  const { isRefreshing } = useMovement();
+  const { isRefreshing, moveStatusMessage } = useMovement();
 
   const [isInitiating, setIsInitiating] = useState(false);
   const [isUserHit, setIsUserHit] = useState(false);
@@ -379,7 +379,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           width="100%"
         >
           <Heading color="white" size={{ base: 'sm', md: 'md' }}>
-            Moving...
+            {moveStatusMessage}
           </Heading>
         </HStack>
         <Flex alignItems="center" h="100%" justifyContent="center" mt={6}>

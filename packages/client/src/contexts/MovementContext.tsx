@@ -24,12 +24,14 @@ const PREVENT_DEFAULT_KEYS = ['ArrowUp', 'ArrowDown'];
 
 type MovementContextType = {
   isRefreshing: boolean;
+  moveStatusMessage: string;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSetIsMovementDisabled: (isDisabled: boolean) => void;
 };
 
 const MovementContext = createContext<MovementContextType>({
   isRefreshing: false,
+  moveStatusMessage: '',
   onMove: () => {},
   onSetIsMovementDisabled: () => {},
 });
@@ -61,7 +63,7 @@ export const MovementProvider = ({
   const [isMovementDisabled, setIsMovementDisabled] = useState(false);
 
   const moveTx = useTransaction({
-    actionName: 'move',
+    actionName: 'moving',
     silent: true,
     maxAttempts: 2,
     backoffMs: 1000,
@@ -203,6 +205,7 @@ export const MovementProvider = ({
     <MovementContext.Provider
       value={{
         isRefreshing: isFetchingEntities || moveTx.isLoading,
+        moveStatusMessage: moveTx.statusMessage || 'Moving...',
         onMove,
         onSetIsMovementDisabled,
       }}
