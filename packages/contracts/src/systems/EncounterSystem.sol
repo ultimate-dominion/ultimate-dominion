@@ -23,11 +23,13 @@ import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS, MAX_PARTY_SIZE} from "../../constants.sol";
 import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize, CombatantHpZero} from "../Errors.sol";
-import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
-import {FragmentSystem} from "./FragmentSystem.sol";
-import {_fragmentSystemId} from "../utils.sol";
-import {WORLD_NAMESPACE} from "../../constants.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+
+/// @dev checkCombatFragmentTriggersForGroup(bytes32[],bytes32[],uint16,uint16,bool)
+bytes4 constant FRAGMENT_CHECK_SELECTOR = 0x6fb56b92;
+/// @dev Precomputed: keccak256("mud.store") ^ keccak256(abi.encodePacked(SYSTEMS_TABLE_ID, FRAGMENT_SYSTEM_ID))
+///      Reads the FragmentSystem address from the MUD Systems table via raw SLOAD.
+uint256 constant FRAGMENT_SYSTEM_SLOT = 0xc920f85a8ab363fa32d9d1edf810668c5427b2bbc247b796eab62a6e2cf44d89;
 
 contract EncounterSystem is System {
     function createEncounter(EncounterType encounterType, bytes32[] memory group1, bytes32[] memory group2)
@@ -191,21 +193,20 @@ contract EncounterSystem is System {
 
         CombatOutcome.set(encounterId, combatOutcome);
 
-        // Check combat fragment triggers for the winning side (non-critical, must not break combat).
-        // Direct delegatecall bypasses World.fallback (avoids prohibitDirectCallback revert).
-        // Failure doesn't propagate since the return value is ignored.
+        // Check combat fragment triggers (non-critical, must not break combat).
+        // Direct delegatecall bypasses World.fallback's prohibitDirectCallback.
         (uint16 currentX, uint16 currentY) = Position.get(encounterData.attackers[0]);
-        address fragmentSystem = Systems.getSystem(_fragmentSystemId(WORLD_NAMESPACE));
-        bytes32[] memory winners = attackersWin ? encounterData.attackers : encounterData.defenders;
-        bytes32[] memory losers = attackersWin ? encounterData.defenders : encounterData.attackers;
-        bool losersAreMobs = attackersWin ? !encounterData.attackersAreMobs : encounterData.attackersAreMobs;
-        // solhint-disable-next-line avoid-low-level-calls
-        fragmentSystem.delegatecall(
-            abi.encodeWithSelector(
-                FragmentSystem.checkCombatFragmentTriggersForGroup.selector,
-                winners, losers, currentX, currentY, losersAreMobs
-            )
-        );
+        address fSys;
+        assembly { fSys := shr(96, sload(FRAGMENT_SYSTEM_SLOT)) }
+        if (attackersWin) {
+            // solhint-disable-next-line avoid-low-level-calls
+            fSys.delegatecall(abi.encodeWithSelector(FRAGMENT_CHECK_SELECTOR,
+                encounterData.attackers, encounterData.defenders, currentX, currentY, !encounterData.attackersAreMobs));
+        } else {
+            // solhint-disable-next-line avoid-low-level-calls
+            fSys.delegatecall(abi.encodeWithSelector(FRAGMENT_CHECK_SELECTOR,
+                encounterData.defenders, encounterData.attackers, currentX, currentY, encounterData.attackersAreMobs));
+        }
     }
 
     function _endWorldEncounter(bytes32 encounterId) internal {

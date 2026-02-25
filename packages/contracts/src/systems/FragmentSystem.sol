@@ -49,11 +49,10 @@ contract FragmentSystem is System {
             return; // Already triggered, no-op
         }
 
-        // Set triggered state
-        FragmentProgress.setTriggered(characterId, fType, true);
-        FragmentProgress.setTriggeredAt(characterId, fType, block.timestamp);
-        FragmentProgress.setTriggerTileX(characterId, fType, tileX);
-        FragmentProgress.setTriggerTileY(characterId, fType, tileY);
+        // Batch all fields into a single setRecord call to minimize external CALL overhead.
+        // 4 separate setStaticField calls each cost ~32K gas (external CALL to World);
+        // 1 setRecord call writes everything in one round-trip.
+        FragmentProgress.set(characterId, fType, true, block.timestamp, tileX, tileY, false, 0, 0);
 
         emit FragmentTriggered(characterId, fragmentType, tileX, tileY);
     }
