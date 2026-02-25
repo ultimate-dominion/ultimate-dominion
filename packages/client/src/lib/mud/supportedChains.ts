@@ -15,13 +15,14 @@ import { garnet, MUDChain, mudFoundry } from '@latticexyz/common/chains';
 // Primary RPC from env, plus public fallbacks
 const baseHttpRpcs = [
   import.meta.env.VITE_HTTPS_RPC_URL,
-  'https://mainnet.base.org',
-  'https://base-rpc.publicnode.com',
   'https://base.drpc.org',
+  'https://base.api.pocket.network',
+  'https://mainnet.base.org',
 ].filter(Boolean) as string[];
 
 const baseWsRpcs = [
   import.meta.env.VITE_WS_RPC_URL,
+  'wss://base.drpc.org',
   'wss://base-rpc.publicnode.com',
 ].filter(Boolean) as string[];
 
