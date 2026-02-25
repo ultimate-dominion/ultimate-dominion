@@ -134,7 +134,7 @@ export const Welcome = (): JSX.Element => {
             </Typist>
           </VStack>
 
-          {syncProgress && syncProgress.step !== SyncStep.LIVE ? (
+          {syncProgress && syncProgress.step !== SyncStep.LIVE && syncProgress.percentage < 100 ? (
             <VStack justify="center" w={{ base: '80%', sm: '50%' }}>
               <Text>Loading {Math.round(syncProgress.percentage)}%</Text>
               <Progress value={Math.round(syncProgress.percentage)} w="100%" />

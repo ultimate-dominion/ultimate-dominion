@@ -63,6 +63,7 @@ const AppRoutes: React.FC = () => {
   if (
     syncProgress &&
     syncProgress.step !== SyncStep.LIVE &&
+    syncProgress.percentage < 100 &&
     pathname !== HOME_PATH
   ) {
     return (
