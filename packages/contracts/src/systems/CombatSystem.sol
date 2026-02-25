@@ -49,7 +49,7 @@ contract CombatSystem is System {
     using Math for int256;
 
     // Combat triangle constants
-    uint256 constant COMBAT_TRIANGLE_BONUS_PER_STAT = WAD / 20; // 5% per stat point difference
+    uint256 constant COMBAT_TRIANGLE_BONUS_PER_STAT = WAD / 50; // 2% per stat point difference
 
     /**
      * @notice Determine the dominant stat for an entity

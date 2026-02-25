@@ -35,12 +35,12 @@ uint256 constant ATTACKER_HIT_DAMPENER = 95;
 uint256 constant BASE_GOLD_DROP = 5 ether; //
 
 // LEVELING - Diminishing returns system
-// Stat points: +1/level (1-10), +1/2 levels (11-50), +1/5 levels (51-100)
+// Stat points: +2/level (1-10), +1/2 levels (11-50), +1/5 levels (51-100)
 // HP: +2/level (1-10), +1/level (11-50), +1/2 levels (51-100)
 int256 constant BASE_HP_GAIN_EARLY = 2;      // Levels 1-10
 int256 constant BASE_HP_GAIN_MID = 1;        // Levels 11-50
 int256 constant BASE_HP_GAIN_LATE = 1;       // Levels 51-100 (every 2 levels)
-int256 constant STAT_POINTS_EARLY = 1;       // Levels 1-10 (every level)
+int256 constant STAT_POINTS_EARLY = 2;       // Levels 1-10 (every level)
 int256 constant STAT_POINTS_MID = 1;         // Levels 11-50 (every 2 levels)
 int256 constant STAT_POINTS_LATE = 1;        // Levels 51-100 (every 5 levels)
 uint256 constant EARLY_GAME_CAP = 10;

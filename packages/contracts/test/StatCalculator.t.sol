@@ -82,12 +82,12 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateStatPointsForLevel() public {
-        // Test early game: levels 1-10, +1 per level
+        // Test early game: levels 1-10, +2 per level
         int256 statPoints = StatCalculator.calculateStatPointsForLevel(5);
-        assertEq(statPoints, 1);
+        assertEq(statPoints, 2);
 
         statPoints = StatCalculator.calculateStatPointsForLevel(10);
-        assertEq(statPoints, 1);
+        assertEq(statPoints, 2);
 
         // Test mid game: levels 11-50, +1 per 2 levels (even levels only)
         statPoints = StatCalculator.calculateStatPointsForLevel(12);
@@ -125,9 +125,9 @@ contract StatCalculatorTest is Test {
         StatsData memory currentStats = _createDefaultStatsData();
 
         StatsData memory desiredStats = _createDefaultStatsData();
-        desiredStats.strength = 11; // +1 point change
+        desiredStats.strength = 12; // +2 point change
 
-        // Valid stat changes for level 2 (early game: +1 point)
+        // Valid stat changes for level 2 (early game: +2 points)
         bool isValid = StatCalculator.validateStatChanges(currentStats, desiredStats, 2);
         assertTrue(isValid);
 
@@ -267,17 +267,17 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateTotalStatPoints() public {
-        // Test level 10 (early game: 10 points)
+        // Test level 10 (early game: 20 points)
         int256 totalPoints = StatCalculator.calculateTotalStatPoints(10);
-        assertEq(totalPoints, 10); // 10 levels * 1 point
+        assertEq(totalPoints, 20); // 10 levels * 2 points
 
-        // Test level 20 (10 early + 5 mid = 15)
+        // Test level 20 (20 early + 5 mid = 25)
         totalPoints = StatCalculator.calculateTotalStatPoints(20);
-        assertEq(totalPoints, 15); // 10 + (10/2) = 15
+        assertEq(totalPoints, 25); // 20 + (10/2) = 25
 
-        // Test level 60 (10 early + 20 mid + 2 late)
+        // Test level 60 (20 early + 20 mid + 2 late)
         totalPoints = StatCalculator.calculateTotalStatPoints(60);
-        assertEq(totalPoints, 32); // 10 + 20 + 2 = 32
+        assertEq(totalPoints, 42); // 20 + 20 + 2 = 42
     }
 
     function testCalculateTotalHpFromLeveling() public {
