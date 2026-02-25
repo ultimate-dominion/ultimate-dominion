@@ -2,7 +2,6 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {IWorld} from "@world/IWorld.sol";
 import {
     FragmentProgress,
     FragmentMetadata,
@@ -37,8 +36,12 @@ contract FragmentSystem is System {
     function triggerFragment(bytes32 characterId, uint8 fragmentType, uint16 tileX, uint16 tileY) public {
         PauseLib.requireNotPaused();
         require(fragmentType >= 1 && fragmentType <= 8, "Invalid fragment type");
-        require(IWorld(_world()).UD__isValidCharacterId(characterId), "Invalid character");
+        require(_isCharacter(characterId), "Invalid character");
 
+        _triggerFragment(characterId, fragmentType, tileX, tileY);
+    }
+
+    function _triggerFragment(bytes32 characterId, uint8 fragmentType, uint16 tileX, uint16 tileY) private {
         FragmentType fType = FragmentType(fragmentType);
 
         // Check if already triggered
@@ -55,6 +58,10 @@ contract FragmentSystem is System {
         emit FragmentTriggered(characterId, fragmentType, tileX, tileY);
     }
 
+    function _isCharacter(bytes32 entityId) private view returns (bool) {
+        return Characters.getOwner(entityId) != address(0);
+    }
+
     /**
      * @notice Claim a triggered fragment and mint the NFT
      * @param characterId The character ID
@@ -64,7 +71,7 @@ contract FragmentSystem is System {
     function claimFragment(bytes32 characterId, uint8 fragmentType) public returns (uint256 tokenId) {
         PauseLib.requireNotPaused();
         require(fragmentType >= 1 && fragmentType <= 8, "Invalid fragment type");
-        require(IWorld(_world()).UD__isValidCharacterId(characterId), "Invalid character");
+        require(_isCharacter(characterId), "Invalid character");
 
         address owner = Characters.getOwner(characterId);
         require(owner == _msgSender(), "Only character owner can claim");
@@ -195,7 +202,7 @@ contract FragmentSystem is System {
         bool defeatedAreMobs
     ) public {
         for (uint256 i = 0; i < winners.length; i++) {
-            if (IWorld(_world()).UD__isValidCharacterId(winners[i])) {
+            if (_isCharacter(winners[i])) {
                 checkCombatFragmentTriggers(winners[i], defeated, tileX, tileY, defeatedAreMobs);
             }
         }
@@ -211,33 +218,34 @@ contract FragmentSystem is System {
         // Fragment III: The Restless - first monster kill
         if (defeatedAreMobs && !CharacterFirstActions.getHasKilledMonster(characterId)) {
             CharacterFirstActions.setHasKilledMonster(characterId, true);
-            IWorld(_world()).UD__triggerFragment(characterId, 3, tileX, tileY);
+            _triggerFragment(characterId, 3, tileX, tileY);
         }
 
         for (uint256 i = 0; i < defeated.length; i++) {
             bytes32 defeatedId = defeated[i];
 
             if (defeatedAreMobs) {
-                uint256 mobId = IWorld(_world()).UD__getMobId(defeatedId);
+                // Inline getMobId: upper 32 bits of entityId encode the mob template ID
+                uint256 mobId = uint256(uint256(defeatedId) >> 224);
 
                 // Fragment IV: Souls That Linger - kill Crystal Elemental
                 if (mobId == CRYSTAL_ELEMENTAL_MOB_ID) {
-                    IWorld(_world()).UD__triggerFragment(characterId, 4, tileX, tileY);
+                    _triggerFragment(characterId, 4, tileX, tileY);
                 }
                 // Fragment VI: Death of the Death God - kill Lich Acolyte
                 else if (mobId == LICH_ACOLYTE_MOB_ID) {
-                    IWorld(_world()).UD__triggerFragment(characterId, 6, tileX, tileY);
+                    _triggerFragment(characterId, 6, tileX, tileY);
                 }
                 // Fragment VII: Betrayer's Truth - kill Shadow Stalker
                 else if (mobId == SHADOW_STALKER_MOB_ID) {
-                    IWorld(_world()).UD__triggerFragment(characterId, 7, tileX, tileY);
+                    _triggerFragment(characterId, 7, tileX, tileY);
                 }
             } else {
                 // PvP kill
-                if (IWorld(_world()).UD__isValidCharacterId(defeatedId)) {
+                if (_isCharacter(defeatedId)) {
                     if (!CharacterFirstActions.getHasKilledPlayer(characterId)) {
                         CharacterFirstActions.setHasKilledPlayer(characterId, true);
-                        IWorld(_world()).UD__triggerFragment(characterId, 8, tileX, tileY);
+                        _triggerFragment(characterId, 8, tileX, tileY);
                     }
                 }
             }

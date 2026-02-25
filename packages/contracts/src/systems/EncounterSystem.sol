@@ -23,6 +23,10 @@ import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS, MAX_PARTY_SIZE} from "../../constants.sol";
 import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize, CombatantHpZero} from "../Errors.sol";
+import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
+import {FragmentSystem} from "./FragmentSystem.sol";
+import {_fragmentSystemId} from "../utils.sol";
+import {WORLD_NAMESPACE} from "../../constants.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
 contract EncounterSystem is System {
@@ -188,27 +192,20 @@ contract EncounterSystem is System {
         CombatOutcome.set(encounterId, combatOutcome);
 
         // Check combat fragment triggers for the winning side (non-critical, must not break combat).
-        // Uses low-level call: the ERC-4337 bundler's gas estimate can undercount conditional code
-        // paths (like first-time fragment triggers), causing OutOfGas. A bare IWorld call would
-        // propagate the revert and break combat. Low-level call swallows the failure gracefully.
+        // Direct delegatecall bypasses World.fallback (avoids prohibitDirectCallback revert).
+        // Failure doesn't propagate since the return value is ignored.
         (uint16 currentX, uint16 currentY) = Position.get(encounterData.attackers[0]);
-        if (attackersWin) {
-            // solhint-disable-next-line avoid-low-level-calls
-            address(_world()).call(
-                abi.encodeWithSelector(
-                    IWorld(_world()).UD__checkCombatFragmentTriggersForGroup.selector,
-                    encounterData.attackers, encounterData.defenders, currentX, currentY, !encounterData.attackersAreMobs
-                )
-            );
-        } else {
-            // solhint-disable-next-line avoid-low-level-calls
-            address(_world()).call(
-                abi.encodeWithSelector(
-                    IWorld(_world()).UD__checkCombatFragmentTriggersForGroup.selector,
-                    encounterData.defenders, encounterData.attackers, currentX, currentY, encounterData.attackersAreMobs
-                )
-            );
-        }
+        address fragmentSystem = Systems.getSystem(_fragmentSystemId(WORLD_NAMESPACE));
+        bytes32[] memory winners = attackersWin ? encounterData.attackers : encounterData.defenders;
+        bytes32[] memory losers = attackersWin ? encounterData.defenders : encounterData.attackers;
+        bool losersAreMobs = attackersWin ? !encounterData.attackersAreMobs : encounterData.attackersAreMobs;
+        // solhint-disable-next-line avoid-low-level-calls
+        fragmentSystem.delegatecall(
+            abi.encodeWithSelector(
+                FragmentSystem.checkCombatFragmentTriggersForGroup.selector,
+                winners, losers, currentX, currentY, losersAreMobs
+            )
+        );
     }
 
     function _endWorldEncounter(bytes32 encounterId) internal {
