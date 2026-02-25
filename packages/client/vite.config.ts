@@ -57,7 +57,13 @@ export default defineConfig(({ command }) => {
       target: 'es2022',
       minify: true,
       sourcemap: false,
-      rollupOptions: {},
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            thirdweb: ['thirdweb', 'thirdweb/wallets/in-app', 'thirdweb/adapters/viem'],
+          },
+        },
+      },
       commonjsOptions: {
         // Handle 'use client' directives
         transformMixedEsModules: true,

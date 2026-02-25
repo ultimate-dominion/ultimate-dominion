@@ -15,8 +15,6 @@ import {
   type ThirdwebClient,
 } from 'thirdweb';
 import { type Wallet } from 'thirdweb/wallets';
-import { inAppWallet } from 'thirdweb/wallets/in-app';
-import { viemAdapter } from 'thirdweb/adapters/viem';
 
 import { DEFAULT_CHAIN_ID, SUPPORTED_CHAINS } from '../lib/web3';
 
@@ -44,9 +42,10 @@ const thirdwebClient = createThirdwebClient({
 
 const activeChain = SUPPORTED_CHAINS[0];
 
+// Let Thirdweb use its built-in RPC Edge CDN (150+ global edge locations)
+// instead of routing through our single RPC URL. Faster geographic routing.
 const thirdwebChain = defineThirdwebChain({
   id: activeChain.id,
-  rpc: activeChain.rpcUrls.default.http[0],
 });
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -85,6 +84,7 @@ export const AuthProvider = ({
         const account = wallet.getAccount();
         if (!account) return;
 
+        const { viemAdapter } = await import('thirdweb/adapters/viem');
         const viemClient = viemAdapter.walletClient.toViem({
           client: thirdwebClient,
           chain: thirdwebChain,
@@ -114,11 +114,13 @@ export const AuthProvider = ({
   useEffect(() => {
     const tryReconnect = async () => {
       try {
+        const { inAppWallet } = await import('thirdweb/wallets/in-app');
         const wallet = inAppWallet({
           smartAccount: smartAccountConfig,
         });
         const connected = await wallet.autoConnect({
           client: thirdwebClient,
+          timeout: 5000,
         });
         if (connected) {
           await initEmbeddedClient(wallet);
@@ -133,6 +135,7 @@ export const AuthProvider = ({
   const connectWithGoogle = useCallback(async () => {
     setIsConnecting(true);
     try {
+      const { inAppWallet } = await import('thirdweb/wallets/in-app');
       const wallet = inAppWallet({
         smartAccount: smartAccountConfig,
       });

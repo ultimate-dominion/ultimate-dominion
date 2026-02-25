@@ -200,7 +200,10 @@ const MUDProviderInner = ({
     // Use viem's standard polling instead — it retries getTransactionReceipt
     // until found, independent of RECS sync state.
     const embeddedWaitForTransaction = async (tx: Hex) => {
-      return setupResult.network.publicClient.waitForTransactionReceipt({ hash: tx });
+      return setupResult.network.publicClient.waitForTransactionReceipt({
+        hash: tx,
+        pollingInterval: 1_000, // 1s instead of default 4s — detect mined txs faster
+      });
     };
 
     const systemCalls = createSystemCalls(
@@ -211,6 +214,7 @@ const MUDProviderInner = ({
         worldContract,
       },
       embeddedComponents,
+      { skipSimulation: true }, // Thirdweb bundler already simulates UserOps
     );
 
     setEmbeddedSetup({

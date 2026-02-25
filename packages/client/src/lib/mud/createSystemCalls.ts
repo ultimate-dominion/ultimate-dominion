@@ -78,25 +78,6 @@ const getContractError = (error: unknown): string => {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSystemCalls(
-  /*
-   * The parameter list informs TypeScript that:
-   *
-   * - The first parameter is expected to be a
-   *   SetupNetworkResult, as defined in setupNetwork.ts
-   *
-   *   Out of this parameter, we only care about two fields:
-   *   - worldContract (which comes from getContract, see
-   *     https://github.com/latticexyz/mud/blob/main/templates/react/packages/client/src/mud/setupNetwork.ts#L63-L69).
-   *
-   *   - waitForTransaction (which comes from syncToRecs, see
-   *     https://github.com/latticexyz/mud/blob/main/templates/react/packages/client/src/mud/setupNetwork.ts#L77-L83).
-   *
-   * - From the second parameter, which is a ClientComponent,
-   *   we only care about Counter. This parameter comes to use
-   *   through createClientComponents.ts, but it originates in
-   *   syncToRecs
-   *   (https://github.com/latticexyz/mud/blob/main/templates/react/packages/client/src/mud/setupNetwork.ts#L77-L83).
-   */
   {
     delegatorAddress,
     publicClient,
@@ -112,6 +93,7 @@ export function createSystemCalls(
     Spawned,
     Stats,
   }: ClientComponents,
+  options?: { skipSimulation?: boolean },
 ) {
   const buy = async (
     amount: bigint,
@@ -126,6 +108,13 @@ export function createSystemCalls(
         BigInt(itemIndex),
         characterId as `0x${string}`,
       ]);
+
+      if (options?.skipSimulation) {
+        // Fire-and-forget for embedded path
+        waitForTransaction(tx).catch(() => {});
+        return { success: true };
+      }
+
       const txResult = await waitForTransaction(tx);
       const { status } = txResult;
 
@@ -145,13 +134,15 @@ export function createSystemCalls(
 
   const cancelOrder = async (orderHash: string): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [orderHash as Hash],
-        functionName: 'UD__cancelOrder',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [orderHash as Hash],
+          functionName: 'UD__cancelOrder',
+        });
+      }
 
       const tx = await worldContract.write.UD__cancelOrder([orderHash as Hash]);
 
@@ -184,17 +175,19 @@ export function createSystemCalls(
     group2: string[],
   ): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [
-          encounterType,
-          group1 as `0x${string}`[],
-          group2 as `0x${string}`[],
-        ],
-        functionName: 'UD__createEncounter',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [
+            encounterType,
+            group1 as `0x${string}`[],
+            group2 as `0x${string}`[],
+          ],
+          functionName: 'UD__createEncounter',
+        });
+      }
 
       const tx = await worldContract.write.UD__createEncounter([
         encounterType,
@@ -221,23 +214,28 @@ export function createSystemCalls(
 
   const createOrder = async (order: NewOrder): SystemCallReturn => {
     try {
-      const simulatedTx = await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [order],
-        functionName: 'UD__createOrder',
-      });
-
-      const orderHash = simulatedTx.result;
+      let orderHash: Hash | undefined;
+      if (!options?.skipSimulation) {
+        const simulatedTx = await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [order],
+          functionName: 'UD__createOrder',
+        });
+        orderHash = simulatedTx.result;
+      }
 
       const tx = await worldContract.write.UD__createOrder([order]);
-      await waitForTransaction(tx);
+      const txResult = await waitForTransaction(tx);
 
-      const success = !!getComponentValue(
-        Orders,
-        encodeEntity({ orderHash: 'bytes32' }, { orderHash: orderHash }),
-      );
+      // When simulation was skipped, trust the receipt status
+      const success = orderHash
+        ? !!getComponentValue(
+            Orders,
+            encodeEntity({ orderHash: 'bytes32' }, { orderHash }),
+          )
+        : txResult.status === 'success';
 
       return {
         error: success ? undefined : 'Failed to create order.',
@@ -259,13 +257,15 @@ export function createSystemCalls(
     try {
       const characterId = characterEntity.toString() as `0x${string}`;
 
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterId, BigInt(amount)],
-        functionName: 'UD__depositToEscrow',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterId, BigInt(amount)],
+          functionName: 'UD__depositToEscrow',
+        });
+      }
 
       const tx = await worldContract.write.UD__depositToEscrow([
         characterId,
@@ -341,6 +341,12 @@ export function createSystemCalls(
         },
       );
 
+      if (options?.skipSimulation) {
+        // Fire-and-forget for embedded path
+        waitForTransaction(tx).catch(() => {});
+        return { success: true };
+      }
+
       const txResult = await waitForTransaction(tx);
 
       const { status } = txResult;
@@ -365,17 +371,19 @@ export function createSystemCalls(
     starterArmorId: bigint,
   ): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [
-          characterEntity.toString() as `0x${string}`,
-          starterWeaponId,
-          starterArmorId,
-        ],
-        functionName: 'UD__enterGame',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [
+            characterEntity.toString() as `0x${string}`,
+            starterWeaponId,
+            starterArmorId,
+          ],
+          functionName: 'UD__enterGame',
+        });
+      }
 
       const tx = await worldContract.write.UD__enterGame([
         characterEntity.toString() as `0x${string}`,
@@ -403,16 +411,18 @@ export function createSystemCalls(
     itemIds: string[],
   ): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [
-          characterEntity.toString() as `0x${string}`,
-          itemIds.map(itemId => BigInt(itemId)),
-        ],
-        functionName: 'UD__equipItems',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [
+            characterEntity.toString() as `0x${string}`,
+            itemIds.map(itemId => BigInt(itemId)),
+          ],
+          functionName: 'UD__equipItems',
+        });
+      }
 
       const tx = await worldContract.write.UD__equipItems([
         characterEntity.toString() as `0x${string}`,
@@ -456,13 +466,15 @@ export function createSystemCalls(
 
   const fleePvp = async (characterId: string): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterId as `0x${string}`],
-        functionName: 'UD__fleePvp',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterId as `0x${string}`],
+          functionName: 'UD__fleePvp',
+        });
+      }
 
       const tx = await worldContract.write.UD__fleePvp([
         characterId as `0x${string}`,
@@ -487,13 +499,15 @@ export function createSystemCalls(
 
   const fulfillOrder = async (orderHash: string): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [orderHash as Hash],
-        functionName: 'UD__fulfillOrder',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [orderHash as Hash],
+          functionName: 'UD__fulfillOrder',
+        });
+      }
 
       const tx = await worldContract.write.UD__fulfillOrder([
         orderHash as Hash,
@@ -546,13 +560,15 @@ export function createSystemCalls(
         hasSelectedAdvancedClass: entityStats.hasSelectedAdvancedClass ?? false,
       };
 
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterId as `0x${string}`, formattedNewStats],
-        functionName: 'UD__levelCharacter',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterId as `0x${string}`, formattedNewStats],
+          functionName: 'UD__levelCharacter',
+        });
+      }
 
       const tx = await worldContract.write.UD__levelCharacter([
         characterId as `0x${string}`,
@@ -591,15 +607,17 @@ export function createSystemCalls(
     try {
       const nameHex = stringToHex(name, { size: 32 });
 
-      const simulatedTx = await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [account, nameHex, uri],
-        functionName: 'UD__mintCharacter',
-      });
-
-      const characterId = simulatedTx.result;
+      let characterId: bigint | undefined;
+      if (!options?.skipSimulation) {
+        const simulatedTx = await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [account, nameHex, uri],
+          functionName: 'UD__mintCharacter',
+        });
+        characterId = simulatedTx.result;
+      }
 
       const tx = await worldContract.write.UD__mintCharacter([
         account,
@@ -607,15 +625,18 @@ export function createSystemCalls(
         uri,
       ]);
 
-      await waitForTransaction(tx);
+      const txResult = await waitForTransaction(tx);
 
-      const success = !!getComponentValue(
-        Characters,
-        encodeEntity(
-          { characterId: 'uint256' },
-          { characterId: BigInt(characterId) },
-        ),
-      );
+      // When simulation was skipped, trust the receipt status
+      const success = characterId
+        ? !!getComponentValue(
+            Characters,
+            encodeEntity(
+              { characterId: 'uint256' },
+              { characterId: BigInt(characterId) },
+            ),
+          )
+        : txResult.status === 'success';
 
       return {
         error: success ? undefined : 'Failed to mint character.',
@@ -647,6 +668,24 @@ export function createSystemCalls(
           gas: BigInt('10000000'),
         },
       );
+
+      if (options?.skipSimulation) {
+        // Fire-and-forget for embedded path — confirm in background
+        waitForTransaction(tx)
+          .then(receipt => {
+            if (receipt.status !== 'success') {
+              Position.removeOverride(positionId);
+            }
+          })
+          .catch(() => {
+            Position.removeOverride(positionId);
+          })
+          .finally(() => {
+            Position.removeOverride(positionId);
+          });
+        return { success: true };
+      }
+
       await waitForTransaction(tx);
 
       const { x: newX, y: newY } = getComponentValueStrict(
@@ -661,24 +700,30 @@ export function createSystemCalls(
         success,
       };
     } catch (e) {
+      Position.removeOverride(positionId);
       return {
         error: getContractError(e),
         success: false,
       };
     } finally {
-      Position.removeOverride(positionId);
+      // For blocking path, clean up override after wait completes
+      if (!options?.skipSimulation) {
+        Position.removeOverride(positionId);
+      }
     }
   };
 
   const removeEntityFromBoard = async (entity: Entity): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [entity.toString() as `0x${string}`],
-        functionName: 'UD__removeEntityFromBoard',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [entity.toString() as `0x${string}`],
+          functionName: 'UD__removeEntityFromBoard',
+        });
+      }
 
       const tx = await worldContract.write.UD__removeEntityFromBoard([
         entity.toString() as `0x${string}`,
@@ -743,17 +788,19 @@ export function createSystemCalls(
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
 
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [
-          userRandomNumber,
-          characterEntity.toString() as `0x${string}`,
-          characterClass,
-        ],
-        functionName: 'UD__rollStats',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [
+            userRandomNumber,
+            characterEntity.toString() as `0x${string}`,
+            characterClass,
+          ],
+          functionName: 'UD__rollStats',
+        });
+      }
 
       const tx = await worldContract.write.UD__rollStats([
         userRandomNumber,
@@ -804,6 +851,13 @@ export function createSystemCalls(
         BigInt(itemIndex),
         characterId as `0x${string}`,
       ]);
+
+      if (options?.skipSimulation) {
+        // Fire-and-forget for embedded path
+        waitForTransaction(tx).catch(() => {});
+        return { success: true };
+      }
+
       const txResult = await waitForTransaction(tx);
       const { status } = txResult;
 
@@ -823,13 +877,15 @@ export function createSystemCalls(
 
   const spawn = async (characterEntity: Entity): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterEntity.toString() as `0x${string}`],
-        functionName: 'UD__spawn',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterEntity.toString() as `0x${string}`],
+          functionName: 'UD__spawn',
+        });
+      }
 
       const tx = await worldContract.write.UD__spawn([
         characterEntity.toString() as `0x${string}`,
@@ -856,13 +912,15 @@ export function createSystemCalls(
     itemId: string,
   ): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterEntity.toString() as `0x${string}`, BigInt(itemId)],
-        functionName: 'UD__unequipItem',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterEntity.toString() as `0x${string}`, BigInt(itemId)],
+          functionName: 'UD__unequipItem',
+        });
+      }
 
       const tx = await worldContract.write.UD__unequipItem([
         characterEntity.toString() as `0x${string}`,
@@ -909,13 +967,15 @@ export function createSystemCalls(
     tokenId: string,
   ): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterId as `0x${string}`, characterMetadataCid],
-        functionName: 'UD__updateTokenUri',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterId as `0x${string}`, characterMetadataCid],
+          functionName: 'UD__updateTokenUri',
+        });
+      }
 
       const tx = await worldContract.write.UD__updateTokenUri([
         characterId as `0x${string}`,
@@ -955,13 +1015,15 @@ export function createSystemCalls(
     try {
       const characterId = entity.toString() as `0x${string}`;
 
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterId, characterId, BigInt(tokenId)],
-        functionName: 'UD__useWorldConsumableItem',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterId, characterId, BigInt(tokenId)],
+          functionName: 'UD__useWorldConsumableItem',
+        });
+      }
 
       const tx = await worldContract.write.UD__useWorldConsumableItem([
         characterId,
@@ -992,18 +1054,16 @@ export function createSystemCalls(
   ): SystemCallReturn => {
     try {
       const characterId = entity.toString() as `0x${string}`;
-      console.log('[useCombatConsumableItem] characterId:', characterId);
-      console.log('[useCombatConsumableItem] tokenId:', tokenId);
-      console.log('[useCombatConsumableItem] delegatorAddress:', delegatorAddress);
-      console.log('[useCombatConsumableItem] worldContract.address:', worldContract.address);
 
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterId, BigInt(tokenId)],
-        functionName: 'UD__useCombatConsumableItem',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterId, BigInt(tokenId)],
+          functionName: 'UD__useCombatConsumableItem',
+        });
+      }
 
       const tx = await worldContract.write.UD__useCombatConsumableItem([
         characterId,
@@ -1035,13 +1095,15 @@ export function createSystemCalls(
     try {
       const characterId = characterEntity.toString() as `0x${string}`;
 
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterId, amount],
-        functionName: 'UD__withdrawFromEscrow',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterId, amount],
+          functionName: 'UD__withdrawFromEscrow',
+        });
+      }
 
       const tx = await worldContract.write.UD__withdrawFromEscrow([
         characterId,
@@ -1075,13 +1137,15 @@ export function createSystemCalls(
     race: Race,
   ): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterEntity.toString() as `0x${string}`, race],
-        functionName: 'UD__chooseRace',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterEntity.toString() as `0x${string}`, race],
+          functionName: 'UD__chooseRace',
+        });
+      }
 
       const tx = await worldContract.write.UD__chooseRace([
         characterEntity.toString() as `0x${string}`,
@@ -1110,13 +1174,15 @@ export function createSystemCalls(
     powerSource: PowerSource,
   ): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterEntity.toString() as `0x${string}`, powerSource],
-        functionName: 'UD__choosePowerSource',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterEntity.toString() as `0x${string}`, powerSource],
+          functionName: 'UD__choosePowerSource',
+        });
+      }
 
       const tx = await worldContract.write.UD__choosePowerSource([
         characterEntity.toString() as `0x${string}`,
@@ -1147,16 +1213,18 @@ export function createSystemCalls(
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
 
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [
-          userRandomNumber,
-          characterEntity.toString() as `0x${string}`,
-        ],
-        functionName: 'UD__rollBaseStats',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [
+            userRandomNumber,
+            characterEntity.toString() as `0x${string}`,
+          ],
+          functionName: 'UD__rollBaseStats',
+        });
+      }
 
       const tx = await worldContract.write.UD__rollBaseStats([
         userRandomNumber,
@@ -1197,13 +1265,15 @@ export function createSystemCalls(
     advancedClass: AdvancedClass,
   ): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterEntity.toString() as `0x${string}`, advancedClass],
-        functionName: 'UD__selectAdvancedClass',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterEntity.toString() as `0x${string}`, advancedClass],
+          functionName: 'UD__selectAdvancedClass',
+        });
+      }
 
       const tx = await worldContract.write.UD__selectAdvancedClass([
         characterEntity.toString() as `0x${string}`,
@@ -1262,13 +1332,15 @@ export function createSystemCalls(
     fragmentType: number,
   ): SystemCallReturn => {
     try {
-      await publicClient.simulateContract({
-        abi: worldContract.abi,
-        account: delegatorAddress,
-        address: worldContract.address,
-        args: [characterId as `0x${string}`, fragmentType],
-        functionName: 'UD__claimFragment',
-      });
+      if (!options?.skipSimulation) {
+        await publicClient.simulateContract({
+          abi: worldContract.abi,
+          account: delegatorAddress,
+          address: worldContract.address,
+          args: [characterId as `0x${string}`, fragmentType],
+          functionName: 'UD__claimFragment',
+        });
+      }
 
       const tx = await worldContract.write.UD__claimFragment([
         characterId as `0x${string}`,
