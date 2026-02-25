@@ -20,6 +20,7 @@ import {
     ArmorStats,
     ArmorStatsData,
     ConsumableStats,
+    AccessoryStats,
     StatRestrictions,
     StatRestrictionsData
 } from "@codegen/index.sol";
@@ -250,6 +251,7 @@ contract EquipmentSystem is System {
             modifiedStats.intelligence = baseStats.intelligence;
             modifiedStats.armor = CharacterEquipment.getArmor(entityId);
             modifiedStats.maxHp = baseStats.maxHp;
+            modifiedStats.currentHp = baseStats.currentHp;
         } else if (IWorld(_world()).UD__isValidMob(entityId)) {
             modifiedStats = IWorld(_world()).UD__getMonsterCombatStats(entityId);
         } else {
@@ -356,6 +358,8 @@ contract EquipmentSystem is System {
             effects = WeaponStats.getEffects(itemId);
         } else if (itemType == ItemType.Consumable) {
             effects = ConsumableStats.getEffects(itemId);
+        } else if (itemType == ItemType.Accessory) {
+            effects = AccessoryStats.getEffects(itemId);
         }
     }
 }

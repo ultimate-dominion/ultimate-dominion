@@ -43,6 +43,7 @@ error InvalidShopEncounter();
 error AlreadyInEncounter();
 error InvalidCombatEntity();
 error InvalidGroupSize();
+error CombatantHpZero();
 
 // Map
 error OnlyCharacters();

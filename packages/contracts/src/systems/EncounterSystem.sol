@@ -22,7 +22,7 @@ import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS, MAX_PARTY_SIZE} from "../../constants.sol";
-import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize} from "../Errors.sol";
+import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize, CombatantHpZero} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
 contract EncounterSystem is System {
@@ -67,6 +67,14 @@ contract EncounterSystem is System {
             (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
 
             if (!IWorld(_world()).UD__isValidPvP(attackers, defenders, x, y)) revert InvalidPvP();
+
+            // Validate all combatants have HP > 0
+            for (uint256 i; i < attackers.length; i++) {
+                if (Stats.getCurrentHp(attackers[i]) <= 0) revert CombatantHpZero();
+            }
+            for (uint256 i; i < defenders.length; i++) {
+                if (Stats.getCurrentHp(defenders[i]) <= 0) revert CombatantHpZero();
+            }
 
             uint256 startTime = block.timestamp;
             encounterId = keccak256(abi.encode(encounterType, attackers, defenders, startTime));
