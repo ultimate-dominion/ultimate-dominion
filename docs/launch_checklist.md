@@ -35,7 +35,7 @@ Get the game playable with real users on testnet. Rough edges acceptable — the
 - [ ] Edge case testing (disconnects, timeouts during combat)
 
 **Survivability**
-- [ ] Free healing mechanic — players need a way to recover HP without buying consumables (e.g. rest action, passive regen in safe zones, heal-on-level-up, campfire tile)
+- [x] Free healing mechanic ✓ `rest()` action heals to full HP outside combat. "Rest (Heal to Full)" button in StatsPanel when HP < max.
 
 **Economy & Shop**
 - [x] Buy/sell flow ✓ Fixed ERC1155MissingApprovalForAll bug
