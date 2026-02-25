@@ -28,6 +28,9 @@ libs = ["node_modules", "lib"]
 [profile.base-sepolia]
 eth_rpc_url = "https://base-sepolia-rpc.publicnode.com"
 
+[profile.base-mainnet]
+eth_rpc_url = "https://mainnet.base.org"
+
 [profile.garnet]
 eth_rpc_url = "https://rpc.garnetchain.com"
 

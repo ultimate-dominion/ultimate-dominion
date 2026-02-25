@@ -54,6 +54,20 @@ The manifesto (`packages/client/src/pages/Manifesto.tsx`) defines the game's ide
 - `ultimatedominion.com` = Base mainnet (production)
 - NEVER mix testnet/mainnet configs. Double-check CHAIN_ID, RPC URLs, and WORLD_ADDRESS before any deploy.
 
+### Deployment Convention (Branch → Environment)
+Each package uses per-environment `.env` files. Scripts source the right file automatically.
+
+| Branch | Target | Confirm? |
+|---|---|---|
+| `dev` | Testnet (Base Sepolia) | No |
+| `main` | Mainnet (Base) | **Always** |
+| Feature branch | Ask user | Yes |
+
+- **Contracts**: `deploy:testnet` / `deploy:mainnet` / `seed:testnet` / `zone:load:testnet` etc.
+- **Client**: `pnpm dev` (local) / `pnpm build:staging` (testnet) / `pnpm build` (mainnet)
+- **Forge admin scripts**: `source .env.testnet && forge script ...` (on dev) or `source .env.mainnet && forge script ...` (on main)
+- When user says "deploy it": on `dev` → target testnet; on `main` → confirm before mainnet; on feature branch → ask which env.
+
 ### MUD Deploy Safety
 - **Always use `--worldAddress` when deploying to existing chains** to force upgrade instead of accidental fresh deploy. Compiler setting changes (optimizer_runs, via_ir) change all bytecodes → different CREATE2 addresses → MUD deploys a new world instead of upgrading.
 - `mud deploy` with nonce errors can silently skip transactions — always verify function selectors after deploy.
