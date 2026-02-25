@@ -1013,6 +1013,15 @@ const getAdvantageColor = (
   player: { strength: bigint; agility: bigint; intelligence: bigint },
   opponent: { strength: bigint; agility: bigint; intelligence: bigint },
 ): string => {
+  // Guard against undefined stats (e.g. monster template not yet loaded)
+  if (
+    opponent.strength == null ||
+    opponent.agility == null ||
+    opponent.intelligence == null
+  ) {
+    return 'yellow';
+  }
+
   const [playerDom, playerVal] = getDominantStat(player);
   const [opponentDom, opponentVal] = getDominantStat(opponent);
 
@@ -1031,18 +1040,18 @@ const getAdvantageColor = (
 
   if (playerBeatsOpponent) {
     // You have triangle advantage — green unless heavily outstatted
-    return statDiff >= -3 ? 'green.400' : 'yellow.400';
+    return statDiff >= -3 ? 'green' : 'yellow';
   }
 
   if (opponentBeatsPlayer) {
     // They have triangle advantage — red unless you heavily outstat them
-    return statDiff <= 3 ? 'red.400' : 'yellow.400';
+    return statDiff <= 3 ? 'red' : 'yellow';
   }
 
   // Same dominant stat — pure stat comparison
-  if (statDiff >= 3) return 'green.400';
-  if (statDiff <= -3) return 'red.400';
-  return 'yellow.400';
+  if (statDiff >= 3) return 'green';
+  if (statDiff <= -3) return 'red';
+  return 'yellow';
 };
 
 const OpponentRow = ({

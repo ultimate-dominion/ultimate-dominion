@@ -202,7 +202,7 @@ const MUDProviderInner = ({
     const embeddedWaitForTransaction = async (tx: Hex) => {
       return setupResult.network.publicClient.waitForTransactionReceipt({
         hash: tx,
-        pollingInterval: 1_000, // 1s instead of default 4s — detect mined txs faster
+        pollingInterval: 250, // Match Base Flashblocks 200ms block time
       });
     };
 
