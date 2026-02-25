@@ -17,6 +17,33 @@
         "bonusDamage": 0,
         "critChanceBonus": 0
       }
+    },
+    {
+      "effectId": "0x102de589896bba66000000000000000000000000000000000000000000000000",
+      "name": "arcane_surge_damage",
+      "stats": {
+        "attackModifierBonus": 0,
+        "bonusDamage": 2,
+        "critChanceBonus": 1
+      }
+    },
+    {
+      "effectId": "0x591921f378d5a851000000000000000000000000000000000000000000000000",
+      "name": "soul_drain_damage",
+      "stats": {
+        "attackModifierBonus": 0,
+        "bonusDamage": 1,
+        "critChanceBonus": 0
+      }
+    },
+    {
+      "effectId": "0x021f0781523c9b87000000000000000000000000000000000000000000000000",
+      "name": "arcane_blast_damage",
+      "stats": {
+        "attackModifierBonus": 0,
+        "bonusDamage": 3,
+        "critChanceBonus": 2
+      }
     }
   ],
   "physicalDamage": [
@@ -42,7 +69,8 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 0
+        "strModifier": 0,
+        "targetsSelf": false
       },
       "validity": {
         "cooldown": 0,
@@ -61,7 +89,8 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 0
+        "strModifier": 0,
+        "targetsSelf": false
       },
       "validity": {
         "cooldown": 3,
@@ -80,7 +109,8 @@
         "hpModifier": 0,
         "intModifier": -5,
         "resistanceStat": 0,
-        "strModifier": 8
+        "strModifier": 8,
+        "targetsSelf": false
       },
       "validity": {
         "cooldown": 0,
@@ -99,7 +129,8 @@
         "hpModifier": 0,
         "intModifier": 5,
         "resistanceStat": 0,
-        "strModifier": 0
+        "strModifier": 0,
+        "targetsSelf": false
       },
       "validity": {
         "cooldown": 0,
@@ -118,7 +149,8 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 0
+        "strModifier": 0,
+        "targetsSelf": false
       },
       "validity": {
         "cooldown": 2,
@@ -137,7 +169,8 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 5
+        "strModifier": 5,
+        "targetsSelf": false
       },
       "validity": {
         "cooldown": 0,
@@ -156,7 +189,8 @@
         "hpModifier": 0,
         "intModifier": -8,
         "resistanceStat": 0,
-        "strModifier": 0
+        "strModifier": 0,
+        "targetsSelf": false
       },
       "validity": {
         "cooldown": 3,
@@ -175,13 +209,154 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": -8
+        "strModifier": -8,
+        "targetsSelf": false
       },
       "validity": {
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 8
+      }
+    },
+    {
+      "effectId": "0x9aad548eddd4a76c000000000000000000000000000000000000000000000000",
+      "name": "battle_cry",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 3,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 4,
+        "targetsSelf": true
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0xf69d7422b50eefa3000000000000000000000000000000000000000000000000",
+      "name": "divine_shield",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 5,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 3,
+        "targetsSelf": true
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0x243e6a3580c7821c000000000000000000000000000000000000000000000000",
+      "name": "hunters_mark",
+      "stats": {
+        "agiModifier": -5,
+        "armorModifier": -2,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 2,
+        "strModifier": 0,
+        "targetsSelf": false
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 4
+      }
+    },
+    {
+      "effectId": "0x22d77b1601b6e5c5000000000000000000000000000000000000000000000000",
+      "name": "shadowstep",
+      "stats": {
+        "agiModifier": 8,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0,
+        "targetsSelf": true
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 2
+      }
+    },
+    {
+      "effectId": "0x284e0e9eec85ca2d000000000000000000000000000000000000000000000000",
+      "name": "entangle",
+      "stats": {
+        "agiModifier": -5,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 2,
+        "strModifier": -3,
+        "targetsSelf": false
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0xa72795e8555f90e1000000000000000000000000000000000000000000000000",
+      "name": "soul_drain_curse",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": -3,
+        "resistanceStat": 3,
+        "strModifier": -3,
+        "targetsSelf": false
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0xd5547c9c5217a7bc000000000000000000000000000000000000000000000000",
+      "name": "blessing",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 5,
+        "damagePerTick": 0,
+        "hpModifier": 5,
+        "intModifier": 3,
+        "resistanceStat": 0,
+        "strModifier": 0,
+        "targetsSelf": true
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
       }
     }
   ]

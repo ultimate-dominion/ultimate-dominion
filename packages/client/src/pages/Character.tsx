@@ -30,6 +30,7 @@ import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
 import { erc721Abi, hexToBigInt, hexToString, zeroHash } from 'viem';
+import { AdvancedClassModal } from '../components/AdvancedClassModal';
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
 import { FragmentCollection } from '../components/FragmentCollection';
@@ -95,13 +96,19 @@ export const CharacterPage = (): JSX.Element => {
     isSynced,
     network: { publicClient, worldContract },
   } = useMUD();
-  const { character: userCharacter } = useCharacter();
+  const { character: userCharacter, refreshCharacter } = useCharacter();
   const { onOpen: onOpenChat } = useChat();
 
   const {
     isOpen: isEditModalOpen,
     onClose: onCloseEditModal,
     onOpen: onOpenEditModal,
+  } = useDisclosure();
+
+  const {
+    isOpen: isClassModalOpen,
+    onClose: onCloseClassModal,
+    onOpen: onOpenClassModal,
   } = useDisclosure();
 
   const [character, setCharacter] = useState<Character | null>(null);
@@ -299,6 +306,22 @@ export const CharacterPage = (): JSX.Element => {
       await fetchCharacter();
     })();
   }, [fetchCharacter, isOwner, isSynced, userCharacter]);
+
+  // Auto-open advanced class modal when level >= 10 and no class selected
+  useEffect(() => {
+    if (
+      isOwner &&
+      userCharacter &&
+      Number(userCharacter.level) >= 10 &&
+      !userCharacter.hasSelectedAdvancedClass
+    ) {
+      onOpenClassModal();
+    }
+  }, [isOwner, userCharacter, onOpenClassModal]);
+
+  const onClassSelected = useCallback(() => {
+    refreshCharacter();
+  }, [refreshCharacter]);
 
   const currentLevelXpRequirement =
     useComponentValue(
@@ -526,6 +549,11 @@ export const CharacterPage = (): JSX.Element => {
                   </Tooltip>
                 )}
                 <ClassSymbol entityClass={character.entityClass} />
+                {isOwner && Number(character.level) >= 10 && !character.hasSelectedAdvancedClass && (
+                  <Button size="xs" variant="outline" colorScheme="blue" onClick={onOpenClassModal}>
+                    Choose Class
+                  </Button>
+                )}
               </HStack>
               <Text fontWeight={500} my={12} size={{ base: 'sm', sm: 'md' }}>
                 {character.description}
@@ -587,6 +615,14 @@ export const CharacterPage = (): JSX.Element => {
           isOpen={isEditModalOpen}
           onClose={onCloseEditModal}
           {...character}
+        />
+      )}
+      {character && isOwner && (
+        <AdvancedClassModal
+          isOpen={isClassModalOpen}
+          onClose={onCloseClassModal}
+          characterId={character.id}
+          onClassSelected={onClassSelected}
         />
       )}
     </Box>

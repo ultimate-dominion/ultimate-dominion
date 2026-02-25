@@ -2443,6 +2443,232 @@
         "minIntelligence": 68,
         "minStrength": 0
       }
+    },
+    {
+      "name": "Battle Cry",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "spell:battle_cry",
+      "price": 0,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0x9aad548eddd4a76c000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Divine Shield",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "spell:divine_shield",
+      "price": 0,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xf69d7422b50eefa3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Arcane Surge",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "spell:arcane_surge",
+      "price": 0,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0x102de589896bba66000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 16,
+        "minDamage": 10,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Hunter's Mark",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "spell:hunters_mark",
+      "price": 0,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0x243e6a3580c7821c000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Shadowstep",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "spell:shadowstep",
+      "price": 0,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0x22d77b1601b6e5c5000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Entangle",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "spell:entangle",
+      "price": 0,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0x284e0e9eec85ca2d000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Soul Drain",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "spell:soul_drain",
+      "price": 0,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0x591921f378d5a851000000000000000000000000000000000000000000000000",
+          "0xa72795e8555f90e1000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 14,
+        "minDamage": 8,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Arcane Blast",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "spell:arcane_blast",
+      "price": 0,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0x021f0781523c9b87000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 20,
+        "minDamage": 12,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Blessing",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "spell:blessing",
+      "price": 0,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xd5547c9c5217a7bc000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 10,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
     }
   ]
 }

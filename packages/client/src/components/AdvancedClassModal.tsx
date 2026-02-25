@@ -27,14 +27,16 @@ const ADVANCED_CLASS_INFO: Record<AdvancedClass, {
   icon: string;
   flatBonuses: string;
   multipliers: string;
+  spell: string;
 }> = {
-  [AdvancedClass.None]: { name: 'None', description: '', icon: '', flatBonuses: '', multipliers: '' },
+  [AdvancedClass.None]: { name: 'None', description: '', icon: '', flatBonuses: '', multipliers: '', spell: '' },
   [AdvancedClass.Warrior]: {
     name: 'Warrior',
     description: 'Pure martial masters who excel in physical combat.',
     icon: '⚔️',
     flatBonuses: '+3 STR, +10 HP',
     multipliers: '+10% Physical Damage',
+    spell: 'Battle Cry: +4 STR, +3 Armor for 3 turns',
   },
   [AdvancedClass.Paladin]: {
     name: 'Paladin',
@@ -42,6 +44,7 @@ const ADVANCED_CLASS_INFO: Record<AdvancedClass, {
     icon: '🛡️',
     flatBonuses: '+2 STR, +15 HP',
     multipliers: '+5% Physical, +5% Healing Received',
+    spell: 'Divine Shield: +5 Armor, +3 STR for 3 turns',
   },
   [AdvancedClass.Ranger]: {
     name: 'Ranger',
@@ -49,6 +52,7 @@ const ADVANCED_CLASS_INFO: Record<AdvancedClass, {
     icon: '🏹',
     flatBonuses: '+3 AGI',
     multipliers: '+10% Physical Damage',
+    spell: "Hunter's Mark: -5 AGI, -2 Armor on enemy for 4 turns",
   },
   [AdvancedClass.Rogue]: {
     name: 'Rogue',
@@ -56,6 +60,7 @@ const ADVANCED_CLASS_INFO: Record<AdvancedClass, {
     icon: '🗡️',
     flatBonuses: '+2 AGI, +1 INT',
     multipliers: '+15% Critical Damage',
+    spell: 'Shadowstep: +8 AGI for 2 turns',
   },
   [AdvancedClass.Druid]: {
     name: 'Druid',
@@ -63,6 +68,7 @@ const ADVANCED_CLASS_INFO: Record<AdvancedClass, {
     icon: '🌿',
     flatBonuses: '+2 AGI, +2 STR',
     multipliers: '+5% All Damage, +5% Max HP',
+    spell: 'Entangle: -5 AGI, -3 STR on enemy for 3 turns',
   },
   [AdvancedClass.Warlock]: {
     name: 'Warlock',
@@ -70,6 +76,7 @@ const ADVANCED_CLASS_INFO: Record<AdvancedClass, {
     icon: '🔮',
     flatBonuses: '+2 AGI, +2 INT',
     multipliers: '+10% Spell Damage',
+    spell: 'Soul Drain: 8-14 magic damage + -3 STR, -3 INT on enemy for 3 turns',
   },
   [AdvancedClass.Wizard]: {
     name: 'Wizard',
@@ -77,6 +84,7 @@ const ADVANCED_CLASS_INFO: Record<AdvancedClass, {
     icon: '📖',
     flatBonuses: '+3 INT',
     multipliers: '+15% Spell Damage',
+    spell: 'Arcane Blast: 12-20 magic damage',
   },
   [AdvancedClass.Cleric]: {
     name: 'Cleric',
@@ -84,6 +92,7 @@ const ADVANCED_CLASS_INFO: Record<AdvancedClass, {
     icon: '✨',
     flatBonuses: '+2 INT, +10 HP',
     multipliers: '+10% Healing Done',
+    spell: 'Blessing: +3 INT, +5 Armor, +5 Max HP for 3 turns',
   },
   [AdvancedClass.Sorcerer]: {
     name: 'Sorcerer',
@@ -91,6 +100,7 @@ const ADVANCED_CLASS_INFO: Record<AdvancedClass, {
     icon: '💪',
     flatBonuses: '+2 STR, +2 INT',
     multipliers: '+8% Spell Damage, +5% Max HP',
+    spell: 'Arcane Surge: 10-16 magic damage',
   },
 };
 
@@ -194,6 +204,11 @@ export const AdvancedClassModal = ({
                       <Text fontSize="xs" color="yellow.400" fontWeight={600}>
                         {info.multipliers}
                       </Text>
+                      {info.spell && (
+                        <Text fontSize="xs" color="cyan.300" fontWeight={600} mt={1}>
+                          {info.spell}
+                        </Text>
+                      )}
                     </Box>
                   </VStack>
                 </Box>

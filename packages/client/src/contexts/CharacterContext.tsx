@@ -50,6 +50,7 @@ import { useMUD } from './MUDContext';
 type CharacterContextType = {
   character: Character | null;
   equippedArmor: Armor[];
+  equippedConsumables: Consumable[];
   equippedSpells: Spell[];
   equippedWeapons: Weapon[];
   inventoryArmor: Armor[];
@@ -64,6 +65,7 @@ type CharacterContextType = {
 const CharacterContext = createContext<CharacterContextType>({
   character: null,
   equippedArmor: [],
+  equippedConsumables: [],
   equippedSpells: [],
   equippedWeapons: [],
   inventoryArmor: [],
@@ -101,6 +103,7 @@ export const CharacterProvider = ({
         value={{
           character: null,
           equippedArmor: [],
+          equippedConsumables: [],
           equippedSpells: [],
           equippedWeapons: [],
           inventoryArmor: [],
@@ -174,6 +177,7 @@ const CharacterProviderInner = ({
   const [inventorySpells, setInventorySpells] = useState<Spell[]>([]);
   const [inventoryWeapons, setInventoryWeapons] = useState<Weapon[]>([]);
   const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
+  const [equippedConsumables, setEquippedConsumables] = useState<Consumable[]>([]);
   const [equippedSpells, setEquippedSpells] = useState<Spell[]>([]);
   const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
 
@@ -450,6 +454,7 @@ const CharacterProviderInner = ({
       _equippedArmorIds: bigint[],
       _equippedSpellsIds: bigint[],
       _equippedWeaponsIds: bigint[],
+      _equippedConsumableIds: bigint[],
     ) => {
       try {
         // If ItemsOwners component doesn't exist, skip item fetching
@@ -544,6 +549,9 @@ const CharacterProviderInner = ({
         const _equippedArmor = _equippedArmorIds
           .map(id => _armor.find(a => a.tokenId === id.toString()))
           .filter(Boolean) as Armor[];
+        const _equippedConsumablesList = _equippedConsumableIds
+          .map(id => _consumables.find(c => c.tokenId === id.toString()))
+          .filter(Boolean) as Consumable[];
         const _equippedSpells = _equippedSpellsIds
           .map(id => _spells.find(s => s.tokenId === id.toString()))
           .filter(Boolean) as Spell[];
@@ -557,6 +565,7 @@ const CharacterProviderInner = ({
         setInventoryWeapons(_weapons);
 
         setEquippedArmor(_equippedArmor);
+        setEquippedConsumables(_equippedConsumablesList);
         setEquippedSpells(_equippedSpells);
         setEquippedWeapons(_equippedWeapons);
       } catch (e) {
@@ -584,10 +593,11 @@ const CharacterProviderInner = ({
       ? getComponentValue(CharacterEquipme, userCharacter.id)
       : undefined;
 
-    const { equippedArmor, equippedSpells, equippedWeapons } =
+    const { equippedArmor, equippedConsumables: eqConsumables, equippedSpells, equippedWeapons } =
       equipmentData ??
-      ({ equippedArmor: [], equippedSpells: [], equippedWeapons: [] } as {
+      ({ equippedArmor: [], equippedConsumables: [], equippedSpells: [], equippedWeapons: [] } as {
         equippedArmor: bigint[];
+        equippedConsumables: bigint[];
         equippedSpells: bigint[];
         equippedWeapons: bigint[];
       });
@@ -597,6 +607,7 @@ const CharacterProviderInner = ({
       equippedArmor,
       equippedSpells,
       equippedWeapons,
+      eqConsumables,
     );
   }, [
     CharacterEquipme,
@@ -616,6 +627,7 @@ const CharacterProviderInner = ({
       value={{
         character: userCharacter,
         equippedArmor,
+        equippedConsumables,
         equippedSpells,
         equippedWeapons,
         inventoryArmor,

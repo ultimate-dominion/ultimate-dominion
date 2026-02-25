@@ -59,7 +59,7 @@ export const MONSTER_MOVE_MAPPING: Record<string, string> = {
 };
 
 export const ActionsPanel = (): JSX.Element => {
-  const { character, equippedSpells, equippedWeapons, inventoryConsumables } =
+  const { character, equippedConsumables, equippedSpells, equippedWeapons } =
     useCharacter();
   const { isSpawned, monstersOnTile, position } = useMap();
   const {
@@ -275,8 +275,8 @@ export const ActionsPanel = (): JSX.Element => {
   );
 
   const combatConsumables = useMemo(
-    () => inventoryConsumables.filter(c => c.hpRestoreAmount !== BigInt(0)),
-    [inventoryConsumables],
+    () => equippedConsumables.filter(c => c.hpRestoreAmount !== BigInt(0)),
+    [equippedConsumables],
   );
 
   const onUsePotion = useCallback(
