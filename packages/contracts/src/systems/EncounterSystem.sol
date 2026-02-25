@@ -193,19 +193,23 @@ contract EncounterSystem is System {
 
         CombatOutcome.set(encounterId, combatOutcome);
 
-        // Check combat fragment triggers (non-critical, must not break combat).
-        // Direct delegatecall bypasses World.fallback's prohibitDirectCallback.
-        (uint16 currentX, uint16 currentY) = Position.get(encounterData.attackers[0]);
-        address fSys;
-        assembly { fSys := shr(96, sload(FRAGMENT_SYSTEM_SLOT)) }
-        if (attackersWin) {
-            // solhint-disable-next-line avoid-low-level-calls
-            fSys.delegatecall(abi.encodeWithSelector(FRAGMENT_CHECK_SELECTOR,
-                encounterData.attackers, encounterData.defenders, currentX, currentY, !encounterData.attackersAreMobs));
-        } else {
-            // solhint-disable-next-line avoid-low-level-calls
-            fSys.delegatecall(abi.encodeWithSelector(FRAGMENT_CHECK_SELECTOR,
-                encounterData.defenders, encounterData.attackers, currentX, currentY, encounterData.attackersAreMobs));
+        // Fragment triggers: non-critical, skip if gas is tight after combat resolution.
+        // Gas guard prevents OOG in setup code from reverting the entire combat.
+        // delegatecall keeps World context so StoreSwitch → StoreCore (direct storage).
+        // Return value ignored — delegatecall failure is non-fatal.
+        if (gasleft() > 200_000) {
+            (uint16 currentX, uint16 currentY) = Position.get(encounterData.attackers[0]);
+            address fSys;
+            assembly { fSys := shr(96, sload(FRAGMENT_SYSTEM_SLOT)) }
+            if (attackersWin) {
+                // solhint-disable-next-line avoid-low-level-calls
+                fSys.delegatecall(abi.encodeWithSelector(FRAGMENT_CHECK_SELECTOR,
+                    encounterData.attackers, encounterData.defenders, currentX, currentY, !encounterData.attackersAreMobs));
+            } else {
+                // solhint-disable-next-line avoid-low-level-calls
+                fSys.delegatecall(abi.encodeWithSelector(FRAGMENT_CHECK_SELECTOR,
+                    encounterData.defenders, encounterData.attackers, currentX, currentY, encounterData.attackersAreMobs));
+            }
         }
     }
 
