@@ -235,10 +235,9 @@ export const LevelingPanel = ({
     if (result !== undefined) {
       await refreshCharacter();
 
-      // Check if this level up earned the Adventurer badge (level 3)
       const newLevel = Number(character.level) + 1;
       if (newLevel === 3) {
-        renderSuccess('Level 3! You earned the Adventurer Badge - Chat Unlocked!');
+        renderSuccess('Level 3! You earned the Adventurer Badge!');
       } else {
         renderSuccess('Character leveled up!');
       }

@@ -46,8 +46,8 @@ export const ChatBox: React.FC = () => {
     onSetMessageInputFocus,
   } = useChat();
 
-  // Badge gating is disabled if no badge contract is configured
-  const badgeGatingEnabled = !!import.meta.env.VITE_BADGE_CONTRACT_ADDRESS;
+  // Badge gating — disabled for beta, re-enable by setting VITE_BADGE_CONTRACT_ADDRESS
+  const badgeGatingEnabled = false; // TODO: restore after beta: !!import.meta.env.VITE_BADGE_CONTRACT_ADDRESS
   const canAccessChat = !badgeGatingEnabled || hasBadge;
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
