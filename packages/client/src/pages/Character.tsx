@@ -847,6 +847,11 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     return equippedSpellsAndWeapons.map(sow => BigInt(sow.tokenId));
   }, [equippedSpellsAndWeapons]);
 
+  const equippedConsumableIds = useMemo(() => {
+    const ids = (equipmentData?.equippedConsumables ?? []) as bigint[];
+    return ids.map(id => BigInt(id));
+  }, [equipmentData?.equippedConsumables]);
+
   const maxArmorEquipped = equippedArmorIds.length === MAX_EQUIPPED_ARMOR;
   const maxWeaponsEquipped =
     equippedSpellsAndWeaponsIds.length === MAX_EQUIPPED_WEAPONS;
@@ -981,7 +986,8 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           })}
         </Grid>
         <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
-          Consumables ({consumablesInInventory})
+          Consumables ({consumablesInInventory}) -{' '}
+          {equippedConsumableIds.length} equipped
         </Text>
         <Grid
           templateColumns={{
@@ -995,9 +1001,13 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         >
           {inventoryConsumables.length === 0 && <Text>No consumables</Text>}
           {inventoryConsumables.map((consumable, i) => {
+            const isEquipped = equippedConsumableIds.includes(
+              BigInt(consumable.tokenId),
+            );
             return (
               <GridItem key={i}>
                 <ItemCard
+                  isEquipped={isEquipped}
                   onClick={() => {
                     setSelectedConsumable(consumable);
                     onOpenConsumableModal();
@@ -1026,6 +1036,9 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         )}
         {selectedConsumable && (
           <ItemConsumeModal
+            isEquipped={equippedConsumableIds.includes(
+              BigInt(selectedConsumable.tokenId),
+            )}
             isOpen={isConsumableModalOpen}
             onClose={() => {
               onCloseConsumableModal();

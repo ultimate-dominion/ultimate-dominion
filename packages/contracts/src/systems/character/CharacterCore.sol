@@ -209,6 +209,9 @@ contract CharacterCore is System {
         CharacterEquipment.pushEquippedWeapons(characterId, starterWeaponId);
         CharacterEquipment.pushEquippedArmor(characterId, starterArmorId);
 
+        // NOTE: Starter consumables are NOT auto-equipped here to stay under contract size limit.
+        // Players can equip them manually via the Character page, or they'll auto-equip on future loot drops.
+
         // Lock character and store base stats
         charData.locked = true;
         bytes memory encodedStats = abi.encode(tempStats);

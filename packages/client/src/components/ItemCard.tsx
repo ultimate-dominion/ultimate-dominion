@@ -1,7 +1,8 @@
-import { Box, Center, HStack, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
+import { Box, Center, HStack, Image, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
 import { useMemo } from 'react';
 
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
+import { getItemImage } from '../utils/itemImages';
 import {
   type Armor,
   type Consumable,
@@ -215,7 +216,16 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         }
       >
         <Center h="100%" mr={{ base: 2, sm: 6 }}>
-          <Text fontSize={{ base: 'xl', lg: '3xl' }}>{getEmoji(name)}</Text>
+          {getItemImage(removeEmoji(name)) ? (
+            <Image
+              src={getItemImage(removeEmoji(name))}
+              alt={removeEmoji(name)}
+              boxSize={{ base: '40px', lg: '56px' }}
+              objectFit="contain"
+            />
+          ) : (
+            <Text fontSize={{ base: 'xl', lg: '3xl' }}>{getEmoji(name)}</Text>
+          )}
         </Center>
         <VStack alignItems="start" spacing={0}>
           <HStack spacing={2} mb={1}>
@@ -259,9 +269,18 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
         w="100%"
       >
         <Stack alignItems="center" h="60px" justifyContent="center" mr={8}>
-          <Text color="white" fontSize="2xl">
-            {getEmoji(item.name)}
-          </Text>
+          {getItemImage(removeEmoji(item.name)) ? (
+            <Image
+              src={getItemImage(removeEmoji(item.name))}
+              alt={removeEmoji(item.name)}
+              boxSize="40px"
+              objectFit="contain"
+            />
+          ) : (
+            <Text color="white" fontSize="2xl">
+              {getEmoji(item.name)}
+            </Text>
+          )}
         </Stack>
         <Box>
           <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }} color={rarityColor}>
@@ -285,9 +304,18 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
       w="100%"
     >
       <Stack alignItems="center" h="60px" justifyContent="center" mr={8}>
-        <Text color="white" fontSize="2xl">
-          {getEmoji(item.name)}
-        </Text>
+        {getItemImage(removeEmoji(item.name)) ? (
+          <Image
+            src={getItemImage(removeEmoji(item.name))}
+            alt={removeEmoji(item.name)}
+            boxSize="40px"
+            objectFit="contain"
+          />
+        ) : (
+          <Text color="white" fontSize="2xl">
+            {getEmoji(item.name)}
+          </Text>
+        )}
       </Stack>
       <Box>
         <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }} color={rarityColor}>

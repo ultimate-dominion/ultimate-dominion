@@ -3,6 +3,7 @@ import {
   Button,
   Flex,
   HStack,
+  Image,
   Text,
   Tooltip,
   useDisclosure,
@@ -25,6 +26,7 @@ import {
   removeEmoji,
   shortenAddress,
 } from '../utils/helpers';
+import { getItemImage } from '../utils/itemImages';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -143,14 +145,24 @@ export const OrderRow = ({
   return (
     <Flex bgColor="#F5F5FA1F" justify="space-between" w="100%">
       <Flex>
-        <Avatar
-          borderRadius={0}
-          size={{ base: 'md', sm: 'lg' }}
-          name={' '}
-          backgroundColor="grey300"
-        >
-          {getEmoji(item.name)}
-        </Avatar>
+        {getItemImage(removeEmoji(item.name)) ? (
+          <Image
+            src={getItemImage(removeEmoji(item.name))}
+            alt={removeEmoji(item.name)}
+            boxSize={{ base: '48px', sm: '64px' }}
+            objectFit="contain"
+            mr={2}
+          />
+        ) : (
+          <Avatar
+            borderRadius={0}
+            size={{ base: 'md', sm: 'lg' }}
+            name={' '}
+            backgroundColor="grey300"
+          >
+            {getEmoji(item.name)}
+          </Avatar>
+        )}
         <VStack
           align="start"
           justify="center"

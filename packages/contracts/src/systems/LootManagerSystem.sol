@@ -13,9 +13,11 @@ import {
     AdvancedClassItems,
     AdvancedClassItemsData,
     Stats,
-    AdventureEscrow
+    AdventureEscrow,
+    CharacterEquipment,
+    Items
 } from "@codegen/index.sol";
-import {AdvancedClass} from "@codegen/common.sol";
+import {AdvancedClass, ItemType} from "@codegen/common.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {_requireAccess, _requireSystemOrAdmin} from "../utils.sol";
@@ -118,6 +120,18 @@ contract LootManagerSystem is ERC1155Holder, System {
         // Update total supply
         uint256 currentSupply = TotalSupply.getTotalSupply(_totalSupplyTableId(namespace), itemId);
         TotalSupply.setTotalSupply(_totalSupplyTableId(namespace), itemId, currentSupply + amount);
+
+        // Auto-equip consumables if there's room in the shared weapon+consumable slots
+        if (gasleft() > 80_000) {
+            ItemType itemType = Items.getItemType(itemId);
+            if (itemType == ItemType.Consumable) {
+                uint256 totalEquipped = CharacterEquipment.lengthEquippedWeapons(characterId)
+                    + CharacterEquipment.lengthEquippedConsumables(characterId);
+                if (totalEquipped < 4 && !IWorld(_world()).UD__isEquipped(characterId, itemId)) {
+                    CharacterEquipment.pushEquippedConsumables(characterId, itemId);
+                }
+            }
+        }
     }
 
     function dropItems(bytes32[] memory characterIds, uint256[] memory itemIds, uint256[] memory amounts) public {
@@ -194,6 +208,24 @@ contract LootManagerSystem is ERC1155Holder, System {
 
         // Burn the item directly via table writes (bypasses ERC1155 approval requirement)
         _burnItemDirect(playerAddr, itemId, 1);
+
+        // Clean up stale equipped entry if balance hit 0
+        uint256 remainingBalance = Owners.getBalance(_ownersTableId(ITEMS_NAMESPACE), playerAddr, itemId);
+        if (remainingBalance == 0 && Items.getItemType(itemId) == ItemType.Consumable) {
+            uint256[] memory equipped = CharacterEquipment.getEquippedConsumables(characterId);
+            for (uint256 i = 0; i < equipped.length; i++) {
+                if (equipped[i] == itemId) {
+                    // Shift elements left and pop (same pattern as unequipItem)
+                    for (uint256 j = i; j < equipped.length - 1; j++) {
+                        equipped[j] = equipped[j + 1];
+                    }
+                    equipped[equipped.length - 1] = itemId;
+                    CharacterEquipment.setEquippedConsumables(characterId, equipped);
+                    CharacterEquipment.popEquippedConsumables(characterId);
+                    break;
+                }
+            }
+        }
     }
 
     /**

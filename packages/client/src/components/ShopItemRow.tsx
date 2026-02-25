@@ -8,6 +8,7 @@ import {
   Grid,
   GridItem,
   HStack,
+  Image,
   Input,
   Modal,
   ModalBody,
@@ -35,6 +36,7 @@ import {
   getStatSymbol,
   removeEmoji,
 } from '../utils/helpers';
+import { getItemImage } from '../utils/itemImages';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -243,14 +245,24 @@ export const ShopItemRow = ({
       }}
     >
       <Flex>
-        <Avatar
-          backgroundColor="transparent"
-          borderRadius={0}
-          name=" "
-          size={{ base: 'md', sm: 'lg' }}
-        >
-          {name ? getEmoji(name.toString()) : ''}
-        </Avatar>
+        {name && getItemImage(removeEmoji(name.toString())) ? (
+          <Image
+            src={getItemImage(removeEmoji(name.toString()))}
+            alt={removeEmoji(name.toString())}
+            boxSize={{ base: '48px', sm: '64px' }}
+            objectFit="contain"
+            mr={2}
+          />
+        ) : (
+          <Avatar
+            backgroundColor="transparent"
+            borderRadius={0}
+            name=" "
+            size={{ base: 'md', sm: 'lg' }}
+          >
+            {name ? getEmoji(name.toString()) : ''}
+          </Avatar>
+        )}
         <VStack justify="center" ml={{ base: 0, sm: 4 }}>
           <Text fontWeight={700} size={{ base: 'xs', sm: 'md', lg: 'lg' }}>
             {name ? removeEmoji(name.toString()) : ''}
@@ -323,14 +335,23 @@ export const ShopItemRow = ({
               templateRows="2fr"
             >
               <GridItem colSpan={{ base: 2, sm: 1 }}>
-                <Avatar
-                  backgroundColor="grey300"
-                  borderRadius={0}
-                  name={' '}
-                  size="lg"
-                >
-                  {name ? getEmoji(name.toString()) : ''}
-                </Avatar>
+                {name && getItemImage(removeEmoji(name.toString())) ? (
+                  <Image
+                    src={getItemImage(removeEmoji(name.toString()))}
+                    alt={removeEmoji(name.toString())}
+                    boxSize="64px"
+                    objectFit="contain"
+                  />
+                ) : (
+                  <Avatar
+                    backgroundColor="grey300"
+                    borderRadius={0}
+                    name={' '}
+                    size="lg"
+                  >
+                    {name ? getEmoji(name.toString()) : ''}
+                  </Avatar>
+                )}
 
                 <Text mt={{ base: 4, sm: 8 }} size="sm">
                   {item?.description || ''}

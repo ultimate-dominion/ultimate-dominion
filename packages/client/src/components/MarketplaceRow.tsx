@@ -4,6 +4,7 @@ import {
   Button,
   Flex,
   HStack,
+  Image,
   Text,
   VStack,
 } from '@chakra-ui/react';
@@ -12,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { ITEM_PATH } from '../Routes';
 import { getEmoji, removeEmoji } from '../utils/helpers';
+import { getItemImage } from '../utils/itemImages';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -66,9 +68,19 @@ export const MarketplaceRow = ({
       }}
     >
       <Flex>
-        <Avatar bgColor="#F5F5FA1F" borderRadius={0} size="lg" name={' '}>
-          {getEmoji(name)}
-        </Avatar>
+        {getItemImage(removeEmoji(name)) ? (
+          <Image
+            src={getItemImage(removeEmoji(name))}
+            alt={removeEmoji(name)}
+            boxSize="64px"
+            objectFit="contain"
+            mr={2}
+          />
+        ) : (
+          <Avatar bgColor="#F5F5FA1F" borderRadius={0} size="lg" name={' '}>
+            {getEmoji(name)}
+          </Avatar>
+        )}
         <VStack align="start" justify="center" ml={4}>
           <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
             {removeEmoji(name)}

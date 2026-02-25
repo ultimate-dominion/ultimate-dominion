@@ -22,6 +22,10 @@ import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { Consumable, EncounterType, Monster } from '../utils/types';
 
+import {
+  STATUS_EFFECT_NAME_MAPPING,
+  STATUS_EFFECT_DESCRIPTION_MAPPING,
+} from '../utils/constants';
 import { ItemConsumeModal } from './ItemConsumeModal';
 import { PotionSvg } from './SVGs/PotionSvg';
 
@@ -116,13 +120,6 @@ export const ActionsPanel = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    if (parentDivRef.current) {
-      parentDivRef.current.scrollTo({
-        behavior: 'smooth',
-        top: parentDivRef.current.scrollHeight,
-      });
-    }
-
     if (attackButton1Ref.current) {
       attackButton1Ref.current.focus();
       setAttackButtonFocus(0);
@@ -603,7 +600,8 @@ export const ActionsPanel = (): JSX.Element => {
           )}
 
         {opponent &&
-          attackOutcomes.map((attack, i) => {
+          [...attackOutcomes].reverse().map((attack, reverseIndex) => {
+            const i = attackOutcomes.length - 1 - reverseIndex;
             const attackItem = spellAndWeaponTemplates.find(
               item => item.tokenId === attack.itemId,
             );
@@ -624,6 +622,20 @@ export const ActionsPanel = (): JSX.Element => {
               ),
             );
 
+            // Resolve effect names for this attack's effects
+            const effectNames = attack.effectIds
+              .map(effectId => {
+                const paddedId = effectId.toString().padEnd(66, '0');
+                return STATUS_EFFECT_NAME_MAPPING[paddedId];
+              })
+              .filter(Boolean);
+
+            const isPlayerAttack = attack.attackerId === character?.id;
+            const hasOnlyStatusEffects =
+              attack.attackerDamageDelt === 0n &&
+              attack.effectIds.length > 0 &&
+              !possibleStatusEffectAttack;
+
             if (attack.miss[0]) {
               return (
                 <Typist
@@ -632,11 +644,8 @@ export const ActionsPanel = (): JSX.Element => {
                   key={`battle-attack-${i}`}
                   stdTypingDelay={10}
                 >
-                  {attack.attackerId === character?.id ? (
-                    <Text
-                      key={`battle-attack-${i}`}
-                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                    >
+                  {isPlayerAttack ? (
+                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       You missed{' '}
                       <Text as="span" color="green">
                         {opponent.name}
@@ -644,10 +653,7 @@ export const ActionsPanel = (): JSX.Element => {
                       with {itemName}.
                     </Text>
                   ) : (
-                    <Text
-                      key={`battle-attack-${i}`}
-                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                    >
+                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       <Text as="span" color="green">
                         {opponent.name}
                       </Text>{' '}
@@ -667,37 +673,84 @@ export const ActionsPanel = (): JSX.Element => {
                 key={`battle-attack-${i}`}
                 stdTypingDelay={10}
               >
-                {attack.attackerId === character?.id &&
-                  !!possibleStatusEffectAttack && (
-                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                      {critText}You attacked{' '}
-                      <Text as="span" color="green">
-                        {opponent.name}
-                      </Text>{' '}
-                      with {itemName}. You inflicted{' '}
-                      <Text as="span" color="red">
-                        {possibleStatusEffectAttack.name}
+                {/* Status effect applied — passive style */}
+                {isPlayerAttack && !!possibleStatusEffectAttack && (() => {
+                  const isSelfBuff = possibleStatusEffectAttack.victimId === character?.id;
+                  const effectColor = isSelfBuff ? 'cyan.300' : 'orange.300';
+                  const affectedText = isSelfBuff
+                    ? `You are affected by ${possibleStatusEffectAttack.name}.`
+                    : `${opponent.name} is affected by ${possibleStatusEffectAttack.name}.`;
+                  return (
+                    <>
+                      <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                        {critText}You cast {itemName}
+                        {!isSelfBuff && (
+                          <>
+                            {' '}on{' '}
+                            <Text as="span" color="green">
+                              {opponent.name}
+                            </Text>
+                          </>
+                        )}
+                        .{' '}
+                        <Text as="span" color={effectColor}>
+                          {affectedText}
+                        </Text>
                       </Text>
-                      !
-                    </Text>
-                  )}
-                {attack.attackerId !== character?.id &&
-                  !!possibleStatusEffectAttack && (
-                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                      {critText}
-                      <Text as="span" color="green">
-                        {opponent?.name}
-                      </Text>{' '}
-                      attacked you with {itemName}. You were inflicted with{' '}
-                      <Text as="span" color="red">
-                        {possibleStatusEffectAttack.name}
+                      {STATUS_EFFECT_DESCRIPTION_MAPPING[
+                        possibleStatusEffectAttack.name
+                      ] && (
+                        <Text
+                          size={{ base: '2xs', sm: 'xs', lg: 'sm' }}
+                          color={effectColor}
+                        >
+                          {STATUS_EFFECT_DESCRIPTION_MAPPING[
+                            possibleStatusEffectAttack.name
+                          ]}
+                        </Text>
+                      )}
+                    </>
+                  );
+                })()}
+                {!isPlayerAttack && !!possibleStatusEffectAttack && (() => {
+                  const isSelfBuff = possibleStatusEffectAttack.victimId === opponent?.id;
+                  const effectColor = isSelfBuff ? 'orange.300' : 'cyan.300';
+                  const affectedText = isSelfBuff
+                    ? `${opponent.name} is affected by ${possibleStatusEffectAttack.name}.`
+                    : `You are affected by ${possibleStatusEffectAttack.name}.`;
+                  return (
+                    <>
+                      <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                        {critText}
+                        <Text as="span" color="green">
+                          {opponent.name}
+                        </Text>{' '}
+                        cast {itemName}.{' '}
+                        <Text as="span" color={effectColor}>
+                          {affectedText}
+                        </Text>
                       </Text>
-                      !
-                    </Text>
-                  )}
-                {attack.attackerId === character?.id &&
+                      {STATUS_EFFECT_DESCRIPTION_MAPPING[
+                        possibleStatusEffectAttack.name
+                      ] && (
+                        <Text
+                          size={{ base: '2xs', sm: 'xs', lg: 'sm' }}
+                          color={effectColor}
+                        >
+                          {STATUS_EFFECT_DESCRIPTION_MAPPING[
+                            possibleStatusEffectAttack.name
+                          ]}
+                        </Text>
+                      )}
+                    </>
+                  );
+                })()}
+
+                {/* Normal damage attack */}
+                {isPlayerAttack &&
                   !possibleStatusEffectAttack &&
-                  !alreadyAffected && (
+                  !alreadyAffected &&
+                  !hasOnlyStatusEffects && (
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       {critText}You attacked{' '}
                       <Text as="span" color="green">
@@ -710,9 +763,10 @@ export const ActionsPanel = (): JSX.Element => {
                       damage.
                     </Text>
                   )}
-                {attack.attackerId !== character?.id &&
+                {!isPlayerAttack &&
                   !possibleStatusEffectAttack &&
-                  !alreadyAffected && (
+                  !alreadyAffected &&
+                  !hasOnlyStatusEffects && (
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                       {critText}
                       <Text as="span" color="green">
@@ -726,15 +780,41 @@ export const ActionsPanel = (): JSX.Element => {
                     </Text>
                   )}
 
-                {attack.attackerId === character?.id &&
+                {/* 0-damage spell cast (no new status effect applied, but has effects) */}
+                {isPlayerAttack && hasOnlyStatusEffects && !alreadyAffected && (
+                  <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                    You cast {itemName} on{' '}
+                    <Text as="span" color="green">
+                      {opponent.name}
+                    </Text>
+                    .
+                    {effectNames[0] &&
+                      STATUS_EFFECT_DESCRIPTION_MAPPING[effectNames[0]] && (
+                        <Text
+                          as="span"
+                          color="orange.300"
+                        >
+                          {' '}
+                          {effectNames[0]}.{' '}
+                          {STATUS_EFFECT_DESCRIPTION_MAPPING[effectNames[0]]}
+                        </Text>
+                      )}
+                  </Text>
+                )}
+
+                {/* Already affected — spell had no new effect */}
+                {isPlayerAttack &&
                   alreadyAffected &&
                   !possibleStatusEffectAttack && (
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                      {critText}You attacked{' '}
+                      You cast {itemName} on{' '}
                       <Text as="span" color="green">
                         {opponent.name}
-                      </Text>{' '}
-                      with {itemName}. It had no effect.
+                      </Text>
+                      .{' '}
+                      {effectNames[0]
+                        ? `${effectNames[0]} is already active.`
+                        : 'It had no effect.'}
                     </Text>
                   )}
               </Typist>

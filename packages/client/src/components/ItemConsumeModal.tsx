@@ -21,6 +21,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { ITEM_PATH } from '../Routes';
+import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import { type Consumable, OrderType } from '../utils/types';
 
 import { HealthBar } from './HealthBar';
@@ -36,11 +37,13 @@ const getMinutesAndSeconds = (seconds: bigint): string => {
 };
 
 type ItemConsumeModalProps = Consumable & {
+  isEquipped: boolean;
   isOpen: boolean;
   onClose: () => void;
 };
 
 export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
+  isEquipped,
   isOpen,
   onClose,
   ...item
@@ -49,9 +52,10 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   const { renderSuccess } = useToast();
   const {
     delegatorAddress,
-    systemCalls: { useCombatConsumableItem, useWorldConsumableItem },
+    systemCalls: { equipItems, unequipItem, useCombatConsumableItem, useWorldConsumableItem },
   } = useMUD();
-  const { character, refreshCharacter } = useCharacter();
+  const { character, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
+    useCharacter();
   const { isSpawned } = useMap();
   const { currentBattle } = useBattle();
   const { itemsLootManagerAllowance } = useAllowance();
@@ -63,6 +67,8 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   } = useDisclosure();
 
   const consumeTx = useTransaction({ actionName: 'use item', showSuccessToast: false });
+  const equipTx = useTransaction({ actionName: 'equip item', showSuccessToast: false });
+  const unequipTx = useTransaction({ actionName: 'unequip item', showSuccessToast: false });
 
   const [itemBalance, setItemBalance] = useState(item.balance);
   const [isConsumed, setIsConsumed] = useState(false);
@@ -71,6 +77,13 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     () => character?.owner === item.owner,
     [character, item.owner],
   );
+
+  const totalEquippedSlots = useMemo(
+    () => equippedWeapons.length + equippedSpells.length + equippedConsumables.length,
+    [equippedConsumables.length, equippedSpells.length, equippedWeapons.length],
+  );
+
+  const maxSlotsReached = totalEquippedSlots >= MAX_EQUIPPED_WEAPONS;
 
   const onUseConsumable = useCallback(async () => {
     if (!character) return;
@@ -106,6 +119,56 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     renderSuccess,
     useCombatConsumableItem,
     useWorldConsumableItem,
+  ]);
+
+  const onEquipItem = useCallback(async () => {
+    if (!character) return;
+    if (!delegatorAddress) return;
+
+    const result = await equipTx.execute(async () => {
+      const { error, success } = await equipItems(character.id, [item.tokenId]);
+      if (error && !success) throw new Error(error);
+    });
+
+    if (result !== undefined) {
+      await refreshCharacter();
+      renderSuccess(`${item.name} equipped successfully!`);
+      onClose();
+    }
+  }, [
+    character,
+    delegatorAddress,
+    equipItems,
+    equipTx,
+    item,
+    onClose,
+    refreshCharacter,
+    renderSuccess,
+  ]);
+
+  const onUnequipItem = useCallback(async () => {
+    if (!character) return;
+    if (!delegatorAddress) return;
+
+    const result = await unequipTx.execute(async () => {
+      const { error, success } = await unequipItem(character.id, item.tokenId);
+      if (error && !success) throw new Error(error);
+    });
+
+    if (result !== undefined) {
+      await refreshCharacter();
+      renderSuccess(`${item.name} unequipped successfully!`);
+      onClose();
+    }
+  }, [
+    character,
+    delegatorAddress,
+    item,
+    onClose,
+    refreshCharacter,
+    renderSuccess,
+    unequipTx,
+    unequipItem,
   ]);
 
   const isHealthRestore = useMemo(
@@ -160,7 +223,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     [item.hpRestoreAmount],
   );
 
-  const isDisabled = useMemo(() => {
+  const isConsumeDisabled = useMemo(() => {
     if (!isOwner) return false;
     // Only allow instant heal items during combat
     if (currentBattle && !isInstantHeal) return true;
@@ -171,12 +234,14 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     return false;
   }, [currentBattle, isHealthFull, isInstantHeal, isOwner, isSpawned, maxStacksReached]);
 
+  const isAnyLoading = consumeTx.isLoading || equipTx.isLoading || unequipTx.isLoading;
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
-        <ModalHeader>{isOwner ? 'Consume Item' : 'Make an offer'}</ModalHeader>
+        <ModalHeader>{isOwner ? 'Consumable' : 'Make an offer'}</ModalHeader>
         <ModalCloseButton />
         <ModalBody px={{ base: 6, sm: 8 }}>
           {isOwner && character ? (
@@ -185,9 +250,9 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
                 <Text mb={6}>{item.name} was consumed!</Text>
               ) : (
                 <Text mb={6}>
-                  Do you want to consume this item?{' '}
+                  {isEquipped ? 'This consumable is equipped and ready for combat.' : 'This consumable is not equipped.'}{' '}
                   {item.validTime > BigInt(0) &&
-                    `Its effect will last for ${getMinutesAndSeconds(item.validTime)}.`}
+                    `Its effect lasts ${getMinutesAndSeconds(item.validTime)}.`}
                 </Text>
               )}
               {isHealthRestore && (
@@ -202,7 +267,12 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
           ) : (
             <Text mb={6}>Do you want to make an offer for this item?</Text>
           )}
-          <ItemCard {...item} balance={itemBalance} />
+          <ItemCard {...item} balance={itemBalance} isEquipped={isEquipped} />
+          {isOwner && (
+            <Text color="gray.500" fontSize="xs" mt={2}>
+              Slot {totalEquippedSlots}/{MAX_EQUIPPED_WEAPONS} (weapons + consumables)
+            </Text>
+          )}
           {!!currentBattle && isOwner && !isInstantHeal && (
             <Text color="red" fontWeight="bold" mt={4} size="sm">
               You cannot consume this during battle.
@@ -232,7 +302,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
         {isConsumed ? (
           <ModalFooter>
             <Button
-              isDisabled={consumeTx.isLoading}
+              isDisabled={isAnyLoading}
               onClick={onClose}
               size="sm"
               variant="ghost"
@@ -242,14 +312,35 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
           </ModalFooter>
         ) : (
           <ModalFooter gap={3}>
-            <Button isDisabled={consumeTx.isLoading} onClick={onClose} variant="ghost">
-              No
+            <Button isDisabled={isAnyLoading} onClick={onClose} variant="ghost">
+              Cancel
             </Button>
+            {isOwner && !isEquipped && (
+              <Button
+                isDisabled={!!currentBattle || maxSlotsReached}
+                isLoading={equipTx.isLoading}
+                loadingText="Equipping..."
+                onClick={onEquipItem}
+                variant="outline"
+              >
+                Equip
+              </Button>
+            )}
+            {isOwner && isEquipped && (
+              <Button
+                isDisabled={!!currentBattle}
+                isLoading={unequipTx.isLoading}
+                loadingText="Unequipping..."
+                onClick={onUnequipItem}
+                variant="outline"
+              >
+                Unequip
+              </Button>
+            )}
             <Button
-              isDisabled={isDisabled}
+              isDisabled={isConsumeDisabled}
               isLoading={consumeTx.isLoading}
               loadingText="Consuming..."
-              mr={3}
               onClick={() =>
                 isOwner
                   ? onUseConsumable()
@@ -258,7 +349,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
                     )
               }
             >
-              Yes
+              {isOwner ? 'Consume' : 'Make Offer'}
             </Button>
           </ModalFooter>
         )}

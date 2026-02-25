@@ -6,6 +6,7 @@ import {
   FormHelperText,
   Heading,
   HStack,
+  Image,
   Input,
   InputGroup,
   InputLeftAddon,
@@ -45,6 +46,7 @@ import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
+import { getItemImage } from '../utils/itemImages';
 import {
   type ArmorTemplate,
   ItemType,
@@ -484,17 +486,28 @@ const MarketplaceItemInner = (): JSX.Element => {
             </Text>
           </Stack>
         </HStack>
-        <Avatar
-          backgroundColor="transparent"
-          borderRadius={0}
-          display={{ base: 'flex', lg: 'none' }}
-          h={14}
-          mt={4}
-          name={' '}
-          size="2xl"
-        >
-          {getEmoji(selectedItem.name)}
-        </Avatar>
+        {getItemImage(removeEmoji(selectedItem.name)) ? (
+          <Image
+            src={getItemImage(removeEmoji(selectedItem.name))}
+            alt={removeEmoji(selectedItem.name)}
+            boxSize="112px"
+            objectFit="contain"
+            display={{ base: 'flex', lg: 'none' }}
+            mt={4}
+          />
+        ) : (
+          <Avatar
+            backgroundColor="transparent"
+            borderRadius={0}
+            display={{ base: 'flex', lg: 'none' }}
+            h={14}
+            mt={4}
+            name={' '}
+            size="2xl"
+          >
+            {getEmoji(selectedItem.name)}
+          </Avatar>
+        )}
         <Stack
           alignItems="start"
           direction={{ base: 'column-reverse', lg: 'row' }}
@@ -508,16 +521,26 @@ const MarketplaceItemInner = (): JSX.Element => {
               Description
             </Text>
             <HStack align="center">
-              <Avatar
-                backgroundColor="transparent"
-                borderRadius={0}
-                display={{ base: 'none', lg: 'flex' }}
-                h={14}
-                name={' '}
-                size="2xl"
-              >
-                {getEmoji(selectedItem.name)}
-              </Avatar>
+              {getItemImage(removeEmoji(selectedItem.name)) ? (
+                <Image
+                  src={getItemImage(removeEmoji(selectedItem.name))}
+                  alt={removeEmoji(selectedItem.name)}
+                  boxSize="112px"
+                  objectFit="contain"
+                  display={{ base: 'none', lg: 'flex' }}
+                />
+              ) : (
+                <Avatar
+                  backgroundColor="transparent"
+                  borderRadius={0}
+                  display={{ base: 'none', lg: 'flex' }}
+                  h={14}
+                  name={' '}
+                  size="2xl"
+                >
+                  {getEmoji(selectedItem.name)}
+                </Avatar>
+              )}
               <Text size="sm" textAlign={{ base: 'center', lg: 'start' }}>
                 {selectedItem.description}
               </Text>

@@ -17,6 +17,13 @@ const STATUS_EFFECT_COLOR_MAPPING: { [key: string]: string } = {
   'STR boost': 'red',
   stupify: 'blue',
   weaken: 'red',
+  'Battle Cry': 'orange',
+  'Divine Shield': 'yellow',
+  "Hunter's Mark": 'orange',
+  Shadowstep: 'cyan',
+  Entangle: 'green',
+  'Soul Drain': 'purple',
+  Blessing: 'teal',
 };
 
 export const HealthBar = ({

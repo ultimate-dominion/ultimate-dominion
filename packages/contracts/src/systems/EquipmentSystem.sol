@@ -65,9 +65,7 @@ contract EquipmentSystem is System {
                 // Delegate to ArmorSystem
                 IWorld(_world()).UD__equipArmor(characterId, itemId);
             } else if (itemType == ItemType.Consumable) {
-                // Keep simple equip list management for consumables until dedicated system method exists
-                require(!isEquipped(characterId, itemId), "EQUIPMENT: ALREADY EQUIPPED");
-                CharacterEquipment.pushEquippedConsumables(characterId, itemId);
+                _equipItem(characterId, itemId, ItemType.Consumable);
             } else {
                 revert("EQUIPMENT: Unsupported item type");
             }
