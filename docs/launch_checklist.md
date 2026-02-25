@@ -98,7 +98,8 @@ Get the game playable with real users on testnet. Rough edges acceptable — the
 - [x] DNS: beta.ultimatedominion.com → Vercel ✓
 - [ ] Set up error monitoring (Sentry or similar)
 - [ ] Set up uptime monitoring for API and client
-- [ ] Push Protocol chat — verify on production domain (CORS issue on localhost)
+- [x] Push Protocol chat — CORS fix (env var trailing newline) + EOA signer for smart accounts
+- [ ] Chat UI polish — improve layout to look more like a traditional chat interface
 
 ### 1.3 Beta Smoke Test (Post-Deploy)
 
@@ -112,7 +113,7 @@ Run through every core flow before inviting players:
 - [ ] Visit shop, buy/sell items
 - [ ] List item on marketplace, buy from marketplace
 - [ ] Level up, allocate stats
-- [ ] Chat (Push Protocol)
+- [x] Chat (Push Protocol) ✓ CORS fix + EOA signer for smart accounts
 - [ ] Mobile browser — full flow
 - [ ] Multiple concurrent users (at least 2-3 testers simultaneously)
 

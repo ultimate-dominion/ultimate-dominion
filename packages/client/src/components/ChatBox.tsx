@@ -110,13 +110,19 @@ export const ChatBox: React.FC = () => {
 
         const promises = allCharacters.map(async character => {
           if (!_ensNameByAddressMapping[character.owner]) {
-            const ensName = await publicClient.getEnsName({
-              address: character.owner as `0x${string}`,
-              universalResolverAddress:
-                mainnet.contracts.ensUniversalResolver.address,
-            });
-            _ensNameByAddressMapping[character.owner] =
-              ensName || shortenAddress(character.owner);
+            try {
+              const ensName = await publicClient.getEnsName({
+                address: character.owner as `0x${string}`,
+                universalResolverAddress:
+                  mainnet.contracts.ensUniversalResolver.address,
+              });
+              _ensNameByAddressMapping[character.owner] =
+                ensName || shortenAddress(character.owner);
+            } catch {
+              // ENS reverse lookup fails for smart accounts / non-ENS addresses
+              _ensNameByAddressMapping[character.owner] =
+                shortenAddress(character.owner);
+            }
           }
         });
 
@@ -124,9 +130,8 @@ export const ChatBox: React.FC = () => {
 
         setAllCharacterOwners(newCharacterOwners);
         setEnsNameByAddressMapping(_ensNameByAddressMapping);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Error fetching ENS names:', error);
+      } catch {
+        // ENS resolution failed entirely — fall back silently
       }
     })();
   }, [allCharacters, allCharacterOwners, isGroupMember, isLoggedIn]);
