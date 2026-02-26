@@ -12,9 +12,9 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
-import { getComponentValue, Has, runQuery } from '@latticexyz/recs';
+import { Has, runQuery } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   IoIosArrowForward,
   IoMdInformationCircleOutline,
@@ -23,20 +23,9 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { hexToBigInt } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
-import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
-import { useTransaction } from '../hooks/useTransaction';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
-
-const REST_FLAVOR = [
-  'The fire crackles softly as warmth seeps into your bones. Your wounds begin to close.',
-  'You sit by the flames and let the heat chase away the cold. Strength returns.',
-  'Embers dance in the dark. The world feels far away. You breathe deep, and heal.',
-  'The fire hisses and pops. For a moment, the dangers beyond feel like a distant memory.',
-  'Sparks drift upward like tiny stars. When you rise, the pain is gone.',
-];
 
 import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
@@ -46,40 +35,10 @@ export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
-    components: { Levels, Stats },
-    systemCalls: { rest },
+    components: { Levels },
   } = useMUD();
-  const { character, refreshCharacter } = useCharacter();
-  const { position } = useMap();
+  const { character } = useCharacter();
 
-  const isAtFire = position?.x === 0 && position?.y === 0;
-
-  const restTx = useTransaction({
-    actionName: 'Resting by the fire',
-    showSuccessToast: false,
-  });
-
-  const { renderSuccess } = useToast();
-
-  const onRest = useCallback(async () => {
-    if (!character) return;
-    const prevHp = character.currentHp;
-    const result = await restTx.execute(async () => {
-      const { error, success } = await rest(character.id);
-      if (error && !success) throw new Error(error);
-      return true;
-    });
-    if (result !== undefined) {
-      // Poll MUD Stats component until HP reflects the rest
-      for (let i = 0; i < 30; i++) {
-        const stats = getComponentValue(Stats, character.id);
-        if (stats && stats.currentHp !== prevHp) break;
-        await new Promise(r => setTimeout(r, 500));
-      }
-      await refreshCharacter();
-      renderSuccess(REST_FLAVOR[Math.floor(Math.random() * REST_FLAVOR.length)]);
-    }
-  }, [character, rest, restTx, Stats, refreshCharacter, renderSuccess]);
 
   const maxLevelXpRequirement = useMemo(
     () =>
@@ -370,44 +329,6 @@ export const StatsPanel = (): JSX.Element => {
         </HStack>
       </VStack>
 
-      {!character.inBattle &&
-        currentHp > BigInt(0) &&
-        currentHp < maxHp &&
-        isAtFire && (
-          <VStack
-            bg="rgba(0, 0, 0, 0.45)"
-            borderRadius="md"
-            mt={3}
-            mx={2}
-            px={3}
-            py={2}
-            spacing={1}
-          >
-            <Text
-              color="orange.300"
-              fontFamily="mono"
-              fontSize="xs"
-              fontStyle="italic"
-              textAlign="center"
-            >
-              A fire crackles nearby. You could rest here.
-            </Text>
-            <Button
-              alignSelf="center"
-              isDisabled={restTx.isLoading}
-              isLoading={restTx.isLoading}
-              loadingText="Resting by the fire..."
-              onClick={onRest}
-              size="xs"
-              variant="outline"
-              color="orange.200"
-              borderColor="orange.400"
-              _hover={{ bg: 'orange.900', borderColor: 'orange.300' }}
-            >
-              Rest by the Fire
-            </Button>
-          </VStack>
-        )}
 
       {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
         <Button

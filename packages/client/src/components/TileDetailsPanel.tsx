@@ -24,12 +24,15 @@ import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { getComponentValue } from '@latticexyz/recs';
+
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments } from '../contexts/FragmentContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import {
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
@@ -49,6 +52,14 @@ import { InfoModal } from './InfoModal';
 import { ShopRow } from './ShopRow';
 
 const ROW_HEIGHT = { base: 5, md: 8 };
+
+const REST_FLAVOR = [
+  'The fire crackles softly as warmth seeps into your bones. Your wounds begin to close.',
+  'You sit by the flames and let the heat chase away the cold. Strength returns.',
+  'Embers dance in the dark. The world feels far away. You breathe deep, and heal.',
+  'The fire hisses and pops. For a moment, the dangers beyond feel like a distant memory.',
+  'Sparks drift upward like tiny stars. When you rise, the pain is gone.',
+];
 
 export const TileDetailsPanel = (): JSX.Element => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
@@ -74,8 +85,9 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useDisclosure();
 
   const {
+    components: { Stats },
     delegatorAddress,
-    systemCalls: { createEncounter },
+    systemCalls: { createEncounter, rest },
   } = useMUD();
   const { pendingEcho } = useFragments();
   const {
@@ -104,6 +116,32 @@ export const TileDetailsPanel = (): JSX.Element => {
   const encounterTx = useTransaction({
     actionName: 'initiate battle',
   });
+
+  const restTx = useTransaction({
+    actionName: 'Resting by the fire',
+    showSuccessToast: false,
+  });
+
+  const { renderSuccess } = useToast();
+
+  const onRest = useCallback(async () => {
+    if (!character) return;
+    const prevHp = character.currentHp;
+    const result = await restTx.execute(async () => {
+      const { error, success } = await rest(character.id);
+      if (error && !success) throw new Error(error);
+      return true;
+    });
+    if (result !== undefined) {
+      for (let i = 0; i < 30; i++) {
+        const stats = getComponentValue(Stats, character.id);
+        if (stats && stats.currentHp !== prevHp) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
+      await refreshCharacter();
+      renderSuccess(REST_FLAVOR[Math.floor(Math.random() * REST_FLAVOR.length)]);
+    }
+  }, [character, rest, restTx, Stats, refreshCharacter, renderSuccess]);
 
   const [isWaitingForBattle, setIsWaitingForBattle] = useState(false);
   const [pendingOpponent, setPendingOpponent] = useState<{ name: string; image?: string } | null>(null);
@@ -837,6 +875,43 @@ export const TileDetailsPanel = (): JSX.Element => {
                   Move Gold
                 </Button>
               )}
+              {isHomeTile &&
+                !character.inBattle &&
+                character.currentHp > BigInt(0) &&
+                character.currentHp < character.maxHp && (
+                  <VStack
+                    bg="rgba(0, 0, 0, 0.45)"
+                    borderRadius="md"
+                    mt={3}
+                    px={3}
+                    py={2}
+                    spacing={1}
+                  >
+                    <Text
+                      color="orange.300"
+                      fontFamily="mono"
+                      fontSize="xs"
+                      fontStyle="italic"
+                      textAlign="center"
+                    >
+                      A fire crackles nearby. You could rest here.
+                    </Text>
+                    <Button
+                      alignSelf="center"
+                      isDisabled={restTx.isLoading}
+                      isLoading={restTx.isLoading}
+                      loadingText="Resting by the fire..."
+                      onClick={onRest}
+                      size="xs"
+                      variant="outline"
+                      color="orange.200"
+                      borderColor="orange.400"
+                      _hover={{ bg: 'orange.900', borderColor: 'orange.300' }}
+                    >
+                      Rest by the Fire
+                    </Button>
+                  </VStack>
+                )}
             </VStack>
             <Box
               backgroundColor="#F5F5FA1F"
