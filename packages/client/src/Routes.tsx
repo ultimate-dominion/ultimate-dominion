@@ -82,6 +82,12 @@ const Welcome = lazyWithReload(() =>
 const Manifesto = lazyWithReload(() =>
   import('./pages/Manifesto').then(m => ({ default: m.Manifesto })),
 );
+const Guide = lazyWithReload(() =>
+  import('./pages/Guide').then(m => ({ default: m.Guide })),
+);
+const Tavern = lazyWithReload(() =>
+  import('./pages/Tavern').then(m => ({ default: m.Tavern })),
+);
 
 export const HOME_PATH = '/';
 export const MANIFESTO_PATH = '/manifesto';
@@ -92,6 +98,8 @@ export const LEADERBOARD_PATH = '/leaderboard';
 export const MARKETPLACE_PATH = '/marketplace';
 export const ITEM_PATH = MARKETPLACE_PATH + '/items';
 export const SHOP_PATH = '/shops';
+export const GUIDE_PATH = '/guide';
+export const TAVERN_PATH = '/tavern';
 
 const RoutesFallback = () => (
   <VStack justify="center" h="100%">
@@ -147,6 +155,8 @@ const AppRoutes: React.FC = () => {
           <Route path={MARKETPLACE_PATH} element={<Marketplace />} />
           <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />
           <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />
+          <Route path={GUIDE_PATH} element={<Guide />} />
+          <Route path={TAVERN_PATH} element={<Tavern />} />
         </Routes>
       </Suspense>
     </ChunkErrorBoundary>

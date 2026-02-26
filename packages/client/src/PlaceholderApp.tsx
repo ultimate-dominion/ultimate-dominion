@@ -11,7 +11,9 @@ import {
   Routes,
 } from 'react-router-dom';
 
+import { Guide } from './pages/Guide';
 import { LandingPage } from './pages/LandingPage';
+import { Tavern } from './pages/Tavern';
 
 /**
  * Dark-themed manifesto for the placeholder site.
@@ -177,24 +179,8 @@ export const PlaceholderApp = (): JSX.Element => (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/manifesto" element={<DarkManifesto />} />
-      <Route
-        path="/tavern"
-        element={
-          <PlaceholderPage
-            title="The Tavern"
-            description="A place where adventurers gather to share tales, trade rumors, and form alliances. The Tavern will open its doors soon."
-          />
-        }
-      />
-      <Route
-        path="/guide"
-        element={
-          <PlaceholderPage
-            title="Adventurer's Guide"
-            description="Everything you need to know about surviving in the world of Ultimate Dominion. The Guide is being written."
-          />
-        }
-      />
+      <Route path="/tavern" element={<Tavern />} />
+      <Route path="/guide" element={<Guide />} />
       <Route path="*" element={<LandingPage />} />
     </Routes>
   </BrowserRouter>
