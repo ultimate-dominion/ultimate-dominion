@@ -412,6 +412,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
                 return prevMessages.slice(0, -1).concat({
                   ...lastMessage,
                   delivered: true,
+                  timestamp: Number(message.timestamp),
                 });
               }
               return prevMessages;
@@ -474,11 +475,25 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         })).reverse();
 
         setMessages(prev => {
-          // Check if the latest fetched message is newer than what we have
           const prevTimestamps = new Set(prev.filter(m => m.delivered).map(m => m.timestamp));
-          const newMsgs = fetched.filter(m => !prevTimestamps.has(m.timestamp));
-          if (newMsgs.length === 0) return prev;
-          // Append new messages, preserving optimistic (undelivered) at end
+          const newMsgs = fetched.filter(m => {
+            // Dedup by timestamp (covers delivered messages)
+            if (prevTimestamps.has(m.timestamp)) return false;
+            // Dedup by from+content (covers optimistic messages with client-side timestamps)
+            if (prev.some(p => p.from === m.from && p.message === m.message)) return false;
+            return true;
+          });
+          if (newMsgs.length === 0) {
+            // Still reconcile: mark optimistic messages as delivered if server confirms them
+            const updated = prev.map(p => {
+              if (p.delivered) return p;
+              const match = fetched.find(f => f.from === p.from && f.message === p.message);
+              if (match) return { ...p, delivered: true, timestamp: match.timestamp };
+              return p;
+            });
+            if (updated.some((m, i) => m !== prev[i])) return updated;
+            return prev;
+          }
           const delivered = prev.filter(m => m.delivered);
           const optimistic = prev.filter(m => !m.delivered);
           return [...delivered, ...newMsgs, ...optimistic];
