@@ -22,14 +22,14 @@ import { usePublicClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
-import { decodeMobInstanceId, startsWithVowel } from '../utils/helpers';
-import { Character, MonsterTemplate } from '../utils/types';
+import { startsWithVowel } from '../utils/helpers';
+import { Character } from '../utils/types';
 
 import { useAuth } from './AuthContext';
 import { useCharacter } from './CharacterContext';
 import { useItems } from './ItemsContext';
 import { useMap } from './MapContext';
-import { useMonsters } from './MonstersContext';
+
 import { useMUD } from './MUDContext';
 
 // Push Protocol environment: 'prod' for deployed sites, 'staging' for localhost
@@ -122,7 +122,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // Use the appropriate wallet client for Push Protocol
   const data = authMethod === 'embedded' ? embeddedWalletClient : externalWalletClient;
   const {
-    components: { CombatEncounter, CombatOutcome, MarketplaceSale, ShopSale },
+    components: { MarketplaceSale, ShopSale },
   } = useMUD();
   const {
     armorTemplates,
@@ -130,7 +130,6 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     spellTemplates,
     weaponTemplates,
   } = useItems();
-  const { monsterTemplates } = useMonsters();
   const { allCharacters } = useMap();
   const { character: currentCharacter } = useCharacter();
 
@@ -191,81 +190,6 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     checkBadge();
     // Re-check when level changes (badge is minted at level 3)
   }, [address, publicClient, currentCharacter?.tokenId, currentCharacter?.level]);
-
-  const battleOutcomeEntities = useEntityQuery([Has(CombatOutcome)]);
-  const allBattleOutcomes: Message[] = useMemo(() => battleOutcomeEntities
-    .map(entity => {
-      const combatOutcome = getComponentValueStrict(CombatOutcome, entity);
-      const encounter = getComponentValueStrict(CombatEncounter, entity);
-
-      const attackerId = encounter.attackers[0];
-      const defenderId = encounter.defenders[0];
-
-      // Only show battles involving the current character
-      if (
-        currentCharacter &&
-        attackerId !== currentCharacter.id &&
-        defenderId !== currentCharacter.id
-      ) {
-        return null;
-      }
-
-      let attacker: Character | MonsterTemplate | undefined =
-        allCharacters.find(character => character.id === attackerId);
-
-      if (!attacker) {
-        const decodedMonster = decodeMobInstanceId(attackerId as `0x${string}`);
-        attacker = monsterTemplates.find(
-          monster => monster.mobId === decodedMonster.mobId,
-        );
-      }
-
-      let defender: Character | MonsterTemplate | undefined =
-        allCharacters.find(character => character.id === defenderId);
-
-      if (!defender) {
-        const decodedMonster = decodeMobInstanceId(defenderId as `0x${string}`);
-        defender = monsterTemplates.find(
-          monster => monster.mobId === decodedMonster.mobId,
-        );
-      }
-
-      const winner = combatOutcome.attackersWin ? attacker : defender;
-      const loser = combatOutcome.attackersWin ? defender : attacker;
-
-      const { itemsDropped } = combatOutcome;
-
-      const allItems = [...spellTemplates, ...weaponTemplates];
-
-      const droppedItemNames = itemsDropped
-        .map(itemId => {
-          const item = allItems.find(item => item.tokenId === itemId.toString());
-          return item ? item.name : null;
-        })
-        .filter(Boolean);
-
-      const firstDroppedItemName = droppedItemNames[0];
-      const article = startsWithVowel(firstDroppedItemName ?? '') ? 'an' : 'a';
-
-      return {
-        delivered: true,
-        from: zeroAddress,
-        jsx: winner && loser && (
-          <Text fontWeight={500} size="xs" textAlign="center">
-            {winner.name} defeated {loser.name}!{' '}
-            {firstDroppedItemName && (
-              <Text as="span" color="green.500">
-                {winner.name} gained {article} {firstDroppedItemName}!
-              </Text>
-            )}
-          </Text>
-        ),
-        message: '',
-        timestamp: Number(combatOutcome.endTime) * 1000,
-      };
-    })
-    .filter((m): m is Message => m !== null),
-  [battleOutcomeEntities, currentCharacter, allCharacters, monsterTemplates, spellTemplates, weaponTemplates]);
 
   const shopSaleEntities = useEntityQuery([Has(ShopSale)]);
   const allShopSales: Message[] = useMemo(() => shopSaleEntities.map(
@@ -354,11 +278,10 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const messagesAndEvents = useMemo(() => {
     return [
       ...messages,
-      ...allBattleOutcomes,
       ...allMarketplaceSales,
       ...allShopSales,
     ].sort((a, b) => a.timestamp - b.timestamp);
-  }, [allBattleOutcomes, allMarketplaceSales, allShopSales, messages]);
+  }, [allMarketplaceSales, allShopSales, messages]);
 
   const onLogin = useCallback(async () => {
     try {
