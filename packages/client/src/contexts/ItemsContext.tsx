@@ -1,8 +1,8 @@
+import { useEntityQuery } from '@latticexyz/react';
 import {
   getComponentValue,
   getComponentValueStrict,
   Has,
-  runQuery,
 } from '@latticexyz/recs';
 import {
   decodeEntity,
@@ -76,6 +76,10 @@ export const ItemsProvider = ({
   const [spellTemplates, setSpellTemplates] = useState<SpellTemplate[]>([]);
   const [weaponTemplates, setWeaponTemplates] = useState<WeaponTemplate[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Reactive query: re-triggers when background sync adds Items records
+  // (fixes stale cache issue where LIVE fires before items arrive)
+  const allItemEntities = useEntityQuery(Items ? [Has(Items)] : []);
 
   const fetchAllArmor = useCallback(
     async (allArmorIds: bigint[]) => {
@@ -422,11 +426,9 @@ export const ItemsProvider = ({
 
   useEffect(() => {
     (async () => {
-      if (!isSynced) return;
+      if (!isSynced || allItemEntities.length === 0) return;
 
       try {
-        const allItemEntities = Array.from(runQuery([Has(Items)]));
-
         const allItemIds = allItemEntities
           .map(entity => {
             const itemTemplate = getComponentValue(Items, entity);
@@ -496,6 +498,7 @@ export const ItemsProvider = ({
       }
     })();
   }, [
+    allItemEntities,
     fetchAllArmor,
     fetchAllConsumables,
     fetchAllSpells,
