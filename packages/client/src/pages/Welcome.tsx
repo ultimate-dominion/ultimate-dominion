@@ -35,7 +35,7 @@ const torchGlow = keyframes`
 export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const { authMethod, disconnect, isAuthenticated } = useAuth();
+  const { authMethod, isAuthenticated } = useAuth();
   const {
     components: { SyncProgress },
     delegatorAddress,
@@ -66,30 +66,19 @@ export const Welcome = (): JSX.Element => {
     return () => clearTimeout(timer);
   }, [syncProgress]);
 
-  // Clear stale auth sessions: if authenticated but no character after sync,
-  // disconnect so the user gets a fresh sign-in flow.
-  useEffect(() => {
-    if (!isAuthenticated || isRefreshing) return;
-    if (syncProgress?.step !== SyncStep.LIVE) return;
-    if (character?.locked) return; // Has character — session is valid
-
-    console.info('[Welcome] Stale auth session detected (no character on this world), disconnecting...');
-    disconnect();
-  }, [character?.locked, disconnect, isAuthenticated, isRefreshing, syncProgress?.step]);
-
-  // Auto-navigate returning players who already have a character straight to the game.
-  // New players (no character) see the full intro and click Enter manually.
+  // Auto-navigate when fully set up (returning players, or just signed in)
   useEffect(() => {
     if (isRefreshing) return;
-    if (!character?.locked) return;
+    if (!isAuthenticated) return;
 
-    if (authMethod === 'embedded' && isAuthenticated) {
-      navigate(GAME_BOARD_PATH);
-      return;
-    }
+    const embeddedReady = authMethod === 'embedded';
+    const externalReady = authMethod === 'external' && !!delegatorAddress;
+    if (!embeddedReady && !externalReady) return;
 
-    if (authMethod === 'external' && isAuthenticated && delegatorAddress) {
+    if (character?.locked) {
       navigate(GAME_BOARD_PATH);
+    } else {
+      navigate(CHARACTER_CREATION_PATH);
     }
   }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isRefreshing, navigate]);
 
