@@ -27,7 +27,7 @@ export const Manifesto = (): JSX.Element => {
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
           backgroundSize: 'contain',
-          opacity: 0.04,
+          opacity: 0.02,
           pointerEvents: 'none',
         }}
       >
