@@ -111,8 +111,14 @@ export async function withRetry<T>(
       return result;
     } catch (error) {
       lastError = error;
+      const msg = ((error as Error)?.message ?? '').toLowerCase();
+      const willRetry = attempt < maxAttempts && isRetryable(error);
 
-      if (attempt < maxAttempts && isRetryable(error)) {
+      console.warn(
+        `[RETRY][${actionName}] attempt ${attempt}/${maxAttempts} failed | retry=${willRetry} | ${msg.slice(0, 200)}`,
+      );
+
+      if (willRetry) {
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
