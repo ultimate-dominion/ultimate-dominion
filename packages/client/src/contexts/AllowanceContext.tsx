@@ -222,7 +222,7 @@ const AllowanceProviderInner = ({
         }
 
         renderSuccess('Gold allowance successfully set!');
-        fetchAllowances();
+        await fetchAllowances();
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Error setting gold allowance.',
@@ -245,7 +245,7 @@ const AllowanceProviderInner = ({
 
   const onApproveMaxGoldAllowance = useCallback(
     async (systemToAllow: SystemToAllow) => {
-      onApproveGoldAllowance(systemToAllow, maxUint256);
+      await onApproveGoldAllowance(systemToAllow, maxUint256);
     },
     [onApproveGoldAllowance],
   );
@@ -282,7 +282,7 @@ const AllowanceProviderInner = ({
         }
 
         renderSuccess('Items allowance successfully set!');
-        fetchAllowances();
+        await fetchAllowances();
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Error setting item allowance.',

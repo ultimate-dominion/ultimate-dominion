@@ -112,7 +112,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
               _ensNameByAddressMapping[character.owner] =
                 ensName || shortenAddress(character.owner);
             } catch {
-              // ENS reverse lookup fails for smart accounts / non-ENS addresses
+              // ENS reverse lookup fails for non-ENS addresses
               _ensNameByAddressMapping[character.owner] =
                 shortenAddress(character.owner);
             }

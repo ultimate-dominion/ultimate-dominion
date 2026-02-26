@@ -66,8 +66,8 @@ export const useGasStation = (): void => {
   }, [character, renderSuccess, systemCalls]);
 
   useEffect(() => {
-    // Skip for embedded users at low levels (paymaster covers them)
-    if (authMethod === 'embedded' && character && character.level < 3n) return;
+    // Gas is sponsored for all embedded users (EIP-7702 + sponsorGas)
+    if (authMethod === 'embedded') return;
 
     // Check if ETH balance is below threshold
     try {

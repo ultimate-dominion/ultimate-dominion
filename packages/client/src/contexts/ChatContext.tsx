@@ -113,12 +113,9 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const {
     authMethod,
-    embeddedWallet,
     embeddedWalletClient,
     externalWalletClient,
     ownerAddress: address,
-    thirdwebClient,
-    thirdwebChain,
   } = useAuth();
   const publicClient = usePublicClient();
   // Use the appropriate wallet client for Push Protocol
@@ -343,22 +340,9 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       }
 
       if (!_user) {
-        // For embedded wallets, use the admin (EOA) account for Push Protocol.
-        // Smart account signatures don't verify via ecrecover, causing 400 errors.
-        let pushSigner = data;
-        if (authMethod === 'embedded' && embeddedWallet?.getAdminAccount) {
-          const adminAccount = embeddedWallet.getAdminAccount();
-          if (adminAccount) {
-            const { viemAdapter } = await import('thirdweb/adapters/viem');
-            pushSigner = viemAdapter.walletClient.toViem({
-              client: thirdwebClient,
-              chain: thirdwebChain,
-              account: adminAccount,
-            });
-          }
-        }
-
-        _user = await PushSDK.initialize(pushSigner, {
+        // EIP-7702: embedded wallet is an EOA — standard signatures verify
+        // via ecrecover, so no admin account extraction needed.
+        _user = await PushSDK.initialize(data, {
           env: PUSH_ENV,
         });
       }
@@ -440,7 +424,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     } finally {
       setIsLoggingIn(false);
     }
-  }, [authMethod, data, embeddedWallet, renderError, thirdwebChain, thirdwebClient, user]);
+  }, [data, renderError, user]);
 
   // Auto-login only when a cached PGP key exists (no MetaMask popup).
   // First-time users click the Login button manually.

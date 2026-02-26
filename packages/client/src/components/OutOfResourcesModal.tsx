@@ -18,8 +18,8 @@ import { PolygonalCard } from './PolygonalCard';
 /**
  * Shown when a level 3+ player has both 0 ETH and 0 Gold.
  *
- * - Embedded users: "Fight monsters to earn Gold" (paymaster mercy clause
- *   will sponsor the next combat tx so they can earn Gold for GasStation).
+ * - Embedded users: "Fight monsters to earn Gold" (gas is sponsored via
+ *   EIP-7702, so they can always transact to earn Gold for GasStation).
  * - External users: "Deposit ETH from your main wallet".
  */
 export const OutOfResourcesModal = ({

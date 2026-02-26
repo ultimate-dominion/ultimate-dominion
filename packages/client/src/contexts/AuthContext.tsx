@@ -102,10 +102,11 @@ export const AuthProvider = ({
     [],
   );
 
-  // Smart account config for gasless transactions (levels 1-3)
-  const smartAccountConfig = useMemo(
+  // EIP-7702: embedded wallet transacts as a standard EOA with gas sponsorship.
+  // No bundler, no EntryPoint — direct chain transactions.
+  const executionModeConfig = useMemo(
     () => ({
-      chain: thirdwebChain,
+      mode: "EIP7702" as const,
       sponsorGas: true,
     }),
     [],
@@ -117,7 +118,7 @@ export const AuthProvider = ({
       try {
         const { inAppWallet } = await import('thirdweb/wallets/in-app');
         const wallet = inAppWallet({
-          smartAccount: smartAccountConfig,
+          executionMode: executionModeConfig,
         });
         const connected = await wallet.autoConnect({
           client: thirdwebClient,
@@ -131,14 +132,14 @@ export const AuthProvider = ({
       }
     };
     tryReconnect();
-  }, [initEmbeddedClient, smartAccountConfig]);
+  }, [initEmbeddedClient, executionModeConfig]);
 
   const connectWithGoogle = useCallback(async () => {
     setIsConnecting(true);
     try {
       const { inAppWallet } = await import('thirdweb/wallets/in-app');
       const wallet = inAppWallet({
-        smartAccount: smartAccountConfig,
+        executionMode: executionModeConfig,
       });
       await wallet.connect({
         client: thirdwebClient,
@@ -152,7 +153,7 @@ export const AuthProvider = ({
     } finally {
       setIsConnecting(false);
     }
-  }, [initEmbeddedClient, smartAccountConfig]);
+  }, [initEmbeddedClient, executionModeConfig]);
 
   const disconnect = useCallback(async () => {
     if (embeddedWallet) {

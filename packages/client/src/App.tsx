@@ -103,7 +103,7 @@ const AppInner = (): JSX.Element => {
     if (!burnerBalanceFetched || !isSynced) return;
     if (DEFAULT_CHAIN_ID === garnet.id) return;
 
-    // Embedded users: paymaster or GasStation handles gas — don't show wallet modal
+    // Embedded users: gas is sponsored (EIP-7702) — don't show wallet modal
     if (authMethod === 'embedded') {
       // Check if level 3+ with 0 ETH and 0 Gold → show OutOfResources
       if (
