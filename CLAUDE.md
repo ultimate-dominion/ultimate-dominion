@@ -50,17 +50,18 @@ The manifesto (`packages/client/src/pages/Manifesto.tsx`) defines the game's ide
 - Never deploy to mainnet without testnet verification first.
 
 ### Environment Separation
-- `beta.ultimatedominion.com` = Base Sepolia (testnet)
-- `ultimatedominion.com` = Base mainnet (production)
-- NEVER mix testnet/mainnet configs. Double-check CHAIN_ID, RPC URLs, and WORLD_ADDRESS before any deploy.
+- `beta.ultimatedominion.com` = Base Mainnet (beta world)
+- `ultimatedominion.com` = Base Mainnet (production world)
+- Both on chain 8453, distinguished by WORLD_ADDRESS (and VITE_WORLD_ADDRESS on client).
+- NEVER mix beta/production world addresses. Double-check WORLD_ADDRESS before any deploy.
 
 ### Deployment Convention (Branch → Environment)
 Each package uses per-environment `.env` files. Scripts source the right file automatically.
 
 | Branch | Target | Confirm? |
 |---|---|---|
-| `dev` | Testnet (Base Sepolia) | No |
-| `main` | Mainnet (Base) | **Always** |
+| `dev` | Beta (Base Mainnet, separate world) | No |
+| `main` | Production (Base Mainnet) | **Always** |
 | Feature branch | Ask user | Yes |
 
 - **Contracts**: `deploy:testnet` / `deploy:mainnet` / `seed:testnet` / `zone:load:testnet` etc.
@@ -106,7 +107,7 @@ Each package uses per-environment `.env` files. Scripts source the right file au
 - **Contracts**: Solidity 0.8.24+, deployed via MUD World, tested with Forge (Foundry)
 - **Frontend**: React 18, Chakra UI, Thirdweb + RainbowKit, viem/wagmi
 - **API**: Express on Vercel serverless, Pinata IPFS
-- **Chain**: Base Sepolia (testnet) → Base (mainnet)
+- **Chain**: Base Mainnet (chain 8453) — both production and beta (separate world addresses)
 
 ## Key Documentation
 - `docs/launch_checklist.md` - Launch readiness tracking

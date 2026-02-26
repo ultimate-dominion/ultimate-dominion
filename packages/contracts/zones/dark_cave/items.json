@@ -2,8 +2,9 @@
   "armor": [
     {
       "name": "Tattered Cloth",
+      "description": "Stitched together from whatever was at hand. Better than nothing.",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:tattered_cloth",
       "price": 5000000000000000000,
@@ -25,8 +26,9 @@
     },
     {
       "name": "Worn Leather Vest",
+      "description": "Cracked and stiff. Somebody died wearing this.",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:worn_leather_vest",
       "price": 5000000000000000000,
@@ -48,8 +50,9 @@
     },
     {
       "name": "Rusty Chainmail",
+      "description": "Half the links are missing. Still stops a bite.",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:rusty_chainmail",
       "price": 5000000000000000000,
@@ -71,8 +74,9 @@
     },
     {
       "name": "Padded Armor",
+      "description": "Layered cloth packed with cave straw. Crude but honest protection.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:padded_armor",
       "price": 15000000000000000000,
@@ -94,8 +98,9 @@
     },
     {
       "name": "Leather Jerkin",
+      "description": "Cut from something tougher than cow. The stitching holds.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:leather_jerkin",
       "price": 15000000000000000000,
@@ -117,8 +122,9 @@
     },
     {
       "name": "Apprentice Robes",
+      "description": "Faded blue with a singed hem. The last wearer learned something the hard way.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:apprentice_robes",
       "price": 15000000000000000000,
@@ -140,8 +146,9 @@
     },
     {
       "name": "Studded Leather",
-      "rarity": 2,
-      "dropChance": 18,
+      "description": "Iron studs hammered into boiled hide. Cave-made, but sturdy.",
+      "rarity": 1,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:studded_leather",
       "price": 35000000000000000000,
@@ -163,8 +170,9 @@
     },
     {
       "name": "Scout Armor",
-      "rarity": 2,
-      "dropChance": 18,
+      "description": "Light enough to run in. That matters down here.",
+      "rarity": 1,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:scout_armor",
       "price": 35000000000000000000,
@@ -186,8 +194,9 @@
     },
     {
       "name": "Acolyte Vestments",
-      "rarity": 2,
-      "dropChance": 18,
+      "description": "White once. The prayer stitched into the collar is to a god that doesn't answer.",
+      "rarity": 1,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:acolyte_vestments",
       "price": 35000000000000000000,
@@ -209,8 +218,9 @@
     },
     {
       "name": "Chainmail Shirt",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "Heavy and well-kept. Whoever wore it before knew what they were doing.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:chainmail_shirt",
       "price": 80000000000000000000,
@@ -232,8 +242,9 @@
     },
     {
       "name": "Ranger Leathers",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "Supple and dark. Made for someone who expected to be hunted.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:ranger_leathers",
       "price": 80000000000000000000,
@@ -255,8 +266,9 @@
     },
     {
       "name": "Mage Robes",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "The fabric hums faintly. You can feel it when the cave goes quiet.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:mage_robes",
       "price": 80000000000000000000,
@@ -278,8 +290,9 @@
     },
     {
       "name": "Spider Silk Wraps",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "Impossibly light. The silk doesn't tear \u2014 you have to cut it.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:spider_silk_wraps",
       "price": 90000000000000000000,
@@ -300,11 +313,12 @@
       }
     },
     {
-      "name": "Stone Giant's Chestplate",
-      "rarity": 4,
-      "dropChance": 10,
+      "name": "Cracked Stone Plate",
+      "description": "Carved from the giant's own armor. It cracked when he fell. Still heavier than anything you've lifted.",
+      "rarity": 3,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "armor:stone_giants_chestplate",
+      "metadataUri": "armor:cracked_stone_plate",
       "price": 200000000000000000000,
       "armorType": "Plate",
       "isStarter": false,
@@ -323,11 +337,12 @@
       }
     },
     {
-      "name": "Shadow Cloak",
-      "rarity": 4,
-      "dropChance": 10,
+      "name": "Stalker's Cloak",
+      "description": "The edges seem to blur in dim light. You feel less visible wearing it.",
+      "rarity": 3,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "armor:shadow_cloak",
+      "metadataUri": "armor:stalkers_cloak",
       "price": 200000000000000000000,
       "armorType": "Leather",
       "isStarter": false,
@@ -346,11 +361,12 @@
       }
     },
     {
-      "name": "Dragonscale Mail",
-      "rarity": 4,
-      "dropChance": 10,
+      "name": "Scorched Scale Vest",
+      "description": "Peeled from something that breathed fire. The scales are still warm.",
+      "rarity": 3,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "armor:dragonscale_mail",
+      "metadataUri": "armor:scorched_scale_vest",
       "price": 300000000000000000000,
       "armorType": "Plate",
       "isStarter": false,
@@ -372,8 +388,9 @@
   "weapons": [
     {
       "name": "Broken Sword",
+      "description": "Snapped at the hilt. The edge still cuts if you hold it right.",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:broken_sword",
       "price": 5000000000000000000,
@@ -398,8 +415,9 @@
     },
     {
       "name": "Worn Shortbow",
+      "description": "The string frays at both ends. Every shot might be the last.",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:worn_shortbow",
       "price": 5000000000000000000,
@@ -424,8 +442,9 @@
     },
     {
       "name": "Cracked Wand",
+      "description": "Split down the middle. The magic leaks out like heat from a cracked lantern.",
       "rarity": 0,
-      "dropChance": 25,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:cracked_wand",
       "price": 5000000000000000000,
@@ -450,8 +469,9 @@
     },
     {
       "name": "Iron Axe",
+      "description": "Functional. Heavy. Not made for elegance.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:iron_axe",
       "price": 15000000000000000000,
@@ -476,8 +496,9 @@
     },
     {
       "name": "Hunting Bow",
+      "description": "Built for game, not war. It'll do for both.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:hunting_bow",
       "price": 15000000000000000000,
@@ -502,8 +523,9 @@
     },
     {
       "name": "Apprentice Staff",
+      "description": "Ash wood with a copper cap. Hums when you grip it too tight.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:apprentice_staff",
       "price": 15000000000000000000,
@@ -528,8 +550,9 @@
     },
     {
       "name": "Steel Mace",
-      "rarity": 2,
-      "dropChance": 18,
+      "description": "Dented but solid. Doesn't need an edge to break bones.",
+      "rarity": 1,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:steel_mace",
       "price": 40000000000000000000,
@@ -553,8 +576,9 @@
     },
     {
       "name": "Recurve Bow",
-      "rarity": 2,
-      "dropChance": 18,
+      "description": "Compact and tense. Pulls harder than it looks.",
+      "rarity": 1,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:recurve_bow",
       "price": 40000000000000000000,
@@ -578,8 +602,9 @@
     },
     {
       "name": "Channeling Rod",
-      "rarity": 2,
-      "dropChance": 18,
+      "description": "Iron wrapped in copper wire. The tip glows faintly in the dark.",
+      "rarity": 1,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:channeling_rod",
       "price": 40000000000000000000,
@@ -602,11 +627,12 @@
       }
     },
     {
-      "name": "Runesword",
-      "rarity": 2,
-      "dropChance": 18,
+      "name": "Etched Blade",
+      "description": "Someone scratched symbols into the flat of the blade. They might mean something.",
+      "rarity": 1,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:runesword",
+      "metadataUri": "weapon:etched_blade",
       "price": 50000000000000000000,
       "stats": {
         "agiModifier": 0,
@@ -628,8 +654,9 @@
     },
     {
       "name": "Warhammer",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "Too heavy to swing fast. You only need to swing it once.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:warhammer",
       "price": 100000000000000000000,
@@ -653,8 +680,9 @@
     },
     {
       "name": "Longbow",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "Yew wood, well-oiled. Reach matters when the cave opens up.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:longbow",
       "price": 100000000000000000000,
@@ -678,8 +706,9 @@
     },
     {
       "name": "Mage Staff",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "Oak core with iron banding. The wood grain follows no natural pattern.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:mage_staff",
       "price": 100000000000000000000,
@@ -703,8 +732,9 @@
     },
     {
       "name": "Rat King's Fang",
-      "rarity": 4,
-      "dropChance": 10,
+      "description": "Pulled from a jaw the size of your head. The venom still weeps from the root.",
+      "rarity": 3,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:rat_kings_fang",
       "price": 150000000000000000000,
@@ -730,8 +760,9 @@
     },
     {
       "name": "Sporecap Wand",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "Carved from a fungal stalk. Pulses with a slow, living warmth.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:sporecap_wand",
       "price": 60000000000000000000,
@@ -757,8 +788,9 @@
     },
     {
       "name": "Brute's Cleaver",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "Chipped from use, not neglect. The brute knew how to hit.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:brutes_cleaver",
       "price": 60000000000000000000,
@@ -783,8 +815,9 @@
     },
     {
       "name": "Crystal Blade",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "Grown, not forged. The edge is sharper than steel but brittle.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:crystal_blade",
       "price": 70000000000000000000,
@@ -809,8 +842,9 @@
     },
     {
       "name": "Troll's Bonebreaker",
-      "rarity": 4,
-      "dropChance": 10,
+      "description": "A femur sharpened to a point. The troll used it on everything.",
+      "rarity": 3,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:trolls_bonebreaker",
       "price": 180000000000000000000,
@@ -835,8 +869,9 @@
     },
     {
       "name": "Webspinner Bow",
-      "rarity": 3,
-      "dropChance": 15,
+      "description": "Strung with spider silk. The arrows fly silent.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:webspinner_bow",
       "price": 90000000000000000000,
@@ -860,11 +895,12 @@
       }
     },
     {
-      "name": "Necrotic Staff",
-      "rarity": 4,
-      "dropChance": 10,
+      "name": "Bone Staff",
+      "description": "Cold to the touch. The marrow inside is black and still.",
+      "rarity": 3,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:necrotic_staff",
+      "metadataUri": "weapon:bone_staff",
       "price": 180000000000000000000,
       "isStarter": false,
       "stats": {
@@ -887,11 +923,12 @@
       }
     },
     {
-      "name": "Earthshaker Maul",
-      "rarity": 4,
-      "dropChance": 10,
+      "name": "Giant's Club",
+      "description": "A stone column broken from the cave wall. The giant called it a weapon.",
+      "rarity": 3,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:earthshaker_maul",
+      "metadataUri": "weapon:giants_club",
       "price": 250000000000000000000,
       "isStarter": false,
       "stats": {
@@ -913,11 +950,12 @@
       }
     },
     {
-      "name": "Shadowfang Bow",
-      "rarity": 4,
-      "dropChance": 10,
+      "name": "Darkwood Bow",
+      "description": "The wood is so dark it drinks the torchlight. Silent to draw.",
+      "rarity": 3,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:shadowfang_bow",
+      "metadataUri": "weapon:darkwood_bow",
       "price": 220000000000000000000,
       "isStarter": false,
       "stats": {
@@ -939,11 +977,12 @@
       }
     },
     {
-      "name": "Dragonfire Scepter",
-      "rarity": 4,
-      "dropChance": 10,
+      "name": "Smoldering Rod",
+      "description": "The tip glows like a dying ember. It never goes out.",
+      "rarity": 3,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:dragonfire_scepter",
+      "metadataUri": "weapon:smoldering_rod",
       "price": 300000000000000000000,
       "isStarter": false,
       "stats": {
@@ -1151,8 +1190,9 @@
   "consumables": [
     {
       "name": "Minor Health Potion",
+      "description": "Tastes like copper and moss. It works.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:minor_health_potion",
       "price": 10000000000000000000,
@@ -1173,8 +1213,9 @@
     },
     {
       "name": "Health Potion",
-      "rarity": 2,
-      "dropChance": 15,
+      "description": "Cleaner than the minor version. Somebody knew what they were brewing.",
+      "rarity": 1,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:health_potion",
       "price": 25000000000000000000,
@@ -1194,8 +1235,9 @@
     },
     {
       "name": "Greater Health Potion",
-      "rarity": 3,
-      "dropChance": 12,
+      "description": "Thick and amber. Closes wounds you can watch.",
+      "rarity": 2,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:greater_health_potion",
       "price": 60000000000000000000,
@@ -1215,8 +1257,9 @@
     },
     {
       "name": "Fortifying Stew",
+      "description": "Thick, grey, and vaguely warm. Your arms feel steadier after.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:fortifying_stew",
       "price": 20000000000000000000,
@@ -1236,8 +1279,9 @@
     },
     {
       "name": "Quickening Berries",
+      "description": "Bitter and bright red. Your hands shake for a moment, then everything feels faster.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:quickening_berries",
       "price": 20000000000000000000,
@@ -1257,8 +1301,9 @@
     },
     {
       "name": "Focusing Tea",
+      "description": "Brewed from cave herbs. The world narrows to a point.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:focusing_tea",
       "price": 20000000000000000000,
@@ -1278,8 +1323,9 @@
     },
     {
       "name": "Antidote",
+      "description": "Burns going down. Burns worse coming up. But the poison stops.",
       "rarity": 1,
-      "dropChance": 20,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:antidote",
       "price": 15000000000000000000,
@@ -1299,8 +1345,9 @@
     },
     {
       "name": "Smoke Bomb",
-      "rarity": 2,
-      "dropChance": 15,
+      "description": "Wrapped in oilcloth. One sharp throw and the room goes blind.",
+      "rarity": 1,
+      "dropChance": 75,
       "initialSupply": 10000000000000000000,
       "metadataUri": "consumable:smoke_bomb",
       "price": 35000000000000000000,
@@ -1308,6 +1355,126 @@
         "effects": [
           "0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000"
         ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Rat Tooth",
+      "description": "Small, sharp, and useless for anything but selling.",
+      "rarity": 0,
+      "dropChance": 75,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:rat_tooth",
+      "price": 1000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Cave Moss",
+      "description": "Damp and faintly luminescent. Alchemists might pay for it.",
+      "rarity": 0,
+      "dropChance": 75,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:cave_moss",
+      "price": 1000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Cracked Bone",
+      "description": "Could be human. Could be something else.",
+      "rarity": 0,
+      "dropChance": 75,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:cracked_bone",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Dull Crystal",
+      "description": "Barely catches the light. Worth a few coins to the right buyer.",
+      "rarity": 0,
+      "dropChance": 75,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:dull_crystal",
+      "price": 3000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Tattered Hide",
+      "description": "Stripped from something that didn't survive the cave.",
+      "rarity": 0,
+      "dropChance": 75,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:tattered_hide",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Bent Nail",
+      "description": "Pulled from a coffin. Or a wall. Hard to say.",
+      "rarity": 0,
+      "dropChance": 75,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:bent_nail",
+      "price": 1000000000000000000,
+      "stats": {
+        "effects": [],
         "maxDamage": 0,
         "minDamage": 0,
         "minLevel": 0

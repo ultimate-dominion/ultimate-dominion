@@ -322,8 +322,8 @@ contract CharacterCore is System {
         address ownerAddress = getOwnerAddress(characterId);
         uint256 tokenId = getCharacterTokenId(characterId);
         address ownerOf;
-        try _characterToken().ownerOf(tokenId) returns (address) {
-            ownerOf = _characterToken().ownerOf(tokenId);
+        try _characterToken().ownerOf(tokenId) returns (address _owner) {
+            ownerOf = _owner;
         } catch {
             return false;
         }

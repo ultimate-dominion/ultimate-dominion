@@ -1194,6 +1194,7 @@ const OpponentRow = ({
   onClick: () => void;
 }) => {
   const { inBattle, level, name } = opponent;
+  const isElite = encounterType === EncounterType.PvE && (opponent as Monster).isElite;
   const navigate = useNavigate();
 
   const inCooldown = useMemo(() => {
@@ -1252,7 +1253,7 @@ const OpponentRow = ({
             filter={disableRow ? 'grayscale(100%)' : 'none'}
             size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
           >
-            {name}
+            {isElite ? '★ ' : ''}{name}
           </Text>
         </HStack>
         {!disableRow && !!level && (

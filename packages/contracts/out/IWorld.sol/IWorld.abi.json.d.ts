@@ -386,6 +386,11 @@ declare const abi: [
         "internalType": "uint256"
       },
       {
+        "name": "rarity",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "stats",
         "type": "bytes",
         "internalType": "bytes"
@@ -426,6 +431,11 @@ declare const abi: [
       },
       {
         "name": "prices",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "rarities",
         "type": "uint256[]",
         "internalType": "uint256[]"
       },
@@ -2076,6 +2086,11 @@ declare const abi: [
         "internalType": "uint256"
       },
       {
+        "name": "rarity",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "stats",
         "type": "bytes",
         "internalType": "bytes"
@@ -2116,6 +2131,11 @@ declare const abi: [
       },
       {
         "name": "prices",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "rarities",
         "type": "uint256[]",
         "internalType": "uint256[]"
       },

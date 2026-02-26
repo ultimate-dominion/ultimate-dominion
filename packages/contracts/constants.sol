@@ -76,6 +76,14 @@ uint256 constant SHADOW_STALKER_MOB_ID = 9;       // Fragment VII: Betrayer's Tr
 // GameDelegation constants
 bytes16 constant GAME_DELEGATION_NAME = "GameDelegation";
 
+// Elite monster constants
+uint256 constant ELITE_CHANCE = 15;           // 15% spawn chance
+uint256 constant ELITE_STAT_MULTIPLIER = 130; // 1.3x STR/AGI/INT
+uint256 constant ELITE_HP_MULTIPLIER = 150;   // 1.5x HP
+uint256 constant ELITE_REWARD_MULTIPLIER = 150; // 1.5x XP/gold
+uint256 constant ELITE_DROP_BONUS = 15;       // +15% additive drop chance
+uint256 constant STAT_VARIANCE_PCT = 10;      // ±10% variance on all spawns
+
 // GasStation constants
 uint256 constant DEFAULT_ETH_PER_GOLD = 1e12;         // 0.000001 ETH per Gold (1 Gold = 1e18 units)
 uint256 constant DEFAULT_MAX_GOLD_PER_SWAP = 500e18;   // 500 Gold max per swap

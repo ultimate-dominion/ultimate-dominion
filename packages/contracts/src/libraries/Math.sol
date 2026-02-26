@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.24;
 
+import {STAT_VARIANCE_PCT} from "../../constants.sol";
+
 /// @dev Max uint256 value that a RAD can represent without overflowing
 uint256 constant MAX_RAD = type(uint256).max / RAY;
 /// @dev Uint256 representation of 1 RAD
@@ -265,6 +267,13 @@ library Math {
             // Round down
             return (value / baseUnit) * baseUnit;
         }
+    }
+
+    function variance(int256 baseStat, uint32 seed) internal pure returns (int256) {
+        int256 maxDelta = (baseStat * int256(uint256(STAT_VARIANCE_PCT))) / 100;
+        if (maxDelta < 1) maxDelta = 1;
+        uint256 range = uint256(2 * maxDelta + 1);
+        return int256(uint256(seed) % range) - maxDelta;
     }
 
     function sqrt(uint256 y) internal pure returns (uint256 z) {

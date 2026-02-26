@@ -373,6 +373,7 @@ export default defineWorld({
       schema: {
         mobId: "bytes32",
         armor: "int256",
+        isElite: "bool",
         inventory: "uint256[]",
       },
     },

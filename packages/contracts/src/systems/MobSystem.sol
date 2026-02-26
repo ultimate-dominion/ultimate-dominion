@@ -16,7 +16,8 @@ import {MobType, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/com
 import {MonsterStats, NPCStats, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
 import {_requireOwner, _requireAccess, _requireAccessOrAdmin} from "../utils.sol";
-import {MAX_MONSTERS} from "../../constants.sol";
+import {Math} from "@libraries/Math.sol";
+import {MAX_MONSTERS, ELITE_CHANCE, ELITE_STAT_MULTIPLIER, ELITE_HP_MULTIPLIER, ELITE_REWARD_MULTIPLIER} from "../../constants.sol";
 
 contract MobSystem is System {
     /**
@@ -80,13 +81,26 @@ contract MobSystem is System {
                 return entities[i];
             }
             MonsterStats memory monsterStats = abi.decode(stats.mobStats, (MonsterStats));
+
+            // Generate deterministic randomness from unique entityId
+            uint256 rng = uint256(keccak256(abi.encodePacked(entityId, block.prevrandao)));
+
+            // Apply stat variance (±10%, minimum ±1) to ALL monsters
+            int256 strVar = Math.variance(monsterStats.strength, uint32(rng));
+            int256 agiVar = Math.variance(monsterStats.agility, uint32(rng >> 32));
+            int256 intVar = Math.variance(monsterStats.intelligence, uint32(rng >> 64));
+            int256 hpVar = Math.variance(monsterStats.hitPoints, uint32(rng >> 96));
+
+            // Roll for elite (15% chance)
+            bool isElite = (uint32(rng >> 128) % 100) < ELITE_CHANCE;
+
             StatsData memory statsData = StatsData({
-                strength: monsterStats.strength,
-                agility: monsterStats.agility,
-                intelligence: monsterStats.intelligence,
-                maxHp: monsterStats.hitPoints,
+                strength: monsterStats.strength + strVar,
+                agility: monsterStats.agility + agiVar,
+                intelligence: monsterStats.intelligence + intVar,
+                maxHp: monsterStats.hitPoints + hpVar,
                 class: monsterStats.class,
-                currentHp: monsterStats.hitPoints,
+                currentHp: monsterStats.hitPoints + hpVar,
                 experience: monsterStats.experience,
                 level: monsterStats.level,
                 powerSource: PowerSource.None,
@@ -95,8 +109,20 @@ contract MobSystem is System {
                 advancedClass: AdvancedClass.None,
                 hasSelectedAdvancedClass: false
             });
+
+            // Apply elite boost on top of variance
+            if (isElite) {
+                statsData.strength = statsData.strength * int256(ELITE_STAT_MULTIPLIER) / 100;
+                statsData.agility = statsData.agility * int256(ELITE_STAT_MULTIPLIER) / 100;
+                statsData.intelligence = statsData.intelligence * int256(ELITE_STAT_MULTIPLIER) / 100;
+                statsData.maxHp = statsData.maxHp * int256(ELITE_HP_MULTIPLIER) / 100;
+                statsData.currentHp = statsData.maxHp;
+                statsData.experience = statsData.experience * ELITE_REWARD_MULTIPLIER / 100;
+                monsterStats.armor += 1;
+            }
+
             MobStatsData memory newMobStats =
-                MobStatsData({armor: monsterStats.armor, inventory: monsterStats.inventory});
+                MobStatsData({armor: monsterStats.armor, isElite: isElite, inventory: monsterStats.inventory});
             MobStats.set(entityId, newMobStats);
             Stats.set(entityId, statsData);
         } else if (stats.mobType == MobType.Shop) {

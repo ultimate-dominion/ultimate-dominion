@@ -1,16 +1,16 @@
 # Ultimate Dominion - Launch Checklist
 
-Organized into three phases: Beta Launch (Base Sepolia), Mainnet Launch (Base), and Post-Launch.
+Organized into three phases: Beta Launch (Base Mainnet Beta), Mainnet Launch (Base), and Post-Launch.
 
 > **Status Key**: `[x]` = done, `[ ]` = not started, `[~]` = in progress
 
 ---
 
-## Phase 1: Beta Launch (Base Sepolia / beta.ultimatedominion.com)
+## Phase 1: Beta Launch (Base Mainnet Beta / beta.ultimatedominion.com)
 
-Get the game playable with real users on testnet. Rough edges acceptable — the goal is real player feedback.
+Get the game playable with real users. Rough edges acceptable — the goal is real player feedback.
 
-> **Current status**: Game live at beta.ultimatedominion.com (Base Sepolia) and ultimatedominion.com. Fresh redeploy complete with Dark Cave balance overhaul. Gasless transactions nearly done — last onboarding blocker.
+> **Current status**: Game live at beta.ultimatedominion.com (Base Mainnet, separate world) and ultimatedominion.com (Base Mainnet, production world). Both environments on chain 8453, distinguished by world address.
 
 ### 1.1 Core Gameplay (Must Work)
 
@@ -64,7 +64,7 @@ Get the game playable with real users on testnet. Rough edges acceptable — the
 ### 1.2 Testnet Deployment
 
 **Smart Contracts**
-- [x] Deploy MUD World to Base Sepolia ✓
+- [x] Deploy MUD World to Base Mainnet Beta ✓
 - [x] Run FullPostDeploy (ERC20 Gold, ERC721 Characters, ERC1155 Items, core config) ✓
 - [x] Seed game data (items, monsters, shops via zone loader or SeedGameData) ✓
 - [ ] Configure badge token and fragment NFTs
@@ -94,7 +94,7 @@ Get the game playable with real users on testnet. Rough edges acceptable — the
 
 **Infrastructure**
 - [x] Set up RPC provider ✓
-- [ ] MUD indexer reachable and syncing for Base Sepolia
+- [ ] MUD indexer reachable and syncing for Base Mainnet Beta
 - [x] DNS: beta.ultimatedominion.com → Vercel ✓
 - [ ] Set up error monitoring (Sentry or similar)
 - [ ] Set up uptime monitoring for API and client
@@ -179,7 +179,25 @@ All security items must be complete before touching real money:
 - [ ] Economic exploit review (inflation attacks, arbitrage, gold duplication)
 - [x] Emergency pause mechanism ✓ PauseSystem + PauseLib on 30+ entry points across 13 systems
 
-### 2.2 Game Balance (Incorporate Beta Feedback)
+### 2.2 Playtest Feedback (Must Fix)
+
+**Google Auth + Gas Station Sync**
+- [ ] Deep dive on Google auth ↔ gas station transaction flow — identify all sources of lag/desync
+- [ ] Make gameplay feel smooth even if slightly slower — eliminate jank, stutters, and failed txs
+
+**Chat**
+- [ ] Show usernames in chat messages — currently anonymous, no one knows who's talking
+- [ ] Broadcast item finds to chat — when a player finds an item, announce it to all players
+
+**Player Hooks & Engagement**
+- [ ] Leaderboard position updates — notify players of rank changes, show relative position prominently
+- [ ] Item discovery emphasis — use color (rarity-based), animations, or callouts when player finds items
+
+**Marketplace**
+- [ ] Fix marketplace — currently broken end-to-end
+- [ ] Make links to marketplace and leaderboard more prominent in the UI (navigation, in-game prompts)
+
+### 2.3 Game Balance (Incorporate Beta Feedback)
 
 **PvP Balance**
 - [ ] Comprehensive PvP balance testing (all class matchups)
@@ -209,7 +227,7 @@ All security items must be complete before touching real money:
 - [ ] Level cap and endgame balance
 - [ ] Restock mechanics testing (shop restocking frequency and quantities)
 
-### 2.3 Mainnet Deployment
+### 2.4 Mainnet Deployment
 
 **Smart Contracts**
 - [ ] Deploy MUD World to Base mainnet
@@ -246,7 +264,7 @@ All security items must be complete before touching real money:
 - [ ] Thirdweb embedded wallet allowlisted for production domain
 - [ ] WalletConnect verified on production domain
 
-### 2.4 GTM (Mainnet Launch)
+### 2.5 GTM (Mainnet Launch)
 
 **Content & SEO**
 - [ ] Public docs site live at docs.ultimatedominion.com (Docusaurus, 10+ pages)
@@ -268,7 +286,7 @@ All security items must be complete before touching real money:
 - [ ] Human verification system (see LAUNCH_STRATEGY.md)
 - [ ] DEX liquidity setup for $GOLD token (see ECONOMICS.md)
 
-### 2.5 Mainnet Smoke Test
+### 2.6 Mainnet Smoke Test
 
 Same as beta smoke test, but on mainnet with real assets:
 
@@ -309,7 +327,7 @@ Ongoing after mainnet is live. Focus shifts from building to growing and sustain
 
 ### 3.3 Ongoing Balance & Tuning
 
-All tuning changes below use `AdminTuning.s.sol` (built in 2.3) — single-transaction admin calls, no downtime, no redeployment. Changes are instant and affect all players (items are referenced by ID, stats live in shared tables).
+All tuning changes below use `AdminTuning.s.sol` (built in 2.4) — single-transaction admin calls, no downtime, no redeployment. Changes are instant and affect all players (items are referenced by ID, stats live in shared tables).
 
 - [ ] Monitor gold inflation/deflation (on-chain metrics)
 - [ ] Adjust drop rates based on player data
@@ -366,7 +384,7 @@ A consolidated view of all completed items across phases:
 
 **Infrastructure**: API on Vercel, RPC provider, DNS (beta.ultimatedominion.com + ultimatedominion.com), CORS, API rate limiting
 
-**Deployment**: MUD World on Base Sepolia, FullPostDeploy, game data seeded, WORLD_ADDRESS + INITIAL_BLOCK_NUMBER recorded, client built and deployed to Vercel
+**Deployment**: MUD World on Base Mainnet Beta, FullPostDeploy, game data seeded, WORLD_ADDRESS + INITIAL_BLOCK_NUMBER recorded, client built and deployed to Vercel
 
 **GTM**: Target audience defined, marketing plan drafted, messaging by segment, Founding Player badge
 
