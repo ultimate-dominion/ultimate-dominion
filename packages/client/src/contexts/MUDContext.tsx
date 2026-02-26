@@ -266,6 +266,29 @@ const MUDProviderInner = ({
 
       if (receipt.status === 'reverted') {
         console.error(`[TX][RECEIPT] REVERTED on-chain tx=${tx} gasUsed=${receipt.gasUsed}`);
+
+        // Try to extract the revert reason by replaying the call
+        try {
+          const txData = await setupResult.network.publicClient.getTransaction({ hash: tx });
+          console.error(`[TX][REVERT-DEBUG] from=${txData.from} to=${txData.to} input=${txData.input.slice(0, 10)}... block=${receipt.blockNumber}`);
+
+          await setupResult.network.publicClient.call({
+            account: txData.from,
+            to: txData.to!,
+            data: txData.input,
+            blockNumber: receipt.blockNumber,
+          });
+          // If call succeeds, state changed between submission and now
+          console.warn('[TX][REVERT-DEBUG] Replay succeeded — revert was state-dependent');
+        } catch (revertErr: unknown) {
+          const errMsg = revertErr instanceof Error ? revertErr.message : String(revertErr);
+          // Extract hex revert data if present (viem includes it in the error)
+          const hexMatch = errMsg.match(/data:\s*(0x[0-9a-fA-F]+)/);
+          if (hexMatch) {
+            console.error(`[TX][REVERT-REASON] ${hexMatch[1]}`);
+          }
+          console.error('[TX][REVERT-DEBUG] Replay error:', errMsg.slice(0, 500));
+        }
       } else {
         console.info(`[TX][RECEIPT] confirmed tx=${tx} block=${receipt.blockNumber}`);
 
