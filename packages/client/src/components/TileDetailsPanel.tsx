@@ -103,18 +103,17 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const encounterTx = useTransaction({
     actionName: 'initiate battle',
-    showSuccessToast: true,
-    successMessage: 'Battle has begun!',
   });
 
   const [isWaitingForBattle, setIsWaitingForBattle] = useState(false);
 
-  // Clear waiting state when battle data arrives from RECS sync
+  // Clear waiting state when ALL battle data is ready (not just currentBattle)
+  // Battle view requires: currentBattle + opponent + userCharacterForBattleRendering
   useEffect(() => {
-    if (currentBattle && isWaitingForBattle) {
+    if (currentBattle && opponent && userCharacterForBattleRendering && isWaitingForBattle) {
       setIsWaitingForBattle(false);
     }
-  }, [currentBattle, isWaitingForBattle]);
+  }, [currentBattle, opponent, userCharacterForBattleRendering, isWaitingForBattle]);
 
   // Safety timeout — clear if battle never starts (10s)
   useEffect(() => {
