@@ -205,9 +205,11 @@ const AppInner = (): JSX.Element => {
       {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && (
         <>
           <Box
-            bottom={{ base: 2, lg: 6 }}
+            bottom={{ base: 'unset', lg: 6 }}
             position="fixed"
             right={{ base: 2, lg: 6 }}
+            top={{ base: 2, lg: 'unset' }}
+            zIndex={10}
           >
             <ScaleFade initialScale={0.9} in={!isChatBoxOpen}>
               <Button
@@ -222,9 +224,11 @@ const AppInner = (): JSX.Element => {
             </ScaleFade>
           </Box>
           <Box
-            bottom={isChatBoxOpen ? { base: 2, lg: 6 } : { base: -1 }}
+            bottom={{ base: 'unset', lg: isChatBoxOpen ? 6 : -1 }}
             position="fixed"
             right={{ base: 2, lg: 6 }}
+            top={{ base: isChatBoxOpen ? 2 : -1, lg: 'unset' }}
+            zIndex={10}
           >
             <ChatBox />
           </Box>
