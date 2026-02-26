@@ -166,14 +166,13 @@ export const Header = ({
             )}
           </HStack>
           <Button
-            mb={{ base: pathname !== HOME_PATH ? 4 : 0, sm: 4 }}
-            mt={{ base: pathname !== HOME_PATH ? -5 : -4, sm: -5 }}
+            mb={{ base: pathname !== HOME_PATH ? 2 : 0, sm: 2 }}
+            mt={{ base: pathname !== HOME_PATH ? -1 : 0, sm: -1 }}
             onClick={() => navigate(logoLink)}
             variant="unstyled"
           >
             <Image
               alt="Ultimate Dominion Logo"
-              filter="sepia(0.2) brightness(1.3)"
               src="/images/ultimate-dominion-logo.svg"
               width={{ base: '200px', sm: '225px' }}
             />

@@ -232,7 +232,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
           </VStack>
         )}
         {canAccessChat && isLoggedIn && isGroupMember && chatUser && (
-          <VStack bg="#14120F" flex="1" overflowY="auto" p={2} spacing={2}>
+          <VStack bg="#14120F" className="data-dense" flex="1" overflowY="auto" p={2} spacing={2}>
             {messages.map((message, index) => {
               const isUser = message.from === chatUser.account;
               const messageCharacter = allCharacters.find(

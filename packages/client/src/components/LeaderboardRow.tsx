@@ -99,6 +99,7 @@ export const LeaderboardRow = ({
           </HStack>
           <Text
             color="#8A7E6A"
+            fontFamily="'Inter', sans-serif"
             fontWeight={500}
             size={{ base: '2xs', lg: 'md' }}
           >

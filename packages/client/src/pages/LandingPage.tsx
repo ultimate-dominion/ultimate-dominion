@@ -118,8 +118,6 @@ export const LandingPage = (): JSX.Element => {
           alt="Ultimate Dominion"
           maxW={{ base: '280px', sm: '380px', md: '480px' }}
           src="/images/ultimate-dominion-logo.svg"
-          // Subtle brightness so the silver pops on dark bg
-          filter="sepia(0.2) brightness(1.3)"
         />
 
         <Text

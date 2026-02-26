@@ -252,7 +252,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             <Text fontSize={{ base: 'xl', lg: '3xl' }}>{getEmoji(name)}</Text>
           )}
         </Center>
-        <VStack alignItems="start" spacing={0}>
+        <VStack alignItems="start" className="data-dense" spacing={0}>
           <HStack spacing={2} mb={1}>
             <Text
               fontWeight="bold"

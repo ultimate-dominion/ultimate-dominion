@@ -120,6 +120,9 @@ importers:
       '@fontsource/cinzel':
         specifier: ^5.2.8
         version: 5.2.8
+      '@fontsource/cormorant-garamond':
+        specifier: ^5.2.11
+        version: 5.2.11
       '@fontsource/fira-code':
         specifier: ^5.1.0
         version: 5.1.0
@@ -2708,6 +2711,9 @@ packages:
 
   '@fontsource/cinzel@5.2.8':
     resolution: {integrity: sha512-B9WeF/jPlOJOrcXfX96cy4KfM+s1QcU2C9W2hE3azBOBzPvzFkNpBovT5JmhAeicE/s4HZWKF9LF5hmEcqlbsw==}
+
+  '@fontsource/cormorant-garamond@5.2.11':
+    resolution: {integrity: sha512-5JjpN023lhA5soijgVT0BdRGzmlijm402ppjccMd6h+vRE0mX2lJnE+41UPfnlidrkV9/rCo1mf58WZlHnB0CA==}
 
   '@fontsource/fira-code@5.1.0':
     resolution: {integrity: sha512-ti2XDP0qthaTDu44QawNP3PjEZIZ/cNl5VUZzvF9oYS/WY4LgmbF43IMTgTUZL33hknwFWBfmLmZCheOQmzJDg==}
@@ -15457,6 +15463,8 @@ snapshots:
   '@floating-ui/utils@0.2.10': {}
 
   '@fontsource/cinzel@5.2.8': {}
+
+  '@fontsource/cormorant-garamond@5.2.11': {}
 
   '@fontsource/fira-code@5.1.0': {}
 

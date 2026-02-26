@@ -13,12 +13,16 @@ export const globalStyles = css`
   body {
     background: #12100E;
     color: #C4B89E;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 1rem;
+    font-family: 'Cormorant Garamond', 'Inter', Georgia, serif;
+    font-size: 1.05rem;
   }
 
   .game-image {
     filter: sepia(0.15) brightness(0.95);
+  }
+
+  .data-dense {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   /* Custom scrollbar */
@@ -441,7 +445,7 @@ const Tooltip = {
 export const theme = extendTheme({
   config: { initialColorMode: 'dark', useSystemColorMode: false, disableTransitionOnChange: false },
   fonts: {
-    body: `'Inter', -apple-system, BlinkMacSystemFont, sans-serif`,
+    body: `'Cormorant Garamond', 'Inter', Georgia, serif`,
     heading: `'Cinzel', 'Inter', serif`,
     mono: `'Fira Code', monospace`,
   },

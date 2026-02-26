@@ -1,7 +1,9 @@
 import {
   Box,
   Button,
-  Heading,
+  HStack,
+  keyframes,
+  Link,
   Progress,
   Text,
   useDisclosure,
@@ -20,6 +22,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, MANIFESTO_PATH } from '../Routes';
+
+const torchGlow = keyframes`
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(200,122,42,0.3), 0 0 24px rgba(200,122,42,0.15);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(232,168,64,0.5), 0 0 40px rgba(200,122,42,0.25);
+  }
+`;
 
 export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
@@ -93,7 +104,20 @@ export const Welcome = (): JSX.Element => {
   }, [authMethod, character, delegatorAddress, isAuthenticated, navigate, onOpen]);
 
   return (
-    <Box border="6px solid #3A3228" p={1.5}>
+    <Box
+      border="6px solid #3A3228"
+      p={1.5}
+      _after={{
+        content: '""',
+        position: 'fixed',
+        inset: 0,
+        opacity: 0.05,
+        mixBlendMode: 'overlay',
+        pointerEvents: 'none',
+        zIndex: 1,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+      }}
+    >
       <Helmet>
         <title>Ultimate Dominion — A Persistent On-Chain World</title>
       </Helmet>
@@ -103,44 +127,50 @@ export const Welcome = (): JSX.Element => {
         _before={{
           content: '""',
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '60%',
-          height: '60%',
-          backgroundImage: 'url(/images/ultimate-dominion-logo.svg)',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          backgroundSize: 'contain',
-          opacity: 0.04,
-          filter: 'sepia(0.3)',
+          inset: 0,
+          background: 'radial-gradient(ellipse at center, transparent 0%, rgba(10,8,6,0.6) 100%)',
           pointerEvents: 'none',
+          zIndex: 1,
         }}
       >
+        {/* Dragon watermark */}
+        <Box
+          position="absolute"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+          width="60%"
+          height="60%"
+          backgroundImage="url(/images/ultimate-dominion-logo.svg)"
+          backgroundRepeat="no-repeat"
+          backgroundPosition="center"
+          backgroundSize="contain"
+          opacity={0.04}
+          pointerEvents="none"
+          zIndex={0}
+        />
+
         <VStack
           justifyContent="center"
           mb={16}
-          mt={{ base: 20, sm: 32 }}
-          px={{ base: 2, sm: 12, md: 20 }}
-          spacing={{ base: 12, md: 16 }}
+          mt={{ base: 14, sm: 20 }}
+          position="relative"
+          px={{ base: 2, sm: 14, md: 18 }}
+          spacing={{ base: 14, md: 18 }}
+          zIndex={2}
         >
-          <VStack spacing={4}>
-            <Heading
-              size={{ base: 'md', md: 'lg' }}
-              textAlign="center"
-              textTransform="uppercase"
-            >
-              Welcome to Ultimate Dominion
-            </Heading>
-            <Button
-              as={RouterLink}
-              to={MANIFESTO_PATH}
-              variant="outline"
-              size="sm"
-            >
-              Read the Manifesto
-            </Button>
-          </VStack>
+          <Text
+            color="#8A7E6A"
+            fontFamily="'Cinzel', serif"
+            fontSize={{ base: '11px', sm: '13px' }}
+            fontStyle="italic"
+            letterSpacing="0.3em"
+            textAlign="center"
+            textTransform="uppercase"
+          >
+            A Persistent On-Chain World
+          </Text>
+
           <VStack fontWeight={500} maxW="850px" spacing={6} textAlign="center">
             <Typist
               avgTypingDelay={18}
@@ -152,17 +182,17 @@ export const Welcome = (): JSX.Element => {
                 of a dimly lit cave.
               </Text>
               <Typist.Delay ms={400} />
-              <Text size={{ base: 'xs', sm: 'sm', md: 'md' }} mt={6}>
+              <Text size={{ base: 'xs', sm: 'sm', md: 'md' }} mt={10}>
                 Confusion clouds your mind; the cold, hard ground beneath you
                 offers no comfort. Glimpses of blood and bruises on your body only
                 deepen the mystery, painting a silent story of unseen struggles.
               </Text>
               <Typist.Delay ms={400} />
-              <Text size={{ base: 'xs', sm: 'sm', md: 'md' }} mt={6}>
+              <Text size={{ base: 'xs', sm: 'sm', md: 'md' }} mt={10}>
                 Where are you? How did you end up here?
               </Text>
               <Typist.Delay ms={600} />
-              <Text size={{ base: 'xs', sm: 'sm', md: 'md' }} mt={6}>
+              <Text size={{ base: 'xs', sm: 'sm', md: 'md' }} mt={10}>
                 The shadows around you hold secrets, whispering tales of survival
                 and discovery. Gathering your strength, you rise, the weight of
                 uncertainty heavy on your shoulders — yet igniting a spark of
@@ -193,8 +223,50 @@ export const Welcome = (): JSX.Element => {
               )}
             </VStack>
           ) : (
-            <Button onClick={onPlay}>Play</Button>
+            <Button
+              animation={`${torchGlow} 4s ease-in-out infinite`}
+              letterSpacing="0.15em"
+              onClick={onPlay}
+              px={{ base: 16, sm: 24 }}
+              textTransform="uppercase"
+            >
+              Enter
+            </Button>
           )}
+
+          <HStack
+            fontFamily="'Cinzel', serif"
+            fontSize={{ base: '11px', sm: '13px' }}
+            spacing={3}
+          >
+            <Link
+              as={RouterLink}
+              color="#8A7E6A"
+              to={MANIFESTO_PATH}
+              _hover={{ color: '#D4A54A', textDecoration: 'none' }}
+            >
+              Manifesto
+            </Link>
+            <Text color="#3A3228" userSelect="none">|</Text>
+            <Link
+              color="#8A7E6A"
+              href="https://ultimatedominion.com/guide"
+              isExternal
+              _hover={{ color: '#D4A54A', textDecoration: 'none' }}
+            >
+              Guide
+            </Link>
+            <Text color="#3A3228" userSelect="none">|</Text>
+            <Link
+              color="#8A7E6A"
+              href="https://ultimatedominion.com/tavern"
+              isExternal
+              _hover={{ color: '#D4A54A', textDecoration: 'none' }}
+            >
+              Tavern
+            </Link>
+          </HStack>
+
           <ConnectWalletModal isOpen={isOpen} onClose={onClose} />
         </VStack>
       </Box>
