@@ -390,7 +390,7 @@ export const theme = extendTheme({
     yellow: '#EFD31C',
     // Rarity colors
     rarityWorn: '#8a8a8a',
-    rarityCommon: '#d4d8dc',
+    rarityCommon: '#f0f2f5',
     rarityUncommon: '#3d8a4e',
     rarityRare: '#3d6fb5',
     rarityEpic: '#7b4ab5',
