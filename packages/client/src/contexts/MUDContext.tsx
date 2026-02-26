@@ -191,7 +191,8 @@ const MUDProviderInner = ({
       client: { public: setupResult.network.publicClient, wallet: walletClient },
     });
 
-    // Diagnostic proxy: log every contract write call and its outcome
+    // Proxy: adds gas buffer (Thirdweb relayer underestimates for deep MUD call chains)
+    // and logs every contract write call for diagnostics.
     const worldContract = new Proxy(rawWorldContract, {
       get(target, prop) {
         if (prop === 'write') {
@@ -201,7 +202,36 @@ const MUDProviderInner = ({
               if (typeof origFn !== 'function') return origFn;
               return async (...args: unknown[]) => {
                 const t0 = performance.now();
-                console.info(`[TX][SEND] ${String(fnName)}`, args);
+
+                // Inject a 2x gas buffer to prevent out-of-gas reverts in the
+                // relayer's executeWithSig wrapper. The Thirdweb relayer estimates
+                // gas for the outer tx but the deep MUD delegatecall chain
+                // (7702 wallet → World → System → NFT checks) exceeds the estimate.
+                try {
+                  const fnArgs = Array.isArray(args[0]) ? args[0] : [];
+                  const opts = (args.length > 1 && args[1] && typeof args[1] === 'object')
+                    ? args[1] as Record<string, unknown>
+                    : {};
+                  if (!opts.gas) {
+                    const estimated = await setupResult.network.publicClient.estimateContractGas({
+                      address: rawWorldContract.address,
+                      abi: IWorldAbi,
+                      functionName: String(fnName),
+                      args: fnArgs,
+                      account: embeddedWalletClient!.account!,
+                    });
+                    opts.gas = estimated * 2n;
+                    args = [args[0], opts];
+                    console.info(`[TX][SEND] ${String(fnName)} est=${estimated} gas=${opts.gas}`, fnArgs);
+                  } else {
+                    console.info(`[TX][SEND] ${String(fnName)}`, args);
+                  }
+                } catch (estErr) {
+                  // If estimation fails, let it through without override — the
+                  // origFn will likely fail too with a better error message.
+                  console.warn(`[TX][EST_FAIL] ${String(fnName)}`, estErr);
+                }
+
                 try {
                   const result = await origFn.apply(writeTarget, args);
                   console.info(`[TX][OK] ${String(fnName)} hash=${result} (${(performance.now() - t0).toFixed(0)}ms)`);
