@@ -26,17 +26,6 @@ const baseWsRpcs = [
   'wss://base-rpc.publicnode.com',
 ].filter(Boolean) as string[];
 
-const baseSepoliaHttpRpcs = [
-  import.meta.env.VITE_HTTPS_RPC_URL,
-  'https://base-sepolia-rpc.publicnode.com',
-  'https://sepolia.base.org',
-  'https://base-sepolia.drpc.org',
-].filter(Boolean) as string[];
-
-const baseSepoliaWsRpcs = [
-  import.meta.env.VITE_WS_RPC_URL,
-  'wss://base-sepolia-rpc.publicnode.com',
-].filter(Boolean) as string[];
 
 export const base = {
   name: 'Base',
@@ -57,29 +46,6 @@ export const base = {
     default: {
       name: 'BaseScan',
       url: 'https://basescan.org',
-    },
-  },
-};
-
-export const baseSepolia = {
-  name: 'Base Sepolia',
-  id: 84532,
-  network: 'Base Sepolia',
-  nativeCurrency: { decimals: 18, name: 'Ether', symbol: 'ETH' },
-  rpcUrls: {
-    default: {
-      http: baseSepoliaHttpRpcs,
-      webSocket: baseSepoliaWsRpcs,
-    },
-    public: {
-      http: baseSepoliaHttpRpcs,
-      webSocket: baseSepoliaWsRpcs,
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: 'Base Sepolia',
-      url: 'https://sepolia-explorer.base.org',
     },
   },
 };
@@ -114,7 +80,7 @@ export const pyrope = {
   },
 };
 
-const POSSIBLE_SUPPORTED_CHAINS = [base, baseSepolia, garnet, mudFoundry, pyrope];
+const POSSIBLE_SUPPORTED_CHAINS = [base, garnet, mudFoundry, pyrope];
 
 const getSupportedChains = () => {
   // Get the chain ID from environment or use 31337 (Anvil) as default for development
@@ -128,7 +94,6 @@ const getSupportedChains = () => {
 
   const prodChainId = Number(import.meta.env.VITE_CHAIN_ID);
   if (prodChainId === base.id) return [base];
-  if (prodChainId === baseSepolia.id) return [baseSepolia];
   if (prodChainId === pyrope.id) return [pyrope];
   return [garnet];
 };

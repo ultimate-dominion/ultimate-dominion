@@ -11,6 +11,7 @@ import {
     MagicDamageStatsData,
     StatusEffectStats,
     StatusEffectStatsData,
+    StatusEffectTargeting,
     StatusEffectValidity,
     StatusEffectValidityData
 } from "@codegen/index.sol";
@@ -39,8 +40,8 @@ contract EffectDataSystem is System {
             MagicDamageStatsData memory magicStats = abi.decode(effectStats, (MagicDamageStatsData));
             MagicDamageStats.set(effectStatsId, magicStats);
         } else if (effectType == EffectType.StatusEffect) {
-            (StatusEffectStatsData memory statusStats, StatusEffectValidityData memory validityData) =
-                abi.decode(effectStats, (StatusEffectStatsData, StatusEffectValidityData));
+            (StatusEffectStatsData memory statusStats, StatusEffectValidityData memory validityData, bool targetsSelf) =
+                abi.decode(effectStats, (StatusEffectStatsData, StatusEffectValidityData, bool));
 
             if (validityData.validTime != 0) {
                 if (validityData.validTurns != 0) revert InvalidEffectConfig();
@@ -50,6 +51,7 @@ contract EffectDataSystem is System {
             }
             StatusEffectStats.set(effectStatsId, statusStats);
             StatusEffectValidity.set(effectStatsId, validityData);
+            StatusEffectTargeting.set(effectStatsId, targetsSelf);
         }
         Effects.set(effectStatsId, effectType, true);
     }

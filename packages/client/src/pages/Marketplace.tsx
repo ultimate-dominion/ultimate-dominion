@@ -57,7 +57,7 @@ const MARKETPLACE_INFO_SEEN_KEY = 'marketplace-info-seen';
 
 export const Marketplace = (): JSX.Element => {
   const navigate = useNavigate();
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const { delegatorAddress, isSynced } = useMUD();
   const {
@@ -109,6 +109,8 @@ export const Marketplace = (): JSX.Element => {
 
   // Redirect to home if synced, but missing other requirements
   useEffect(() => {
+    if (isConnecting) return;
+
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
@@ -131,6 +133,7 @@ export const Marketplace = (): JSX.Element => {
     character,
     delegatorAddress,
     isConnected,
+    isConnecting,
     isRefreshing,
     isSynced,
     navigate,
@@ -393,7 +396,7 @@ export const Marketplace = (): JSX.Element => {
             w={{ base: '100%', md: '325px' }}
           >
             <Text
-              color="#565555"
+              color="#8A7E6A"
               fontWeight={400}
               size="sm"
               w={{ base: '50%', sm: '42%' }}
@@ -421,7 +424,7 @@ export const Marketplace = (): JSX.Element => {
           </Button>
         </Stack>
         <Flex alignItems="center" justify="space-between" w="100%">
-          <Text pl={4} color="#565555" fontWeight={400} size="sm">
+          <Text pl={4} color="#8A7E6A" fontWeight={400} size="sm">
             Items {length}
           </Text>
           <HStack>
@@ -429,7 +432,7 @@ export const Marketplace = (): JSX.Element => {
               {Array.from(Object.values(SortOptions)).map(s => {
                 return (
                   <Button
-                    color="#565555"
+                    color="#8A7E6A"
                     display={{ base: 'none', md: 'flex' }}
                     fontWeight={sort.sorted == s ? 'bold' : 'normal'}
                     key={`filter-${s}`}
@@ -461,8 +464,8 @@ export const Marketplace = (): JSX.Element => {
 
         <VStack overflowX="auto" spacing={0} w="100%">
           <Box
-            bgColor="#F5F5FA1F"
-            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+            bgColor="rgba(196,184,158,0.08)"
+            boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
             h="5px"
             w="100%"
           />
@@ -490,9 +493,9 @@ export const Marketplace = (): JSX.Element => {
                     {...item}
                   />
                   <Box
-                    bgColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
-                    h="5px"
+                    bg="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                    h="1px"
                     w="100%"
                   />
                 </>

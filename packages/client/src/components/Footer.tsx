@@ -7,7 +7,7 @@ export const Footer = (): JSX.Element => {
     <HStack
       alignItems="center"
       as="footer"
-      borderTop="1px solid black"
+      borderTop="1px solid #3A3228"
       px={20}
       py={4}
     >
@@ -26,6 +26,24 @@ export const Footer = (): JSX.Element => {
                 isExternal
               >
                 About
+              </Link>
+              <Link
+                alignSelf="start"
+                color="#8A7E6A"
+                fontSize={{ base: 'xs', sm: 'sm' }}
+                href="https://ultimatedominion.com/terms"
+                isExternal
+              >
+                Terms
+              </Link>
+              <Link
+                alignSelf="start"
+                color="#8A7E6A"
+                fontSize={{ base: 'xs', sm: 'sm' }}
+                href="https://ultimatedominion.com/privacy"
+                isExternal
+              >
+                Privacy
               </Link>
               {/* <Link
                 alignSelf="start"

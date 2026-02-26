@@ -3,12 +3,48 @@ import '@fontsource/fira-code';
 import { extendTheme } from '@chakra-ui/react';
 import { css } from '@emotion/react';
 
+// Torchlit Dungeon shadow constants — use in components replacing old neumorphic shadows
+export const DARK_INSET_SHADOW =
+  '2px 2px 6px rgba(0,0,0,0.5) inset, -1px -1px 3px rgba(60,50,40,0.15) inset';
+export const DARK_DIVIDER_SHADOW =
+  '0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)';
+
 export const globalStyles = css`
   body {
-    background: #a2a9b0;
-    color: #000;
+    background: #12100E;
+    color: #C4B89E;
+    font-family: 'Cormorant Garamond', 'Inter', Georgia, serif;
+    font-size: 1.05rem;
+  }
+
+  .game-image {
+    filter: sepia(0.15) brightness(0.95);
+  }
+
+  .data-dense {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 1rem;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #14120F;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3A3228;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4A4238;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #3A3228 #14120F;
   }
 `;
 
@@ -17,12 +53,12 @@ const Button = {
     borderRadius: '12px',
     fontWeight: 500,
     _focusVisible: {
-      boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.6)',
+      boxShadow: '0 0 0 3px rgba(200, 122, 42, 0.4)',
       outline: 'none',
     },
   },
   defaultProps: {
-    variant: 'blue',
+    variant: 'amber',
   },
   sizes: {
     sm: {
@@ -34,120 +70,140 @@ const Button = {
     },
   },
   variants: {
-    dark: {
-      bg: 'grey500',
+    amber: {
+      bg: '#C87A2A',
       border: '2px solid',
-      borderColor: 'grey500',
+      borderColor: '#C87A2A',
       borderRadius: '8px',
-      boxShadow: '-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480',
-      color: 'white',
+      boxShadow:
+        '2px 2px 5px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(200, 122, 42, 0.3)',
+      color: '#E8DCC8',
       _active: {
-        bg: 'rgba(0, 0, 0, 0.8)',
+        bg: '#A86420',
         _disabled: {
-          bg: 'rgba(0, 0, 0, 0.7)',
+          bg: 'rgba(200, 122, 42, 0.4)',
         },
       },
       _hover: {
-        bg: 'rgba(0, 0, 0, 0.8)',
+        bg: '#E8A840',
         _disabled: {
-          bg: 'rgba(0, 0, 0, 0.7)',
+          bg: 'rgba(200, 122, 42, 0.4)',
         },
       },
       _loading: {
-        bg: 'rgba(0, 0, 0, 0.8)',
+        bg: '#A86420',
         _hover: {
-          bg: 'rgba(0, 0, 0, 0.8)',
+          bg: '#A86420',
+        },
+      },
+    },
+    dark: {
+      bg: '#14120F',
+      border: '2px solid',
+      borderColor: '#3A3228',
+      borderRadius: '8px',
+      boxShadow: '2px 2px 6px rgba(0,0,0,0.4)',
+      color: '#E8DCC8',
+      _active: {
+        bg: '#0A0908',
+        _disabled: {
+          bg: 'rgba(20, 18, 15, 0.7)',
+        },
+      },
+      _hover: {
+        bg: '#2E2820',
+        _disabled: {
+          bg: 'rgba(20, 18, 15, 0.7)',
+        },
+      },
+      _loading: {
+        bg: '#0A0908',
+        _hover: {
+          bg: '#0A0908',
         },
       },
     },
     gold: {
-      bg: 'yellow',
+      bg: '#EFD31C',
       border: '2px solid',
-      borderColor: 'black',
-      color: 'black',
+      borderColor: '#3A3228',
+      color: '#12100E',
       _active: {
-        bg: 'rgba(0, 0, 0, 1)',
-        color: 'white',
+        bg: '#C8B018',
         _disabled: {
-          bg: 'rgba(0, 0, 0, 0.7)',
+          bg: 'rgba(239, 211, 28, 0.4)',
         },
       },
       _hover: {
-        bg: 'rgba(0, 0, 0, 0.8)',
-        color: 'white',
+        bg: '#F8E040',
         _disabled: {
-          bg: 'rgba(0, 0, 0, 0.7)',
+          bg: 'rgba(239, 211, 28, 0.4)',
         },
       },
       _loading: {
-        bg: 'rgba(0, 0, 0, 0.8)',
+        bg: '#C8B018',
         _hover: {
-          bg: 'rgba(0, 0, 0, 0.8)',
+          bg: '#C8B018',
         },
       },
     },
     outline: {
       border: '2px solid',
-      borderColor: 'grey500',
-      bg: 'white',
+      borderColor: '#3A3228',
+      bg: 'transparent',
+      color: '#C4B89E',
+      _hover: {
+        bg: '#2E2820',
+      },
     },
     blue: {
-      bg: 'blue400',
+      bg: '#C87A2A',
       border: '2px solid',
-      borderColor: 'blue400',
+      borderColor: '#C87A2A',
       borderRadius: '8px',
       boxShadow:
-        '2px 2px 5px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 0, 255, 0.5)',
-      color: 'white',
+        '2px 2px 5px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(200, 122, 42, 0.3)',
+      color: '#E8DCC8',
       _active: {
-        bg: 'blue300',
+        bg: '#A86420',
         _disabled: {
-          bg: 'rgba(0, 0, 0, 0.7)',
+          bg: 'rgba(200, 122, 42, 0.4)',
         },
       },
       _hover: {
-        bg: 'blue300',
+        bg: '#E8A840',
         _disabled: {
-          bg: 'rgba(0, 0, 0, 0.7)',
+          bg: 'rgba(200, 122, 42, 0.4)',
         },
       },
       _loading: {
-        bg: 'rgba(0, 0, 0, 0.8)',
+        bg: '#A86420',
         _hover: {
-          bg: 'rgba(0, 0, 0, 0.8)',
+          bg: '#A86420',
         },
       },
     },
     white: {
-      bg: 'white',
+      bg: '#24201A',
       borderRadius: '8px',
-      boxShadow: '-10px -10px 20px 0px #54545440, 5px 5px 10px 0px #54545480',
-      color: 'black',
+      boxShadow: '2px 2px 6px rgba(0,0,0,0.4)',
+      color: '#E8DCC8',
       _active: {
-        bg: 'grey500',
-        color: 'white',
-        svg: {
-          fill: 'white',
-        },
+        bg: '#2E2820',
         _disabled: {
-          bg: 'rgba(0, 0, 0, 0.7)',
+          bg: 'rgba(36, 32, 26, 0.7)',
         },
       },
       _hover: {
-        bg: 'grey500',
-        color: 'white',
-        svg: {
-          fill: 'white',
-        },
+        bg: '#2E2820',
         _disabled: {
-          bg: 'rgba(0, 0, 0, 0.7)',
+          bg: 'rgba(36, 32, 26, 0.7)',
         },
       },
       _loading: {
-        bg: 'grey500',
-        color: 'white',
+        bg: '#2E2820',
         _hover: {
-          bg: 'grey500',
+          bg: '#2E2820',
         },
       },
     },
@@ -155,6 +211,9 @@ const Button = {
 };
 
 const Heading = {
+  baseStyle: {
+    color: '#E8DCC8',
+  },
   defaultProps: {
     size: 'md',
   },
@@ -175,17 +234,20 @@ const Input = {
   variants: {
     outline: {
       field: {
+        bg: '#14120F',
         border: '2px solid',
-        borderColor: 'transparent',
+        borderColor: '#3A3228',
         borderRadius: '8px',
-        boxShadow:
-          '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
+        color: '#E8DCC8',
         py: 5,
         _active: {
-          borderColor: 'blue400',
+          borderColor: '#C87A2A',
         },
         _focus: {
-          borderColor: 'blue400',
+          borderColor: '#C87A2A',
+        },
+        _placeholder: {
+          color: '#8A7E6A',
         },
       },
     },
@@ -198,22 +260,26 @@ const Modal = {
   },
   baseStyle: {
     closeButton: {
+      color: '#8A7E6A',
       right: 5,
       top: 4,
+      _hover: {
+        color: '#E8DCC8',
+      },
     },
     dialogContainer: {
       overflow: 'hidden',
     },
     dialog: {
-      bgColor: '#B3B9BE',
+      bgColor: '#1C1814',
       borderRadius: { base: 0, md: 'lg' },
       clipPath:
         'polygon(40px 0%, 100% 0%, 100% calc(100% - 50px), calc(100% - 50px) 100%, 0% 100%, 0% 80px)',
+      color: '#C4B89E',
       m: { base: 0, md: 'auto' },
       maxH: 'calc(100% - 7.5rem)',
       minW: { base: '100%', md: '500px' },
       maxW: { base: '100%', md: '500px' },
-      position: 'absolute',
     },
     body: {
       overflow: 'auto',
@@ -221,14 +287,14 @@ const Modal = {
       px: 8,
     },
     footer: {
-      borderTop: '1px #1A244E solid',
+      borderTop: '1px solid #3A3228',
       display: 'flex',
       justifyContent: 'center',
       pb: 6,
       pt: 4,
     },
     header: {
-      color: '#283570',
+      color: '#D4A54A',
       fontWeight: 700,
       px: 4,
       py: 8,
@@ -241,9 +307,8 @@ const Progress = {
   baseStyle: {
     track: {
       borderRadius: 5,
-      bg: '#6363634D',
-      boxShadow:
-        '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset',
+      bg: '#14120F',
+      boxShadow: DARK_INSET_SHADOW,
     },
     filledTrack: {
       transition: 'width 0.5s',
@@ -255,22 +320,22 @@ const Progress = {
   variants: {
     filling: {
       filledTrack: {
-        bg: '#283570',
+        bg: '#C87A2A',
       },
     },
     filled: {
       filledTrack: {
-        bg: 'green',
+        bg: '#5A8A3E',
       },
     },
     maxed: {
       filledTrack: {
-        bg: 'purple',
+        bg: '#7b4ab5',
       },
     },
     timer: {
       filledTrack: {
-        bg: 'blue',
+        bg: '#C87A2A',
       },
       track: {
         borderRadius: 0,
@@ -283,9 +348,14 @@ const Select = {
   variants: {
     outline: {
       field: {
+        bg: '#14120F',
         border: '2px solid',
-        borderColor: 'white',
+        borderColor: '#3A3228',
         borderRadius: '5px',
+        color: '#E8DCC8',
+        _focus: {
+          borderColor: '#C87A2A',
+        },
       },
     },
   },
@@ -298,8 +368,10 @@ const Tabs = {
   variants: {
     line: {
       tab: {
+        color: '#8A7E6A',
         _selected: {
-          color: 'blue400',
+          color: '#C87A2A',
+          borderColor: '#C87A2A',
         },
       },
     },
@@ -341,16 +413,19 @@ const Text = {
 const Textarea = {
   variants: {
     outline: {
+      bg: '#14120F',
       border: '2px solid',
-      borderColor: 'transparent',
+      borderColor: '#3A3228',
       borderRadius: '5px',
-      boxShadow:
-        '-5px -5px 10px 0px #54545440 inset, 5px 5px 10px 0px #A6A6A680 inset, 2px 2px 4px 0px #18161640 inset, -2px -2px 4px 0px #A2A9B080 inset',
+      color: '#E8DCC8',
       _active: {
-        borderColor: 'blue400',
+        borderColor: '#C87A2A',
       },
       _focus: {
-        borderColor: 'blue400',
+        borderColor: '#C87A2A',
+      },
+      _placeholder: {
+        color: '#8A7E6A',
       },
     },
   },
@@ -358,39 +433,42 @@ const Textarea = {
 
 const Tooltip = {
   baseStyle: {
-    bg: '#070D2A',
+    bg: '#14120F',
     borderRadius: 0,
     clipPath: 'polygon(0% 0%, 93% 0%, 100% 18%, 100% 100%, 10% 100%, 0% 90%);',
-    color: 'white',
+    color: '#E8DCC8',
     p: 4,
   },
 };
 
 export const theme = extendTheme({
-  config: { initialColorMode: 'light', useSystemColorMode: false, disableTransitionOnChange: false },
+  config: { initialColorMode: 'dark', useSystemColorMode: false, disableTransitionOnChange: false },
   fonts: {
-    body: `'Inter', -apple-system, BlinkMacSystemFont, sans-serif`,
-    heading: `'Inter', -apple-system, BlinkMacSystemFont, sans-serif`,
+    body: `'Cormorant Garamond', 'Inter', Georgia, serif`,
+    heading: `'Cinzel', 'Inter', serif`,
     mono: `'Fira Code', monospace`,
   },
   colors: {
     black: '#000',
-    blue300: '#1633B6',
-    blue400: '#0A2187',
-    blue500: '#0C1539',
-    blue600: '#131832',
-    green: '#008F07',
-    grey100: '#D0D0D0',
-    grey200: '#A8ADB2',
-    grey300: '#A2A9B0',
-    grey400: '#7E848A',
-    grey500: '#3D4247',
-    red: '#AF0D08',
     white: '#fff',
     yellow: '#EFD31C',
+    green: '#5A8A3E',
+    red: '#B83A2A',
+
+    // Legacy aliases — remap old names to Torchlit palette
+    blue300: '#E8A840',   // was #1633B6 — now hover glow
+    blue400: '#C87A2A',   // was #0A2187 — now action amber
+    blue500: '#1C1814',   // was #0C1539 — now card bg
+    blue600: '#14120F',   // was #131832 — now input bg
+    grey100: '#2E2820',   // was #D0D0D0 — now hover surface
+    grey200: '#8A7E6A',   // was #A8ADB2 — now muted text
+    grey300: '#1C1814',   // was #A2A9B0 — now card bg
+    grey400: '#24201A',   // was #7E848A — now panel bg
+    grey500: '#3A3228',   // was #3D4247 — now border
+
     // Rarity colors
     rarityWorn: '#8a8a8a',
-    rarityCommon: '#f0f2f5',
+    rarityCommon: '#C4B89E',
     rarityUncommon: '#3d8a4e',
     rarityRare: '#3d6fb5',
     rarityEpic: '#7b4ab5',
@@ -398,34 +476,23 @@ export const theme = extendTheme({
   },
   semanticTokens: {
     colors: {
-      'bg.primary': {
-        default: '#B3B9BE',
-        _dark: '#1a1a2e',
-      },
-      'bg.secondary': {
-        default: '#A2A9B0',
-        _dark: '#16213e',
-      },
-      'bg.card': {
-        default: '#B3B9BE',
-        _dark: '#0f3460',
-      },
-      'text.primary': {
-        default: '#000',
-        _dark: '#e0e0e0',
-      },
-      'text.secondary': {
-        default: '#3D4247',
-        _dark: '#a0a0b0',
-      },
-      'border.primary': {
-        default: '#1A244E',
-        _dark: '#2a2a4e',
-      },
-      'border.accent': {
-        default: '#3B82C4',
-        _dark: '#4a6fa5',
-      },
+      'bg.primary': '#12100E',
+      'bg.secondary': '#14120F',
+      'bg.card': '#1C1814',
+      'bg.panel': '#24201A',
+      'bg.hover': '#2E2820',
+      'text.primary': '#E8DCC8',
+      'text.body': '#C4B89E',
+      'text.muted': '#8A7E6A',
+      'text.heading': '#E8DCC8',
+      'text.secondary': '#8A7E6A',
+      'accent.action': '#C87A2A',
+      'accent.glow': '#E8A840',
+      'accent.success': '#5A8A3E',
+      'accent.danger': '#B83A2A',
+      'border.primary': '#3A3228',
+      'border.accent': 'rgba(200,122,42,0.3)',
+      'border.subtle': 'rgba(196,184,158,0.1)',
     },
   },
   components: {

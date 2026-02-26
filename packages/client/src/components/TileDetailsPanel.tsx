@@ -48,6 +48,7 @@ import { AdventureEscrowModal } from './AdventureEscrowModal';
 import { ClassSymbol } from './ClassSymbol';
 import { FragmentClaimModal } from './FragmentClaimModal';
 import { HealthBar } from './HealthBar';
+import { TransactionProgressBar } from './TransactionProgressBar';
 import { InfoModal } from './InfoModal';
 import { ShopRow } from './ShopRow';
 
@@ -111,7 +112,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     statusEffectActions,
     userCharacterForBattleRendering,
   } = useBattle();
-  const { isRefreshing, moveStatusMessage } = useMovement();
+  const { isRefreshing, moveProgress } = useMovement();
 
   const encounterTx = useTransaction({
     actionName: 'initiate battle',
@@ -411,7 +412,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           px="20px"
           width="100%"
         >
-          <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+          <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
             Tile Details
           </Heading>
         </HStack>
@@ -428,26 +429,6 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (!currentBattle && isRefreshing) {
-    return (
-      <Box>
-        <HStack
-          bgColor="blue500"
-          h={{ base: '40px', md: '66px' }}
-          px="20px"
-          width="100%"
-        >
-          <Heading color="white" size={{ base: 'sm', md: 'md' }}>
-            {moveStatusMessage}
-          </Heading>
-        </HStack>
-        <Flex alignItems="center" h="100%" justifyContent="center" mt={6}>
-          <Spinner size="lg" />
-        </Flex>
-      </Box>
-    );
-  }
-
   if (!currentBattle && !isSpawned) {
     return (
       <Box>
@@ -457,7 +438,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           px="20px"
           width="100%"
         >
-          <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+          <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
             Tile Details
           </Heading>
         </HStack>
@@ -482,8 +463,8 @@ export const TileDetailsPanel = (): JSX.Element => {
           }
         `}
         </style>
-        <HStack bgColor="blue500" h={{ base: '40px', md: '66px' }} px={4}>
-          <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+        <HStack bgColor="blue500" h={{ base: '36px', md: '46px' }} px={4}>
+          <Heading color="#E8DCC8" size="sm">
             Battlefield
           </Heading>
         </HStack>
@@ -541,8 +522,8 @@ export const TileDetailsPanel = (): JSX.Element => {
 
                 <Box mt={4} w="100%">
                   <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                     h="6px"
                     w="100%"
                   />
@@ -556,8 +537,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                     </Text>
                   </HStack>
                   <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                     h="6px"
                     w="100%"
                   />
@@ -571,8 +552,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                     </Text>
                   </HStack>
                   <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                     h="6px"
                     w="100%"
                   />
@@ -586,8 +567,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                     </Text>
                   </HStack>
                   <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                     h="6px"
                     w="100%"
                   />
@@ -602,7 +583,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     <Avatar
                       animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
                       bgColor="grey300"
-                      boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+                      boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                       mb={{ base: 1, lg: 2 }}
                       opacity={isMonsterHit ? 0 : 1}
                       size={{ base: '2xs', lg: 'md' }}
@@ -625,11 +606,6 @@ export const TileDetailsPanel = (): JSX.Element => {
                     <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
                       {opponent.name}
                     </Text>
-                    {opponent.experience > opponent.level * 150n && (
-                      <Text color="gold" fontSize={{ base: 'xs', lg: 'sm' }}>
-                        ★
-                      </Text>
-                    )}
                     <ClassSymbol
                       entityClass={opponent.entityClass}
                       mb={1}
@@ -678,8 +654,8 @@ export const TileDetailsPanel = (): JSX.Element => {
 
                 <Box mt={4} w="100%">
                   <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                     h="6px"
                     w="100%"
                   />
@@ -695,8 +671,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                     )}
                   </HStack>
                   <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                     h="6px"
                     w="100%"
                   />
@@ -712,8 +688,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                     )}
                   </HStack>
                   <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                     h="6px"
                     w="100%"
                   />
@@ -729,8 +705,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                     )}
                   </HStack>
                   <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                     h="6px"
                     w="100%"
                   />
@@ -794,11 +770,12 @@ export const TileDetailsPanel = (): JSX.Element => {
   }
 
   return (
-    <Box h={{ base: 'calc(100% - 40px)', md: 'calc(100% - 66px)' }}>
-      <HStack bgColor="blue500" h={{ base: '40px', md: '66px' }}>
+    <Box h={{ base: 'calc(100% - 36px)', md: 'calc(100% - 46px)' }} position="relative">
+      <TransactionProgressBar progress={moveProgress} />
+      <HStack bgColor="blue500" h={{ base: '36px', md: '46px' }}>
         <Grid
           alignItems="center"
-          color="white"
+          color="#E8DCC8"
           h="100%"
           px={6}
           templateColumns="repeat(4, 1fr)"
@@ -806,18 +783,18 @@ export const TileDetailsPanel = (): JSX.Element => {
         >
           {isHomeTile && shopsOnTile.length > 0 && (
             <GridItem colSpan={2}>
-              <Heading size={{ base: 'xs', sm: 'sm', md: 'md' }}>Shops</Heading>
+              <Heading size="sm">Shops</Heading>
             </GridItem>
           )}
           {!isHomeTile && (
             <GridItem colSpan={2}>
-              <Heading size={{ base: 'xs', sm: 'sm', md: 'md' }}>
+              <Heading size="sm">
                 Monsters
               </Heading>
             </GridItem>
           )}
           <GridItem colSpan={2}>
-            <Heading size={{ base: 'xs', sm: 'sm', md: 'md' }}>
+            <Heading size="sm">
               {shopsOnTile.length > 0 && !isHomeTile && 'Shops & '}Players
             </Heading>
           </GridItem>
@@ -856,7 +833,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                   {etherToFixedNumber(character.escrowGoldBalance)} Gold
                 </Text>
                 <Tooltip
-                  bg="#070D2A"
+                  bg="#14120F"
                   hasArrow
                   label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
                   placement="top"
@@ -914,8 +891,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                 )}
             </VStack>
             <Box
-              backgroundColor="#F5F5FA1F"
-              boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+              backgroundColor="rgba(196,184,158,0.08)"
+              boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
               h="6px"
               w="100%"
             />
@@ -927,8 +904,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                   onClick={onOpenFragmentClaimModal}
                 />
                 <Box
-                  backgroundColor="#F5F5FA1F"
-                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                  backgroundColor="rgba(196,184,158,0.08)"
+                  boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                   h="6px"
                   w="100%"
                 />
@@ -938,8 +915,8 @@ export const TileDetailsPanel = (): JSX.Element => {
               <Box key={`tile-shop-${i}`}>
                 <ShopRow shopId={shop.shopId} shopName={shop.name} />
                 <Box
-                  backgroundColor="#F5F5FA1F"
-                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                  backgroundColor="rgba(196,184,158,0.08)"
+                  boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                   h="6px"
                   w="100%"
                 />
@@ -951,8 +928,8 @@ export const TileDetailsPanel = (): JSX.Element => {
         {!isHomeTile && (
           <GridItem borderColor="blue500" borderRight="6px solid" colSpan={2}>
             <Box
-              backgroundColor="#F5F5FA1F"
-              boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+              backgroundColor="rgba(196,184,158,0.08)"
+              boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
               h="6px"
               w="100%"
             />
@@ -964,8 +941,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                   onClick={onOpenFragmentClaimModal}
                 />
                 <Box
-                  backgroundColor="#F5F5FA1F"
-                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                  backgroundColor="rgba(196,184,158,0.08)"
+                  boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                   h="6px"
                   w="100%"
                 />
@@ -991,8 +968,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                     }}
                   />
                   <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                     h="6px"
                     w="100%"
                   />
@@ -1008,8 +985,8 @@ export const TileDetailsPanel = (): JSX.Element => {
 
         <GridItem colSpan={2}>
           <Box
-            backgroundColor="#F5F5FA1F"
-            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+            backgroundColor="rgba(196,184,158,0.08)"
+            boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
             h="6px"
             w="100%"
           />
@@ -1019,8 +996,8 @@ export const TileDetailsPanel = (): JSX.Element => {
             </Text>
           </HStack>
           <Box
-            backgroundColor="#F5F5FA1F"
-            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+            backgroundColor="rgba(196,184,158,0.08)"
+            boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
             h="6px"
             w="100%"
           />
@@ -1029,8 +1006,8 @@ export const TileDetailsPanel = (): JSX.Element => {
               <Box key={`tile-shop-${i}`}>
                 <ShopRow shopId={shop.shopId} shopName={shop.name} />
                 <Box
-                  backgroundColor="#F5F5FA1F"
-                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                  backgroundColor="rgba(196,184,158,0.08)"
+                  boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                   h="6px"
                   w="100%"
                 />
@@ -1054,8 +1031,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                   }}
                 />
                 <Box
-                  backgroundColor="#F5F5FA1F"
-                  boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                  backgroundColor="rgba(196,184,158,0.08)"
+                  boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                   h="6px"
                   w="100%"
                 />
@@ -1217,6 +1194,7 @@ const OpponentRow = ({
   onClick: () => void;
 }) => {
   const { inBattle, level, name } = opponent;
+  const isElite = encounterType === EncounterType.PvE && (opponent as Monster).isElite;
   const navigate = useNavigate();
 
   const inCooldown = useMemo(() => {
@@ -1275,14 +1253,8 @@ const OpponentRow = ({
             filter={disableRow ? 'grayscale(100%)' : 'none'}
             size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
           >
-            {name}
+            {isElite ? '★ ' : ''}{name}
           </Text>
-          {encounterType === EncounterType.PvE &&
-            opponent.experience > opponent.level * 150n && (
-              <Text color="gold" fontSize={{ base: '2xs', md: 'xs' }}>
-                ★
-              </Text>
-            )}
         </HStack>
         {!disableRow && !!level && (
           <Text fontWeight={500} size={{ base: '3xs', sm: '2xs', md: 'sm' }}>

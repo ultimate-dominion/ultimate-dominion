@@ -3,7 +3,6 @@ import {
   Button,
   Heading,
   HStack,
-  Icon,
   IconButton,
   Stack,
   Text,
@@ -12,8 +11,8 @@ import {
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import { useMemo, useState } from 'react';
-import { BiCompass, BiSolidNavigation } from 'react-icons/bi';
+import { useMemo } from 'react';
+import { BiSolidNavigation } from 'react-icons/bi';
 import { FaStoreAlt } from 'react-icons/fa';
 
 import { useBattle } from '../contexts/BattleContext';
@@ -23,7 +22,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { ChatBox } from './ChatBox';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
-import { CompassSvg } from './SVGs/CompassSvg';
+import { CompassArrowSvg } from './SVGs/CompassRoseSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
 
 const SAFE_ZONE_AREA = {
@@ -49,7 +48,6 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
   const { isRefreshing, onMove } = useMovement();
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const [isCompassExpanded, setIsCompassExpanded] = useState(false);
 
   const currentPlayersSpawned = useMemo(() => {
     return allCharacters.filter(character => character.isSpawned).length;
@@ -62,16 +60,16 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
   const maxPlayers = configValue?.maxPlayers ?? BigInt(0);
 
   return (
-    <Stack alignItems="center" h="100%">
+    <Stack alignItems="center" className="data-dense" h="100%">
       <Box w="100%" h={{ base: '300px', lg: '300px' }}>
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
-            h={{ base: '40px', md: '66px' }}
+            h={{ base: '36px', md: '46px' }}
             px="20px"
             width="100%"
           >
-            <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+            <Heading size="sm">
               Dark Cave
             </Heading>
           </HStack>
@@ -82,10 +80,10 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
             display="grid"
             gridTemplateColumns="repeat(10, 1fr)"
             gridTemplateRows="repeat(10, 1fr)"
-            h={{ base: 'calc(100% - 65px)', md: 'calc(100% - 95px)' }}
+            h={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
             maxW="100%"
             m="0 auto"
-            mt={2}
+            mt={1}
           >
             {[...Array(100)].map((_, i) => {
               const row = 9 - Math.floor(i / 10); // Reverse the row
@@ -117,29 +115,29 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
                   bgColor={
                     col <= SAFE_ZONE_AREA.topLeft.y &&
                     row <= SAFE_ZONE_AREA.bottomRight.x
-                      ? '#DCD64F14'
+                      ? 'rgba(200,122,42,0.06)'
                       : 'transparent'
                   }
                   borderBottom={
                     hasSafeZoneBottomBorder ? '1.5px solid' : '0.5px solid'
                   }
                   borderBottomColor={
-                    hasSafeZoneBottomBorder ? 'yellow' : 'grey500'
+                    hasSafeZoneBottomBorder ? '#C87A2A' : 'grey500'
                   }
                   borderLeft={
                     hasSafeZoneLeftBorder ? '1.5px solid' : '0.5px solid'
                   }
-                  borderLeftColor={hasSafeZoneLeftBorder ? 'yellow' : 'grey500'}
+                  borderLeftColor={hasSafeZoneLeftBorder ? '#C87A2A' : 'grey500'}
                   borderRight={
                     hasSafeZoneRightBorder ? '1.5px solid' : '0.5px solid'
                   }
                   borderRightColor={
-                    hasSafeZoneRightBorder ? 'yellow' : 'grey500'
+                    hasSafeZoneRightBorder ? '#C87A2A' : 'grey500'
                   }
                   borderTop={
                     hasSafeZoneTopBorder ? '1.5px solid' : '0.5px solid'
                   }
-                  borderTopColor={hasSafeZoneTopBorder ? 'yellow' : 'grey500'}
+                  borderTopColor={hasSafeZoneTopBorder ? '#C87A2A' : 'grey500'}
                   justifyContent="center"
                   key={`map-tile${i}`}
                   position="relative"
@@ -183,18 +181,19 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
             px={{ base: 1, sm: 2 }}
           >
             {isSpawned && position && (
-              <HStack>
-                <BiSolidNavigation size={isDesktop ? 12 : 10} />
+              <HStack spacing={1}>
+                <BiSolidNavigation color="#C87A2A" size={isDesktop ? 12 : 10} />
                 <Text
+                  color="#E8DCC8"
                   fontFamily="mono"
                   fontWeight={700}
-                  size={{ base: 'xs', sm: 'sm', md: 'sm' }}
+                  size={{ base: 'xs', sm: 'sm' }}
                 >
                   {position.x},{position.y}
                 </Text>
               </HStack>
             )}
-            <Text fontWeight={500} size={{ base: '2xs', sm: 'xs', md: 'sm' }}>
+            <Text color="#8A7E6A" fontWeight={500} size={{ base: '2xs', sm: 'xs' }}>
               {currentPlayersSpawned} Player
               {currentPlayersSpawned === 1 ? '' : 's'}
             </Text>
@@ -202,82 +201,10 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
         </PolygonalCard>
       </Box>
       {isSpawned ? (
-        isDesktop ? (
-          <Box mt={1}>
-            {isCompassExpanded ? (
-              <VStack>
-                <IconButton
-                  aria-label="Collapse compass"
-                  icon={<BiCompass />}
-                  onClick={() => setIsCompassExpanded(false)}
-                  size="xs"
-                  variant="ghost"
-                />
-                <NavigationCompass
-                  isDisabled={!!currentBattle || isRefreshing}
-                  onMove={onMove}
-                />
-              </VStack>
-            ) : (
-              <HStack spacing={1}>
-                <IconButton
-                  aria-label="Expand compass"
-                  icon={<BiCompass />}
-                  onClick={() => setIsCompassExpanded(true)}
-                  size="xs"
-                  variant="ghost"
-                />
-                <Button
-                  aria-label="Move north"
-                  fontWeight={700}
-                  isDisabled={!!currentBattle || isRefreshing}
-                  onClick={() => onMove('up')}
-                  size="xs"
-                  variant="blue"
-                >
-                  N
-                </Button>
-                <Button
-                  aria-label="Move south"
-                  fontWeight={700}
-                  isDisabled={!!currentBattle || isRefreshing}
-                  onClick={() => onMove('down')}
-                  size="xs"
-                  variant="blue"
-                >
-                  S
-                </Button>
-                <Button
-                  aria-label="Move west"
-                  fontWeight={700}
-                  isDisabled={!!currentBattle || isRefreshing}
-                  onClick={() => onMove('left')}
-                  size="xs"
-                  variant="blue"
-                >
-                  W
-                </Button>
-                <Button
-                  aria-label="Move east"
-                  fontWeight={700}
-                  isDisabled={!!currentBattle || isRefreshing}
-                  onClick={() => onMove('right')}
-                  size="xs"
-                  variant="blue"
-                >
-                  E
-                </Button>
-              </HStack>
-            )}
-          </Box>
-        ) : (
-          <Box>
-            <NavigationCompass
-              isDisabled={!!currentBattle || isRefreshing}
-              onMove={onMove}
-            />
-          </Box>
-        )
+        <NavigationCompass
+          isDisabled={!!currentBattle || isRefreshing}
+          onMove={onMove}
+        />
       ) : (
         <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
           {currentPlayersSpawned >= Number(maxPlayers) && (
@@ -307,150 +234,42 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
   );
 };
 
+const ARROW_DIRECTIONS: {
+  label: string;
+  direction: 'up' | 'down' | 'left' | 'right';
+  rotate: string;
+}[] = [
+  { label: 'west', direction: 'left', rotate: '90deg' },
+  { label: 'north', direction: 'up', rotate: '0deg' },
+  { label: 'south', direction: 'down', rotate: '180deg' },
+  { label: 'east', direction: 'right', rotate: '-90deg' },
+];
+
 const NavigationCompass = ({
   isDisabled,
   onMove,
 }: {
   isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
-}): JSX.Element => {
-  return (
-    <VStack
-      alignItems="stretch"
-      h={{ base: 140, lg: 175 }}
-      justifyContent="space-between"
-      mt={{ base: 0, lg: 12, xl: 8 }}
-      position="relative"
-      w={{ base: 140, lg: 175 }}
-    >
-      <Box
-        left="50%"
-        position="absolute"
-        top="50%"
-        transform="translate(-50%, -50%)"
-      >
-        <CompassSvg />
-      </Box>
-      <VStack spacing={0}>
-        <Icon
-          fill="none"
-          height={3}
-          viewBox="0 0 22 9"
-          width={4}
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M20.6967 7.93237L10.9997 1.212L1.30273 7.93237"
-            stroke="#283570"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-          />
-        </Icon>
-
-        <Button
-          aria-label="Move north"
-          borderRadius="50%"
-          fontWeight={700}
-          isDisabled={isDisabled}
-          onClick={() => onMove('up')}
-          p={0}
-          size={{ base: 'xs', lg: 'sm' }}
-          variant="blue"
-        >
-          N
-        </Button>
-      </VStack>
-      <HStack justifyContent="space-between" spacing={10}>
-        <HStack spacing={1}>
-          <Icon
-            fill="none"
-            height={4}
-            viewBox="0 0 10 22"
-            width={2}
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M8.20899 1.09093L1.48862 10.7879L8.20898 20.4849"
-              stroke="#283570"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-            />
-          </Icon>
-
-          <Button
-            aria-label="Move west"
-            borderRadius="50%"
-            fontWeight={700}
-            isDisabled={isDisabled}
-            onClick={() => onMove('left')}
-            p={0}
-            size={{ base: 'xs', lg: 'sm' }}
-            variant="blue"
-          >
-            W
-          </Button>
-        </HStack>
-        <HStack spacing={1}>
-          <Button
-            aria-label="Move east"
-            borderRadius="50%"
-            fontWeight={700}
-            isDisabled={isDisabled}
-            onClick={() => onMove('right')}
-            p={0}
-            size={{ base: 'xs', lg: 'sm' }}
-            variant="blue"
-          >
-            E
-          </Button>
-          <Icon
-            fill="none"
-            height={4}
-            viewBox="0 0 10 22"
-            width={2}
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M1.79101 20.4848L8.51138 10.7878L1.79102 1.09082"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              stroke="#283570"
-            />
-          </Icon>
-        </HStack>
-      </HStack>
-      <VStack spacing={0}>
-        <Button
-          aria-label="Move south"
-          borderRadius="50%"
-          fontWeight={700}
-          isDisabled={isDisabled}
-          onClick={() => onMove('down')}
-          p={0}
-          size={{ base: 'xs', lg: 'sm' }}
-          variant="blue"
-        >
-          S
-        </Button>
-        <Icon
-          fill="none"
-          height={3}
-          viewBox="0 0 22 10"
-          width={4}
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M1.30332 1.51514L11.0003 8.2355L20.6973 1.51514"
-            stroke="#283570"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-          />
-        </Icon>
-      </VStack>
-    </VStack>
-  );
-};
+}): JSX.Element => (
+  <HStack spacing={1} mt={1}>
+    {ARROW_DIRECTIONS.map(({ label, direction, rotate }) => (
+      <IconButton
+        key={label}
+        aria-label={`Move ${label}`}
+        icon={
+          <Box transform={`rotate(${rotate})`} lineHeight={0}>
+            <CompassArrowSvg boxSize="16px" />
+          </Box>
+        }
+        isDisabled={isDisabled}
+        onClick={() => onMove(direction)}
+        h={7}
+        w={7}
+        minW={0}
+        variant="ghost"
+        size="xs"
+      />
+    ))}
+  </HStack>
+);

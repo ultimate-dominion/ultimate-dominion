@@ -8,15 +8,15 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { IoClose } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
 import { useWalletClient } from 'wagmi';
 
 import { useAuth } from '../contexts/AuthContext';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { shortenAddress } from '../utils/helpers';
-
-import { CopyText } from './CopyText';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH } from '../Routes';
 import { DelegationButton } from './DelegationButton';
 import { PolygonalCard } from './PolygonalCard';
 import { SignInModal } from './SignInModal';
@@ -28,29 +28,47 @@ export const ConnectWalletModal = ({
   isOpen: boolean;
   onClose: () => void;
 }): JSX.Element => {
+  const navigate = useNavigate();
   const { data: externalWalletClient } = useWalletClient();
   const { authMethod, isAuthenticated, ownerAddress } = useAuth();
   const { delegatorAddress } = useMUD();
+  const { character } = useCharacter();
 
-  // Auto-close when fully set up
+  // Track whether user explicitly chose the wallet path this modal session.
+  // Resets when modal closes so next open shows sign-in options again.
+  const [choseWallet, setChoseWallet] = useState(false);
+
+  const handleClose = useCallback(() => {
+    setChoseWallet(false);
+    onClose();
+  }, [onClose]);
+
+  // When user signs in via this modal, close and navigate
   useEffect(() => {
-    if (authMethod === 'embedded' && isAuthenticated) {
-      onClose();
-    }
-    if (authMethod === 'external' && delegatorAddress && isAuthenticated) {
-      onClose();
-    }
-  }, [authMethod, delegatorAddress, isAuthenticated, onClose]);
+    if (!isOpen) return;
 
-  // Not authenticated at all — show SignInModal
-  if (!isAuthenticated) {
-    return <SignInModal isOpen={isOpen} onClose={onClose} />;
+    const ready =
+      (authMethod === 'embedded' && isAuthenticated) ||
+      (authMethod === 'external' && delegatorAddress && isAuthenticated);
+
+    if (!ready) return;
+
+    handleClose();
+    navigate(character?.locked ? GAME_BOARD_PATH : CHARACTER_CREATION_PATH);
+  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isOpen, handleClose, navigate]);
+
+  // Show SignInModal if:
+  // - Not authenticated at all, OR
+  // - External wallet auto-connected but user hasn't explicitly chosen wallet path
+  //   (lets them pick Google instead of being forced into MetaMask delegation)
+  if (!isAuthenticated || (authMethod === 'external' && !delegatorAddress && !choseWallet)) {
+    return <SignInModal isOpen={isOpen} onClose={handleClose} onChooseWallet={() => setChoseWallet(true)} />;
   }
 
   // Embedded path — authenticated, auto-closing above
   if (authMethod === 'embedded') {
     return (
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={handleClose}>
         <ModalOverlay />
         <ModalContent>
           <PolygonalCard isModal />
@@ -70,26 +88,14 @@ export const ConnectWalletModal = ({
   const bodyContent = (() => {
     if (ownerAddress && externalWalletClient) {
       return (
-        <VStack spacing={10}>
-          <VStack fontWeight={500} spacing={4}>
-            <Text size="sm" textAlign="center">
-              Connected account:
-            </Text>
-            <CopyText text={ownerAddress}>
-              <Text fontWeight={700} textAlign="center">
-                {shortenAddress(ownerAddress)}
-              </Text>
-            </CopyText>
-            <Text size="sm" textAlign="center">
-              One more step to set up your game account.
-            </Text>
-            <Text size="sm" textAlign="center">
-              This lets you play without approving every action.
-            </Text>
-          </VStack>
+        <VStack spacing={6}>
+          <Text fontSize="sm" textAlign="center">
+            A small ETH deposit is needed to cover gameplay fees.
+            Your funds stay in your session and can be withdrawn anytime.
+          </Text>
           <DelegationButton
             externalWalletClient={externalWalletClient}
-            onClose={onClose}
+            onClose={handleClose}
           />
         </VStack>
       );
@@ -103,12 +109,12 @@ export const ConnectWalletModal = ({
   })();
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={handleClose}>
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader>
-          {delegatorAddress ? 'Delegated' : 'Set Up Game Account'}
+          {delegatorAddress ? 'Ready' : 'Secure Your Session'}
         </ModalHeader>
         <ModalCloseButton>
           <IoClose size={30} />

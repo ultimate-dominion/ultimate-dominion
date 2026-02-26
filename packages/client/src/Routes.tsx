@@ -2,38 +2,91 @@ import { Progress, Text, VStack } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { SyncStep } from '@latticexyz/store-sync';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import React, { Suspense } from 'react';
+import React, { Component, ReactNode, Suspense, useRef } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { useMUD } from './contexts/MUDContext';
 
+// Auto-reload on stale chunk after deploy. If a lazy import fails (old chunk
+// hash no longer exists), reload the page once to get fresh HTML with new hashes.
+function lazyWithReload<T extends React.ComponentType>(
+  factory: () => Promise<{ default: T }>,
+) {
+  return React.lazy(() =>
+    factory().catch(() => {
+      const reloaded = sessionStorage.getItem('chunk-reload');
+      if (!reloaded) {
+        sessionStorage.setItem('chunk-reload', '1');
+        window.location.reload();
+      }
+      // Clear flag on successful load so future deploys also get retried
+      sessionStorage.removeItem('chunk-reload');
+      return factory();
+    }),
+  );
+}
+
+// Error boundary that catches chunk load failures React.lazy can't recover from
+class ChunkErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch() {
+    const reloaded = sessionStorage.getItem('chunk-reload');
+    if (!reloaded) {
+      sessionStorage.setItem('chunk-reload', '1');
+      window.location.reload();
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <VStack justify="center" h="100%">
+          <Text>Updating... please refresh if this persists.</Text>
+        </VStack>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // Lazy-loaded page components — each gets its own chunk
-const CharacterPage = React.lazy(() =>
+const CharacterPage = lazyWithReload(() =>
   import('./pages/Character').then(m => ({ default: m.CharacterPage })),
 );
-const CharacterCreation = React.lazy(() =>
+const CharacterCreation = lazyWithReload(() =>
   import('./pages/CharacterCreation').then(m => ({ default: m.CharacterCreation })),
 );
-const GameBoard = React.lazy(() =>
+const GameBoard = lazyWithReload(() =>
   import('./pages/GameBoard').then(m => ({ default: m.GameBoard })),
 );
-const Leaderboard = React.lazy(() =>
+const Leaderboard = lazyWithReload(() =>
   import('./pages/Leaderboard').then(m => ({ default: m.Leaderboard })),
 );
-const Marketplace = React.lazy(() =>
+const Marketplace = lazyWithReload(() =>
   import('./pages/Marketplace').then(m => ({ default: m.Marketplace })),
 );
-const MarketplaceItem = React.lazy(() =>
+const MarketplaceItem = lazyWithReload(() =>
   import('./pages/MarketplaceItem').then(m => ({ default: m.MarketplaceItem })),
 );
-const Shop = React.lazy(() =>
+const Shop = lazyWithReload(() =>
   import('./pages/Shop').then(m => ({ default: m.Shop })),
 );
-const Welcome = React.lazy(() =>
+const Welcome = lazyWithReload(() =>
   import('./pages/Welcome').then(m => ({ default: m.Welcome })),
 );
-const Manifesto = React.lazy(() =>
+const Manifesto = lazyWithReload(() =>
   import('./pages/Manifesto').then(m => ({ default: m.Manifesto })),
+);
+const Guide = lazyWithReload(() =>
+  import('./pages/Guide').then(m => ({ default: m.Guide })),
+);
+const Tavern = lazyWithReload(() =>
+  import('./pages/Tavern').then(m => ({ default: m.Tavern })),
 );
 
 export const HOME_PATH = '/';
@@ -45,6 +98,8 @@ export const LEADERBOARD_PATH = '/leaderboard';
 export const MARKETPLACE_PATH = '/marketplace';
 export const ITEM_PATH = MARKETPLACE_PATH + '/items';
 export const SHOP_PATH = '/shops';
+export const GUIDE_PATH = '/guide';
+export const TAVERN_PATH = '/tavern';
 
 const RoutesFallback = () => (
   <VStack justify="center" h="100%">
@@ -60,7 +115,17 @@ const AppRoutes: React.FC = () => {
 
   const syncProgress = useComponentValue(SyncProgress, singletonEntity);
 
+  // "Sticky LIVE": once sync reaches LIVE (including cache restore), never
+  // show the loading bar again. Background delta sync may briefly set
+  // SyncProgress to non-LIVE while processing new blocks — that's fine,
+  // the UI already has usable data from the cache or initial sync.
+  const wasLive = useRef(false);
+  if (syncProgress?.step === SyncStep.LIVE) {
+    wasLive.current = true;
+  }
+
   if (
+    !wasLive.current &&
     syncProgress &&
     syncProgress.step !== SyncStep.LIVE &&
     syncProgress.percentage < 100 &&
@@ -78,19 +143,23 @@ const AppRoutes: React.FC = () => {
   }
 
   return (
-    <Suspense fallback={<RoutesFallback />}>
-      <Routes>
-        <Route path={HOME_PATH} element={<Welcome />} />
-        <Route path={MANIFESTO_PATH} element={<Manifesto />} />
-        <Route path={CHARACTER_CREATION_PATH} element={<CharacterCreation />} />
-        <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
-        <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
-        <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
-        <Route path={MARKETPLACE_PATH} element={<Marketplace />} />
-        <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />
-        <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />
-      </Routes>
-    </Suspense>
+    <ChunkErrorBoundary>
+      <Suspense fallback={<RoutesFallback />}>
+        <Routes>
+          <Route path={HOME_PATH} element={<Welcome />} />
+          <Route path={MANIFESTO_PATH} element={<Manifesto />} />
+          <Route path={CHARACTER_CREATION_PATH} element={<CharacterCreation />} />
+          <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
+          <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
+          <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
+          <Route path={MARKETPLACE_PATH} element={<Marketplace />} />
+          <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />
+          <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />
+          <Route path={GUIDE_PATH} element={<Guide />} />
+          <Route path={TAVERN_PATH} element={<Tavern />} />
+        </Routes>
+      </Suspense>
+    </ChunkErrorBoundary>
   );
 };
 

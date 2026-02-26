@@ -373,6 +373,7 @@ export default defineWorld({
       schema: {
         mobId: "bytes32",
         armor: "int256",
+        isElite: "bool",
         inventory: "uint256[]",
       },
     },
@@ -578,6 +579,13 @@ export default defineWorld({
         intModifier: "int256",
         resistanceStat: "ResistanceStat",
         strModifier: "int256",
+      },
+    },
+    StatusEffectTargeting: {
+      key: ["effectId"],
+      schema: {
+        effectId: "bytes32",
+        targetsSelf: "bool",
       },
     },
     StatusEffectValidity: {
@@ -915,6 +923,36 @@ export default defineWorld({
         name: "string",
         narrative: "string",
         hint: "string",
+      },
+    },
+    ///////////////////////////////////// ZONE CONQUEROR ///////////////////////////////////
+    // Tracks which characters completed a zone and when (ordered list)
+    ZoneCompletions: {
+      key: ["zoneId"],
+      schema: {
+        zoneId: "uint256",
+        completedCharacters: "bytes32[]",
+        completedTimestamps: "uint256[]",
+      },
+    },
+    // Per-character per-zone completion status (fast lookup)
+    CharacterZoneCompletion: {
+      key: ["characterId", "zoneId"],
+      schema: {
+        characterId: "bytes32",
+        zoneId: "uint256",
+        completed: "bool",
+        completedAt: "uint256",
+        rank: "uint256",
+      },
+    },
+    // Zone configuration (max level per zone, set by admin)
+    ZoneConfig: {
+      key: ["zoneId"],
+      schema: {
+        zoneId: "uint256",
+        maxLevel: "uint256",
+        badgeBase: "uint256",
       },
     },
   },

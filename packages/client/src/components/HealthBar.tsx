@@ -68,7 +68,7 @@ export const HealthBar = ({
           w={`${health}%`}
         />
         <Text
-          color="black"
+          color="#E8DCC8"
           fontWeight={500}
           position="absolute"
           left={3}

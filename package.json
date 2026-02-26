@@ -35,5 +35,10 @@
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@latticexyz/cli@2.2.23": "patches/@latticexyz__cli@2.2.23.patch"
+    }
   }
 }

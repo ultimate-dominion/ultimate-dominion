@@ -111,7 +111,7 @@ export const ShopAllowanceModal = ({
               </Button>
               {!isApprovingGold && (
                 <Tooltip
-                  bg="#070D2A"
+                  bg="#14120F"
                   hasArrow
                   label="This allows you to spend Gold on Shops without having to approve each transaction. It is a faster and smoother experience."
                   placement="top"

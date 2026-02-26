@@ -4,17 +4,18 @@ import {
   Button,
   Divider,
   HStack,
-  Link,
   Spinner,
   Text,
   Tooltip,
-  useBreakpointValue,
   VStack,
+  keyframes,
 } from '@chakra-ui/react';
+import { DARK_INSET_SHADOW } from '../utils/theme';
 import { useComponentValue } from '@latticexyz/react';
 import { Has, runQuery } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { GiTwoCoins } from 'react-icons/gi';
 import {
   IoIosArrowForward,
   IoMdInformationCircleOutline,
@@ -24,8 +25,16 @@ import { hexToBigInt } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
+
+const fadeSlideIn = keyframes`
+  0% { opacity: 0; transform: translateY(4px); }
+  20% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-2px); }
+`;
 
 import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
@@ -33,12 +42,22 @@ import { LeaderboardIconSvg, MarketplaceIconSvg } from './SVGs';
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
     components: { Levels },
   } = useMUD();
   const { character } = useCharacter();
 
+
+  const { delta: rankDelta, rank: goldRank } = useLeaderboardRank();
+
+  const [showDelta, setShowDelta] = useState(false);
+  useEffect(() => {
+    if (rankDelta !== 0) {
+      setShowDelta(true);
+      const timer = setTimeout(() => setShowDelta(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [rankDelta]);
 
   const maxLevelXpRequirement = useMemo(
     () =>
@@ -150,13 +169,13 @@ export const StatsPanel = (): JSX.Element => {
     <VStack spacing={0}>
       <HStack
         bgColor="blue500"
-        minH={{ base: '40px', md: '66px' }}
+        minH={{ base: '36px', md: '46px' }}
         px="20px"
         width="100%"
       >
         <HStack
           as="button"
-          color="white"
+          color="#E8DCC8"
           justifyContent="space-between"
           onClick={() => navigate(`/characters/${character.id}`)}
           spacing={4}
@@ -178,79 +197,68 @@ export const StatsPanel = (): JSX.Element => {
         </HStack>
       </HStack>
 
-      <VStack mt={4} spacing={0} w="100%">
+      <VStack mt={3} spacing={0} w="100%">
+        {/* HP bar */}
+        <Box px={2} py={1.5} w="100%">
+          <HStack justifyContent="space-between" mb={1}>
+            <Text fontWeight={700} size="sm">HP</Text>
+            <Text color="#8A7E6A" fontFamily="mono" fontWeight={700} size="sm">
+              {currentHpWithFloor.toString()}/{maxHp.toString()}
+            </Text>
+          </HStack>
+          <Box
+            bg="#14120F"
+            borderRadius="md"
+            boxShadow={DARK_INSET_SHADOW}
+            h="10px"
+            overflow="hidden"
+            w="100%"
+          >
+            <Box
+              bg={
+                Number(currentHpWithFloor) / Number(maxHp) > 0.6
+                  ? '#5A8A3E'
+                  : Number(currentHpWithFloor) / Number(maxHp) > 0.3
+                    ? '#C87A2A'
+                    : '#8B2020'
+              }
+              borderRadius="md"
+              h="100%"
+              transition="width 0.5s ease, background-color 0.5s ease"
+              w={`${(Number(currentHpWithFloor) / Number(maxHp)) * 100}%`}
+            />
+          </Box>
+        </Box>
+
+        {/* Stats — compact single row */}
         <HStack
-          fontWeight={700}
-          justifyContent="space-between"
+          justifyContent="center"
           px={2}
-          py={1}
+          py={1.5}
+          spacing={2}
           w="100%"
         >
-          <Text size="lg">HP</Text>
-          <Text color="grey500" fontFamily="mono" size="lg">
-            {currentHpWithFloor.toString()}/{maxHp.toString()}
+          <Text color="#8A7E6A" fontFamily="mono" size="sm">
+            AGI{' '}
+            <Text as="span" color="#E8DCC8" fontWeight={700}>
+              {(agility - expiredEffectModifications.agiModifier).toString()}
+            </Text>
+          </Text>
+          <Text color="#5A5040" size="sm">·</Text>
+          <Text color="#8A7E6A" fontFamily="mono" size="sm">
+            INT{' '}
+            <Text as="span" color="#E8DCC8" fontWeight={700}>
+              {(intelligence - expiredEffectModifications.intModifier).toString()}
+            </Text>
+          </Text>
+          <Text color="#5A5040" size="sm">·</Text>
+          <Text color="#8A7E6A" fontFamily="mono" size="sm">
+            STR{' '}
+            <Text as="span" color="#E8DCC8" fontWeight={700}>
+              {(strength - expiredEffectModifications.strModifier).toString()}
+            </Text>
           </Text>
         </HStack>
-        <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-          h="6px"
-          w="100%"
-        />
-        <HStack
-          fontWeight={700}
-          justifyContent="space-between"
-          px={2}
-          py={1}
-          w="100%"
-        >
-          <Text size="lg">AGI</Text>
-          <Text color="grey500" fontFamily="mono" size="lg">
-            {(agility - expiredEffectModifications.agiModifier).toString()}
-          </Text>
-        </HStack>
-        <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-          h="6px"
-          w="100%"
-        />
-        <HStack
-          fontWeight={700}
-          justifyContent="space-between"
-          px={2}
-          py={1}
-          w="100%"
-        >
-          <Text size="lg">INT</Text>
-          <Text color="grey500" fontFamily="mono" size="lg">
-            {(intelligence - expiredEffectModifications.intModifier).toString()}
-          </Text>
-        </HStack>
-        <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-          h="6px"
-          w="100%"
-        />
-        <HStack
-          fontWeight={700}
-          justifyContent="space-between"
-          px={2}
-          py={1}
-          w="100%"
-        >
-          <Text size="lg">STR</Text>
-          <Text color="grey500" fontFamily="mono" size="lg">
-            {(strength - expiredEffectModifications.strModifier).toString()}
-          </Text>
-        </HStack>
-        <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-          h="6px"
-          w="100%"
-        />
       </VStack>
 
       <Divider borderColor="grey300" mt={4} />
@@ -284,46 +292,49 @@ export const StatsPanel = (): JSX.Element => {
 
       <VStack mt={4} px={2} spacing={1} w="100%">
         <HStack justifyContent="space-between" w="100%">
-          <HStack>
-            <Text color="yellow" fontWeight={700} size="lg">
-              Gold
-            </Text>
-            <Tooltip
-              bg="#070D2A"
-              hasArrow
-              label="Your Gold balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit Gold into your Adventure Escrow, visit 0,0 on the map."
-              placement="top"
-              shouldWrapChildren
-            >
-              <IoMdInformationCircleOutline />
-            </Tooltip>
-          </HStack>
-          <Text color="yellow" fontFamily="mono" fontWeight={700} size="lg">
+          <Tooltip
+            hasArrow
+            label="Your Gold balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit Gold into your Adventure Escrow, visit 0,0 on the map."
+            placement="top"
+            shouldWrapChildren
+          >
+            <HStack spacing={1.5} cursor="default">
+              <GiTwoCoins color="#D4A54A" size={18} />
+              <Text color="yellow" fontWeight={700} size="lg">
+                Gold
+              </Text>
+            </HStack>
+          </Tooltip>
+          <Text
+            color="yellow"
+            fontFamily="mono"
+            fontWeight={700}
+            fontSize="xl"
+          >
             {etherToFixedNumber(
               externalGoldBalance + character.escrowGoldBalance,
             )}
           </Text>
         </HStack>
         <HStack justifyContent="space-between" w="100%" px={2}>
-          <Text size="md">Spendable</Text>
-          <Text fontFamily="mono" fontWeight={700} size="md">
+          <Text color="#6A6050" size="sm">Spendable</Text>
+          <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
             {etherToFixedNumber(externalGoldBalance)}
           </Text>
         </HStack>
         <HStack justifyContent="space-between" w="100%" px={2}>
           <HStack>
-            <Text size="md">Escrow</Text>
+            <Text color="#6A6050" size="sm">Escrow</Text>
             <Tooltip
-              bg="#070D2A"
               hasArrow
               label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
               placement="top"
               shouldWrapChildren
             >
-              <IoMdInformationCircleOutline />
+              <IoMdInformationCircleOutline size={12} />
             </Tooltip>
           </HStack>
-          <Text fontFamily="mono" fontWeight={700} size="md">
+          <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
             {etherToFixedNumber(character.escrowGoldBalance)}
           </Text>
         </HStack>
@@ -342,41 +353,69 @@ export const StatsPanel = (): JSX.Element => {
         </Button>
       )}
 
-      {isDesktop && (
-        <HStack
-          justifyContent="space-between"
-          m="0 auto"
-          maxWidth="250px"
-          pb={6}
-          pt={4}
-          w="100%"
+      <Divider borderColor="grey300" mt={4} />
+
+      <HStack
+        justifyContent="center"
+        gap={2}
+        pb={4}
+        pt={4}
+        px={2}
+        w="100%"
+      >
+        <Button
+          as={RouterLink}
+          flex={1}
+          leftIcon={<MarketplaceIconSvg size={3} theme="dark" />}
+          size="sm"
+          to={MARKETPLACE_PATH}
+          variant="dark"
         >
-          <Link
-            alignItems="center"
+          Marketplace
+        </Button>
+        <Box flex={1} position="relative">
+          <Button
             as={RouterLink}
-            display="flex"
-            fontSize={{ base: 'xs', sm: 'sm' }}
-            gap={1}
-            textDecoration="underline"
-            to={MARKETPLACE_PATH}
-          >
-            <MarketplaceIconSvg size={3} theme="dark" />
-            Marketplace
-          </Link>
-          <Link
-            alignItems="center"
-            as={RouterLink}
-            display="flex"
-            fontSize={{ base: 'xs', sm: 'sm' }}
-            gap={1}
-            textDecoration="underline"
+            leftIcon={<LeaderboardIconSvg size={3} theme="dark" />}
+            size="sm"
             to={LEADERBOARD_PATH}
+            variant="dark"
+            w="100%"
           >
-            <LeaderboardIconSvg size={3} theme="dark" />
             Leaderboard
-          </Link>
-        </HStack>
-      )}
+            {goldRank > 0 && (
+              <Text
+                as="span"
+                bg="rgba(212,165,74,0.2)"
+                borderRadius="sm"
+                color="yellow"
+                fontFamily="mono"
+                fontSize="2xs"
+                fontWeight={700}
+                ml={1.5}
+                px={1}
+              >
+                #{goldRank}
+              </Text>
+            )}
+          </Button>
+          {showDelta && rankDelta !== 0 && (
+            <Text
+              animation={`${fadeSlideIn} 5s ease-in-out forwards`}
+              color={rankDelta > 0 ? '#5A8A3E' : '#C84040'}
+              fontSize="2xs"
+              fontWeight={700}
+              left="50%"
+              position="absolute"
+              top="-14px"
+              transform="translateX(-50%)"
+              whiteSpace="nowrap"
+            >
+              {rankDelta > 0 ? '▲' : '▼'} {Math.abs(rankDelta)}
+            </Text>
+          )}
+        </Box>
+      </HStack>
     </VStack>
   );
 };

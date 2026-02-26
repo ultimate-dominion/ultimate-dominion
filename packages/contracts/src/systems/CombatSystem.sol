@@ -27,7 +27,9 @@ import {
     PhysicalDamageStats,
     PhysicalDamageStatsData,
     MagicDamageStats,
-    MagicDamageStatsData
+    MagicDamageStatsData,
+    StatusEffectStats,
+    StatusEffectTargeting
 } from "@codegen/index.sol";
 import {ResistanceStat, EffectType, ItemType} from "@codegen/common.sol";
 import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
@@ -402,7 +404,8 @@ contract CombatSystem is System {
             }
 
             if (hit) {
-                IWorld(_world()).UD__applyStatusEffect(defenderId, effectId);
+                bytes32 targetId = StatusEffectTargeting.getTargetsSelf(effectId) ? attackerId : defenderId;
+                IWorld(_world()).UD__applyStatusEffect(targetId, effectId);
             }
         }
     }

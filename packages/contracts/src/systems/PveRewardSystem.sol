@@ -12,13 +12,14 @@ import {
     CombatEncounter,
     CombatEncounterData,
     Mobs,
+    MobStats,
     EncounterEntity,
     AdventureEscrow
 } from "@codegen/index.sol";
 import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
 import {InvalidRewardState} from "../Errors.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
-import {BASE_GOLD_DROP, EXP_MODIFIER, MAX_LEVEL} from "../../constants.sol";
+import {BASE_GOLD_DROP, EXP_MODIFIER, MAX_LEVEL, ELITE_REWARD_MULTIPLIER, ELITE_DROP_BONUS} from "../../constants.sol";
 
 contract PveRewardSystem is System {
     function distributePveRewards(bytes32 encounterId, uint256 randomNumber)
@@ -55,7 +56,7 @@ contract PveRewardSystem is System {
                 : (distTemps.cumulativePlayerLevels - distTemps.defenderLevelTemp) <= 5;
             if (EncounterEntity.getDied(distTemps.monsterTemp) && correctLevelSpread) {
                 _baseExp += Stats.getExperience(distTemps.monsterTemp);
-                _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber);
+                _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber, distTemps.monsterTemp);
                 EncounterEntity.setEncounterId(distTemps.monsterTemp, bytes32(0));
 
                 bytes32 playerToDropTo = distTemps.players[randomNumber % distTemps.players.length];
@@ -101,10 +102,11 @@ contract PveRewardSystem is System {
         _expMultiplier = ((Math.sqrt(escrowBalance) * 1e8) / (EXP_MODIFIER)) + WAD;
     }
 
-    function _calculateGoldDrop(uint256 mobLevel, uint256 randomNumber) internal view returns (uint256 dropAmount) {
-        this;
+    function _calculateGoldDrop(uint256 mobLevel, uint256 randomNumber, bytes32 entityId) internal view returns (uint256 dropAmount) {
         if (mobLevel == 0) mobLevel = 1;
-        dropAmount = (randomNumber % (BASE_GOLD_DROP * mobLevel)) + 0.05 ether;
+        uint256 baseGold = BASE_GOLD_DROP;
+        if (MobStats.getIsElite(entityId)) baseGold = baseGold * ELITE_REWARD_MULTIPLIER / 100;
+        dropAmount = (randomNumber % (baseGold * mobLevel)) + 0.05 ether;
     }
 
     function _calculateItemDrop(uint256 randomNumber, bytes32 entityId, bytes32 characterId)
@@ -114,13 +116,17 @@ contract PveRewardSystem is System {
         uint256 mobId = IWorld(_world()).UD__getMobId(entityId);
         MonsterStats memory monsterStats = abi.decode(Mobs.getMobStats(mobId), (MonsterStats));
 
-        // Roll each item independently, then pick at most 1 winner
+        // Roll each item independently — all winners drop
+        bool _isElite = MobStats.getIsElite(entityId);
         uint256[] memory candidates = new uint256[](monsterStats.inventory.length);
         uint256 numCandidates;
         for (uint256 i; i < monsterStats.inventory.length; i++) {
             uint256 tempItemId = monsterStats.inventory[i];
             uint256 dropChance = Items.getDropChance(tempItemId);
-            // Each item gets its own independent roll (hash with index)
+            if (_isElite) {
+                dropChance = dropChance + ELITE_DROP_BONUS;
+                if (dropChance > 100) dropChance = 100;
+            }
             uint256 roll = uint256(keccak256(abi.encodePacked(randomNumber, i))) % 100;
             if (roll < dropChance) {
                 candidates[numCandidates] = tempItemId;
@@ -130,12 +136,12 @@ contract PveRewardSystem is System {
 
         if (numCandidates == 0) return new uint256[](0);
 
-        // Pick one random winner from candidates
-        uint256 winnerId = candidates[randomNumber % numCandidates];
-        IWorld(_world()).UD__dropItem(characterId, winnerId, 1);
-
-        uint256[] memory result = new uint256[](1);
-        result[0] = winnerId;
+        // Drop all items that passed their roll
+        uint256[] memory result = new uint256[](numCandidates);
+        for (uint256 i; i < numCandidates; i++) {
+            IWorld(_world()).UD__dropItem(characterId, candidates[i], 1);
+            result[i] = candidates[i];
+        }
         return result;
     }
 }

@@ -25,9 +25,6 @@ extra_output_files = ["abi", "evm.bytecode"]
 fs_permissions = [{ access = "read-write", path = "./" }]
 libs = ["node_modules", "lib"]
 
-[profile.base-sepolia]
-eth_rpc_url = "https://base-sepolia-rpc.publicnode.com"
-
 [profile.base-mainnet]
 eth_rpc_url = "https://mainnet.base.org"
 

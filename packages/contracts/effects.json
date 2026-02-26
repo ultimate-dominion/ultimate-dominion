@@ -69,15 +69,15 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 0,
-        "targetsSelf": false
+        "strModifier": 0
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 600,
         "validTurns": 0
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000",
@@ -89,15 +89,15 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 0,
-        "targetsSelf": false
+        "strModifier": 0
       },
       "validity": {
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 8
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0xe4d5d6c80f689bee000000000000000000000000000000000000000000000000",
@@ -109,15 +109,15 @@
         "hpModifier": 0,
         "intModifier": -5,
         "resistanceStat": 0,
-        "strModifier": 8,
-        "targetsSelf": false
+        "strModifier": 8
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 600,
         "validTurns": 0
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0x54d076d5607dc751000000000000000000000000000000000000000000000000",
@@ -129,15 +129,15 @@
         "hpModifier": 0,
         "intModifier": 5,
         "resistanceStat": 0,
-        "strModifier": 0,
-        "targetsSelf": false
+        "strModifier": 0
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 600,
         "validTurns": 0
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000",
@@ -149,15 +149,15 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 0,
-        "targetsSelf": false
+        "strModifier": 0
       },
       "validity": {
         "cooldown": 2,
         "maxStacks": 2,
         "validTime": 0,
         "validTurns": 8
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0x5b73694f86a16512000000000000000000000000000000000000000000000000",
@@ -169,15 +169,15 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 5,
-        "targetsSelf": false
+        "strModifier": 5
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 600,
         "validTurns": 0
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0x54a7e38986f19669000000000000000000000000000000000000000000000000",
@@ -189,15 +189,15 @@
         "hpModifier": 0,
         "intModifier": -8,
         "resistanceStat": 0,
-        "strModifier": 0,
-        "targetsSelf": false
+        "strModifier": 0
       },
       "validity": {
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 8
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0x98562f2b32aeb98f000000000000000000000000000000000000000000000000",
@@ -209,15 +209,15 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": -8,
-        "targetsSelf": false
+        "strModifier": -8
       },
       "validity": {
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 8
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0x9aad548eddd4a76c000000000000000000000000000000000000000000000000",
@@ -229,15 +229,15 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 4,
-        "targetsSelf": true
+        "strModifier": 4
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 3
-      }
+      },
+      "targetsSelf": true
     },
     {
       "effectId": "0xf69d7422b50eefa3000000000000000000000000000000000000000000000000",
@@ -249,15 +249,15 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 3,
-        "targetsSelf": true
+        "strModifier": 3
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 3
-      }
+      },
+      "targetsSelf": true
     },
     {
       "effectId": "0x243e6a3580c7821c000000000000000000000000000000000000000000000000",
@@ -269,15 +269,15 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 2,
-        "strModifier": 0,
-        "targetsSelf": false
+        "strModifier": 0
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 4
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0x22d77b1601b6e5c5000000000000000000000000000000000000000000000000",
@@ -289,15 +289,15 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
-        "strModifier": 0,
-        "targetsSelf": true
+        "strModifier": 0
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 2
-      }
+      },
+      "targetsSelf": true
     },
     {
       "effectId": "0x284e0e9eec85ca2d000000000000000000000000000000000000000000000000",
@@ -309,15 +309,15 @@
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 2,
-        "strModifier": -3,
-        "targetsSelf": false
+        "strModifier": -3
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 3
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0xa72795e8555f90e1000000000000000000000000000000000000000000000000",
@@ -329,15 +329,15 @@
         "hpModifier": 0,
         "intModifier": -3,
         "resistanceStat": 3,
-        "strModifier": -3,
-        "targetsSelf": false
+        "strModifier": -3
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 3
-      }
+      },
+      "targetsSelf": false
     },
     {
       "effectId": "0xd5547c9c5217a7bc000000000000000000000000000000000000000000000000",
@@ -349,15 +349,15 @@
         "hpModifier": 5,
         "intModifier": 3,
         "resistanceStat": 0,
-        "strModifier": 0,
-        "targetsSelf": true
+        "strModifier": 0
       },
       "validity": {
         "cooldown": 0,
         "maxStacks": 1,
         "validTime": 0,
         "validTurns": 3
-      }
+      },
+      "targetsSelf": true
     }
   ]
 }

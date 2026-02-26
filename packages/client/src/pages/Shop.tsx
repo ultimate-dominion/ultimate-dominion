@@ -33,7 +33,7 @@ import {
 export const Shop = (): JSX.Element => {
   const { shopId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const { delegatorAddress, isSynced } = useMUD();
   const {
@@ -94,6 +94,8 @@ export const Shop = (): JSX.Element => {
   // Redirect to home if synced, but missing other requirements
   // Redirect to game board if character is not in the shop
   useEffect(() => {
+    if (isConnecting) return;
+
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
@@ -119,6 +121,7 @@ export const Shop = (): JSX.Element => {
   }, [
     delegatorAddress,
     isConnected,
+    isConnecting,
     isRefreshing,
     isSynced,
     navigate,
@@ -209,7 +212,7 @@ export const Shop = (): JSX.Element => {
       <Helmet>
         <title>Shop | Ultimate Dominion</title>
       </Helmet>
-      <HStack bgColor="#1A244E" color="white" h="68px" px={6}>
+      <HStack bgColor="#1C1814" color="#E8DCC8" h="68px" px={6}>
         <ShopSvg />
         <Heading size={{ base: 'sm', md: 'md' }}>{shop.name}</Heading>
         <Spacer />
@@ -225,8 +228,8 @@ export const Shop = (): JSX.Element => {
         templateColumns={{ base: 'repeat(1, 1fr)', xl: 'repeat(2, 1fr)' }}
       >
         <GridItem>
-          <HStack bgColor="#1A244E" h="68px" px={6}>
-            <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+          <HStack bgColor="#1C1814" h="68px" px={6}>
+            <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
               My Inventory
             </Heading>
             <Spacer />
@@ -254,8 +257,8 @@ export const Shop = (): JSX.Element => {
           </PolygonalCard>
         </GridItem>
         <GridItem>
-          <HStack bgColor="#1A244E" h="68px" px={6}>
-            <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+          <HStack bgColor="#1C1814" h="68px" px={6}>
+            <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
               Shopkeeper&apos;s Inventory
             </Heading>
             <Spacer />

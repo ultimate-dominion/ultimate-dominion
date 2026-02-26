@@ -7,12 +7,15 @@ import {
     Stats,
     Characters,
     CharactersData,
-    StatsData
+    StatsData,
+    ZoneCompletions,
+    CharacterZoneCompletion,
+    ZoneConfig
 } from "@codegen/index.sol";
 import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
-import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGES_NAMESPACE} from "../../../constants.sol";
+import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGES_NAMESPACE, MAX_ZONE_CONQUEROR_BADGES, ZONE_DARK_CAVE} from "../../../constants.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {_requireAccess} from "../../utils.sol";
@@ -158,6 +161,9 @@ contract LevelSystem is System {
             _mintAdventurerBadge(characterId);
         }
 
+        // Check for zone completion (Zone Conqueror badge)
+        _checkZoneCompletion(characterId, newLevel);
+
         emit CharacterLeveledUp(characterId, currentStats.level, currentStats.experience);
     }
 
@@ -200,6 +206,61 @@ contract LevelSystem is System {
             levelsTable[i] = Levels.get(i);
         }
         return StatCalculator.calculateLevelFromExperience(experience, levelsTable);
+    }
+
+    /**
+     * @dev Checks if a character has completed any zone and records it
+     * @param characterId The character to check
+     * @param newLevel The level just attained
+     */
+    function _checkZoneCompletion(bytes32 characterId, uint256 newLevel) internal {
+        // Check each configured zone (currently just Dark Cave)
+        uint256[] memory zoneIds = new uint256[](1);
+        zoneIds[0] = ZONE_DARK_CAVE;
+
+        for (uint256 i = 0; i < zoneIds.length; i++) {
+            uint256 zoneId = zoneIds[i];
+            uint256 maxLevel = ZoneConfig.getMaxLevel(zoneId);
+            if (maxLevel == 0) continue; // Zone not configured
+
+            if (newLevel < maxLevel) continue;
+
+            // Check if already completed
+            if (CharacterZoneCompletion.getCompleted(characterId, zoneId)) continue;
+
+            // Record completion
+            bytes32[] memory completed = ZoneCompletions.getCompletedCharacters(zoneId);
+            uint256 rank = completed.length + 1;
+
+            ZoneCompletions.pushCompletedCharacters(zoneId, characterId);
+            ZoneCompletions.pushCompletedTimestamps(zoneId, block.timestamp);
+
+            CharacterZoneCompletion.set(characterId, zoneId, true, block.timestamp, rank);
+
+            // Mint badge if within top N
+            if (rank <= MAX_ZONE_CONQUEROR_BADGES) {
+                _mintZoneConquerorBadge(characterId, zoneId);
+            }
+        }
+    }
+
+    /**
+     * @dev Mints a Zone Conqueror badge to a character's owner
+     * @param characterId The character that completed the zone
+     * @param zoneId The zone that was completed
+     */
+    function _mintZoneConquerorBadge(bytes32 characterId, uint256 zoneId) internal {
+        address badgeToken = UltimateDominionConfig.getBadgeToken();
+        if (badgeToken == address(0)) return;
+
+        address owner = Characters.getOwner(characterId);
+        uint256 tokenId = Characters.getTokenId(characterId);
+
+        // Badge ID: (badgeBase * 1_000_000) + tokenId
+        uint256 badgeBase = ZoneConfig.getBadgeBase(zoneId);
+        uint256 badgeId = (badgeBase * 1_000_000) + tokenId;
+
+        IERC721Mintable(badgeToken).mint(owner, badgeId);
     }
 
     /**

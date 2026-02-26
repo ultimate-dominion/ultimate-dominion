@@ -33,8 +33,8 @@
         "function adminApplyStatusEffect(bytes32 entityId, bytes32 statusEffectId)",
         "function adminClearEncounterState(bytes32 entityId)",
         "function adminCreateEffect(uint8 effectType, string name, bytes effectStats) returns (bytes32)",
-        "function adminCreateItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, bytes stats, string itemMetadataURI) returns (uint256)",
-        "function adminCreateItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, bytes[] stats, string[] itemMetadataURIs)",
+        "function adminCreateItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)",
+        "function adminCreateItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, uint256[] rarities, bytes[] stats, string[] itemMetadataURIs)",
         "function adminCreateMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)",
         "function adminCreateMobs(uint8[] mobTypes, bytes[] stats, string[] mobMetadataURIs)",
         "function adminDropGold(bytes32 characterId, uint256 goldAmount)",
@@ -55,8 +55,8 @@
         "function UD__adminApplyStatusEffect(bytes32 entityId, bytes32 statusEffectId)",
         "function UD__adminClearEncounterState(bytes32 entityId)",
         "function UD__adminCreateEffect(uint8 effectType, string name, bytes effectStats) returns (bytes32)",
-        "function UD__adminCreateItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, bytes stats, string itemMetadataURI) returns (uint256)",
-        "function UD__adminCreateItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, bytes[] stats, string[] itemMetadataURIs)",
+        "function UD__adminCreateItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)",
+        "function UD__adminCreateItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, uint256[] rarities, bytes[] stats, string[] itemMetadataURIs)",
         "function UD__adminCreateMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)",
         "function UD__adminCreateMobs(uint8[] mobTypes, bytes[] stats, string[] mobMetadataURIs)",
         "function UD__adminDropGold(bytes32 characterId, uint256 goldAmount)",
@@ -375,8 +375,8 @@
       "abi": [
         "error ArrayMismatch()",
         "error NoSupply()",
-        "function createItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, bytes stats, string itemMetadataURI) returns (uint256)",
-        "function createItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, bytes[] stats, string[] itemMetadataURIs)",
+        "function createItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)",
+        "function createItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, uint256[] rarities, bytes[] stats, string[] itemMetadataURIs)",
         "function getCurrentItemsCounter() view returns (uint256)",
         "function resupplyLootManager(uint256 itemId, uint256 newSupply)",
         "function setTokenUri(uint256 tokenId, string tokenUri)"
@@ -384,8 +384,8 @@
       "worldAbi": [
         "error ArrayMismatch()",
         "error NoSupply()",
-        "function UD__createItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, bytes stats, string itemMetadataURI) returns (uint256)",
-        "function UD__createItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, bytes[] stats, string[] itemMetadataURIs)",
+        "function UD__createItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)",
+        "function UD__createItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, uint256[] rarities, bytes[] stats, string[] itemMetadataURIs)",
         "function UD__getCurrentItemsCounter() view returns (uint256)",
         "function UD__resupplyLootManager(uint256 itemId, uint256 newSupply)",
         "function UD__setTokenUri(uint256 tokenId, string tokenUri)"
@@ -1152,5 +1152,5 @@
       ]
     }
   ],
-  "createdAt": 1772023183082
+  "createdAt": 1772139357501
 }

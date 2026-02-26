@@ -143,8 +143,7 @@ All at version 2.0.11:
 | Chain | ID | Environment |
 |-------|-----|-------------|
 | Anvil | 31337 | Local development |
-| Base Sepolia | 84532 | Testnet |
-| Base | 8453 | Mainnet (launch target) |
+| Base | 8453 | Mainnet (production + beta, different world addresses) |
 
 ---
 

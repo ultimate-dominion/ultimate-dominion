@@ -187,24 +187,13 @@ contract PvESystem is System {
     }
 
     function _setCharacterSpawns(CombatEncounterData memory encounterData) internal {
-        bytes32 tempEntId;
-        for (uint256 i; i < encounterData.attackers.length; i++) {
-            tempEntId = encounterData.attackers[i];
-            if (IWorld(_world()).UD__isValidCharacterId(tempEntId) && IWorld(_world()).UD__getDied(tempEntId)) {
-                _setSpawned(tempEntId, false);
+        bytes32[] memory players = encounterData.attackersAreMobs
+            ? encounterData.defenders
+            : encounterData.attackers;
+        for (uint256 i; i < players.length; i++) {
+            if (IWorld(_world()).UD__getDied(players[i])) {
+                Spawned.set(players[i], false);
             }
-        }
-        for (uint256 i; i < encounterData.defenders.length; i++) {
-            tempEntId = encounterData.defenders[i];
-            if (IWorld(_world()).UD__isValidCharacterId(tempEntId) && IWorld(_world()).UD__getDied(tempEntId)) {
-                _setSpawned(tempEntId, false);
-            }
-        }
-    }
-
-    function _setSpawned(bytes32 entityId, bool spawned) internal {
-        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
-            Spawned.set(entityId, spawned);
         }
     }
 

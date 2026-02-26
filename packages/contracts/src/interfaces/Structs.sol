@@ -89,6 +89,7 @@ struct StatusEffectTemplate {
     bytes32 effectId;
     string name;
     StatusEffectStatsData stats;
+    bool targetsSelf;
     StatusEffectValidityData validity;
 }
 

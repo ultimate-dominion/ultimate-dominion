@@ -19,7 +19,7 @@ config();
 
 import { createPublicClient, createWalletClient, http, parseAbi, encodeAbiParameters, Hex, Address, Chain } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { foundry, baseSepolia } from 'viem/chains';
+import { foundry, base } from 'viem/chains';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -409,7 +409,9 @@ async function main() {
 
   // Detect chain from RPC URL
   const knownChains: Record<string, Chain> = {
-    'base-sepolia': baseSepolia,
+    'base.drpc.org': base,
+    'mainnet.base.org': base,
+    'base-rpc.publicnode.com': base,
     'localhost': foundry,
     '127.0.0.1': foundry,
   };

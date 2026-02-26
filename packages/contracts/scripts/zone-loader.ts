@@ -23,7 +23,7 @@ config();
 
 import { createPublicClient, createWalletClient, http, parseAbi, encodeAbiParameters, Hex, Address } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { foundry, baseSepolia, base } from 'viem/chains';
+import { foundry, base } from 'viem/chains';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -184,6 +184,7 @@ interface MonsterStats {
   hitPoints: number;
   intelligence: number;
   inventory: number[];
+  inventoryNames?: string[];
   level: number;
   strength: number;
 }
@@ -324,6 +325,7 @@ function encodeStatusEffectStats(effect: StatusEffect): Hex {
         { name: 'validTime', type: 'uint256' },
         { name: 'validTurns', type: 'uint256' },
       ]},
+      { name: 'targetsSelf', type: 'bool' },
     ],
     [
       {
@@ -341,6 +343,7 @@ function encodeStatusEffectStats(effect: StatusEffect): Hex {
         validTime: BigInt(effect.validity.validTime),
         validTurns: BigInt(effect.validity.validTurns),
       },
+      (effect as any).targetsSelf ?? false,
     ]
   );
 }
@@ -620,7 +623,7 @@ Available zones:
 
   // Select chain based on CHAIN_ID env var
   const chainId = parseInt(process.env.CHAIN_ID || '31337');
-  const chain = chainId === 84532 ? baseSepolia : chainId === 8453 ? base : foundry;
+  const chain = chainId === 8453 ? base : foundry;
 
   // Create clients
   const publicClient = createPublicClient({
@@ -885,8 +888,25 @@ Available zones:
 
       for (const monster of monsters.monsters) {
         console.log(`  Monster: ${monster.name} (Lvl ${monster.stats.level})`);
+
+        // Resolve inventoryNames to numeric IDs using itemIdsByName
+        const resolvedStats = { ...monster.stats };
+        if (monster.stats.inventoryNames && monster.stats.inventoryNames.length > 0) {
+          const resolvedIds: number[] = [];
+          for (const itemName of monster.stats.inventoryNames) {
+            const itemId = itemIdsByName.get(itemName);
+            if (itemId !== undefined) {
+              resolvedIds.push(Number(itemId));
+            } else {
+              console.warn(`    Warning: Item "${itemName}" not found for monster ${monster.name}, skipping`);
+            }
+          }
+          resolvedStats.inventory = resolvedIds;
+          console.log(`    Resolved ${resolvedIds.length}/${monster.stats.inventoryNames.length} inventory items`);
+        }
+
         if (!dryRun && walletClient) {
-          const stats = encodeMonsterStats(monster.stats);
+          const stats = encodeMonsterStats(resolvedStats);
           await sendTx({
             address: worldAddress,
             abi: worldAbi,

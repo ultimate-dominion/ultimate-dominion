@@ -23,12 +23,11 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
+import { useComponentValue, useEntityQuery } from '@latticexyz/react';
 import {
   Entity,
   getComponentValueStrict,
   Has,
-  runQuery,
 } from '@latticexyz/recs';
 import { decodeEntity, encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -133,7 +132,7 @@ const CharacterCreationInner = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const chainId = DEFAULT_CHAIN_ID;
   const {
     components,
@@ -166,9 +165,8 @@ const CharacterCreationInner = (): JSX.Element => {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  // Available starter items (weapons and armors in the starter pool)
-  const [availableStarterWeapons, setAvailableStarterWeapons] = useState<Weapon[]>([]);
-  const [availableStarterArmors, setAvailableStarterArmors] = useState<Armor[]>([]);
+  // Reactive query: re-renders when StarterItemPool records arrive via RECS sync
+  const starterPoolEntities = useEntityQuery(StarterItemPool ? [Has(StarterItemPool)] : []);
 
   // Implicit class system state
   const [selectedRace, setSelectedRace] = useState<Race>(Race.None);
@@ -217,14 +215,12 @@ const CharacterCreationInner = (): JSX.Element => {
     setShowError(false);
   }, [avatar, description, name]);
 
-  // Load available starter items from StarterItemPool
-  useEffect(() => {
-    if (!isSynced || isLoadingItemTemplates || !StarterItemPool) {
-      return;
+  // Derive starter items reactively from RECS query (re-computes when records arrive)
+  const { availableStarterWeapons, availableStarterArmors } = useMemo(() => {
+    console.info('[StarterItems] StarterItemPool:', !!StarterItemPool, 'isLoadingTemplates:', isLoadingItemTemplates, 'entities:', starterPoolEntities.length, 'weapons:', weaponTemplates.length, 'armors:', armorTemplates.length);
+    if (!StarterItemPool || isLoadingItemTemplates) {
+      return { availableStarterWeapons: [] as Weapon[], availableStarterArmors: [] as Armor[] };
     }
-
-    // Query StarterItemPool for items that are starters
-    const starterPoolEntities = Array.from(runQuery([Has(StarterItemPool)]));
 
     const starterWeapons: Weapon[] = [];
     const starterArmors: Armor[] = [];
@@ -233,11 +229,10 @@ const CharacterCreationInner = (): JSX.Element => {
       const poolData = getComponentValueStrict(StarterItemPool, entity);
       if (!poolData.isStarter) return;
 
-      // The itemId is encoded in the entity (it's the table key)
       const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
       const itemIdStr = itemId.toString();
+      console.info('[StarterItems] Checking itemId:', itemIdStr, 'weaponMatch:', weaponTemplates.some(w => w.tokenId === itemIdStr), 'armorMatch:', armorTemplates.some(a => a.tokenId === itemIdStr));
 
-      // Check if it's a weapon
       const weapon = weaponTemplates.find(w => w.tokenId === itemIdStr);
       if (weapon) {
         starterWeapons.push({
@@ -249,7 +244,6 @@ const CharacterCreationInner = (): JSX.Element => {
         return;
       }
 
-      // Check if it's an armor
       const armor = armorTemplates.find(a => a.tokenId === itemIdStr);
       if (armor) {
         starterArmors.push({
@@ -261,13 +255,12 @@ const CharacterCreationInner = (): JSX.Element => {
       }
     });
 
-    setAvailableStarterWeapons(starterWeapons);
-    setAvailableStarterArmors(starterArmors);
+    return { availableStarterWeapons: starterWeapons, availableStarterArmors: starterArmors };
   }, [
+    StarterItemPool,
     armorTemplates,
     isLoadingItemTemplates,
-    isSynced,
-    StarterItemPool,
+    starterPoolEntities,
     weaponTemplates,
   ]);
 
@@ -463,7 +456,6 @@ const CharacterCreationInner = (): JSX.Element => {
     if (!character) return;
 
     if (!rolledOnce) {
-      setShowError(true);
       return;
     }
 
@@ -513,6 +505,8 @@ const CharacterCreationInner = (): JSX.Element => {
   }, [character, rolledOnce]);
 
   useEffect(() => {
+    if (isConnecting) return;
+
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
@@ -544,6 +538,7 @@ const CharacterCreationInner = (): JSX.Element => {
     character,
     delegatorAddress,
     isConnected,
+    isConnecting,
     isSynced,
     navigate,
     rolledOnce,
@@ -561,7 +556,7 @@ const CharacterCreationInner = (): JSX.Element => {
         border="4px solid"
         borderColor="grey300"
         borderRadius="50%"
-        boxShadow="-10px -10px 20px 0px #A2A9B0 inset, 10px 10px 20px 0px #54545440 inset, 5px 5px 10px 0px #88919980 inset, -5px -5px 10px 0px #54545440 inset"
+        boxShadow="2px 2px 6px rgba(0,0,0,0.5) inset, -1px -1px 3px rgba(60,50,40,0.15) inset"
         p={1.5}
       >
         <Avatar
@@ -596,7 +591,7 @@ const CharacterCreationInner = (): JSX.Element => {
       <Helmet>
         <title>Create Character | Ultimate Dominion</title>
       </Helmet>
-      {character && characterToken ? (
+      {character ? (
         <PolygonalCard
           clipPath="none"
           h="initial"
@@ -607,53 +602,55 @@ const CharacterCreationInner = (): JSX.Element => {
             <Center>
               <Avatar size={{ base: 'lg', sm: 'xl' }} src={character.image} />
             </Center>
-            <Accordion allowToggle w="100%">
-              <AccordionItem border="none">
-                <AccordionButton justifyContent="center" px={0}>
-                  <Text fontSize="xs" color="grey400">Advanced Details</Text>
-                  <AccordionIcon ml={1} />
-                </AccordionButton>
-                <AccordionPanel pb={2}>
-                  <HStack spacing={4} justifyContent="center">
-                    <Text fontSize={{ base: 'xs', md: 'sm' }}>
-                      Address:{' '}
-                      {chainId && EXPLORER_URLS[chainId] ? (
-                        <Link
-                          color="blue"
-                          fontWeight={700}
-                          href={`${EXPLORER_URLS[chainId]}/token/${characterToken}`}
-                          isExternal
-                        >
-                          {shortenAddress(characterToken)}
-                        </Link>
-                      ) : (
-                        <Text as="span" fontWeight={700}>
-                          {shortenAddress(characterToken)}
-                        </Text>
-                      )}
-                    </Text>
-                    <Text>|</Text>
-                    <Text fontSize={{ base: 'xs', md: 'sm' }}>
-                      Character ID:{' '}
-                      {chainId && EXPLORER_URLS[chainId] ? (
-                        <Link
-                          color="blue"
-                          fontWeight={700}
-                          href={`${EXPLORER_URLS[chainId]}/token/${characterToken}/instance/${character.tokenId}`}
-                          isExternal
-                        >
-                          {character.tokenId.toString()}
-                        </Link>
-                      ) : (
-                        <Text as="span" fontWeight={700}>
-                          {character.tokenId.toString()}
-                        </Text>
-                      )}
-                    </Text>
-                  </HStack>
-                </AccordionPanel>
-              </AccordionItem>
-            </Accordion>
+            {!!characterToken && (
+              <Accordion allowToggle w="100%">
+                <AccordionItem border="none">
+                  <AccordionButton justifyContent="center" px={0}>
+                    <Text fontSize="xs" color="grey400">Advanced Details</Text>
+                    <AccordionIcon ml={1} />
+                  </AccordionButton>
+                  <AccordionPanel pb={2}>
+                    <HStack spacing={4} justifyContent="center">
+                      <Text fontSize={{ base: 'xs', md: 'sm' }}>
+                        Address:{' '}
+                        {chainId && EXPLORER_URLS[chainId] ? (
+                          <Link
+                            color="blue"
+                            fontWeight={700}
+                            href={`${EXPLORER_URLS[chainId]}/token/${characterToken}`}
+                            isExternal
+                          >
+                            {shortenAddress(characterToken)}
+                          </Link>
+                        ) : (
+                          <Text as="span" fontWeight={700}>
+                            {shortenAddress(characterToken)}
+                          </Text>
+                        )}
+                      </Text>
+                      <Text>|</Text>
+                      <Text fontSize={{ base: 'xs', md: 'sm' }}>
+                        Character ID:{' '}
+                        {chainId && EXPLORER_URLS[chainId] ? (
+                          <Link
+                            color="blue"
+                            fontWeight={700}
+                            href={`${EXPLORER_URLS[chainId]}/token/${characterToken}/instance/${character.tokenId}`}
+                            isExternal
+                          >
+                            {character.tokenId.toString()}
+                          </Link>
+                        ) : (
+                          <Text as="span" fontWeight={700}>
+                            {character.tokenId.toString()}
+                          </Text>
+                        )}
+                      </Text>
+                    </HStack>
+                  </AccordionPanel>
+                </AccordionItem>
+              </Accordion>
+            )}
             <VStack>
               <Heading>{character.name}</Heading>
               <Text textAlign="center">{character.description}</Text>
@@ -818,9 +815,9 @@ const CharacterCreationInner = (): JSX.Element => {
                       {isCompleted ? '\u2713' : index + 1}
                     </Box>
                     <Text
-                      fontSize="2xs"
+                      fontSize="xs"
                       fontWeight={isCurrent ? 700 : 400}
-                      color={isCompleted ? 'green' : isCurrent ? 'blue400' : 'grey500'}
+                      color={isCompleted ? 'green' : isCurrent ? 'blue400' : '#9A9080'}
                       mt={0.5}
                     >
                       {label}
@@ -844,7 +841,7 @@ const CharacterCreationInner = (): JSX.Element => {
               <Heading px={{ base: 4, sm: 10 }} size="sm" textAlign="left">
                 Step 1: Choose Your Race
               </Heading>
-              <Text px={{ base: 4, sm: 10 }} fontSize="sm" color="grey500">
+              <Text px={{ base: 4, sm: 10 }} fontSize="md" color="#C4B89E">
                 Your race determines your innate abilities and stat bonuses.
               </Text>
               <ButtonGroup
@@ -856,7 +853,7 @@ const CharacterCreationInner = (): JSX.Element => {
                 {[Race.Human, Race.Elf, Race.Dwarf].map((race) => (
                   <Tooltip
                     key={race}
-                    bg="#070D2A"
+                    bg="#14120F"
                     label={RACE_INFO[race].description}
                     placement="top"
                   >
@@ -886,7 +883,7 @@ const CharacterCreationInner = (): JSX.Element => {
               <Heading px={{ base: 4, sm: 10 }} size="sm" textAlign="left">
                 Step 2: Choose Your Power Source
               </Heading>
-              <Text px={{ base: 4, sm: 10 }} fontSize="sm" color="grey500">
+              <Text px={{ base: 4, sm: 10 }} fontSize="md" color="#C4B89E">
                 Your power source shapes how you channel your abilities.
               </Text>
               <ButtonGroup
@@ -898,7 +895,7 @@ const CharacterCreationInner = (): JSX.Element => {
                 {[PowerSource.Divine, PowerSource.Weave, PowerSource.Physical].map((ps) => (
                   <Tooltip
                     key={ps}
-                    bg="#070D2A"
+                    bg="#14120F"
                     label={POWER_SOURCE_INFO[ps].description}
                     placement="top"
                   >
@@ -929,21 +926,35 @@ const CharacterCreationInner = (): JSX.Element => {
                 Step 3: Roll Your Stats
               </Heading>
               <VStack px={{ base: 4, sm: 10 }} spacing={1} alignItems="flex-start">
-                <Text fontSize="sm" color="grey500">
+                <Text fontSize="md" color="#C4B89E">
                   Race: <Text as="span" fontWeight={700}>{RACE_INFO[selectedRace]?.name ?? 'None'}</Text>
                 </Text>
-                <Text fontSize="sm" color="grey500">
+                <Text fontSize="md" color="#C4B89E">
                   Power: <Text as="span" fontWeight={700}>{POWER_SOURCE_INFO[selectedPowerSource]?.name ?? 'None'}</Text>
                 </Text>
               </VStack>
               {dominantStat && (
                 <Box px={{ base: 4, sm: 10 }} py={2} bg="grey100" borderRadius="md">
-                  <Text fontSize="sm" fontWeight={700} color="grey600">
+                  <Text fontSize="md" fontWeight={700} color="#C4B89E">
                     At Level 10, you can choose any advanced class!
                   </Text>
-                  <Text fontSize="xs" color="grey500">
+                  <Text fontSize="sm" color="#9A9080">
                     Current build: {dominantStat}-dominant
                   </Text>
+                </Box>
+              )}
+              {!rolledOnce && (
+                <Box px={{ base: 4, sm: 10 }} w="100%">
+                  <Button
+                    isDisabled={isDisabled || !hasCompletedChoices}
+                    isLoading={rollStatsTx.isLoading}
+                    loadingText="Rolling..."
+                    onClick={onRollStats}
+                    size="lg"
+                    width="100%"
+                  >
+                    Roll
+                  </Button>
                 </Box>
               )}
             </VStack>
@@ -955,7 +966,7 @@ const CharacterCreationInner = (): JSX.Element => {
               <Heading px={{ base: 4, sm: 10 }} size="sm" textAlign="left">
                 Step 4: Choose Your Starter Equipment
               </Heading>
-              <Text px={{ base: 4, sm: 10 }} fontSize="sm" color="grey500">
+              <Text px={{ base: 4, sm: 10 }} fontSize="md" color="#C4B89E">
                 Select one weapon and one armor to begin your adventure.
               </Text>
             </VStack>
@@ -965,75 +976,76 @@ const CharacterCreationInner = (): JSX.Element => {
               <Heading size="sm" textAlign="left">
                 Stats
               </Heading>
-              {creationStep === 'stats' && (
+              {creationStep === 'stats' && rolledOnce && (
                 <Button
                   isDisabled={isDisabled || !hasCompletedChoices}
                   isLoading={rollStatsTx.isLoading}
                   loadingText="Rolling..."
                   onClick={onRollStats}
                   size="sm"
+                  variant="outline"
                 >
-                  {rolledOnce ? 'Re-roll' : 'Roll Stats'}
+                  Re-roll
                 </Button>
               )}
             </HStack>
-            <VStack fontWeight={700} spacing={1.5} w="100%">
+            <VStack fontWeight={700} spacing={1.5} w="100%" opacity={rolledOnce ? 1 : 0.5}>
               <Box
-                backgroundColor="#F5F5FA1F"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                backgroundColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                 h="6px"
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#121B45">HP - Hit Points</Text>
-                <Text color="grey500" fontFamily="mono" size="lg">
-                  {character?.maxHp.toString() ?? '0'}
+                <Text color="#D4A54A" fontSize="md">HP - Hit Points</Text>
+                <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
+                  {rolledOnce ? character?.maxHp.toString() : '—'}
                 </Text>
               </HStack>
               <Box
-                backgroundColor="#F5F5FA1F"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                backgroundColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                 h="6px"
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#121B45">STR - Strength</Text>
-                <Text color="grey500" fontFamily="mono" size="lg">
-                  {character?.strength.toString() ?? '0'}
+                <Text color="#D4A54A" fontSize="md">STR - Strength</Text>
+                <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
+                  {rolledOnce ? character?.strength.toString() : '—'}
                 </Text>
               </HStack>
               <Box
-                backgroundColor="#F5F5FA1F"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                backgroundColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                 h="6px"
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#121B45">AGI - Agility</Text>
-                <Text color="grey500" fontFamily="mono" size="lg">
-                  {character?.agility.toString() ?? '0'}
+                <Text color="#D4A54A" fontSize="md">AGI - Agility</Text>
+                <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
+                  {rolledOnce ? character?.agility.toString() : '—'}
                 </Text>
               </HStack>
               <Box
-                backgroundColor="#F5F5FA1F"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                backgroundColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                 h="6px"
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#121B45">INT - Intelligence</Text>
-                <Text color="grey500" fontFamily="mono" size="lg">
-                  {character?.intelligence.toString() ?? '0'}
+                <Text color="#D4A54A" fontSize="md">INT - Intelligence</Text>
+                <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
+                  {rolledOnce ? character?.intelligence.toString() : '—'}
                 </Text>
               </HStack>
             </VStack>
           </VStack>
           <VStack mt={4} spacing={2}>
             <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-              <Text color="yellow" fontFamily="mono" fontWeight={700} size="lg">
+              <Text color="yellow" fontFamily="mono" fontWeight={700} fontSize="lg">
                 5 Gold
               </Text>
-              <Text color="grey500" fontFamily="mono" fontWeight={500} size="lg">
+              <Text color="#C4B89E" fontFamily="mono" fontWeight={500} fontSize="lg">
                 0 / {nextLevelXpRequirement.toString()} XP
               </Text>
             </HStack>
@@ -1048,6 +1060,11 @@ const CharacterCreationInner = (): JSX.Element => {
                 >
                   <Heading size="sm">Select Weapon</Heading>
                 </HStack>
+                {availableStarterWeapons.length === 0 && (
+                  <Text px={{ base: 4, sm: 10 }} fontSize="sm" color="#9A9080">
+                    No starter weapons available. Zone data may need reloading.
+                  </Text>
+                )}
                 <VStack spacing={0} w="100%">
                   {availableStarterWeapons.map(weapon => {
                     const restrictions = weapon.statRestrictions;
@@ -1087,6 +1104,11 @@ const CharacterCreationInner = (): JSX.Element => {
                 >
                   <Heading size="sm">Select Armor</Heading>
                 </HStack>
+                {availableStarterArmors.length === 0 && (
+                  <Text px={{ base: 4, sm: 10 }} fontSize="sm" color="#9A9080">
+                    No starter armor available. Zone data may need reloading.
+                  </Text>
+                )}
                 <VStack spacing={0} w="100%">
                   {availableStarterArmors.map(armor => {
                     const restrictions = armor.statRestrictions;
@@ -1121,14 +1143,9 @@ const CharacterCreationInner = (): JSX.Element => {
             )}
           </VStack>
           <Box mt={4} px={{ base: 4, sm: 10 }}>
-            {character && !rolledOnce && showError && creationStep === 'stats' && (
-              <Text color="red" fontSize="sm" mb={2} role="alert" textAlign="center">
-                You must roll stats at least once before continuing.
-              </Text>
-            )}
-            {creationStep === 'stats' && (
+            {creationStep === 'stats' && rolledOnce && (
               <Button
-                isDisabled={isDisabled || !rolledOnce}
+                isDisabled={isDisabled}
                 onClick={() => setCreationStep('starterItems')}
                 size="sm"
                 type="button"

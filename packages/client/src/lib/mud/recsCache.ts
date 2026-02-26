@@ -50,8 +50,9 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
+// v4: switched to Alchemy RPC + added component ID diagnostics.
 function cacheKey(worldAddress: string, chainId: number): string {
-  return `${worldAddress.toLowerCase()}-${chainId}`;
+  return `v4-${worldAddress.toLowerCase()}-${chainId}`;
 }
 
 /**

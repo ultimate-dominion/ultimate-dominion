@@ -121,7 +121,7 @@ export const Header = ({
   return (
     <Grid
       as="header"
-      bgColor="grey400"
+      bgColor={pathname === HOME_PATH ? 'transparent' : '#1C1814'}
       mt={4}
       px={4}
       py={2}
@@ -166,8 +166,8 @@ export const Header = ({
             )}
           </HStack>
           <Button
-            mb={{ base: pathname !== HOME_PATH ? 4 : 0, sm: 4 }}
-            mt={{ base: pathname !== HOME_PATH ? -5 : -4, sm: -5 }}
+            mb={{ base: pathname !== HOME_PATH ? 2 : 0, sm: 2 }}
+            mt={{ base: pathname !== HOME_PATH ? -1 : 0, sm: -1 }}
             onClick={() => navigate(logoLink)}
             variant="unstyled"
           >
@@ -186,7 +186,7 @@ export const Header = ({
       >
         <Button
           aria-label="Open menu"
-          backgroundColor="#D0D0D0"
+          backgroundColor="#24201A"
           onClick={onOpen}
           p={3}
           size="sm"
@@ -196,9 +196,9 @@ export const Header = ({
         </Button>
         <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
           <DrawerOverlay />
-          <DrawerContent>
+          <DrawerContent bg="#1C1814" color="#E8DCC8">
             <DrawerCloseButton />
-            <DrawerHeader>Menu</DrawerHeader>
+            <DrawerHeader color="#D4A54A">Menu</DrawerHeader>
 
             <DrawerBody>
               <Stack
@@ -245,16 +245,35 @@ export const Header = ({
 
             <DrawerFooter>
               <Stack
-                alignItems="center"
-                direction={{ base: 'column', sm: 'row' }}
-                spacing={{ base: 3, md: 8 }}
+                direction="row"
+                spacing={4}
+                w="100%"
+                justify="center"
               >
-                {/* <Link bgColor="black" borderRadius="50%" p={1.5}>
-                  <FaDiscord color="white" />
+                <Link
+                  color="#8A7E6A"
+                  fontSize="2xs"
+                  href="https://ultimatedominion.com/terms"
+                  isExternal
+                >
+                  Terms
                 </Link>
-                <Link bgColor="black" borderRadius="50%" p={1.5}>
-                  <FaXTwitter color="white" />
-                </Link> */}
+                <Link
+                  color="#8A7E6A"
+                  fontSize="2xs"
+                  href="https://ultimatedominion.com/privacy"
+                  isExternal
+                >
+                  Privacy
+                </Link>
+                <Link
+                  color="#8A7E6A"
+                  fontSize="2xs"
+                  href="https://www.ultimatedominion.com/"
+                  isExternal
+                >
+                  About
+                </Link>
               </Stack>
             </DrawerFooter>
           </DrawerContent>

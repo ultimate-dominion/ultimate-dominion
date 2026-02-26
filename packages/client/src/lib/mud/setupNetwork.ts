@@ -5,7 +5,7 @@
  */
 import { ContractWrite, createBurnerAccount } from '@latticexyz/common';
 import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
-import { setComponent } from '@latticexyz/recs';
+import { getComponentEntities, setComponent } from '@latticexyz/recs';
 import { SyncStep } from '@latticexyz/store-sync';
 import {
   encodeEntity,
@@ -94,17 +94,19 @@ export async function setupNetwork() {
     networkConfig.chainId,
   );
   if (cache) {
-    debug.log('[CACHE] Found cached state', {
+    console.info('[CACHE] Found cached state', {
       blockNumber: cache.blockNumber.toString(),
       components: cache.components.length,
     });
   } else {
-    debug.log('[CACHE] No cached state found — full sync');
+    console.info('[CACHE] No cached state found — full sync');
   }
 
   const startBlock = cache
     ? cache.blockNumber
     : BigInt(networkConfig.initialBlockNumber);
+
+  console.info('[SYNC] Starting from block', startBlock.toString(), 'indexerUrl:', indexerUrl || '(none)');
 
   const fallbackFn = async (url: string, opts: RequestInit) => {
     if (!url.toString().includes(indexerUrl ?? '')) {
@@ -163,12 +165,37 @@ export async function setupNetwork() {
       },
     });
 
+  // Diagnostic: log registered RECS component IDs
+  const itemsComponent = world.components.find((c: any) => (c.id as string)?.includes('4974656d73'));
+  const allComponentIds = world.components.map((c: any) => c.id as string);
+  console.info('[SYNC] Registered components:', allComponentIds.length);
+  console.info('[SYNC] Items component found:', !!itemsComponent, itemsComponent?.id);
+  // Log first few component IDs to compare with on-chain table IDs
+  console.info('[SYNC] Component IDs (first 10):', allComponentIds.slice(0, 10));
+
+  // Diagnostic: log sync progress and Items entity count
+  let blocksProcessed = 0;
+  let totalLogs = 0;
+  storedBlockLogs$.subscribe({
+    next: (block) => {
+      blocksProcessed++;
+      totalLogs += block.logs.length;
+      // Log first 5 blocks, then every 50, to see sync progress
+      if (blocksProcessed <= 5 || blocksProcessed % 50 === 0) {
+        const itemCount = Array.from(getComponentEntities(components.Items)).length;
+        console.info(`[SYNC] Block ${block.blockNumber} (#${blocksProcessed}), ${block.logs.length} logs (${totalLogs} total), Items: ${itemCount}`);
+      }
+    },
+    error: (err) => console.error('[SYNC] storedBlockLogs$ error:', err),
+    complete: () => console.info('[SYNC] storedBlockLogs$ completed'),
+  });
+
   // If we had a cache, restore all component values immediately so the UI
   // becomes usable while the background sync catches up on the delta.
   if (cache) {
     try {
       const restored = restoreRecsCache(world, cache);
-      debug.log(`[CACHE] Restored ${restored} entities from cache`);
+      console.info(`[CACHE] Restored ${restored} entities from cache (block ${cache.blockNumber})`);
 
       // Mark sync as LIVE so the UI doesn't show a loading bar.
       // The background sync from cachedBlock will overwrite stale values.
@@ -180,39 +207,62 @@ export async function setupNetwork() {
         lastBlockNumberProcessed: cache.blockNumber,
       });
     } catch (e) {
-      debug.log('[CACHE] Failed to restore cache, continuing with sync', e);
+      console.warn('[CACHE] Failed to restore cache, continuing with sync', e);
     }
   }
 
-  // Periodic cache save — every 60s while synced
-  const CACHE_SAVE_INTERVAL_MS = 60_000;
-  let lastSavedBlock = 0n;
+  // Periodic cache save — use storedBlockLogs$ (NOT latestBlock$) because
+  // latestBlock$ is the chain tip, while storedBlockLogs$ only emits after
+  // logs have been applied to RECS. Using the chain tip would save a block
+  // number ahead of what RECS has processed, creating gaps on restore.
+  const CACHE_SAVE_INTERVAL_MS = 30_000;
+  let lastProcessedBlock = 0n;
+  let hasSavedOnce = false;
 
-  latestBlock$.pipe(debounceTime(CACHE_SAVE_INTERVAL_MS)).subscribe({
-    next: (block) => {
-      const blockNum = block.number ?? 0n;
-      if (blockNum > lastSavedBlock) {
-        lastSavedBlock = blockNum;
+  storedBlockLogs$.subscribe({
+    next: (blockLogs) => {
+      const blockNum = blockLogs.blockNumber;
+      if (blockNum <= lastProcessedBlock) return;
+      lastProcessedBlock = blockNum;
+
+      // Save immediately on the first processed block (ensures cache exists
+      // for next visit even if the user navigates away quickly).
+      if (!hasSavedOnce) {
+        hasSavedOnce = true;
         saveRecsCache(
           world,
           blockNum,
           networkConfig.worldAddress,
           networkConfig.chainId,
         ).then(() => {
-          debug.log(`[CACHE] Saved at block ${blockNum}`);
+          console.info(`[CACHE] Initial save at block ${blockNum}`);
         });
       }
     },
   });
 
+  // Periodic save on a fixed interval
+  const cacheInterval = setInterval(() => {
+    if (lastProcessedBlock > 0n) {
+      saveRecsCache(
+        world,
+        lastProcessedBlock,
+        networkConfig.worldAddress,
+        networkConfig.chainId,
+      ).then(() => {
+        debug.log(`[CACHE] Periodic save at block ${lastProcessedBlock}`);
+      });
+    }
+  }, CACHE_SAVE_INTERVAL_MS);
+
   // Best-effort save on page unload
   if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', () => {
-      const blockNum = lastSavedBlock;
-      if (blockNum > 0n) {
+      clearInterval(cacheInterval);
+      if (lastProcessedBlock > 0n) {
         saveRecsCache(
           world,
-          blockNum,
+          lastProcessedBlock,
           networkConfig.worldAddress,
           networkConfig.chainId,
         );

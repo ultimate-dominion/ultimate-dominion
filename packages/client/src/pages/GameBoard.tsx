@@ -55,7 +55,7 @@ export const GameBoard = (): JSX.Element => {
     onClose: onCloseStatsDrawer,
   } = useDisclosure();
 
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const navigate = useNavigate();
   const {
     delegatorAddress,
@@ -66,21 +66,30 @@ export const GameBoard = (): JSX.Element => {
   const { inSafetyZone, position } = useMap();
   const { continueToBattleOutcome, lastestBattleOutcome } = useBattle();
 
-  // Redirect to home if synced, but missing other requirements
+  // Redirect to home if synced, but missing other requirements.
+  // IMPORTANT: Wait for each loading phase to complete before making
+  // redirect decisions. Premature redirects cause refresh-to-home bugs.
   useEffect(() => {
+    // Phase 1: Wait for auth to resolve
+    if (isConnecting) return;
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
     }
 
+    // Phase 2: Wait for MUD sync
     if (!isSynced) return;
 
+    // Phase 3: Wait for delegation (external path)
     if (!delegatorAddress) {
       navigate(HOME_PATH);
       return;
     }
 
-    if (!character?.locked && !isRefreshing) {
+    // Phase 4: Wait for character data to load before deciding
+    if (isRefreshing) return;
+
+    if (!character?.locked) {
       navigate(CHARACTER_CREATION_PATH);
       return;
     }
@@ -92,6 +101,7 @@ export const GameBoard = (): JSX.Element => {
     character,
     delegatorAddress,
     isConnected,
+    isConnecting,
     isRefreshing,
     isSynced,
     navigate,
@@ -181,7 +191,7 @@ export const GameBoard = (): JSX.Element => {
         display={{ base: 'none', lg: 'block' }}
         rowSpan={{ base: 'auto', lg: 12 }}
       >
-        <PolygonalCard clipPath="none" overflowY="auto">
+        <PolygonalCard className="data-dense" clipPath="none" overflowY="auto">
           <StatsPanel />
         </PolygonalCard>
       </GridItem>
@@ -191,7 +201,7 @@ export const GameBoard = (): JSX.Element => {
         rowSpan={{ base: 'auto', lg: 6 }}
         rowStart={{ base: 0, lg: 0 }}
       >
-        <PolygonalCard clipPath="none">
+        <PolygonalCard className="data-dense" clipPath="none">
           <TileDetailsPanel />
         </PolygonalCard>
       </GridItem>
@@ -201,7 +211,7 @@ export const GameBoard = (): JSX.Element => {
         rowSpan={{ base: 'auto', lg: 6 }}
         rowStart={{ base: 'auto', lg: 7 }}
       >
-        <PolygonalCard clipPath="none">
+        <PolygonalCard className="data-dense" clipPath="none">
           <ActionsPanel />
         </PolygonalCard>
       </GridItem>
@@ -228,7 +238,7 @@ export const GameBoard = (): JSX.Element => {
           <DrawerContent maxH="60vh" borderTopRadius="lg">
             <DrawerCloseButton />
             <DrawerHeader>Stats</DrawerHeader>
-            <DrawerBody overflowY="auto" pb={6}>
+            <DrawerBody className="data-dense" overflowY="auto" pb={6}>
               <StatsPanel />
             </DrawerBody>
           </DrawerContent>

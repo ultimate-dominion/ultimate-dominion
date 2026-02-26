@@ -11,10 +11,9 @@ import {
   Routes,
 } from 'react-router-dom';
 
+import { Guide } from './pages/Guide';
 import { LandingPage } from './pages/LandingPage';
-import { ThemeMidnightSteel } from './pages/ThemeMidnightSteel';
-import { ThemeObsidianVoid } from './pages/ThemeObsidianVoid';
-import { ThemeTorchlitDungeon } from './pages/ThemeTorchlitDungeon';
+import { Tavern } from './pages/Tavern';
 
 /**
  * Dark-themed manifesto for the placeholder site.
@@ -22,7 +21,7 @@ import { ThemeTorchlitDungeon } from './pages/ThemeTorchlitDungeon';
  * the content here to match the dark landing page aesthetic.
  */
 const DarkManifesto = (): JSX.Element => (
-  <Box bg="#0C1539" minH="100vh">
+  <Box bg="#12100E" minH="100vh">
     <Helmet>
       <title>Manifesto | Ultimate Dominion</title>
     </Helmet>
@@ -36,7 +35,7 @@ const DarkManifesto = (): JSX.Element => (
       spacing={8}
     >
       <Text
-        color="rgba(162, 169, 176, 0.5)"
+        color="rgba(196, 184, 158, 0.5)"
         fontSize={{ base: '11px', sm: '12px' }}
         fontWeight={600}
         letterSpacing="0.25em"
@@ -47,7 +46,7 @@ const DarkManifesto = (): JSX.Element => (
 
       <VStack spacing={6}>
         <Text
-          color="rgba(162, 169, 176, 0.6)"
+          color="rgba(196, 184, 158, 0.6)"
           fontSize={{ base: '14px', sm: '16px' }}
           fontStyle="italic"
           fontWeight={400}
@@ -58,7 +57,7 @@ const DarkManifesto = (): JSX.Element => (
           that is yours.
         </Text>
         <Text
-          color="rgba(162, 169, 176, 0.45)"
+          color="rgba(196, 184, 158, 0.45)"
           fontSize={{ base: '13px', sm: '15px' }}
           fontWeight={400}
           lineHeight="1.9"
@@ -71,7 +70,7 @@ const DarkManifesto = (): JSX.Element => (
           you let burn.
         </Text>
         <Text
-          color="rgba(162, 169, 176, 0.45)"
+          color="rgba(196, 184, 158, 0.45)"
           fontSize={{ base: '13px', sm: '15px' }}
           fontWeight={400}
           lineHeight="1.9"
@@ -83,7 +82,7 @@ const DarkManifesto = (): JSX.Element => (
           to take our word for it. You can prove it.
         </Text>
         <Text
-          color="rgba(162, 169, 176, 0.45)"
+          color="rgba(196, 184, 158, 0.45)"
           fontSize={{ base: '13px', sm: '15px' }}
           fontWeight={400}
           lineHeight="1.9"
@@ -93,7 +92,7 @@ const DarkManifesto = (): JSX.Element => (
           into the dark.
         </Text>
         <Text
-          color="rgba(162, 169, 176, 0.6)"
+          color="rgba(196, 184, 158, 0.6)"
           fontSize={{ base: '13px', sm: '15px' }}
           fontWeight={500}
           lineHeight="1.9"
@@ -106,14 +105,14 @@ const DarkManifesto = (): JSX.Element => (
 
       <Box
         as={RouterLink}
-        color="rgba(162, 169, 176, 0.35)"
+        color="rgba(196, 184, 158, 0.35)"
         fontSize="12px"
         letterSpacing="0.15em"
         mt={4}
         textDecoration="none"
         textTransform="uppercase"
         to="/"
-        _hover={{ color: 'rgba(162, 169, 176, 0.6)' }}
+        _hover={{ color: 'rgba(196, 184, 158, 0.6)' }}
       >
         &larr; Back
       </Box>
@@ -128,7 +127,7 @@ const PlaceholderPage = ({
   title: string;
   description: string;
 }): JSX.Element => (
-  <Box bg="#0C1539" minH="100vh">
+  <Box bg="#12100E" minH="100vh">
     <Helmet>
       <title>{title} | Ultimate Dominion</title>
     </Helmet>
@@ -139,7 +138,7 @@ const PlaceholderPage = ({
       spacing={8}
     >
       <Text
-        color="rgba(162, 169, 176, 0.5)"
+        color="rgba(196, 184, 158, 0.5)"
         fontSize={{ base: '11px', sm: '12px' }}
         fontWeight={600}
         letterSpacing="0.25em"
@@ -148,7 +147,7 @@ const PlaceholderPage = ({
         {title}
       </Text>
       <Text
-        color="rgba(162, 169, 176, 0.4)"
+        color="rgba(196, 184, 158, 0.4)"
         fontSize={{ base: '14px', sm: '16px' }}
         fontStyle="italic"
         fontWeight={400}
@@ -160,14 +159,14 @@ const PlaceholderPage = ({
       </Text>
       <Box
         as={RouterLink}
-        color="rgba(162, 169, 176, 0.35)"
+        color="rgba(196, 184, 158, 0.35)"
         fontSize="12px"
         letterSpacing="0.15em"
         mt={4}
         textDecoration="none"
         textTransform="uppercase"
         to="/"
-        _hover={{ color: 'rgba(162, 169, 176, 0.6)' }}
+        _hover={{ color: 'rgba(196, 184, 158, 0.6)' }}
       >
         &larr; Back
       </Box>
@@ -180,27 +179,8 @@ export const PlaceholderApp = (): JSX.Element => (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/manifesto" element={<DarkManifesto />} />
-      <Route
-        path="/tavern"
-        element={
-          <PlaceholderPage
-            title="The Tavern"
-            description="A place where adventurers gather to share tales, trade rumors, and form alliances. The Tavern will open its doors soon."
-          />
-        }
-      />
-      <Route
-        path="/guide"
-        element={
-          <PlaceholderPage
-            title="Adventurer's Guide"
-            description="Everything you need to know about surviving in the world of Ultimate Dominion. The Guide is being written."
-          />
-        }
-      />
-      <Route path="/theme/midnight-steel" element={<ThemeMidnightSteel />} />
-      <Route path="/theme/torchlit-dungeon" element={<ThemeTorchlitDungeon />} />
-      <Route path="/theme/obsidian-void" element={<ThemeObsidianVoid />} />
+      <Route path="/tavern" element={<Tavern />} />
+      <Route path="/guide" element={<Guide />} />
       <Route path="*" element={<LandingPage />} />
     </Routes>
   </BrowserRouter>

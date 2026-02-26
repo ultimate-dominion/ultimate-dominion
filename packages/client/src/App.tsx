@@ -203,7 +203,7 @@ const AppInner = (): JSX.Element => {
       >
         <AppRoutes />
       </Box>
-      {isDesktop && <Footer />}
+      {isDesktop && pathname !== HOME_PATH && <Footer />}
       {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && !isDesktop && (
         <>
           <Box

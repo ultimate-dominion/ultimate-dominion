@@ -5,11 +5,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogOverlay,
+  Box,
   Button,
+  Collapse,
   Divider,
   FormControl,
   FormHelperText,
-  FormLabel,
   HStack,
   Input,
   Modal,
@@ -32,11 +33,18 @@ import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
-import { shortenAddress } from '../utils/helpers';
 
-import { CopyText } from './CopyText';
 import { PolygonalCard } from './PolygonalCard';
 import { SignInModal } from './SignInModal';
+
+/** Format ETH to a readable number (up to 6 decimals, strip trailing zeros) */
+function formatBalance(wei: bigint | string): string {
+  const raw = typeof wei === 'string' ? wei : formatEther(wei);
+  const num = parseFloat(raw);
+  if (num === 0) return '0';
+  if (num < 0.000001) return '<0.000001';
+  return num.toFixed(6).replace(/\.?0+$/, '');
+}
 
 export const WalletDetailsModal = ({
   isOpen,
@@ -54,7 +62,7 @@ export const WalletDetailsModal = ({
     handleLogoutRevoke,
     handleRevokeDelegation,
     isRevokingDelegation,
-    network: { walletClient, publicClient },
+    network: { walletClient },
     systemCalls: { removeEntityFromBoard },
   } = useMUD();
   const { data: externalWalletBalance, refetch } = useBalance({
@@ -78,6 +86,7 @@ export const WalletDetailsModal = ({
   >(null);
 
   const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const cancelRevokeRef = useRef<HTMLButtonElement>(null);
 
   // Reset errorMessage state when any of the form fields change
@@ -90,6 +99,7 @@ export const WalletDetailsModal = ({
     if (isOpen) {
       setDepositAmount('0');
       setWithdrawAmount('0');
+      setShowAdvanced(false);
 
       refetch();
     }
@@ -237,31 +247,40 @@ export const WalletDetailsModal = ({
         <ModalOverlay />
         <ModalContent>
           <PolygonalCard isModal />
-          <ModalHeader>Account Details</ModalHeader>
+          <ModalHeader>Account</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <VStack spacing={6} alignItems="start">
-              <Text>Account:</Text>
-              <CopyText text={ownerAddress!}>
-                <Text>{shortenAddress(ownerAddress!)}</Text>
-              </CopyText>
-              <Text size="sm">Balance: {burnerBalance}</Text>
-              <Button
-                isDisabled={character?.inBattle}
-                isLoading={logoutTx.isLoading}
-                onClick={onLogout}
-                size="sm"
-              >
-                Sign Out
-              </Button>
-              {character?.inBattle && (
-                <Text color="orange" fontWeight={700} size="sm">
-                  You cannot sign out while in battle.
+            <VStack spacing={4} alignItems="start">
+              <Box>
+                <Text
+                  color="gray.400"
+                  fontSize="xs"
+                  letterSpacing="wide"
+                  textTransform="uppercase"
+                >
+                  Balance
                 </Text>
-              )}
+                <Text fontSize="2xl" fontWeight={700}>
+                  {formatBalance(burnerBalance)} ETH
+                </Text>
+              </Box>
             </VStack>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter justifyContent="space-between">
+            <Button
+              isDisabled={character?.inBattle}
+              isLoading={logoutTx.isLoading}
+              onClick={onLogout}
+              size="sm"
+              variant="ghost"
+            >
+              Sign Out
+            </Button>
+            {character?.inBattle && (
+              <Text color="orange" fontSize="xs" fontWeight={700}>
+                Cannot sign out during battle.
+              </Text>
+            )}
             <Button onClick={onClose} size="sm" variant="ghost">
               Close
             </Button>
@@ -271,185 +290,211 @@ export const WalletDetailsModal = ({
     );
   }
 
-  // External wallet — full view with session wallet, deposit, withdraw
+  // External wallet — simplified view with deposit focus
+  const needsFunding = burnerBalance === '0';
+
   return (
     <>
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalOverlay />
-      <ModalContent>
-        <PolygonalCard isModal />
-        <ModalHeader>Account Settings</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          {ownerAddress && externalWalletClient ? (
-            <VStack spacing={10}>
-              <VStack alignItems="start" spacing={4}>
-                {burnerBalance === '0' && (
-                  <>
-                    <Text color="red" fontWeight={700} size="sm">
-                      Your game account balance is 0. In order to play, you
-                      must add funds to your game account.
-                    </Text>
-                    <Divider />
-                  </>
-                )}
-                <Text>Main Account:</Text>
-                <CopyText text={ownerAddress}>
-                  <Text>{shortenAddress(ownerAddress)}</Text>
-                </CopyText>
-                <Text size="sm">
-                  Balance:{' '}
-                  {externalWalletBalance
-                    ? formatEther(externalWalletBalance.value)
-                    : '0'}
-                </Text>
-                <Button
-                  isDisabled={character?.inBattle}
-                  isLoading={logoutTx.isLoading}
-                  onClick={onLogout}
-                  size="sm"
-                >
-                  Logout
-                </Button>
-                {character?.inBattle && (
-                  <Text color="orange" fontWeight={700} size="sm">
-                    You cannot logout while in battle.
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <PolygonalCard isModal />
+          <ModalHeader>
+            {needsFunding ? 'Fund Your Session' : 'Account'}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {ownerAddress && externalWalletClient ? (
+              <VStack align="stretch" spacing={6}>
+                {/* Prompt when session has no funds */}
+                {needsFunding && (
+                  <Text fontSize="sm">
+                    A small ETH deposit is needed to cover gameplay transaction
+                    fees. This stays in your session and can be withdrawn later.
                   </Text>
                 )}
-                <Divider />
-                <Text>Game Account:</Text>
-                <CopyText text={burnerAddress}>
-                  <Text>{shortenAddress(burnerAddress)}</Text>
-                </CopyText>
-                <Text size="sm">Balance: {burnerBalance}</Text>
-                <Text fontWeight={700} size="sm">
-                  We recommend keeping a small amount here for gameplay.
-                </Text>
-                <HStack>
+
+                {/* Session balance when funded */}
+                {!needsFunding && (
+                  <Box>
+                    <Text
+                      color="gray.400"
+                      fontSize="xs"
+                      letterSpacing="wide"
+                      textTransform="uppercase"
+                    >
+                      Session Balance
+                    </Text>
+                    <Text fontSize="2xl" fontWeight={700}>
+                      {formatBalance(burnerBalance)} ETH
+                    </Text>
+                  </Box>
+                )}
+
+                {/* Deposit */}
+                <Box>
+                  {!needsFunding && (
+                    <Text color="gray.400" fontSize="xs" mb={2}>
+                      Add funds
+                    </Text>
+                  )}
                   <FormControl isInvalid={!!depositErrorMessage}>
-                    <FormLabel fontSize="xs">
-                      Add funds to game account
-                    </FormLabel>
                     {!!depositErrorMessage && (
                       <FormHelperText color="red" fontSize="xs" mb={2}>
                         {depositErrorMessage}
                       </FormHelperText>
                     )}
-                    <Input
-                      isDisabled={isDepositing}
-                      onChange={e => setDepositAmount(e.target.value)}
-                      placeholder="Amount"
-                      type="number"
-                      value={depositAmount}
-                    />
+                    <HStack>
+                      <Input
+                        isDisabled={isDepositing}
+                        onChange={e => setDepositAmount(e.target.value)}
+                        placeholder="ETH amount"
+                        type="number"
+                        value={depositAmount}
+                      />
+                      <Button
+                        isLoading={isDepositing}
+                        onClick={onDeposit}
+                        size="sm"
+                      >
+                        Deposit
+                      </Button>
+                    </HStack>
+                    <Text color="gray.500" fontSize="xs" mt={1}>
+                      Wallet balance:{' '}
+                      {externalWalletBalance
+                        ? formatBalance(externalWalletBalance.value)
+                        : '0'}{' '}
+                      ETH
+                    </Text>
                   </FormControl>
-                  <Button
-                    alignSelf="end"
-                    isLoading={isDepositing}
-                    onClick={onDeposit}
-                    size="sm"
-                  >
-                    Deposit
-                  </Button>
-                </HStack>
-                <HStack>
-                  <FormControl isInvalid={!!withdrawErrorMessage}>
-                    <FormLabel fontSize="xs">
-                      Withdraw to main account
-                    </FormLabel>
-                    {character && character.level < 3n && (
-                      <FormHelperText color="orange" fontSize="xs" mb={2}>
-                        Withdrawals are locked until level 3. Your game account
-                        ETH covers gas fees during early gameplay.
-                      </FormHelperText>
-                    )}
-                    {!!withdrawErrorMessage && (
-                      <FormHelperText color="red" fontSize="xs" mb={2}>
-                        {withdrawErrorMessage}
-                      </FormHelperText>
-                    )}
-                    <Input
-                      isDisabled={
-                        isWithdrawing ||
-                        (!!character && character.level < 3n)
-                      }
-                      onChange={e => setWithdrawAmount(e.target.value)}
-                      placeholder="Amount"
-                      type="number"
-                      value={withdrawAmount}
-                    />
-                  </FormControl>
-                  <Button
-                    alignSelf="end"
-                    isDisabled={!!character && character.level < 3n}
-                    isLoading={isWithdrawing}
-                    onClick={onWithdraw}
-                    size="sm"
-                  >
-                    Withdraw
-                  </Button>
-                </HStack>
-                <Divider />
-                <Button
-                  colorScheme="red"
-                  isDisabled={character?.inBattle || isRevokingDelegation}
-                  isLoading={isRevokingDelegation}
-                  loadingText="Revoking..."
-                  onClick={() => setIsRevokeDialogOpen(true)}
-                  size="sm"
-                  variant="outline"
-                >
-                  Reset Game Account
-                </Button>
-                {character?.inBattle && (
-                  <Text color="orange" fontWeight={700} size="sm">
-                    You cannot revoke while in battle.
-                  </Text>
-                )}
-              </VStack>
-            </VStack>
-          ) : (
-            <VStack spacing={10}>
-              <Text textAlign="center">Connecting wallet...</Text>
-            </VStack>
-          )}
-        </ModalBody>
-        <ModalFooter>
-          <Button onClick={onClose} size="sm" variant="ghost">
-            Close
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+                </Box>
 
-    <AlertDialog
-      isOpen={isRevokeDialogOpen}
-      leastDestructiveRef={cancelRevokeRef}
-      onClose={() => setIsRevokeDialogOpen(false)}
-    >
-      <AlertDialogOverlay>
-        <AlertDialogContent>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Reset Game Account?
-          </AlertDialogHeader>
-          <AlertDialogBody>
-            This will remove the game account&apos;s permission to play on
-            your behalf. Any remaining funds stay in the game account.
-          </AlertDialogBody>
-          <AlertDialogFooter>
+                {/* Advanced options (withdraw, reset) */}
+                <Box>
+                  <Button
+                    color="gray.500"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    size="xs"
+                    variant="link"
+                  >
+                    {showAdvanced ? 'Hide advanced' : 'Advanced options'}
+                  </Button>
+                  <Collapse in={showAdvanced}>
+                    <VStack align="stretch" mt={4} spacing={4}>
+                      <FormControl isInvalid={!!withdrawErrorMessage}>
+                        <Text color="gray.400" fontSize="xs" mb={1}>
+                          Withdraw to wallet
+                        </Text>
+                        {character && character.level < 3n && (
+                          <FormHelperText
+                            color="orange"
+                            fontSize="xs"
+                            mb={2}
+                          >
+                            Withdrawals unlock at level 3.
+                          </FormHelperText>
+                        )}
+                        {!!withdrawErrorMessage && (
+                          <FormHelperText color="red" fontSize="xs" mb={2}>
+                            {withdrawErrorMessage}
+                          </FormHelperText>
+                        )}
+                        <HStack>
+                          <Input
+                            isDisabled={
+                              isWithdrawing ||
+                              (!!character && character.level < 3n)
+                            }
+                            onChange={e => setWithdrawAmount(e.target.value)}
+                            placeholder="ETH amount"
+                            type="number"
+                            value={withdrawAmount}
+                          />
+                          <Button
+                            isDisabled={!!character && character.level < 3n}
+                            isLoading={isWithdrawing}
+                            onClick={onWithdraw}
+                            size="sm"
+                          >
+                            Withdraw
+                          </Button>
+                        </HStack>
+                      </FormControl>
+                      <Divider />
+                      <Button
+                        colorScheme="red"
+                        isDisabled={
+                          character?.inBattle || isRevokingDelegation
+                        }
+                        isLoading={isRevokingDelegation}
+                        loadingText="Resetting..."
+                        onClick={() => setIsRevokeDialogOpen(true)}
+                        size="sm"
+                        variant="outline"
+                      >
+                        Reset Session
+                      </Button>
+                    </VStack>
+                  </Collapse>
+                </Box>
+              </VStack>
+            ) : (
+              <VStack spacing={10}>
+                <Text textAlign="center">Connecting...</Text>
+              </VStack>
+            )}
+          </ModalBody>
+          <ModalFooter justifyContent="space-between">
             <Button
-              onClick={() => setIsRevokeDialogOpen(false)}
-              ref={cancelRevokeRef}
+              isDisabled={character?.inBattle}
+              isLoading={logoutTx.isLoading}
+              onClick={onLogout}
+              size="sm"
+              variant="ghost"
             >
-              Cancel
+              Disconnect
             </Button>
-            <Button colorScheme="red" ml={3} onClick={onConfirmRevoke}>
-              Revoke
+            {character?.inBattle && (
+              <Text color="orange" fontSize="xs" fontWeight={700}>
+                Cannot disconnect during battle.
+              </Text>
+            )}
+            <Button onClick={onClose} size="sm" variant="ghost">
+              Close
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogOverlay>
-    </AlertDialog>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <AlertDialog
+        isOpen={isRevokeDialogOpen}
+        leastDestructiveRef={cancelRevokeRef}
+        onClose={() => setIsRevokeDialogOpen(false)}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Reset Session?
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              This will reset your game session. Any remaining ETH stays in the
+              session and can be recovered.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button
+                onClick={() => setIsRevokeDialogOpen(false)}
+                ref={cancelRevokeRef}
+              >
+                Cancel
+              </Button>
+              <Button colorScheme="red" ml={3} onClick={onConfirmRevoke}>
+                Reset
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </>
   );
 };

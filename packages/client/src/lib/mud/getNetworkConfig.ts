@@ -74,7 +74,7 @@ export async function getNetworkConfig(): Promise<{
    * provide it as worldAddress in the query string.
    */
   const world = worlds[chain.id.toString()];
-  const worldAddress = params.get('worldAddress') || world?.address;
+  const worldAddress = params.get('worldAddress') || import.meta.env.VITE_WORLD_ADDRESS || world?.address;
   if (!worldAddress) {
     throw new Error(
       `No world address found for chain ${chainId}. Did you run \`mud deploy\`?`,

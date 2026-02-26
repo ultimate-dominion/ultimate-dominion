@@ -106,7 +106,7 @@ export enum Rarity {
 
 export const RARITY_COLORS: Record<Rarity, string> = {
   [Rarity.Worn]: '#8a8a8a',      // Muted gray
-  [Rarity.Common]: '#f0f2f5',    // Off-white (legible on grey-blue)
+  [Rarity.Common]: '#C4B89E',    // Parchment (legible on dark bg)
   [Rarity.Uncommon]: '#3d8a4e',  // Forest green
   [Rarity.Rare]: '#3d6fb5',      // Steel blue
   [Rarity.Epic]: '#7b4ab5',      // Dusty purple
@@ -120,6 +120,12 @@ export const RARITY_NAMES: Record<Rarity, string> = {
   [Rarity.Rare]: 'Rare',
   [Rarity.Epic]: 'Epic',
   [Rarity.Legendary]: 'Legendary',
+};
+
+export const CLASS_COLORS: Record<StatsClasses, string> = {
+  [StatsClasses.Warrior]: '#B85C3A', // warm copper
+  [StatsClasses.Rogue]: '#5A8A3E',   // forest green
+  [StatsClasses.Mage]: '#4A7AB5',    // steel blue
 };
 
 export enum SystemToAllow {
@@ -289,6 +295,7 @@ export type Monster = MonsterTemplate & {
   currentHp: bigint;
   id: Entity;
   inBattle: boolean;
+  isElite: boolean;
   isSpawned: boolean;
   maxHp: bigint;
   position: { x: number; y: number };

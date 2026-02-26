@@ -43,7 +43,7 @@ export const LeaderboardRow = ({
 
   return (
     <Flex
-      bgColor={top3 ? '#F5F5FA1F' : '#a2a9b0'}
+      bgColor={top3 ? 'rgba(200,122,42,0.08)' : '#1C1814'}
       justify="space-between"
       onClick={() => navigate(`/characters/${id}`)}
       px={{ base: 1, sm: 2, md: 4 }}
@@ -64,7 +64,7 @@ export const LeaderboardRow = ({
       <Flex position="relative">
         <HStack ml={{ base: 3, sm: 0 }} spacing={{ base: 2, md: 6 }}>
           <Text
-            color="#283570"
+            color="#C87A2A"
             fontWeight={700}
             justifySelf="center"
             left={0}
@@ -88,7 +88,7 @@ export const LeaderboardRow = ({
         >
           <HStack>
             <Text
-              color="black"
+              color="#E8DCC8"
               fontWeight={700}
               size={{ base: 'sm', lg: 'xl' }}
               mt={1}
@@ -98,7 +98,8 @@ export const LeaderboardRow = ({
             <ClassSymbol entityClass={entityClass} responsive theme="dark" />
           </HStack>
           <Text
-            color="#121B45"
+            color="#8A7E6A"
+            fontFamily="'Inter', sans-serif"
             fontWeight={500}
             size={{ base: '2xs', lg: 'md' }}
           >

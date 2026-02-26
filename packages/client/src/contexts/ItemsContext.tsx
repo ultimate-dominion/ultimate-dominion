@@ -1,8 +1,8 @@
+import { useEntityQuery } from '@latticexyz/react';
 import {
   getComponentValue,
   getComponentValueStrict,
   Has,
-  runQuery,
 } from '@latticexyz/recs';
 import {
   decodeEntity,
@@ -76,6 +76,10 @@ export const ItemsProvider = ({
   const [spellTemplates, setSpellTemplates] = useState<SpellTemplate[]>([]);
   const [weaponTemplates, setWeaponTemplates] = useState<WeaponTemplate[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Reactive query: re-triggers when background sync adds Items records
+  // (fixes stale cache issue where LIVE fires before items arrive)
+  const allItemEntities = useEntityQuery(Items ? [Has(Items)] : []);
 
   const fetchAllArmor = useCallback(
     async (allArmorIds: bigint[]) => {
@@ -421,21 +425,23 @@ export const ItemsProvider = ({
   );
 
   useEffect(() => {
+    console.info('[ItemsContext] effect fired — isSynced:', isSynced, 'entities:', allItemEntities.length);
     (async () => {
-      if (!isSynced) return;
+      if (!isSynced || allItemEntities.length === 0) return;
 
       try {
-        const allItemEntities = Array.from(runQuery([Has(Items)]));
-
-        const allItemIds = allItemEntities.map(entity => {
-          const itemTemplate = getComponentValueStrict(Items, entity);
-          const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
-          const itemTypeNum = Number(itemTemplate.itemType);
-          return {
-            itemType: itemTypeNum,
-            itemId,
-          };
-        });
+        const allItemIds = allItemEntities
+          .map(entity => {
+            const itemTemplate = getComponentValue(Items, entity);
+            if (!itemTemplate) return null;
+            const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
+            const itemTypeNum = Number(itemTemplate.itemType);
+            return {
+              itemType: itemTypeNum,
+              itemId,
+            };
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null);
 
         if (allItemIds.length > 0) {
           const allArmorIds = allItemIds
@@ -493,6 +499,7 @@ export const ItemsProvider = ({
       }
     })();
   }, [
+    allItemEntities,
     fetchAllArmor,
     fetchAllConsumables,
     fetchAllSpells,

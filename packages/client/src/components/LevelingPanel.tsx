@@ -310,7 +310,7 @@ export const LevelingPanel = ({
   return (
     <PolygonalCard clipPath="none" py={6}>
       <VStack>
-        <HStack color="#283570" justify="space-between" px={6} w="100%">
+        <HStack color="#D4A54A" justify="space-between" px={6} w="100%">
           <Text alignSelf="start" fontWeight={700}>
             My Stats
           </Text>
@@ -351,8 +351,8 @@ export const LevelingPanel = ({
           </HStack>
         </HStack>
         <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+          backgroundColor="rgba(196,184,158,0.08)"
+          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
           h="6px"
           w="100%"
         />
@@ -366,7 +366,7 @@ export const LevelingPanel = ({
             AGI -{' '}
             <Text
               as="span"
-              color="black"
+              color="#C4B89E"
               fontWeight={500}
               size={{ base: '2xs', sm: 'xs' }}
             >
@@ -388,7 +388,7 @@ export const LevelingPanel = ({
               </Box>
             )}
             <Text
-              color={agilityIncreased ? 'green' : 'black'}
+              color={agilityIncreased ? 'green' : '#C4B89E'}
               fontWeight={agilityIncreased ? 'bold' : 'normal'}
               size={{ base: 'xs', sm: 'sm', md: 'lg' }}
               w="33%"
@@ -432,8 +432,8 @@ export const LevelingPanel = ({
           </HStack>
         </HStack>
         <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+          backgroundColor="rgba(196,184,158,0.08)"
+          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
           h="6px"
           w="100%"
         />
@@ -447,7 +447,7 @@ export const LevelingPanel = ({
             INT -{' '}
             <Text
               as="span"
-              color="black"
+              color="#C4B89E"
               fontWeight={500}
               size={{ base: '2xs', sm: 'xs' }}
             >
@@ -469,7 +469,7 @@ export const LevelingPanel = ({
               </Box>
             )}
             <Text
-              color={intelligenceIncreased ? 'green' : 'black'}
+              color={intelligenceIncreased ? 'green' : '#C4B89E'}
               fontWeight={intelligenceIncreased ? 'bold' : 'normal'}
               size={{ base: 'xs', sm: 'sm', md: 'lg' }}
               w="33%"
@@ -514,8 +514,8 @@ export const LevelingPanel = ({
           </HStack>
         </HStack>
         <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+          backgroundColor="rgba(196,184,158,0.08)"
+          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
           h="6px"
           w="100%"
         />
@@ -529,7 +529,7 @@ export const LevelingPanel = ({
             STR -{' '}
             <Text
               as="span"
-              color="black"
+              color="#C4B89E"
               fontWeight={500}
               size={{ base: '2xs', sm: 'xs' }}
             >
@@ -551,7 +551,7 @@ export const LevelingPanel = ({
               </Box>
             )}
             <Text
-              color={strengthIncreased ? 'green' : 'black'}
+              color={strengthIncreased ? 'green' : '#C4B89E'}
               fontWeight={strengthIncreased ? 'bold' : 'normal'}
               size={{ base: 'xs', sm: 'sm', md: 'lg' }}
               w="33%"
@@ -595,8 +595,8 @@ export const LevelingPanel = ({
           </HStack>
         </HStack>
         <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+          backgroundColor="rgba(196,184,158,0.08)"
+          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
           h="6px"
           w="100%"
         />

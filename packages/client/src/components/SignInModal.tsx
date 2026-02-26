@@ -1,7 +1,9 @@
 import {
+  Box,
   Button,
   Divider,
   HStack,
+  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -22,9 +24,11 @@ import { PolygonalCard } from './PolygonalCard';
 export const SignInModal = ({
   isOpen,
   onClose,
+  onChooseWallet,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  onChooseWallet?: () => void;
 }): JSX.Element => {
   const {
     connectWithGoogle,
@@ -76,17 +80,29 @@ export const SignInModal = ({
             )}
 
             {hasInjectedWallet && (
-              <>
-                <HStack spacing={4} w="100%">
-                  <Divider />
-                  <Text color="gray.400" fontSize="xs" whiteSpace="nowrap">
-                    OR
-                  </Text>
-                  <Divider />
-                </HStack>
-                <ConnectWalletButton />
-              </>
+              <Box onClick={onChooseWallet} w="100%">
+                <VStack spacing={6}>
+                  <HStack spacing={4} w="100%">
+                    <Divider />
+                    <Text color="gray.400" fontSize="xs" whiteSpace="nowrap">
+                      OR
+                    </Text>
+                    <Divider />
+                  </HStack>
+                  <ConnectWalletButton />
+                </VStack>
+              </Box>
             )}
+            <Text color="#8A7E6A" fontSize="10px" textAlign="center">
+              By signing in you agree to the{' '}
+              <Link href="https://ultimatedominion.com/terms" isExternal color="#C4B89E" textDecoration="underline">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="https://ultimatedominion.com/privacy" isExternal color="#C4B89E" textDecoration="underline">
+                Privacy Policy
+              </Link>
+            </Text>
           </VStack>
         </ModalBody>
       </ModalContent>

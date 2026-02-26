@@ -5,7 +5,7 @@
  * the Adventurer badge (Token ID 1xxx...) to join.
  *
  * Usage:
- *   PRIVATE_KEY=0x... PUSH_ENV=prod CHAIN_ID=84532 npx ts-node scripts/create-chat-group.ts
+ *   PRIVATE_KEY=0x... PUSH_ENV=prod CHAIN_ID=8453 npx ts-node scripts/create-chat-group.ts
  *
  * PUSH_ENV: 'prod' for production Push backend, 'staging' (default) for dev
  * After running, set VITE_PUSH_GROUP_CHAT_ID env var to the output chat ID
@@ -14,7 +14,7 @@
 import { CONSTANTS, PushAPI } from '@pushprotocol/restapi';
 import { createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { anvil, base, baseSepolia } from 'viem/chains';
+import { anvil, base } from 'viem/chains';
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
 const BADGE_CONTRACT = process.env.BADGE_CONTRACT;
@@ -30,7 +30,6 @@ if (!PRIVATE_KEY) {
 const chains: Record<string, typeof anvil> = {
   '31337': anvil,
   '8453': base,
-  '84532': baseSepolia,
 };
 
 async function createTokenGatedGroup() {

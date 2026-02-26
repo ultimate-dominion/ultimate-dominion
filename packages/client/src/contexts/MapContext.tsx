@@ -93,6 +93,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       CharactersTokenURI,
       EncounterEntity,
       GoldBalances,
+      MobStats: MobStatsComponent,
       Position,
       Shops,
       Spawned,
@@ -388,6 +389,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           const inBattle = !!encounterId && encounterId !== zeroHash;
           const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
           const _position = getComponentValueStrict(Position, entity);
+          const mobStatsData = getComponentValue(MobStatsComponent, entity);
+          const isElite = mobStatsData?.isElite ?? false;
 
           const monsterTemplate = monsterTemplates.find(
             m => m.mobId === mobId.toString(),
@@ -399,6 +402,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             currentHp,
             id: entity,
             inBattle,
+            isElite,
             isSpawned,
             position: { x: _position.x, y: _position.y },
           } as Monster;
@@ -410,7 +414,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         return [];
       }
     },
-    [EncounterEntity, monsterTemplates, Position, renderError, Spawned, Stats],
+    [EncounterEntity, MobStatsComponent, monsterTemplates, Position, renderError, Spawned, Stats],
   );
 
   const getShops = useCallback(

@@ -12,6 +12,7 @@ import {
     MagicDamageStatsData,
     StatusEffectStats,
     StatusEffectStatsData,
+    StatusEffectTargeting,
     StatusEffectValidity,
     StatusEffectValidityData,
     WeaponStats,
@@ -102,7 +103,9 @@ contract DeployClassSpells is Script {
         StatusEffectStats.set(battleCry, StatusEffectStatsData({
             agiModifier: 0, armorModifier: 3, damagePerTick: 0,
             hpModifier: 0, intModifier: 0, resistanceStat: ResistanceStat.None,
-            strModifier: 4        }));
+            strModifier: 4
+        }));
+        StatusEffectTargeting.set(battleCry, true);
         StatusEffectValidity.set(battleCry, StatusEffectValidityData({
             cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 3
         }));
@@ -114,7 +117,9 @@ contract DeployClassSpells is Script {
         StatusEffectStats.set(divineShield, StatusEffectStatsData({
             agiModifier: 0, armorModifier: 5, damagePerTick: 0,
             hpModifier: 0, intModifier: 0, resistanceStat: ResistanceStat.None,
-            strModifier: 3        }));
+            strModifier: 3
+        }));
+        StatusEffectTargeting.set(divineShield, true);
         StatusEffectValidity.set(divineShield, StatusEffectValidityData({
             cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 3
         }));
@@ -126,7 +131,9 @@ contract DeployClassSpells is Script {
         StatusEffectStats.set(huntersMark, StatusEffectStatsData({
             agiModifier: -5, armorModifier: -2, damagePerTick: 0,
             hpModifier: 0, intModifier: 0, resistanceStat: ResistanceStat.Agility,
-            strModifier: 0        }));
+            strModifier: 0
+        }));
+        StatusEffectTargeting.set(huntersMark, false);
         StatusEffectValidity.set(huntersMark, StatusEffectValidityData({
             cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 4
         }));
@@ -138,7 +145,9 @@ contract DeployClassSpells is Script {
         StatusEffectStats.set(shadowstep, StatusEffectStatsData({
             agiModifier: 8, armorModifier: 0, damagePerTick: 0,
             hpModifier: 0, intModifier: 0, resistanceStat: ResistanceStat.None,
-            strModifier: 0        }));
+            strModifier: 0
+        }));
+        StatusEffectTargeting.set(shadowstep, true);
         StatusEffectValidity.set(shadowstep, StatusEffectValidityData({
             cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 2
         }));
@@ -150,7 +159,9 @@ contract DeployClassSpells is Script {
         StatusEffectStats.set(entangle, StatusEffectStatsData({
             agiModifier: -5, armorModifier: 0, damagePerTick: 0,
             hpModifier: 0, intModifier: 0, resistanceStat: ResistanceStat.Agility,
-            strModifier: -3        }));
+            strModifier: -3
+        }));
+        StatusEffectTargeting.set(entangle, false);
         StatusEffectValidity.set(entangle, StatusEffectValidityData({
             cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 3
         }));
@@ -162,7 +173,9 @@ contract DeployClassSpells is Script {
         StatusEffectStats.set(soulDrainCurse, StatusEffectStatsData({
             agiModifier: 0, armorModifier: 0, damagePerTick: 0,
             hpModifier: 0, intModifier: -3, resistanceStat: ResistanceStat.Intelligence,
-            strModifier: -3        }));
+            strModifier: -3
+        }));
+        StatusEffectTargeting.set(soulDrainCurse, false);
         StatusEffectValidity.set(soulDrainCurse, StatusEffectValidityData({
             cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 3
         }));
@@ -174,7 +187,9 @@ contract DeployClassSpells is Script {
         StatusEffectStats.set(blessing, StatusEffectStatsData({
             agiModifier: 0, armorModifier: 5, damagePerTick: 0,
             hpModifier: 5, intModifier: 3, resistanceStat: ResistanceStat.None,
-            strModifier: 0        }));
+            strModifier: 0
+        }));
+        StatusEffectTargeting.set(blessing, true);
         StatusEffectValidity.set(blessing, StatusEffectValidityData({
             cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 3
         }));

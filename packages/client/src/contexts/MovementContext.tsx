@@ -12,6 +12,7 @@ import { Link, useLocation } from 'react-router-dom';
 
 import { InfoModal } from '../components/InfoModal';
 import { useTransaction } from '../hooks/useTransaction';
+import type { TransactionProgress } from '../hooks/useTransactionProgress';
 import { GAME_BOARD_PATH } from '../Routes';
 
 import { useBattle } from './BattleContext';
@@ -24,6 +25,7 @@ const PREVENT_DEFAULT_KEYS = ['ArrowUp', 'ArrowDown'];
 
 type MovementContextType = {
   isRefreshing: boolean;
+  moveProgress: TransactionProgress;
   moveStatusMessage: string;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSetIsMovementDisabled: (isDisabled: boolean) => void;
@@ -31,6 +33,7 @@ type MovementContextType = {
 
 const MovementContext = createContext<MovementContextType>({
   isRefreshing: false,
+  moveProgress: { phase: 'idle', percent: 0, transitionMs: 0 },
   moveStatusMessage: '',
   onMove: () => {},
   onSetIsMovementDisabled: () => {},
@@ -45,6 +48,7 @@ export const MovementProvider = ({
 }: MovementProviderProps): JSX.Element => {
   const { pathname } = useLocation();
   const {
+    authMethod,
     delegatorAddress,
     systemCalls: { move },
   } = useMUD();
@@ -66,8 +70,7 @@ export const MovementProvider = ({
     actionName: 'moving',
     silent: true,
     maxAttempts: 2,
-    backoffMs: 1000,
-    showErrorToast: true,
+    estimatedDurationMs: authMethod === 'embedded' ? 6000 : 500,
   });
 
   const onSetIsMovementDisabled = useCallback((isDisabled: boolean) => {
@@ -205,6 +208,7 @@ export const MovementProvider = ({
     <MovementContext.Provider
       value={{
         isRefreshing: isFetchingEntities || moveTx.isLoading,
+        moveProgress: moveTx.progress,
         moveStatusMessage: moveTx.statusMessage || 'Moving...',
         onMove,
         onSetIsMovementDisabled,

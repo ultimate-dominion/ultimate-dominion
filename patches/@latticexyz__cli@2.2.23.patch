@@ -1,0 +1,179 @@
+diff --git a/dist/commands-IDBOJLTZ.js b/dist/commands-IDBOJLTZ.js
+index 24ec71911e60c024feb9e831b0ba3de2b857f228..50651a4d6c9ca4c8912b264775c811db6bc0afd3 100644
+--- a/dist/commands-IDBOJLTZ.js
++++ b/dist/commands-IDBOJLTZ.js
+@@ -585,24 +585,39 @@ async function ensureTables({
+         const keySchema = getSchemaTypes(getKeySchema(table));
+         const valueSchema = getSchemaTypes(getValueSchema(table));
+         return pRetry(
+-          () => writeContract2(client, {
+-            chain: client.chain ?? null,
+-            address: worldDeploy.address,
+-            abi: worldAbi,
+-            // TODO: replace with batchCall (https://github.com/latticexyz/mud/issues/1645)
+-            functionName: "registerTable",
+-            args: [
+-              table.tableId,
+-              valueSchemaToFieldLayoutHex(valueSchema),
+-              keySchemaToHex(keySchema),
+-              valueSchemaToHex(valueSchema),
+-              Object.keys(keySchema),
+-              Object.keys(valueSchema)
+-            ]
+-          }),
++          async () => {
++            try {
++              return await writeContract2(client, {
++                chain: client.chain ?? null,
++                address: worldDeploy.address,
++                abi: worldAbi,
++                // TODO: replace with batchCall (https://github.com/latticexyz/mud/issues/1645)
++                functionName: "registerTable",
++                args: [
++                  table.tableId,
++                  valueSchemaToFieldLayoutHex(valueSchema),
++                  keySchemaToHex(keySchema),
++                  valueSchemaToHex(valueSchema),
++                  Object.keys(keySchema),
++                  Object.keys(valueSchema)
++                ]
++              });
++            } catch (e) {
++              if (e.message && e.message.includes("Store_TableAlreadyExists")) {
++                debug2(`PATCHED: table ${resourceToLabel(table)} already exists on-chain, skipping`);
++                return undefined;
++              }
++              throw e;
++            }
++          },
+           {
+             retries: 3,
+-            onFailedAttempt: () => debug2(`failed to register table ${resourceToLabel(table)}, retrying...`)
++            onFailedAttempt: (e) => {
++              if (e.message && e.message.includes("Store_TableAlreadyExists")) {
++                throw e;
++              }
++              debug2(`failed to register table ${resourceToLabel(table)}, retrying...`);
++            }
+           }
+         );
+       })
+@@ -903,12 +918,20 @@ async function getWorldDeploy(client, worldAddress, deployBlock) {
+     maxBlockRange: 100000n
+   });
+   if (blockLogs.length === 0) {
+-    throw new Error("could not find `HelloWorld` or `HelloStore` event");
+-  }
++    debug2("PATCHED: HelloWorld/HelloStore events not found, using fallback deploy info for WorldProxy");
++    deploy2 = {
++      address,
++      deployBlock: deployBlock || fromBlock.number,
++      worldVersion: "2.0.2",
++      storeVersion: "2.0.2",
++      stateBlock: stateBlock.number
++    };
++  } else {
+   deploy2 = {
+     ...logsToWorldDeploy(blockLogs.flatMap((block) => block.logs)),
+     stateBlock: stateBlock.number
+   };
++  }
+   deploys.set(address, deploy2);
+   debug2("found world deploy for", address, "at block", deploy2.deployBlock);
+   return deploy2;
+@@ -966,15 +989,30 @@ async function ensureFunctions({
+         args: [func.systemId, func.systemFunctionSignature]
+       };
+       return pRetry3(
+-        () => writeContract4(client, {
+-          chain: client.chain ?? null,
+-          address: worldDeploy.address,
+-          abi: worldAbi,
+-          ...params
+-        }),
++        async () => {
++          try {
++            return await writeContract4(client, {
++              chain: client.chain ?? null,
++              address: worldDeploy.address,
++              abi: worldAbi,
++              ...params
++            });
++          } catch (e) {
++            if (e.message && e.message.includes("FunctionSelectorAlreadyExists")) {
++              debug2(`PATCHED: function ${func.signature} already exists on-chain, skipping`);
++              return undefined;
++            }
++            throw e;
++          }
++        },
+         {
+           retries: 3,
+-          onFailedAttempt: () => debug2(`failed to register function ${func.signature}, retrying...`)
++          onFailedAttempt: (e) => {
++            if (e.message && e.message.includes("FunctionSelectorAlreadyExists")) {
++              throw e;
++            }
++            debug2(`failed to register function ${func.signature}, retrying...`);
++          }
+         }
+       );
+     })
+@@ -1181,13 +1219,23 @@ async function ensureNamespaceOwner({
+   }
+   const registrationTxs = Promise.all(
+     missingNamespaces.map(
+-      (namespace) => writeContract6(client, {
+-        chain: client.chain ?? null,
+-        address: worldDeploy.address,
+-        abi: worldAbi,
+-        functionName: "registerNamespace",
+-        args: [resourceToHex2({ namespace, type: "namespace", name: "" })]
+-      })
++      async (namespace) => {
++        try {
++          return await writeContract6(client, {
++            chain: client.chain ?? null,
++            address: worldDeploy.address,
++            abi: worldAbi,
++            functionName: "registerNamespace",
++            args: [resourceToHex2({ namespace, type: "namespace", name: "" })]
++          });
++        } catch (e) {
++          if (e.message && (e.message.includes("ResourceAlreadyExists") || e.message.includes("World_ResourceAlreadyExists"))) {
++            debug2(`PATCHED: namespace ${namespace} already exists on-chain, skipping`);
++            return undefined;
++          }
++          throw e;
++        }
++      }
+     )
+   );
+   return registrationTxs;
+@@ -1553,7 +1601,7 @@ async function deploy({
+     ...commonDeployOptions,
+     resourceIds: [...tables.map(({ tableId }) => tableId), ...systems.map(({ systemId }) => systemId)]
+   });
+-  await waitForTransactions3({ client, hashes: namespaceTxs, debugLabel: "namespace registrations" });
++  await waitForTransactions3({ client, hashes: namespaceTxs.filter(Boolean), debugLabel: "namespace registrations" });
+   const tableTxs = await ensureTables({
+     ...commonDeployOptions,
+     tables
+@@ -1566,7 +1614,7 @@ async function deploy({
+   });
+   await waitForTransactions3({
+     client,
+-    hashes: [...tableTxs, ...systemTxs],
++    hashes: [...tableTxs, ...systemTxs].filter(Boolean),
+     debugLabel: "table and system registrations"
+   });
+   const functionTxs = await ensureFunctions({
+@@ -1603,7 +1651,7 @@ async function deploy({
+   });
+   await waitForTransactions3({
+     client,
+-    hashes: [...functionTxs, ...moduleTxs, ...tagTxs],
++    hashes: [...functionTxs, ...moduleTxs, ...tagTxs].filter(Boolean),
+     debugLabel: "remaining transactions"
+   });
+   debug2("deploy complete");
