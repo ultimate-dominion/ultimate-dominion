@@ -185,7 +185,7 @@ export const LandingPage = (): JSX.Element => {
                   fontStyle="italic"
                   letterSpacing="0.15em"
                 >
-                  The ravens will find you when the gates open.
+                  You won&apos;t be forgotten. We&apos;ll find you when it&apos;s time to rise.
                 </Text>
               ) : (
                 <VStack as="form" onSubmit={onSubmit} spacing={3} w="100%">
@@ -196,7 +196,7 @@ export const LandingPage = (): JSX.Element => {
                     letterSpacing="0.2em"
                     textTransform="uppercase"
                   >
-                    Send word when the gates open
+                    Be there when the world awakens
                   </Text>
                   <HStack maxW="420px" mx="auto" spacing={0} w="100%">
                     <Input
@@ -231,7 +231,7 @@ export const LandingPage = (): JSX.Element => {
                       textTransform="uppercase"
                       type="submit"
                     >
-                      Summon
+                      Awaken
                     </Button>
                   </HStack>
                 </VStack>
