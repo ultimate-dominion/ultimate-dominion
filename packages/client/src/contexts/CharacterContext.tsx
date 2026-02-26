@@ -141,7 +141,7 @@ const CharacterProviderInner = ({
 
   const {
     AdventureEscrow,
-    CharacterEquipmentnt,
+    CharacterEquipment,
     Characters,
     CharactersTokenURI,
     EncounterEntity,
