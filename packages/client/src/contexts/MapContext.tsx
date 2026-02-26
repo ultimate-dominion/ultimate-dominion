@@ -112,9 +112,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   const spawnTx = useTransaction({
     actionName: 'spawn',
-    showSuccessToast: true,
-    successMessage: 'Spawned!',
   });
+  const [isWaitingForSpawn, setIsWaitingForSpawn] = useState(false);
   const [isFetchingEntities, setIsFetchingEntities] = useState(true);
 
   const [allCharacters, setAllCharacters] = useState<Character[]>([]);
@@ -507,18 +506,36 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     ) as Character[];
   }, [allCharacters, delegatorAddress, position]);
 
+  // Clear spawn waiting state when Spawned component updates from RECS sync
+  useEffect(() => {
+    if (isSpawned && isWaitingForSpawn) {
+      setIsWaitingForSpawn(false);
+      refreshCharacter();
+    }
+  }, [isSpawned, isWaitingForSpawn, refreshCharacter]);
+
+  // Safety timeout for spawn
+  useEffect(() => {
+    if (!isWaitingForSpawn) return;
+    const timeout = setTimeout(() => setIsWaitingForSpawn(false), 15000);
+    return () => clearTimeout(timeout);
+  }, [isWaitingForSpawn]);
+
   const onSpawn = useCallback(async () => {
     if (!delegatorAddress || !character) return;
 
+    setIsWaitingForSpawn(true);
+
     const result = await spawnTx.execute(() => spawn(character.id));
 
-    if (result) {
-      await refreshCharacter();
+    if (!result) {
+      // TX failed, clear immediately
+      setIsWaitingForSpawn(false);
     }
+    // Don't clear — effect clears when isSpawned becomes true
   }, [
     character,
     delegatorAddress,
-    refreshCharacter,
     spawn,
     spawnTx,
   ]);
@@ -532,7 +549,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         inSafetyZone,
         isFetchingEntities,
         isSpawned,
-        isSpawning: spawnTx.isLoading,
+        isSpawning: spawnTx.isLoading || isWaitingForSpawn,
         monstersOnTile,
         onSpawn,
         otherCharactersOnTile,

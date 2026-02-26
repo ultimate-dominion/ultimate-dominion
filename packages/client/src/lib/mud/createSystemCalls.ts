@@ -548,12 +548,8 @@ export function createSystemCalls(
         characterEntity.toString() as `0x${string}`,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
