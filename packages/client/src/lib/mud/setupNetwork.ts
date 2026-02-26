@@ -5,10 +5,16 @@
  */
 import { ContractWrite, createBurnerAccount } from '@latticexyz/common';
 import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
-import { encodeEntity, syncToRecs } from '@latticexyz/store-sync/recs';
+import { setComponent } from '@latticexyz/recs';
+import { SyncStep } from '@latticexyz/store-sync';
+import {
+  encodeEntity,
+  singletonEntity,
+  syncToRecs,
+} from '@latticexyz/store-sync/recs';
 import mudConfig from 'contracts/mud.config';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
-import { share, Subject } from 'rxjs';
+import { debounceTime, share, Subject } from 'rxjs';
 import {
   createPublicClient,
   createWalletClient,
@@ -23,6 +29,7 @@ import { createViemClientConfig } from './createViemClientConfig';
 import { externalTables } from './externalTables';
 import { getNetworkConfig } from './getNetworkConfig';
 import { handleIndexerError } from './indexerFallback';
+import { loadRecsCache, restoreRecsCache, saveRecsCache } from './recsCache';
 import { world } from './world';
 
 /*
@@ -81,6 +88,24 @@ export async function setupNetwork() {
 
   debug.log('Using indexer URL', { isDev, rawIndexerUrl, indexerUrl });
 
+  // Load RECS cache from IndexedDB for instant page loads
+  const cache = await loadRecsCache(
+    networkConfig.worldAddress,
+    networkConfig.chainId,
+  );
+  if (cache) {
+    debug.log('[CACHE] Found cached state', {
+      blockNumber: cache.blockNumber.toString(),
+      components: cache.components.length,
+    });
+  } else {
+    debug.log('[CACHE] No cached state found — full sync');
+  }
+
+  const startBlock = cache
+    ? cache.blockNumber
+    : BigInt(networkConfig.initialBlockNumber);
+
   const fallbackFn = async (url: string, opts: RequestInit) => {
     if (!url.toString().includes(indexerUrl ?? '')) {
       return fetch(url, opts).then(r => r.json());
@@ -101,7 +126,7 @@ export async function setupNetwork() {
       config: mudConfig,
       address: networkConfig.worldAddress as Hex,
       publicClient,
-      startBlock: BigInt(networkConfig.initialBlockNumber),
+      startBlock,
       tables: externalTables,
       indexerUrl,
       fetchJson: async (url: string, opts?: RequestInit) => {
@@ -137,6 +162,63 @@ export async function setupNetwork() {
         }
       },
     });
+
+  // If we had a cache, restore all component values immediately so the UI
+  // becomes usable while the background sync catches up on the delta.
+  if (cache) {
+    try {
+      const restored = restoreRecsCache(world, cache);
+      debug.log(`[CACHE] Restored ${restored} entities from cache`);
+
+      // Mark sync as LIVE so the UI doesn't show a loading bar.
+      // The background sync from cachedBlock will overwrite stale values.
+      setComponent(components.SyncProgress, singletonEntity, {
+        step: SyncStep.LIVE,
+        message: 'Restored from cache',
+        percentage: 100,
+        latestBlockNumber: cache.blockNumber,
+        lastBlockNumberProcessed: cache.blockNumber,
+      });
+    } catch (e) {
+      debug.log('[CACHE] Failed to restore cache, continuing with sync', e);
+    }
+  }
+
+  // Periodic cache save — every 60s while synced
+  const CACHE_SAVE_INTERVAL_MS = 60_000;
+  let lastSavedBlock = 0n;
+
+  latestBlock$.pipe(debounceTime(CACHE_SAVE_INTERVAL_MS)).subscribe({
+    next: (block) => {
+      const blockNum = block.number ?? 0n;
+      if (blockNum > lastSavedBlock) {
+        lastSavedBlock = blockNum;
+        saveRecsCache(
+          world,
+          blockNum,
+          networkConfig.worldAddress,
+          networkConfig.chainId,
+        ).then(() => {
+          debug.log(`[CACHE] Saved at block ${blockNum}`);
+        });
+      }
+    },
+  });
+
+  // Best-effort save on page unload
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', () => {
+      const blockNum = lastSavedBlock;
+      if (blockNum > 0n) {
+        saveRecsCache(
+          world,
+          blockNum,
+          networkConfig.worldAddress,
+          networkConfig.chainId,
+        );
+      }
+    });
+  }
 
   // Wrap waitForTransaction with retry logic to handle anvil receipt timing
   const waitForTransaction = async (
