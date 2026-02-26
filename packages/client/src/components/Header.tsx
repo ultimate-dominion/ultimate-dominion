@@ -121,7 +121,7 @@ export const Header = ({
   return (
     <Grid
       as="header"
-      bgColor="#1C1814"
+      bgColor={pathname === HOME_PATH ? 'transparent' : '#1C1814'}
       mt={4}
       px={4}
       py={2}
