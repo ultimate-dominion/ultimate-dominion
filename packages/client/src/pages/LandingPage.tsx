@@ -1,6 +1,7 @@
 import {
   Box,
   HStack,
+  Image,
   Input,
   keyframes,
   Link,
@@ -81,14 +82,14 @@ export const LandingPage = (): JSX.Element => {
           backgroundPosition="center"
           backgroundRepeat="no-repeat"
           backgroundSize="contain"
-          height="60%"
+          h="50vh"
           left="50%"
-          opacity={0.02}
+          opacity={0.035}
           pointerEvents="none"
           position="absolute"
           top="50%"
           transform="translate(-50%, -50%)"
-          width="60%"
+          w="60vw"
           zIndex={0}
         />
 
@@ -101,12 +102,20 @@ export const LandingPage = (): JSX.Element => {
           spacing={{ base: 14, md: 18 }}
           zIndex={2}
         >
+          <Image
+            alt="Ultimate Dominion"
+            mx="auto"
+            src="/images/ultimate-dominion-logo.svg"
+            width={{ base: '200px', sm: '250px', md: '280px' }}
+          />
+
           <Text
             color="#8A7E6A"
             fontFamily="'Cinzel', serif"
             fontSize={{ base: '11px', sm: '13px' }}
             fontStyle="italic"
             letterSpacing="0.3em"
+            mt={-8}
             textAlign="center"
             textTransform="uppercase"
           >
