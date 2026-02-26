@@ -217,6 +217,7 @@ const CharacterCreationInner = (): JSX.Element => {
 
   // Derive starter items reactively from RECS query (re-computes when records arrive)
   const { availableStarterWeapons, availableStarterArmors } = useMemo(() => {
+    console.info('[StarterItems] StarterItemPool:', !!StarterItemPool, 'isLoadingTemplates:', isLoadingItemTemplates, 'entities:', starterPoolEntities.length, 'weapons:', weaponTemplates.length, 'armors:', armorTemplates.length);
     if (!StarterItemPool || isLoadingItemTemplates) {
       return { availableStarterWeapons: [] as Weapon[], availableStarterArmors: [] as Armor[] };
     }
@@ -230,6 +231,7 @@ const CharacterCreationInner = (): JSX.Element => {
 
       const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
       const itemIdStr = itemId.toString();
+      console.info('[StarterItems] Checking itemId:', itemIdStr, 'weaponMatch:', weaponTemplates.some(w => w.tokenId === itemIdStr), 'armorMatch:', armorTemplates.some(a => a.tokenId === itemIdStr));
 
       const weapon = weaponTemplates.find(w => w.tokenId === itemIdStr);
       if (weapon) {
