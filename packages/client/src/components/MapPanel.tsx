@@ -28,7 +28,6 @@ import { useMUD } from '../contexts/MUDContext';
 import { ChatBox } from './ChatBox';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
-import { CompassSvg } from './SVGs/CompassSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
 
 const SAFE_ZONE_AREA = {
@@ -247,84 +246,62 @@ const NavigationCompass = ({
   isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
 }): JSX.Element => {
-  const btnSize = { base: 7, lg: 8 };
+  const sz = 6;
+  const iconPx = "16px";
 
   return (
-    <Box
-      mt={{ base: 1, lg: 2 }}
-      position="relative"
-      h={{ base: '100px', lg: '120px' }}
-      w={{ base: '100px', lg: '120px' }}
-    >
-      <Box
-        left="50%"
-        opacity={0.25}
-        position="absolute"
-        top="50%"
-        transform="translate(-50%, -50%)"
-      >
-        <CompassSvg size={16} />
-      </Box>
+    <VStack mt={1} spacing={0}>
       <IconButton
         aria-label="Move north"
-        borderRadius="50%"
-        icon={<BiChevronUp size="20px" />}
+        borderRadius="sm"
+        icon={<BiChevronUp size={iconPx} />}
         isDisabled={isDisabled}
-        left="50%"
         onClick={() => onMove('up')}
-        position="absolute"
-        top={0}
-        transform="translateX(-50%)"
-        h={btnSize}
-        w={btnSize}
+        h={sz}
+        w={sz}
         minW={0}
-        variant="blue"
+        variant="ghost"
+        size="xs"
       />
-      <IconButton
-        aria-label="Move west"
-        borderRadius="50%"
-        icon={<BiChevronLeft size="20px" />}
-        isDisabled={isDisabled}
-        left={0}
-        onClick={() => onMove('left')}
-        position="absolute"
-        top="50%"
-        transform="translateY(-50%)"
-        h={btnSize}
-        w={btnSize}
-        minW={0}
-        variant="blue"
-      />
-      <IconButton
-        aria-label="Move east"
-        borderRadius="50%"
-        icon={<BiChevronRight size="20px" />}
-        isDisabled={isDisabled}
-        onClick={() => onMove('right')}
-        position="absolute"
-        right={0}
-        top="50%"
-        transform="translateY(-50%)"
-        h={btnSize}
-        w={btnSize}
-        minW={0}
-        variant="blue"
-      />
+      <HStack spacing={0}>
+        <IconButton
+          aria-label="Move west"
+          borderRadius="sm"
+          icon={<BiChevronLeft size={iconPx} />}
+          isDisabled={isDisabled}
+          onClick={() => onMove('left')}
+          h={sz}
+          w={sz}
+          minW={0}
+          variant="ghost"
+          size="xs"
+        />
+        <Box h={sz} w={sz} />
+        <IconButton
+          aria-label="Move east"
+          borderRadius="sm"
+          icon={<BiChevronRight size={iconPx} />}
+          isDisabled={isDisabled}
+          onClick={() => onMove('right')}
+          h={sz}
+          w={sz}
+          minW={0}
+          variant="ghost"
+          size="xs"
+        />
+      </HStack>
       <IconButton
         aria-label="Move south"
-        borderRadius="50%"
-        icon={<BiChevronDown size="20px" />}
+        borderRadius="sm"
+        icon={<BiChevronDown size={iconPx} />}
         isDisabled={isDisabled}
-        bottom={0}
-        left="50%"
         onClick={() => onMove('down')}
-        position="absolute"
-        transform="translateX(-50%)"
-        h={btnSize}
-        w={btnSize}
+        h={sz}
+        w={sz}
         minW={0}
-        variant="blue"
+        variant="ghost"
+        size="xs"
       />
-    </Box>
+    </VStack>
   );
 };
