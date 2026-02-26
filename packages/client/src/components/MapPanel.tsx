@@ -63,7 +63,7 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
 
   return (
     <Stack alignItems="center" h="100%">
-      <Box w="100%" h={{ base: '300px', lg: '350px' }}>
+      <Box w="100%" h={{ base: '300px', lg: '300px' }}>
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
@@ -184,17 +184,17 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
           >
             {isSpawned && position && (
               <HStack>
-                <BiSolidNavigation size={isDesktop ? 20 : 10} />
+                <BiSolidNavigation size={isDesktop ? 12 : 10} />
                 <Text
                   fontFamily="mono"
                   fontWeight={700}
-                  size={{ base: 'xs', sm: 'md', md: 'xl' }}
+                  size={{ base: 'xs', sm: 'sm', md: 'sm' }}
                 >
                   {position.x},{position.y}
                 </Text>
               </HStack>
             )}
-            <Text fontWeight={500} size={{ base: '2xs', sm: 'sm', md: 'md' }}>
+            <Text fontWeight={500} size={{ base: '2xs', sm: 'xs', md: 'sm' }}>
               {currentPlayersSpawned} Player
               {currentPlayersSpawned === 1 ? '' : 's'}
             </Text>
