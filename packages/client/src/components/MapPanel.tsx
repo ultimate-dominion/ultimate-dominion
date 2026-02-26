@@ -82,7 +82,7 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
             display="grid"
             gridTemplateColumns="repeat(10, 1fr)"
             gridTemplateRows="repeat(10, 1fr)"
-            h={{ base: 'calc(100% - 75px)', md: 'calc(100% - 120px)' }}
+            h={{ base: 'calc(100% - 65px)', md: 'calc(100% - 95px)' }}
             maxW="100%"
             m="0 auto"
             mt={2}
@@ -179,7 +179,7 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
           </Box>
           <HStack
             justifyContent={isSpawned && position ? 'space-between' : 'end'}
-            mt={2}
+            mt={0.5}
             px={{ base: 1, sm: 2 }}
           >
             {isSpawned && position && (
