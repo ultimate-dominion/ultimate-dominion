@@ -9,12 +9,14 @@ import {
   Grid,
   HStack,
   Image,
+  Input,
   keyframes,
   Link,
   Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { FormEvent, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink } from 'react-router-dom';
 import Typist from 'react-typist';
@@ -29,6 +31,20 @@ const torchGlow = keyframes`
 `;
 
 export const LandingPage = (): JSX.Element => {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    const existing = JSON.parse(localStorage.getItem('ud:signups') || '[]');
+    existing.push({ email, ts: Date.now() });
+    localStorage.setItem('ud:signups', JSON.stringify(existing));
+
+    setSubmitted(true);
+  };
+
   return (
     <Grid
       minHeight="100vh"
@@ -161,15 +177,65 @@ export const LandingPage = (): JSX.Element => {
                 </Typist>
               </VStack>
 
-              <Button
-                animation={`${torchGlow} 4s ease-in-out infinite`}
-                color="#12100E"
-                letterSpacing="0.15em"
-                px={{ base: 16, sm: 24 }}
-                textTransform="uppercase"
-              >
-                Enter
-              </Button>
+              {submitted ? (
+                <Text
+                  color="#8A7E6A"
+                  fontFamily="'Cinzel', serif"
+                  fontSize={{ base: '12px', sm: '14px' }}
+                  fontStyle="italic"
+                  letterSpacing="0.15em"
+                >
+                  The ravens will find you when the gates open.
+                </Text>
+              ) : (
+                <VStack as="form" onSubmit={onSubmit} spacing={3} w="100%">
+                  <Text
+                    color="#8A7E6A"
+                    fontFamily="'Cinzel', serif"
+                    fontSize={{ base: '10px', sm: '11px' }}
+                    letterSpacing="0.2em"
+                    textTransform="uppercase"
+                  >
+                    Send word when the gates open
+                  </Text>
+                  <HStack maxW="420px" mx="auto" spacing={0} w="100%">
+                    <Input
+                      bg="rgba(20, 18, 15, 0.8)"
+                      border="2px solid"
+                      borderColor="#3A3228"
+                      borderRadius="8px 0 0 8px"
+                      borderRight="none"
+                      color="#E8DCC8"
+                      fontSize="14px"
+                      h="48px"
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      type="email"
+                      value={email}
+                      _focus={{
+                        borderColor: '#C87A2A',
+                        boxShadow: 'none',
+                      }}
+                      _placeholder={{
+                        color: '#8A7E6A',
+                      }}
+                    />
+                    <Button
+                      animation={`${torchGlow} 4s ease-in-out infinite`}
+                      borderRadius="0 8px 8px 0"
+                      color="#12100E"
+                      flexShrink={0}
+                      h="48px"
+                      letterSpacing="0.15em"
+                      px={{ base: 6, sm: 10 }}
+                      textTransform="uppercase"
+                      type="submit"
+                    >
+                      Summon
+                    </Button>
+                  </HStack>
+                </VStack>
+              )}
 
               <HStack
                 fontFamily="'Cinzel', serif"
