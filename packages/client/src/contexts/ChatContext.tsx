@@ -300,24 +300,52 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       // Lazy-load Push Protocol SDK — only when user actually opens chat
       const { PushAPI: PushSDK, CONSTANTS } = await import('@pushprotocol/restapi');
 
-      // For embedded wallets, use the admin (EOA) account for Push Protocol.
-      // Smart account signatures don't verify via ecrecover, causing 400 errors.
-      let pushSigner = data;
-      if (authMethod === 'embedded' && embeddedWallet?.getAdminAccount) {
-        const adminAccount = embeddedWallet.getAdminAccount();
-        if (adminAccount) {
-          const { viemAdapter } = await import('thirdweb/adapters/viem');
-          pushSigner = viemAdapter.walletClient.toViem({
-            client: thirdwebClient,
-            chain: thirdwebChain,
-            account: adminAccount,
+      // Try cached PGP key first to skip the wallet signature popup on refresh
+      const cachedPgpKey = sessionStorage.getItem('push_pgp_key');
+      const cachedAccount = sessionStorage.getItem('push_account');
+
+      let _user: Awaited<ReturnType<typeof PushSDK.initialize>> | null = null;
+
+      if (cachedPgpKey && cachedAccount) {
+        try {
+          _user = await PushSDK.initialize(null, {
+            env: PUSH_ENV,
+            account: cachedAccount,
+            decryptedPGPPrivateKey: cachedPgpKey,
           });
+        } catch {
+          // Cached key stale — clear and fall through to signer-based init
+          sessionStorage.removeItem('push_pgp_key');
+          sessionStorage.removeItem('push_account');
         }
       }
 
-      const _user = await PushSDK.initialize(pushSigner, {
-        env: PUSH_ENV,
-      });
+      if (!_user) {
+        // For embedded wallets, use the admin (EOA) account for Push Protocol.
+        // Smart account signatures don't verify via ecrecover, causing 400 errors.
+        let pushSigner = data;
+        if (authMethod === 'embedded' && embeddedWallet?.getAdminAccount) {
+          const adminAccount = embeddedWallet.getAdminAccount();
+          if (adminAccount) {
+            const { viemAdapter } = await import('thirdweb/adapters/viem');
+            pushSigner = viemAdapter.walletClient.toViem({
+              client: thirdwebClient,
+              chain: thirdwebChain,
+              account: adminAccount,
+            });
+          }
+        }
+
+        _user = await PushSDK.initialize(pushSigner, {
+          env: PUSH_ENV,
+        });
+      }
+
+      // Cache PGP key so subsequent refreshes skip the signature popup
+      if (_user.decryptedPgpPvtKey) {
+        sessionStorage.setItem('push_pgp_key', _user.decryptedPgpPvtKey);
+        sessionStorage.setItem('push_account', _user.account);
+      }
 
       const groupChatInfo = (await _user.chat.group.info(
         GROUP_CHAT_ID,
@@ -392,9 +420,11 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     }
   }, [authMethod, data, embeddedWallet, renderError, thirdwebChain, thirdwebClient, user]);
 
-  // Auto-login to Push Protocol when spawned and wallet is ready
+  // Auto-login only when a cached PGP key exists (no MetaMask popup).
+  // First-time users click the Login button manually.
   useEffect(() => {
-    if (isSpawned && data && !user && !isLoggingIn) {
+    const hasCachedKey = sessionStorage.getItem('push_pgp_key');
+    if (hasCachedKey && isSpawned && data && !user && !isLoggingIn) {
       onLogin();
     }
   }, [isSpawned, data, user, isLoggingIn, onLogin]);
