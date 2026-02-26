@@ -3,7 +3,7 @@
  * (https://viem.sh/docs/getting-started.html).
  * This line imports the functions we need from it.
  */
-import { ContractWrite, createBurnerAccount } from '@latticexyz/common';
+import { ContractWrite, createBurnerAccount, hexToResource } from '@latticexyz/common';
 import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
 import { getComponentEntities, setComponent } from '@latticexyz/recs';
 import { SyncStep } from '@latticexyz/store-sync';
@@ -20,6 +20,7 @@ import {
   createWalletClient,
   getContract,
   Hex,
+  stringToHex,
   type TransactionReceipt,
 } from 'viem';
 
@@ -129,6 +130,7 @@ export async function setupNetwork() {
       address: networkConfig.worldAddress as Hex,
       publicClient,
       startBlock,
+      startSync: false, // Don't start yet — pre-populate RegisteredTables first
       tables: externalTables,
       indexerUrl,
       fetchJson: async (url: string, opts?: RequestInit) => {
@@ -165,9 +167,49 @@ export async function setupNetwork() {
       },
     });
 
-  // Quick sanity check: verify key component objects exist
-  console.info('[SYNC] components.Items exists:', !!components.Items, 'components.Items.id:', (components.Items as any)?.id);
-  console.info('[SYNC] components keys:', Object.keys(components).join(', '));
+  // MUD v2.2.23 contracts don't emit Store_SetRecord for store:Tables for user
+  // namespace tables, but the v2.0.11 client's storageAdapter requires them in
+  // RegisteredTables. Pre-populate RegisteredTables from the config so the
+  // storageAdapter can find and decode all table events.
+  const regTables = (components as any).RegisteredTables;
+  if (regTables) {
+    let prePopulated = 0;
+    for (const comp of world.components) {
+      const meta = (comp as any).metadata;
+      if (!meta?.keySchema || !meta?.valueSchema || !comp.id) continue;
+      // Skip internal components (RegisteredTables, SyncProgress)
+      if (!comp.id.startsWith('0x')) continue;
+      try {
+        const { namespace, name } = hexToResource(comp.id as Hex);
+        const entity = encodeEntity(
+          { address: 'address', namespace: 'bytes16', name: 'bytes16' },
+          {
+            address: networkConfig.worldAddress as Hex,
+            namespace: stringToHex(namespace, { size: 16 }),
+            name: stringToHex(name, { size: 16 }),
+          },
+        );
+        setComponent(regTables, entity, {
+          table: {
+            address: networkConfig.worldAddress,
+            tableId: comp.id,
+            namespace,
+            name,
+            keySchema: meta.keySchema,
+            valueSchema: meta.valueSchema,
+          },
+        });
+        prePopulated++;
+      } catch {
+        // Skip components that don't have valid resource IDs
+      }
+    }
+    console.info(`[SYNC] Pre-populated RegisteredTables with ${prePopulated} tables from config`);
+  }
+
+  // Now start the sync — RegisteredTables has all tables so the
+  // storageAdapter can match events to RECS components.
+  const syncSub = storedBlockLogs$.subscribe();
 
   // Diagnostic: check RegisteredTables + multiple table entity counts
   let blocksProcessed = 0;
@@ -272,6 +314,7 @@ export async function setupNetwork() {
   // Best-effort save on page unload
   if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', () => {
+      syncSub.unsubscribe();
       clearInterval(cacheInterval);
       if (lastProcessedBlock > 0n) {
         saveRecsCache(
