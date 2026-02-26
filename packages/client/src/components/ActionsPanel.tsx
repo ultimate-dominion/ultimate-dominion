@@ -343,7 +343,7 @@ export const ActionsPanel = (): JSX.Element => {
         equippedSpellsAndWeapons.length !== 0 &&
         opponent && (
           <VStack
-            bgColor="#B3B9BE"
+            bgColor="#1C1814"
             position="sticky"
             spacing={0}
             top={0}
@@ -824,9 +824,9 @@ export const ActionsPanel = (): JSX.Element => {
       {battleOver && currentBattle && (
         <Stack py={4} spacing={4}>
           <Box
-            backgroundColor="#F5F5FA1F"
-            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-            h="6px"
+            backgroundColor="rgba(196,184,158,0.08)"
+            boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+            h="1px"
             w="100%"
           />
           <HStack justifyContent="space-between" px={{ base: 2, lg: 4 }}>

@@ -7,7 +7,7 @@
     <title>Ultimate Dominion</title>
 
     <meta name="description" content="A persistent on-chain world where every choice matters. Fight monsters, trade items, and build your legacy in a browser-based RPG with permanent, provable ownership." />
-    <meta name="theme-color" content="#1A244E" />
+    <meta name="theme-color" content="#12100E" />
     <link rel="canonical" href="https://ultimatedominion.com/" />
 
     <!-- Open Graph -->
@@ -42,10 +42,10 @@
   </head>
   <body>
     <script>
-      // Force light mode - clear any stale dark mode preference from localStorage
-      localStorage.setItem('chakra-ui-color-mode', 'light');
-      document.documentElement.setAttribute('data-theme', 'light');
-      document.documentElement.style.colorScheme = 'light';
+      // Force dark mode
+      localStorage.setItem('chakra-ui-color-mode', 'dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.style.colorScheme = 'dark';
     </script>
     <div id="react-root"></div>
     <script type="module" src="/src/index.tsx"></script>

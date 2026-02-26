@@ -7,7 +7,7 @@ export const Footer = (): JSX.Element => {
     <HStack
       alignItems="center"
       as="footer"
-      borderTop="1px solid black"
+      borderTop="1px solid #3A3228"
       px={20}
       py={4}
     >

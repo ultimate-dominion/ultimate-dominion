@@ -73,11 +73,30 @@ export const Welcome = (): JSX.Element => {
   }, [authMethod, character, delegatorAddress, isAuthenticated, navigate, onOpen]);
 
   return (
-    <Box border="6px solid #1A244E" p={1.5}>
+    <Box border="6px solid #3A3228" p={1.5}>
       <Helmet>
         <title>Ultimate Dominion — A Persistent On-Chain World</title>
       </Helmet>
-      <Box border="0.5px solid #1A244E">
+      <Box
+        border="0.5px solid #3A3228"
+        position="relative"
+        _before={{
+          content: '""',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '60%',
+          height: '60%',
+          backgroundImage: 'url(/images/ultimate-dominion-logo.svg)',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          backgroundSize: 'contain',
+          opacity: 0.04,
+          filter: 'sepia(0.3)',
+          pointerEvents: 'none',
+        }}
+      >
         <VStack
           justifyContent="center"
           mb={16}

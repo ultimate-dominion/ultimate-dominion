@@ -106,7 +106,7 @@ export const LootManagerAllowanceModal = ({
               </Button>
               {!isApprovingGold && (
                 <Tooltip
-                  bg="#070D2A"
+                  bg="#14120F"
                   hasArrow
                   label="This allows you to deposit Gold into your Adventure Escrow without having to approve each transaction. It is a faster and smoother experience."
                   placement="top"

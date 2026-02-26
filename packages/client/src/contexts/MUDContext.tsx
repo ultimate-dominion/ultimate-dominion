@@ -106,8 +106,8 @@ export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
   if (!setupResult) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '1rem' }}>
-        <img src="/images/ultimate-dominion-logo.svg" alt="Ultimate Dominion" style={{ width: '200px', opacity: 0.8 }} />
-        <p style={{ color: 'white', fontSize: '1.125rem' }}>Loading...</p>
+        <img src="/images/ultimate-dominion-logo.svg" alt="Ultimate Dominion" style={{ width: '200px', opacity: 0.8, filter: 'sepia(0.2) brightness(1.3)' }} />
+        <p style={{ color: '#C4B89E', fontSize: '1.125rem' }}>Loading...</p>
       </div>
     );
   }

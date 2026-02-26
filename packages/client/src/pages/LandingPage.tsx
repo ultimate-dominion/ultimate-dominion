@@ -22,8 +22,8 @@ const fadeIn = keyframes`
 `;
 
 const glowPulse = keyframes`
-  0%, 100% { box-shadow: 0 0 8px rgba(22, 51, 182, 0.3), inset 0 0 8px rgba(22, 51, 182, 0.1); }
-  50% { box-shadow: 0 0 16px rgba(22, 51, 182, 0.5), inset 0 0 12px rgba(22, 51, 182, 0.15); }
+  0%, 100% { box-shadow: 0 0 8px rgba(200, 122, 42, 0.3), inset 0 0 8px rgba(200, 122, 42, 0.1); }
+  50% { box-shadow: 0 0 16px rgba(200, 122, 42, 0.5), inset 0 0 12px rgba(200, 122, 42, 0.15); }
 `;
 
 const NavLink = ({
@@ -39,7 +39,7 @@ const NavLink = ({
     as={RouterLink}
     to={to}
     border="1px solid"
-    borderColor="rgba(162, 169, 176, 0.25)"
+    borderColor="rgba(196, 184, 158, 0.25)"
     flex="1"
     maxW="220px"
     minW="160px"
@@ -49,13 +49,13 @@ const NavLink = ({
     textDecoration="none"
     transition="all 0.3s ease"
     _hover={{
-      borderColor: 'rgba(162, 169, 176, 0.5)',
-      bg: 'rgba(255, 255, 255, 0.03)',
+      borderColor: 'rgba(200, 122, 42, 0.4)',
+      bg: 'rgba(200, 122, 42, 0.05)',
       transform: 'translateY(-2px)',
     }}
   >
     <Text
-      color="rgba(162, 169, 176, 0.9)"
+      color="rgba(196, 184, 158, 0.9)"
       fontSize={{ base: '11px', sm: '12px' }}
       fontWeight={600}
       letterSpacing="0.2em"
@@ -64,7 +64,7 @@ const NavLink = ({
       {label}
     </Text>
     <Text
-      color="rgba(162, 169, 176, 0.4)"
+      color="rgba(196, 184, 158, 0.4)"
       fontSize="11px"
       fontStyle="italic"
       mt={1}
@@ -91,7 +91,7 @@ export const LandingPage = (): JSX.Element => {
   };
 
   return (
-    <Box bg="#0C1539" minH="100vh">
+    <Box bg="#12100E" minH="100vh">
       <Helmet>
         <title>Ultimate Dominion — A Persistent On-Chain World</title>
       </Helmet>
@@ -119,11 +119,11 @@ export const LandingPage = (): JSX.Element => {
           maxW={{ base: '280px', sm: '380px', md: '480px' }}
           src="/images/ultimate-dominion-logo.svg"
           // Subtle brightness so the silver pops on dark bg
-          filter="brightness(1.4)"
+          filter="sepia(0.2) brightness(1.3)"
         />
 
         <Text
-          color="rgba(162, 169, 176, 0.7)"
+          color="rgba(196, 184, 158, 0.7)"
           fontSize={{ base: '11px', sm: '13px' }}
           fontWeight={500}
           letterSpacing="0.35em"
@@ -141,14 +141,14 @@ export const LandingPage = (): JSX.Element => {
         >
           <VStack spacing={1}>
             <Text
-              color="rgba(162, 169, 176, 0.35)"
+              color="rgba(196, 184, 158, 0.35)"
               fontSize="11px"
               letterSpacing="0.15em"
               textTransform="uppercase"
             >
               Enter
             </Text>
-            <Text color="rgba(162, 169, 176, 0.3)" fontSize="18px">
+            <Text color="rgba(196, 184, 158, 0.3)" fontSize="18px">
               &#x2304;
             </Text>
           </VStack>
@@ -168,7 +168,7 @@ export const LandingPage = (): JSX.Element => {
         {/* Narrative */}
         <VStack spacing={8}>
           <Text
-            color="rgba(162, 169, 176, 0.55)"
+            color="rgba(196, 184, 158, 0.55)"
             fontSize={{ base: '14px', sm: '16px' }}
             fontStyle="italic"
             fontWeight={400}
@@ -181,10 +181,10 @@ export const LandingPage = (): JSX.Element => {
           </Text>
 
           {/* Thin rule */}
-          <Box bg="rgba(162, 169, 176, 0.12)" h="1px" w="60px" />
+          <Box bg="rgba(196, 184, 158, 0.12)" h="1px" w="60px" />
 
           <Text
-            color="rgba(162, 169, 176, 0.5)"
+            color="rgba(196, 184, 158, 0.5)"
             fontSize={{ base: '13px', sm: '15px' }}
             fontWeight={400}
             lineHeight="1.9"
@@ -196,7 +196,7 @@ export const LandingPage = (): JSX.Element => {
           </Text>
 
           <Text
-            color="rgba(162, 169, 176, 0.65)"
+            color="rgba(196, 184, 158, 0.65)"
             fontSize={{ base: '13px', sm: '15px' }}
             fontWeight={500}
             lineHeight="1.9"
@@ -212,7 +212,7 @@ export const LandingPage = (): JSX.Element => {
           {submitted ? (
             <VStack spacing={2}>
               <Text
-                color="rgba(162, 169, 176, 0.7)"
+                color="rgba(196, 184, 158, 0.7)"
                 fontSize="14px"
                 fontWeight={500}
                 letterSpacing="0.05em"
@@ -220,7 +220,7 @@ export const LandingPage = (): JSX.Element => {
                 You&apos;re on the list.
               </Text>
               <Text
-                color="rgba(162, 169, 176, 0.4)"
+                color="rgba(196, 184, 158, 0.4)"
                 fontSize="13px"
                 fontStyle="italic"
               >
@@ -231,7 +231,7 @@ export const LandingPage = (): JSX.Element => {
             <Box as="form" maxW="420px" mx="auto" onSubmit={onSubmit} w="100%">
               <VStack spacing={3}>
                 <Text
-                  color="rgba(162, 169, 176, 0.5)"
+                  color="rgba(196, 184, 158, 0.5)"
                   fontSize={{ base: '12px', sm: '13px' }}
                   letterSpacing="0.1em"
                   textTransform="uppercase"
@@ -240,11 +240,11 @@ export const LandingPage = (): JSX.Element => {
                 </Text>
                 <HStack spacing={0} w="100%">
                   <Input
-                    bg="rgba(255, 255, 255, 0.04)"
+                    bg="rgba(196, 184, 158, 0.06)"
                     border="1px solid"
-                    borderColor="rgba(162, 169, 176, 0.2)"
+                    borderColor="rgba(196, 184, 158, 0.2)"
                     borderRadius="0"
-                    color="rgba(255, 255, 255, 0.8)"
+                    color="rgba(232, 220, 200, 0.8)"
                     fontSize="14px"
                     h="44px"
                     onChange={e => setEmail(e.target.value)}
@@ -252,21 +252,21 @@ export const LandingPage = (): JSX.Element => {
                     type="email"
                     value={email}
                     _focus={{
-                      borderColor: 'rgba(22, 51, 182, 0.6)',
+                      borderColor: 'rgba(200, 122, 42, 0.6)',
                       boxShadow: 'none',
                     }}
                     _placeholder={{
-                      color: 'rgba(162, 169, 176, 0.3)',
+                      color: 'rgba(196, 184, 158, 0.3)',
                     }}
                   />
                   <Box
                     as="button"
                     animation={`${glowPulse} 3s ease-in-out infinite`}
-                    bg="rgba(10, 33, 135, 0.5)"
+                    bg="rgba(200, 122, 42, 0.5)"
                     border="1px solid"
-                    borderColor="rgba(22, 51, 182, 0.5)"
+                    borderColor="rgba(200, 122, 42, 0.5)"
                     borderLeft="none"
-                    color="rgba(255, 255, 255, 0.8)"
+                    color="rgba(232, 220, 200, 0.9)"
                     cursor="pointer"
                     flexShrink={0}
                     fontSize="12px"
@@ -278,8 +278,8 @@ export const LandingPage = (): JSX.Element => {
                     transition="all 0.2s ease"
                     type="submit"
                     _hover={{
-                      bg: 'rgba(10, 33, 135, 0.7)',
-                      color: 'white',
+                      bg: 'rgba(200, 122, 42, 0.7)',
+                      color: '#E8DCC8',
                     }}
                   >
                     Join
@@ -291,7 +291,7 @@ export const LandingPage = (): JSX.Element => {
         </VStack>
 
         {/* Thin rule */}
-        <Box bg="rgba(162, 169, 176, 0.08)" h="1px" w="100%" />
+        <Box bg="rgba(196, 184, 158, 0.08)" h="1px" w="100%" />
 
         {/* Navigation links */}
         <HStack

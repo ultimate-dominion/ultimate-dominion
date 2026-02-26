@@ -71,7 +71,7 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
             px="20px"
             width="100%"
           >
-            <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+            <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
               Dark Cave
             </Heading>
           </HStack>
@@ -341,7 +341,7 @@ const NavigationCompass = ({
         >
           <path
             d="M20.6967 7.93237L10.9997 1.212L1.30273 7.93237"
-            stroke="#283570"
+            stroke="#C87A2A"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2"
@@ -372,7 +372,7 @@ const NavigationCompass = ({
           >
             <path
               d="M8.20899 1.09093L1.48862 10.7879L8.20898 20.4849"
-              stroke="#283570"
+              stroke="#C87A2A"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2"
@@ -417,7 +417,7 @@ const NavigationCompass = ({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              stroke="#283570"
+              stroke="#C87A2A"
             />
           </Icon>
         </HStack>
@@ -444,7 +444,7 @@ const NavigationCompass = ({
         >
           <path
             d="M1.30332 1.51514L11.0003 8.2355L20.6973 1.51514"
-            stroke="#283570"
+            stroke="#C87A2A"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2"

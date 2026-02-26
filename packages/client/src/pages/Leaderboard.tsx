@@ -354,8 +354,8 @@ export const Leaderboard = (): JSX.Element => {
 
         <VStack overflowX="auto" spacing={0} w="100%">
           <Box
-            bgColor="#F5F5FA1F"
-            boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+            bgColor="rgba(196,184,158,0.08)"
+            boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
             h="5px"
             w="100%"
           />
@@ -369,9 +369,9 @@ export const Leaderboard = (): JSX.Element => {
                     character={entry}
                   />
                   <Box
-                    bgColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
-                    h="5px"
+                    bg="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                    h="1px"
                     w="100%"
                   />
                 </Box>

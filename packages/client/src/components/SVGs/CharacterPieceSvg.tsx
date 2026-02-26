@@ -9,6 +9,7 @@ export const CharacterPieceSvg = ({
   return (
     <Icon
       fill="none"
+      filter="sepia(0.2) brightness(0.9)"
       height={size * 2}
       viewBox="0 0 35 64"
       width={size}

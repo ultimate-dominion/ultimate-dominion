@@ -156,7 +156,7 @@ export const StatsPanel = (): JSX.Element => {
       >
         <HStack
           as="button"
-          color="white"
+          color="#E8DCC8"
           justifyContent="space-between"
           onClick={() => navigate(`/characters/${character.id}`)}
           spacing={4}
@@ -187,14 +187,14 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">HP</Text>
-          <Text color="grey500" fontFamily="mono" size="lg">
+          <Text color="#8A7E6A" fontFamily="mono" size="lg">
             {currentHpWithFloor.toString()}/{maxHp.toString()}
           </Text>
         </HStack>
         <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-          h="6px"
+          backgroundColor="rgba(196,184,158,0.08)"
+          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+          h="1px"
           w="100%"
         />
         <HStack
@@ -205,14 +205,14 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">AGI</Text>
-          <Text color="grey500" fontFamily="mono" size="lg">
+          <Text color="#8A7E6A" fontFamily="mono" size="lg">
             {(agility - expiredEffectModifications.agiModifier).toString()}
           </Text>
         </HStack>
         <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-          h="6px"
+          backgroundColor="rgba(196,184,158,0.08)"
+          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+          h="1px"
           w="100%"
         />
         <HStack
@@ -223,14 +223,14 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">INT</Text>
-          <Text color="grey500" fontFamily="mono" size="lg">
+          <Text color="#8A7E6A" fontFamily="mono" size="lg">
             {(intelligence - expiredEffectModifications.intModifier).toString()}
           </Text>
         </HStack>
         <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-          h="6px"
+          backgroundColor="rgba(196,184,158,0.08)"
+          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+          h="1px"
           w="100%"
         />
         <HStack
@@ -241,14 +241,14 @@ export const StatsPanel = (): JSX.Element => {
           w="100%"
         >
           <Text size="lg">STR</Text>
-          <Text color="grey500" fontFamily="mono" size="lg">
+          <Text color="#8A7E6A" fontFamily="mono" size="lg">
             {(strength - expiredEffectModifications.strModifier).toString()}
           </Text>
         </HStack>
         <Box
-          backgroundColor="#F5F5FA1F"
-          boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
-          h="6px"
+          backgroundColor="rgba(196,184,158,0.08)"
+          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+          h="1px"
           w="100%"
         />
       </VStack>
@@ -289,7 +289,6 @@ export const StatsPanel = (): JSX.Element => {
               Gold
             </Text>
             <Tooltip
-              bg="#070D2A"
               hasArrow
               label="Your Gold balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit Gold into your Adventure Escrow, visit 0,0 on the map."
               placement="top"
@@ -314,7 +313,6 @@ export const StatsPanel = (): JSX.Element => {
           <HStack>
             <Text size="md">Escrow</Text>
             <Tooltip
-              bg="#070D2A"
               hasArrow
               label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
               placement="top"

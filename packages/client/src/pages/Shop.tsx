@@ -209,7 +209,7 @@ export const Shop = (): JSX.Element => {
       <Helmet>
         <title>Shop | Ultimate Dominion</title>
       </Helmet>
-      <HStack bgColor="#1A244E" color="white" h="68px" px={6}>
+      <HStack bgColor="#1C1814" color="#E8DCC8" h="68px" px={6}>
         <ShopSvg />
         <Heading size={{ base: 'sm', md: 'md' }}>{shop.name}</Heading>
         <Spacer />
@@ -225,8 +225,8 @@ export const Shop = (): JSX.Element => {
         templateColumns={{ base: 'repeat(1, 1fr)', xl: 'repeat(2, 1fr)' }}
       >
         <GridItem>
-          <HStack bgColor="#1A244E" h="68px" px={6}>
-            <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+          <HStack bgColor="#1C1814" h="68px" px={6}>
+            <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
               My Inventory
             </Heading>
             <Spacer />
@@ -254,8 +254,8 @@ export const Shop = (): JSX.Element => {
           </PolygonalCard>
         </GridItem>
         <GridItem>
-          <HStack bgColor="#1A244E" h="68px" px={6}>
-            <Heading color="white" size={{ base: 'sm', md: 'md' }}>
+          <HStack bgColor="#1C1814" h="68px" px={6}>
+            <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
               Shopkeeper&apos;s Inventory
             </Heading>
             <Spacer />

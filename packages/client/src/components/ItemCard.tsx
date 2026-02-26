@@ -212,13 +212,13 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         animation={rarityAnimation}
         border={isEquipped ? '2px solid' : '2px solid'}
         borderBottom="2px solid"
-        borderColor={isEquipped ? 'white' : rarityColor}
+        borderColor={isEquipped ? '#C87A2A' : rarityColor}
         boxShadow={
           isEquipped
-            ? '-10px -10px 8px 0px #A2A9B0, 10px 10px 8px 0px #54545480, 5px 5px 10px 0px #54545440, -5px -5px 4px 0px #5454547D'
+            ? '0 0 12px rgba(200,122,42,0.4), 0 0 4px rgba(200,122,42,0.2)'
             : rarityGlow !== 'none'
               ? rarityGlow
-              : '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset'
+              : '2px 2px 6px rgba(0,0,0,0.5) inset, -1px -1px 3px rgba(60,50,40,0.15) inset'
         }
         cursor={onClick ? 'pointer' : 'default'}
         direction="row"
@@ -291,8 +291,8 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
         borderLeft={`3px solid ${rarityColor}`}
         boxShadow={
           hasGlow
-            ? `-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset, -4px 0 8px ${rarityColor}30`
-            : '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset'
+            ? `inset 0 1px 3px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(196,184,158,0.05), -4px 0 8px ${rarityColor}30`
+            : 'inset 0 1px 3px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(196,184,158,0.05)'
         }
         px={{ base: 4, sm: 10 }}
         w="100%"
@@ -329,8 +329,8 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
       borderLeft={`3px solid ${rarityColor}`}
       boxShadow={
         hasGlow
-          ? `-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset, -4px 0 8px ${rarityColor}30`
-          : '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset'
+          ? `2px 2px 6px rgba(0,0,0,0.5) inset, -1px -1px 3px rgba(60,50,40,0.15) inset, -4px 0 8px ${rarityColor}30`
+          : '2px 2px 6px rgba(0,0,0,0.5) inset, -1px -1px 3px rgba(60,50,40,0.15) inset'
       }
       px={{ base: 4, sm: 10 }}
       w="100%"

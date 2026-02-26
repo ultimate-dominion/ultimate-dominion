@@ -121,7 +121,7 @@ export const Header = ({
   return (
     <Grid
       as="header"
-      bgColor="grey400"
+      bgColor="#1C1814"
       mt={4}
       px={4}
       py={2}
@@ -173,6 +173,7 @@ export const Header = ({
           >
             <Image
               alt="Ultimate Dominion Logo"
+              filter="sepia(0.2) brightness(1.3)"
               src="/images/ultimate-dominion-logo.svg"
               width={{ base: '200px', sm: '225px' }}
             />
@@ -186,7 +187,7 @@ export const Header = ({
       >
         <Button
           aria-label="Open menu"
-          backgroundColor="#D0D0D0"
+          backgroundColor="#24201A"
           onClick={onOpen}
           p={3}
           size="sm"
@@ -196,9 +197,9 @@ export const Header = ({
         </Button>
         <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
           <DrawerOverlay />
-          <DrawerContent>
+          <DrawerContent bg="#1C1814" color="#E8DCC8">
             <DrawerCloseButton />
-            <DrawerHeader>Menu</DrawerHeader>
+            <DrawerHeader color="#D4A54A">Menu</DrawerHeader>
 
             <DrawerBody>
               <Stack

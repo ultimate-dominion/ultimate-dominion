@@ -141,7 +141,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
     >
       <HStack
         bgColor="blue500"
-        color="white"
+        color="#E8DCC8"
         h={
           inline
             ? '36px'
@@ -157,19 +157,19 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
           <Heading size={inline ? 'sm' : { base: 'sm', md: 'md' }}>Chat</Heading>
           {hasBadge && (
             <Tooltip
-              bg="#070D2A"
+              bg="#14120F"
               hasArrow
               label="Adventurer Badge - Chat Unlocked!"
               placement="top"
               shouldWrapChildren
             >
-              <Box color="gold">
+              <Box color="#EFD31C">
                 <FaMedal size={16} />
               </Box>
             </Tooltip>
           )}
           <Tooltip
-            bg="#070D2A"
+            bg="#14120F"
             hasArrow
             label="This chat is permanent and public to all other players. Do not share personal information or sensitive data."
             placement="top"
@@ -232,7 +232,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
           </VStack>
         )}
         {canAccessChat && isLoggedIn && isGroupMember && chatUser && (
-          <VStack bg="grey300" flex="1" overflowY="auto" p={2} spacing={2}>
+          <VStack bg="#14120F" flex="1" overflowY="auto" p={2} spacing={2}>
             {messages.map((message, index) => {
               const isUser = message.from === chatUser.account;
               const messageCharacter = allCharacters.find(
@@ -259,9 +259,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                       {new Date(message.timestamp).toLocaleString()}
                     </Text>
                     <Box
-                      bgColor="blue500"
-                      boxShadow="-10px -10px 8px 0px #A2A9B0, 10px 10px 8px 0px #54545480, 5px 5px 10px 0px #54545440, -5px -5px 4px 0px #5454547D"
-                      color="white"
+                      bgColor="#24201A"
+                      boxShadow="2px 2px 6px rgba(0,0,0,0.4)"
+                      color="#E8DCC8"
                       p={1}
                       w="100%"
                     >
@@ -293,7 +293,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                           size="2xs"
                           to={`/characters/${messageCharacter.id}`}
                           _hover={{
-                            color: 'blue',
+                            color: '#C87A2A',
                             textDecoration: 'underline',
                           }}
                         >
@@ -307,11 +307,11 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                       <HStack spacing={1}>
                         {message.delivered && isUser && (
                           <Box>
-                            <CiCircleCheck color="blue" size={14} />
+                            <CiCircleCheck color="#C87A2A" size={14} />
                           </Box>
                         )}
                         <Tooltip
-                          bg="#070D2A"
+                          bg="#14120F"
                           hasArrow
                           label={`Sent: ${new Date(message.timestamp).toLocaleString()}`}
                           placement={isUser ? 'left' : 'right'}
@@ -319,9 +319,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                           fontSize="xs"
                         >
                           <Box
-                            bg={isUser ? 'blue' : 'white'}
+                            bg={isUser ? '#C87A2A' : '#24201A'}
                             borderRadius="md"
-                            color={isUser ? 'white' : 'black'}
+                            color="#E8DCC8"
                             cursor="pointer"
                             p={2}
                             shadow="sm"

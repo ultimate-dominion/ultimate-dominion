@@ -106,7 +106,7 @@ export enum Rarity {
 
 export const RARITY_COLORS: Record<Rarity, string> = {
   [Rarity.Worn]: '#8a8a8a',      // Muted gray
-  [Rarity.Common]: '#f0f2f5',    // Off-white (legible on grey-blue)
+  [Rarity.Common]: '#C4B89E',    // Parchment (legible on dark bg)
   [Rarity.Uncommon]: '#3d8a4e',  // Forest green
   [Rarity.Rare]: '#3d6fb5',      // Steel blue
   [Rarity.Epic]: '#7b4ab5',      // Dusty purple

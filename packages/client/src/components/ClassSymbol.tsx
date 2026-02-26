@@ -34,7 +34,7 @@ export const ClassSymbol = ({
       return (
         <Tooltip
           aria-label="Mage"
-          bg="#070D2A"
+          bg="#14120F"
           hasArrow
           label="Mage"
           shouldWrapChildren
@@ -52,7 +52,7 @@ export const ClassSymbol = ({
       return (
         <Tooltip
           aria-label="Rogue"
-          bg="#070D2A"
+          bg="#14120F"
           hasArrow
           label="Rogue"
           shouldWrapChildren
@@ -70,7 +70,7 @@ export const ClassSymbol = ({
       return (
         <Tooltip
           aria-label="Warrior"
-          bg="#070D2A"
+          bg="#14120F"
           hasArrow
           label="Warrior"
           shouldWrapChildren

@@ -560,7 +560,7 @@ const CharacterCreationInner = (): JSX.Element => {
         border="4px solid"
         borderColor="grey300"
         borderRadius="50%"
-        boxShadow="-10px -10px 20px 0px #A2A9B0 inset, 10px 10px 20px 0px #54545440 inset, 5px 5px 10px 0px #88919980 inset, -5px -5px 10px 0px #54545440 inset"
+        boxShadow="2px 2px 6px rgba(0,0,0,0.5) inset, -1px -1px 3px rgba(60,50,40,0.15) inset"
         p={1.5}
       >
         <Avatar
@@ -855,7 +855,7 @@ const CharacterCreationInner = (): JSX.Element => {
                 {[Race.Human, Race.Elf, Race.Dwarf].map((race) => (
                   <Tooltip
                     key={race}
-                    bg="#070D2A"
+                    bg="#14120F"
                     label={RACE_INFO[race].description}
                     placement="top"
                   >
@@ -897,7 +897,7 @@ const CharacterCreationInner = (): JSX.Element => {
                 {[PowerSource.Divine, PowerSource.Weave, PowerSource.Physical].map((ps) => (
                   <Tooltip
                     key={ps}
-                    bg="#070D2A"
+                    bg="#14120F"
                     label={POWER_SOURCE_INFO[ps].description}
                     placement="top"
                   >
@@ -993,49 +993,49 @@ const CharacterCreationInner = (): JSX.Element => {
             </HStack>
             <VStack fontWeight={700} spacing={1.5} w="100%" opacity={rolledOnce ? 1 : 0.5}>
               <Box
-                backgroundColor="#F5F5FA1F"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                backgroundColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                 h="6px"
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#121B45">HP - Hit Points</Text>
+                <Text color="#D4A54A">HP - Hit Points</Text>
                 <Text color="grey500" fontFamily="mono" size="lg">
                   {rolledOnce ? character?.maxHp.toString() : '—'}
                 </Text>
               </HStack>
               <Box
-                backgroundColor="#F5F5FA1F"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                backgroundColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                 h="6px"
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#121B45">STR - Strength</Text>
+                <Text color="#D4A54A">STR - Strength</Text>
                 <Text color="grey500" fontFamily="mono" size="lg">
                   {rolledOnce ? character?.strength.toString() : '—'}
                 </Text>
               </HStack>
               <Box
-                backgroundColor="#F5F5FA1F"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                backgroundColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                 h="6px"
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#121B45">AGI - Agility</Text>
+                <Text color="#D4A54A">AGI - Agility</Text>
                 <Text color="grey500" fontFamily="mono" size="lg">
                   {rolledOnce ? character?.agility.toString() : '—'}
                 </Text>
               </HStack>
               <Box
-                backgroundColor="#F5F5FA1F"
-                boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
+                backgroundColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                 h="6px"
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#121B45">INT - Intelligence</Text>
+                <Text color="#D4A54A">INT - Intelligence</Text>
                 <Text color="grey500" fontFamily="mono" size="lg">
                   {rolledOnce ? character?.intelligence.toString() : '—'}
                 </Text>

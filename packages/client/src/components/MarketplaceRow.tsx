@@ -54,7 +54,7 @@ export const MarketplaceRow = ({
 
   return (
     <Flex
-      bgColor="#F5F5FA1F"
+      bgColor="#1C1814"
       borderLeft={hasRarityAccent ? `3px solid ${rarityColor}` : undefined}
       justify="space-between"
       onClick={() => navigate(`${ITEM_PATH}/${tokenId}?${newSearchParams}`)}
@@ -83,7 +83,7 @@ export const MarketplaceRow = ({
             mr={2}
           />
         ) : (
-          <Avatar bgColor="#F5F5FA1F" borderRadius={0} size="lg" name={' '}>
+          <Avatar bgColor="#1C1814" borderRadius={0} size="lg" name={' '}>
             {getEmoji(name)}
           </Avatar>
         )}
@@ -97,7 +97,7 @@ export const MarketplaceRow = ({
           </Text>
           {itemType !== ItemType.Spell && (
             <Text
-              color="#121B45"
+              color="#8A7E6A"
               fontWeight={500}
               size={{ base: '2xs', lg: 'md' }}
             >

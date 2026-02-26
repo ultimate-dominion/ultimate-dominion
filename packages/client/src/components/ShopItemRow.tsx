@@ -230,20 +230,20 @@ export const ShopItemRow = ({
     <Flex
       borderBottom={`2px solid ${theme || 'white'}`}
       borderLeft={hasRarityAccent ? `3px solid ${rarityColor}` : undefined}
-      boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset;"
+      boxShadow="inset 0 1px 3px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(196,184,158,0.05)"
       justify="space-between"
       onClick={onOpen}
       transition="all 0.3s"
       w="100%"
       _hover={{
-        borderBottom: '2px solid black',
+        borderBottom: '2px solid #3A3228',
         cursor: 'pointer',
         button: {
           bgColor: 'grey300',
         },
       }}
       _active={{
-        borderBottom: '2px solid black',
+        borderBottom: '2px solid #3A3228',
         button: {
           bgColor: 'grey400',
         },
@@ -448,10 +448,10 @@ export const ShopItemRow = ({
                     <HStack>
                       <Button
                         aspectRatio="1 / 1"
-                        background="#D0D0D0"
-                        boxShadow="1.5px 1.5px 3px 0px #54545466, -1px -1px 3px 0px #545454B2"
+                        background="#24201A"
+                        boxShadow="1.5px 1.5px 3px 0px rgba(0,0,0,0.3), -1px -1px 3px 0px rgba(0,0,0,0.2)"
                         borderRadius="5px"
-                        color="#1633B6"
+                        color="#C87A2A"
                         minW="24px"
                         minH="24px"
                         isDisabled={amount <= 1}
@@ -470,8 +470,8 @@ export const ShopItemRow = ({
                       </Button>
                       <Input
                         aspectRatio="1 / 1"
-                        background="#B3B9BE"
-                        boxShadow="-5px -5px 10px 0px #54545440 inset, 5px 5px 2px 0px #A6A6A680 inset, 2px 2px 2px 0px #18161640 inset, -2px -2px 2px 0px #A2A9B080 inset"
+                        background="#14120F"
+                        boxShadow="inset 0 1px 3px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(196,184,158,0.05)"
                         fontSize="lg"
                         fontWeight={500}
                         max={stock?.toString() || balance?.toString() || 0}
@@ -506,10 +506,10 @@ export const ShopItemRow = ({
                       />
                       <Button
                         aspectRatio="1 / 1"
-                        background="#D0D0D0"
-                        boxShadow="1.5px 1.5px 3px 0px #54545466, -1px -1px 3px 0px #545454B2"
+                        background="#24201A"
+                        boxShadow="1.5px 1.5px 3px 0px rgba(0,0,0,0.3), -1px -1px 3px 0px rgba(0,0,0,0.2)"
                         borderRadius="5px"
-                        color="#1633B6"
+                        color="#C87A2A"
                         minW="24px"
                         minH="24px"
                         isDisabled={
@@ -531,9 +531,9 @@ export const ShopItemRow = ({
                     </HStack>
                   </VStack>
                   <Box
-                    backgroundColor="#F5F5FA1F"
-                    boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset"
-                    h="7px"
+                    bg="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                    h="1px"
                     w="100%"
                   />
                   <VStack>
@@ -546,7 +546,7 @@ export const ShopItemRow = ({
                         Total to recieve: {etherToFixedNumber(price)} $GOLD
                       </Text>
                     )}
-                    <Text color="#3D4247" size="xs">
+                    <Text color="#8A7E6A" size="xs">
                       Current Balance{' '}
                       {etherToFixedNumber(
                         userCharacter?.externalGoldBalance ?? '0',

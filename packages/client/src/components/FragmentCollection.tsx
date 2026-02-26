@@ -148,7 +148,7 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
       label={tooltipLabel}
       placement="top"
       hasArrow
-      bg="#070D2A"
+      bg="#14120F"
       color="white"
     >
       <Box

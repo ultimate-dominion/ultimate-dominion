@@ -37,7 +37,7 @@ export const FragmentReadModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
       <ModalOverlay backdropFilter="blur(4px)" />
-      <ModalContent bg="#070D2A" color="white" borderRadius="md">
+      <ModalContent bg="#1C1814" color="#E8DCC8" borderRadius="md">
         <ModalHeader textAlign="center" pb={0}>
           <Text color="gray.400" fontSize="sm" fontFamily="mono">
             --- Fragment {getRomanNumeral(fragment.fragmentType)} of{' '}

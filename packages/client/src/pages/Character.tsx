@@ -418,7 +418,7 @@ export const CharacterPage = (): JSX.Element => {
                       {etherToFixedNumber(character.externalGoldBalance)} $GOLD
                     </Text>
                     <Tooltip
-                      bg="#070D2A"
+                      bg="#14120F"
                       hasArrow
                       label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
                       placement="top"
@@ -448,7 +448,7 @@ export const CharacterPage = (): JSX.Element => {
                 </HStack>
                 <HStack>
                   <Text
-                    color="#3D4247"
+                    color="#8A7E6A"
                     size="xs"
                     fontWeight="bold"
                     textAlign="start"
@@ -457,7 +457,7 @@ export const CharacterPage = (): JSX.Element => {
                     {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
                   </Text>
                   <Tooltip
-                    bg="#070D2A"
+                    bg="#14120F"
                     hasArrow
                     label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
                     placement="top"
@@ -524,7 +524,7 @@ export const CharacterPage = (): JSX.Element => {
             colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
           >
             <PolygonalCard
-              bgColor="#070D2A"
+              bgColor="#14120F"
               clipPath="none"
               color="white"
               p={6}
@@ -537,7 +537,7 @@ export const CharacterPage = (): JSX.Element => {
                 </Text>
                 {hasBadge && (
                   <Tooltip
-                    bg="#070D2A"
+                    bg="#14120F"
                     hasArrow
                     label="Adventurer Badge - Earned at Level 3"
                     placement="top"
@@ -892,7 +892,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     <Box>
       <HStack
         color="white"
-        bgColor="#1A244E"
+        bgColor="#1C1814"
         h="68px"
         justifyContent="space-between"
         px={6}

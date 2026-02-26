@@ -143,7 +143,7 @@ export const OrderRow = ({
   const { consideration, offer } = order;
 
   return (
-    <Flex bgColor="#F5F5FA1F" justify="space-between" w="100%">
+    <Flex bgColor="#1C1814" justify="space-between" w="100%">
       <Flex>
         {getItemImage(removeEmoji(item.name)) ? (
           <Image
@@ -195,7 +195,7 @@ export const OrderRow = ({
             aria-label={
               offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
             }
-            bg="#070D2A"
+            bg="#14120F"
             hasArrow
             label={
               offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
@@ -216,7 +216,7 @@ export const OrderRow = ({
         {isOfferer && (
           <Tooltip
             aria-label="Remove listing"
-            bg="#070D2A"
+            bg="#14120F"
             hasArrow
             label="Remove listing"
             placement="top"
