@@ -78,6 +78,7 @@ type ChatContextType = {
   onSendMessage: () => void;
   onSetNewMessage: (message: string) => void;
   onSetMessageInputFocus: (isFocused: boolean) => void;
+  unreadCount: number;
 };
 
 const ChatContext = createContext<ChatContextType>({
@@ -100,6 +101,7 @@ const ChatContext = createContext<ChatContextType>({
   onSendMessage: () => {},
   onSetNewMessage: () => {},
   onSetMessageInputFocus: () => {},
+  unreadCount: 0,
 });
 
 export type ChatProviderProps = {
@@ -143,6 +145,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
   const [isSending, setIsSending] = useState<boolean>(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const prevMessageCountRef = useRef(0);
 
   // Push Protocol stream ref for cleanup
   const streamRef = useRef<Awaited<ReturnType<PushAPI['initStream']>> | null>(null);
@@ -285,6 +289,15 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       ...rareMarketplaceSales,
     ].sort((a, b) => a.timestamp - b.timestamp);
   }, [rareDropAnnouncements, rareMarketplaceSales, messages]);
+
+  // Track unread messages when chat is closed (mobile)
+  useEffect(() => {
+    const count = messages.length;
+    if (count > prevMessageCountRef.current && !isOpen) {
+      setUnreadCount(prev => prev + (count - prevMessageCountRef.current));
+    }
+    prevMessageCountRef.current = count;
+  }, [messages.length, isOpen]);
 
   const onLogin = useCallback(async () => {
     try {
@@ -570,6 +583,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
   const onOpenAndSet = useCallback(() => {
     onOpen();
+    setUnreadCount(0);
     localStorage.setItem(IS_CHAT_BOX_OPEN_KEY, 'true');
   }, [onOpen]);
 
@@ -595,6 +609,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         onSendMessage,
         onSetNewMessage,
         onSetMessageInputFocus,
+        unreadCount,
       }}
     >
       {children}
