@@ -8,7 +8,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { useWalletClient } from 'wagmi';
 
@@ -32,25 +32,37 @@ export const ConnectWalletModal = ({
   const { authMethod, isAuthenticated, ownerAddress } = useAuth();
   const { delegatorAddress } = useMUD();
 
+  // Track whether user explicitly chose the wallet path this modal session.
+  // Resets when modal closes so next open shows sign-in options again.
+  const [choseWallet, setChoseWallet] = useState(false);
+
+  const handleClose = useCallback(() => {
+    setChoseWallet(false);
+    onClose();
+  }, [onClose]);
+
   // Auto-close when fully set up
   useEffect(() => {
     if (authMethod === 'embedded' && isAuthenticated) {
-      onClose();
+      handleClose();
     }
     if (authMethod === 'external' && delegatorAddress && isAuthenticated) {
-      onClose();
+      handleClose();
     }
-  }, [authMethod, delegatorAddress, isAuthenticated, onClose]);
+  }, [authMethod, delegatorAddress, isAuthenticated, handleClose]);
 
-  // Not authenticated at all — show SignInModal
-  if (!isAuthenticated) {
-    return <SignInModal isOpen={isOpen} onClose={onClose} />;
+  // Show SignInModal if:
+  // - Not authenticated at all, OR
+  // - External wallet auto-connected but user hasn't explicitly chosen wallet path
+  //   (lets them pick Google instead of being forced into MetaMask delegation)
+  if (!isAuthenticated || (authMethod === 'external' && !delegatorAddress && !choseWallet)) {
+    return <SignInModal isOpen={isOpen} onClose={handleClose} onChooseWallet={() => setChoseWallet(true)} />;
   }
 
   // Embedded path — authenticated, auto-closing above
   if (authMethod === 'embedded') {
     return (
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={handleClose}>
         <ModalOverlay />
         <ModalContent>
           <PolygonalCard isModal />
@@ -89,7 +101,7 @@ export const ConnectWalletModal = ({
           </VStack>
           <DelegationButton
             externalWalletClient={externalWalletClient}
-            onClose={onClose}
+            onClose={handleClose}
           />
         </VStack>
       );
@@ -103,7 +115,7 @@ export const ConnectWalletModal = ({
   })();
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={handleClose}>
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />

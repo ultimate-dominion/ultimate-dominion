@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Divider,
   HStack,
@@ -23,9 +24,11 @@ import { PolygonalCard } from './PolygonalCard';
 export const SignInModal = ({
   isOpen,
   onClose,
+  onChooseWallet,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  onChooseWallet?: () => void;
 }): JSX.Element => {
   const {
     connectWithGoogle,
@@ -77,16 +80,18 @@ export const SignInModal = ({
             )}
 
             {hasInjectedWallet && (
-              <>
-                <HStack spacing={4} w="100%">
-                  <Divider />
-                  <Text color="gray.400" fontSize="xs" whiteSpace="nowrap">
-                    OR
-                  </Text>
-                  <Divider />
-                </HStack>
-                <ConnectWalletButton />
-              </>
+              <Box onClick={onChooseWallet} w="100%">
+                <VStack spacing={6}>
+                  <HStack spacing={4} w="100%">
+                    <Divider />
+                    <Text color="gray.400" fontSize="xs" whiteSpace="nowrap">
+                      OR
+                    </Text>
+                    <Divider />
+                  </HStack>
+                  <ConnectWalletButton />
+                </VStack>
+              </Box>
             )}
             <Text color="#8A7E6A" fontSize="10px" textAlign="center">
               By signing in you agree to the{' '}
