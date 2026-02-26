@@ -42,6 +42,8 @@ import {
   type ConsumableTemplate,
   ItemType,
   OrderType,
+  Rarity,
+  RARITY_COLORS,
   Shop,
   type SpellTemplate,
   type WeaponTemplate,
@@ -99,6 +101,8 @@ export const ShopItemRow = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const { name, statRestrictions } = item;
+  const rarityColor = item.rarity !== undefined ? RARITY_COLORS[item.rarity] : undefined;
+  const hasRarityAccent = item.rarity !== undefined && item.rarity >= Rarity.Rare;
 
   const price = useMemo(() => {
     if (orderType == OrderType.Selling)
@@ -225,6 +229,7 @@ export const ShopItemRow = ({
   return (
     <Flex
       borderBottom={`2px solid ${theme || 'white'}`}
+      borderLeft={hasRarityAccent ? `3px solid ${rarityColor}` : undefined}
       boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset;"
       justify="space-between"
       onClick={onOpen}
@@ -264,7 +269,11 @@ export const ShopItemRow = ({
           </Avatar>
         )}
         <VStack justify="center" ml={{ base: 0, sm: 4 }}>
-          <Text fontWeight={700} size={{ base: 'xs', sm: 'md', lg: 'lg' }}>
+          <Text
+            color={rarityColor}
+            fontWeight={700}
+            size={{ base: 'xs', sm: 'md', lg: 'lg' }}
+          >
             {name ? removeEmoji(name.toString()) : ''}
           </Text>
         </VStack>

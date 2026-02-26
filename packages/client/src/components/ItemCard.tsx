@@ -1,4 +1,4 @@
-import { Box, Center, HStack, Image, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
+import { Box, Center, HStack, Image, keyframes, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
 import { useMemo } from 'react';
 
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
@@ -26,16 +26,39 @@ const getRarityName = (rarity?: Rarity): string => {
 
 const getRarityGlow = (rarity?: Rarity): string => {
   const color = getRarityColor(rarity);
-  if (rarity === Rarity.Legendary) {
-    return `0 0 10px ${color}, 0 0 20px ${color}`;
-  }
-  if (rarity === Rarity.Epic) {
-    return `0 0 8px ${color}, 0 0 15px ${color}`;
-  }
   if (rarity === Rarity.Rare) {
-    return `0 0 6px ${color}`;
+    return `0 0 8px ${color}40, 0 0 16px ${color}20`;
   }
   return 'none';
+};
+
+const epicBreathing = (color: string) => keyframes`
+  0%, 100% {
+    box-shadow: 0 0 6px ${color}30, 0 0 12px ${color}15;
+  }
+  50% {
+    box-shadow: 0 0 10px ${color}60, 0 0 20px ${color}30;
+  }
+`;
+
+const legendaryBreathing = (color: string) => keyframes`
+  0%, 100% {
+    box-shadow: 0 0 8px ${color}50, 0 0 18px ${color}25, 0 0 30px ${color}10;
+  }
+  50% {
+    box-shadow: 0 0 14px ${color}80, 0 0 28px ${color}45, 0 0 42px ${color}20;
+  }
+`;
+
+const getRarityAnimation = (rarity?: Rarity): string | undefined => {
+  const color = getRarityColor(rarity);
+  if (rarity === Rarity.Legendary) {
+    return `${legendaryBreathing(color)} 2.5s ease-in-out infinite`;
+  }
+  if (rarity === Rarity.Epic) {
+    return `${epicBreathing(color)} 3s ease-in-out infinite`;
+  }
+  return undefined;
 };
 
 type ItemCardProps = (Armor | Consumable | Spell | Weapon) & {
@@ -54,6 +77,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const rarityColor = getRarityColor(rarity);
   const rarityName = getRarityName(rarity);
   const rarityGlow = getRarityGlow(rarity);
+  const rarityAnimation = getRarityAnimation(rarity);
 
   const itemStats = useMemo(() => {
     if (item.itemType === ItemType.Consumable) {
@@ -185,6 +209,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       hasArrow
     >
       <HStack
+        animation={rarityAnimation}
         border={isEquipped ? '2px solid' : '2px solid'}
         borderBottom="2px solid"
         borderColor={isEquipped ? 'white' : rarityColor}
@@ -258,13 +283,17 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
 }): JSX.Element => {
   const { rarity } = item;
   const rarityColor = getRarityColor(rarity);
+  const hasGlow = rarity !== undefined && rarity >= Rarity.Rare;
 
   if (item.itemType === ItemType.Spell) {
     return (
       <HStack
-        borderBottom="2px solid"
-        borderColor={rarityColor}
-        boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+        borderLeft={`3px solid ${rarityColor}`}
+        boxShadow={
+          hasGlow
+            ? `-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset, -4px 0 8px ${rarityColor}30`
+            : '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset'
+        }
         px={{ base: 4, sm: 10 }}
         w="100%"
       >
@@ -297,9 +326,12 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
 
   return (
     <HStack
-      borderBottom="2px solid"
-      borderColor={rarityColor}
-      boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset"
+      borderLeft={`3px solid ${rarityColor}`}
+      boxShadow={
+        hasGlow
+          ? `-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset, -4px 0 8px ${rarityColor}30`
+          : '-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #545454 inset'
+      }
       px={{ base: 4, sm: 10 }}
       w="100%"
     >
