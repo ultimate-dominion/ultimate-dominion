@@ -31,6 +31,6 @@ export function createViemClientConfig(chain: MUDChain): {
   return {
     chain,
     transport: transportObserver(fallback(transports.length > 0 ? transports : [http()])),
-    pollingInterval: 500,
+    pollingInterval: 200,
   } as const satisfies ClientConfig;
 }

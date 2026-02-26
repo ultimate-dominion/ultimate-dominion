@@ -96,6 +96,7 @@ export const BattleProvider = ({
 
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
+  const attackOutcomeCountAtAttack = useRef<number | null>(null);
 
   const attackTx = useTransaction({
     actionName: 'attack',
@@ -362,6 +363,7 @@ export const BattleProvider = ({
       if (!delegatorAddress || !character || !currentBattle || !opponent) return;
 
       setAttackingItemId(itemId);
+      attackOutcomeCountAtAttack.current = currentBattleAttackOutcomes.length;
 
       const result = await attackTx.execute(() =>
         endTurn(
@@ -376,20 +378,45 @@ export const BattleProvider = ({
         localStorage.removeItem(CURRENT_BATTLE_OPPONENT_TURN_KEY);
         localStorage.removeItem(CURRENT_BATTLE_USER_TURN_KEY);
         refreshCharacter();
+        // Don't clear attackingItemId — effect below clears when outcome arrives
+      } else {
+        // TX failed, clear immediately
+        setAttackingItemId(null);
+        attackOutcomeCountAtAttack.current = null;
       }
-
-      setAttackingItemId(null);
     },
     [
       attackTx,
       character,
       currentBattle,
+      currentBattleAttackOutcomes.length,
       delegatorAddress,
       endTurn,
       opponent,
       refreshCharacter,
     ],
   );
+
+  // Clear attack loading state when new outcome data arrives from RECS sync
+  useEffect(() => {
+    if (
+      attackOutcomeCountAtAttack.current !== null &&
+      currentBattleAttackOutcomes.length > attackOutcomeCountAtAttack.current
+    ) {
+      setAttackingItemId(null);
+      attackOutcomeCountAtAttack.current = null;
+    }
+  }, [currentBattleAttackOutcomes.length]);
+
+  // Safety timeout — clear attack loading if outcome never arrives (10s)
+  useEffect(() => {
+    if (attackingItemId === null) return;
+    const timeout = setTimeout(() => {
+      setAttackingItemId(null);
+      attackOutcomeCountAtAttack.current = null;
+    }, 10000);
+    return () => clearTimeout(timeout);
+  }, [attackingItemId]);
 
   const onFleePvp = useCallback(async () => {
     if (!character || !delegatorAddress || !currentBattle) return;

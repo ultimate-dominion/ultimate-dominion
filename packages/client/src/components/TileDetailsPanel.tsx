@@ -107,6 +107,22 @@ export const TileDetailsPanel = (): JSX.Element => {
     successMessage: 'Battle has begun!',
   });
 
+  const [isWaitingForBattle, setIsWaitingForBattle] = useState(false);
+
+  // Clear waiting state when battle data arrives from RECS sync
+  useEffect(() => {
+    if (currentBattle && isWaitingForBattle) {
+      setIsWaitingForBattle(false);
+    }
+  }, [currentBattle, isWaitingForBattle]);
+
+  // Safety timeout — clear if battle never starts (10s)
+  useEffect(() => {
+    if (!isWaitingForBattle) return;
+    const timeout = setTimeout(() => setIsWaitingForBattle(false), 10000);
+    return () => clearTimeout(timeout);
+  }, [isWaitingForBattle]);
+
   const [isUserHit, setIsUserHit] = useState(false);
   const [isMonsterHit, setIsMonsterHit] = useState(false);
 
@@ -185,6 +201,8 @@ export const TileDetailsPanel = (): JSX.Element => {
       if (!character) return;
       if (!delegatorAddress) return;
 
+      setIsWaitingForBattle(true);
+
       const result = await encounterTx.execute(async () => {
         const { error, success } = await createEncounter(
           encounterType,
@@ -196,6 +214,10 @@ export const TileDetailsPanel = (): JSX.Element => {
 
       if (result !== undefined) {
         refreshCharacter();
+        // Don't clear isWaitingForBattle — effect clears when currentBattle arrives
+      } else {
+        // TX failed, clear immediately
+        setIsWaitingForBattle(false);
       }
     },
     [
@@ -670,12 +692,12 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (encounterTx.isLoading) {
+  if (isWaitingForBattle || encounterTx.isLoading) {
     return (
       <Box h="100%">
         <VStack h="100%" justifyContent="center" spacing={8}>
           <Text fontWeight={700} size={{ base: 'md', lg: 'xl' }}>
-            {encounterTx.statusMessage || 'Initiating battle!'}
+            Initiating battle!
           </Text>
           <Spinner color="red" size="xl" />
         </VStack>
