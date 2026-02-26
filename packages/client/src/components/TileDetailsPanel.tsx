@@ -106,12 +106,14 @@ export const TileDetailsPanel = (): JSX.Element => {
   });
 
   const [isWaitingForBattle, setIsWaitingForBattle] = useState(false);
+  const [pendingOpponent, setPendingOpponent] = useState<{ name: string; image?: string } | null>(null);
 
   // Clear waiting state when ALL battle data is ready (not just currentBattle)
   // Battle view requires: currentBattle + opponent + userCharacterForBattleRendering
   useEffect(() => {
     if (currentBattle && opponent && userCharacterForBattleRendering && isWaitingForBattle) {
       setIsWaitingForBattle(false);
+      setPendingOpponent(null);
     }
   }, [currentBattle, opponent, userCharacterForBattleRendering, isWaitingForBattle]);
 
@@ -201,6 +203,12 @@ export const TileDetailsPanel = (): JSX.Element => {
       if (!delegatorAddress) return;
 
       setIsWaitingForBattle(true);
+      setPendingOpponent({
+        name: opponent.name,
+        image: encounterType === EncounterType.PvE
+          ? getMonsterImage(opponent.name)
+          : (opponent as Character).image,
+      });
 
       const result = await encounterTx.execute(async () => {
         const { error, success } = await createEncounter(
@@ -217,6 +225,7 @@ export const TileDetailsPanel = (): JSX.Element => {
       } else {
         // TX failed, clear immediately
         setIsWaitingForBattle(false);
+        setPendingOpponent(null);
       }
     },
     [
@@ -693,12 +702,49 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   if (isWaitingForBattle || encounterTx.isLoading) {
     return (
-      <Box h="100%">
-        <VStack h="100%" justifyContent="center" spacing={8}>
-          <Text fontWeight={700} size={{ base: 'md', lg: 'xl' }}>
-            Initiating battle!
+      <Box h="100%" bg="gray.900" position="relative" overflow="hidden">
+        <style>
+          {`
+          @keyframes battlePulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+          }
+          @keyframes slideIn {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+          `}
+        </style>
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bg="linear-gradient(180deg, rgba(200,30,30,0.15) 0%, transparent 40%, transparent 60%, rgba(200,30,30,0.15) 100%)"
+        />
+        <VStack h="100%" justifyContent="center" spacing={5} position="relative">
+          {pendingOpponent?.image && (
+            <Avatar
+              size={{ base: 'lg', lg: 'xl' }}
+              src={pendingOpponent.image}
+              name={pendingOpponent.name}
+              animation="slideIn 0.3s ease-out"
+              border="3px solid"
+              borderColor="red.600"
+            />
+          )}
+          <Text
+            animation="battlePulse 1.5s ease-in-out infinite"
+            color="red.400"
+            fontWeight={700}
+            letterSpacing="wider"
+            size={{ base: 'md', lg: 'xl' }}
+            textTransform="uppercase"
+          >
+            {pendingOpponent ? `Fighting ${pendingOpponent.name}` : 'Initiating battle'}
           </Text>
-          <Spinner color="red" size="xl" />
+          <Spinner color="red.400" size="lg" thickness="3px" speed="0.8s" />
         </VStack>
       </Box>
     );
