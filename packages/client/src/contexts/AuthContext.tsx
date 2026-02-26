@@ -68,7 +68,7 @@ export const AuthProvider = ({
   const [embeddedWalletClient, setEmbeddedWalletClient] =
     useState<WalletClient | null>(null);
   const [embeddedAddress, setEmbeddedAddress] = useState<Address | null>(null);
-  const [isConnecting, setIsConnecting] = useState(true);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
 
   // Detect injected wallet (MetaMask etc.)
@@ -232,7 +232,7 @@ export const AuthProvider = ({
       externalWalletClient: null,
       hasInjectedWallet,
       isAuthenticated: false,
-      isConnecting: isConnecting || wagmiReconnecting,
+      isConnecting,
       ownerAddress: null,
       thirdwebChain,
       thirdwebClient,
@@ -247,7 +247,6 @@ export const AuthProvider = ({
     isConnecting,
     wagmiAddress,
     wagmiConnected,
-    wagmiReconnecting,
     wagmiWalletClient,
   ]);
 
