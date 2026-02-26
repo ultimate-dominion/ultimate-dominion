@@ -56,7 +56,11 @@ export const AuthProvider = ({
 }: {
   children: ReactNode;
 }): JSX.Element => {
-  const { isConnected: wagmiConnected, address: wagmiAddress } = useAccount();
+  const {
+    isConnected: wagmiConnected,
+    isReconnecting: wagmiReconnecting,
+    address: wagmiAddress,
+  } = useAccount();
   const { data: wagmiWalletClient } = useWalletClient();
   const { disconnect: wagmiDisconnect } = useDisconnect();
 
@@ -220,7 +224,7 @@ export const AuthProvider = ({
       externalWalletClient: null,
       hasInjectedWallet,
       isAuthenticated: false,
-      isConnecting,
+      isConnecting: isConnecting || wagmiReconnecting,
       ownerAddress: null,
       thirdwebChain,
       thirdwebClient,
@@ -235,6 +239,7 @@ export const AuthProvider = ({
     isConnecting,
     wagmiAddress,
     wagmiConnected,
+    wagmiReconnecting,
     wagmiWalletClient,
   ]);
 
