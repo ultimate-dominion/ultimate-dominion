@@ -167,6 +167,11 @@ const MUDProviderInner = ({
 
     embeddedSetupDone.current = true;
 
+    console.info('[MUD][EMBEDDED] Initializing embedded wallet path', {
+      address: ownerAddress,
+      chain: setupResult.network.publicClient.chain?.id,
+    });
+
     const write$ = new Subject<ContractWrite>();
 
     if (!embeddedWalletClient.account) {
@@ -180,10 +185,37 @@ const MUDProviderInner = ({
     const walletClient = (embeddedWalletClient as any)
       .extend(writeObserver({ onWrite: write => write$.next(write) }));
 
-    const worldContract = getContract({
+    const rawWorldContract = getContract({
       address: setupResult.network.worldContract.address,
       abi: IWorldAbi,
       client: { public: setupResult.network.publicClient, wallet: walletClient },
+    });
+
+    // Diagnostic proxy: log every contract write call and its outcome
+    const worldContract = new Proxy(rawWorldContract, {
+      get(target, prop) {
+        if (prop === 'write') {
+          return new Proxy(target.write, {
+            get(writeTarget: Record<string, (...args: unknown[]) => Promise<unknown>>, fnName: string) {
+              const origFn = writeTarget[fnName];
+              if (typeof origFn !== 'function') return origFn;
+              return async (...args: unknown[]) => {
+                const t0 = performance.now();
+                console.info(`[TX][SEND] ${String(fnName)}`, args);
+                try {
+                  const result = await origFn.apply(writeTarget, args);
+                  console.info(`[TX][OK] ${String(fnName)} hash=${result} (${(performance.now() - t0).toFixed(0)}ms)`);
+                  return result;
+                } catch (err) {
+                  console.error(`[TX][FAIL] ${String(fnName)} (${(performance.now() - t0).toFixed(0)}ms)`, err);
+                  throw err;
+                }
+              };
+            },
+          });
+        }
+        return (target as Record<string | symbol, unknown>)[prop];
+      },
     });
 
     const embeddedComponents = {
@@ -195,10 +227,16 @@ const MUDProviderInner = ({
     // which races with the Thirdweb transport's receipt availability — even
     // with EIP-7702. Use viem's standard polling instead.
     const embeddedWaitForTransaction = async (tx: Hex) => {
-      return setupResult.network.publicClient.waitForTransactionReceipt({
+      const receipt = await setupResult.network.publicClient.waitForTransactionReceipt({
         hash: tx,
         pollingInterval: 250,
       });
+      if (receipt.status === 'reverted') {
+        console.error(`[TX][RECEIPT] REVERTED on-chain tx=${tx} gasUsed=${receipt.gasUsed}`);
+      } else {
+        console.info(`[TX][RECEIPT] confirmed tx=${tx} block=${receipt.blockNumber}`);
+      }
+      return receipt;
     };
 
     const systemCalls = createSystemCalls(
