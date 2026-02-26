@@ -3,7 +3,6 @@ import {
   Button,
   Heading,
   HStack,
-  Icon,
   IconButton,
   Stack,
   Text,
@@ -12,8 +11,14 @@ import {
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import { useMemo, useState } from 'react';
-import { BiCompass, BiSolidNavigation } from 'react-icons/bi';
+import { useMemo } from 'react';
+import {
+  BiChevronDown,
+  BiChevronLeft,
+  BiChevronRight,
+  BiChevronUp,
+  BiSolidNavigation,
+} from 'react-icons/bi';
 import { FaStoreAlt } from 'react-icons/fa';
 
 import { useBattle } from '../contexts/BattleContext';
@@ -49,7 +54,6 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
   const { isRefreshing, onMove } = useMovement();
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const [isCompassExpanded, setIsCompassExpanded] = useState(false);
 
   const currentPlayersSpawned = useMemo(() => {
     return allCharacters.filter(character => character.isSpawned).length;
@@ -203,82 +207,10 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
         </PolygonalCard>
       </Box>
       {isSpawned ? (
-        isDesktop ? (
-          <Box mt={1}>
-            {isCompassExpanded ? (
-              <VStack>
-                <IconButton
-                  aria-label="Collapse compass"
-                  icon={<BiCompass />}
-                  onClick={() => setIsCompassExpanded(false)}
-                  size="xs"
-                  variant="ghost"
-                />
-                <NavigationCompass
-                  isDisabled={!!currentBattle || isRefreshing}
-                  onMove={onMove}
-                />
-              </VStack>
-            ) : (
-              <HStack spacing={1}>
-                <IconButton
-                  aria-label="Expand compass"
-                  icon={<BiCompass />}
-                  onClick={() => setIsCompassExpanded(true)}
-                  size="xs"
-                  variant="ghost"
-                />
-                <Button
-                  aria-label="Move north"
-                  fontWeight={700}
-                  isDisabled={!!currentBattle || isRefreshing}
-                  onClick={() => onMove('up')}
-                  size="xs"
-                  variant="blue"
-                >
-                  N
-                </Button>
-                <Button
-                  aria-label="Move south"
-                  fontWeight={700}
-                  isDisabled={!!currentBattle || isRefreshing}
-                  onClick={() => onMove('down')}
-                  size="xs"
-                  variant="blue"
-                >
-                  S
-                </Button>
-                <Button
-                  aria-label="Move west"
-                  fontWeight={700}
-                  isDisabled={!!currentBattle || isRefreshing}
-                  onClick={() => onMove('left')}
-                  size="xs"
-                  variant="blue"
-                >
-                  W
-                </Button>
-                <Button
-                  aria-label="Move east"
-                  fontWeight={700}
-                  isDisabled={!!currentBattle || isRefreshing}
-                  onClick={() => onMove('right')}
-                  size="xs"
-                  variant="blue"
-                >
-                  E
-                </Button>
-              </HStack>
-            )}
-          </Box>
-        ) : (
-          <Box>
-            <NavigationCompass
-              isDisabled={!!currentBattle || isRefreshing}
-              onMove={onMove}
-            />
-          </Box>
-        )
+        <NavigationCompass
+          isDisabled={!!currentBattle || isRefreshing}
+          onMove={onMove}
+        />
       ) : (
         <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
           {currentPlayersSpawned >= Number(maxPlayers) && (
@@ -315,143 +247,84 @@ const NavigationCompass = ({
   isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
 }): JSX.Element => {
+  const btnSize = { base: 7, lg: 8 };
+
   return (
-    <VStack
-      alignItems="stretch"
-      h={{ base: 140, lg: 175 }}
-      justifyContent="space-between"
-      mt={{ base: 0, lg: 12, xl: 8 }}
+    <Box
+      mt={{ base: 1, lg: 2 }}
       position="relative"
-      w={{ base: 140, lg: 175 }}
+      h={{ base: '100px', lg: '120px' }}
+      w={{ base: '100px', lg: '120px' }}
     >
       <Box
         left="50%"
+        opacity={0.25}
         position="absolute"
         top="50%"
         transform="translate(-50%, -50%)"
       >
-        <CompassSvg />
+        <CompassSvg size={16} />
       </Box>
-      <VStack spacing={0}>
-        <Icon
-          fill="none"
-          height={3}
-          viewBox="0 0 22 9"
-          width={4}
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M20.6967 7.93237L10.9997 1.212L1.30273 7.93237"
-            stroke="#C87A2A"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-          />
-        </Icon>
-
-        <Button
-          aria-label="Move north"
-          borderRadius="50%"
-          fontWeight={700}
-          isDisabled={isDisabled}
-          onClick={() => onMove('up')}
-          p={0}
-          size={{ base: 'xs', lg: 'sm' }}
-          variant="blue"
-        >
-          N
-        </Button>
-      </VStack>
-      <HStack justifyContent="space-between" spacing={10}>
-        <HStack spacing={1}>
-          <Icon
-            fill="none"
-            height={4}
-            viewBox="0 0 10 22"
-            width={2}
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M8.20899 1.09093L1.48862 10.7879L8.20898 20.4849"
-              stroke="#C87A2A"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-            />
-          </Icon>
-
-          <Button
-            aria-label="Move west"
-            borderRadius="50%"
-            fontWeight={700}
-            isDisabled={isDisabled}
-            onClick={() => onMove('left')}
-            p={0}
-            size={{ base: 'xs', lg: 'sm' }}
-            variant="blue"
-          >
-            W
-          </Button>
-        </HStack>
-        <HStack spacing={1}>
-          <Button
-            aria-label="Move east"
-            borderRadius="50%"
-            fontWeight={700}
-            isDisabled={isDisabled}
-            onClick={() => onMove('right')}
-            p={0}
-            size={{ base: 'xs', lg: 'sm' }}
-            variant="blue"
-          >
-            E
-          </Button>
-          <Icon
-            fill="none"
-            height={4}
-            viewBox="0 0 10 22"
-            width={2}
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M1.79101 20.4848L8.51138 10.7878L1.79102 1.09082"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              stroke="#C87A2A"
-            />
-          </Icon>
-        </HStack>
-      </HStack>
-      <VStack spacing={0}>
-        <Button
-          aria-label="Move south"
-          borderRadius="50%"
-          fontWeight={700}
-          isDisabled={isDisabled}
-          onClick={() => onMove('down')}
-          p={0}
-          size={{ base: 'xs', lg: 'sm' }}
-          variant="blue"
-        >
-          S
-        </Button>
-        <Icon
-          fill="none"
-          height={3}
-          viewBox="0 0 22 10"
-          width={4}
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M1.30332 1.51514L11.0003 8.2355L20.6973 1.51514"
-            stroke="#C87A2A"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-          />
-        </Icon>
-      </VStack>
-    </VStack>
+      <IconButton
+        aria-label="Move north"
+        borderRadius="50%"
+        icon={<BiChevronUp size="20px" />}
+        isDisabled={isDisabled}
+        left="50%"
+        onClick={() => onMove('up')}
+        position="absolute"
+        top={0}
+        transform="translateX(-50%)"
+        h={btnSize}
+        w={btnSize}
+        minW={0}
+        variant="blue"
+      />
+      <IconButton
+        aria-label="Move west"
+        borderRadius="50%"
+        icon={<BiChevronLeft size="20px" />}
+        isDisabled={isDisabled}
+        left={0}
+        onClick={() => onMove('left')}
+        position="absolute"
+        top="50%"
+        transform="translateY(-50%)"
+        h={btnSize}
+        w={btnSize}
+        minW={0}
+        variant="blue"
+      />
+      <IconButton
+        aria-label="Move east"
+        borderRadius="50%"
+        icon={<BiChevronRight size="20px" />}
+        isDisabled={isDisabled}
+        onClick={() => onMove('right')}
+        position="absolute"
+        right={0}
+        top="50%"
+        transform="translateY(-50%)"
+        h={btnSize}
+        w={btnSize}
+        minW={0}
+        variant="blue"
+      />
+      <IconButton
+        aria-label="Move south"
+        borderRadius="50%"
+        icon={<BiChevronDown size="20px" />}
+        isDisabled={isDisabled}
+        bottom={0}
+        left="50%"
+        onClick={() => onMove('down')}
+        position="absolute"
+        transform="translateX(-50%)"
+        h={btnSize}
+        w={btnSize}
+        minW={0}
+        variant="blue"
+      />
+    </Box>
   );
 };
