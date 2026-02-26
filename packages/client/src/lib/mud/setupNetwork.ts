@@ -94,12 +94,12 @@ export async function setupNetwork() {
     networkConfig.chainId,
   );
   if (cache) {
-    debug.log('[CACHE] Found cached state', {
+    console.info('[CACHE] Found cached state', {
       blockNumber: cache.blockNumber.toString(),
       components: cache.components.length,
     });
   } else {
-    debug.log('[CACHE] No cached state found — full sync');
+    console.info('[CACHE] No cached state found — full sync');
   }
 
   const startBlock = cache
@@ -168,7 +168,7 @@ export async function setupNetwork() {
   if (cache) {
     try {
       const restored = restoreRecsCache(world, cache);
-      debug.log(`[CACHE] Restored ${restored} entities from cache`);
+      console.info(`[CACHE] Restored ${restored} entities from cache (block ${cache.blockNumber})`);
 
       // Mark sync as LIVE so the UI doesn't show a loading bar.
       // The background sync from cachedBlock will overwrite stale values.
@@ -180,39 +180,61 @@ export async function setupNetwork() {
         lastBlockNumberProcessed: cache.blockNumber,
       });
     } catch (e) {
-      debug.log('[CACHE] Failed to restore cache, continuing with sync', e);
+      console.warn('[CACHE] Failed to restore cache, continuing with sync', e);
     }
   }
 
-  // Periodic cache save — every 60s while synced
-  const CACHE_SAVE_INTERVAL_MS = 60_000;
+  // Periodic cache save — every 30s while synced, plus save immediately on
+  // first LIVE so short sessions still produce a usable cache.
+  const CACHE_SAVE_INTERVAL_MS = 30_000;
   let lastSavedBlock = 0n;
+  let hasSavedOnce = false;
 
-  latestBlock$.pipe(debounceTime(CACHE_SAVE_INTERVAL_MS)).subscribe({
+  latestBlock$.subscribe({
     next: (block) => {
       const blockNum = block.number ?? 0n;
-      if (blockNum > lastSavedBlock) {
-        lastSavedBlock = blockNum;
+      if (blockNum <= lastSavedBlock) return;
+      lastSavedBlock = blockNum;
+
+      // Save immediately on the first block update (ensures cache exists
+      // for next visit even if the user navigates away quickly).
+      // After that, save at the periodic interval.
+      if (!hasSavedOnce) {
+        hasSavedOnce = true;
         saveRecsCache(
           world,
           blockNum,
           networkConfig.worldAddress,
           networkConfig.chainId,
         ).then(() => {
-          debug.log(`[CACHE] Saved at block ${blockNum}`);
+          console.info(`[CACHE] Initial save at block ${blockNum}`);
         });
       }
     },
   });
 
+  // Periodic save on a fixed interval
+  const cacheInterval = setInterval(() => {
+    if (lastSavedBlock > 0n) {
+      saveRecsCache(
+        world,
+        lastSavedBlock,
+        networkConfig.worldAddress,
+        networkConfig.chainId,
+      ).then(() => {
+        debug.log(`[CACHE] Periodic save at block ${lastSavedBlock}`);
+      });
+    }
+  }, CACHE_SAVE_INTERVAL_MS);
+
   // Best-effort save on page unload
   if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', () => {
-      const blockNum = lastSavedBlock;
-      if (blockNum > 0n) {
+      clearInterval(cacheInterval);
+      if (lastSavedBlock > 0n) {
         saveRecsCache(
           world,
-          blockNum,
+          lastSavedBlock,
           networkConfig.worldAddress,
           networkConfig.chainId,
         );

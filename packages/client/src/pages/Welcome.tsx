@@ -12,7 +12,7 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { SyncStep } from '@latticexyz/store-sync';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import Typist from 'react-typist';
@@ -43,6 +43,13 @@ export const Welcome = (): JSX.Element => {
   const { character, isRefreshing } = useCharacter();
 
   const syncProgress = useComponentValue(SyncProgress, singletonEntity);
+
+  // Sticky LIVE: once sync reaches LIVE (including cache restore), don't
+  // re-show loading bar if background delta sync briefly goes non-LIVE.
+  const wasLive = useRef(false);
+  if (syncProgress?.step === SyncStep.LIVE) {
+    wasLive.current = true;
+  }
 
   const [syncStalled, setSyncStalled] = useState(false);
 
@@ -206,7 +213,7 @@ export const Welcome = (): JSX.Element => {
             </Typist>
           </VStack>
 
-          {syncProgress && syncProgress.step !== SyncStep.LIVE && syncProgress.percentage < 100 ? (
+          {syncProgress && syncProgress.step !== SyncStep.LIVE && syncProgress.percentage < 100 && !wasLive.current ? (
             <VStack justify="center" w={{ base: '80%', sm: '50%' }}>
               <Text>Loading {Math.round(syncProgress.percentage)}%</Text>
               <Progress value={Math.round(syncProgress.percentage)} w="100%" />

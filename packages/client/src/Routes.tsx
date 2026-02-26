@@ -2,7 +2,7 @@ import { Progress, Text, VStack } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { SyncStep } from '@latticexyz/store-sync';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import React, { Component, ReactNode, Suspense } from 'react';
+import React, { Component, ReactNode, Suspense, useRef } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { useMUD } from './contexts/MUDContext';
@@ -107,7 +107,17 @@ const AppRoutes: React.FC = () => {
 
   const syncProgress = useComponentValue(SyncProgress, singletonEntity);
 
+  // "Sticky LIVE": once sync reaches LIVE (including cache restore), never
+  // show the loading bar again. Background delta sync may briefly set
+  // SyncProgress to non-LIVE while processing new blocks — that's fine,
+  // the UI already has usable data from the cache or initial sync.
+  const wasLive = useRef(false);
+  if (syncProgress?.step === SyncStep.LIVE) {
+    wasLive.current = true;
+  }
+
   if (
+    !wasLive.current &&
     syncProgress &&
     syncProgress.step !== SyncStep.LIVE &&
     syncProgress.percentage < 100 &&
