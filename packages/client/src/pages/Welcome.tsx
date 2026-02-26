@@ -66,26 +66,19 @@ export const Welcome = (): JSX.Element => {
     return () => clearTimeout(timer);
   }, [syncProgress]);
 
-  // Auto-navigate when auth state becomes ready (after sign-in or on return visit)
+  // Auto-navigate returning players who already have a character straight to the game.
+  // New players (no character) see the full intro and click Enter manually.
   useEffect(() => {
+    if (isRefreshing) return;
+    if (!character?.locked) return;
+
     if (authMethod === 'embedded' && isAuthenticated) {
-      // Wait for character data to load before deciding where to go
-      if (isRefreshing) return;
-      if (character?.locked) {
-        navigate(GAME_BOARD_PATH);
-      } else {
-        navigate(CHARACTER_CREATION_PATH);
-      }
+      navigate(GAME_BOARD_PATH);
       return;
     }
 
     if (authMethod === 'external' && isAuthenticated && delegatorAddress) {
-      if (isRefreshing) return;
-      if (character?.locked) {
-        navigate(GAME_BOARD_PATH);
-      } else {
-        navigate(CHARACTER_CREATION_PATH);
-      }
+      navigate(GAME_BOARD_PATH);
     }
   }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isRefreshing, navigate]);
 
