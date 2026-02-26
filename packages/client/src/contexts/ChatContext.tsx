@@ -130,7 +130,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     spellTemplates,
     weaponTemplates,
   } = useItems();
-  const { allCharacters } = useMap();
+  const { allCharacters, isSpawned } = useMap();
   const { character: currentCharacter } = useCharacter();
 
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
@@ -288,7 +288,6 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
   const onLogin = useCallback(async () => {
     try {
-      if (!isOpen) return;
       if (user) return;
       if (!data) return;
 
@@ -391,14 +390,14 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     } finally {
       setIsLoggingIn(false);
     }
-  }, [authMethod, data, embeddedWallet, isOpen, renderError, thirdwebChain, thirdwebClient, user]);
+  }, [authMethod, data, embeddedWallet, renderError, thirdwebChain, thirdwebClient, user]);
 
-  // Auto-login to Push Protocol when chat opens and wallet is ready
+  // Auto-login to Push Protocol when spawned and wallet is ready
   useEffect(() => {
-    if (isOpen && data && !user && !isLoggingIn) {
+    if (isSpawned && data && !user && !isLoggingIn) {
       onLogin();
     }
-  }, [isOpen, data, user, isLoggingIn, onLogin]);
+  }, [isSpawned, data, user, isLoggingIn, onLogin]);
 
   // Cleanup Push Protocol stream on unmount
   useEffect(() => {
