@@ -1,53 +1,33 @@
+/**
+ * Production landing page — exact visual clone of Welcome.tsx
+ * without MUD/Auth/Web3 dependencies (runs in placeholder mode).
+ */
 import {
   Box,
+  Button,
   HStack,
-  Image,
-  Input,
   keyframes,
   Link,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { FormEvent, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink } from 'react-router-dom';
 import Typist from 'react-typist';
 
 const torchGlow = keyframes`
   0%, 100% {
-    box-shadow: 0 0 8px rgba(200,122,42,0.3), inset 0 0 8px rgba(200,122,42,0.1);
+    box-shadow: 0 0 12px rgba(200,122,42,0.3), 0 0 24px rgba(200,122,42,0.15);
   }
   50% {
-    box-shadow: 0 0 16px rgba(200,122,42,0.5), inset 0 0 12px rgba(200,122,42,0.15);
+    box-shadow: 0 0 20px rgba(232,168,64,0.5), 0 0 40px rgba(200,122,42,0.25);
   }
 `;
 
 export const LandingPage = (): JSX.Element => {
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-
-  const onSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    const existing = JSON.parse(localStorage.getItem('ud:signups') || '[]');
-    existing.push({ email, ts: Date.now() });
-    localStorage.setItem('ud:signups', JSON.stringify(existing));
-
-    setSubmitted(true);
-  };
-
   return (
     <Box
-      minH="100vh"
-      px={{ base: 2, sm: 12, md: 20 }}
-      py={{ base: 4, lg: 12 }}
-    >
-    <Box
       border="6px solid #3A3228"
-      display="flex"
-      flexDirection="column"
-      minH={{ base: 'calc(100vh - 32px)', lg: 'calc(100vh - 96px)' }}
       p={1.5}
       _after={{
         content: '""',
@@ -65,7 +45,6 @@ export const LandingPage = (): JSX.Element => {
       </Helmet>
       <Box
         border="0.5px solid #3A3228"
-        flex="1"
         position="relative"
         _before={{
           content: '""',
@@ -78,18 +57,18 @@ export const LandingPage = (): JSX.Element => {
       >
         {/* Dragon watermark */}
         <Box
-          backgroundImage="url(/images/ultimate-dominion-logo.svg)"
-          backgroundPosition="center"
-          backgroundRepeat="no-repeat"
-          backgroundSize="contain"
-          h="50vh"
-          left="50%"
-          opacity={0.035}
-          pointerEvents="none"
           position="absolute"
           top="50%"
+          left="50%"
           transform="translate(-50%, -50%)"
-          w="60vw"
+          width="60%"
+          height="60%"
+          backgroundImage="url(/images/ultimate-dominion-logo.svg)"
+          backgroundRepeat="no-repeat"
+          backgroundPosition="center"
+          backgroundSize="contain"
+          opacity={0.02}
+          pointerEvents="none"
           zIndex={0}
         />
 
@@ -102,20 +81,12 @@ export const LandingPage = (): JSX.Element => {
           spacing={{ base: 14, md: 18 }}
           zIndex={2}
         >
-          <Image
-            alt="Ultimate Dominion"
-            mx="auto"
-            src="/images/ultimate-dominion-logo.svg"
-            width={{ base: '200px', sm: '250px', md: '280px' }}
-          />
-
           <Text
             color="#8A7E6A"
             fontFamily="'Cinzel', serif"
             fontSize={{ base: '11px', sm: '13px' }}
             fontStyle="italic"
             letterSpacing="0.3em"
-            mt={-8}
             textAlign="center"
             textTransform="uppercase"
           >
@@ -154,89 +125,15 @@ export const LandingPage = (): JSX.Element => {
             </Typist>
           </VStack>
 
-          {/* Email signup — replaces the "Enter" button */}
-          <VStack spacing={4} w="100%">
-            {submitted ? (
-              <VStack spacing={2}>
-                <Text
-                  color="rgba(196, 184, 158, 0.7)"
-                  fontSize="14px"
-                  fontWeight={500}
-                  letterSpacing="0.05em"
-                >
-                  You&apos;re on the list.
-                </Text>
-                <Text
-                  color="rgba(196, 184, 158, 0.4)"
-                  fontSize="13px"
-                  fontStyle="italic"
-                >
-                  We&apos;ll send word when the gates open.
-                </Text>
-              </VStack>
-            ) : (
-              <Box as="form" maxW="420px" mx="auto" onSubmit={onSubmit} w="100%">
-                <VStack spacing={3}>
-                  <Text
-                    color="rgba(196, 184, 158, 0.5)"
-                    fontFamily="'Cinzel', serif"
-                    fontSize={{ base: '11px', sm: '12px' }}
-                    letterSpacing="0.15em"
-                    textTransform="uppercase"
-                  >
-                    Get notified when the gates open
-                  </Text>
-                  <HStack spacing={0} w="100%">
-                    <Input
-                      bg="rgba(196, 184, 158, 0.06)"
-                      border="1px solid"
-                      borderColor="rgba(196, 184, 158, 0.2)"
-                      borderRadius="0"
-                      color="rgba(232, 220, 200, 0.8)"
-                      fontSize="14px"
-                      h="44px"
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      type="email"
-                      value={email}
-                      _focus={{
-                        borderColor: 'rgba(200, 122, 42, 0.6)',
-                        boxShadow: 'none',
-                      }}
-                      _placeholder={{
-                        color: 'rgba(196, 184, 158, 0.3)',
-                      }}
-                    />
-                    <Box
-                      as="button"
-                      animation={`${torchGlow} 3s ease-in-out infinite`}
-                      bg="rgba(200, 122, 42, 0.5)"
-                      border="1px solid"
-                      borderColor="rgba(200, 122, 42, 0.5)"
-                      borderLeft="none"
-                      color="rgba(232, 220, 200, 0.9)"
-                      cursor="pointer"
-                      flexShrink={0}
-                      fontSize="12px"
-                      fontWeight={600}
-                      h="44px"
-                      letterSpacing="0.15em"
-                      px={6}
-                      textTransform="uppercase"
-                      transition="all 0.2s ease"
-                      type="submit"
-                      _hover={{
-                        bg: 'rgba(200, 122, 42, 0.7)',
-                        color: '#E8DCC8',
-                      }}
-                    >
-                      Join
-                    </Box>
-                  </HStack>
-                </VStack>
-              </Box>
-            )}
-          </VStack>
+          <Button
+            animation={`${torchGlow} 4s ease-in-out infinite`}
+            color="#12100E"
+            letterSpacing="0.15em"
+            px={{ base: 16, sm: 24 }}
+            textTransform="uppercase"
+          >
+            Enter
+          </Button>
 
           <HStack
             fontFamily="'Cinzel', serif"
@@ -272,7 +169,6 @@ export const LandingPage = (): JSX.Element => {
           </HStack>
         </VStack>
       </Box>
-    </Box>
     </Box>
   );
 };
