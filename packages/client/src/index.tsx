@@ -12,48 +12,76 @@ import { Global } from '@emotion/react';
 import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 
-import { App } from './App';
-import { DevTools } from './components/DevTools';
-import { AllowanceProvider } from './contexts/AllowanceContext';
-import { AuthProvider } from './contexts/AuthContext';
-import { CharacterProvider } from './contexts/CharacterContext';
-import { ItemsProvider } from './contexts/ItemsContext';
-import { MonstersProvider } from './contexts/MonstersContext';
-import { MUDProvider } from './contexts/MUDContext';
-import { OrdersProvider } from './contexts/OrdersContext';
-import { Web3Provider } from './contexts/Web3Provider';
-import { setup } from './lib/mud/setup';
 import { globalStyles, theme } from './utils/theme';
 
 const rootElement = document.getElementById('react-root');
 if (!rootElement) throw new Error('React root not found');
 const root = createRoot(rootElement);
 
-const setupPromise = setup();
+const isGameLive = import.meta.env.VITE_GAME_LIVE === 'true';
 
-root.render(
-  <HelmetProvider>
-    <ChakraProvider resetCSS theme={theme}>
-      <Global styles={globalStyles} />
-      <Web3Provider>
-      <AuthProvider>
-        <MUDProvider setupPromise={setupPromise}>
-          <ItemsProvider>
-            <MonstersProvider>
-              <OrdersProvider>
-                <CharacterProvider>
-                  <AllowanceProvider>
-                    <App />
-                  </AllowanceProvider>
-                </CharacterProvider>
-              </OrdersProvider>
-            </MonstersProvider>
-          </ItemsProvider>
-          {/* DevTools temporarily disabled - causes error with undefined table values */}
-          {/* {import.meta.env.DEV && <DevTools />} */}
-        </MUDProvider>
-      </AuthProvider>
-    </Web3Provider>
-  </ChakraProvider>
-  </HelmetProvider>,
-);
+if (isGameLive) {
+  // Full game — lazy-import heavy MUD/Web3 dependencies only when needed
+  Promise.all([
+    import('./App'),
+    import('./contexts/AllowanceContext'),
+    import('./contexts/AuthContext'),
+    import('./contexts/CharacterContext'),
+    import('./contexts/ItemsContext'),
+    import('./contexts/MonstersContext'),
+    import('./contexts/MUDContext'),
+    import('./contexts/OrdersContext'),
+    import('./contexts/Web3Provider'),
+    import('./lib/mud/setup'),
+  ]).then(([
+    { App },
+    { AllowanceProvider },
+    { AuthProvider },
+    { CharacterProvider },
+    { ItemsProvider },
+    { MonstersProvider },
+    { MUDProvider },
+    { OrdersProvider },
+    { Web3Provider },
+    { setup },
+  ]) => {
+    const setupPromise = setup();
+
+    root.render(
+      <HelmetProvider>
+        <ChakraProvider resetCSS theme={theme}>
+          <Global styles={globalStyles} />
+          <Web3Provider>
+          <AuthProvider>
+            <MUDProvider setupPromise={setupPromise}>
+              <ItemsProvider>
+                <MonstersProvider>
+                  <OrdersProvider>
+                    <CharacterProvider>
+                      <AllowanceProvider>
+                        <App />
+                      </AllowanceProvider>
+                    </CharacterProvider>
+                  </OrdersProvider>
+                </MonstersProvider>
+              </ItemsProvider>
+            </MUDProvider>
+          </AuthProvider>
+        </Web3Provider>
+      </ChakraProvider>
+      </HelmetProvider>,
+    );
+  });
+} else {
+  // Placeholder / landing page — no MUD, no Web3, no chain connection
+  import('./PlaceholderApp').then(({ PlaceholderApp }) => {
+    root.render(
+      <HelmetProvider>
+        <ChakraProvider resetCSS theme={theme}>
+          <Global styles={globalStyles} />
+          <PlaceholderApp />
+        </ChakraProvider>
+      </HelmetProvider>,
+    );
+  });
+}
