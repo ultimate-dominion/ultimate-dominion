@@ -87,8 +87,12 @@ export const AuthProvider = ({
     async (wallet: Wallet) => {
       try {
         const account = wallet.getAccount();
-        if (!account) return;
+        if (!account) {
+          console.warn('[Auth] Wallet has no account after connect — session may be stale');
+          return;
+        }
 
+        console.info('[Auth] Initializing viem client for', account.address);
         const { viemAdapter } = await import('thirdweb/adapters/viem');
         const viemClient = viemAdapter.walletClient.toViem({
           client: thirdwebClient,
@@ -100,7 +104,7 @@ export const AuthProvider = ({
         setEmbeddedAddress(account.address as Address);
         setEmbeddedWallet(wallet);
       } catch (e) {
-        console.error('[AuthContext] Failed to initialize embedded client:', e);
+        console.error('[Auth] Failed to initialize embedded client:', e);
       }
     },
     [],
@@ -126,13 +130,17 @@ export const AuthProvider = ({
         });
         const connected = await wallet.autoConnect({
           client: thirdwebClient,
-          timeout: 5000,
+          chain: thirdwebChain,
+          timeout: 10000,
         });
         if (connected) {
+          console.info('[Auth] autoConnect succeeded, initializing client...');
           await initEmbeddedClient(wallet);
+        } else {
+          console.info('[Auth] autoConnect returned no account — no persisted session');
         }
-      } catch {
-        // No persisted session or auto-connect failed — that's fine
+      } catch (e) {
+        console.warn('[Auth] autoConnect failed:', e);
       } finally {
         setIsConnecting(false);
       }

@@ -40,7 +40,7 @@ export const Welcome = (): JSX.Element => {
     components: { SyncProgress },
     delegatorAddress,
   } = useMUD();
-  const { character } = useCharacter();
+  const { character, isRefreshing } = useCharacter();
 
   const syncProgress = useComponentValue(SyncProgress, singletonEntity);
 
@@ -62,6 +62,8 @@ export const Welcome = (): JSX.Element => {
   // Auto-navigate when auth state becomes ready (after sign-in or on return visit)
   useEffect(() => {
     if (authMethod === 'embedded' && isAuthenticated) {
+      // Wait for character data to load before deciding where to go
+      if (isRefreshing) return;
       if (character?.locked) {
         navigate(GAME_BOARD_PATH);
       } else {
@@ -71,13 +73,14 @@ export const Welcome = (): JSX.Element => {
     }
 
     if (authMethod === 'external' && isAuthenticated && delegatorAddress) {
+      if (isRefreshing) return;
       if (character?.locked) {
         navigate(GAME_BOARD_PATH);
       } else {
         navigate(CHARACTER_CREATION_PATH);
       }
     }
-  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, navigate]);
+  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isRefreshing, navigate]);
 
   const onPlay = useCallback(() => {
     // Embedded path: authenticated = ready to go (no delegation needed)

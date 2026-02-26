@@ -66,23 +66,30 @@ export const GameBoard = (): JSX.Element => {
   const { inSafetyZone, position } = useMap();
   const { continueToBattleOutcome, lastestBattleOutcome } = useBattle();
 
-  // Redirect to home if synced, but missing other requirements
+  // Redirect to home if synced, but missing other requirements.
+  // IMPORTANT: Wait for each loading phase to complete before making
+  // redirect decisions. Premature redirects cause refresh-to-home bugs.
   useEffect(() => {
+    // Phase 1: Wait for auth to resolve
     if (isConnecting) return;
-
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
     }
 
+    // Phase 2: Wait for MUD sync
     if (!isSynced) return;
 
+    // Phase 3: Wait for delegation (external path)
     if (!delegatorAddress) {
       navigate(HOME_PATH);
       return;
     }
 
-    if (!character?.locked && !isRefreshing) {
+    // Phase 4: Wait for character data to load before deciding
+    if (isRefreshing) return;
+
+    if (!character?.locked) {
       navigate(CHARACTER_CREATION_PATH);
       return;
     }
