@@ -122,6 +122,12 @@ export const RARITY_NAMES: Record<Rarity, string> = {
   [Rarity.Legendary]: 'Legendary',
 };
 
+export const CLASS_COLORS: Record<StatsClasses, string> = {
+  [StatsClasses.Warrior]: '#B85C3A', // warm copper
+  [StatsClasses.Rogue]: '#5A8A3E',   // forest green
+  [StatsClasses.Mage]: '#4A7AB5',    // steel blue
+};
+
 export enum SystemToAllow {
   LootManager = 'LootManager',
   Marketplace = 'Marketplace',
@@ -289,6 +295,7 @@ export type Monster = MonsterTemplate & {
   currentHp: bigint;
   id: Entity;
   inBattle: boolean;
+  isElite: boolean;
   isSpawned: boolean;
   maxHp: bigint;
   position: { x: number; y: number };

@@ -10,17 +10,16 @@ import {
   Tooltip,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { CiCircleCheck } from 'react-icons/ci';
 import { IoIosSend, IoMdInformationCircleOutline } from 'react-icons/io';
 import { FaMedal } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { createPublicClient, http } from 'viem';
-import { mainnet } from 'viem/chains';
 
 import { useChat } from '../contexts/ChatContext';
 import { useMap } from '../contexts/MapContext';
 import { shortenAddress } from '../utils/helpers';
+import { CLASS_COLORS } from '../utils/types';
 
 import { PolygonalCard } from './PolygonalCard';
 
@@ -55,11 +54,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const [allCharacterOwners, setAllCharacterOwners] = useState<string>('');
-  const [ensNameByAddressMapping, setEnsNameByAddressMapping] = useState<
-    Record<string, string>
-  >({});
-
   const adjustTextareaHeight = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -81,53 +75,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
       scrollToBottom();
     }
   }, [chatUser, isGroupMember, isLoggedIn, messages, scrollToBottom]);
-
-  useEffect(() => {
-    (async () => {
-      if (!isLoggedIn) return;
-      if (!isGroupMember) return;
-      if (allCharacters.length === 0) return;
-
-      const newCharacterOwners = JSON.stringify(
-        allCharacters.map(character => character.owner).sort(),
-      );
-
-      if (newCharacterOwners === allCharacterOwners) return;
-      try {
-        const publicClient = createPublicClient({
-          chain: mainnet,
-          transport: http(),
-        });
-
-        const _ensNameByAddressMapping: Record<string, string> = {};
-
-        const promises = allCharacters.map(async character => {
-          if (!_ensNameByAddressMapping[character.owner]) {
-            try {
-              const ensName = await publicClient.getEnsName({
-                address: character.owner as `0x${string}`,
-                universalResolverAddress:
-                  mainnet.contracts.ensUniversalResolver.address,
-              });
-              _ensNameByAddressMapping[character.owner] =
-                ensName || shortenAddress(character.owner);
-            } catch {
-              // ENS reverse lookup fails for non-ENS addresses
-              _ensNameByAddressMapping[character.owner] =
-                shortenAddress(character.owner);
-            }
-          }
-        });
-
-        await Promise.all(promises);
-
-        setAllCharacterOwners(newCharacterOwners);
-        setEnsNameByAddressMapping(_ensNameByAddressMapping);
-      } catch {
-        // ENS resolution failed entirely — fall back silently
-      }
-    })();
-  }, [allCharacters, allCharacterOwners, isGroupMember, isLoggedIn]);
 
   const isVisible = inline || isChatBoxOpen;
 
@@ -241,9 +188,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                   message.from.toLowerCase(),
               );
 
-              const characterAddressOrEns =
-                ensNameByAddressMapping[message.from];
-
               // Only show timestamp if it's been more than 30 minutes since the last message
               const prevMessage = messages[index - 1];
               const showTimestamp =
@@ -252,17 +196,31 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                   new Date(prevMessage.timestamp).getTime() >
                   1000 * 60 * 30;
 
+              // Announcement cards (JSX messages like rare drops, marketplace sales)
               if (message.jsx) {
                 return (
                   <VStack key={`message-${index}`} mt={1} w="100%">
-                    <Text size="2xs">
-                      {new Date(message.timestamp).toLocaleString()}
-                    </Text>
+                    {showTimestamp && (
+                      <Text color="#5A5347" size="2xs">
+                        &mdash;{' '}
+                        {new Date(message.timestamp).toLocaleTimeString([], {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                        })}{' '}
+                        &mdash;
+                      </Text>
+                    )}
                     <Box
-                      bgColor="#24201A"
+                      bg="#1A1610"
+                      borderLeft={
+                        message.rarityColor
+                          ? `3px solid ${message.rarityColor}`
+                          : undefined
+                      }
+                      borderRadius="md"
                       boxShadow="2px 2px 6px rgba(0,0,0,0.4)"
                       color="#E8DCC8"
-                      p={1}
+                      p={2}
                       w="100%"
                     >
                       {message.jsx}
@@ -271,11 +229,20 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                 );
               }
 
+              const nameColor = messageCharacter
+                ? CLASS_COLORS[messageCharacter.entityClass] ?? '#E8DCC8'
+                : '#E8DCC8';
+
               return (
                 <VStack key={`message-${index}`} w="100%">
                   {showTimestamp && (
-                    <Text size="2xs">
-                      {new Date(message.timestamp).toLocaleString()}
+                    <Text color="#5A5347" size="2xs">
+                      &mdash;{' '}
+                      {new Date(message.timestamp).toLocaleTimeString([], {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}{' '}
+                      &mdash;
                     </Text>
                   )}
                   <HStack
@@ -290,19 +257,20 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                       {!isUser && messageCharacter && (
                         <Text
                           as={Link}
+                          color={nameColor}
                           size="2xs"
                           to={`/characters/${messageCharacter.id}`}
                           _hover={{
-                            color: '#C87A2A',
                             textDecoration: 'underline',
                           }}
                         >
-                          {`${messageCharacter.name} `}(
-                          {characterAddressOrEns})
+                          {messageCharacter.name}
                         </Text>
                       )}
                       {!isUser && !messageCharacter && (
-                        <Text size="2xs">{characterAddressOrEns}</Text>
+                        <Text color="#5A5347" size="2xs">
+                          {shortenAddress(message.from)}
+                        </Text>
                       )}
                       <HStack spacing={1}>
                         {message.delivered && isUser && (
@@ -319,7 +287,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                           fontSize="xs"
                         >
                           <Box
-                            bg={isUser ? '#C87A2A' : '#24201A'}
+                            bg={isUser ? '#C87A2A' : '#1C1814'}
                             borderRadius="md"
                             color="#E8DCC8"
                             cursor="pointer"

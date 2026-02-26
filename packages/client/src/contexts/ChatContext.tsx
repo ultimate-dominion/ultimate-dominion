@@ -55,6 +55,7 @@ type Message = {
   from: string;
   jsx?: JSX.Element;
   message: string;
+  rarityColor?: string;
   timestamp: number;
 };
 
@@ -200,48 +201,59 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
   // Rare+ item drop announcements from battle outcomes
   const battleOutcomeEntities = useEntityQuery([Has(CombatOutcome)]);
-  const rareDropAnnouncements: Message[] = useMemo(() => battleOutcomeEntities
-    .map(entity => {
-      const combatOutcome = getComponentValueStrict(CombatOutcome, entity);
-      const { itemsDropped } = combatOutcome;
-      if (!itemsDropped || itemsDropped.length === 0) return null;
+  const rareDropAnnouncements: Message[] = useMemo(() => {
+    console.info('[CHAT] Battle outcome entities:', battleOutcomeEntities.length);
+    return battleOutcomeEntities
+      .map(entity => {
+        const combatOutcome = getComponentValueStrict(CombatOutcome, entity);
+        const { itemsDropped } = combatOutcome;
+        console.info('[CHAT] Combat outcome itemsDropped:', itemsDropped);
+        if (!itemsDropped || itemsDropped.length === 0) return null;
 
-      const encounter = getComponentValueStrict(CombatEncounter, entity);
-      const attackerId = encounter.attackers[0];
-      const defenderId = encounter.defenders[0];
+        const encounter = getComponentValueStrict(CombatEncounter, entity);
+        const attackerId = encounter.attackers[0];
+        const defenderId = encounter.defenders[0];
 
-      const winner = combatOutcome.attackersWin ? attackerId : defenderId;
-      const winnerName = allCharacters.find(c => c.id === winner)?.name;
-      if (!winnerName) return null;
+        const winner = combatOutcome.attackersWin ? attackerId : defenderId;
+        const winnerName = allCharacters.find(c => c.id === winner)?.name;
+        console.info('[CHAT] Winner:', winner, 'Name:', winnerName);
+        if (!winnerName) return null;
 
-      const rareDrops = itemsDropped
-        .map(itemId => allItems.find(item => item.tokenId === itemId.toString()))
-        .filter(item => item && item.rarity !== undefined && item.rarity >= Rarity.Rare);
+        const rareDrops = itemsDropped
+          .map(itemId => {
+            const found = allItems.find(item => item.tokenId === itemId.toString());
+            console.info('[CHAT] Item lookup:', itemId, '→', found?.name, 'rarity:', found?.rarity);
+            return found;
+          })
+          .filter(item => item && item.rarity !== undefined && item.rarity >= Rarity.Rare);
 
-      if (rareDrops.length === 0) return null;
+        if (rareDrops.length === 0) return null;
 
-      const droppedItem = rareDrops[0]!;
-      const rarityName = RARITY_NAMES[droppedItem.rarity!];
-      const rarityColor = RARITY_COLORS[droppedItem.rarity!];
+        const droppedItem = rareDrops[0]!;
+        const rarityName = RARITY_NAMES[droppedItem.rarity!];
+        const rarityColor = RARITY_COLORS[droppedItem.rarity!];
 
-      return {
-        delivered: true,
-        from: zeroAddress,
-        jsx: (
-          <Text fontWeight={500} size="xs" textAlign="center">
-            {winnerName} found{' '}
-            <Text as="span" color={rarityColor} fontWeight={700}>
-              {droppedItem.name}
-            </Text>{' '}
-            ({rarityName})!
-          </Text>
-        ),
-        message: '',
-        timestamp: Number(combatOutcome.endTime) * 1000,
-      };
-    })
-    .filter((m): m is Message => m !== null),
-  [battleOutcomeEntities, allCharacters, allItems]);
+        console.info('[CHAT] Announcing rare drop:', droppedItem.name, rarityName);
+
+        return {
+          delivered: true,
+          from: zeroAddress,
+          jsx: (
+            <Text fontWeight={500} size="xs" textAlign="center">
+              {winnerName} found{' '}
+              <Text as="span" color={rarityColor} fontWeight={700}>
+                {droppedItem.name}
+              </Text>{' '}
+              ({rarityName})!
+            </Text>
+          ),
+          message: '',
+          rarityColor,
+          timestamp: Number(combatOutcome.endTime) * 1000,
+        };
+      })
+      .filter((m): m is Message => m !== null);
+  }, [battleOutcomeEntities, allCharacters, allItems]);
 
   // Rare+ marketplace transactions only
   const marketplaceSaleEntities = useEntityQuery([Has(MarketplaceSale)]);
@@ -272,6 +284,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
           </Text>
         ),
         message: '',
+        rarityColor,
         timestamp: Number(timestamp) * 1000,
       };
     })
