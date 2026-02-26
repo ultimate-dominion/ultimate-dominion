@@ -85,7 +85,7 @@ const AppInner = (): JSX.Element => {
     onOpenWalletDetailsModal,
   } = useMUD();
   const { isSpawned } = useMap();
-  const { isOpen: isChatBoxOpen, onOpen: onOpenChatBox } = useChat();
+  const { isOpen: isChatBoxOpen, onOpen: onOpenChatBox, unreadCount } = useChat();
   const { character } = useCharacter();
 
   // Activate GasStation auto-swap hook
@@ -214,11 +214,31 @@ const AppInner = (): JSX.Element => {
               <Button
                 onClick={onOpenChatBox}
                 opacity={isChatBoxOpen ? 0 : 1}
+                position="relative"
                 px={4}
                 py={5}
                 transition="opacity 0.3s ease"
               >
                 <IoChatbubble size={24} />
+                {unreadCount > 0 && (
+                  <Box
+                    alignItems="center"
+                    bg="red.500"
+                    borderRadius="full"
+                    color="white"
+                    display="flex"
+                    fontSize="xs"
+                    fontWeight="bold"
+                    h={5}
+                    justifyContent="center"
+                    position="absolute"
+                    right="-1"
+                    top="-1"
+                    w={5}
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Box>
+                )}
               </Button>
             </ScaleFade>
           </Box>
