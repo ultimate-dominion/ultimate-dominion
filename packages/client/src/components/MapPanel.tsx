@@ -19,6 +19,7 @@ import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
+import { ChatBox } from './ChatBox';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
 import { CompassSvg } from './SVGs/CompassSvg';
@@ -224,6 +225,11 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
             Spawn
           </Button>
         </VStack>
+      )}
+      {isDesktop && isSpawned && (
+        <Box w="100%" flex={1} minH="120px" mt={2}>
+          <ChatBox inline />
+        </Box>
       )}
     </Stack>
   );

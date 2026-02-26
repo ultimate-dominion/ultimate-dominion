@@ -216,17 +216,13 @@ export const GameBoard = (): JSX.Element => {
       <Box
         bottom={2}
         display={{ base: 'block', lg: 'none' }}
-        left="50%"
+        left={2}
         pos="fixed"
-        px={2}
-        transform="translateX(-50%)"
-        w="100%"
+        zIndex={5}
       >
-        <VStack>
-          <Button alignSelf="start" onClick={onOpenStatsDrawer} size="sm" w="calc(100% - 67px)">
-            Stats
-          </Button>
-        </VStack>
+        <Button onClick={onOpenStatsDrawer} size="sm">
+          Stats
+        </Button>
         <Drawer isOpen={isStatsDrawerOpen} onClose={onCloseStatsDrawer} placement="bottom">
           <DrawerOverlay />
           <DrawerContent maxH="60vh" borderTopRadius="lg">
