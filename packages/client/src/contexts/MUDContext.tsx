@@ -1,6 +1,6 @@
 import { useDisclosure } from '@chakra-ui/react';
 import { type ContractWrite } from '@latticexyz/common';
-import { writeObserver } from '@latticexyz/common/actions';
+import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
 import { useComponentValue } from '@latticexyz/react';
 import { getComponentValue, overridableComponent } from '@latticexyz/recs';
 import { SyncStep } from '@latticexyz/store-sync';
@@ -174,14 +174,10 @@ const MUDProviderInner = ({
       return;
     }
 
-    // Use the Thirdweb wallet client directly — it has its own signing transport.
-    // Extracting the account and pairing it with an HTTP transport doesn't work
-    // because the Thirdweb account is a JSON-RPC type that delegates signing
-    // to Thirdweb's transport layer.
-    // Note: we skip transactionQueue() here because Thirdweb handles its own
-    // nonce management; layering MUD's queue on top causes receipt-polling
-    // mismatches with the RECS sync.
-    let walletClient = (embeddedWalletClient as any)
+    // EIP-7702: the embedded wallet is an EOA with standard nonce management,
+    // so transactionQueue() works normally (unlike the old ERC-4337 path).
+    const walletClient = (embeddedWalletClient as any)
+      .extend(transactionQueue())
       .extend(writeObserver({ onWrite: write => write$.next(write) }));
 
     const worldContract = getContract({
@@ -195,21 +191,11 @@ const MUDProviderInner = ({
       Position: overridableComponent(setupResult.components.Position),
     };
 
-    // MUD's waitForTransaction relies on RECS block sync (storedBlockLogs$),
-    // which races with the Thirdweb transport's receipt availability.
-    // Use viem's standard polling instead — it retries getTransactionReceipt
-    // until found, independent of RECS sync state.
-    const embeddedWaitForTransaction = async (tx: Hex) => {
-      return setupResult.network.publicClient.waitForTransactionReceipt({
-        hash: tx,
-        pollingInterval: 250, // Match Base Flashblocks 200ms block time
-      });
-    };
-
+    // EIP-7702: standard tx hashes work with MUD's default waitForTransaction
+    // (RECS block sync). No custom polling needed like the old ERC-4337 path.
     const systemCalls = createSystemCalls(
       {
         ...setupResult.network,
-        waitForTransaction: embeddedWaitForTransaction,
         delegatorAddress: ownerAddress,
         worldContract,
       },

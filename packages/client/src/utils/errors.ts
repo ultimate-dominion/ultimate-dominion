@@ -47,14 +47,6 @@ export const getFriendlyError = (error: unknown): string | null => {
     return "The game couldn't process your action. Please try again.";
   }
 
-  // UserOp / bundler failures
-  if (
-    message.includes('userop failed') ||
-    message.includes('useroperation')
-  ) {
-    return 'Action was slow to process. Please try again.';
-  }
-
   // Nonce issues (usually resolved by retry)
   if (message.includes('nonce')) {
     return 'Transaction conflict. Please try again.';
@@ -89,7 +81,7 @@ export const getFriendlyError = (error: unknown): string | null => {
     if (
       firstChar === firstChar.toUpperCase() &&
       !/0x[0-9a-f]{4,}/i.test(raw) &&
-      !/reverted|userop|nonce|timeout/i.test(raw)
+      !/reverted|nonce|timeout/i.test(raw)
     ) {
       return raw;
     }
