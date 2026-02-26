@@ -452,30 +452,32 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     setRefreshCounter(prev => prev + 1);
   }, []);
 
+  // Sync effect: Monsters and shops update immediately (no async fetches)
   useEffect(() => {
+    if (!(allMonsterEntities && isSynced)) return;
+
+    const _monsters = getMonsters(allMonsterEntities);
+    const _shops = getShops(allShopEntities);
+
+    setAllMonsters(_monsters);
+    setAllShops(_shops);
+    setIsFetchingEntities(false);
+  }, [allMonsterEntities, allShopEntities, getMonsters, getShops, isSynced, refreshCounter]);
+
+  // Async effect: Characters load in background (IPFS metadata fetches can be slow)
+  useEffect(() => {
+    if (!(allCharacterEntities && isSynced)) return;
+
+    let cancelled = false;
     (async () => {
-      if (!(allCharacterEntities && allMonsterEntities && isSynced)) return;
-
       const _allCharacters = await getAllCharacters(allCharacterEntities);
-      setAllCharacters(_allCharacters as Character[]);
-
-      const _monsters = getMonsters(allMonsterEntities);
-      const _shops = getShops(allShopEntities);
-
-      setAllMonsters(_monsters);
-      setAllShops(_shops);
-      setIsFetchingEntities(false);
+      if (!cancelled) {
+        setAllCharacters(_allCharacters as Character[]);
+      }
     })();
-  }, [
-    allCharacterEntities,
-    allMonsterEntities,
-    allShopEntities,
-    getAllCharacters,
-    getMonsters,
-    getShops,
-    isSynced,
-    refreshCounter,
-  ]);
+
+    return () => { cancelled = true; };
+  }, [allCharacterEntities, getAllCharacters, isSynced, refreshCounter]);
 
   const monstersOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
