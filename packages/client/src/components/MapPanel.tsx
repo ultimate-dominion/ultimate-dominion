@@ -62,7 +62,7 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
   const maxPlayers = configValue?.maxPlayers ?? BigInt(0);
 
   return (
-    <Stack alignItems="center" h="100%">
+    <Stack alignItems="center" className="data-dense" h="100%">
       <Box w="100%" h={{ base: '300px', lg: '300px' }}>
         <PolygonalCard clipPath="none">
           <HStack

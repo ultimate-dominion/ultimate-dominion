@@ -184,7 +184,7 @@ export const GameBoard = (): JSX.Element => {
         display={{ base: 'none', lg: 'block' }}
         rowSpan={{ base: 'auto', lg: 12 }}
       >
-        <PolygonalCard clipPath="none" overflowY="auto">
+        <PolygonalCard className="data-dense" clipPath="none" overflowY="auto">
           <StatsPanel />
         </PolygonalCard>
       </GridItem>
@@ -194,7 +194,7 @@ export const GameBoard = (): JSX.Element => {
         rowSpan={{ base: 'auto', lg: 6 }}
         rowStart={{ base: 0, lg: 0 }}
       >
-        <PolygonalCard clipPath="none">
+        <PolygonalCard className="data-dense" clipPath="none">
           <TileDetailsPanel />
         </PolygonalCard>
       </GridItem>
@@ -204,7 +204,7 @@ export const GameBoard = (): JSX.Element => {
         rowSpan={{ base: 'auto', lg: 6 }}
         rowStart={{ base: 'auto', lg: 7 }}
       >
-        <PolygonalCard clipPath="none">
+        <PolygonalCard className="data-dense" clipPath="none">
           <ActionsPanel />
         </PolygonalCard>
       </GridItem>
@@ -231,7 +231,7 @@ export const GameBoard = (): JSX.Element => {
           <DrawerContent maxH="60vh" borderTopRadius="lg">
             <DrawerCloseButton />
             <DrawerHeader>Stats</DrawerHeader>
-            <DrawerBody overflowY="auto" pb={6}>
+            <DrawerBody className="data-dense" overflowY="auto" pb={6}>
               <StatsPanel />
             </DrawerBody>
           </DrawerContent>

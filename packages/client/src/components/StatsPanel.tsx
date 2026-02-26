@@ -4,11 +4,9 @@ import {
   Button,
   Divider,
   HStack,
-  Link,
   Spinner,
   Text,
   Tooltip,
-  useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
@@ -33,7 +31,6 @@ import { LeaderboardIconSvg, MarketplaceIconSvg } from './SVGs';
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
     components: { Levels },
   } = useMUD();
@@ -340,41 +337,37 @@ export const StatsPanel = (): JSX.Element => {
         </Button>
       )}
 
-      {isDesktop && (
-        <HStack
-          justifyContent="space-between"
-          m="0 auto"
-          maxWidth="250px"
-          pb={6}
-          pt={4}
-          w="100%"
+      <Divider borderColor="grey300" mt={4} />
+
+      <HStack
+        justifyContent="center"
+        gap={2}
+        pb={4}
+        pt={4}
+        px={2}
+        w="100%"
+      >
+        <Button
+          as={RouterLink}
+          flex={1}
+          leftIcon={<MarketplaceIconSvg size={3} theme="dark" />}
+          size="sm"
+          to={MARKETPLACE_PATH}
+          variant="dark"
         >
-          <Link
-            alignItems="center"
-            as={RouterLink}
-            display="flex"
-            fontSize={{ base: 'xs', sm: 'sm' }}
-            gap={1}
-            textDecoration="underline"
-            to={MARKETPLACE_PATH}
-          >
-            <MarketplaceIconSvg size={3} theme="dark" />
-            Marketplace
-          </Link>
-          <Link
-            alignItems="center"
-            as={RouterLink}
-            display="flex"
-            fontSize={{ base: 'xs', sm: 'sm' }}
-            gap={1}
-            textDecoration="underline"
-            to={LEADERBOARD_PATH}
-          >
-            <LeaderboardIconSvg size={3} theme="dark" />
-            Leaderboard
-          </Link>
-        </HStack>
-      )}
+          Marketplace
+        </Button>
+        <Button
+          as={RouterLink}
+          flex={1}
+          leftIcon={<LeaderboardIconSvg size={3} theme="dark" />}
+          size="sm"
+          to={LEADERBOARD_PATH}
+          variant="dark"
+        >
+          Leaderboard
+        </Button>
+      </HStack>
     </VStack>
   );
 };
