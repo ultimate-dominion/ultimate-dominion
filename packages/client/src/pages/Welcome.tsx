@@ -225,6 +225,7 @@ export const Welcome = (): JSX.Element => {
           ) : (
             <Button
               animation={`${torchGlow} 4s ease-in-out infinite`}
+              color="#12100E"
               letterSpacing="0.15em"
               onClick={onPlay}
               px={{ base: 16, sm: 24 }}
