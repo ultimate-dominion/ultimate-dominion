@@ -606,11 +606,6 @@ export const TileDetailsPanel = (): JSX.Element => {
                     <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
                       {opponent.name}
                     </Text>
-                    {opponent.experience > opponent.level * 150n && (
-                      <Text color="gold" fontSize={{ base: 'xs', lg: 'sm' }}>
-                        ★
-                      </Text>
-                    )}
                     <ClassSymbol
                       entityClass={opponent.entityClass}
                       mb={1}
@@ -1259,12 +1254,6 @@ const OpponentRow = ({
           >
             {name}
           </Text>
-          {encounterType === EncounterType.PvE &&
-            opponent.experience > opponent.level * 150n && (
-              <Text color="gold" fontSize={{ base: '2xs', md: 'xs' }}>
-                ★
-              </Text>
-            )}
         </HStack>
         {!disableRow && !!level && (
           <Text fontWeight={500} size={{ base: '3xs', sm: '2xs', md: 'sm' }}>
