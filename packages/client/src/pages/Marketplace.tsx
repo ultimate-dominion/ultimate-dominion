@@ -57,7 +57,7 @@ const MARKETPLACE_INFO_SEEN_KEY = 'marketplace-info-seen';
 
 export const Marketplace = (): JSX.Element => {
   const navigate = useNavigate();
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const { delegatorAddress, isSynced } = useMUD();
   const {
@@ -109,6 +109,8 @@ export const Marketplace = (): JSX.Element => {
 
   // Redirect to home if synced, but missing other requirements
   useEffect(() => {
+    if (isConnecting) return;
+
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
@@ -131,6 +133,7 @@ export const Marketplace = (): JSX.Element => {
     character,
     delegatorAddress,
     isConnected,
+    isConnecting,
     isRefreshing,
     isSynced,
     navigate,

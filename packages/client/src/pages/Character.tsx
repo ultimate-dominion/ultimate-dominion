@@ -78,7 +78,7 @@ export const CharacterPage = (): JSX.Element => {
   const { id } = useParams();
   const { renderError } = useToast();
   const navigate = useNavigate();
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const {
     components: {
@@ -116,10 +116,12 @@ export const CharacterPage = (): JSX.Element => {
   const [hasBadge, setHasBadge] = useState(false);
 
   useEffect(() => {
+    if (isConnecting) return;
+
     if (!isConnected) {
       navigate(HOME_PATH);
     }
-  }, [isConnected, navigate]);
+  }, [isConnected, isConnecting, navigate]);
 
   // Check if character has Adventurer badge
   useEffect(() => {

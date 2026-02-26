@@ -33,7 +33,7 @@ import {
 export const Shop = (): JSX.Element => {
   const { shopId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const { delegatorAddress, isSynced } = useMUD();
   const {
@@ -94,6 +94,8 @@ export const Shop = (): JSX.Element => {
   // Redirect to home if synced, but missing other requirements
   // Redirect to game board if character is not in the shop
   useEffect(() => {
+    if (isConnecting) return;
+
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
@@ -119,6 +121,7 @@ export const Shop = (): JSX.Element => {
   }, [
     delegatorAddress,
     isConnected,
+    isConnecting,
     isRefreshing,
     isSynced,
     navigate,

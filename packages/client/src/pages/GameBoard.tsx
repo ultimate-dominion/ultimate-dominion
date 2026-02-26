@@ -55,7 +55,7 @@ export const GameBoard = (): JSX.Element => {
     onClose: onCloseStatsDrawer,
   } = useDisclosure();
 
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const navigate = useNavigate();
   const {
     delegatorAddress,
@@ -68,6 +68,8 @@ export const GameBoard = (): JSX.Element => {
 
   // Redirect to home if synced, but missing other requirements
   useEffect(() => {
+    if (isConnecting) return;
+
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
@@ -92,6 +94,7 @@ export const GameBoard = (): JSX.Element => {
     character,
     delegatorAddress,
     isConnected,
+    isConnecting,
     isRefreshing,
     isSynced,
     navigate,

@@ -80,7 +80,7 @@ const MarketplaceItemInner = (): JSX.Element => {
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
   const [searchParams] = useSearchParams();
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const {
     components,
@@ -151,6 +151,8 @@ const MarketplaceItemInner = (): JSX.Element => {
 
   // Redirect to home if synced, but missing other requirements
   useEffect(() => {
+    if (isConnecting) return;
+
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
@@ -171,6 +173,7 @@ const MarketplaceItemInner = (): JSX.Element => {
     userCharacter,
     delegatorAddress,
     isConnected,
+    isConnecting,
     isRefreshing,
     isSynced,
     navigate,

@@ -133,7 +133,7 @@ const CharacterCreationInner = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const chainId = DEFAULT_CHAIN_ID;
   const {
     components,
@@ -512,6 +512,8 @@ const CharacterCreationInner = (): JSX.Element => {
   }, [character, rolledOnce]);
 
   useEffect(() => {
+    if (isConnecting) return;
+
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
@@ -543,6 +545,7 @@ const CharacterCreationInner = (): JSX.Element => {
     character,
     delegatorAddress,
     isConnected,
+    isConnecting,
     isSynced,
     navigate,
     rolledOnce,

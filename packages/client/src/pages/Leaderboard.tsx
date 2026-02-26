@@ -39,7 +39,7 @@ const PLAYERS_PER_PAGE = 10;
 export const Leaderboard = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const navigate = useNavigate();
-  const { isAuthenticated: isConnected } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const { allCharacters, isFetchingEntities, refreshEntities } = useMap();
 
   const [entries, setEntries] = useState<Character[]>([]);
@@ -52,12 +52,14 @@ export const Leaderboard = (): JSX.Element => {
   const [length, setLength] = useState(1);
 
   useEffect(() => {
+    if (isConnecting) return;
+
     if (!isConnected) {
       navigate(HOME_PATH);
     } else {
       refreshEntities();
     }
-  }, [isConnected, navigate, refreshEntities]);
+  }, [isConnected, isConnecting, navigate, refreshEntities]);
 
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {

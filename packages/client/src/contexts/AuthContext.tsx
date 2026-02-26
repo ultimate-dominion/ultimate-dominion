@@ -64,7 +64,7 @@ export const AuthProvider = ({
   const [embeddedWalletClient, setEmbeddedWalletClient] =
     useState<WalletClient | null>(null);
   const [embeddedAddress, setEmbeddedAddress] = useState<Address | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(true);
   const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
 
   // Detect injected wallet (MetaMask etc.)
@@ -129,6 +129,8 @@ export const AuthProvider = ({
         }
       } catch {
         // No persisted session or auto-connect failed — that's fine
+      } finally {
+        setIsConnecting(false);
       }
     };
     tryReconnect();
