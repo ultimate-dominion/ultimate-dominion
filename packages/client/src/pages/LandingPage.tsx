@@ -1,13 +1,17 @@
 /**
- * Production landing page — exact visual clone of Welcome.tsx
- * without MUD/Auth/Web3 dependencies (runs in placeholder mode).
+ * Production landing page — exact visual replica of the beta Welcome page
+ * including the App shell layout (header with logo, padded content area).
+ * No MUD/Auth/Web3 dependencies — runs in placeholder mode.
  */
 import {
   Box,
   Button,
+  Grid,
   HStack,
+  Image,
   keyframes,
   Link,
+  Stack,
   Text,
   VStack,
 } from '@chakra-ui/react';
@@ -26,149 +30,183 @@ const torchGlow = keyframes`
 
 export const LandingPage = (): JSX.Element => {
   return (
-    <Box
-      border="6px solid #3A3228"
-      p={1.5}
-      _after={{
-        content: '""',
-        position: 'fixed',
-        inset: 0,
-        opacity: 0.05,
-        mixBlendMode: 'overlay',
-        pointerEvents: 'none',
-        zIndex: 1,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-      }}
+    <Grid
+      minHeight="100vh"
+      templateColumns="100%"
+      templateRows="auto 1fr"
+      w="100%"
     >
       <Helmet>
         <title>Ultimate Dominion — A Persistent World</title>
       </Helmet>
-      <Box
-        border="0.5px solid #3A3228"
-        position="relative"
-        _before={{
-          content: '""',
-          position: 'absolute',
-          inset: 0,
-          background: 'radial-gradient(ellipse at center, transparent 0%, rgba(10,8,6,0.6) 100%)',
-          pointerEvents: 'none',
-          zIndex: 1,
-        }}
-      >
-        {/* Dragon watermark */}
-        <Box
-          position="absolute"
-          top="50%"
-          left="50%"
-          transform="translate(-50%, -50%)"
-          width="60%"
-          height="60%"
-          backgroundImage="url(/images/ultimate-dominion-logo.svg)"
-          backgroundRepeat="no-repeat"
-          backgroundPosition="center"
-          backgroundSize="contain"
-          opacity={0.02}
-          pointerEvents="none"
-          zIndex={0}
-        />
 
-        <VStack
-          justifyContent="center"
-          mb={16}
-          mt={{ base: 14, sm: 20 }}
-          position="relative"
-          px={{ base: 2, sm: 14, md: 18 }}
-          spacing={{ base: 14, md: 18 }}
-          zIndex={2}
-        >
-          <Text
-            color="#8A7E6A"
-            fontFamily="'Cinzel', serif"
-            fontSize={{ base: '11px', sm: '13px' }}
-            fontStyle="italic"
-            letterSpacing="0.3em"
-            textAlign="center"
-            textTransform="uppercase"
-          >
-            A Persistent World
-          </Text>
-
-          <VStack fontWeight={500} maxW="850px" spacing={6} textAlign="center">
-            <Typist
-              avgTypingDelay={35}
-              stdTypingDelay={20}
-              cursor={{ show: true, blink: true, element: '\u258C', hideWhenDone: true, hideWhenDoneDelay: 500 }}
-            >
-              <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
-                As you awaken, your eyes flutter open to the stark, eerie ambiance
-                of a dimly lit cave.
-              </Text>
-              <Typist.Delay ms={800} />
-              <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                Confusion clouds your mind; the cold, hard ground beneath you
-                offers no comfort. Glimpses of blood and bruises on your body only
-                deepen the mystery, painting a silent story of unseen struggles.
-              </Text>
-              <Typist.Delay ms={600} />
-              <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                Where are you? How did you end up here?
-              </Text>
-              <Typist.Delay ms={1000} />
-              <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                The shadows around you hold secrets, whispering tales of survival
-                and discovery. Gathering your strength, you rise, the weight of
-                uncertainty heavy on your shoulders — yet igniting a spark of
-                determination within. With a deep breath, you take your first step
-                into the unknown, embarking on a journey where every choice carves
-                your path through the darkness.
-              </Text>
-            </Typist>
-          </VStack>
-
+      {/* Header — matches beta Header on HOME_PATH (transparent bg, logo right) */}
+      <Box as="header" mt={4} px={4} py={2} w="100%">
+        <Stack direction={{ base: 'column-reverse', lg: 'row' }} justify="end">
           <Button
-            animation={`${torchGlow} 4s ease-in-out infinite`}
-            color="#12100E"
-            letterSpacing="0.15em"
-            px={{ base: 16, sm: 24 }}
-            textTransform="uppercase"
+            mb={{ base: 0, sm: 2 }}
+            mt={{ base: 0, sm: -1 }}
+            variant="unstyled"
           >
-            Enter
+            <Image
+              alt="Ultimate Dominion Logo"
+              src="/images/ultimate-dominion-logo.svg"
+              width={{ base: '200px', sm: '225px' }}
+            />
           </Button>
-
-          <HStack
-            fontFamily="'Cinzel', serif"
-            fontSize={{ base: '11px', sm: '13px' }}
-            spacing={3}
-          >
-            <Link
-              as={RouterLink}
-              color="#8A7E6A"
-              to="/manifesto"
-              _hover={{ color: '#D4A54A', textDecoration: 'none' }}
-            >
-              Manifesto
-            </Link>
-            <Text color="#3A3228" userSelect="none">|</Text>
-            <Link
-              as={RouterLink}
-              color="#8A7E6A"
-              to="/guide"
-              _hover={{ color: '#D4A54A', textDecoration: 'none' }}
-            >
-              Guide
-            </Link>
-            <Text color="#3A3228" userSelect="none">|</Text>
-            <Link
-              as={RouterLink}
-              color="#8A7E6A"
-              to="/tavern"
-              _hover={{ color: '#D4A54A', textDecoration: 'none' }}
-            >
-              Tavern
-            </Link>
-          </HStack>
-        </VStack>
+        </Stack>
       </Box>
-    </Box>
+
+      {/* Content area — matches beta App shell wrapper */}
+      <Box
+        m="0 auto"
+        maxW="1800px"
+        my={{ base: 4, lg: 12 }}
+        px={{ base: 2, sm: 12, md: 20 }}
+        w="100%"
+      >
+        <Box
+          border="6px solid #3A3228"
+          p={1.5}
+          _after={{
+            content: '""',
+            position: 'fixed',
+            inset: 0,
+            opacity: 0.05,
+            mixBlendMode: 'overlay',
+            pointerEvents: 'none',
+            zIndex: 1,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          }}
+        >
+          <Box
+            border="0.5px solid #3A3228"
+            position="relative"
+            _before={{
+              content: '""',
+              position: 'absolute',
+              inset: 0,
+              background: 'radial-gradient(ellipse at center, transparent 0%, rgba(10,8,6,0.6) 100%)',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          >
+            {/* Dragon watermark */}
+            <Box
+              position="absolute"
+              top="50%"
+              left="50%"
+              transform="translate(-50%, -50%)"
+              width="60%"
+              height="60%"
+              backgroundImage="url(/images/ultimate-dominion-logo.svg)"
+              backgroundRepeat="no-repeat"
+              backgroundPosition="center"
+              backgroundSize="contain"
+              opacity={0.02}
+              pointerEvents="none"
+              zIndex={0}
+            />
+
+            <VStack
+              justifyContent="center"
+              mb={16}
+              mt={{ base: 14, sm: 20 }}
+              position="relative"
+              px={{ base: 2, sm: 14, md: 18 }}
+              spacing={{ base: 14, md: 18 }}
+              zIndex={2}
+            >
+              <Text
+                color="#8A7E6A"
+                fontFamily="'Cinzel', serif"
+                fontSize={{ base: '11px', sm: '13px' }}
+                fontStyle="italic"
+                letterSpacing="0.3em"
+                textAlign="center"
+                textTransform="uppercase"
+              >
+                A Persistent World
+              </Text>
+
+              <VStack fontWeight={500} maxW="850px" spacing={6} textAlign="center">
+                <Typist
+                  avgTypingDelay={35}
+                  stdTypingDelay={20}
+                  cursor={{ show: true, blink: true, element: '\u258C', hideWhenDone: true, hideWhenDoneDelay: 500 }}
+                >
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
+                    As you awaken, your eyes flutter open to the stark, eerie ambiance
+                    of a dimly lit cave.
+                  </Text>
+                  <Typist.Delay ms={800} />
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
+                    Confusion clouds your mind; the cold, hard ground beneath you
+                    offers no comfort. Glimpses of blood and bruises on your body only
+                    deepen the mystery, painting a silent story of unseen struggles.
+                  </Text>
+                  <Typist.Delay ms={600} />
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
+                    Where are you? How did you end up here?
+                  </Text>
+                  <Typist.Delay ms={1000} />
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
+                    The shadows around you hold secrets, whispering tales of survival
+                    and discovery. Gathering your strength, you rise, the weight of
+                    uncertainty heavy on your shoulders — yet igniting a spark of
+                    determination within. With a deep breath, you take your first step
+                    into the unknown, embarking on a journey where every choice carves
+                    your path through the darkness.
+                  </Text>
+                </Typist>
+              </VStack>
+
+              <Button
+                animation={`${torchGlow} 4s ease-in-out infinite`}
+                color="#12100E"
+                letterSpacing="0.15em"
+                px={{ base: 16, sm: 24 }}
+                textTransform="uppercase"
+              >
+                Enter
+              </Button>
+
+              <HStack
+                fontFamily="'Cinzel', serif"
+                fontSize={{ base: '11px', sm: '13px' }}
+                spacing={3}
+              >
+                <Link
+                  as={RouterLink}
+                  color="#8A7E6A"
+                  to="/manifesto"
+                  _hover={{ color: '#D4A54A', textDecoration: 'none' }}
+                >
+                  Manifesto
+                </Link>
+                <Text color="#3A3228" userSelect="none">|</Text>
+                <Link
+                  as={RouterLink}
+                  color="#8A7E6A"
+                  to="/guide"
+                  _hover={{ color: '#D4A54A', textDecoration: 'none' }}
+                >
+                  Guide
+                </Link>
+                <Text color="#3A3228" userSelect="none">|</Text>
+                <Link
+                  as={RouterLink}
+                  color="#8A7E6A"
+                  to="/tavern"
+                  _hover={{ color: '#D4A54A', textDecoration: 'none' }}
+                >
+                  Tavern
+                </Link>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      </Box>
+    </Grid>
   );
 };
