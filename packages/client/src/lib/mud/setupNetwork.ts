@@ -5,7 +5,7 @@
  */
 import { ContractWrite, createBurnerAccount } from '@latticexyz/common';
 import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
-import { setComponent } from '@latticexyz/recs';
+import { getComponentEntities, setComponent } from '@latticexyz/recs';
 import { SyncStep } from '@latticexyz/store-sync';
 import {
   encodeEntity,
@@ -106,6 +106,8 @@ export async function setupNetwork() {
     ? cache.blockNumber
     : BigInt(networkConfig.initialBlockNumber);
 
+  console.info('[SYNC] Starting from block', startBlock.toString(), 'indexerUrl:', indexerUrl || '(none)');
+
   const fallbackFn = async (url: string, opts: RequestInit) => {
     if (!url.toString().includes(indexerUrl ?? '')) {
       return fetch(url, opts).then(r => r.json());
@@ -162,6 +164,20 @@ export async function setupNetwork() {
         }
       },
     });
+
+  // Diagnostic: log sync progress and Items entity count
+  let blocksProcessed = 0;
+  storedBlockLogs$.subscribe({
+    next: (block) => {
+      blocksProcessed++;
+      if (blocksProcessed <= 3 || blocksProcessed % 100 === 0) {
+        const itemCount = Array.from(getComponentEntities(components.Items)).length;
+        console.info(`[SYNC] Block ${block.blockNumber} processed (${blocksProcessed} total), logs: ${block.logs.length}, Items: ${itemCount}`);
+      }
+    },
+    error: (err) => console.error('[SYNC] storedBlockLogs$ error:', err),
+    complete: () => console.info('[SYNC] storedBlockLogs$ completed'),
+  });
 
   // If we had a cache, restore all component values immediately so the UI
   // becomes usable while the background sync catches up on the delta.

@@ -425,6 +425,7 @@ export const ItemsProvider = ({
   );
 
   useEffect(() => {
+    console.info('[ItemsContext] effect fired — isSynced:', isSynced, 'entities:', allItemEntities.length);
     (async () => {
       if (!isSynced || allItemEntities.length === 0) return;
 
