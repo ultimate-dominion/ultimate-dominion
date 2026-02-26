@@ -205,9 +205,9 @@ const AppInner = (): JSX.Element => {
       {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && !isDesktop && (
         <>
           <Box
+            bottom={2}
             position="fixed"
             right={2}
-            top={2}
             zIndex={10}
           >
             <ScaleFade initialScale={0.9} in={!isChatBoxOpen}>
@@ -223,9 +223,9 @@ const AppInner = (): JSX.Element => {
             </ScaleFade>
           </Box>
           <Box
+            bottom={isChatBoxOpen ? 2 : -1}
             position="fixed"
             right={2}
-            top={isChatBoxOpen ? 2 : -1}
             zIndex={10}
           >
             <ChatBox />

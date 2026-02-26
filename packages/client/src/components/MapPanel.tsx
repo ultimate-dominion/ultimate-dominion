@@ -4,6 +4,7 @@ import {
   Heading,
   HStack,
   Icon,
+  IconButton,
   Stack,
   Text,
   useBreakpointValue,
@@ -11,8 +12,8 @@ import {
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import { useMemo } from 'react';
-import { BiSolidNavigation } from 'react-icons/bi';
+import { useMemo, useState } from 'react';
+import { BiCompass, BiSolidNavigation } from 'react-icons/bi';
 import { FaStoreAlt } from 'react-icons/fa';
 
 import { useBattle } from '../contexts/BattleContext';
@@ -48,6 +49,7 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
   const { isRefreshing, onMove } = useMovement();
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const [isCompassExpanded, setIsCompassExpanded] = useState(false);
 
   const currentPlayersSpawned = useMemo(() => {
     return allCharacters.filter(character => character.isSpawned).length;
@@ -61,7 +63,7 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
 
   return (
     <Stack alignItems="center" h="100%">
-      <Box w="100%" h={{ base: '300px', lg: '400px' }}>
+      <Box w="100%" h={{ base: '300px', lg: '350px' }}>
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
@@ -200,12 +202,82 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
         </PolygonalCard>
       </Box>
       {isSpawned ? (
-        <Box>
-          <NavigationCompass
-            isDisabled={!!currentBattle || isRefreshing}
-            onMove={onMove}
-          />
-        </Box>
+        isDesktop ? (
+          <Box mt={1}>
+            {isCompassExpanded ? (
+              <VStack>
+                <IconButton
+                  aria-label="Collapse compass"
+                  icon={<BiCompass />}
+                  onClick={() => setIsCompassExpanded(false)}
+                  size="xs"
+                  variant="ghost"
+                />
+                <NavigationCompass
+                  isDisabled={!!currentBattle || isRefreshing}
+                  onMove={onMove}
+                />
+              </VStack>
+            ) : (
+              <HStack spacing={1}>
+                <IconButton
+                  aria-label="Expand compass"
+                  icon={<BiCompass />}
+                  onClick={() => setIsCompassExpanded(true)}
+                  size="xs"
+                  variant="ghost"
+                />
+                <Button
+                  aria-label="Move north"
+                  fontWeight={700}
+                  isDisabled={!!currentBattle || isRefreshing}
+                  onClick={() => onMove('up')}
+                  size="xs"
+                  variant="blue"
+                >
+                  N
+                </Button>
+                <Button
+                  aria-label="Move south"
+                  fontWeight={700}
+                  isDisabled={!!currentBattle || isRefreshing}
+                  onClick={() => onMove('down')}
+                  size="xs"
+                  variant="blue"
+                >
+                  S
+                </Button>
+                <Button
+                  aria-label="Move west"
+                  fontWeight={700}
+                  isDisabled={!!currentBattle || isRefreshing}
+                  onClick={() => onMove('left')}
+                  size="xs"
+                  variant="blue"
+                >
+                  W
+                </Button>
+                <Button
+                  aria-label="Move east"
+                  fontWeight={700}
+                  isDisabled={!!currentBattle || isRefreshing}
+                  onClick={() => onMove('right')}
+                  size="xs"
+                  variant="blue"
+                >
+                  E
+                </Button>
+              </HStack>
+            )}
+          </Box>
+        ) : (
+          <Box>
+            <NavigationCompass
+              isDisabled={!!currentBattle || isRefreshing}
+              onMove={onMove}
+            />
+          </Box>
+        )
       ) : (
         <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
           {currentPlayersSpawned >= Number(maxPlayers) && (
@@ -227,7 +299,7 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
         </VStack>
       )}
       {isDesktop && isSpawned && (
-        <Box w="100%" flex={1} minH="120px" mt={2}>
+        <Box w="100%" flex={1} minH="100px" mt={2}>
           <ChatBox inline />
         </Box>
       )}
