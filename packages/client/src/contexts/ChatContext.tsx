@@ -483,8 +483,9 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
     const pollInterval = setInterval(async () => {
       try {
-        const chatHistory = await user.chat.history(GROUP_CHAT_ID);
-        const fetched = chatHistory.map(msg => ({
+        // Only fetch last 5 messages to minimize API load
+        const recent = await user.chat.history(GROUP_CHAT_ID, { limit: 5 });
+        const fetched = recent.map(msg => ({
           delivered: true,
           from: msg.fromDID.split(':')[1],
           message: msg.messageContent,
@@ -492,12 +493,14 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         })).reverse();
 
         setMessages(prev => {
-          // Only update if there are genuinely new messages from others
-          const prevNonOptimistic = prev.filter(m => m.delivered);
-          if (fetched.length <= prevNonOptimistic.length) return prev;
-          // Preserve any undelivered (optimistic) messages at the end
+          // Check if the latest fetched message is newer than what we have
+          const prevTimestamps = new Set(prev.filter(m => m.delivered).map(m => m.timestamp));
+          const newMsgs = fetched.filter(m => !prevTimestamps.has(m.timestamp));
+          if (newMsgs.length === 0) return prev;
+          // Append new messages, preserving optimistic (undelivered) at end
+          const delivered = prev.filter(m => m.delivered);
           const optimistic = prev.filter(m => !m.delivered);
-          return [...fetched, ...optimistic];
+          return [...delivered, ...newMsgs, ...optimistic];
         });
       } catch {
         // Silently ignore poll failures
