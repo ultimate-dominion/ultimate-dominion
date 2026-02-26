@@ -173,25 +173,25 @@ export const Welcome = (): JSX.Element => {
 
           <VStack fontWeight={500} maxW="850px" spacing={6} textAlign="center">
             <Typist
-              avgTypingDelay={18}
-              stdTypingDelay={8}
+              avgTypingDelay={35}
+              stdTypingDelay={20}
               cursor={{ show: true, blink: true, element: '▌', hideWhenDone: true, hideWhenDoneDelay: 500 }}
             >
               <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
                 As you awaken, your eyes flutter open to the stark, eerie ambiance
                 of a dimly lit cave.
               </Text>
-              <Typist.Delay ms={400} />
+              <Typist.Delay ms={800} />
               <Text size={{ base: 'xs', sm: 'sm', md: 'md' }} mt={10}>
                 Confusion clouds your mind; the cold, hard ground beneath you
                 offers no comfort. Glimpses of blood and bruises on your body only
                 deepen the mystery, painting a silent story of unseen struggles.
               </Text>
-              <Typist.Delay ms={400} />
+              <Typist.Delay ms={600} />
               <Text size={{ base: 'xs', sm: 'sm', md: 'md' }} mt={10}>
                 Where are you? How did you end up here?
               </Text>
-              <Typist.Delay ms={600} />
+              <Typist.Delay ms={1000} />
               <Text size={{ base: 'xs', sm: 'sm', md: 'md' }} mt={10}>
                 The shadows around you hold secrets, whispering tales of survival
                 and discovery. Gathering your strength, you rise, the weight of
