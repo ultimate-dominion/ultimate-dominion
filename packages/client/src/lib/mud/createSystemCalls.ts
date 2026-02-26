@@ -43,33 +43,66 @@ type SystemCallReturn = Promise<{
   error?: string;
 }>;
 
-const getContractError = (error: unknown): string => {
-  console.error('[getContractError] Full error:', error);
-  // Handle non-viem errors gracefully
-  if (!error || typeof error !== 'object' || !('walk' in error)) {
-    if (error instanceof Error) {
-      console.error('[getContractError] Error message:', error.message);
-      return error.message;
+type ErrorCategory = 'REVERT' | 'FUNDS' | 'RPC' | 'GAS' | 'NONCE' | 'SPONSOR' | 'UNKNOWN';
+
+const classifyError = (error: unknown): { category: ErrorCategory; message: string } => {
+  const raw = ((error as Error)?.message ?? '').toLowerCase();
+
+  // Viem structured errors — walk the chain for specific types
+  if (error && typeof error === 'object' && 'walk' in error) {
+    const baseError = error as BaseError;
+
+    const revertError = baseError.walk(
+      e => e instanceof ContractFunctionRevertedError,
+    );
+    if (revertError instanceof ContractFunctionRevertedError) {
+      const args = revertError.data?.args ?? [];
+      const reason = (args[0] as string) ?? 'Unknown revert reason';
+      return { category: 'REVERT', message: reason };
     }
-    console.error('[getContractError] Unknown error type');
-    return 'An error occurred calling the contract.';
+
+    const insufficientFundsError = baseError.walk(
+      e => e instanceof InsufficientFundsError,
+    );
+    if (insufficientFundsError instanceof InsufficientFundsError) {
+      return { category: 'FUNDS', message: INSUFFICIENT_FUNDS_MESSAGE };
+    }
   }
 
-  const baseError = error as BaseError;
-  const revertError = baseError.walk(
-    e => e instanceof ContractFunctionRevertedError,
-  );
-  if (revertError instanceof ContractFunctionRevertedError) {
-    const args = revertError.data?.args ?? [];
-    return (args[0] as string) ?? 'An error occurred calling the contract.';
+  // Pattern-based classification for non-viem or wrapped errors
+  if (/gas required exceeds|out of gas|gas estimation/i.test(raw)) {
+    return { category: 'GAS', message: raw };
   }
-  const insufficientFundsError = baseError.walk(
-    e => e instanceof InsufficientFundsError,
-  );
-  if (insufficientFundsError instanceof InsufficientFundsError) {
-    return INSUFFICIENT_FUNDS_MESSAGE;
+  if (/nonce/i.test(raw)) {
+    return { category: 'NONCE', message: raw };
   }
-  return 'An error occurred calling the contract.';
+  if (/sponsor|paymaster|entrypoint/i.test(raw)) {
+    return { category: 'SPONSOR', message: raw };
+  }
+  if (/timeout|network|econnrefused|econnreset|socket hang up|fetch failed|failed to fetch|rate limit|429|502|503|504/i.test(raw)) {
+    return { category: 'RPC', message: raw };
+  }
+  if (/execution reverted|revert/i.test(raw)) {
+    return { category: 'REVERT', message: raw };
+  }
+
+  if (error instanceof Error) {
+    return { category: 'UNKNOWN', message: error.message };
+  }
+  return { category: 'UNKNOWN', message: 'An error occurred calling the contract.' };
+};
+
+const getContractError = (error: unknown): string => {
+  const { category, message } = classifyError(error);
+
+  // Structured diagnostic log — scan browser console for [TX_ERROR] to filter
+  console.error(
+    `[TX_ERROR][${category}] ${message}`,
+    category === 'UNKNOWN' ? error : '',
+  );
+
+  if (category === 'FUNDS') return INSUFFICIENT_FUNDS_MESSAGE;
+  return message || 'An error occurred calling the contract.';
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
