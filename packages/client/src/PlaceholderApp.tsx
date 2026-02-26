@@ -12,6 +12,9 @@ import {
 } from 'react-router-dom';
 
 import { LandingPage } from './pages/LandingPage';
+import { ThemeMidnightSteel } from './pages/ThemeMidnightSteel';
+import { ThemeObsidianVoid } from './pages/ThemeObsidianVoid';
+import { ThemeTorchlitDungeon } from './pages/ThemeTorchlitDungeon';
 
 /**
  * Dark-themed manifesto for the placeholder site.
@@ -195,6 +198,9 @@ export const PlaceholderApp = (): JSX.Element => (
           />
         }
       />
+      <Route path="/theme/midnight-steel" element={<ThemeMidnightSteel />} />
+      <Route path="/theme/torchlit-dungeon" element={<ThemeTorchlitDungeon />} />
+      <Route path="/theme/obsidian-void" element={<ThemeObsidianVoid />} />
       <Route path="*" element={<LandingPage />} />
     </Routes>
   </BrowserRouter>
