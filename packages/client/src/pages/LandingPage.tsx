@@ -53,7 +53,7 @@ export const LandingPage = (): JSX.Element => {
       w="100%"
     >
       <Helmet>
-        <title>Ultimate Dominion — A Persistent World</title>
+        <title>Ultimate Dominion — Nothing Is Forgotten</title>
       </Helmet>
 
       {/* Header — matches beta Header on HOME_PATH (transparent bg, logo right) */}
@@ -142,7 +142,7 @@ export const LandingPage = (): JSX.Element => {
                 textAlign="center"
                 textTransform="uppercase"
               >
-                A Persistent World
+                Nothing Is Forgotten
               </Text>
 
               <VStack fontWeight={500} maxW="850px" spacing={6} textAlign="center">
