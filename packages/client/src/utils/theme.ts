@@ -280,7 +280,6 @@ const Modal = {
       maxH: 'calc(100% - 7.5rem)',
       minW: { base: '100%', md: '500px' },
       maxW: { base: '100%', md: '500px' },
-      position: 'absolute',
     },
     body: {
       overflow: 'auto',
