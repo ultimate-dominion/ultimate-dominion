@@ -185,10 +185,10 @@ const worldAbi = parseAbi([
   'function UD__getCurrentItemsCounter() view returns (uint256)',
 
   // Batch creation (preferred - fewer TXs)
-  'function UD__createItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, bytes[] stats, string[] itemMetadataURIs)',
+  'function UD__createItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, uint256[] rarities, bytes[] stats, string[] itemMetadataURIs)',
 
   // Single creation (fallback)
-  'function UD__createItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, bytes stats, string itemMetadataURI) returns (uint256)',
+  'function UD__createItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)',
   'function UD__createMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)',
 ]);
 
@@ -482,6 +482,7 @@ async function main() {
     const allSupplies: bigint[] = [];
     const allDropChances: bigint[] = [];
     const allPrices: bigint[] = [];
+    const allRarities: bigint[] = [];
     const allStats: Hex[] = [];
     const allUris: string[] = [];
 
@@ -492,6 +493,7 @@ async function main() {
       allSupplies.push(BigInt(armor.initialSupply));
       allDropChances.push(BigInt(armor.dropChance));
       allPrices.push(BigInt(armor.price));
+      allRarities.push(BigInt(armor.rarity ?? 1));
       allStats.push(encodeArmorStats(
         {
           agiModifier: BigInt(armor.stats.agiModifier),
@@ -517,6 +519,7 @@ async function main() {
       allSupplies.push(BigInt(weapon.initialSupply));
       allDropChances.push(BigInt(weapon.dropChance));
       allPrices.push(BigInt(weapon.price));
+      allRarities.push(BigInt(weapon.rarity ?? 1));
       allStats.push(encodeWeaponStats(
         {
           agiModifier: BigInt(weapon.stats.agiModifier),
@@ -543,6 +546,7 @@ async function main() {
       allSupplies.push(BigInt(consumable.initialSupply));
       allDropChances.push(BigInt(consumable.dropChance));
       allPrices.push(BigInt(consumable.price));
+      allRarities.push(BigInt(consumable.rarity ?? 1));
       allStats.push(encodeConsumableStats(
         {
           effects: consumable.stats.effects,
@@ -578,6 +582,7 @@ async function main() {
           allSupplies.slice(start, end),
           allDropChances.slice(start, end),
           allPrices.slice(start, end),
+          allRarities.slice(start, end),
           allStats.slice(start, end),
           allUris.slice(start, end),
         ],

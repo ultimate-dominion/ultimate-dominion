@@ -1059,6 +1059,7 @@ contract PostDeploy is Script {
                 itemType: ItemType.Armor,
                 dropChance: armorTemplate.dropChance,
                 price: armorTemplate.price,
+                rarity: 1,
                 stats: abi.encode(newArmor, armorTemplate.statRestrictions)
             });
             Items.set(itemId, newItem);
@@ -1104,6 +1105,7 @@ contract PostDeploy is Script {
                 itemType: ItemType.Weapon,
                 dropChance: weaponTemplate.dropChance,
                 price: weaponTemplate.price,
+                rarity: 1,
                 stats: abi.encode(newWeapon, weaponTemplate.statRestrictions)
             });
             Items.set(itemId, newItem);
@@ -1151,6 +1153,7 @@ contract PostDeploy is Script {
                 itemType: ItemType.Consumable,
                 dropChance: consumablesTemplate.dropChance,
                 price: consumablesTemplate.price,
+                rarity: 1,
                 stats: abi.encode(newConsumable, consumablesTemplate.statRestrictions)
             });
             Items.set(itemId, newItem);

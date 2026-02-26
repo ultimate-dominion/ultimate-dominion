@@ -24,6 +24,7 @@ import {
   type ArmorTemplate,
   type ConsumableTemplate,
   ItemType,
+  Rarity,
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
@@ -129,6 +130,7 @@ export const ItemsProvider = ({
             itemType: itemTemplate.itemType,
             minLevel: armorStats.minLevel,
             price: itemTemplate.price,
+            rarity: Number(itemTemplate.rarity) as Rarity,
             statRestrictions: {
               minAgility: statRestrictions.minAgility,
               minIntelligence: statRestrictions.minIntelligence,
@@ -244,6 +246,7 @@ export const ItemsProvider = ({
             maxStacks: statusEffectValidities[0]?.maxStacks ?? 0n,
             minLevel: consumableStats.minLevel,
             price: itemTemplate.price,
+            rarity: Number(itemTemplate.rarity) as Rarity,
             tokenId: consumableId.toString(),
             statRestrictions: {
               minAgility: statRestrictions.minAgility,
@@ -326,6 +329,7 @@ export const ItemsProvider = ({
             minDamage: spellStats.minDamage,
             minLevel: spellStats.minLevel,
             price: itemTemplate.price,
+            rarity: Number(itemTemplate.rarity) as Rarity,
             tokenId: spellId.toString(),
             statRestrictions: {
               minAgility: statRestrictions.minAgility,
@@ -399,6 +403,7 @@ export const ItemsProvider = ({
             minDamage: weaponStats.minDamage,
             minLevel: weaponStats.minLevel,
             price: itemTemplate.price,
+            rarity: Number(itemTemplate.rarity) as Rarity,
             statRestrictions: {
               minAgility: statRestrictions.minAgility,
               minIntelligence: statRestrictions.minIntelligence,
