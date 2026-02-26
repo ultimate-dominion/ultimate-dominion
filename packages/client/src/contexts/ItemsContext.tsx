@@ -427,15 +427,18 @@ export const ItemsProvider = ({
       try {
         const allItemEntities = Array.from(runQuery([Has(Items)]));
 
-        const allItemIds = allItemEntities.map(entity => {
-          const itemTemplate = getComponentValueStrict(Items, entity);
-          const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
-          const itemTypeNum = Number(itemTemplate.itemType);
-          return {
-            itemType: itemTypeNum,
-            itemId,
-          };
-        });
+        const allItemIds = allItemEntities
+          .map(entity => {
+            const itemTemplate = getComponentValue(Items, entity);
+            if (!itemTemplate) return null;
+            const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
+            const itemTypeNum = Number(itemTemplate.itemType);
+            return {
+              itemType: itemTypeNum,
+              itemId,
+            };
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null);
 
         if (allItemIds.length > 0) {
           const allArmorIds = allItemIds
