@@ -1,7 +1,7 @@
 import { Text, useDisclosure } from '@chakra-ui/react';
 import { useEntityQuery } from '@latticexyz/react';
 import { getComponentValueStrict, Has } from '@latticexyz/recs';
-import { decodeEntity } from '@latticexyz/store-sync/recs';
+
 import type {
   GroupDTO,
   MessageEvent,
@@ -22,8 +22,8 @@ import { usePublicClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
-import { startsWithVowel } from '../utils/helpers';
-import { Character } from '../utils/types';
+
+import { Character, Rarity, RARITY_COLORS, RARITY_NAMES } from '../utils/types';
 
 import { useAuth } from './AuthContext';
 import { useCharacter } from './CharacterContext';
@@ -122,7 +122,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // Use the appropriate wallet client for Push Protocol
   const data = authMethod === 'embedded' ? embeddedWalletClient : externalWalletClient;
   const {
-    components: { MarketplaceSale, ShopSale },
+    components: { CombatEncounter, CombatOutcome, MarketplaceSale },
   } = useMUD();
   const {
     armorTemplates,
@@ -191,97 +191,100 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     // Re-check when level changes (badge is minted at level 3)
   }, [address, publicClient, currentCharacter?.tokenId, currentCharacter?.level]);
 
-  const shopSaleEntities = useEntityQuery([Has(ShopSale)]);
-  const allShopSales: Message[] = useMemo(() => shopSaleEntities.map(
-    entity => {
-      const shopSale = getComponentValueStrict(ShopSale, entity);
+  const allItems = useMemo(() => [
+    ...armorTemplates,
+    ...consumableTemplates,
+    ...spellTemplates,
+    ...weaponTemplates,
+  ], [armorTemplates, consumableTemplates, spellTemplates, weaponTemplates]);
 
-      const { buying } = shopSale;
+  // Rare+ item drop announcements from battle outcomes
+  const battleOutcomeEntities = useEntityQuery([Has(CombatOutcome)]);
+  const rareDropAnnouncements: Message[] = useMemo(() => battleOutcomeEntities
+    .map(entity => {
+      const combatOutcome = getComponentValueStrict(CombatOutcome, entity);
+      const { itemsDropped } = combatOutcome;
+      if (!itemsDropped || itemsDropped.length === 0) return null;
 
-      const { customerId, itemId, timestamp } = decodeEntity(
-        {
-          shopId: 'bytes32',
-          customerId: 'bytes32',
-          itemId: 'uint256',
-          timestamp: 'uint256',
-        },
-        entity,
-      );
+      const encounter = getComponentValueStrict(CombatEncounter, entity);
+      const attackerId = encounter.attackers[0];
+      const defenderId = encounter.defenders[0];
 
-      const allItems = [
-        ...armorTemplates,
-        ...consumableTemplates,
-        ...spellTemplates,
-        ...weaponTemplates,
-      ];
+      const winner = combatOutcome.attackersWin ? attackerId : defenderId;
+      const winnerName = allCharacters.find(c => c.id === winner)?.name;
+      if (!winnerName) return null;
 
-      const customerName =
-        allCharacters.find(character => character.id === customerId)?.name ??
-        null;
+      const rareDrops = itemsDropped
+        .map(itemId => allItems.find(item => item.tokenId === itemId.toString()))
+        .filter(item => item && item.rarity !== undefined && item.rarity >= Rarity.Rare);
 
-      const itemName =
-        allItems.find(item => item.tokenId === itemId.toString())?.name ?? null;
+      if (rareDrops.length === 0) return null;
 
-      const article = startsWithVowel(itemName ?? '') ? 'an' : 'a';
+      const droppedItem = rareDrops[0]!;
+      const rarityName = RARITY_NAMES[droppedItem.rarity!];
+      const rarityColor = RARITY_COLORS[droppedItem.rarity!];
 
       return {
         delivered: true,
         from: zeroAddress,
-        jsx:
-          customerName && itemName ? (
-            <Text fontWeight={500} size="xs" textAlign="center">
-              {customerName} {buying ? 'bought' : 'sold'} {article} {itemName}{' '}
-              in a shop!
-            </Text>
-          ) : undefined,
+        jsx: (
+          <Text fontWeight={500} size="xs" textAlign="center">
+            {winnerName} found{' '}
+            <Text as="span" color={rarityColor} fontWeight={700}>
+              {droppedItem.name}
+            </Text>{' '}
+            ({rarityName})!
+          </Text>
+        ),
+        message: '',
+        timestamp: Number(combatOutcome.endTime) * 1000,
+      };
+    })
+    .filter((m): m is Message => m !== null),
+  [battleOutcomeEntities, allCharacters, allItems]);
+
+  // Rare+ marketplace transactions only
+  const marketplaceSaleEntities = useEntityQuery([Has(MarketplaceSale)]);
+  const rareMarketplaceSales: Message[] = useMemo(() => marketplaceSaleEntities
+    .map(entity => {
+      const marketplaceSale = getComponentValueStrict(MarketplaceSale, entity);
+      const { buyer, itemId, timestamp } = marketplaceSale;
+
+      const item = allItems.find(i => i.tokenId === itemId.toString());
+      if (!item || item.rarity === undefined || item.rarity < Rarity.Rare) return null;
+
+      const customerName =
+        allCharacters.find(character => character.owner === buyer)?.name ?? null;
+      if (!customerName) return null;
+
+      const rarityColor = RARITY_COLORS[item.rarity];
+
+      return {
+        delivered: true,
+        from: zeroAddress,
+        jsx: (
+          <Text fontWeight={500} size="xs" textAlign="center">
+            {customerName} bought{' '}
+            <Text as="span" color={rarityColor} fontWeight={700}>
+              {item.name}
+            </Text>{' '}
+            in the Marketplace!
+          </Text>
+        ),
         message: '',
         timestamp: Number(timestamp) * 1000,
       };
-    },
-  ), [shopSaleEntities, allCharacters, armorTemplates, consumableTemplates, spellTemplates, weaponTemplates]);
-
-  const marketplaceSaleEntities = useEntityQuery([Has(MarketplaceSale)]);
-  const allMarketplaceSales: Message[] = useMemo(() => marketplaceSaleEntities.map(entity => {
-    const marketplaceSale = getComponentValueStrict(MarketplaceSale, entity);
-
-    const { buyer, itemId, timestamp } = marketplaceSale;
-
-    const allItems = [
-      ...armorTemplates,
-      ...consumableTemplates,
-      ...spellTemplates,
-      ...weaponTemplates,
-    ];
-
-    const customerName =
-      allCharacters.find(character => character.owner === buyer)?.name ?? null;
-
-    const itemName =
-      allItems.find(item => item.tokenId === itemId.toString())?.name ?? null;
-
-    const article = startsWithVowel(itemName ?? '') ? 'an' : 'a';
-
-    return {
-      delivered: true,
-      from: zeroAddress,
-      jsx:
-        customerName && itemName ? (
-          <Text fontWeight={500} size="xs" textAlign="center">
-            {customerName} bought {article} {itemName} in the Marketplace!
-          </Text>
-        ) : undefined,
-      message: '',
-      timestamp: Number(timestamp) * 1000,
-    };
-  }), [marketplaceSaleEntities, allCharacters, armorTemplates, consumableTemplates, spellTemplates, weaponTemplates]);
+    })
+    .filter((m): m is Message => m !== null),
+  [marketplaceSaleEntities, allCharacters, allItems]);
 
   const messagesAndEvents = useMemo(() => {
     return [
       ...messages,
-      ...allMarketplaceSales,
-      ...allShopSales,
+      ...rareDropAnnouncements,
+      ...rareMarketplaceSales,
     ].sort((a, b) => a.timestamp - b.timestamp);
-  }, [allMarketplaceSales, allShopSales, messages]);
+  }, [rareDropAnnouncements, rareMarketplaceSales, messages]);
 
   const onLogin = useCallback(async () => {
     try {
