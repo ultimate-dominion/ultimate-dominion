@@ -19,6 +19,7 @@ import {
   useState,
 } from 'react';
 
+import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import {
   BATTLE_OUTCOME_SEEN_KEY,
@@ -91,18 +92,13 @@ export const BattleProvider = ({
     delegatorAddress,
     systemCalls: { checkCombatFragmentTriggers, endTurn, fleePvp },
   } = useMUD();
-  const { character, refreshCharacter } = useCharacter();
+  const { character } = useCharacter();
   const { allMonsters, allCharacters, position } = useMap();
 
+  const { renderError } = useToast();
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
   const attackOutcomeCountAtAttack = useRef<number | null>(null);
-
-  const attackTx = useTransaction({
-    actionName: 'attack',
-    maxAttempts: 3,
-    backoffMs: 1500,
-  });
 
   const fleeTx = useTransaction({
     actionName: 'flee',
@@ -361,39 +357,38 @@ export const BattleProvider = ({
   const onAttack = useCallback(
     async (itemId: string) => {
       if (!delegatorAddress || !character || !currentBattle || !opponent) return;
+      if (attackingItemId !== null) return; // prevent double-submit
 
       setAttackingItemId(itemId);
       attackOutcomeCountAtAttack.current = currentBattleAttackOutcomes.length;
 
-      const result = await attackTx.execute(() =>
-        endTurn(
-          currentBattle.encounterId,
-          character.id,
-          opponent.id,
-          itemId,
-        ),
+      const result = await endTurn(
+        currentBattle.encounterId,
+        character.id,
+        opponent.id,
+        itemId,
       );
 
-      if (result) {
+      if (result.success) {
         localStorage.removeItem(CURRENT_BATTLE_OPPONENT_TURN_KEY);
         localStorage.removeItem(CURRENT_BATTLE_USER_TURN_KEY);
-        refreshCharacter();
         // Don't clear attackingItemId — effect below clears when outcome arrives
+        // Don't call refreshCharacter — RECS sync handles it
       } else {
-        // TX failed, clear immediately
+        renderError(result.error || 'Attack failed');
         setAttackingItemId(null);
         attackOutcomeCountAtAttack.current = null;
       }
     },
     [
-      attackTx,
+      attackingItemId,
       character,
       currentBattle,
       currentBattleAttackOutcomes.length,
       delegatorAddress,
       endTurn,
       opponent,
-      refreshCharacter,
+      renderError,
     ],
   );
 
@@ -435,7 +430,7 @@ export const BattleProvider = ({
     () => ({
       attackOutcomes: currentBattleAttackOutcomes,
       attackingItemId,
-      attackStatusMessage: attackTx.statusMessage || 'Attacking...',
+      attackStatusMessage: attackingItemId ? 'Attacking...' : '',
       continueToBattleOutcome,
       currentBattle,
       isFleeing: fleeTx.isLoading,
@@ -450,7 +445,6 @@ export const BattleProvider = ({
     [
       currentBattleAttackOutcomes,
       attackingItemId,
-      attackTx.statusMessage,
       continueToBattleOutcome,
       currentBattle,
       fleeTx.isLoading,
