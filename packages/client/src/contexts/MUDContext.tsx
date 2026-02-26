@@ -1,6 +1,6 @@
 import { useDisclosure } from '@chakra-ui/react';
 import { type ContractWrite } from '@latticexyz/common';
-import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
+import { writeObserver } from '@latticexyz/common/actions';
 import { useComponentValue } from '@latticexyz/react';
 import { getComponentValue, overridableComponent } from '@latticexyz/recs';
 import { SyncStep } from '@latticexyz/store-sync';
@@ -174,10 +174,10 @@ const MUDProviderInner = ({
       return;
     }
 
-    // EIP-7702: the embedded wallet is an EOA with standard nonce management,
-    // so transactionQueue() works normally (unlike the old ERC-4337 path).
+    // Use the Thirdweb wallet client directly — it has its own signing transport.
+    // Skip transactionQueue(): even with EIP-7702, Thirdweb manages its own
+    // nonce sequencing; layering MUD's queue on top causes receipt-polling conflicts.
     const walletClient = (embeddedWalletClient as any)
-      .extend(transactionQueue())
       .extend(writeObserver({ onWrite: write => write$.next(write) }));
 
     const worldContract = getContract({
@@ -191,11 +191,20 @@ const MUDProviderInner = ({
       Position: overridableComponent(setupResult.components.Position),
     };
 
-    // EIP-7702: standard tx hashes work with MUD's default waitForTransaction
-    // (RECS block sync). No custom polling needed like the old ERC-4337 path.
+    // MUD's waitForTransaction relies on RECS block sync (storedBlockLogs$),
+    // which races with the Thirdweb transport's receipt availability — even
+    // with EIP-7702. Use viem's standard polling instead.
+    const embeddedWaitForTransaction = async (tx: Hex) => {
+      return setupResult.network.publicClient.waitForTransactionReceipt({
+        hash: tx,
+        pollingInterval: 250,
+      });
+    };
+
     const systemCalls = createSystemCalls(
       {
         ...setupResult.network,
+        waitForTransaction: embeddedWaitForTransaction,
         delegatorAddress: ownerAddress,
         worldContract,
       },
