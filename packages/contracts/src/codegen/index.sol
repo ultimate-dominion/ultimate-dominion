@@ -36,6 +36,7 @@ import { Effects, EffectsData } from "./tables/Effects.sol";
 import { PhysicalDamageStats, PhysicalDamageStatsData } from "./tables/PhysicalDamageStats.sol";
 import { MagicDamageStats, MagicDamageStatsData } from "./tables/MagicDamageStats.sol";
 import { StatusEffectStats, StatusEffectStatsData } from "./tables/StatusEffectStats.sol";
+import { StatusEffectTargeting } from "./tables/StatusEffectTargeting.sol";
 import { StatusEffectValidity, StatusEffectValidityData } from "./tables/StatusEffectValidity.sol";
 import { CombatEncounter, CombatEncounterData } from "./tables/CombatEncounter.sol";
 import { WorldEncounter, WorldEncounterData } from "./tables/WorldEncounter.sol";

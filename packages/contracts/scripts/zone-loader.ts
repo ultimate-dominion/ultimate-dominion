@@ -324,6 +324,7 @@ function encodeStatusEffectStats(effect: StatusEffect): Hex {
         { name: 'validTime', type: 'uint256' },
         { name: 'validTurns', type: 'uint256' },
       ]},
+      { name: 'targetsSelf', type: 'bool' },
     ],
     [
       {
@@ -341,6 +342,7 @@ function encodeStatusEffectStats(effect: StatusEffect): Hex {
         validTime: BigInt(effect.validity.validTime),
         validTurns: BigInt(effect.validity.validTurns),
       },
+      (effect as any).targetsSelf ?? false,
     ]
   );
 }

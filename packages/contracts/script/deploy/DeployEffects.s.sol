@@ -13,6 +13,7 @@ import {
     MagicDamageStats,
     StatusEffectStats,
     StatusEffectStatsData,
+    StatusEffectTargeting,
     StatusEffectValidity,
     StatusEffectValidityData
 } from "@codegen/index.sol";
@@ -127,6 +128,7 @@ contract DeployEffects is Script {
 
             StatusEffectStats.set(effectId, effectsData.statusEffects[i].stats);
             StatusEffectValidity.set(effectId, validityData);
+            StatusEffectTargeting.set(effectId, effectsData.statusEffects[i].targetsSelf);
             Effects.set(effectId, EffectType.StatusEffect, true);
 
             console.log("  Status effect created:", i + 1);
@@ -176,6 +178,7 @@ contract DeployEffects is Script {
             bytes32 effectId = bytes32(bytes8(keccak256(abi.encode(effectsData.statusEffects[i].name))));
             StatusEffectStats.set(effectId, effectsData.statusEffects[i].stats);
             StatusEffectValidity.set(effectId, effectsData.statusEffects[i].validity);
+            StatusEffectTargeting.set(effectId, effectsData.statusEffects[i].targetsSelf);
             Effects.set(effectId, EffectType.StatusEffect, true);
         }
     }

@@ -580,6 +580,13 @@ export default defineWorld({
         strModifier: "int256",
       },
     },
+    StatusEffectTargeting: {
+      key: ["effectId"],
+      schema: {
+        effectId: "bytes32",
+        targetsSelf: "bool",
+      },
+    },
     StatusEffectValidity: {
       key: ["effectId"],
       schema: {
