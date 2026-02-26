@@ -48,6 +48,26 @@ export const Welcome = (): JSX.Element => {
     return () => clearTimeout(timer);
   }, [syncProgress]);
 
+  // Auto-navigate when auth state becomes ready (after sign-in or on return visit)
+  useEffect(() => {
+    if (authMethod === 'embedded' && isAuthenticated) {
+      if (character?.locked) {
+        navigate(GAME_BOARD_PATH);
+      } else {
+        navigate(CHARACTER_CREATION_PATH);
+      }
+      return;
+    }
+
+    if (authMethod === 'external' && isAuthenticated && delegatorAddress) {
+      if (character?.locked) {
+        navigate(GAME_BOARD_PATH);
+      } else {
+        navigate(CHARACTER_CREATION_PATH);
+      }
+    }
+  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, navigate]);
+
   const onPlay = useCallback(() => {
     // Embedded path: authenticated = ready to go (no delegation needed)
     if (authMethod === 'embedded' && isAuthenticated) {
