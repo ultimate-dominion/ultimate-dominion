@@ -24,6 +24,7 @@
     "@latticexyz/dev-tools": "2.0.11",
     "@latticexyz/faucet": "^2.1.1",
     "@latticexyz/react": "2.0.11",
+    "@latticexyz/protocol-parser": "2.0.11",
     "@latticexyz/recs": "2.0.11",
     "@latticexyz/schema-type": "2.0.11",
     "@latticexyz/store-sync": "2.0.11",

@@ -38,6 +38,7 @@ import {
   SystemCallsResult,
 } from '../lib/mud/setup';
 
+import { applyReceiptLogs } from '../lib/mud/applyReceiptLogs';
 import { useAuth } from './AuthContext';
 
 type AuthMethod = 'embedded' | 'external' | null;
@@ -255,17 +256,35 @@ const MUDProviderInner = ({
 
     // MUD's waitForTransaction relies on RECS block sync (storedBlockLogs$),
     // which races with the Thirdweb transport's receipt availability — even
-    // with EIP-7702. Use viem's standard polling instead.
+    // with EIP-7702. Use viem's standard polling instead, then feed the
+    // receipt's MUD store events directly into RECS for instant UI updates.
     const embeddedWaitForTransaction = async (tx: Hex) => {
       const receipt = await setupResult.network.publicClient.waitForTransactionReceipt({
         hash: tx,
         pollingInterval: 250,
       });
+
       if (receipt.status === 'reverted') {
         console.error(`[TX][RECEIPT] REVERTED on-chain tx=${tx} gasUsed=${receipt.gasUsed}`);
       } else {
         console.info(`[TX][RECEIPT] confirmed tx=${tx} block=${receipt.blockNumber}`);
+
+        // Apply receipt logs directly to RECS — bypasses independent block
+        // polling, giving instant UI updates with confirmed on-chain state.
+        try {
+          const applied = applyReceiptLogs(
+            setupResult.network.world,
+            receipt.logs,
+          );
+          if (applied > 0) {
+            console.info(`[TX][RECS] Applied ${applied} store events from tx=${tx}`);
+          }
+        } catch (recsErr) {
+          // Non-fatal — the polling loop will eventually pick up the state
+          console.warn('[TX][RECS] Failed to apply receipt logs', recsErr);
+        }
       }
+
       return receipt;
     };
 
