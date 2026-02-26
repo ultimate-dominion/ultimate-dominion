@@ -214,7 +214,6 @@ const MUDProviderInner = ({
         worldContract,
       },
       embeddedComponents,
-      { skipSimulation: true }, // Thirdweb bundler already simulates UserOps
     );
 
     setEmbeddedSetup({

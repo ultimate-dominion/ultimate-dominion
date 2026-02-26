@@ -8,9 +8,7 @@
 
 import {
   Entity,
-  getComponentValue,
 } from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { uuid } from '@latticexyz/utils';
 import {
   Address,
@@ -77,17 +75,13 @@ const getContractError = (error: unknown): string => {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSystemCalls(
   {
-    delegatorAddress,
     publicClient,
     waitForTransaction,
     worldContract,
   }: SetupNetworkResult & { delegatorAddress?: Address },
   {
-    Characters,
-    Orders,
     Position,
   }: ClientComponents,
-  options?: { skipSimulation?: boolean },
 ) {
   const buy = async (
     amount: bigint,
@@ -103,21 +97,8 @@ export function createSystemCalls(
         characterId as `0x${string}`,
       ]);
 
-      if (options?.skipSimulation) {
-        // Fire-and-forget for embedded path
-        waitForTransaction(tx).catch(() => {});
-        return { success: true };
-      }
-
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
-
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to complete purchase.',
-        success: !!success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -128,24 +109,10 @@ export function createSystemCalls(
 
   const cancelOrder = async (orderHash: string): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [orderHash as Hash],
-          functionName: 'UD__cancelOrder',
-        });
-      }
-
       const tx = await worldContract.write.UD__cancelOrder([orderHash as Hash]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -160,35 +127,14 @@ export function createSystemCalls(
     group2: string[],
   ): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [
-            encounterType,
-            group1 as `0x${string}`[],
-            group2 as `0x${string}`[],
-          ],
-          functionName: 'UD__createEncounter',
-        });
-      }
-
       const tx = await worldContract.write.UD__createEncounter([
         encounterType,
         group1 as `0x${string}`[],
         group2 as `0x${string}`[],
       ]);
 
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
-
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to create encounter.',
-        success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -199,32 +145,12 @@ export function createSystemCalls(
 
   const createOrder = async (order: NewOrder): SystemCallReturn => {
     try {
-      let orderHash: Hash | undefined;
-      if (!options?.skipSimulation) {
-        const simulatedTx = await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [order],
-          functionName: 'UD__createOrder',
-        });
-        orderHash = simulatedTx.result;
-      }
-
       const tx = await worldContract.write.UD__createOrder([order]);
       const txResult = await waitForTransaction(tx);
 
-      // When simulation was skipped, trust the receipt status
-      const success = orderHash
-        ? !!getComponentValue(
-            Orders,
-            encodeEntity({ orderHash: 'bytes32' }, { orderHash }),
-          )
-        : txResult.status === 'success';
-
       return {
-        error: success ? undefined : 'Failed to create order.',
-        success,
+        error: txResult.status === 'success' ? undefined : 'Failed to create order.',
+        success: txResult.status === 'success',
       };
     } catch (e) {
       return {
@@ -241,16 +167,6 @@ export function createSystemCalls(
   ): SystemCallReturn => {
     try {
       const characterId = characterEntity.toString() as `0x${string}`;
-
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterId, BigInt(amount)],
-          functionName: 'UD__depositToEscrow',
-        });
-      }
 
       const tx = await worldContract.write.UD__depositToEscrow([
         characterId,
@@ -283,15 +199,8 @@ export function createSystemCalls(
         encounterId.toString() as `0x${string}`,
       ]);
 
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
-
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to end shop encounter.',
-        success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -326,22 +235,8 @@ export function createSystemCalls(
         },
       );
 
-      if (options?.skipSimulation) {
-        // Fire-and-forget for embedded path
-        waitForTransaction(tx).catch(() => {});
-        return { success: true };
-      }
-
-      const txResult = await waitForTransaction(tx);
-
-      const { status } = txResult;
-
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to end turn.',
-        success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -356,20 +251,6 @@ export function createSystemCalls(
     starterArmorId: bigint,
   ): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [
-            characterEntity.toString() as `0x${string}`,
-            starterWeaponId,
-            starterArmorId,
-          ],
-          functionName: 'UD__enterGame',
-        });
-      }
-
       const tx = await worldContract.write.UD__enterGame([
         characterEntity.toString() as `0x${string}`,
         starterWeaponId,
@@ -395,30 +276,13 @@ export function createSystemCalls(
     itemIds: string[],
   ): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [
-            characterEntity.toString() as `0x${string}`,
-            itemIds.map(itemId => BigInt(itemId)),
-          ],
-          functionName: 'UD__equipItems',
-        });
-      }
-
       const tx = await worldContract.write.UD__equipItems([
         characterEntity.toString() as `0x${string}`,
         itemIds.map(itemId => BigInt(itemId)),
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -429,29 +293,12 @@ export function createSystemCalls(
 
   const fleePvp = async (characterId: string): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterId as `0x${string}`],
-          functionName: 'UD__fleePvp',
-        });
-      }
-
       const tx = await worldContract.write.UD__fleePvp([
         characterId as `0x${string}`,
       ]);
 
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
-
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to flee from PvP.',
-        success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -462,26 +309,12 @@ export function createSystemCalls(
 
   const fulfillOrder = async (orderHash: string): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [orderHash as Hash],
-          functionName: 'UD__fulfillOrder',
-        });
-      }
-
       const tx = await worldContract.write.UD__fulfillOrder([
         orderHash as Hash,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -514,16 +347,6 @@ export function createSystemCalls(
         hasSelectedAdvancedClass: entityStats.hasSelectedAdvancedClass ?? false,
       };
 
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterId as `0x${string}`, formattedNewStats],
-          functionName: 'UD__levelCharacter',
-        });
-      }
-
       const tx = await worldContract.write.UD__levelCharacter([
         characterId as `0x${string}`,
         formattedNewStats,
@@ -551,18 +374,6 @@ export function createSystemCalls(
     try {
       const nameHex = stringToHex(name, { size: 32 });
 
-      let characterId: bigint | undefined;
-      if (!options?.skipSimulation) {
-        const simulatedTx = await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [account, nameHex, uri],
-          functionName: 'UD__mintCharacter',
-        });
-        characterId = simulatedTx.result;
-      }
-
       const tx = await worldContract.write.UD__mintCharacter([
         account,
         nameHex,
@@ -571,20 +382,9 @@ export function createSystemCalls(
 
       const txResult = await waitForTransaction(tx);
 
-      // When simulation was skipped, trust the receipt status
-      const success = characterId
-        ? !!getComponentValue(
-            Characters,
-            encodeEntity(
-              { characterId: 'uint256' },
-              { characterId: BigInt(characterId) },
-            ),
-          )
-        : txResult.status === 'success';
-
       return {
-        error: success ? undefined : 'Failed to mint character.',
-        success,
+        error: txResult.status === 'success' ? undefined : 'Failed to mint character.',
+        success: txResult.status === 'success',
       };
     } catch (e) {
       return {
@@ -638,26 +438,12 @@ export function createSystemCalls(
 
   const removeEntityFromBoard = async (entity: Entity): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [entity.toString() as `0x${string}`],
-          functionName: 'UD__removeEntityFromBoard',
-        });
-      }
-
       const tx = await worldContract.write.UD__removeEntityFromBoard([
         entity.toString() as `0x${string}`,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -680,15 +466,9 @@ export function createSystemCalls(
       const tx = await worldContract.write.UD__restock([
         shopId as `0x${string}`,
       ]);
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
 
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to restock.',
-        success: !!success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -704,20 +484,6 @@ export function createSystemCalls(
     try {
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
-
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [
-            userRandomNumber,
-            characterEntity.toString() as `0x${string}`,
-            characterClass,
-          ],
-          functionName: 'UD__rollStats',
-        });
-      }
 
       const tx = await worldContract.write.UD__rollStats([
         userRandomNumber,
@@ -766,21 +532,8 @@ export function createSystemCalls(
         characterId as `0x${string}`,
       ]);
 
-      if (options?.skipSimulation) {
-        // Fire-and-forget for embedded path
-        waitForTransaction(tx).catch(() => {});
-        return { success: true };
-      }
-
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
-
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to complete sale.',
-        success: !!success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -791,16 +544,6 @@ export function createSystemCalls(
 
   const spawn = async (characterEntity: Entity): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterEntity.toString() as `0x${string}`],
-          functionName: 'UD__spawn',
-        });
-      }
-
       const tx = await worldContract.write.UD__spawn([
         characterEntity.toString() as `0x${string}`,
       ]);
@@ -824,27 +567,13 @@ export function createSystemCalls(
     itemId: string,
   ): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterEntity.toString() as `0x${string}`, BigInt(itemId)],
-          functionName: 'UD__unequipItem',
-        });
-      }
-
       const tx = await worldContract.write.UD__unequipItem([
         characterEntity.toString() as `0x${string}`,
         BigInt(itemId),
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -859,27 +588,13 @@ export function createSystemCalls(
     tokenId: string,
   ): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterId as `0x${string}`, characterMetadataCid],
-          functionName: 'UD__updateTokenUri',
-        });
-      }
-
       const tx = await worldContract.write.UD__updateTokenUri([
         characterId as `0x${string}`,
         characterMetadataCid,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -892,23 +607,10 @@ export function createSystemCalls(
     try {
       const characterId = entity.toString() as `0x${string}`;
 
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterId],
-          functionName: 'UD__rest',
-        });
-      }
-
       const tx = await worldContract.write.UD__rest([characterId]);
-      const txResult = await waitForTransaction(tx);
 
-      return {
-        error: txResult.status === 'success' ? undefined : 'Failed to rest.',
-        success: txResult.status === 'success',
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -924,31 +626,14 @@ export function createSystemCalls(
     try {
       const characterId = entity.toString() as `0x${string}`;
 
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterId, characterId, BigInt(tokenId)],
-          functionName: 'UD__useWorldConsumableItem',
-        });
-      }
-
       const tx = await worldContract.write.UD__useWorldConsumableItem([
         characterId,
         characterId,
         BigInt(tokenId),
       ]);
 
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
-
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to use consumable item.',
-        success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -964,30 +649,13 @@ export function createSystemCalls(
     try {
       const characterId = entity.toString() as `0x${string}`;
 
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterId, BigInt(tokenId)],
-          functionName: 'UD__useCombatConsumableItem',
-        });
-      }
-
       const tx = await worldContract.write.UD__useCombatConsumableItem([
         characterId,
         BigInt(tokenId),
       ]);
 
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
-
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to use combat consumable.',
-        success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1003,16 +671,6 @@ export function createSystemCalls(
   ): SystemCallReturn => {
     try {
       const characterId = characterEntity.toString() as `0x${string}`;
-
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterId, amount],
-          functionName: 'UD__withdrawFromEscrow',
-        });
-      }
 
       const tx = await worldContract.write.UD__withdrawFromEscrow([
         characterId,
@@ -1046,16 +704,6 @@ export function createSystemCalls(
     race: Race,
   ): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterEntity.toString() as `0x${string}`, race],
-          functionName: 'UD__chooseRace',
-        });
-      }
-
       const tx = await worldContract.write.UD__chooseRace([
         characterEntity.toString() as `0x${string}`,
         race,
@@ -1080,16 +728,6 @@ export function createSystemCalls(
     powerSource: PowerSource,
   ): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterEntity.toString() as `0x${string}`, powerSource],
-          functionName: 'UD__choosePowerSource',
-        });
-      }
-
       const tx = await worldContract.write.UD__choosePowerSource([
         characterEntity.toString() as `0x${string}`,
         powerSource,
@@ -1115,19 +753,6 @@ export function createSystemCalls(
     try {
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
-
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [
-            userRandomNumber,
-            characterEntity.toString() as `0x${string}`,
-          ],
-          functionName: 'UD__rollBaseStats',
-        });
-      }
 
       const tx = await worldContract.write.UD__rollBaseStats([
         userRandomNumber,
@@ -1165,16 +790,6 @@ export function createSystemCalls(
     advancedClass: AdvancedClass,
   ): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterEntity.toString() as `0x${string}`, advancedClass],
-          functionName: 'UD__selectAdvancedClass',
-        });
-      }
-
       const tx = await worldContract.write.UD__selectAdvancedClass([
         characterEntity.toString() as `0x${string}`,
         advancedClass,
@@ -1209,11 +824,9 @@ export function createSystemCalls(
         tileY,
         defeatedAreMobs,
       ]);
-      const txResult = await waitForTransaction(tx);
-      return {
-        error: txResult.status === 'reverted' ? 'Fragment check reverted' : undefined,
-        success: txResult.status === 'success',
-      };
+
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return { error: getContractError(e), success: false };
     }
@@ -1234,13 +847,8 @@ export function createSystemCalls(
         tileY,
       ]);
 
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
-
-      return {
-        error: status === 'reverted' ? 'Transaction reverted' : undefined,
-        success: status === 'success',
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1254,30 +862,13 @@ export function createSystemCalls(
     fragmentType: number,
   ): SystemCallReturn => {
     try {
-      if (!options?.skipSimulation) {
-        await publicClient.simulateContract({
-          abi: worldContract.abi,
-          account: delegatorAddress,
-          address: worldContract.address,
-          args: [characterId as `0x${string}`, fragmentType],
-          functionName: 'UD__claimFragment',
-        });
-      }
-
       const tx = await worldContract.write.UD__claimFragment([
         characterId as `0x${string}`,
         fragmentType,
       ]);
 
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
-
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to claim fragment.',
-        success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1295,15 +886,9 @@ export function createSystemCalls(
         characterId as `0x${string}`,
         goldAmount,
       ]);
-      const txResult = await waitForTransaction(tx);
-      const { status } = txResult;
 
-      const success = status === 'success';
-
-      return {
-        error: success ? undefined : 'Failed to swap gold for gas.',
-        success: !!success,
-      };
+      waitForTransaction(tx).catch(() => {});
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
