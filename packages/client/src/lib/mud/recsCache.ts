@@ -50,9 +50,9 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-// v4: switched to Alchemy RPC + added component ID diagnostics.
+// v5: force fresh sync to diagnose RegisteredTables + multi-table entity counts.
 function cacheKey(worldAddress: string, chainId: number): string {
-  return `v4-${worldAddress.toLowerCase()}-${chainId}`;
+  return `v5-${worldAddress.toLowerCase()}-${chainId}`;
 }
 
 /**

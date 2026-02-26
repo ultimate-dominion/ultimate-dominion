@@ -38,7 +38,15 @@ export const LandingPage = (): JSX.Element => {
 
   return (
     <Box
+      minH="100vh"
+      px={{ base: 2, sm: 12, md: 20 }}
+      py={{ base: 4, lg: 12 }}
+    >
+    <Box
       border="6px solid #3A3228"
+      display="flex"
+      flexDirection="column"
+      minH={{ base: 'calc(100vh - 32px)', lg: 'calc(100vh - 96px)' }}
       p={1.5}
       _after={{
         content: '""',
@@ -56,6 +64,7 @@ export const LandingPage = (): JSX.Element => {
       </Helmet>
       <Box
         border="0.5px solid #3A3228"
+        flex="1"
         position="relative"
         _before={{
           content: '""',
@@ -254,6 +263,7 @@ export const LandingPage = (): JSX.Element => {
           </HStack>
         </VStack>
       </Box>
+    </Box>
     </Box>
   );
 };
