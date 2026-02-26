@@ -202,13 +202,12 @@ const AppInner = (): JSX.Element => {
         <AppRoutes />
       </Box>
       {isDesktop && <Footer />}
-      {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && (
+      {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && !isDesktop && (
         <>
           <Box
-            bottom={{ base: 'unset', lg: 6 }}
             position="fixed"
-            right={{ base: 2, lg: 6 }}
-            top={{ base: 2, lg: 'unset' }}
+            right={2}
+            top={2}
             zIndex={10}
           >
             <ScaleFade initialScale={0.9} in={!isChatBoxOpen}>
@@ -216,18 +215,17 @@ const AppInner = (): JSX.Element => {
                 onClick={onOpenChatBox}
                 opacity={isChatBoxOpen ? 0 : 1}
                 px={4}
-                py={{ base: 5, lg: 6 }}
+                py={5}
                 transition="opacity 0.3s ease"
               >
-                <IoChatbubble size={isDesktop ? 28 : 24} />
+                <IoChatbubble size={24} />
               </Button>
             </ScaleFade>
           </Box>
           <Box
-            bottom={{ base: 'unset', lg: isChatBoxOpen ? 6 : -1 }}
             position="fixed"
-            right={{ base: 2, lg: 6 }}
-            top={{ base: isChatBoxOpen ? 2 : -1, lg: 'unset' }}
+            right={2}
+            top={isChatBoxOpen ? 2 : -1}
             zIndex={10}
           >
             <ChatBox />
