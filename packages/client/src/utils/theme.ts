@@ -389,12 +389,12 @@ export const theme = extendTheme({
     white: '#fff',
     yellow: '#EFD31C',
     // Rarity colors
-    rarityWorn: '#9d9d9d',
-    rarityCommon: '#ffffff',
-    rarityUncommon: '#1eff00',
-    rarityRare: '#0070dd',
-    rarityEpic: '#a335ee',
-    rarityLegendary: '#ff8000',
+    rarityWorn: '#8a8a8a',
+    rarityCommon: '#d4d8dc',
+    rarityUncommon: '#3d8a4e',
+    rarityRare: '#3d6fb5',
+    rarityEpic: '#7b4ab5',
+    rarityLegendary: '#c47a2a',
   },
   semanticTokens: {
     colors: {

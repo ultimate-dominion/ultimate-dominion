@@ -105,12 +105,12 @@ export enum Rarity {
 }
 
 export const RARITY_COLORS: Record<Rarity, string> = {
-  [Rarity.Worn]: '#9d9d9d',      // Gray
-  [Rarity.Common]: '#ffffff',    // White
-  [Rarity.Uncommon]: '#1eff00',  // Green
-  [Rarity.Rare]: '#0070dd',      // Blue
-  [Rarity.Epic]: '#a335ee',      // Purple
-  [Rarity.Legendary]: '#ff8000', // Orange
+  [Rarity.Worn]: '#8a8a8a',      // Muted gray
+  [Rarity.Common]: '#d4d8dc',    // Soft white (legible on grey-blue)
+  [Rarity.Uncommon]: '#3d8a4e',  // Forest green
+  [Rarity.Rare]: '#3d6fb5',      // Steel blue
+  [Rarity.Epic]: '#7b4ab5',      // Dusty purple
+  [Rarity.Legendary]: '#c47a2a', // Aged gold/amber
 };
 
 export const RARITY_NAMES: Record<Rarity, string> = {

@@ -19,6 +19,8 @@ import {
   type ConsumableTemplate,
   ItemType,
   OrderType,
+  Rarity,
+  RARITY_COLORS,
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
@@ -41,6 +43,9 @@ export const MarketplaceRow = ({
 }): JSX.Element => {
   const navigate = useNavigate();
 
+  const rarityColor = item.rarity !== undefined ? RARITY_COLORS[item.rarity] : undefined;
+  const hasRarityAccent = item.rarity !== undefined && item.rarity >= Rarity.Rare;
+
   const newSearchParams = useMemo(() => {
     const searchParams = new URLSearchParams();
     searchParams.set('orderType', orderType);
@@ -50,6 +55,7 @@ export const MarketplaceRow = ({
   return (
     <Flex
       bgColor="#F5F5FA1F"
+      borderLeft={hasRarityAccent ? `3px solid ${rarityColor}` : undefined}
       justify="space-between"
       onClick={() => navigate(`${ITEM_PATH}/${tokenId}?${newSearchParams}`)}
       px={{ base: 1, sm: 2, md: 4 }}
@@ -82,7 +88,11 @@ export const MarketplaceRow = ({
           </Avatar>
         )}
         <VStack align="start" justify="center" ml={4}>
-          <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
+          <Text
+            color={rarityColor}
+            fontWeight={700}
+            size={{ base: 'sm', lg: 'lg' }}
+          >
             {removeEmoji(name)}
           </Text>
           {itemType !== ItemType.Spell && (
