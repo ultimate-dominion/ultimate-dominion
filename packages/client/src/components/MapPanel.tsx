@@ -3,7 +3,6 @@ import {
   Button,
   Heading,
   HStack,
-  IconButton,
   Stack,
   Text,
   useBreakpointValue,
@@ -14,7 +13,6 @@ import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
 import { BiSolidNavigation } from 'react-icons/bi';
 import { FaStoreAlt } from 'react-icons/fa';
-import { GiPlainArrow } from 'react-icons/gi';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
@@ -23,6 +21,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { ChatBox } from './ChatBox';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
+import { CompassRoseSvg } from './SVGs/CompassRoseSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
 
 const SAFE_ZONE_AREA = {
@@ -234,15 +233,15 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
   );
 };
 
-const ARROW_DIRECTIONS: {
+const HIT_ZONES: {
   label: string;
   direction: 'up' | 'down' | 'left' | 'right';
-  rotate: string;
+  style: Record<string, string | number>;
 }[] = [
-  { label: 'west', direction: 'left', rotate: '90deg' },
-  { label: 'north', direction: 'up', rotate: '0deg' },
-  { label: 'south', direction: 'down', rotate: '180deg' },
-  { label: 'east', direction: 'right', rotate: '-90deg' },
+  { label: 'north', direction: 'up', style: { top: 0, left: '25%', width: '50%', height: '30%' } },
+  { label: 'south', direction: 'down', style: { bottom: 0, left: '25%', width: '50%', height: '30%' } },
+  { label: 'west', direction: 'left', style: { top: '25%', left: 0, width: '30%', height: '50%' } },
+  { label: 'east', direction: 'right', style: { top: '25%', right: 0, width: '30%', height: '50%' } },
 ];
 
 const NavigationCompass = ({
@@ -252,24 +251,30 @@ const NavigationCompass = ({
   isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
 }): JSX.Element => (
-  <HStack spacing={1} mt={1}>
-    {ARROW_DIRECTIONS.map(({ label, direction, rotate }) => (
-      <IconButton
+  <Box
+    position="relative"
+    w="80px"
+    h="80px"
+    mx="auto"
+    mt={1}
+    opacity={isDisabled ? 0.3 : 1}
+    pointerEvents={isDisabled ? 'none' : 'auto'}
+    transition="opacity 0.2s"
+  >
+    <CompassRoseSvg size={80} />
+    {HIT_ZONES.map(({ label, direction, style }) => (
+      <Box
         key={label}
-        aria-label={`Move ${label}`}
-        icon={
-          <Box transform={`rotate(${rotate})`} lineHeight={0}>
-            <GiPlainArrow size="14px" />
-          </Box>
-        }
-        isDisabled={isDisabled}
+        position="absolute"
+        cursor="pointer"
+        borderRadius="sm"
         onClick={() => onMove(direction)}
-        h={7}
-        w={7}
-        minW={0}
-        variant="ghost"
-        size="xs"
+        _hover={{ bg: 'whiteAlpha.100' }}
+        transition="background 0.15s"
+        aria-label={`Move ${label}`}
+        role="button"
+        {...style}
       />
     ))}
-  </HStack>
+  </Box>
 );
