@@ -494,6 +494,17 @@ const MUDProviderInner = ({
   // =============================================
   // Build context value
   // =============================================
+
+  // isSynced means "delegation ready" but consumers also need RECS data.
+  // Gate on SyncStep.LIVE so Items/StarterItemPool are available.
+  // Sticky: once true, stays true (background delta sync can briefly drop LIVE).
+  const [isFullySynced, setIsFullySynced] = useState(false);
+  useEffect(() => {
+    if (!isFullySynced && isSynced && syncProgress?.step === SyncStep.LIVE) {
+      setIsFullySynced(true);
+    }
+  }, [isFullySynced, isSynced, syncProgress?.step]);
+
   const value = useMemo(() => {
     const noopRevoke = async () => {};
 
@@ -514,7 +525,7 @@ const MUDProviderInner = ({
         handleLogoutRevoke: noopRevoke,
         handleRevokeDelegation: noopRevoke,
         isRevokingDelegation: false,
-        isSynced,
+        isSynced: isFullySynced,
         isWalletDetailsModalOpen,
         network: embeddedSetup.network,
         onCloseWalletDetailsModal,
@@ -537,7 +548,7 @@ const MUDProviderInner = ({
         handleLogoutRevoke,
         handleRevokeDelegation,
         isRevokingDelegation,
-        isSynced,
+        isSynced: isFullySynced,
         isWalletDetailsModalOpen,
         network: setupResult.network,
         onCloseWalletDetailsModal,
@@ -561,7 +572,7 @@ const MUDProviderInner = ({
       handleLogoutRevoke,
       handleRevokeDelegation,
       isRevokingDelegation,
-      isSynced,
+      isSynced: isFullySynced,
       isWalletDetailsModalOpen,
       network: burner.network,
       onCloseWalletDetailsModal,
@@ -577,8 +588,8 @@ const MUDProviderInner = ({
     getBurner,
     handleLogoutRevoke,
     handleRevokeDelegation,
+    isFullySynced,
     isRevokingDelegation,
-    isSynced,
     isWalletDetailsModalOpen,
     onCloseWalletDetailsModal,
     onOpenWalletDetailsModal,
