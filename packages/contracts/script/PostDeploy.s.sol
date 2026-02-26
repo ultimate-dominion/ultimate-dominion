@@ -611,10 +611,15 @@ contract PostDeploy is Script {
         ResourceId rngSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "", "RngSystem");
 
         try world.registerSystem(rngSystemId, rngSystem, true) {
-            world.registerRootFunctionSelector(rngSystemId, "getRng(bytes32,uint8,bytes)", "getRng(bytes32,uint8,bytes)");
-            console.log("  RngSystem deployed and registered");
+            console.log("  RngSystem registered");
         } catch {
             console.log("  RngSystem already registered, skipping");
+        }
+
+        try world.registerRootFunctionSelector(rngSystemId, "getRng(bytes32,uint8,bytes)", "getRng(bytes32,uint8,bytes)") {
+            console.log("  RngSystem function selector registered");
+        } catch {
+            console.log("  RngSystem function selector already exists, skipping");
         }
     }
 
