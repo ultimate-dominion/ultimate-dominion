@@ -12,14 +12,9 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
-import {
-  BiChevronDown,
-  BiChevronLeft,
-  BiChevronRight,
-  BiChevronUp,
-  BiSolidNavigation,
-} from 'react-icons/bi';
+import { BiSolidNavigation } from 'react-icons/bi';
 import { FaStoreAlt } from 'react-icons/fa';
+import { GiPlainArrow } from 'react-icons/gi';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
@@ -239,69 +234,42 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
   );
 };
 
+const ARROW_DIRECTIONS: {
+  label: string;
+  direction: 'up' | 'down' | 'left' | 'right';
+  rotate: string;
+}[] = [
+  { label: 'west', direction: 'left', rotate: '90deg' },
+  { label: 'north', direction: 'up', rotate: '0deg' },
+  { label: 'south', direction: 'down', rotate: '180deg' },
+  { label: 'east', direction: 'right', rotate: '-90deg' },
+];
+
 const NavigationCompass = ({
   isDisabled,
   onMove,
 }: {
   isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
-}): JSX.Element => {
-  const sz = 6;
-  const iconPx = "16px";
-
-  return (
-    <VStack mt={1} spacing={0}>
+}): JSX.Element => (
+  <HStack spacing={1} mt={1}>
+    {ARROW_DIRECTIONS.map(({ label, direction, rotate }) => (
       <IconButton
-        aria-label="Move north"
-        borderRadius="sm"
-        icon={<BiChevronUp size={iconPx} />}
+        key={label}
+        aria-label={`Move ${label}`}
+        icon={
+          <Box transform={`rotate(${rotate})`} lineHeight={0}>
+            <GiPlainArrow size="14px" />
+          </Box>
+        }
         isDisabled={isDisabled}
-        onClick={() => onMove('up')}
-        h={sz}
-        w={sz}
+        onClick={() => onMove(direction)}
+        h={7}
+        w={7}
         minW={0}
         variant="ghost"
         size="xs"
       />
-      <HStack spacing={0}>
-        <IconButton
-          aria-label="Move west"
-          borderRadius="sm"
-          icon={<BiChevronLeft size={iconPx} />}
-          isDisabled={isDisabled}
-          onClick={() => onMove('left')}
-          h={sz}
-          w={sz}
-          minW={0}
-          variant="ghost"
-          size="xs"
-        />
-        <Box h={sz} w={sz} />
-        <IconButton
-          aria-label="Move east"
-          borderRadius="sm"
-          icon={<BiChevronRight size={iconPx} />}
-          isDisabled={isDisabled}
-          onClick={() => onMove('right')}
-          h={sz}
-          w={sz}
-          minW={0}
-          variant="ghost"
-          size="xs"
-        />
-      </HStack>
-      <IconButton
-        aria-label="Move south"
-        borderRadius="sm"
-        icon={<BiChevronDown size={iconPx} />}
-        isDisabled={isDisabled}
-        onClick={() => onMove('down')}
-        h={sz}
-        w={sz}
-        minW={0}
-        variant="ghost"
-        size="xs"
-      />
-    </VStack>
-  );
-};
+    ))}
+  </HStack>
+);
