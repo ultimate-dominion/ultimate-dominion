@@ -2,6 +2,7 @@ import {
   Button,
   Divider,
   HStack,
+  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -87,6 +88,16 @@ export const SignInModal = ({
                 <ConnectWalletButton />
               </>
             )}
+            <Text color="#8A7E6A" fontSize="10px" textAlign="center">
+              By signing in you agree to the{' '}
+              <Link href="https://ultimatedominion.com/terms" isExternal color="#C4B89E" textDecoration="underline">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="https://ultimatedominion.com/privacy" isExternal color="#C4B89E" textDecoration="underline">
+                Privacy Policy
+              </Link>
+            </Text>
           </VStack>
         </ModalBody>
       </ModalContent>

@@ -27,6 +27,24 @@ export const Footer = (): JSX.Element => {
               >
                 About
               </Link>
+              <Link
+                alignSelf="start"
+                color="#8A7E6A"
+                fontSize={{ base: 'xs', sm: 'sm' }}
+                href="https://ultimatedominion.com/terms"
+                isExternal
+              >
+                Terms
+              </Link>
+              <Link
+                alignSelf="start"
+                color="#8A7E6A"
+                fontSize={{ base: 'xs', sm: 'sm' }}
+                href="https://ultimatedominion.com/privacy"
+                isExternal
+              >
+                Privacy
+              </Link>
               {/* <Link
                 alignSelf="start"
                 borderColor="grey400"

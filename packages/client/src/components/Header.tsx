@@ -245,16 +245,35 @@ export const Header = ({
 
             <DrawerFooter>
               <Stack
-                alignItems="center"
-                direction={{ base: 'column', sm: 'row' }}
-                spacing={{ base: 3, md: 8 }}
+                direction="row"
+                spacing={4}
+                w="100%"
+                justify="center"
               >
-                {/* <Link bgColor="black" borderRadius="50%" p={1.5}>
-                  <FaDiscord color="white" />
+                <Link
+                  color="#8A7E6A"
+                  fontSize="2xs"
+                  href="https://ultimatedominion.com/terms"
+                  isExternal
+                >
+                  Terms
                 </Link>
-                <Link bgColor="black" borderRadius="50%" p={1.5}>
-                  <FaXTwitter color="white" />
-                </Link> */}
+                <Link
+                  color="#8A7E6A"
+                  fontSize="2xs"
+                  href="https://ultimatedominion.com/privacy"
+                  isExternal
+                >
+                  Privacy
+                </Link>
+                <Link
+                  color="#8A7E6A"
+                  fontSize="2xs"
+                  href="https://www.ultimatedominion.com/"
+                  isExternal
+                >
+                  About
+                </Link>
               </Stack>
             </DrawerFooter>
           </DrawerContent>
