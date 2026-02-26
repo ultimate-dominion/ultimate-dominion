@@ -17,9 +17,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH } from '../Routes';
-import { shortenAddress } from '../utils/helpers';
-
-import { CopyText } from './CopyText';
 import { DelegationButton } from './DelegationButton';
 import { PolygonalCard } from './PolygonalCard';
 import { SignInModal } from './SignInModal';
@@ -91,23 +88,11 @@ export const ConnectWalletModal = ({
   const bodyContent = (() => {
     if (ownerAddress && externalWalletClient) {
       return (
-        <VStack spacing={10}>
-          <VStack fontWeight={500} spacing={4}>
-            <Text size="sm" textAlign="center">
-              Connected account:
-            </Text>
-            <CopyText text={ownerAddress}>
-              <Text fontWeight={700} textAlign="center">
-                {shortenAddress(ownerAddress)}
-              </Text>
-            </CopyText>
-            <Text size="sm" textAlign="center">
-              One more step to set up your game account.
-            </Text>
-            <Text size="sm" textAlign="center">
-              This lets you play without approving every action.
-            </Text>
-          </VStack>
+        <VStack spacing={6}>
+          <Text fontSize="sm" textAlign="center">
+            A small ETH deposit is needed to cover gameplay fees.
+            Your funds stay in your session and can be withdrawn anytime.
+          </Text>
           <DelegationButton
             externalWalletClient={externalWalletClient}
             onClose={handleClose}
@@ -129,7 +114,7 @@ export const ConnectWalletModal = ({
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader>
-          {delegatorAddress ? 'Delegated' : 'Set Up Game Account'}
+          {delegatorAddress ? 'Ready' : 'Secure Your Session'}
         </ModalHeader>
         <ModalCloseButton>
           <IoClose size={30} />
