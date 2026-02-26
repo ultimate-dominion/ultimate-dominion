@@ -8,12 +8,13 @@ import {
   Text,
   Tooltip,
   VStack,
+  keyframes,
 } from '@chakra-ui/react';
 import { DARK_INSET_SHADOW } from '../utils/theme';
 import { useComponentValue } from '@latticexyz/react';
 import { Has, runQuery } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import {
   IoIosArrowForward,
@@ -24,8 +25,16 @@ import { hexToBigInt } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
+
+const fadeSlideIn = keyframes`
+  0% { opacity: 0; transform: translateY(4px); }
+  20% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-2px); }
+`;
 
 import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
@@ -38,6 +47,17 @@ export const StatsPanel = (): JSX.Element => {
   } = useMUD();
   const { character } = useCharacter();
 
+
+  const { delta: rankDelta, rank: goldRank } = useLeaderboardRank();
+
+  const [showDelta, setShowDelta] = useState(false);
+  useEffect(() => {
+    if (rankDelta !== 0) {
+      setShowDelta(true);
+      const timer = setTimeout(() => setShowDelta(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [rankDelta]);
 
   const maxLevelXpRequirement = useMemo(
     () =>
@@ -353,16 +373,48 @@ export const StatsPanel = (): JSX.Element => {
         >
           Marketplace
         </Button>
-        <Button
-          as={RouterLink}
-          flex={1}
-          leftIcon={<LeaderboardIconSvg size={3} theme="dark" />}
-          size="sm"
-          to={LEADERBOARD_PATH}
-          variant="dark"
-        >
-          Leaderboard
-        </Button>
+        <Box flex={1} position="relative">
+          <Button
+            as={RouterLink}
+            leftIcon={<LeaderboardIconSvg size={3} theme="dark" />}
+            size="sm"
+            to={LEADERBOARD_PATH}
+            variant="dark"
+            w="100%"
+          >
+            Leaderboard
+            {goldRank > 0 && (
+              <Text
+                as="span"
+                bg="rgba(212,165,74,0.2)"
+                borderRadius="sm"
+                color="yellow"
+                fontFamily="mono"
+                fontSize="2xs"
+                fontWeight={700}
+                ml={1.5}
+                px={1}
+              >
+                #{goldRank}
+              </Text>
+            )}
+          </Button>
+          {showDelta && rankDelta !== 0 && (
+            <Text
+              animation={`${fadeSlideIn} 5s ease-in-out forwards`}
+              color={rankDelta > 0 ? '#5A8A3E' : '#C84040'}
+              fontSize="2xs"
+              fontWeight={700}
+              left="50%"
+              position="absolute"
+              top="-14px"
+              transform="translateX(-50%)"
+              whiteSpace="nowrap"
+            >
+              {rankDelta > 0 ? '▲' : '▼'} {Math.abs(rankDelta)}
+            </Text>
+          )}
+        </Box>
       </HStack>
     </VStack>
   );

@@ -1,6 +1,7 @@
 import { Text, useDisclosure } from '@chakra-ui/react';
-import { useEntityQuery } from '@latticexyz/react';
-import { getComponentValueStrict, Has } from '@latticexyz/recs';
+import { useComponentValue, useEntityQuery } from '@latticexyz/react';
+import { getComponentValueStrict, Has, HasValue } from '@latticexyz/recs';
+import { singletonEntity } from '@latticexyz/store-sync/recs';
 
 import type {
   GroupDTO,
@@ -17,13 +18,15 @@ import {
   useRef,
   useState,
 } from 'react';
-import { zeroAddress, erc721Abi } from 'viem';
+import { Link as RouterLink } from 'react-router-dom';
+import { formatEther, zeroAddress, erc721Abi } from 'viem';
 import { usePublicClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
+import { CHARACTERS_PATH, ITEM_PATH } from '../Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
 
-import { Character, Rarity, RARITY_COLORS, RARITY_NAMES } from '../utils/types';
+import { Character, OrderStatus, Rarity, RARITY_COLORS, RARITY_NAMES, TokenType } from '../utils/types';
 
 import { useAuth } from './AuthContext';
 import { useCharacter } from './CharacterContext';
@@ -31,6 +34,7 @@ import { useItems } from './ItemsContext';
 import { useMap } from './MapContext';
 
 import { useMUD } from './MUDContext';
+import { useOrders } from './OrdersContext';
 
 // Push Protocol environment: 'prod' for deployed sites, 'staging' for localhost
 // Values match @pushprotocol/restapi CONSTANTS.ENV — inlined to avoid static import
@@ -122,7 +126,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // Use the appropriate wallet client for Push Protocol
   const data = authMethod === 'embedded' ? embeddedWalletClient : externalWalletClient;
   const {
-    components: { CombatEncounter, CombatOutcome, MarketplaceSale },
+    components: { CombatEncounter, CombatOutcome, MarketplaceSale, UltimateDominion },
   } = useMUD();
   const {
     armorTemplates,
@@ -132,6 +136,10 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   } = useItems();
   const { allCharacters, isSpawned } = useMap();
   const { character: currentCharacter } = useCharacter();
+  const { activeOrders } = useOrders();
+
+  const configValue = useComponentValue(UltimateDominion, singletonEntity);
+  const goldToken = configValue?.goldToken ?? null;
 
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [user, setUser] = useState<PushAPI | null>(null);
@@ -240,8 +248,22 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
           from: zeroAddress,
           jsx: (
             <Text fontWeight={500} size="xs" textAlign="center">
-              {winnerName} found{' '}
-              <Text as="span" color={rarityColor} fontWeight={700}>
+              <Text
+                as={RouterLink}
+                color="#E8DCC8"
+                to={`${CHARACTERS_PATH}/${winner}`}
+                _hover={{ textDecoration: 'underline' }}
+              >
+                {winnerName}
+              </Text>{' '}
+              found{' '}
+              <Text
+                as={RouterLink}
+                color={rarityColor}
+                fontWeight={700}
+                to={`${ITEM_PATH}/${droppedItem.tokenId}`}
+                _hover={{ textDecoration: 'underline' }}
+              >
                 {droppedItem.name}
               </Text>{' '}
               ({rarityName})!
@@ -265,9 +287,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       const item = allItems.find(i => i.tokenId === itemId.toString());
       if (!item || item.rarity === undefined || item.rarity < Rarity.Rare) return null;
 
-      const customerName =
-        allCharacters.find(character => character.owner === buyer)?.name ?? null;
-      if (!customerName) return null;
+      const buyerCharacter = allCharacters.find(character => character.owner === buyer);
+      if (!buyerCharacter?.name) return null;
 
       const rarityColor = RARITY_COLORS[item.rarity];
 
@@ -276,8 +297,22 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         from: zeroAddress,
         jsx: (
           <Text fontWeight={500} size="xs" textAlign="center">
-            {customerName} bought{' '}
-            <Text as="span" color={rarityColor} fontWeight={700}>
+            <Text
+              as={RouterLink}
+              color="#E8DCC8"
+              to={`${CHARACTERS_PATH}/${buyerCharacter.id}`}
+              _hover={{ textDecoration: 'underline' }}
+            >
+              {buyerCharacter.name}
+            </Text>{' '}
+            bought{' '}
+            <Text
+              as={RouterLink}
+              color={rarityColor}
+              fontWeight={700}
+              to={`${ITEM_PATH}/${item.tokenId}`}
+              _hover={{ textDecoration: 'underline' }}
+            >
               {item.name}
             </Text>{' '}
             in the Marketplace!
@@ -291,13 +326,78 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     .filter((m): m is Message => m !== null),
   [marketplaceSaleEntities, allCharacters, allItems]);
 
+  // Gold offer broadcasts for Rare+ items (buy orders)
+  const goldOfferAnnouncements: Message[] = useMemo(() => {
+    if (!goldToken) return [];
+
+    return activeOrders
+      .filter(order => {
+        // Offer side is Gold (ERC20)
+        if (order.offer.tokenType !== TokenType.ERC20) return false;
+        if (order.offer.token.toLowerCase() !== goldToken.toLowerCase()) return false;
+        // Consideration side is an ERC1155 item
+        if (order.consideration.tokenType !== TokenType.ERC1155) return false;
+        // Check item rarity >= Rare
+        const item = allItems.find(i => i.tokenId === order.consideration.identifier.toString());
+        if (!item || item.rarity === undefined || item.rarity < Rarity.Rare) return false;
+        return true;
+      })
+      .map(order => {
+        const item = allItems.find(i => i.tokenId === order.consideration.identifier.toString())!;
+        const offererCharacter = allCharacters.find(c => c.owner.toLowerCase() === order.offerer.toLowerCase());
+        const playerName = offererCharacter?.name ?? 'Someone';
+        const goldAmount = formatEther(order.offer.amount);
+        const rarityColor = RARITY_COLORS[item.rarity!];
+
+        return {
+          delivered: true,
+          from: zeroAddress,
+          jsx: (
+            <Text fontWeight={500} size="xs" textAlign="center">
+              {offererCharacter ? (
+                <Text
+                  as={RouterLink}
+                  color="#E8DCC8"
+                  to={`${CHARACTERS_PATH}/${offererCharacter.id}`}
+                  _hover={{ textDecoration: 'underline' }}
+                >
+                  {playerName}
+                </Text>
+              ) : (
+                playerName
+              )}{' '}
+              is offering{' '}
+              <Text as="span" color="#D4A54A" fontWeight={700}>
+                {goldAmount} Gold
+              </Text>{' '}
+              for{' '}
+              <Text
+                as={RouterLink}
+                color={rarityColor}
+                fontWeight={700}
+                to={`${ITEM_PATH}/${item.tokenId}`}
+                _hover={{ textDecoration: 'underline' }}
+              >
+                {item.name}
+              </Text>
+              !
+            </Text>
+          ),
+          message: '',
+          rarityColor,
+          timestamp: Date.now(),
+        };
+      });
+  }, [activeOrders, allCharacters, allItems, goldToken]);
+
   const messagesAndEvents = useMemo(() => {
     return [
       ...messages,
       ...rareDropAnnouncements,
       ...rareMarketplaceSales,
+      ...goldOfferAnnouncements,
     ].sort((a, b) => a.timestamp - b.timestamp);
-  }, [rareDropAnnouncements, rareMarketplaceSales, messages]);
+  }, [goldOfferAnnouncements, rareDropAnnouncements, rareMarketplaceSales, messages]);
 
   // Track unread messages using last-seen timestamp (persists across refreshes)
   useEffect(() => {

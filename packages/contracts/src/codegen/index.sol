@@ -63,3 +63,6 @@ import { GasStationCooldown } from "./tables/GasStationCooldown.sol";
 import { FragmentProgress, FragmentProgressData } from "./tables/FragmentProgress.sol";
 import { CharacterFirstActions, CharacterFirstActionsData } from "./tables/CharacterFirstActions.sol";
 import { FragmentMetadata, FragmentMetadataData } from "./tables/FragmentMetadata.sol";
+import { ZoneCompletions, ZoneCompletionsData } from "./tables/ZoneCompletions.sol";
+import { CharacterZoneCompletion, CharacterZoneCompletionData } from "./tables/CharacterZoneCompletion.sol";
+import { ZoneConfig, ZoneConfigData } from "./tables/ZoneConfig.sol";

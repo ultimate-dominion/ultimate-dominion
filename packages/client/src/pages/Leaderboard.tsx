@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   Button,
   Center,
@@ -11,14 +12,17 @@ import {
   Spinner,
   Stack,
   Text,
+  Tooltip,
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
+import { useEntityQuery } from '@latticexyz/react';
+import { getComponentValueStrict, Has } from '@latticexyz/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { FaSearch, FaSortAmountDown, FaSortAmountUp, FaMedal } from 'react-icons/fa';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Pagination } from '../components/Pagination';
@@ -31,17 +35,31 @@ import {
 } from '../components/SVGs';
 import { useAuth } from '../contexts/AuthContext';
 import { useMap } from '../contexts/MapContext';
-import { HOME_PATH } from '../Routes';
+import { useMUD } from '../contexts/MUDContext';
+import { CHARACTERS_PATH, HOME_PATH } from '../Routes';
 import { Character, StatsClasses } from '../utils/types';
 
 const PLAYERS_PER_PAGE = 10;
+
+type LeaderboardTab = 'rankings' | 'raceToMax';
+
+type ZoneCompletionEntry = {
+  characterId: string;
+  characterName: string;
+  characterImage?: string;
+  completedAt: number;
+  rank: number;
+  hasBadge: boolean;
+};
 
 export const Leaderboard = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const { allCharacters, isFetchingEntities, refreshEntities } = useMap();
+  const { components } = useMUD();
 
+  const [tab, setTab] = useState<LeaderboardTab>('rankings');
   const [entries, setEntries] = useState<Character[]>([]);
   const [sort, setSort] = useState({ sorted: 'byGold', reversed: false });
   const [filter, setFilter] = useState<StatsClasses | 'All'>('All');
@@ -50,6 +68,34 @@ export const Leaderboard = (): JSX.Element => {
   const [page, setPage] = useState(1);
   const [pageLimit, setPageLimit] = useState(1);
   const [length, setLength] = useState(1);
+
+  // Zone completion data for Race to Max tab
+  const zoneCompletionEntities = useEntityQuery(
+    components?.CharacterZoneCompletion ? [Has(components.CharacterZoneCompletion)] : [],
+  );
+
+  const zoneCompletions: ZoneCompletionEntry[] = useMemo(() => {
+    if (!components?.CharacterZoneCompletion) return [];
+
+    return zoneCompletionEntities
+      .map(entity => {
+        const data = getComponentValueStrict(components.CharacterZoneCompletion, entity);
+        if (!data.completed) return null;
+
+        const character = allCharacters.find(c => c.id === data.characterId);
+
+        return {
+          characterId: data.characterId as string,
+          characterName: character?.name ?? 'Unknown',
+          characterImage: character?.image,
+          completedAt: Number(data.completedAt),
+          rank: Number(data.rank),
+          hasBadge: Number(data.rank) <= 10,
+        };
+      })
+      .filter((e): e is ZoneCompletionEntry => e !== null)
+      .sort((a, b) => a.rank - b.rank);
+  }, [zoneCompletionEntities, allCharacters, components?.CharacterZoneCompletion]);
 
   useEffect(() => {
     if (isConnecting) return;
@@ -169,7 +215,30 @@ export const Leaderboard = (): JSX.Element => {
           <Heading color="white">Leaderboard</Heading>
         </HStack>
 
-        <Stack
+        {/* Tab switcher */}
+        <HStack px={3} pt={3} spacing={2} w="100%">
+          <Button
+            bgColor={tab === 'rankings' ? 'grey500' : undefined}
+            color={tab === 'rankings' ? 'white' : undefined}
+            onClick={() => setTab('rankings')}
+            size="sm"
+            variant="white"
+          >
+            Rankings
+          </Button>
+          <Button
+            bgColor={tab === 'raceToMax' ? 'grey500' : undefined}
+            color={tab === 'raceToMax' ? 'white' : undefined}
+            leftIcon={<FaMedal color={tab === 'raceToMax' ? '#D4A54A' : undefined} />}
+            onClick={() => setTab('raceToMax')}
+            size="sm"
+            variant="white"
+          >
+            Race to Max
+          </Button>
+        </HStack>
+
+        {tab === 'rankings' && <><Stack
           direction={{ base: 'column', md: 'row' }}
           mb={8}
           my={4}
@@ -393,6 +462,96 @@ export const Leaderboard = (): JSX.Element => {
             setPageLimit={setPageLimit}
           />
         </HStack>
+        </>}
+
+        {tab === 'raceToMax' && (
+          <VStack px={3} py={4} spacing={3} w="100%">
+            <Text color="#8A7E6A" size="sm" textAlign="center">
+              First 10 players to reach max level earn a permanent Zone Conqueror badge.
+            </Text>
+
+            <VStack spacing={0} w="100%">
+              <Box
+                bgColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                h="5px"
+                w="100%"
+              />
+              {zoneCompletions.length > 0 ? (
+                zoneCompletions.map((entry) => (
+                  <Box key={`zone-${entry.characterId}`} w="100%">
+                    <HStack
+                      as={RouterLink}
+                      px={4}
+                      py={3}
+                      spacing={3}
+                      to={`${CHARACTERS_PATH}/${entry.characterId}`}
+                      w="100%"
+                      _hover={{ bg: 'rgba(196,184,158,0.06)' }}
+                    >
+                      <Text
+                        color={entry.rank <= 3 ? '#D4A54A' : '#8A7E6A'}
+                        fontFamily="mono"
+                        fontWeight={700}
+                        minW="30px"
+                        size="sm"
+                      >
+                        #{entry.rank}
+                      </Text>
+                      {entry.hasBadge && (
+                        <Tooltip hasArrow label="Zone Conqueror" placement="top">
+                          <span>
+                            <FaMedal color="#D4A54A" size={14} />
+                          </span>
+                        </Tooltip>
+                      )}
+                      <Avatar size="xs" src={entry.characterImage} />
+                      <Text
+                        color="#E8DCC8"
+                        flex={1}
+                        fontWeight={600}
+                        size="sm"
+                      >
+                        {entry.characterName}
+                      </Text>
+                      <Text
+                        color="#6A6050"
+                        display={{ base: 'none', sm: 'block' }}
+                        fontFamily="mono"
+                        size="xs"
+                      >
+                        {new Date(entry.completedAt * 1000).toLocaleDateString()}
+                      </Text>
+                    </HStack>
+                    <Box
+                      bg="rgba(196,184,158,0.08)"
+                      boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                      h="1px"
+                      w="100%"
+                    />
+                  </Box>
+                ))
+              ) : (
+                <VStack py={8} spacing={2}>
+                  <FaMedal color="#5A5040" size={32} />
+                  <Text color="#8A7E6A" mt={2} size="sm">
+                    No one has conquered the Dark Cave yet.
+                  </Text>
+                  <Text color="#5A5040" size="xs">
+                    Be the first to reach max level!
+                  </Text>
+                </VStack>
+              )}
+            </VStack>
+
+            {/* In-progress characters */}
+            {zoneCompletions.length > 0 && zoneCompletions.length < 10 && (
+              <Text color="#5A5040" mt={2} size="xs" textAlign="center">
+                {10 - zoneCompletions.length} badge{10 - zoneCompletions.length !== 1 ? 's' : ''} remaining
+              </Text>
+            )}
+          </VStack>
+        )}
       </VStack>
     </PolygonalCard>
   );

@@ -11,9 +11,14 @@ bytes14 constant WORLD_NAMESPACE = "UD";
 // Badge Token IDs
 uint256 constant BADGE_ADVENTURER = 1;  // Unlocks chat at level 3
 uint256 constant BADGE_FOUNDER = 50;    // Limited time launch badge
+uint256 constant BADGE_ZONE_CONQUEROR_BASE = 100; // Base for zone conqueror badges
 
 // Badge requirements
 uint256 constant ADVENTURER_BADGE_LEVEL = 3;
+uint256 constant MAX_ZONE_CONQUEROR_BADGES = 10; // Top 10 per zone
+
+// Zone IDs
+uint256 constant ZONE_DARK_CAVE = 1;
 
 string constant ERC721_NAME = "UDCharacters";
 string constant ERC721_SYMBOL = "UDC";
