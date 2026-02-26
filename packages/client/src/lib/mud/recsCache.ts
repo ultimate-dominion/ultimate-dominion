@@ -50,10 +50,10 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-// v2: fixes cache corruption where latestBlock$ (chain tip) was used instead
-// of storedBlockLogs$ (processed tip), causing items to be permanently skipped.
+// v3: force fresh sync after v2 cache was created from a session where
+// Items events weren't applied (likely RPC/transport issue on first visit).
 function cacheKey(worldAddress: string, chainId: number): string {
-  return `v2-${worldAddress.toLowerCase()}-${chainId}`;
+  return `v3-${worldAddress.toLowerCase()}-${chainId}`;
 }
 
 /**

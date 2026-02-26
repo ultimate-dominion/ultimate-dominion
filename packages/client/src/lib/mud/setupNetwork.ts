@@ -167,12 +167,15 @@ export async function setupNetwork() {
 
   // Diagnostic: log sync progress and Items entity count
   let blocksProcessed = 0;
+  let totalLogs = 0;
   storedBlockLogs$.subscribe({
     next: (block) => {
       blocksProcessed++;
-      if (blocksProcessed <= 3 || blocksProcessed % 100 === 0) {
+      totalLogs += block.logs.length;
+      // Log first 5 blocks, then every 50, to see sync progress
+      if (blocksProcessed <= 5 || blocksProcessed % 50 === 0) {
         const itemCount = Array.from(getComponentEntities(components.Items)).length;
-        console.info(`[SYNC] Block ${block.blockNumber} processed (${blocksProcessed} total), logs: ${block.logs.length}, Items: ${itemCount}`);
+        console.info(`[SYNC] Block ${block.blockNumber} (#${blocksProcessed}), ${block.logs.length} logs (${totalLogs} total), Items: ${itemCount}`);
       }
     },
     error: (err) => console.error('[SYNC] storedBlockLogs$ error:', err),
