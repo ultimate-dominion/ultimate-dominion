@@ -9,10 +9,12 @@ import {
   Tooltip,
   VStack,
 } from '@chakra-ui/react';
+import { DARK_INSET_SHADOW } from '../utils/theme';
 import { useComponentValue } from '@latticexyz/react';
 import { Has, runQuery } from '@latticexyz/recs';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
+import { GiTwoCoins } from 'react-icons/gi';
 import {
   IoIosArrowForward,
   IoMdInformationCircleOutline,
@@ -175,79 +177,68 @@ export const StatsPanel = (): JSX.Element => {
         </HStack>
       </HStack>
 
-      <VStack mt={4} spacing={0} w="100%">
+      <VStack mt={3} spacing={0} w="100%">
+        {/* HP bar */}
+        <Box px={2} py={1.5} w="100%">
+          <HStack justifyContent="space-between" mb={1}>
+            <Text fontWeight={700} size="sm">HP</Text>
+            <Text color="#8A7E6A" fontFamily="mono" fontWeight={700} size="sm">
+              {currentHpWithFloor.toString()}/{maxHp.toString()}
+            </Text>
+          </HStack>
+          <Box
+            bg="#14120F"
+            borderRadius="md"
+            boxShadow={DARK_INSET_SHADOW}
+            h="10px"
+            overflow="hidden"
+            w="100%"
+          >
+            <Box
+              bg={
+                Number(currentHpWithFloor) / Number(maxHp) > 0.6
+                  ? '#5A8A3E'
+                  : Number(currentHpWithFloor) / Number(maxHp) > 0.3
+                    ? '#C87A2A'
+                    : '#8B2020'
+              }
+              borderRadius="md"
+              h="100%"
+              transition="width 0.5s ease, background-color 0.5s ease"
+              w={`${(Number(currentHpWithFloor) / Number(maxHp)) * 100}%`}
+            />
+          </Box>
+        </Box>
+
+        {/* Stats — compact single row */}
         <HStack
-          fontWeight={700}
-          justifyContent="space-between"
+          justifyContent="center"
           px={2}
           py={1.5}
+          spacing={2}
           w="100%"
         >
-          <Text size="lg">HP</Text>
-          <Text color="#8A7E6A" fontFamily="mono" size="lg">
-            {currentHpWithFloor.toString()}/{maxHp.toString()}
+          <Text color="#8A7E6A" fontFamily="mono" size="sm">
+            AGI{' '}
+            <Text as="span" color="#E8DCC8" fontWeight={700}>
+              {(agility - expiredEffectModifications.agiModifier).toString()}
+            </Text>
+          </Text>
+          <Text color="#5A5040" size="sm">·</Text>
+          <Text color="#8A7E6A" fontFamily="mono" size="sm">
+            INT{' '}
+            <Text as="span" color="#E8DCC8" fontWeight={700}>
+              {(intelligence - expiredEffectModifications.intModifier).toString()}
+            </Text>
+          </Text>
+          <Text color="#5A5040" size="sm">·</Text>
+          <Text color="#8A7E6A" fontFamily="mono" size="sm">
+            STR{' '}
+            <Text as="span" color="#E8DCC8" fontWeight={700}>
+              {(strength - expiredEffectModifications.strModifier).toString()}
+            </Text>
           </Text>
         </HStack>
-        <Box
-          backgroundColor="rgba(196,184,158,0.08)"
-          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-          h="1px"
-          w="100%"
-        />
-        <HStack
-          fontWeight={700}
-          justifyContent="space-between"
-          px={2}
-          py={1.5}
-          w="100%"
-        >
-          <Text size="lg">AGI</Text>
-          <Text color="#8A7E6A" fontFamily="mono" size="lg">
-            {(agility - expiredEffectModifications.agiModifier).toString()}
-          </Text>
-        </HStack>
-        <Box
-          backgroundColor="rgba(196,184,158,0.08)"
-          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-          h="1px"
-          w="100%"
-        />
-        <HStack
-          fontWeight={700}
-          justifyContent="space-between"
-          px={2}
-          py={1.5}
-          w="100%"
-        >
-          <Text size="lg">INT</Text>
-          <Text color="#8A7E6A" fontFamily="mono" size="lg">
-            {(intelligence - expiredEffectModifications.intModifier).toString()}
-          </Text>
-        </HStack>
-        <Box
-          backgroundColor="rgba(196,184,158,0.08)"
-          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-          h="1px"
-          w="100%"
-        />
-        <HStack
-          fontWeight={700}
-          justifyContent="space-between"
-          px={2}
-          py={1.5}
-          w="100%"
-        >
-          <Text size="lg">STR</Text>
-          <Text color="#8A7E6A" fontFamily="mono" size="lg">
-            {(strength - expiredEffectModifications.strModifier).toString()}
-          </Text>
-        </HStack>
-        <Box
-          backgroundColor="rgba(196,184,158,0.08)"
-          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-          h="1px"
-          w="100%"
-        />
       </VStack>
 
       <Divider borderColor="grey300" mt={4} />
@@ -281,44 +272,49 @@ export const StatsPanel = (): JSX.Element => {
 
       <VStack mt={4} px={2} spacing={1} w="100%">
         <HStack justifyContent="space-between" w="100%">
-          <HStack>
-            <Text color="yellow" fontWeight={700} size="lg">
-              Gold
-            </Text>
-            <Tooltip
-              hasArrow
-              label="Your Gold balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit Gold into your Adventure Escrow, visit 0,0 on the map."
-              placement="top"
-              shouldWrapChildren
-            >
-              <IoMdInformationCircleOutline />
-            </Tooltip>
-          </HStack>
-          <Text color="yellow" fontFamily="mono" fontWeight={700} size="lg">
+          <Tooltip
+            hasArrow
+            label="Your Gold balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit Gold into your Adventure Escrow, visit 0,0 on the map."
+            placement="top"
+            shouldWrapChildren
+          >
+            <HStack spacing={1.5} cursor="default">
+              <GiTwoCoins color="#D4A54A" size={18} />
+              <Text color="yellow" fontWeight={700} size="lg">
+                Gold
+              </Text>
+            </HStack>
+          </Tooltip>
+          <Text
+            color="yellow"
+            fontFamily="mono"
+            fontWeight={700}
+            fontSize="xl"
+          >
             {etherToFixedNumber(
               externalGoldBalance + character.escrowGoldBalance,
             )}
           </Text>
         </HStack>
         <HStack justifyContent="space-between" w="100%" px={2}>
-          <Text size="md">Spendable</Text>
-          <Text fontFamily="mono" fontWeight={700} size="md">
+          <Text color="#6A6050" size="sm">Spendable</Text>
+          <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
             {etherToFixedNumber(externalGoldBalance)}
           </Text>
         </HStack>
         <HStack justifyContent="space-between" w="100%" px={2}>
           <HStack>
-            <Text size="md">Escrow</Text>
+            <Text color="#6A6050" size="sm">Escrow</Text>
             <Tooltip
               hasArrow
               label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
               placement="top"
               shouldWrapChildren
             >
-              <IoMdInformationCircleOutline />
+              <IoMdInformationCircleOutline size={12} />
             </Tooltip>
           </HStack>
-          <Text fontFamily="mono" fontWeight={700} size="md">
+          <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
             {etherToFixedNumber(character.escrowGoldBalance)}
           </Text>
         </HStack>
