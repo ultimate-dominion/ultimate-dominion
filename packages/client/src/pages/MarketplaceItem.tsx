@@ -64,7 +64,7 @@ export const MarketplaceItem = (): JSX.Element => {
   const { components } = useMUD();
   const navigate = useNavigate();
 
-  if (!components?.UltimateDominion) {
+  if (!components?.UltimateDominionConfig) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" h="100vh">
         <Spinner size="xl" />
@@ -89,7 +89,7 @@ const MarketplaceItemInner = (): JSX.Element => {
     systemCalls: { createOrder },
   } = useMUD();
   const ItemsOwners = components?.ItemsOwners;
-  const UltimateDominion = components?.UltimateDominion;
+  const UltimateDominionConfig = components?.UltimateDominionConfig;
   const {
     armorTemplates,
     consumableTemplates,
@@ -143,7 +143,7 @@ const MarketplaceItemInner = (): JSX.Element => {
   } = useDisclosure();
 
   const configValue = useComponentValue(
-    UltimateDominion!,
+    UltimateDominionConfig!,
     singletonEntity,
   );
   const goldTokenAddress = configValue?.goldToken ?? null;

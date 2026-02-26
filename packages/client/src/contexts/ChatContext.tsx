@@ -126,7 +126,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // Use the appropriate wallet client for Push Protocol
   const data = authMethod === 'embedded' ? embeddedWalletClient : externalWalletClient;
   const {
-    components: { CombatEncounter, CombatOutcome, MarketplaceSale, UltimateDominion },
+    components: { CombatEncounter, CombatOutcome, MarketplaceSale, UltimateDominionConfig },
   } = useMUD();
   const {
     armorTemplates,
@@ -138,7 +138,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { character: currentCharacter } = useCharacter();
   const { activeOrders } = useOrders();
 
-  const configValue = useComponentValue(UltimateDominion, singletonEntity);
+  const configValue = useComponentValue(UltimateDominionConfig, singletonEntity);
   const goldToken = configValue?.goldToken ?? null;
 
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);

@@ -34,14 +34,14 @@ const SAFE_ZONE_AREA = {
 export const MapPanel = (): JSX.Element => {
   const { components } = useMUD();
 
-  if (!components?.UltimateDominion) {
+  if (!components?.UltimateDominionConfig) {
     return <Box />;
   }
 
-  return <MapPanelInner UltimateDominion={components.UltimateDominion} />;
+  return <MapPanelInner UltimateDominionConfig={components.UltimateDominionConfig} />;
 };
 
-const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Element => {
+const MapPanelInner = ({ UltimateDominionConfig }: { UltimateDominionConfig: any }): JSX.Element => {
   const { allCharacters, isSpawned, isSpawning, onSpawn, position } = useMap();
   const { allShops } = useMap();
   const { currentBattle } = useBattle();
@@ -54,7 +54,7 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
   }, [allCharacters]);
 
   const configValue = useComponentValue(
-    UltimateDominion,
+    UltimateDominionConfig,
     singletonEntity,
   );
   const maxPlayers = configValue?.maxPlayers ?? BigInt(0);

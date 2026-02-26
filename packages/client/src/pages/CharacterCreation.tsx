@@ -117,7 +117,7 @@ export const CharacterCreation = (): JSX.Element => {
   const { components, isSynced } = useMUD();
 
   // If components aren't ready, show loading
-  if (!components?.UltimateDominion) {
+  if (!components?.UltimateDominionConfig) {
     return (
       <Center h="100vh">
         <Spinner size="xl" />
@@ -148,7 +148,7 @@ const CharacterCreationInner = (): JSX.Element => {
   } = useMUD();
   const Levels = components?.Levels;
   const StarterItemPool = components?.StarterItemPool;
-  const UltimateDominion = components?.UltimateDominion;
+  const UltimateDominionConfig = components?.UltimateDominionConfig;
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
@@ -206,7 +206,7 @@ const CharacterCreationInner = (): JSX.Element => {
   });
 
   const { characterToken } = useComponentValue(
-    UltimateDominion,
+    UltimateDominionConfig,
     singletonEntity,
   ) ?? { characterToken: null };
 
