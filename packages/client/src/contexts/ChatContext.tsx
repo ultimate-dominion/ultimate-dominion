@@ -393,6 +393,13 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     }
   }, [authMethod, data, embeddedWallet, isOpen, renderError, thirdwebChain, thirdwebClient, user]);
 
+  // Auto-login to Push Protocol when chat opens and wallet is ready
+  useEffect(() => {
+    if (isOpen && data && !user && !isLoggingIn) {
+      onLogin();
+    }
+  }, [isOpen, data, user, isLoggingIn, onLogin]);
+
   // Cleanup Push Protocol stream on unmount
   useEffect(() => {
     return () => {
