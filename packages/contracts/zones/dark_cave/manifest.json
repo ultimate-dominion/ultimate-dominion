@@ -13,7 +13,7 @@
   },
   "dependencies": [],
   "load": {
-    "effects": true,
+    "effects": false,
     "items": true,
     "monsters": true,
     "shops": true

@@ -639,6 +639,25 @@ Available zones:
     });
   }
 
+  // Explicit nonce tracking to avoid RPC lag on L2s
+  let currentNonce: number | null = null;
+  if (account && publicClient) {
+    currentNonce = await publicClient.getTransactionCount({ address: account.address });
+    console.log(`Starting nonce: ${currentNonce}`);
+  }
+
+  async function sendTx(args: Parameters<typeof walletClient!.writeContract>[0]) {
+    if (!walletClient) throw new Error('No wallet client');
+    const hash = await walletClient.writeContract({
+      ...args,
+      nonce: currentNonce!,
+    });
+    currentNonce!++;
+    await publicClient.waitForTransactionReceipt({ hash });
+    await sleep(2000);
+    return hash;
+  }
+
   // Track created item IDs by name for shop inventory resolution
   const itemIdsByName: Map<string, bigint> = new Map();
 
@@ -660,13 +679,12 @@ Available zones:
         console.log(`  Physical: ${effect.name}`);
         if (!dryRun && walletClient) {
           const stats = encodePhysicalDamageStats(effect.stats);
-          const hash = await walletClient.writeContract({
+          await sendTx({
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__createEffect',
             args: [EffectType.PhysicalDamage, effect.name, stats],
           });
-          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
         }
       }
 
@@ -675,13 +693,12 @@ Available zones:
         console.log(`  Magic: ${effect.name}`);
         if (!dryRun && walletClient) {
           const stats = encodeMagicDamageStats(effect.stats);
-          const hash = await walletClient.writeContract({
+          await sendTx({
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__createEffect',
             args: [EffectType.MagicDamage, effect.name, stats],
           });
-          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
         }
       }
 
@@ -690,13 +707,12 @@ Available zones:
         console.log(`  Status: ${effect.name}`);
         if (!dryRun && walletClient) {
           const stats = encodeStatusEffectStats(effect);
-          const hash = await walletClient.writeContract({
+          await sendTx({
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__createEffect',
             args: [EffectType.StatusEffect, effect.name, stats],
           });
-          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
         }
       }
     }
@@ -714,7 +730,7 @@ Available zones:
         console.log(`  Armor: ${armor.name} (${armor.armorType}${armor.isStarter ? ', starter' : ''})`);
         if (!dryRun && walletClient) {
           const stats = encodeArmorStats(armor);
-          const hash = await walletClient.writeContract({
+          await sendTx({
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__createItem',
@@ -727,7 +743,6 @@ Available zones:
               armor.metadataUri,
             ],
           });
-          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
           const itemId = await publicClient.readContract({
             address: worldAddress,
             abi: worldAbi,
@@ -739,13 +754,12 @@ Available zones:
 
           // Set starter item pool if this is a starter item
           if (armor.isStarter) {
-            const starterHash = await walletClient.writeContract({
+            await sendTx({
               address: worldAddress,
               abi: worldAbi,
               functionName: 'UD__setStarterItemPool',
               args: [itemId, true],
             });
-            await publicClient.waitForTransactionReceipt({ hash: starterHash }); await sleep(2000);
             console.log(`    -> Added to StarterItemPool`);
           }
         }
@@ -756,7 +770,7 @@ Available zones:
         console.log(`  Weapon: ${weapon.name}${weapon.isStarter ? ' (starter)' : ''}`);
         if (!dryRun && walletClient) {
           const stats = encodeWeaponStats(weapon);
-          const hash = await walletClient.writeContract({
+          await sendTx({
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__createItem',
@@ -769,7 +783,6 @@ Available zones:
               weapon.metadataUri,
             ],
           });
-          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
           const itemId = await publicClient.readContract({
             address: worldAddress,
             abi: worldAbi,
@@ -781,13 +794,12 @@ Available zones:
 
           // Set starter item pool if this is a starter item
           if (weapon.isStarter) {
-            const starterHash = await walletClient.writeContract({
+            await sendTx({
               address: worldAddress,
               abi: worldAbi,
               functionName: 'UD__setStarterItemPool',
               args: [itemId, true],
             });
-            await publicClient.waitForTransactionReceipt({ hash: starterHash }); await sleep(2000);
             console.log(`    -> Added to StarterItemPool`);
           }
         }
@@ -798,7 +810,7 @@ Available zones:
         console.log(`  Consumable: ${consumable.name}${consumable.isStarter ? ' (starter)' : ''}`);
         if (!dryRun && walletClient) {
           const stats = encodeConsumableStats(consumable);
-          const hash = await walletClient.writeContract({
+          await sendTx({
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__createItem',
@@ -811,7 +823,6 @@ Available zones:
               consumable.metadataUri,
             ],
           });
-          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
           const itemId = await publicClient.readContract({
             address: worldAddress,
             abi: worldAbi,
@@ -823,13 +834,12 @@ Available zones:
 
           // Set starter item pool if this is a starter item
           if (consumable.isStarter) {
-            const starterHash = await walletClient.writeContract({
+            await sendTx({
               address: worldAddress,
               abi: worldAbi,
               functionName: 'UD__setStarterItemPool',
               args: [itemId, true],
             });
-            await publicClient.waitForTransactionReceipt({ hash: starterHash }); await sleep(2000);
             console.log(`    -> Added to StarterItemPool`);
           }
         }
@@ -852,13 +862,12 @@ Available zones:
 
       if (!dryRun && walletClient && starterConsumableIds.length > 0) {
         console.log('\n>>> Setting Starter Consumables <<<');
-        const starterConsumablesHash = await walletClient.writeContract({
+        await sendTx({
           address: worldAddress,
           abi: worldAbi,
           functionName: 'UD__setStarterConsumables',
           args: [starterConsumableIds, starterConsumableAmounts],
         });
-        await publicClient.waitForTransactionReceipt({ hash: starterConsumablesHash }); await sleep(2000);
         console.log(`  Set ${starterConsumableIds.length} starter consumable(s) with amount 3 each`);
       }
     }
@@ -875,13 +884,12 @@ Available zones:
         console.log(`  Monster: ${monster.name} (Lvl ${monster.stats.level})`);
         if (!dryRun && walletClient) {
           const stats = encodeMonsterStats(monster.stats);
-          const hash = await walletClient.writeContract({
+          await sendTx({
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__createMob',
             args: [MobType.Monster, stats, monster.metadataUri],
           });
-          await publicClient.waitForTransactionReceipt({ hash }); await sleep(2000);
         }
       }
     }
@@ -932,13 +940,12 @@ Available zones:
           );
 
           // Step 1: Create shop mob template
-          const createHash = await walletClient.writeContract({
+          await sendTx({
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__createMob',
             args: [MobType.Shop, shopStats, `shop:${shop.name.toLowerCase().replace(/\s+/g, '_')}`],
           });
-          const createReceipt = await publicClient.waitForTransactionReceipt({ hash: createHash }); await sleep(2000);
 
           // Get the mob ID from the createMob return value (it's the incremented counter)
           // For simplicity, we'll read the counter after creation
@@ -979,13 +986,12 @@ Available zones:
           const shopIndex = shopsData.shops.indexOf(shop);
           const mobId = BigInt(monsterCount + shopIndex + 1);
 
-          const spawnHash = await walletClient.writeContract({
+          await sendTx({
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__spawnMob',
             args: [mobId, shop.location[0], shop.location[1]],
           });
-          await publicClient.waitForTransactionReceipt({ hash: spawnHash }); await sleep(2000);
           console.log(`    -> Spawned at (${shop.location[0]}, ${shop.location[1]}) with mobId ${mobId}`);
         }
       }
