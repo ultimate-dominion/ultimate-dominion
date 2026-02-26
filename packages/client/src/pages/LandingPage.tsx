@@ -155,14 +155,14 @@ export const LandingPage = (): JSX.Element => {
                   fontWeight={500}
                   letterSpacing="0.05em"
                 >
-                  You&apos;re on the list.
+                  You won&apos;t be forgotten.
                 </Text>
                 <Text
                   color="rgba(196, 184, 158, 0.4)"
                   fontSize="13px"
                   fontStyle="italic"
                 >
-                  We&apos;ll send word when the gates open.
+                  We&apos;ll find you when it&apos;s time to rise.
                 </Text>
               </VStack>
             ) : (
@@ -175,7 +175,7 @@ export const LandingPage = (): JSX.Element => {
                     letterSpacing="0.15em"
                     textTransform="uppercase"
                   >
-                    Get notified when the gates open
+                    Be there when the world awakens
                   </Text>
                   <HStack spacing={0} w="100%">
                     <Input
@@ -221,7 +221,7 @@ export const LandingPage = (): JSX.Element => {
                         color: '#E8DCC8',
                       }}
                     >
-                      Join
+                      Awaken
                     </Box>
                   </HStack>
                 </VStack>
