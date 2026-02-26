@@ -463,7 +463,6 @@ const CharacterCreationInner = (): JSX.Element => {
     if (!character) return;
 
     if (!rolledOnce) {
-      setShowError(true);
       return;
     }
 
@@ -946,6 +945,20 @@ const CharacterCreationInner = (): JSX.Element => {
                   </Text>
                 </Box>
               )}
+              {!rolledOnce && (
+                <Box px={{ base: 4, sm: 10 }} w="100%">
+                  <Button
+                    isDisabled={isDisabled || !hasCompletedChoices}
+                    isLoading={rollStatsTx.isLoading}
+                    loadingText="Rolling..."
+                    onClick={onRollStats}
+                    size="lg"
+                    width="100%"
+                  >
+                    Roll Stats
+                  </Button>
+                </Box>
+              )}
             </VStack>
           )}
 
@@ -965,19 +978,20 @@ const CharacterCreationInner = (): JSX.Element => {
               <Heading size="sm" textAlign="left">
                 Stats
               </Heading>
-              {creationStep === 'stats' && (
+              {creationStep === 'stats' && rolledOnce && (
                 <Button
                   isDisabled={isDisabled || !hasCompletedChoices}
                   isLoading={rollStatsTx.isLoading}
                   loadingText="Rolling..."
                   onClick={onRollStats}
                   size="sm"
+                  variant="outline"
                 >
-                  {rolledOnce ? 'Re-roll' : 'Roll Stats'}
+                  Re-roll
                 </Button>
               )}
             </HStack>
-            <VStack fontWeight={700} spacing={1.5} w="100%">
+            <VStack fontWeight={700} spacing={1.5} w="100%" opacity={rolledOnce ? 1 : 0.5}>
               <Box
                 backgroundColor="#F5F5FA1F"
                 boxShadow="-5px -5px 10px 0px #B3B9BE inset, 5px 5px 10px 0px #949CA380 inset, 2px 2px 4px 0px #88919980 inset, 0px 0px 4px 0px #54545433 inset"
@@ -987,7 +1001,7 @@ const CharacterCreationInner = (): JSX.Element => {
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">HP - Hit Points</Text>
                 <Text color="grey500" fontFamily="mono" size="lg">
-                  {character?.maxHp.toString() ?? '0'}
+                  {rolledOnce ? character?.maxHp.toString() : '—'}
                 </Text>
               </HStack>
               <Box
@@ -999,7 +1013,7 @@ const CharacterCreationInner = (): JSX.Element => {
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">STR - Strength</Text>
                 <Text color="grey500" fontFamily="mono" size="lg">
-                  {character?.strength.toString() ?? '0'}
+                  {rolledOnce ? character?.strength.toString() : '—'}
                 </Text>
               </HStack>
               <Box
@@ -1011,7 +1025,7 @@ const CharacterCreationInner = (): JSX.Element => {
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">AGI - Agility</Text>
                 <Text color="grey500" fontFamily="mono" size="lg">
-                  {character?.agility.toString() ?? '0'}
+                  {rolledOnce ? character?.agility.toString() : '—'}
                 </Text>
               </HStack>
               <Box
@@ -1023,7 +1037,7 @@ const CharacterCreationInner = (): JSX.Element => {
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
                 <Text color="#121B45">INT - Intelligence</Text>
                 <Text color="grey500" fontFamily="mono" size="lg">
-                  {character?.intelligence.toString() ?? '0'}
+                  {rolledOnce ? character?.intelligence.toString() : '—'}
                 </Text>
               </HStack>
             </VStack>
@@ -1121,14 +1135,9 @@ const CharacterCreationInner = (): JSX.Element => {
             )}
           </VStack>
           <Box mt={4} px={{ base: 4, sm: 10 }}>
-            {character && !rolledOnce && showError && creationStep === 'stats' && (
-              <Text color="red" fontSize="sm" mb={2} role="alert" textAlign="center">
-                You must roll stats at least once before continuing.
-              </Text>
-            )}
-            {creationStep === 'stats' && (
+            {creationStep === 'stats' && rolledOnce && (
               <Button
-                isDisabled={isDisabled || !rolledOnce}
+                isDisabled={isDisabled}
                 onClick={() => setCreationStep('starterItems')}
                 size="sm"
                 type="button"
