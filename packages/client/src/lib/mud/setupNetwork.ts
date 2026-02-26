@@ -184,21 +184,22 @@ export async function setupNetwork() {
     }
   }
 
-  // Periodic cache save — every 30s while synced, plus save immediately on
-  // first LIVE so short sessions still produce a usable cache.
+  // Periodic cache save — use storedBlockLogs$ (NOT latestBlock$) because
+  // latestBlock$ is the chain tip, while storedBlockLogs$ only emits after
+  // logs have been applied to RECS. Using the chain tip would save a block
+  // number ahead of what RECS has processed, creating gaps on restore.
   const CACHE_SAVE_INTERVAL_MS = 30_000;
-  let lastSavedBlock = 0n;
+  let lastProcessedBlock = 0n;
   let hasSavedOnce = false;
 
-  latestBlock$.subscribe({
-    next: (block) => {
-      const blockNum = block.number ?? 0n;
-      if (blockNum <= lastSavedBlock) return;
-      lastSavedBlock = blockNum;
+  storedBlockLogs$.subscribe({
+    next: (blockLogs) => {
+      const blockNum = blockLogs.blockNumber;
+      if (blockNum <= lastProcessedBlock) return;
+      lastProcessedBlock = blockNum;
 
-      // Save immediately on the first block update (ensures cache exists
+      // Save immediately on the first processed block (ensures cache exists
       // for next visit even if the user navigates away quickly).
-      // After that, save at the periodic interval.
       if (!hasSavedOnce) {
         hasSavedOnce = true;
         saveRecsCache(
@@ -215,14 +216,14 @@ export async function setupNetwork() {
 
   // Periodic save on a fixed interval
   const cacheInterval = setInterval(() => {
-    if (lastSavedBlock > 0n) {
+    if (lastProcessedBlock > 0n) {
       saveRecsCache(
         world,
-        lastSavedBlock,
+        lastProcessedBlock,
         networkConfig.worldAddress,
         networkConfig.chainId,
       ).then(() => {
-        debug.log(`[CACHE] Periodic save at block ${lastSavedBlock}`);
+        debug.log(`[CACHE] Periodic save at block ${lastProcessedBlock}`);
       });
     }
   }, CACHE_SAVE_INTERVAL_MS);
@@ -231,10 +232,10 @@ export async function setupNetwork() {
   if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', () => {
       clearInterval(cacheInterval);
-      if (lastSavedBlock > 0n) {
+      if (lastProcessedBlock > 0n) {
         saveRecsCache(
           world,
-          lastSavedBlock,
+          lastProcessedBlock,
           networkConfig.worldAddress,
           networkConfig.chainId,
         );
