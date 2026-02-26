@@ -50,10 +50,9 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-// v3: force fresh sync after v2 cache was created from a session where
-// Items events weren't applied (likely RPC/transport issue on first visit).
+// v4: switched to Alchemy RPC + added component ID diagnostics.
 function cacheKey(worldAddress: string, chainId: number): string {
-  return `v3-${worldAddress.toLowerCase()}-${chainId}`;
+  return `v4-${worldAddress.toLowerCase()}-${chainId}`;
 }
 
 /**

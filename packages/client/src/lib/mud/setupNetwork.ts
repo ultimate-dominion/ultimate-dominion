@@ -165,6 +165,14 @@ export async function setupNetwork() {
       },
     });
 
+  // Diagnostic: log registered RECS component IDs
+  const itemsComponent = world.components.find((c: any) => (c.id as string)?.includes('4974656d73'));
+  const allComponentIds = world.components.map((c: any) => c.id as string);
+  console.info('[SYNC] Registered components:', allComponentIds.length);
+  console.info('[SYNC] Items component found:', !!itemsComponent, itemsComponent?.id);
+  // Log first few component IDs to compare with on-chain table IDs
+  console.info('[SYNC] Component IDs (first 10):', allComponentIds.slice(0, 10));
+
   // Diagnostic: log sync progress and Items entity count
   let blocksProcessed = 0;
   let totalLogs = 0;
