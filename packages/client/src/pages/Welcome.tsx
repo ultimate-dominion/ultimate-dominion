@@ -83,27 +83,26 @@ export const Welcome = (): JSX.Element => {
   }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isRefreshing, navigate]);
 
   const onPlay = useCallback(() => {
-    // Embedded path: authenticated = ready to go (no delegation needed)
-    if (authMethod === 'embedded' && isAuthenticated) {
-      if (character?.locked) {
-        navigate(GAME_BOARD_PATH);
-      } else {
-        navigate(CHARACTER_CREATION_PATH);
-      }
-      return;
-    }
-
-    // External path: need both connection and delegation
-    if (!(delegatorAddress && isAuthenticated)) {
-      onOpen();
-      return;
-    }
-
-    if (character?.locked) {
+    // Already authenticated with a character — go to game
+    if (isAuthenticated && character?.locked) {
       navigate(GAME_BOARD_PATH);
-    } else {
-      navigate(CHARACTER_CREATION_PATH);
+      return;
     }
+
+    // Embedded (Google) auth ready but no character — go to character creation
+    if (authMethod === 'embedded' && isAuthenticated) {
+      navigate(CHARACTER_CREATION_PATH);
+      return;
+    }
+
+    // External wallet with delegation but no character — go to character creation
+    if (authMethod === 'external' && isAuthenticated && delegatorAddress) {
+      navigate(CHARACTER_CREATION_PATH);
+      return;
+    }
+
+    // Not set up — open sign-in modal
+    onOpen();
   }, [authMethod, character, delegatorAddress, isAuthenticated, navigate, onOpen]);
 
   return (

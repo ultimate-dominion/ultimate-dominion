@@ -10,10 +10,13 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 import { IoClose } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
 import { useWalletClient } from 'wagmi';
 
 import { useAuth } from '../contexts/AuthContext';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH } from '../Routes';
 import { shortenAddress } from '../utils/helpers';
 
 import { CopyText } from './CopyText';
@@ -28,9 +31,11 @@ export const ConnectWalletModal = ({
   isOpen: boolean;
   onClose: () => void;
 }): JSX.Element => {
+  const navigate = useNavigate();
   const { data: externalWalletClient } = useWalletClient();
   const { authMethod, isAuthenticated, ownerAddress } = useAuth();
   const { delegatorAddress } = useMUD();
+  const { character } = useCharacter();
 
   // Track whether user explicitly chose the wallet path this modal session.
   // Resets when modal closes so next open shows sign-in options again.
@@ -41,15 +46,19 @@ export const ConnectWalletModal = ({
     onClose();
   }, [onClose]);
 
-  // Auto-close when fully set up
+  // When user signs in via this modal, close and navigate
   useEffect(() => {
-    if (authMethod === 'embedded' && isAuthenticated) {
-      handleClose();
-    }
-    if (authMethod === 'external' && delegatorAddress && isAuthenticated) {
-      handleClose();
-    }
-  }, [authMethod, delegatorAddress, isAuthenticated, handleClose]);
+    if (!isOpen) return;
+
+    const ready =
+      (authMethod === 'embedded' && isAuthenticated) ||
+      (authMethod === 'external' && delegatorAddress && isAuthenticated);
+
+    if (!ready) return;
+
+    handleClose();
+    navigate(character?.locked ? GAME_BOARD_PATH : CHARACTER_CREATION_PATH);
+  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isOpen, handleClose, navigate]);
 
   // Show SignInModal if:
   // - Not authenticated at all, OR
