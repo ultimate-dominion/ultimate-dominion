@@ -21,6 +21,7 @@ import {
 
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
+import { useTransactionProgress, type TransactionProgress } from '../hooks/useTransactionProgress';
 import {
   BATTLE_OUTCOME_SEEN_KEY,
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
@@ -45,6 +46,7 @@ import { useMUD } from './MUDContext';
 type BattleContextType = {
   attackOutcomes: AttackOutcomeType[];
   attackingItemId: null | string;
+  attackProgress: TransactionProgress;
   attackStatusMessage: string;
   continueToBattleOutcome: boolean;
   currentBattle: CombatDetails | null;
@@ -61,6 +63,7 @@ type BattleContextType = {
 const BattleContext = createContext<BattleContextType>({
   attackOutcomes: [],
   attackingItemId: null,
+  attackProgress: { phase: 'idle', percent: 0, transitionMs: 0 },
   attackStatusMessage: '',
   continueToBattleOutcome: false,
   currentBattle: null,
@@ -82,6 +85,7 @@ export const BattleProvider = ({
   children,
 }: BattleProviderProps): JSX.Element => {
   const {
+    authMethod,
     components: {
       ActionOutcome,
       CombatEncounter,
@@ -96,6 +100,12 @@ export const BattleProvider = ({
   const { allMonsters, allCharacters, position } = useMap();
 
   const { renderError } = useToast();
+  const {
+    progress: attackProgress,
+    start: startAttackProgress,
+    complete: completeAttackProgress,
+    fail: failAttackProgress,
+  } = useTransactionProgress();
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
   const attackOutcomeCountAtAttack = useRef<number | null>(null);
@@ -147,7 +157,7 @@ export const BattleProvider = ({
 
     const latestCompletedBattle = allBattles
       .filter(b => b.end !== BigInt(0))
-      .pop();
+      .sort((a, b) => Number(b.end - a.end))[0] ?? null;
 
     if (latestCompletedBattle) {
       const combatOutcome = getComponentValue(
@@ -169,7 +179,7 @@ export const BattleProvider = ({
   const lastestBattleOutcome = useMemo(() => {
     const latestCompletedBattle = allBattles
       .filter(b => b.end !== BigInt(0))
-      .pop();
+      .sort((a, b) => Number(b.end - a.end))[0] ?? null;
     if (!latestCompletedBattle) return null;
 
     const combatOutcome = getComponentValue(
@@ -361,6 +371,7 @@ export const BattleProvider = ({
 
       setAttackingItemId(itemId);
       attackOutcomeCountAtAttack.current = currentBattleAttackOutcomes.length;
+      startAttackProgress(authMethod === 'embedded' ? 6000 : 500);
 
       const result = await endTurn(
         currentBattle.encounterId,
@@ -376,19 +387,23 @@ export const BattleProvider = ({
         // Don't call refreshCharacter — RECS sync handles it
       } else {
         renderError(result.error || 'Attack failed');
+        failAttackProgress();
         setAttackingItemId(null);
         attackOutcomeCountAtAttack.current = null;
       }
     },
     [
       attackingItemId,
+      authMethod,
       character,
       currentBattle,
       currentBattleAttackOutcomes.length,
       delegatorAddress,
       endTurn,
+      failAttackProgress,
       opponent,
       renderError,
+      startAttackProgress,
     ],
   );
 
@@ -398,15 +413,17 @@ export const BattleProvider = ({
       attackOutcomeCountAtAttack.current !== null &&
       currentBattleAttackOutcomes.length > attackOutcomeCountAtAttack.current
     ) {
+      completeAttackProgress();
       setAttackingItemId(null);
       attackOutcomeCountAtAttack.current = null;
     }
-  }, [currentBattleAttackOutcomes.length]);
+  }, [completeAttackProgress, currentBattleAttackOutcomes.length]);
 
   // Safety timeout — clear attack loading if outcome never arrives (10s)
   useEffect(() => {
     if (attackingItemId === null) return;
     const timeout = setTimeout(() => {
+      failAttackProgress();
       setAttackingItemId(null);
       attackOutcomeCountAtAttack.current = null;
     }, 10000);
@@ -430,6 +447,7 @@ export const BattleProvider = ({
     () => ({
       attackOutcomes: currentBattleAttackOutcomes,
       attackingItemId,
+      attackProgress,
       attackStatusMessage: attackingItemId ? 'Attacking...' : '',
       continueToBattleOutcome,
       currentBattle,
@@ -443,6 +461,7 @@ export const BattleProvider = ({
       userCharacterForBattleRendering,
     }),
     [
+      attackProgress,
       currentBattleAttackOutcomes,
       attackingItemId,
       continueToBattleOutcome,

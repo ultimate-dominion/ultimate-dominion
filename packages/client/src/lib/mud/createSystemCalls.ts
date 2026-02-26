@@ -9,7 +9,6 @@
 import {
   Entity,
 } from '@latticexyz/recs';
-import { uuid } from '@latticexyz/utils';
 import {
   Address,
   BaseError,
@@ -112,9 +111,8 @@ export function createSystemCalls(
     waitForTransaction,
     worldContract,
   }: SetupNetworkResult & { delegatorAddress?: Address },
-  {
-    Position,
-  }: ClientComponents,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _clientComponents: ClientComponents,
 ) {
   const buy = async (
     amount: bigint,
@@ -432,12 +430,6 @@ export function createSystemCalls(
     x: number,
     y: number,
   ): SystemCallReturn => {
-    const positionId = uuid();
-    Position.addOverride(positionId, {
-      entity: characterEntity,
-      value: { x, y },
-    });
-
     try {
       const tx = await worldContract.write.UD__move(
         [characterEntity.toString() as `0x${string}`, x, y],
@@ -446,22 +438,9 @@ export function createSystemCalls(
         },
       );
 
-      // Fire-and-forget — optimistic update already applied, confirm in background
-      waitForTransaction(tx)
-        .then(receipt => {
-          if (receipt.status !== 'success') {
-            Position.removeOverride(positionId);
-          }
-        })
-        .catch(() => {
-          Position.removeOverride(positionId);
-        })
-        .finally(() => {
-          Position.removeOverride(positionId);
-        });
+      await waitForTransaction(tx);
       return { success: true };
     } catch (e) {
-      Position.removeOverride(positionId);
       return {
         error: getContractError(e),
         success: false,

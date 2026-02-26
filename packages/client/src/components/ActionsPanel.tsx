@@ -28,6 +28,7 @@ import {
 } from '../utils/constants';
 import { ItemConsumeModal } from './ItemConsumeModal';
 import { PotionSvg } from './SVGs/PotionSvg';
+import { TransactionProgressBar } from './TransactionProgressBar';
 
 export const MONSTER_MOVE_MAPPING: Record<string, string> = {
   '1': 'Razor Claws',      // Rock Beetle
@@ -69,6 +70,7 @@ export const ActionsPanel = (): JSX.Element => {
   const {
     attackOutcomes,
     attackingItemId,
+    attackProgress,
     attackStatusMessage,
     currentBattle,
     isFleeing,
@@ -349,6 +351,9 @@ export const ActionsPanel = (): JSX.Element => {
             top={0}
             w="100%"
           >
+            <Box position="relative" w="100%">
+              <TransactionProgressBar progress={attackProgress} />
+            </Box>
             {currentBattle.encounterType === EncounterType.PvE && (
               <Text
                 fontWeight="bold"

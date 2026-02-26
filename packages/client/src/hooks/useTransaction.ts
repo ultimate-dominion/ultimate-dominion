@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useToast } from './useToast';
+import { useTransactionProgress, type TransactionProgress } from './useTransactionProgress';
 import { getFriendlyError } from '../utils/errors';
 import { withRetry, type RetryStatus } from '../utils/withRetry';
 
@@ -11,6 +12,8 @@ type UseTransactionOptions = {
   successMessage?: string;
   /** Silent mode: no toasts at all (e.g. movement) */
   silent?: boolean;
+  /** Estimated tx duration for progress bar animation */
+  estimatedDurationMs?: number;
 };
 
 type UseTransactionReturn = {
@@ -22,6 +25,8 @@ type UseTransactionReturn = {
   statusMessage: string;
   /** Current retry status */
   status: RetryStatus | 'idle';
+  /** Progress bar state */
+  progress: TransactionProgress;
 };
 
 /**
@@ -39,9 +44,11 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
     showSuccessToast = false,
     successMessage,
     silent = false,
+    estimatedDurationMs,
   } = options;
 
   const { renderError, renderSuccess } = useToast();
+  const { progress, start: startProgress, complete: completeProgress, fail: failProgress } = useTransactionProgress();
   const inFlight = useRef(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -65,6 +72,7 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
       setStatusMessage(`${actionName}...`);
 
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+      if (estimatedDurationMs) startProgress(estimatedDurationMs);
 
       try {
         const result = await withRetry(fn, {
@@ -75,6 +83,8 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
             setStatusMessage(message);
           },
         });
+
+        if (estimatedDurationMs) completeProgress();
 
         if (showSuccessToast && !silent && successMessage) {
           renderSuccess(successMessage);
@@ -88,6 +98,8 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
 
         return result;
       } catch (error) {
+        if (estimatedDurationMs) failProgress();
+
         if (!silent) {
           const friendlyMessage = getFriendlyError(error);
           if (friendlyMessage) {
@@ -107,8 +119,8 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
         inFlight.current = false;
       }
     },
-    [actionName, maxAttempts, renderError, renderSuccess, showSuccessToast, silent, successMessage],
+    [actionName, completeProgress, estimatedDurationMs, failProgress, maxAttempts, renderError, renderSuccess, showSuccessToast, silent, startProgress, successMessage],
   );
 
-  return { execute, isLoading, statusMessage, status };
+  return { execute, isLoading, statusMessage, status, progress };
 }

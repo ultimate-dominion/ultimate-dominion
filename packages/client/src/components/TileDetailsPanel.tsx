@@ -48,6 +48,7 @@ import { AdventureEscrowModal } from './AdventureEscrowModal';
 import { ClassSymbol } from './ClassSymbol';
 import { FragmentClaimModal } from './FragmentClaimModal';
 import { HealthBar } from './HealthBar';
+import { TransactionProgressBar } from './TransactionProgressBar';
 import { InfoModal } from './InfoModal';
 import { ShopRow } from './ShopRow';
 
@@ -111,7 +112,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     statusEffectActions,
     userCharacterForBattleRendering,
   } = useBattle();
-  const { isRefreshing, moveStatusMessage } = useMovement();
+  const { isRefreshing, moveProgress } = useMovement();
 
   const encounterTx = useTransaction({
     actionName: 'initiate battle',
@@ -428,26 +429,6 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (!currentBattle && isRefreshing) {
-    return (
-      <Box>
-        <HStack
-          bgColor="blue500"
-          h={{ base: '40px', md: '66px' }}
-          px="20px"
-          width="100%"
-        >
-          <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
-            {moveStatusMessage}
-          </Heading>
-        </HStack>
-        <Flex alignItems="center" h="100%" justifyContent="center" mt={6}>
-          <Spinner size="lg" />
-        </Flex>
-      </Box>
-    );
-  }
-
   if (!currentBattle && !isSpawned) {
     return (
       <Box>
@@ -482,8 +463,8 @@ export const TileDetailsPanel = (): JSX.Element => {
           }
         `}
         </style>
-        <HStack bgColor="blue500" h={{ base: '40px', md: '66px' }} px={4}>
-          <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
+        <HStack bgColor="blue500" h={{ base: '36px', md: '46px' }} px={4}>
+          <Heading color="#E8DCC8" size="sm">
             Battlefield
           </Heading>
         </HStack>
@@ -794,8 +775,9 @@ export const TileDetailsPanel = (): JSX.Element => {
   }
 
   return (
-    <Box h={{ base: 'calc(100% - 40px)', md: 'calc(100% - 66px)' }}>
-      <HStack bgColor="blue500" h={{ base: '40px', md: '66px' }}>
+    <Box h={{ base: 'calc(100% - 36px)', md: 'calc(100% - 46px)' }} position="relative">
+      <TransactionProgressBar progress={moveProgress} />
+      <HStack bgColor="blue500" h={{ base: '36px', md: '46px' }}>
         <Grid
           alignItems="center"
           color="#E8DCC8"
@@ -806,18 +788,18 @@ export const TileDetailsPanel = (): JSX.Element => {
         >
           {isHomeTile && shopsOnTile.length > 0 && (
             <GridItem colSpan={2}>
-              <Heading size={{ base: 'xs', sm: 'sm', md: 'md' }}>Shops</Heading>
+              <Heading size="sm">Shops</Heading>
             </GridItem>
           )}
           {!isHomeTile && (
             <GridItem colSpan={2}>
-              <Heading size={{ base: 'xs', sm: 'sm', md: 'md' }}>
+              <Heading size="sm">
                 Monsters
               </Heading>
             </GridItem>
           )}
           <GridItem colSpan={2}>
-            <Heading size={{ base: 'xs', sm: 'sm', md: 'md' }}>
+            <Heading size="sm">
               {shopsOnTile.length > 0 && !isHomeTile && 'Shops & '}Players
             </Heading>
           </GridItem>
