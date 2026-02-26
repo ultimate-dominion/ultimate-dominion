@@ -3,9 +3,9 @@
  * (https://viem.sh/docs/getting-started.html).
  * This line imports the functions we need from it.
  */
-import { ContractWrite, createBurnerAccount, hexToResource } from '@latticexyz/common';
+import { ContractWrite, createBurnerAccount } from '@latticexyz/common';
 import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
-import { getComponentEntities, setComponent } from '@latticexyz/recs';
+import { setComponent } from '@latticexyz/recs';
 import { SyncStep } from '@latticexyz/store-sync';
 import {
   encodeEntity,
@@ -14,14 +14,12 @@ import {
 } from '@latticexyz/store-sync/recs';
 import mudConfig from 'contracts/mud.config';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
-import { debounceTime, share, Subject } from 'rxjs';
+import { share, Subject } from 'rxjs';
 import {
   createPublicClient,
   createWalletClient,
   getContract,
   Hex,
-  stringToHex,
-  type TransactionReceipt,
 } from 'viem';
 
 import { debug } from '../../utils/debug';
@@ -29,7 +27,6 @@ import { debug } from '../../utils/debug';
 import { createViemClientConfig } from './createViemClientConfig';
 import { externalTables } from './externalTables';
 import { getNetworkConfig } from './getNetworkConfig';
-import { handleIndexerError } from './indexerFallback';
 import { loadRecsCache, restoreRecsCache, saveRecsCache } from './recsCache';
 import { world } from './world';
 
@@ -79,50 +76,27 @@ export async function setupNetwork() {
     client: { public: publicClient, wallet: burnerWalletClient },
   });
 
-  // Use proxy URL in development, direct URL in production
-  const isDev = import.meta.env.DEV;
-  const rawIndexerUrl =
-    (import.meta.env.VITE_INDEXER_URL as string) ?? undefined;
-  const indexerUrl = isDev && rawIndexerUrl
-    ? rawIndexerUrl.replace(/https?:\/\/[^/]+/, '/mud-indexer')
-    : rawIndexerUrl;
-
-  debug.log('Using indexer URL', { isDev, rawIndexerUrl, indexerUrl });
+  // Optional indexer URL
+  const indexerUrl =
+    (import.meta.env.VITE_INDEXER_URL as string) || undefined;
 
   // Load RECS cache from IndexedDB for instant page loads
   const cache = await loadRecsCache(
     networkConfig.worldAddress,
     networkConfig.chainId,
   );
-  if (cache) {
-    console.info('[CACHE] Found cached state', {
-      blockNumber: cache.blockNumber.toString(),
-      components: cache.components.length,
-    });
-  } else {
-    console.info('[CACHE] No cached state found — full sync');
-  }
 
   const startBlock = cache
     ? cache.blockNumber
     : BigInt(networkConfig.initialBlockNumber);
 
-  console.info('[SYNC] Starting from block', startBlock.toString(), 'indexerUrl:', indexerUrl || '(none)');
-
-  const fallbackFn = async (url: string, opts: RequestInit) => {
-    if (!url.toString().includes(indexerUrl ?? '')) {
-      return fetch(url, opts).then(r => r.json());
-    }
-    return handleIndexerError(url.toString(), async () => {
-      debug.log('Using RPC fallback for indexer');
-      return null;
-    });
-  };
+  debug.log('Starting sync from block', startBlock.toString());
 
   const {
     components,
     latestBlock$,
     storedBlockLogs$,
+    stopSync,
     waitForTransaction: mudWaitForTransaction,
   } = await syncToRecs({
       world,
@@ -130,121 +104,9 @@ export async function setupNetwork() {
       address: networkConfig.worldAddress as Hex,
       publicClient,
       startBlock,
-      startSync: false, // Don't start yet — pre-populate RegisteredTables first
       tables: externalTables,
-      indexerUrl,
-      fetchJson: async (url: string, opts?: RequestInit) => {
-        const proxyUrl = isDev
-          ? url.toString()
-          : `/api/proxy?url=${encodeURIComponent(url.toString())}`;
-
-        debug.log('Fetching through proxy', {
-          url: url.toString(),
-          proxyUrl,
-        });
-
-        try {
-          const response = await fetch(proxyUrl, {
-            ...opts,
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (!response.ok) {
-            debug.log('Proxy request failed, falling back to RPC', {
-              status: response.status,
-              statusText: response.statusText,
-            });
-            return fallbackFn(url, opts ?? {});
-          }
-
-          return response.json();
-        } catch (error) {
-          debug.log('Error fetching through proxy, falling back to RPC', error);
-          return fallbackFn(url, opts ?? {});
-        }
-      },
+      indexerUrl: indexerUrl || false,
     });
-
-  // MUD v2.2.23 contracts don't emit Store_SetRecord for store:Tables for user
-  // namespace tables, but the v2.0.11 client's storageAdapter requires them in
-  // RegisteredTables. Pre-populate RegisteredTables from the config so the
-  // storageAdapter can find and decode all table events.
-  const regTables = (components as any).RegisteredTables;
-  if (regTables) {
-    let prePopulated = 0;
-    for (const comp of world.components) {
-      const meta = (comp as any).metadata;
-      if (!meta?.keySchema || !meta?.valueSchema || !comp.id) continue;
-      // Skip internal components (RegisteredTables, SyncProgress)
-      if (!comp.id.startsWith('0x')) continue;
-      try {
-        const { namespace, name } = hexToResource(comp.id as Hex);
-        const entity = encodeEntity(
-          { address: 'address', namespace: 'bytes16', name: 'bytes16' },
-          {
-            address: networkConfig.worldAddress as Hex,
-            namespace: stringToHex(namespace, { size: 16 }),
-            name: stringToHex(name, { size: 16 }),
-          },
-        );
-        setComponent(regTables, entity, {
-          table: {
-            address: networkConfig.worldAddress,
-            tableId: comp.id,
-            namespace,
-            name,
-            keySchema: meta.keySchema,
-            valueSchema: meta.valueSchema,
-          },
-        });
-        prePopulated++;
-      } catch {
-        // Skip components that don't have valid resource IDs
-      }
-    }
-    console.info(`[SYNC] Pre-populated RegisteredTables with ${prePopulated} tables from config`);
-  }
-
-  // Now start the sync — RegisteredTables has all tables so the
-  // storageAdapter can match events to RECS components.
-  const syncSub = storedBlockLogs$.subscribe();
-
-  // Diagnostic: check RegisteredTables + multiple table entity counts
-  let blocksProcessed = 0;
-  let totalLogs = 0;
-  const seenTableIds = new Set<string>();
-  storedBlockLogs$.subscribe({
-    next: (block) => {
-      blocksProcessed++;
-      totalLogs += block.logs.length;
-      for (const log of block.logs) {
-        seenTableIds.add((log as any).args?.tableId ?? 'unknown');
-      }
-      // Log first 5 blocks, then every 100
-      if (blocksProcessed <= 5 || blocksProcessed % 100 === 0) {
-        // Check RegisteredTables (internal MUD component)
-        const regTables = (components as any).RegisteredTables;
-        const regCount = regTables ? Array.from(getComponentEntities(regTables)).length : -1;
-        // Check multiple tables
-        const tableCounts: Record<string, number> = {};
-        for (const name of ['Items', 'WeaponStats', 'ArmorStats', 'StarterItems', 'Stats', 'Position', 'Zones']) {
-          const comp = (components as any)[name];
-          if (comp) tableCounts[name] = Array.from(getComponentEntities(comp)).length;
-        }
-        console.info(`[SYNC] Block ${block.blockNumber} (#${blocksProcessed}), ${block.logs.length} logs (${totalLogs} total), RegisteredTables: ${regCount}, tables:`, tableCounts);
-        // On block 5, log unique tableIds seen so far
-        if (blocksProcessed === 5) {
-          console.info('[SYNC] Unique tableIds in logs so far:', Array.from(seenTableIds));
-        }
-      }
-    },
-    error: (err) => console.error('[SYNC] storedBlockLogs$ error:', err),
-    complete: () => {
-      console.info('[SYNC] storedBlockLogs$ completed. Total unique tableIds:', Array.from(seenTableIds));
-    },
-  });
 
   // If we had a cache, restore all component values immediately so the UI
   // becomes usable while the background sync catches up on the delta.
@@ -314,7 +176,7 @@ export async function setupNetwork() {
   // Best-effort save on page unload
   if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', () => {
-      syncSub.unsubscribe();
+      stopSync();
       clearInterval(cacheInterval);
       if (lastProcessedBlock > 0n) {
         saveRecsCache(
@@ -328,9 +190,7 @@ export async function setupNetwork() {
   }
 
   // Wrap waitForTransaction with retry logic to handle anvil receipt timing
-  const waitForTransaction = async (
-    tx: Hex,
-  ): Promise<TransactionReceipt & { blockNumber: bigint }> => {
+  const waitForTransaction = async (tx: Hex) => {
     const maxRetries = 3;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {

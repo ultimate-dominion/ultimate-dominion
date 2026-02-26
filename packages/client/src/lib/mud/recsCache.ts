@@ -50,9 +50,9 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-// v5: force fresh sync to diagnose RegisteredTables + multi-table entity counts.
+// v6: MUD client upgraded to 2.2.23 — new sync engine, invalidate old caches.
 function cacheKey(worldAddress: string, chainId: number): string {
-  return `v5-${worldAddress.toLowerCase()}-${chainId}`;
+  return `v6-${worldAddress.toLowerCase()}-${chainId}`;
 }
 
 /**
