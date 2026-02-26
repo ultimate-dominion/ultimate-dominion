@@ -477,6 +477,36 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     };
   }, []);
 
+  // Poll for new messages as fallback (Push streams are unreliable)
+  useEffect(() => {
+    if (!user || !isGroupMember) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const chatHistory = await user.chat.history(GROUP_CHAT_ID);
+        const fetched = chatHistory.map(msg => ({
+          delivered: true,
+          from: msg.fromDID.split(':')[1],
+          message: msg.messageContent,
+          timestamp: Number(msg.timestamp),
+        })).reverse();
+
+        setMessages(prev => {
+          // Only update if there are genuinely new messages from others
+          const prevNonOptimistic = prev.filter(m => m.delivered);
+          if (fetched.length <= prevNonOptimistic.length) return prev;
+          // Preserve any undelivered (optimistic) messages at the end
+          const optimistic = prev.filter(m => !m.delivered);
+          return [...fetched, ...optimistic];
+        });
+      } catch {
+        // Silently ignore poll failures
+      }
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
+  }, [user, isGroupMember]);
+
   const onJoinGroupChat = useCallback(async () => {
     try {
       setIsJoiningGroupChat(true);
