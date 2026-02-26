@@ -89,6 +89,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
             10 ether,
             100000000,
             1 ether,
+            1,
             abi.encode(weaponStats, statRestrictions),
             "test_Weapon_uri1/"
         );
@@ -128,6 +129,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
             10 ether,
             100000000,
             1 ether,
+            1,
             abi.encode(weaponStats, statRestrictions),
             "test_Weapon_uri1/"
         );
@@ -167,6 +169,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
             10 ether,
             100000000,
             1 ether,
+            1,
             abi.encode(weaponStats, statRestrictions),
             "test_Weapon_uri1/"
         );
@@ -206,6 +209,7 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
             10 ether,
             100000000,
             1 ether,
+            1,
             abi.encode(weaponStats, statRestrictions),
             "test_Weapon_uri1/"
         );
@@ -305,10 +309,10 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
             StatRestrictionsData({minAgility: 0, minIntelligence: 0, minStrength: 0});
         vm.startPrank(deployer);
         uint256 extraConsumableId1 = world.UD__createItem(
-            ItemType.Consumable, 10 ether, 100000000, 1 ether, abi.encode(extraConsumable, restrictions), "test_uri"
+            ItemType.Consumable, 10 ether, 100000000, 1 ether, 1, abi.encode(extraConsumable, restrictions), "test_uri"
         );
         uint256 extraConsumableId2 = world.UD__createItem(
-            ItemType.Consumable, 10 ether, 100000000, 1 ether, abi.encode(extraConsumable, restrictions), "test_uri"
+            ItemType.Consumable, 10 ether, 100000000, 1 ether, 1, abi.encode(extraConsumable, restrictions), "test_uri"
         );
         vm.stopPrank();
 

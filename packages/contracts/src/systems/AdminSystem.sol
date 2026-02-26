@@ -107,10 +107,11 @@ contract AdminSystem is System {
         uint256 supply,
         uint256 dropChance,
         uint256 price,
+        uint256 rarity,
         bytes memory stats,
         string memory itemMetadataURI
     ) public onlyAdmin returns (uint256) {
-        return IWorld(_world()).UD__createItem(itemType, supply, dropChance, price, stats, itemMetadataURI);
+        return IWorld(_world()).UD__createItem(itemType, supply, dropChance, price, rarity, stats, itemMetadataURI);
     }
 
     function adminCreateItems(
@@ -118,10 +119,11 @@ contract AdminSystem is System {
         uint256[] memory supply,
         uint256[] memory dropChances,
         uint256[] memory prices,
+        uint256[] memory rarities,
         bytes[] memory stats,
         string[] memory itemMetadataURIs
     ) public onlyAdmin {
-        IWorld(_world()).UD__createItems(itemTypes, supply, dropChances, prices, stats, itemMetadataURIs);
+        IWorld(_world()).UD__createItems(itemTypes, supply, dropChances, prices, rarities, stats, itemMetadataURIs);
     }
 
     function adminResupplyLootManager(uint256 itemId, uint256 newSupply) public onlyAdmin {

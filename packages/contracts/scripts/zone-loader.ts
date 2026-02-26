@@ -264,7 +264,7 @@ const worldAbi = parseAbi([
 
   // Direct system functions (require namespace access - works for deployer)
   'function UD__createEffect(uint8 effectType, string name, bytes effectStats) returns (bytes32)',
-  'function UD__createItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, bytes stats, string itemMetadataURI) returns (uint256)',
+  'function UD__createItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)',
   'function UD__createMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)',
   'function UD__spawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32)',
   'function UD__setStarterItems(uint8 class, uint256[] itemIds, uint256[] amounts)',
@@ -739,6 +739,7 @@ Available zones:
               BigInt(armor.initialSupply),
               BigInt(armor.dropChance),
               BigInt(armor.price),
+              BigInt(armor.rarity ?? 1),
               stats,
               armor.metadataUri,
             ],
@@ -779,6 +780,7 @@ Available zones:
               BigInt(weapon.initialSupply),
               BigInt(weapon.dropChance),
               BigInt(weapon.price),
+              BigInt(weapon.rarity ?? 1),
               stats,
               weapon.metadataUri,
             ],
@@ -819,6 +821,7 @@ Available zones:
               BigInt(consumable.initialSupply),
               BigInt(consumable.dropChance),
               BigInt(consumable.price),
+              BigInt(consumable.rarity ?? 1),
               stats,
               consumable.metadataUri,
             ],

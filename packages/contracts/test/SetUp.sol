@@ -172,22 +172,23 @@ contract SetUp is Test {
         vm.label(world.UD__getCharacterToken(), "character token");
 
         newArmorId = world.UD__createItem(
-            ItemType.Armor, 10 ether, 100000000, 1 ether, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
+            ItemType.Armor, 10 ether, 100000000, 1 ether, 1, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
         );
         alsoNewArmorId = world.UD__createItem(
-            ItemType.Armor, 10 ether, 100000000, 1 ether, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
+            ItemType.Armor, 10 ether, 100000000, 1 ether, 1, abi.encode(newArmor, statRestrictions), "setup_armor_uri"
         );
         newWeaponId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(newWeapon, statRestrictions), "setup_armor_uri"
+            ItemType.Weapon, 10 ether, 100000000, 1 ether, 1, abi.encode(newWeapon, statRestrictions), "setup_armor_uri"
         );
         alsoNewWeaponId = world.UD__createItem(
-            ItemType.Weapon, 10 ether, 100000000, 1 ether, abi.encode(newWeapon, statRestrictions), "setup_armor_uri"
+            ItemType.Weapon, 10 ether, 100000000, 1 ether, 1, abi.encode(newWeapon, statRestrictions), "setup_armor_uri"
         );
         newConsumableId = world.UD__createItem(
             ItemType.Consumable,
             10 ether,
             100000000,
             1 ether,
+            1,
             abi.encode(newConsumable, statRestrictions),
             "setup_armor_uri"
         );

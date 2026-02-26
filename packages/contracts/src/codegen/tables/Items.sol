@@ -23,6 +23,7 @@ struct ItemsData {
   ItemType itemType;
   uint256 dropChance;
   uint256 price;
+  uint256 rarity;
   bytes stats;
 }
 
@@ -31,12 +32,12 @@ library Items {
   ResourceId constant _tableId = ResourceId.wrap(0x746255440000000000000000000000004974656d730000000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0041030101202000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0061040101202020000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (uint256)
   Schema constant _keySchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint8, uint256, uint256, bytes)
-  Schema constant _valueSchema = Schema.wrap(0x00410301001f1fc4000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint8, uint256, uint256, uint256, bytes)
+  Schema constant _valueSchema = Schema.wrap(0x00610401001f1f1fc40000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -52,11 +53,12 @@ library Items {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](4);
+    fieldNames = new string[](5);
     fieldNames[0] = "itemType";
     fieldNames[1] = "dropChance";
     fieldNames[2] = "price";
-    fieldNames[3] = "stats";
+    fieldNames[3] = "rarity";
+    fieldNames[4] = "stats";
   }
 
   /**
@@ -197,6 +199,48 @@ library Items {
     _keyTuple[0] = bytes32(uint256(itemId));
 
     StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((price)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get rarity.
+   */
+  function getRarity(uint256 itemId) internal view returns (uint256 rarity) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get rarity.
+   */
+  function _getRarity(uint256 itemId) internal view returns (uint256 rarity) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set rarity.
+   */
+  function setRarity(uint256 itemId, uint256 rarity) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((rarity)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set rarity.
+   */
+  function _setRarity(uint256 itemId, uint256 rarity) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(itemId));
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((rarity)), _fieldLayout);
   }
 
   /**
@@ -394,8 +438,15 @@ library Items {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(uint256 itemId, ItemType itemType, uint256 dropChance, uint256 price, bytes memory stats) internal {
-    bytes memory _staticData = encodeStatic(itemType, dropChance, price);
+  function set(
+    uint256 itemId,
+    ItemType itemType,
+    uint256 dropChance,
+    uint256 price,
+    uint256 rarity,
+    bytes memory stats
+  ) internal {
+    bytes memory _staticData = encodeStatic(itemType, dropChance, price, rarity);
 
     EncodedLengths _encodedLengths = encodeLengths(stats);
     bytes memory _dynamicData = encodeDynamic(stats);
@@ -409,8 +460,15 @@ library Items {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(uint256 itemId, ItemType itemType, uint256 dropChance, uint256 price, bytes memory stats) internal {
-    bytes memory _staticData = encodeStatic(itemType, dropChance, price);
+  function _set(
+    uint256 itemId,
+    ItemType itemType,
+    uint256 dropChance,
+    uint256 price,
+    uint256 rarity,
+    bytes memory stats
+  ) internal {
+    bytes memory _staticData = encodeStatic(itemType, dropChance, price, rarity);
 
     EncodedLengths _encodedLengths = encodeLengths(stats);
     bytes memory _dynamicData = encodeDynamic(stats);
@@ -425,7 +483,7 @@ library Items {
    * @notice Set the full data using the data struct.
    */
   function set(uint256 itemId, ItemsData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.itemType, _table.dropChance, _table.price);
+    bytes memory _staticData = encodeStatic(_table.itemType, _table.dropChance, _table.price, _table.rarity);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.stats);
     bytes memory _dynamicData = encodeDynamic(_table.stats);
@@ -440,7 +498,7 @@ library Items {
    * @notice Set the full data using the data struct.
    */
   function _set(uint256 itemId, ItemsData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.itemType, _table.dropChance, _table.price);
+    bytes memory _staticData = encodeStatic(_table.itemType, _table.dropChance, _table.price, _table.rarity);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.stats);
     bytes memory _dynamicData = encodeDynamic(_table.stats);
@@ -456,12 +514,14 @@ library Items {
    */
   function decodeStatic(
     bytes memory _blob
-  ) internal pure returns (ItemType itemType, uint256 dropChance, uint256 price) {
+  ) internal pure returns (ItemType itemType, uint256 dropChance, uint256 price, uint256 rarity) {
     itemType = ItemType(uint8(Bytes.getBytes1(_blob, 0)));
 
     dropChance = (uint256(Bytes.getBytes32(_blob, 1)));
 
     price = (uint256(Bytes.getBytes32(_blob, 33)));
+
+    rarity = (uint256(Bytes.getBytes32(_blob, 65)));
   }
 
   /**
@@ -490,7 +550,7 @@ library Items {
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (ItemsData memory _table) {
-    (_table.itemType, _table.dropChance, _table.price) = decodeStatic(_staticData);
+    (_table.itemType, _table.dropChance, _table.price, _table.rarity) = decodeStatic(_staticData);
 
     (_table.stats) = decodeDynamic(_encodedLengths, _dynamicData);
   }
@@ -519,8 +579,13 @@ library Items {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(ItemType itemType, uint256 dropChance, uint256 price) internal pure returns (bytes memory) {
-    return abi.encodePacked(itemType, dropChance, price);
+  function encodeStatic(
+    ItemType itemType,
+    uint256 dropChance,
+    uint256 price,
+    uint256 rarity
+  ) internal pure returns (bytes memory) {
+    return abi.encodePacked(itemType, dropChance, price, rarity);
   }
 
   /**
@@ -552,9 +617,10 @@ library Items {
     ItemType itemType,
     uint256 dropChance,
     uint256 price,
+    uint256 rarity,
     bytes memory stats
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(itemType, dropChance, price);
+    bytes memory _staticData = encodeStatic(itemType, dropChance, price, rarity);
 
     EncodedLengths _encodedLengths = encodeLengths(stats);
     bytes memory _dynamicData = encodeDynamic(stats);

@@ -97,6 +97,7 @@ contract WeaponSystemTest is SetUp {
             itemType: ItemType.Weapon,
             dropChance: 1000,
             price: 100,
+            rarity: 1,
             stats: ""
         }));
 
@@ -283,6 +284,7 @@ contract WeaponSystemTest is SetUp {
             itemType: ItemType.Weapon,
             dropChance: 1000,
             price: 100,
+            rarity: 1,
             stats: ""
         }));
         
@@ -301,6 +303,7 @@ contract WeaponSystemTest is SetUp {
             itemType: ItemType.Armor,
             dropChance: 1000,
             price: 100,
+            rarity: 1,
             stats: ""
         }));
         

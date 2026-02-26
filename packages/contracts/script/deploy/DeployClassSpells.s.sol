@@ -315,6 +315,7 @@ contract DeployClassSpells is Script {
             0,    // supply
             0,    // dropChance
             0,    // price
+            1,    // rarity (Common)
             statsEncoded,
             metadataUri
         );

@@ -413,6 +413,7 @@ export default defineWorld({
         itemType: "ItemType",
         dropChance: "uint256",
         price: "uint256",
+        rarity: "uint256",
         stats: "bytes",
       },
       key: ["itemId"],

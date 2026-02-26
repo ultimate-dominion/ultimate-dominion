@@ -42,6 +42,7 @@ interface IAdminSystem {
     uint256 supply,
     uint256 dropChance,
     uint256 price,
+    uint256 rarity,
     bytes memory stats,
     string memory itemMetadataURI
   ) external returns (uint256);
@@ -51,6 +52,7 @@ interface IAdminSystem {
     uint256[] memory supply,
     uint256[] memory dropChances,
     uint256[] memory prices,
+    uint256[] memory rarities,
     bytes[] memory stats,
     string[] memory itemMetadataURIs
   ) external;

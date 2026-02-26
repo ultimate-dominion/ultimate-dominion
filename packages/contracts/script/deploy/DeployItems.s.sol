@@ -177,6 +177,7 @@ contract DeployItems is Script {
             itemType: ItemType.Armor,
             dropChance: armorTemplate.dropChance,
             price: armorTemplate.price,
+            rarity: 1,
             stats: abi.encode(newArmor, armorTemplate.statRestrictions)
         });
         Items.set(itemId, newItem);
@@ -208,6 +209,7 @@ contract DeployItems is Script {
             itemType: ItemType.Weapon,
             dropChance: weaponTemplate.dropChance,
             price: weaponTemplate.price,
+            rarity: 1,
             stats: abi.encode(newWeapon, weaponTemplate.statRestrictions)
         });
         Items.set(itemId, newItem);
@@ -235,6 +237,7 @@ contract DeployItems is Script {
             itemType: ItemType.Consumable,
             dropChance: consumableTemplate.dropChance,
             price: consumableTemplate.price,
+            rarity: 1,
             stats: abi.encode(newConsumable, consumableTemplate.statRestrictions)
         });
         Items.set(itemId, newItem);

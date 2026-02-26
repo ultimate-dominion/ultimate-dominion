@@ -56,6 +56,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             10 ether,
             100000000,
             1 ether,
+            1,
             abi.encode(weaponStats, statRestrictions),
             "test_Weapon_uri1/"
         );
@@ -64,6 +65,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             100 ether,
             100000000,
             1 ether,
+            1,
             abi.encode(weaponStats, statRestrictions),
             "test_Weapon_uri/"
         );
@@ -101,6 +103,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             100 ether,
             100000000,
             1 ether,
+            1,
             abi.encode(weaponStats, statRestrictions),
             "test_Weapon_uri1/"
         );
@@ -148,6 +151,7 @@ contract Test_ItemsSystem is SetUp, GasReporter {
             100 ether,
             100000000,
             1 ether,
+            1,
             abi.encode(weaponStats, statRestrictions),
             "test_Weapon_uri/"
         );
