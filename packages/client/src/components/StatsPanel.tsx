@@ -147,7 +147,7 @@ export const StatsPanel = (): JSX.Element => {
     <VStack spacing={0}>
       <HStack
         bgColor="blue500"
-        minH={{ base: '40px', md: '66px' }}
+        minH={{ base: '36px', md: '46px' }}
         px="20px"
         width="100%"
       >
@@ -180,7 +180,7 @@ export const StatsPanel = (): JSX.Element => {
           fontWeight={700}
           justifyContent="space-between"
           px={2}
-          py={1}
+          py={1.5}
           w="100%"
         >
           <Text size="lg">HP</Text>
@@ -198,7 +198,7 @@ export const StatsPanel = (): JSX.Element => {
           fontWeight={700}
           justifyContent="space-between"
           px={2}
-          py={1}
+          py={1.5}
           w="100%"
         >
           <Text size="lg">AGI</Text>
@@ -216,7 +216,7 @@ export const StatsPanel = (): JSX.Element => {
           fontWeight={700}
           justifyContent="space-between"
           px={2}
-          py={1}
+          py={1.5}
           w="100%"
         >
           <Text size="lg">INT</Text>
@@ -234,7 +234,7 @@ export const StatsPanel = (): JSX.Element => {
           fontWeight={700}
           justifyContent="space-between"
           px={2}
-          py={1}
+          py={1.5}
           w="100%"
         >
           <Text size="lg">STR</Text>
