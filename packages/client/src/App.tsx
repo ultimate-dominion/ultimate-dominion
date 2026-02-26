@@ -173,16 +173,18 @@ const AppInner = (): JSX.Element => {
   }, [ownerAddress, network]);
 
   useEffect(() => {
-    const isChatBoxOpen = localStorage.getItem(IS_CHAT_BOX_OPEN_KEY);
-
     if (!isSpawned) return;
     if (CHAT_NOT_ALLOWED_PATHS.includes(pathname)) return;
+    // Only auto-open on desktop (inline chat). On mobile, let user tap the button
+    // so unread badge can show new messages.
+    if (!isDesktop) return;
 
+    const isChatBoxOpen = localStorage.getItem(IS_CHAT_BOX_OPEN_KEY);
     if (!isChatBoxOpen || isChatBoxOpen === 'true') {
       localStorage.setItem(IS_CHAT_BOX_OPEN_KEY, 'true');
       onOpenChatBox();
     }
-  }, [isSpawned, onOpenChatBox, pathname]);
+  }, [isDesktop, isSpawned, onOpenChatBox, pathname]);
 
   return (
     <Grid

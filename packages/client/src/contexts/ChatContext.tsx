@@ -146,7 +146,6 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const [newMessage, setNewMessage] = useState<string>('');
   const [isSending, setIsSending] = useState<boolean>(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const prevMessageCountRef = useRef(0);
 
   // Push Protocol stream ref for cleanup
   const streamRef = useRef<Awaited<ReturnType<PushAPI['initStream']>> | null>(null);
@@ -290,14 +289,24 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     ].sort((a, b) => a.timestamp - b.timestamp);
   }, [rareDropAnnouncements, rareMarketplaceSales, messages]);
 
-  // Track unread messages when chat is closed (mobile)
+  // Track unread messages using last-seen timestamp (persists across refreshes)
   useEffect(() => {
-    const count = messages.length;
-    if (count > prevMessageCountRef.current && !isOpen) {
-      setUnreadCount(prev => prev + (count - prevMessageCountRef.current));
+    if (isOpen) {
+      setUnreadCount(0);
+      if (messages.length > 0) {
+        localStorage.setItem('chat_last_seen', Date.now().toString());
+      }
+    } else {
+      const lastSeen = parseInt(
+        localStorage.getItem('chat_last_seen') || Date.now().toString(),
+        10,
+      );
+      const unread = messages.filter(
+        m => m.timestamp > lastSeen && m.delivered,
+      ).length;
+      setUnreadCount(unread);
     }
-    prevMessageCountRef.current = count;
-  }, [messages.length, isOpen]);
+  }, [isOpen, messages]);
 
   const onLogin = useCallback(async () => {
     try {
@@ -584,6 +593,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const onOpenAndSet = useCallback(() => {
     onOpen();
     setUnreadCount(0);
+    localStorage.setItem('chat_last_seen', Date.now().toString());
     localStorage.setItem(IS_CHAT_BOX_OPEN_KEY, 'true');
   }, [onOpen]);
 
