@@ -67,11 +67,11 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
-            h={{ base: '40px', md: '66px' }}
+            h={{ base: '36px', md: '46px' }}
             px="20px"
             width="100%"
           >
-            <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
+            <Heading size="sm">
               Dark Cave
             </Heading>
           </HStack>
@@ -82,10 +82,10 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
             display="grid"
             gridTemplateColumns="repeat(10, 1fr)"
             gridTemplateRows="repeat(10, 1fr)"
-            h={{ base: 'calc(100% - 65px)', md: 'calc(100% - 95px)' }}
+            h={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
             maxW="100%"
             m="0 auto"
-            mt={2}
+            mt={1}
           >
             {[...Array(100)].map((_, i) => {
               const row = 9 - Math.floor(i / 10); // Reverse the row
@@ -117,29 +117,29 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
                   bgColor={
                     col <= SAFE_ZONE_AREA.topLeft.y &&
                     row <= SAFE_ZONE_AREA.bottomRight.x
-                      ? '#DCD64F14'
+                      ? 'rgba(200,122,42,0.06)'
                       : 'transparent'
                   }
                   borderBottom={
                     hasSafeZoneBottomBorder ? '1.5px solid' : '0.5px solid'
                   }
                   borderBottomColor={
-                    hasSafeZoneBottomBorder ? 'yellow' : 'grey500'
+                    hasSafeZoneBottomBorder ? '#C87A2A' : 'grey500'
                   }
                   borderLeft={
                     hasSafeZoneLeftBorder ? '1.5px solid' : '0.5px solid'
                   }
-                  borderLeftColor={hasSafeZoneLeftBorder ? 'yellow' : 'grey500'}
+                  borderLeftColor={hasSafeZoneLeftBorder ? '#C87A2A' : 'grey500'}
                   borderRight={
                     hasSafeZoneRightBorder ? '1.5px solid' : '0.5px solid'
                   }
                   borderRightColor={
-                    hasSafeZoneRightBorder ? 'yellow' : 'grey500'
+                    hasSafeZoneRightBorder ? '#C87A2A' : 'grey500'
                   }
                   borderTop={
                     hasSafeZoneTopBorder ? '1.5px solid' : '0.5px solid'
                   }
-                  borderTopColor={hasSafeZoneTopBorder ? 'yellow' : 'grey500'}
+                  borderTopColor={hasSafeZoneTopBorder ? '#C87A2A' : 'grey500'}
                   justifyContent="center"
                   key={`map-tile${i}`}
                   position="relative"
@@ -183,18 +183,19 @@ const MapPanelInner = ({ UltimateDominion }: { UltimateDominion: any }): JSX.Ele
             px={{ base: 1, sm: 2 }}
           >
             {isSpawned && position && (
-              <HStack>
-                <BiSolidNavigation size={isDesktop ? 12 : 10} />
+              <HStack spacing={1}>
+                <BiSolidNavigation color="#C87A2A" size={isDesktop ? 12 : 10} />
                 <Text
+                  color="#E8DCC8"
                   fontFamily="mono"
                   fontWeight={700}
-                  size={{ base: 'xs', sm: 'sm', md: 'sm' }}
+                  size={{ base: 'xs', sm: 'sm' }}
                 >
                   {position.x},{position.y}
                 </Text>
               </HStack>
             )}
-            <Text fontWeight={500} size={{ base: '2xs', sm: 'xs', md: 'sm' }}>
+            <Text color="#8A7E6A" fontWeight={500} size={{ base: '2xs', sm: 'xs' }}>
               {currentPlayersSpawned} Player
               {currentPlayersSpawned === 1 ? '' : 's'}
             </Text>

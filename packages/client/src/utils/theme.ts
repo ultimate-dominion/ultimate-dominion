@@ -212,7 +212,7 @@ const Button = {
 
 const Heading = {
   baseStyle: {
-    color: '#D4A54A',
+    color: '#E8DCC8',
   },
   defaultProps: {
     size: 'md',
@@ -484,7 +484,7 @@ export const theme = extendTheme({
       'text.primary': '#E8DCC8',
       'text.body': '#C4B89E',
       'text.muted': '#8A7E6A',
-      'text.heading': '#D4A54A',
+      'text.heading': '#E8DCC8',
       'text.secondary': '#8A7E6A',
       'accent.action': '#C87A2A',
       'accent.glow': '#E8A840',
