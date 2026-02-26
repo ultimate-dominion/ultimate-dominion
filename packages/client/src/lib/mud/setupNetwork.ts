@@ -165,29 +165,43 @@ export async function setupNetwork() {
       },
     });
 
-  // Diagnostic: log registered RECS component IDs
-  const itemsComponent = world.components.find((c: any) => (c.id as string)?.includes('4974656d73'));
-  const allComponentIds = world.components.map((c: any) => c.id as string);
-  console.info('[SYNC] Registered components:', allComponentIds.length);
-  console.info('[SYNC] Items component found:', !!itemsComponent, itemsComponent?.id);
-  // Log first few component IDs to compare with on-chain table IDs
-  console.info('[SYNC] Component IDs (first 10):', allComponentIds.slice(0, 10));
+  // Quick sanity check: verify key component objects exist
+  console.info('[SYNC] components.Items exists:', !!components.Items, 'components.Items.id:', (components.Items as any)?.id);
+  console.info('[SYNC] components keys:', Object.keys(components).join(', '));
 
-  // Diagnostic: log sync progress and Items entity count
+  // Diagnostic: check RegisteredTables + multiple table entity counts
   let blocksProcessed = 0;
   let totalLogs = 0;
+  const seenTableIds = new Set<string>();
   storedBlockLogs$.subscribe({
     next: (block) => {
       blocksProcessed++;
       totalLogs += block.logs.length;
-      // Log first 5 blocks, then every 50, to see sync progress
-      if (blocksProcessed <= 5 || blocksProcessed % 50 === 0) {
-        const itemCount = Array.from(getComponentEntities(components.Items)).length;
-        console.info(`[SYNC] Block ${block.blockNumber} (#${blocksProcessed}), ${block.logs.length} logs (${totalLogs} total), Items: ${itemCount}`);
+      for (const log of block.logs) {
+        seenTableIds.add((log as any).args?.tableId ?? 'unknown');
+      }
+      // Log first 5 blocks, then every 100
+      if (blocksProcessed <= 5 || blocksProcessed % 100 === 0) {
+        // Check RegisteredTables (internal MUD component)
+        const regTables = (components as any).RegisteredTables;
+        const regCount = regTables ? Array.from(getComponentEntities(regTables)).length : -1;
+        // Check multiple tables
+        const tableCounts: Record<string, number> = {};
+        for (const name of ['Items', 'WeaponStats', 'ArmorStats', 'StarterItems', 'Stats', 'Position', 'Zones']) {
+          const comp = (components as any)[name];
+          if (comp) tableCounts[name] = Array.from(getComponentEntities(comp)).length;
+        }
+        console.info(`[SYNC] Block ${block.blockNumber} (#${blocksProcessed}), ${block.logs.length} logs (${totalLogs} total), RegisteredTables: ${regCount}, tables:`, tableCounts);
+        // On block 5, log unique tableIds seen so far
+        if (blocksProcessed === 5) {
+          console.info('[SYNC] Unique tableIds in logs so far:', Array.from(seenTableIds));
+        }
       }
     },
     error: (err) => console.error('[SYNC] storedBlockLogs$ error:', err),
-    complete: () => console.info('[SYNC] storedBlockLogs$ completed'),
+    complete: () => {
+      console.info('[SYNC] storedBlockLogs$ completed. Total unique tableIds:', Array.from(seenTableIds));
+    },
   });
 
   // If we had a cache, restore all component values immediately so the UI
