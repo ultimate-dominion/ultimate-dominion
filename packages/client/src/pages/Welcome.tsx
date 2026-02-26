@@ -35,7 +35,7 @@ const torchGlow = keyframes`
 export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const { authMethod, isAuthenticated } = useAuth();
+  const { authMethod, disconnect, isAuthenticated } = useAuth();
   const {
     components: { SyncProgress },
     delegatorAddress,
@@ -66,6 +66,17 @@ export const Welcome = (): JSX.Element => {
     return () => clearTimeout(timer);
   }, [syncProgress]);
 
+  // Clear stale auth sessions: if authenticated but no character after sync,
+  // disconnect so the user gets a fresh sign-in flow.
+  useEffect(() => {
+    if (!isAuthenticated || isRefreshing) return;
+    if (syncProgress?.step !== SyncStep.LIVE) return;
+    if (character?.locked) return; // Has character — session is valid
+
+    console.info('[Welcome] Stale auth session detected (no character on this world), disconnecting...');
+    disconnect();
+  }, [character?.locked, disconnect, isAuthenticated, isRefreshing, syncProgress?.step]);
+
   // Auto-navigate returning players who already have a character straight to the game.
   // New players (no character) see the full intro and click Enter manually.
   useEffect(() => {
@@ -83,27 +94,15 @@ export const Welcome = (): JSX.Element => {
   }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isRefreshing, navigate]);
 
   const onPlay = useCallback(() => {
-    // Already authenticated with a character — go to game
+    // Authenticated with a character — go to game
     if (isAuthenticated && character?.locked) {
       navigate(GAME_BOARD_PATH);
       return;
     }
 
-    // Embedded (Google) auth ready but no character — go to character creation
-    if (authMethod === 'embedded' && isAuthenticated) {
-      navigate(CHARACTER_CREATION_PATH);
-      return;
-    }
-
-    // External wallet with delegation but no character — go to character creation
-    if (authMethod === 'external' && isAuthenticated && delegatorAddress) {
-      navigate(CHARACTER_CREATION_PATH);
-      return;
-    }
-
-    // Not set up — open sign-in modal
+    // Not authenticated (or stale session was cleared) — open sign-in modal
     onOpen();
-  }, [authMethod, character, delegatorAddress, isAuthenticated, navigate, onOpen]);
+  }, [character, isAuthenticated, navigate, onOpen]);
 
   return (
     <Box
