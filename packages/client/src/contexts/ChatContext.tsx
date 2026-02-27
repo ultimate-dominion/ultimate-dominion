@@ -26,7 +26,7 @@ import { useToast } from '../hooks/useToast';
 import { CHARACTERS_PATH, ITEM_PATH } from '../Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
 
-import { Character, CLASS_COLORS, OrderStatus, Rarity, RARITY_COLORS, RARITY_NAMES, TokenType } from '../utils/types';
+import { Character, CLASS_COLORS, OrderStatus, Rarity, RARITY_COLORS, TokenType } from '../utils/types';
 
 import { useAuth } from './AuthContext';
 import { useCharacter } from './CharacterContext';
@@ -210,12 +210,10 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // Rare+ item drop announcements from battle outcomes
   const battleOutcomeEntities = useEntityQuery([Has(CombatOutcome)]);
   const rareDropAnnouncements: Message[] = useMemo(() => {
-    console.info('[CHAT] Battle outcome entities:', battleOutcomeEntities.length);
     return battleOutcomeEntities
       .map(entity => {
         const combatOutcome = getComponentValueStrict(CombatOutcome, entity);
         const { itemsDropped } = combatOutcome;
-        console.info('[CHAT] Combat outcome itemsDropped:', itemsDropped);
         if (!itemsDropped || itemsDropped.length === 0) return null;
 
         const encounter = getComponentValueStrict(CombatEncounter, entity);
@@ -225,14 +223,12 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         const winner = combatOutcome.attackersWin ? attackerId : defenderId;
         const winnerCharacter = allCharacters.find(c => c.id === winner);
         const winnerName = winnerCharacter?.name;
-        console.info('[CHAT] Winner:', winner, 'Name:', winnerName);
         if (!winnerName) return null;
         const winnerNameColor = winnerCharacter ? (CLASS_COLORS[winnerCharacter.entityClass] ?? '#E8DCC8') : '#E8DCC8';
 
         const rareDrops = itemsDropped
           .map(itemId => {
             const found = allItems.find(item => item.tokenId === itemId.toString());
-            console.info('[CHAT] Item lookup:', itemId, '→', found?.name, 'rarity:', found?.rarity);
             return found;
           })
           .filter(item => item && item.rarity !== undefined && item.rarity >= Rarity.Rare);
@@ -240,10 +236,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         if (rareDrops.length === 0) return null;
 
         const droppedItem = rareDrops[0]!;
-        const rarityName = RARITY_NAMES[droppedItem.rarity!];
         const rarityColor = RARITY_COLORS[droppedItem.rarity!];
-
-        console.info('[CHAT] Announcing rare drop:', droppedItem.name, rarityName);
 
         return {
           delivered: true,

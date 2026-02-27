@@ -61,7 +61,7 @@ const MapPanelInner = ({ UltimateDominionConfig }: { UltimateDominionConfig: any
 
   return (
     <Stack alignItems="center" className="data-dense" h="100%">
-      <Box w="100%" h={{ base: '300px', lg: '300px' }}>
+      <Box w="100%" h={{ base: '300px', lg: 'calc(50% - 24px)' }}>
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
