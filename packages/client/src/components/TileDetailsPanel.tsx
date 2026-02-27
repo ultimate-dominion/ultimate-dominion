@@ -1329,13 +1329,13 @@ const FragmentEchoRow = ({
       borderBottom="2px solid transparent"
       h={ROW_HEIGHT}
       spacing={0}
-      bg="linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%)"
+      bg="linear-gradient(90deg, rgba(120, 200, 255, 0.15) 0%, rgba(120, 200, 255, 0.05) 100%)"
       _active={{
-        borderBottom: '2px solid gold',
+        borderBottom: '2px solid rgba(120, 200, 255, 0.8)',
       }}
       _hover={{
-        borderBottom: '2px solid gold',
-        bg: 'linear-gradient(90deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 215, 0, 0.1) 100%)',
+        borderBottom: '2px solid rgba(120, 200, 255, 0.8)',
+        bg: 'linear-gradient(90deg, rgba(120, 200, 255, 0.25) 0%, rgba(120, 200, 255, 0.1) 100%)',
       }}
     >
       <HStack
@@ -1355,15 +1355,15 @@ const FragmentEchoRow = ({
       >
         <HStack justifyContent="start" spacing={2}>
           <Text
-            color="yellow.400"
+            color="#A8DEFF"
             fontWeight={700}
             size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
-            textShadow="0 0 8px rgba(255, 215, 0, 0.6)"
+            textShadow="0 0 8px rgba(120, 200, 255, 0.6)"
           >
             ✦
           </Text>
           <Text
-            color="yellow.300"
+            color="#A8DEFF"
             fontWeight={600}
             size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
           >
@@ -1371,7 +1371,7 @@ const FragmentEchoRow = ({
           </Text>
         </HStack>
         <Text
-          color="yellow.400"
+          color="#A8DEFF"
           fontWeight={500}
           size={{ base: '3xs', sm: '2xs', md: 'sm' }}
         >
