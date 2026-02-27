@@ -160,12 +160,12 @@ export const Leaderboard = (): JSX.Element => {
     });
     entriesCopy = [...entriesCopy].filter(entry => {
       switch (filter) {
-        case StatsClasses.Warrior:
-          return entry.entityClass == StatsClasses.Warrior;
-        case StatsClasses.Rogue:
-          return entry.entityClass == StatsClasses.Rogue;
-        case StatsClasses.Mage:
-          return entry.entityClass == StatsClasses.Mage;
+        case StatsClasses.Strength:
+          return entry.entityClass == StatsClasses.Strength;
+        case StatsClasses.Agility:
+          return entry.entityClass == StatsClasses.Agility;
+        case StatsClasses.Intelligence:
+          return entry.entityClass == StatsClasses.Intelligence;
         default:
           return true;
       }
@@ -270,21 +270,21 @@ export const Leaderboard = (): JSX.Element => {
               leftIcon={
                 isSmallScreen ? undefined : (
                   <WarriorSvg
-                    theme={filter === StatsClasses.Warrior ? 'light' : 'dark'}
+                    theme={filter === StatsClasses.Strength ? 'light' : 'dark'}
                   />
                 )
               }
-              bgColor={filter === StatsClasses.Warrior ? 'grey500' : undefined}
-              color={filter === StatsClasses.Warrior ? 'white' : undefined}
-              onClick={() => setFilter(StatsClasses.Warrior)}
+              bgColor={filter === StatsClasses.Strength ? 'grey500' : undefined}
+              color={filter === StatsClasses.Strength ? 'white' : undefined}
+              onClick={() => setFilter(StatsClasses.Strength)}
               size="sm"
               variant="white"
             >
               {!isSmallScreen ? (
-                'Warrior'
+                'Strength'
               ) : (
                 <WarriorSvg
-                  theme={filter === StatsClasses.Warrior ? 'light' : 'dark'}
+                  theme={filter === StatsClasses.Strength ? 'light' : 'dark'}
                 />
               )}
             </Button>
@@ -292,21 +292,21 @@ export const Leaderboard = (): JSX.Element => {
               leftIcon={
                 isSmallScreen ? undefined : (
                   <RogueSvg
-                    theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
+                    theme={filter === StatsClasses.Agility ? 'light' : 'dark'}
                   />
                 )
               }
-              bgColor={filter === StatsClasses.Rogue ? 'grey500' : undefined}
-              color={filter === StatsClasses.Rogue ? 'white' : undefined}
-              onClick={() => setFilter(StatsClasses.Rogue)}
+              bgColor={filter === StatsClasses.Agility ? 'grey500' : undefined}
+              color={filter === StatsClasses.Agility ? 'white' : undefined}
+              onClick={() => setFilter(StatsClasses.Agility)}
               size="sm"
               variant="white"
             >
               {!isSmallScreen ? (
-                'Rogue'
+                'Agility'
               ) : (
                 <RogueSvg
-                  theme={filter === StatsClasses.Rogue ? 'light' : 'dark'}
+                  theme={filter === StatsClasses.Agility ? 'light' : 'dark'}
                 />
               )}
             </Button>
@@ -314,21 +314,21 @@ export const Leaderboard = (): JSX.Element => {
               leftIcon={
                 isSmallScreen ? undefined : (
                   <MageSvg
-                    theme={filter === StatsClasses.Mage ? 'light' : 'dark'}
+                    theme={filter === StatsClasses.Intelligence ? 'light' : 'dark'}
                   />
                 )
               }
-              bgColor={filter === StatsClasses.Mage ? 'grey500' : undefined}
-              color={filter === StatsClasses.Mage ? 'white' : undefined}
-              onClick={() => setFilter(StatsClasses.Mage)}
+              bgColor={filter === StatsClasses.Intelligence ? 'grey500' : undefined}
+              color={filter === StatsClasses.Intelligence ? 'white' : undefined}
+              onClick={() => setFilter(StatsClasses.Intelligence)}
               size="sm"
               variant="white"
             >
               {!isSmallScreen ? (
-                'Mage'
+                'Intelligence'
               ) : (
                 <MageSvg
-                  theme={filter === StatsClasses.Mage ? 'light' : 'dark'}
+                  theme={filter === StatsClasses.Intelligence ? 'light' : 'dark'}
                 />
               )}
             </Button>

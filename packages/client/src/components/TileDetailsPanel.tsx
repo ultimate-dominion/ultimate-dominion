@@ -821,7 +821,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         />
         {isHomeTile && (
           <GridItem borderColor="blue500" borderRight="6px solid" colSpan={2}>
-            <VStack alignItems="start" h="76px" p={2}>
+            <VStack alignItems="start" minH="76px" p={2}>
               <HStack>
                 <Text
                   fontFamily="mono"
@@ -852,10 +852,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                   Move Gold
                 </Button>
               )}
-              {isHomeTile &&
-                !character.inBattle &&
-                character.currentHp > BigInt(0) &&
-                character.currentHp < character.maxHp && (
+              {isHomeTile && !character.inBattle && (
                   <VStack
                     bg="rgba(0, 0, 0, 0.45)"
                     borderRadius="md"
@@ -864,29 +861,44 @@ export const TileDetailsPanel = (): JSX.Element => {
                     py={2}
                     spacing={1}
                   >
-                    <Text
-                      color="orange.300"
-                      fontFamily="mono"
-                      fontSize="xs"
-                      fontStyle="italic"
-                      textAlign="center"
-                    >
-                      A fire crackles nearby. You could rest here.
-                    </Text>
-                    <Button
-                      alignSelf="center"
-                      isDisabled={restTx.isLoading}
-                      isLoading={restTx.isLoading}
-                      loadingText="Resting by the fire..."
-                      onClick={onRest}
-                      size="xs"
-                      variant="outline"
-                      color="orange.200"
-                      borderColor="orange.400"
-                      _hover={{ bg: 'orange.900', borderColor: 'orange.300' }}
-                    >
-                      Rest by the Fire
-                    </Button>
+                    {character.currentHp > BigInt(0) &&
+                    character.currentHp < character.maxHp ? (
+                      <>
+                        <Text
+                          color="orange.300"
+                          fontFamily="mono"
+                          fontSize="xs"
+                          fontStyle="italic"
+                          textAlign="center"
+                        >
+                          A fire crackles nearby. You could rest here.
+                        </Text>
+                        <Button
+                          alignSelf="center"
+                          isDisabled={restTx.isLoading}
+                          isLoading={restTx.isLoading}
+                          loadingText="Resting by the fire..."
+                          onClick={onRest}
+                          size="xs"
+                          variant="outline"
+                          color="orange.200"
+                          borderColor="orange.400"
+                          _hover={{ bg: 'orange.900', borderColor: 'orange.300' }}
+                        >
+                          Rest by the Fire
+                        </Button>
+                      </>
+                    ) : (
+                      <Text
+                        color="green.300"
+                        fontFamily="mono"
+                        fontSize="xs"
+                        fontStyle="italic"
+                        textAlign="center"
+                      >
+                        A fire crackles softly. You are fully rested.
+                      </Text>
+                    )}
                   </VStack>
                 )}
             </VStack>
@@ -1317,13 +1329,13 @@ const FragmentEchoRow = ({
       borderBottom="2px solid transparent"
       h={ROW_HEIGHT}
       spacing={0}
-      bg="linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%)"
+      bg="linear-gradient(90deg, rgba(120, 200, 255, 0.15) 0%, rgba(120, 200, 255, 0.05) 100%)"
       _active={{
-        borderBottom: '2px solid gold',
+        borderBottom: '2px solid rgba(120, 200, 255, 0.8)',
       }}
       _hover={{
-        borderBottom: '2px solid gold',
-        bg: 'linear-gradient(90deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 215, 0, 0.1) 100%)',
+        borderBottom: '2px solid rgba(120, 200, 255, 0.8)',
+        bg: 'linear-gradient(90deg, rgba(120, 200, 255, 0.25) 0%, rgba(120, 200, 255, 0.1) 100%)',
       }}
     >
       <HStack
@@ -1343,15 +1355,15 @@ const FragmentEchoRow = ({
       >
         <HStack justifyContent="start" spacing={2}>
           <Text
-            color="yellow.400"
+            color="#A8DEFF"
             fontWeight={700}
             size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
-            textShadow="0 0 8px rgba(255, 215, 0, 0.6)"
+            textShadow="0 0 8px rgba(120, 200, 255, 0.6)"
           >
             ✦
           </Text>
           <Text
-            color="yellow.300"
+            color="#A8DEFF"
             fontWeight={600}
             size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
           >
@@ -1359,7 +1371,7 @@ const FragmentEchoRow = ({
           </Text>
         </HStack>
         <Text
-          color="yellow.400"
+          color="#A8DEFF"
           fontWeight={500}
           size={{ base: '3xs', sm: '2xs', md: 'sm' }}
         >

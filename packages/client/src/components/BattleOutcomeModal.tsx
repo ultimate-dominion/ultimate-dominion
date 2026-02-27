@@ -169,8 +169,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     }
   }, [battleOutcome, fetchLootedItems, isOpen]);
 
-  const spellsAndWeapons = useMemo(() => {
-    return spells.concat(weapons);
+  const sortedArmor = useMemo(() => {
+    return [...armor].sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
+  }, [armor]);
+
+  const sortedSpellsAndWeapons = useMemo(() => {
+    return [...spells, ...weapons].sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
   }, [spells, weapons]);
 
   const battleDraw = useMemo(() => {
@@ -290,11 +294,11 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                   <Spinner />
                 ) : (
                   <>
-                    {armor.length > 0 && winner == character.id && (
+                    {sortedArmor.length > 0 && winner == character.id && (
                       <Text fontWeight="bold">Looted Armor:</Text>
                     )}
                     {winner == character.id &&
-                      armor.map(item => (
+                      sortedArmor.map(item => (
                         <Box key={`armor-box-${item.tokenId}`}>
                           <ItemCard
                             key={item.tokenId}
@@ -313,11 +317,11 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                           />
                         </Box>
                       ))}
-                    {spellsAndWeapons.length > 0 && winner == character.id && (
+                    {sortedSpellsAndWeapons.length > 0 && winner == character.id && (
                       <Text fontWeight="bold">Looted Weapons:</Text>
                     )}
                     {winner == character.id &&
-                      spellsAndWeapons.map(item => (
+                      sortedSpellsAndWeapons.map(item => (
                         <Box key={`spell-weapon-box-${item.tokenId}`}>
                           <ItemCard
                             key={item.tokenId}

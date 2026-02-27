@@ -1097,25 +1097,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__basicCharacterValidation",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "isValid",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__buy",
     "inputs": [
       {
@@ -3309,7 +3290,7 @@ declare const abi: [
     ],
     "outputs": [
       {
-        "name": "characterId",
+        "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -3347,25 +3328,6 @@ declare const abi: [
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__getCharacterTokenId",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -4396,25 +4358,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "UD__getName",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__getNpcStats",
     "inputs": [
       {
@@ -5274,25 +5217,6 @@ declare const abi: [
     "outputs": [
       {
         "name": "_isAttacker",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UD__isCharacterLocked",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
         "type": "bool",
         "internalType": "bool"
       }
@@ -6868,24 +6792,6 @@ declare const abi: [
             "internalType": "bool"
           }
         ]
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__updateTokenUri",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "tokenUri",
-        "type": "string",
-        "internalType": "string"
       }
     ],
     "outputs": [],

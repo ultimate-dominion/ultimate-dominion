@@ -60,7 +60,7 @@ export const MovementProvider = ({
   } = useDisclosure();
 
   const { character, isMoveEquipped } = useCharacter();
-  const { isFetchingEntities, isSpawned, position } = useMap();
+  const { isFetchingEntities, isSpawned, position, setOptimisticPosition } = useMap();
   const { currentBattle } = useBattle();
   const { isMessageInputFocused } = useChat();
 
@@ -130,7 +130,15 @@ export const MovementProvider = ({
           break;
       }
 
-      await moveTx.execute(() => move(character.id, newX, newY));
+      // Optimistic update: show new tile content immediately
+      setOptimisticPosition({ x: newX, y: newY });
+
+      const result = await moveTx.execute(() => move(character.id, newX, newY));
+
+      // If tx failed, revert optimistic position
+      if (!result) {
+        setOptimisticPosition(null);
+      }
     },
     [
       character,
@@ -144,6 +152,7 @@ export const MovementProvider = ({
       moveTx,
       onOpenNoMoveEquippedModal,
       position,
+      setOptimisticPosition,
     ],
   );
 

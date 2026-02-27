@@ -54,13 +54,13 @@ const OrdersProviderInner = ({
 }): JSX.Element => {
   const { renderError } = useToast();
 
-  const { Considerations, Offers, Orders, UltimateDominion } = components;
+  const { Considerations, Offers, Orders, UltimateDominionConfig } = components;
 
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const configValue = useComponentValue(
-    UltimateDominion,
+    UltimateDominionConfig,
     singletonEntity,
   );
   const goldToken = configValue?.goldToken ?? null;
@@ -180,7 +180,7 @@ export const OrdersProvider = ({
     components?.Considerations &&
     components?.Offers &&
     components?.Orders &&
-    components?.UltimateDominion
+    components?.UltimateDominionConfig
   );
 
   // If components aren't ready, render with default context

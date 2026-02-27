@@ -141,17 +141,17 @@ const CharacterProviderInner = ({
 
   const {
     AdventureEscrow,
-    CharacterEquipme,
+    CharacterEquipment,
     Characters,
     CharactersTokenURI,
     EncounterEntity,
     GoldBalances,
     ItemsOwners,
     Stats,
-    StatusEffectStat,
-    StatusEffectVali,
+    StatusEffectStats,
+    StatusEffectValidity,
     WorldEncounter,
-    WorldStatusEffec,
+    WorldStatusEffects,
   } = components;
   const {
     delegatorAddress,
@@ -252,9 +252,9 @@ const CharacterProviderInner = ({
         decodedBaseStats = decodeBaseStats(characterData.baseStats);
       }
 
-      // WorldStatusEffec and related components may be undefined
-      const worldStatusEffectsComponent = WorldStatusEffec
-        ? getComponentValue(WorldStatusEffec, entity)
+      // WorldStatusEffects and related components may be undefined
+      const worldStatusEffectsComponent = WorldStatusEffects
+        ? getComponentValue(WorldStatusEffects, entity)
         : undefined;
 
       const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
@@ -266,12 +266,12 @@ const CharacterProviderInner = ({
       );
 
       // Only process status effects if the required components exist
-      const worldStatusEffects: WorldStatusEffect[] = (StatusEffectStat && StatusEffectVali)
+      const worldStatusEffects: WorldStatusEffect[] = (StatusEffectStats && StatusEffectValidity)
         ? decodedStatusEffects.map(effect => {
             const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
 
-            const effectStats = getComponentValue(StatusEffectStat, paddedEffectId);
-            const validity = getComponentValue(StatusEffectVali, paddedEffectId);
+            const effectStats = getComponentValue(StatusEffectStats, paddedEffectId);
+            const validity = getComponentValue(StatusEffectValidity, paddedEffectId);
 
             if (!effectStats || !validity) {
               return null;
@@ -400,11 +400,11 @@ const CharacterProviderInner = ({
     GoldBalances,
     publicClient,
     Stats,
-    StatusEffectStat,
-    StatusEffectVali,
+    StatusEffectStats,
+    StatusEffectValidity,
     worldContract,
     WorldEncounter,
-    WorldStatusEffec,
+    WorldStatusEffects,
   ]);
 
   const refreshCharacter = useCallback(async () => {
@@ -588,9 +588,9 @@ const CharacterProviderInner = ({
   useEffect(() => {
     if (!(isSynced && userCharacter) || isLoadingItemTemplates) return;
 
-    // CharacterEquipme may be undefined if the table is empty
-    const equipmentData = CharacterEquipme
-      ? getComponentValue(CharacterEquipme, userCharacter.id)
+    // CharacterEquipment may be undefined if the table is empty
+    const equipmentData = CharacterEquipment
+      ? getComponentValue(CharacterEquipment, userCharacter.id)
       : undefined;
 
     const { equippedArmor, equippedConsumables: eqConsumables, equippedSpells, equippedWeapons } =
@@ -610,7 +610,7 @@ const CharacterProviderInner = ({
       eqConsumables,
     );
   }, [
-    CharacterEquipme,
+    CharacterEquipment,
     fetchCharacterItems,
     isLoadingItemTemplates,
     isSynced,

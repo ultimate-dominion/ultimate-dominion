@@ -17,6 +17,18 @@ type UseTransactionProgressReturn = {
   reset: () => void;
 };
 
+/**
+ * Optimistic progress bar that fills quickly at first, then decelerates
+ * asymptotically — never reaching 100% until the actual request completes.
+ *
+ * Phase timeline (for a 6000ms estimated duration):
+ *   0→60%  in ~30% of estimated time (fast burst — feels responsive)
+ *   60→85% in ~40% of estimated time (steady progress)
+ *   85→95% in ~30% of estimated time (slowing down)
+ *   95→98% over 10s extra crawl   (asymptotic — request taking longer)
+ *
+ * When complete() is called, snaps to 100% instantly.
+ */
 export function useTransactionProgress(): UseTransactionProgressReturn {
   const [progress, setProgress] = useState<TransactionProgress>({
     phase: 'idle',
@@ -34,12 +46,37 @@ export function useTransactionProgress(): UseTransactionProgressReturn {
   const start = useCallback(
     (estimatedMs: number) => {
       clearTimers();
-      // Start at 0 immediately
+
+      const phase1Duration = estimatedMs * 0.3;  // Fast burst
+      const phase2Duration = estimatedMs * 0.4;  // Steady
+      const phase3Duration = estimatedMs * 0.3;  // Decelerating
+      const phase4Duration = 10000;               // Asymptotic crawl
+
+      // Start at 0
       setProgress({ phase: 'filling', percent: 0, transitionMs: 0 });
-      // Next frame: animate to 90% over estimatedMs
+
+      // Phase 1: 0→60% (fast burst, ease-out feel via short duration)
       requestAnimationFrame(() => {
-        setProgress({ phase: 'filling', percent: 90, transitionMs: estimatedMs });
+        setProgress({ phase: 'filling', percent: 60, transitionMs: phase1Duration });
       });
+
+      // Phase 2: 60→85% (steady)
+      const t1 = setTimeout(() => {
+        setProgress({ phase: 'filling', percent: 85, transitionMs: phase2Duration });
+      }, phase1Duration);
+      timers.current.push(t1);
+
+      // Phase 3: 85→95% (slowing)
+      const t2 = setTimeout(() => {
+        setProgress({ phase: 'filling', percent: 95, transitionMs: phase3Duration });
+      }, phase1Duration + phase2Duration);
+      timers.current.push(t2);
+
+      // Phase 4: 95→98% (asymptotic crawl — request taking longer than expected)
+      const t3 = setTimeout(() => {
+        setProgress({ phase: 'filling', percent: 98, transitionMs: phase4Duration });
+      }, phase1Duration + phase2Duration + phase3Duration);
+      timers.current.push(t3);
     },
     [clearTimers],
   );

@@ -89,9 +89,9 @@ export const CharacterPage = (): JSX.Element => {
       GoldBalances,
       Levels,
       Stats,
-      StatusEffectStat,
-      StatusEffectVali,
-      WorldStatusEffec,
+      StatusEffectStats,
+      StatusEffectValidity,
+      WorldStatusEffects,
     },
     isSynced,
     network: { publicClient, worldContract },
@@ -196,9 +196,9 @@ export const CharacterPage = (): JSX.Element => {
 
       const decodedBaseStats = decodeBaseStats(characterData.baseStats);
 
-      // WorldStatusEffec and related components may be undefined
-      const worldStatusEffectsComponent = WorldStatusEffec
-        ? getComponentValue(WorldStatusEffec, id as Entity)
+      // WorldStatusEffects and related components may be undefined
+      const worldStatusEffectsComponent = WorldStatusEffects
+        ? getComponentValue(WorldStatusEffects, id as Entity)
         : undefined;
 
       const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
@@ -210,11 +210,11 @@ export const CharacterPage = (): JSX.Element => {
       );
 
       // Only process status effects if the required components exist
-      const worldStatusEffects: WorldStatusEffect[] = (StatusEffectStat && StatusEffectVali)
+      const worldStatusEffects: WorldStatusEffect[] = (StatusEffectStats && StatusEffectValidity)
         ? decodedStatusEffects.map(effect => {
             const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
-            const effectStats = getComponentValue(StatusEffectStat, paddedEffectId);
-            const validity = getComponentValue(StatusEffectVali, paddedEffectId);
+            const effectStats = getComponentValue(StatusEffectStats, paddedEffectId);
+            const validity = getComponentValue(StatusEffectValidity, paddedEffectId);
 
             if (!effectStats || !validity) return null;
 
@@ -285,10 +285,10 @@ export const CharacterPage = (): JSX.Element => {
     publicClient,
     renderError,
     Stats,
-    StatusEffectStat,
-    StatusEffectVali,
+    StatusEffectStats,
+    StatusEffectValidity,
     worldContract,
-    WorldStatusEffec,
+    WorldStatusEffects,
   ]);
 
   const isOwner = useMemo(() => {
@@ -634,7 +634,7 @@ export const CharacterPage = (): JSX.Element => {
 const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const { renderError } = useToast();
   const {
-    components: { CharacterEquipme, ItemsOwners },
+    components: { CharacterEquipment, ItemsOwners },
   } = useMUD();
   const {
     armorTemplates,
@@ -804,10 +804,10 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   );
 
   // Use useComponentValue to subscribe to equipment data changes
-  // CharacterEquipme may be undefined if table is empty/not synced yet
+  // CharacterEquipment may be undefined if table is empty/not synced yet
   const equipmentData = useComponentValue(
-    CharacterEquipme ?? undefined,
-    CharacterEquipme ? character.id : undefined,
+    CharacterEquipment ?? undefined,
+    CharacterEquipment ? character.id : undefined,
   );
 
   useEffect(() => {

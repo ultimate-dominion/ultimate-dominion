@@ -61,6 +61,7 @@ type MapContextType = {
   otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
   refreshEntities: () => void;
+  setOptimisticPosition: (pos: { x: number; y: number } | null) => void;
   shopsOnTile: Shop[];
 };
 
@@ -77,6 +78,7 @@ const MapContext = createContext<MapContextType>({
   otherCharactersOnTile: [],
   position: null,
   refreshEntities: () => {},
+  setOptimisticPosition: () => {},
   shopsOnTile: [],
 });
 
@@ -122,14 +124,30 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [allShops, setAllShops] = useState<Shop[]>([]);
 
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [optimisticPosition, setOptimisticPosition] = useState<{ x: number; y: number } | null>(null);
 
-  const position = useComponentValue(
+  const recsPosition = useComponentValue(
     Position,
     encodeEntity(
       { characterId: 'uint256' },
       { characterId: BigInt(character?.id ?? 0) },
     ),
   );
+
+  // Clear optimistic position once RECS catches up
+  useEffect(() => {
+    if (
+      optimisticPosition &&
+      recsPosition &&
+      recsPosition.x === optimisticPosition.x &&
+      recsPosition.y === optimisticPosition.y
+    ) {
+      setOptimisticPosition(null);
+    }
+  }, [recsPosition, optimisticPosition]);
+
+  // Use optimistic position if set, otherwise fall back to RECS
+  const position = optimisticPosition ?? (recsPosition ? { x: recsPosition.x, y: recsPosition.y } : null);
 
   const inSafetyZone = useMemo(() => {
     if (!position) return false;
@@ -557,8 +575,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         monstersOnTile,
         onSpawn,
         otherCharactersOnTile,
-        position: position ? { x: position.x, y: position.y } : null,
+        position,
         refreshEntities,
+        setOptimisticPosition,
         shopsOnTile,
       }}
     >

@@ -12,7 +12,9 @@ import {
   createWalletClient,
   getContract,
   type Hex,
+  padHex,
   parseEther,
+  slice,
 } from 'viem';
 
 import { createSystemCalls } from '../mud/createSystemCalls';
@@ -60,6 +62,7 @@ export function createBurner(
         worldAddress: network.worldContract.address,
         delegatorAddress,
         worldFunctionToSystemFunction: async worldFunctionSelector => {
+          // Fast path: read from RECS (populated by sync)
           const encodedWorldFunctionSelector = encodeEntity(
             { string: 'bytes4' },
             { string: worldFunctionSelector },
@@ -70,15 +73,77 @@ export function createBurner(
             encodedWorldFunctionSelector,
           );
 
-          if (!systemFunction)
+          if (systemFunction) {
+            return {
+              systemId: systemFunction.systemId as Hex,
+              systemFunctionSelector:
+                systemFunction.systemFunctionSelector as Hex,
+            };
+          }
+
+          // Fallback: read FunctionSelectors directly from the World contract.
+          // This handles cases where RECS sync hasn't loaded the table yet.
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[callFrom] FunctionSelectors not in RECS for ${worldFunctionSelector}, reading from chain`,
+          );
+
+          const TABLE_ID =
+            '0x7462776f726c6400000000000000000046756e6374696f6e53656c6563746f72' as Hex;
+          const LAYOUT =
+            '0x0024020020040000000000000000000000000000000000000000000000000000' as Hex;
+          const GSF_ABI = [
+            {
+              name: 'getStaticField',
+              type: 'function',
+              stateMutability: 'view',
+              inputs: [
+                { name: 'tableId', type: 'bytes32' },
+                { name: 'keyTuple', type: 'bytes32[]' },
+                { name: 'fieldIndex', type: 'uint8' },
+                { name: 'fieldLayout', type: 'bytes32' },
+              ],
+              outputs: [{ name: 'data', type: 'bytes32' }],
+            },
+          ] as const;
+
+          // bytes4 → bytes32: value in high bytes (right-pad with zeros)
+          const paddedKey = padHex(worldFunctionSelector, { size: 32, dir: 'right' });
+
+          const [systemId, rawSystemFnSel] = await Promise.all([
+            network.publicClient.readContract({
+              address: network.worldContract.address as Hex,
+              abi: GSF_ABI,
+              functionName: 'getStaticField',
+              args: [TABLE_ID, [paddedKey], 0, LAYOUT],
+            }),
+            network.publicClient.readContract({
+              address: network.worldContract.address as Hex,
+              abi: GSF_ABI,
+              functionName: 'getStaticField',
+              args: [TABLE_ID, [paddedKey], 1, LAYOUT],
+            }),
+          ]);
+
+          if (
+            systemId ===
+            '0x0000000000000000000000000000000000000000000000000000000000000000'
+          ) {
             throw new Error(
-              `Possibly store not synced: ${worldFunctionSelector}`,
+              `Function selector ${worldFunctionSelector} not registered on World`,
             );
+          }
+
+          // systemFunctionSelector is bytes4 in high bytes of bytes32
+          const systemFunctionSel = slice(
+            rawSystemFnSel,
+            0,
+            4,
+          ) as Hex;
 
           return {
-            systemId: systemFunction.systemId as Hex,
-            systemFunctionSelector:
-              systemFunction.systemFunctionSelector as Hex,
+            systemId: systemId as Hex,
+            systemFunctionSelector: systemFunctionSel,
           };
         },
       }),

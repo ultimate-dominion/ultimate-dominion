@@ -59,12 +59,12 @@ const AllowanceContext = createContext<AllowanceContextType>(defaultContextValue
 // Inner component that uses hooks - only rendered when components are ready
 const AllowanceProviderInner = ({
   children,
-  UltimateDominion,
+  UltimateDominionConfig,
   publicClient,
   isSynced,
 }: {
   children: ReactNode;
-  UltimateDominion: any;
+  UltimateDominionConfig: any;
   publicClient: any;
   isSynced: boolean;
 }): JSX.Element => {
@@ -88,7 +88,7 @@ const AllowanceProviderInner = ({
   const [isApprovingItems, setIsApprovingItems] = useState(false);
 
   const configValue = useComponentValue(
-    UltimateDominion,
+    UltimateDominionConfig,
     singletonEntity,
   );
   const goldTokenAddress = configValue?.goldToken ?? null;
@@ -332,10 +332,10 @@ export const AllowanceProvider = ({
 }): JSX.Element => {
   const { components, isSynced, network } = useMUD();
   const { publicClient } = network;
-  const UltimateDominion = components?.UltimateDominion;
+  const UltimateDominionConfig = components?.UltimateDominionConfig;
 
   // If component isn't ready, render with default context
-  if (!UltimateDominion) {
+  if (!UltimateDominionConfig) {
     return (
       <AllowanceContext.Provider value={defaultContextValue}>
         {children}
@@ -345,7 +345,7 @@ export const AllowanceProvider = ({
 
   return (
     <AllowanceProviderInner
-      UltimateDominion={UltimateDominion}
+      UltimateDominionConfig={UltimateDominionConfig}
       publicClient={publicClient}
       isSynced={isSynced}
     >

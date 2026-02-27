@@ -26,7 +26,7 @@ import { useToast } from '../hooks/useToast';
 import { CHARACTERS_PATH, ITEM_PATH } from '../Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
 
-import { Character, OrderStatus, Rarity, RARITY_COLORS, RARITY_NAMES, TokenType } from '../utils/types';
+import { Character, CLASS_COLORS, OrderStatus, Rarity, RARITY_COLORS, TokenType } from '../utils/types';
 
 import { useAuth } from './AuthContext';
 import { useCharacter } from './CharacterContext';
@@ -126,7 +126,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // Use the appropriate wallet client for Push Protocol
   const data = authMethod === 'embedded' ? embeddedWalletClient : externalWalletClient;
   const {
-    components: { CombatEncounter, CombatOutcome, MarketplaceSale, UltimateDominion },
+    components: { CombatEncounter, CombatOutcome, MarketplaceSale, UltimateDominionConfig },
   } = useMUD();
   const {
     armorTemplates,
@@ -138,7 +138,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { character: currentCharacter } = useCharacter();
   const { activeOrders } = useOrders();
 
-  const configValue = useComponentValue(UltimateDominion, singletonEntity);
+  const configValue = useComponentValue(UltimateDominionConfig, singletonEntity);
   const goldToken = configValue?.goldToken ?? null;
 
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
@@ -210,12 +210,10 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // Rare+ item drop announcements from battle outcomes
   const battleOutcomeEntities = useEntityQuery([Has(CombatOutcome)]);
   const rareDropAnnouncements: Message[] = useMemo(() => {
-    console.info('[CHAT] Battle outcome entities:', battleOutcomeEntities.length);
     return battleOutcomeEntities
       .map(entity => {
         const combatOutcome = getComponentValueStrict(CombatOutcome, entity);
         const { itemsDropped } = combatOutcome;
-        console.info('[CHAT] Combat outcome itemsDropped:', itemsDropped);
         if (!itemsDropped || itemsDropped.length === 0) return null;
 
         const encounter = getComponentValueStrict(CombatEncounter, entity);
@@ -223,14 +221,14 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         const defenderId = encounter.defenders[0];
 
         const winner = combatOutcome.attackersWin ? attackerId : defenderId;
-        const winnerName = allCharacters.find(c => c.id === winner)?.name;
-        console.info('[CHAT] Winner:', winner, 'Name:', winnerName);
+        const winnerCharacter = allCharacters.find(c => c.id === winner);
+        const winnerName = winnerCharacter?.name;
         if (!winnerName) return null;
+        const winnerNameColor = winnerCharacter ? (CLASS_COLORS[winnerCharacter.entityClass] ?? '#E8DCC8') : '#E8DCC8';
 
         const rareDrops = itemsDropped
           .map(itemId => {
             const found = allItems.find(item => item.tokenId === itemId.toString());
-            console.info('[CHAT] Item lookup:', itemId, '→', found?.name, 'rarity:', found?.rarity);
             return found;
           })
           .filter(item => item && item.rarity !== undefined && item.rarity >= Rarity.Rare);
@@ -238,10 +236,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         if (rareDrops.length === 0) return null;
 
         const droppedItem = rareDrops[0]!;
-        const rarityName = RARITY_NAMES[droppedItem.rarity!];
         const rarityColor = RARITY_COLORS[droppedItem.rarity!];
-
-        console.info('[CHAT] Announcing rare drop:', droppedItem.name, rarityName);
 
         return {
           delivered: true,
@@ -250,7 +245,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
             <Text fontWeight={500} size="xs" textAlign="center">
               <Text
                 as={RouterLink}
-                color="#E8DCC8"
+                color={winnerNameColor}
+                fontWeight={700}
                 to={`${CHARACTERS_PATH}/${winner}`}
                 _hover={{ textDecoration: 'underline' }}
               >
@@ -265,8 +261,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
                 _hover={{ textDecoration: 'underline' }}
               >
                 {droppedItem.name}
-              </Text>{' '}
-              ({rarityName})!
+              </Text>!
             </Text>
           ),
           message: '',
@@ -291,6 +286,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       if (!buyerCharacter?.name) return null;
 
       const rarityColor = RARITY_COLORS[item.rarity];
+      const buyerNameColor = CLASS_COLORS[buyerCharacter.entityClass] ?? '#E8DCC8';
 
       return {
         delivered: true,
@@ -299,7 +295,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
           <Text fontWeight={500} size="xs" textAlign="center">
             <Text
               as={RouterLink}
-              color="#E8DCC8"
+              color={buyerNameColor}
+              fontWeight={700}
               to={`${CHARACTERS_PATH}/${buyerCharacter.id}`}
               _hover={{ textDecoration: 'underline' }}
             >
@@ -346,6 +343,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         const item = allItems.find(i => i.tokenId === order.consideration.identifier.toString())!;
         const offererCharacter = allCharacters.find(c => c.owner.toLowerCase() === order.offerer.toLowerCase());
         const playerName = offererCharacter?.name ?? 'Someone';
+        const offererNameColor = offererCharacter ? (CLASS_COLORS[offererCharacter.entityClass] ?? '#E8DCC8') : '#E8DCC8';
         const goldAmount = formatEther(order.offer.amount);
         const rarityColor = RARITY_COLORS[item.rarity!];
 
@@ -357,7 +355,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
               {offererCharacter ? (
                 <Text
                   as={RouterLink}
-                  color="#E8DCC8"
+                  color={offererNameColor}
+                  fontWeight={700}
                   to={`${CHARACTERS_PATH}/${offererCharacter.id}`}
                   _hover={{ textDecoration: 'underline' }}
                 >
@@ -418,7 +417,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     }
   }, [isOpen, messages]);
 
-  const onLogin = useCallback(async () => {
+  const onLogin = useCallback(async (options?: { silent?: boolean }) => {
     try {
       if (user) return;
       if (!data) return;
@@ -534,7 +533,9 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       stream.connect();
       streamRef.current = stream;
     } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to initialize chat.', e);
+      if (!options?.silent) {
+        renderError((e as Error)?.message ?? 'Failed to initialize chat.', e);
+      }
     } finally {
       setIsLoggingIn(false);
     }
@@ -542,10 +543,15 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
   // Auto-login only when a cached PGP key exists (no MetaMask popup).
   // First-time users click the Login button manually.
+  // Failures are silent — chat is non-critical and Push backend can be flaky.
   useEffect(() => {
     const hasCachedKey = sessionStorage.getItem('push_pgp_key');
     if (hasCachedKey && isSpawned && data && !user && !isLoggingIn) {
-      onLogin();
+      onLogin({ silent: true }).catch(() => {
+        // Push backend unreachable — clear stale cached key so we don't retry
+        sessionStorage.removeItem('push_pgp_key');
+        sessionStorage.removeItem('push_account');
+      });
     }
   }, [isSpawned, data, user, isLoggingIn, onLogin]);
 
