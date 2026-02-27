@@ -29,6 +29,9 @@ const getRarityGlow = (rarity?: Rarity): string => {
   if (rarity === Rarity.Rare) {
     return `0 0 8px ${color}40, 0 0 16px ${color}20`;
   }
+  if (rarity === Rarity.Uncommon) {
+    return `0 0 6px ${color}30, 0 0 12px ${color}15`;
+  }
   return 'none';
 };
 
@@ -50,6 +53,15 @@ const legendaryBreathing = (color: string) => keyframes`
   }
 `;
 
+const uncommonBreathing = (color: string) => keyframes`
+  0%, 100% {
+    box-shadow: 0 0 4px ${color}20, 0 0 8px ${color}10;
+  }
+  50% {
+    box-shadow: 0 0 8px ${color}40, 0 0 14px ${color}20;
+  }
+`;
+
 const getRarityAnimation = (rarity?: Rarity): string | undefined => {
   const color = getRarityColor(rarity);
   if (rarity === Rarity.Legendary) {
@@ -57,6 +69,9 @@ const getRarityAnimation = (rarity?: Rarity): string | undefined => {
   }
   if (rarity === Rarity.Epic) {
     return `${epicBreathing(color)} 3s ease-in-out infinite`;
+  }
+  if (rarity === Rarity.Uncommon) {
+    return `${uncommonBreathing(color)} 3.5s ease-in-out infinite`;
   }
   return undefined;
 };
