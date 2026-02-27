@@ -427,7 +427,13 @@ export const ItemsProvider = ({
   useEffect(() => {
     console.info('[ItemsContext] effect fired — isSynced:', isSynced, 'entities:', allItemEntities.length);
     (async () => {
-      if (!isSynced || allItemEntities.length === 0) return;
+      if (!isSynced) return;
+      if (allItemEntities.length === 0) {
+        // No items in the world — stop loading so downstream components aren't
+        // permanently blocked waiting for items that don't exist.
+        setIsLoading(false);
+        return;
+      }
 
       try {
         const allItemIds = allItemEntities

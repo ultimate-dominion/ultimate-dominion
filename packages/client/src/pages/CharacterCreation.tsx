@@ -573,16 +573,16 @@ const CharacterCreationInner = (): JSX.Element => {
     );
   }, [avatar, delegatorAddress]);
 
-  // Show loading state while syncing or loading item templates
-  if (!isSynced || isLoadingItemTemplates) {
-    console.info('[CharacterCreation] Blocked on loading:', { isSynced, isLoadingItemTemplates });
+  // Only block on sync — items load in background and are needed at the
+  // starterItems step, not for race/powerSource/stats steps
+  if (!isSynced) {
+    console.info('[CharacterCreation] Blocked on sync');
     return (
       <Center h="100vh">
         <Spinner size="xl" />
       </Center>
     );
   }
-  console.info('[CharacterCreation] Ready to render form');
 
   return (
     <Stack
