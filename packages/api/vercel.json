@@ -34,6 +34,11 @@
     { "src": "/files/(.*)", "dest": "/api/index.ts?file=$1" },
     { "src": "/health", "dest": "/api/health.ts" },
     { "src": "/api/paymasterWebhook", "dest": "/api/paymasterWebhook.ts" },
+    { "src": "/api/signup", "dest": "/api/signup.ts" },
+    { "src": "/api/drip", "dest": "/api/drip.ts" },
     { "src": "/api/(.*)", "dest": "/api/$1.ts" }
+  ],
+  "crons": [
+    { "path": "/api/drip", "schedule": "0 14 * * *" }
   ]
 }

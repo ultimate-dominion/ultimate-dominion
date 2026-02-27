@@ -11,6 +11,7 @@ import { FormEvent, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink } from 'react-router-dom';
 import Typist from 'react-typist';
+import { API_URL } from '../utils/constants';
 
 const torchGlow = keyframes`
   0%, 100% {
@@ -24,16 +25,42 @@ const torchGlow = keyframes`
 export const LandingPage = (): JSX.Element => {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || isSubmitting) return;
 
-    const existing = JSON.parse(localStorage.getItem('ud:signups') || '[]');
-    existing.push({ email, ts: Date.now() });
-    localStorage.setItem('ud:signups', JSON.stringify(existing));
+    setIsSubmitting(true);
+    setErrorMsg('');
 
-    setSubmitted(true);
+    // localStorage backup — always save locally regardless of API result
+    try {
+      const existing = JSON.parse(localStorage.getItem('ud:signups') || '[]');
+      existing.push({ email, ts: Date.now() });
+      localStorage.setItem('ud:signups', JSON.stringify(existing));
+    } catch { /* localStorage unavailable — not critical */ }
+
+    try {
+      const res = await fetch(`${API_URL}/api/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setErrorMsg(data.error || 'Something went wrong. Try again.');
+        setIsSubmitting(false);
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      // Network error — still show success since localStorage saved
+      setSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -200,30 +227,41 @@ export const LandingPage = (): JSX.Element => {
                     />
                     <Box
                       as="button"
-                      animation={`${torchGlow} 3s ease-in-out infinite`}
-                      bg="rgba(200, 122, 42, 0.5)"
+                      animation={isSubmitting ? undefined : `${torchGlow} 3s ease-in-out infinite`}
+                      bg={isSubmitting ? 'rgba(200, 122, 42, 0.3)' : 'rgba(200, 122, 42, 0.5)'}
                       border="1px solid"
                       borderColor="rgba(200, 122, 42, 0.5)"
                       borderLeft="none"
                       color="rgba(232, 220, 200, 0.9)"
-                      cursor="pointer"
+                      cursor={isSubmitting ? 'wait' : 'pointer'}
                       flexShrink={0}
                       fontSize="12px"
                       fontWeight={600}
                       h="44px"
                       letterSpacing="0.15em"
+                      opacity={isSubmitting ? 0.6 : 1}
                       px={6}
                       textTransform="uppercase"
                       transition="all 0.2s ease"
                       type="submit"
                       _hover={{
-                        bg: 'rgba(200, 122, 42, 0.7)',
+                        bg: isSubmitting ? undefined : 'rgba(200, 122, 42, 0.7)',
                         color: '#E8DCC8',
                       }}
                     >
-                      Awaken
+                      {isSubmitting ? '...' : 'Awaken'}
                     </Box>
                   </HStack>
+                  {errorMsg && (
+                    <Text
+                      color="rgba(200, 100, 100, 0.8)"
+                      fontSize="13px"
+                      mt={1}
+                      textAlign="center"
+                    >
+                      {errorMsg}
+                    </Text>
+                  )}
                 </VStack>
               </Box>
             )}
