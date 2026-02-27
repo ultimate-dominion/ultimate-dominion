@@ -794,9 +794,14 @@ contract PostDeploy is Script {
         console.log("  Fee percent: 3% (300 basis points)");
 
         // Drop multipliers (100 = 1x, fresh deploy defaults)
-        UltimateDominionConfig.setGlobalDropMultiplier(100);
-        UltimateDominionConfig.setGoldDropMultiplier(100);
-        console.log("  Drop multipliers: 1x (100)");
+        // DISABLED: UltimateDominionConfig's on-chain schema was registered before
+        // these fields existed. MUD schemas are immutable, so writing to field
+        // indices 13/14 reverts. The PveRewardSystem code handles mult=0 gracefully
+        // (skips multiplication). To enable multipliers, create a separate DropConfig
+        // table and migrate the reads.
+        // UltimateDominionConfig.setGlobalDropMultiplier(100);
+        // UltimateDominionConfig.setGoldDropMultiplier(100);
+        console.log("  Drop multipliers: SKIPPED (schema mismatch, fields not on-chain)");
     }
 
     function _configureGasStation() internal {
