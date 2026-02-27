@@ -33,6 +33,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isConnecting: boolean;
   ownerAddress: Address | null;
+  signedInEmail: string | null;
   thirdwebChain: ReturnType<typeof defineThirdwebChain>;
   thirdwebClient: ThirdwebClient;
 };
@@ -68,6 +69,7 @@ export const AuthProvider = ({
   const [embeddedWalletClient, setEmbeddedWalletClient] =
     useState<WalletClient | null>(null);
   const [embeddedAddress, setEmbeddedAddress] = useState<Address | null>(null);
+  const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
 
@@ -99,6 +101,25 @@ export const AuthProvider = ({
         if (!account) {
           console.error('[Auth] Wallet has no account after connect — giving up');
           throw new Error('Account not available after sign-in. Please try again.');
+        }
+
+        // Log full account details to debug wrong-account bug
+        console.info('[Auth] Wallet account details:', {
+          address: account.address,
+          type: (account as any).type,
+          // EIP-7702 may wrap EOA — check for delegation target
+          delegatedAddress: (account as any).delegatedAddress,
+        });
+
+        // Get user email from Thirdweb — both for diagnostics and UI display
+        try {
+          const { getUserEmail } = await import('thirdweb/wallets');
+          const email = await getUserEmail({ client: thirdwebClient });
+          console.info('[Auth] Signed-in email:', email);
+          setSignedInEmail(email ?? null);
+        } catch {
+          console.info('[Auth] Could not retrieve user email (non-fatal)');
+          setSignedInEmail(null);
         }
 
         console.info('[Auth] Initializing viem client for', account.address);
@@ -145,7 +166,8 @@ export const AuthProvider = ({
           timeout: 10000,
         });
         if (connected) {
-          console.info('[Auth] autoConnect succeeded, initializing client...');
+          const acct = wallet.getAccount();
+          console.info('[Auth] autoConnect succeeded, recovered address:', acct?.address);
           await initEmbeddedClient(wallet);
         } else {
           console.info('[Auth] autoConnect returned no account — no persisted session');
@@ -198,9 +220,28 @@ export const AuthProvider = ({
       setEmbeddedWallet(null);
       setEmbeddedWalletClient(null);
       setEmbeddedAddress(null);
+      setSignedInEmail(null);
     }
     if (wagmiConnected) {
       wagmiDisconnect();
+    }
+
+    // Aggressively clear Thirdweb session storage to prevent stale
+    // autoConnect from recovering a different user's session
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('thirdweb') || key.startsWith('walletConnect'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      if (keysToRemove.length > 0) {
+        console.info('[Auth] Cleared', keysToRemove.length, 'Thirdweb storage keys');
+      }
+    } catch {
+      // ignore — best-effort cleanup
     }
   }, [embeddedWallet, wagmiConnected, wagmiDisconnect]);
 
@@ -218,6 +259,7 @@ export const AuthProvider = ({
         isAuthenticated: true,
         isConnecting,
         ownerAddress: embeddedAddress,
+        signedInEmail,
         thirdwebChain,
         thirdwebClient,
       };
@@ -236,6 +278,7 @@ export const AuthProvider = ({
         isAuthenticated: true,
         isConnecting: false,
         ownerAddress: wagmiAddress,
+        signedInEmail: null,
         thirdwebChain,
         thirdwebClient,
       };
@@ -253,6 +296,7 @@ export const AuthProvider = ({
       isAuthenticated: false,
       isConnecting,
       ownerAddress: null,
+      signedInEmail: null,
       thirdwebChain,
       thirdwebClient,
     };
@@ -264,6 +308,7 @@ export const AuthProvider = ({
     embeddedWalletClient,
     hasInjectedWallet,
     isConnecting,
+    signedInEmail,
     wagmiAddress,
     wagmiConnected,
     wagmiWalletClient,

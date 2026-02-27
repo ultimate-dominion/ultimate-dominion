@@ -118,6 +118,7 @@ export const CharacterCreation = (): JSX.Element => {
 
   // If components aren't ready, show loading
   if (!components?.UltimateDominionConfig) {
+    console.info('[CharacterCreation] Wrapper: components not ready, isSynced:', isSynced);
     return (
       <Center h="100vh">
         <Spinner size="xl" />
@@ -129,6 +130,7 @@ export const CharacterCreation = (): JSX.Element => {
 };
 
 const CharacterCreationInner = (): JSX.Element => {
+  console.info('[CharacterCreation] Inner component mounted');
   const navigate = useNavigate();
   const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
@@ -573,12 +575,14 @@ const CharacterCreationInner = (): JSX.Element => {
 
   // Show loading state while syncing or loading item templates
   if (!isSynced || isLoadingItemTemplates) {
+    console.info('[CharacterCreation] Blocked on loading:', { isSynced, isLoadingItemTemplates });
     return (
       <Center h="100vh">
         <Spinner size="xl" />
       </Center>
     );
   }
+  console.info('[CharacterCreation] Ready to render form');
 
   return (
     <Stack

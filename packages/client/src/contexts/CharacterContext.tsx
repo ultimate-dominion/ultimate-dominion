@@ -184,6 +184,8 @@ const CharacterProviderInner = ({
   const fetchCharacterData = useCallback(async (): Promise<boolean> => {
     if (!(delegatorAddress && publicClient && worldContract)) return false;
 
+    console.info('[Character] Looking up character for delegatorAddress:', delegatorAddress);
+
     // Find character by owner - try exact match first, then lowercase match
     // MUD may store addresses in different cases depending on how they were set
     let characterEntities = Array.from(
@@ -194,6 +196,8 @@ const CharacterProviderInner = ({
       ]),
     );
 
+    console.info('[Character] Exact match results:', characterEntities.length);
+
     // If no match, try lowercase (some contracts store addresses in lowercase)
     if (characterEntities.length === 0) {
       characterEntities = Array.from(
@@ -203,6 +207,7 @@ const CharacterProviderInner = ({
           }),
         ]),
       );
+      console.info('[Character] Lowercase match results:', characterEntities.length);
     }
 
     // If still no match, manually find by comparing lowercase addresses
@@ -212,7 +217,7 @@ const CharacterProviderInner = ({
         const data = getComponentValue(Characters, entity);
         return data?.owner?.toLowerCase() === delegatorAddress.toLowerCase();
       });
-      // Found via manual lowercase comparison
+      console.info('[Character] Manual scan results:', characterEntities.length, 'out of', allChars.length, 'total characters');
     }
 
     const partialCharacter: CharacterData & EntityStats = characterEntities.map(entity => {
@@ -346,8 +351,15 @@ const CharacterProviderInner = ({
     })[0];
 
     if (!partialCharacter) {
+      console.info('[Character] No character found for', delegatorAddress);
       return false;
     }
+    console.info('[Character] Found character:', {
+      name: hexToString(partialCharacter.name as `0x${string}` || '0x', { size: 32 }),
+      owner: partialCharacter.owner,
+      tokenId: partialCharacter.tokenId?.toString(),
+      level: partialCharacter.level?.toString(),
+    });
     const { tokenId } = partialCharacter;
 
     const tokenIdEntity = encodeEntity(

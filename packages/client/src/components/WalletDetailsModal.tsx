@@ -55,7 +55,7 @@ export const WalletDetailsModal = ({
 }): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
   const { data: externalWalletClient } = useWalletClient();
-  const { authMethod, isAuthenticated, ownerAddress, disconnect } = useAuth();
+  const { authMethod, isAuthenticated, ownerAddress, signedInEmail, disconnect } = useAuth();
   const {
     burnerAddress,
     burnerBalance,
@@ -251,6 +251,21 @@ export const WalletDetailsModal = ({
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} alignItems="start">
+              {signedInEmail && (
+                <Box>
+                  <Text
+                    color="gray.400"
+                    fontSize="xs"
+                    letterSpacing="wide"
+                    textTransform="uppercase"
+                  >
+                    Signed in as
+                  </Text>
+                  <Text fontSize="sm" fontWeight={500}>
+                    {signedInEmail}
+                  </Text>
+                </Box>
+              )}
               <Box>
                 <Text
                   color="gray.400"
