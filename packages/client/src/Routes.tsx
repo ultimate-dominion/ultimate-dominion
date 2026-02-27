@@ -2,7 +2,7 @@ import { Progress, Text, VStack } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { SyncStep } from '@latticexyz/store-sync';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import React, { Component, ReactNode, Suspense, useRef } from 'react';
+import React, { Component, ReactNode, Suspense, useEffect, useRef } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { useMUD } from './contexts/MUDContext';
@@ -96,7 +96,12 @@ export const MARKETPLACE_PATH = '/marketplace';
 export const ITEM_PATH = MARKETPLACE_PATH + '/items';
 export const SHOP_PATH = '/shops';
 export const GUIDE_PATH = '/guide';
-export const TAVERN_PATH = 'https://tavern.ultimatedominion.com';
+export const TAVERN_URL = 'https://tavern.ultimatedominion.com';
+
+const ExternalRedirect = ({ to }: { to: string }) => {
+  useEffect(() => { window.location.href = to; }, [to]);
+  return null;
+};
 
 const RoutesFallback = () => (
   <VStack justify="center" h="100%">
@@ -153,6 +158,7 @@ const AppRoutes: React.FC = () => {
           <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />
           <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />
           <Route path={GUIDE_PATH} element={<Guide />} />
+          <Route path="/tavern" element={<ExternalRedirect to={TAVERN_URL} />} />
         </Routes>
       </Suspense>
     </ChunkErrorBoundary>

@@ -4,6 +4,7 @@
  */
 import { Box, Text, VStack } from '@chakra-ui/react';
 import { Helmet } from 'react-helmet-async';
+import { useEffect } from 'react';
 import {
   BrowserRouter,
   Link as RouterLink,
@@ -13,6 +14,12 @@ import {
 
 import { LandingPage } from './pages/LandingPage';
 import { Tavern } from './pages/Tavern';
+
+const TAVERN_URL = 'https://tavern.ultimatedominion.com';
+const ExternalRedirect = ({ to }: { to: string }) => {
+  useEffect(() => { window.location.href = to; }, [to]);
+  return null;
+};
 
 /**
  * Dark-themed manifesto for the placeholder site.
@@ -179,6 +186,7 @@ export const PlaceholderApp = (): JSX.Element => (
       <Route path="/" element={<LandingPage />} />
       <Route path="/manifesto" element={<DarkManifesto />} />
       <Route path="/guide" element={<Tavern />} />
+      <Route path="/tavern" element={<ExternalRedirect to={TAVERN_URL} />} />
       <Route path="*" element={<LandingPage />} />
     </Routes>
   </BrowserRouter>
