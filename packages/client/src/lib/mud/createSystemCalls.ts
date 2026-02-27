@@ -44,6 +44,17 @@ type SystemCallReturn = Promise<{
 
 type ErrorCategory = 'REVERT' | 'FUNDS' | 'RPC' | 'GAS' | 'NONCE' | 'SPONSOR' | 'UNKNOWN';
 
+// Map known custom error signatures to user-friendly messages.
+// When viem can't decode a revert (error not on ABI), it reports the raw
+// selector. We match these to provide clear feedback.
+const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
+  '0x9e4b2685': 'That name is already taken. Please choose a different name.',
+  '0x6d187b28': 'Invalid account.',
+  '0x442473f8': 'Invalid token URI.',
+  '0x261fa6d6': 'Character is locked and cannot be modified.',
+  '0x82b42900': 'You are not authorized to perform this action.',
+};
+
 const classifyError = (error: unknown): { category: ErrorCategory; message: string } => {
   const raw = ((error as Error)?.message ?? '').toLowerCase();
 
@@ -101,6 +112,14 @@ const getContractError = (error: unknown): string => {
   );
 
   if (category === 'FUNDS') return INSUFFICIENT_FUNDS_MESSAGE;
+
+  // Check for known error signatures that viem couldn't decode
+  const sigMatch = message.match(/signature\s+"(0x[0-9a-f]{8})"/i);
+  if (sigMatch) {
+    const friendly = KNOWN_ERROR_SIGNATURES[sigMatch[1].toLowerCase()];
+    if (friendly) return friendly;
+  }
+
   return message || 'An error occurred calling the contract.';
 };
 
