@@ -852,10 +852,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                   Move Gold
                 </Button>
               )}
-              {isHomeTile &&
-                !character.inBattle &&
-                character.currentHp > BigInt(0) &&
-                character.currentHp < character.maxHp && (
+              {isHomeTile && !character.inBattle && (
                   <VStack
                     bg="rgba(0, 0, 0, 0.45)"
                     borderRadius="md"
@@ -864,29 +861,44 @@ export const TileDetailsPanel = (): JSX.Element => {
                     py={2}
                     spacing={1}
                   >
-                    <Text
-                      color="orange.300"
-                      fontFamily="mono"
-                      fontSize="xs"
-                      fontStyle="italic"
-                      textAlign="center"
-                    >
-                      A fire crackles nearby. You could rest here.
-                    </Text>
-                    <Button
-                      alignSelf="center"
-                      isDisabled={restTx.isLoading}
-                      isLoading={restTx.isLoading}
-                      loadingText="Resting by the fire..."
-                      onClick={onRest}
-                      size="xs"
-                      variant="outline"
-                      color="orange.200"
-                      borderColor="orange.400"
-                      _hover={{ bg: 'orange.900', borderColor: 'orange.300' }}
-                    >
-                      Rest by the Fire
-                    </Button>
+                    {character.currentHp > BigInt(0) &&
+                    character.currentHp < character.maxHp ? (
+                      <>
+                        <Text
+                          color="orange.300"
+                          fontFamily="mono"
+                          fontSize="xs"
+                          fontStyle="italic"
+                          textAlign="center"
+                        >
+                          A fire crackles nearby. You could rest here.
+                        </Text>
+                        <Button
+                          alignSelf="center"
+                          isDisabled={restTx.isLoading}
+                          isLoading={restTx.isLoading}
+                          loadingText="Resting by the fire..."
+                          onClick={onRest}
+                          size="xs"
+                          variant="outline"
+                          color="orange.200"
+                          borderColor="orange.400"
+                          _hover={{ bg: 'orange.900', borderColor: 'orange.300' }}
+                        >
+                          Rest by the Fire
+                        </Button>
+                      </>
+                    ) : (
+                      <Text
+                        color="green.300"
+                        fontFamily="mono"
+                        fontSize="xs"
+                        fontStyle="italic"
+                        textAlign="center"
+                      >
+                        A fire crackles softly. You are fully rested.
+                      </Text>
+                    )}
                   </VStack>
                 )}
             </VStack>
