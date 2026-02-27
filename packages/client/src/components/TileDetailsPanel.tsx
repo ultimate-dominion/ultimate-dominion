@@ -821,7 +821,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         />
         {isHomeTile && (
           <GridItem borderColor="blue500" borderRight="6px solid" colSpan={2}>
-            <VStack alignItems="start" h="76px" p={2}>
+            <VStack alignItems="start" minH="76px" p={2}>
               <HStack>
                 <Text
                   fontFamily="mono"
