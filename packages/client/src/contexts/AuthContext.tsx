@@ -86,10 +86,19 @@ export const AuthProvider = ({
   const initEmbeddedClient = useCallback(
     async (wallet: Wallet) => {
       try {
-        const account = wallet.getAccount();
+        // Retry getAccount — new embedded wallets may need a moment to provision
+        let account = wallet.getAccount();
         if (!account) {
-          console.warn('[Auth] Wallet has no account after connect — session may be stale');
-          return;
+          console.info('[Auth] Wallet account not ready, retrying...');
+          for (let i = 0; i < 5; i++) {
+            await new Promise(r => setTimeout(r, 500));
+            account = wallet.getAccount();
+            if (account) break;
+          }
+        }
+        if (!account) {
+          console.error('[Auth] Wallet has no account after connect — giving up');
+          throw new Error('Account not available after sign-in. Please try again.');
         }
 
         console.info('[Auth] Initializing viem client for', account.address);
@@ -105,6 +114,7 @@ export const AuthProvider = ({
         setEmbeddedWallet(wallet);
       } catch (e) {
         console.error('[Auth] Failed to initialize embedded client:', e);
+        throw e;
       }
     },
     [],
@@ -123,9 +133,10 @@ export const AuthProvider = ({
   // Auto-reconnect persisted Thirdweb session on mount
   useEffect(() => {
     const tryReconnect = async () => {
+      let wallet: Wallet | null = null;
       try {
         const { inAppWallet } = await import('thirdweb/wallets/in-app');
-        const wallet = inAppWallet({
+        wallet = inAppWallet({
           executionMode: executionModeConfig,
         });
         const connected = await wallet.autoConnect({
@@ -141,6 +152,14 @@ export const AuthProvider = ({
         }
       } catch (e) {
         console.warn('[Auth] autoConnect failed:', e);
+        // Clear stale Thirdweb session data so fresh sign-in isn't blocked
+        if (wallet) {
+          try {
+            await wallet.disconnect();
+          } catch {
+            // ignore — best-effort cleanup
+          }
+        }
       } finally {
         setIsConnecting(false);
       }

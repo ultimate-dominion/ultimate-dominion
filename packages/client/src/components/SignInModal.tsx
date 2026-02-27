@@ -42,11 +42,14 @@ export const SignInModal = ({
     setError(null);
     try {
       await connectWithGoogle();
-      onClose();
+      // Don't close here — ConnectWalletModal's effect detects auth
+      // and handles navigation + close. Closing here races with that
+      // effect and can leave the user on the Welcome page with no
+      // loading feedback while MUD sync finishes.
     } catch (e) {
       setError((e as Error)?.message ?? 'Google sign-in failed');
     }
-  }, [connectWithGoogle, onClose]);
+  }, [connectWithGoogle]);
 
   const handleClose = useCallback(() => {
     setError(null);
