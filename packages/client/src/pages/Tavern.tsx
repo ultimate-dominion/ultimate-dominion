@@ -199,7 +199,7 @@ export const Tavern = (): JSX.Element => (
     }}
   >
     <Helmet>
-      <title>The Tavern | Ultimate Dominion</title>
+      <title>The Adventurer&apos;s Codex | Ultimate Dominion</title>
     </Helmet>
 
     {/* Warm radial hearth glow at center */}
@@ -237,7 +237,7 @@ export const Tavern = (): JSX.Element => (
           letterSpacing="0.4em"
           textTransform="uppercase"
         >
-          A Gathering Place
+          Knowledge for the Bold
         </Text>
         <Heading
           color="#E8DCC8"
@@ -247,7 +247,7 @@ export const Tavern = (): JSX.Element => (
           letterSpacing="0.06em"
           textAlign="center"
         >
-          The Tavern
+          The Adventurer&apos;s Codex
         </Heading>
         <Text
           color="rgba(196,184,158,0.55)"
@@ -257,9 +257,9 @@ export const Tavern = (): JSX.Element => (
           maxW="600px"
           textAlign="center"
         >
-          Somewhere in the dark, a fire still burns. Adventurers gather
-          here to trade stories, share warnings, and plan their next move
-          into the unknown.
+          A worn volume passed between wanderers. Within its pages lie the
+          paths forward &mdash; rankings, trade, and the principles that
+          govern this world.
         </Text>
       </VStack>
 
@@ -341,15 +341,6 @@ export const Tavern = (): JSX.Element => (
               subtitle="Player Trade"
               title="Marketplace"
               to="/marketplace"
-            />
-          </GridItem>
-          <GridItem>
-            <TavernCard
-              accentColor="rgba(90,138,62,0.5)"
-              description="Everything you need to know about surviving in the dark. Races, classes, combat, and more."
-              subtitle="Knowledge"
-              title="Adventurer&apos;s Guide"
-              to="/guide"
             />
           </GridItem>
           <GridItem>

@@ -11,7 +11,6 @@ import {
   Routes,
 } from 'react-router-dom';
 
-import { Guide } from './pages/Guide';
 import { LandingPage } from './pages/LandingPage';
 import { Tavern } from './pages/Tavern';
 
@@ -179,8 +178,7 @@ export const PlaceholderApp = (): JSX.Element => (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/manifesto" element={<DarkManifesto />} />
-      <Route path="/tavern" element={<Tavern />} />
-      <Route path="/guide" element={<Guide />} />
+      <Route path="/guide" element={<Tavern />} />
       <Route path="*" element={<LandingPage />} />
     </Routes>
   </BrowserRouter>

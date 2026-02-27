@@ -21,7 +21,7 @@ import { ConnectWalletModal } from '../components/ConnectWalletModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, GUIDE_PATH, MANIFESTO_PATH, TAVERN_PATH } from '../Routes';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, GUIDE_PATH, MANIFESTO_PATH } from '../Routes';
 
 const torchGlow = keyframes`
   0%, 100% {
@@ -249,9 +249,9 @@ export const Welcome = (): JSX.Element => {
             </Link>
             <Text color="#3A3228" userSelect="none">|</Text>
             <Link
-              as={RouterLink}
               color="#8A7E6A"
-              to={TAVERN_PATH}
+              href="https://tavern.ultimatedominion.com"
+              isExternal
               _hover={{ color: '#D4A54A', textDecoration: 'none' }}
             >
               Tavern

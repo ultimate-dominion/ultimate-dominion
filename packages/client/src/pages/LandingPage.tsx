@@ -291,9 +291,9 @@ export const LandingPage = (): JSX.Element => {
             </Link>
             <Text color="#3A3228" userSelect="none">|</Text>
             <Link
-              as={RouterLink}
               color="#8A7E6A"
-              to="/tavern"
+              href="https://tavern.ultimatedominion.com"
+              isExternal
               _hover={{ color: '#D4A54A', textDecoration: 'none' }}
             >
               Tavern
