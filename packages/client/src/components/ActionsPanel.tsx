@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Divider,
   HStack,
   Progress,
   Spinner,
@@ -26,6 +27,8 @@ import {
   STATUS_EFFECT_NAME_MAPPING,
   STATUS_EFFECT_DESCRIPTION_MAPPING,
 } from '../utils/constants';
+import { ConsumableQuickUse } from './ConsumableQuickUse';
+import { EquippedLoadout } from './EquippedLoadout';
 import { ItemConsumeModal } from './ItemConsumeModal';
 import { PotionSvg } from './SVGs/PotionSvg';
 import { TransactionProgressBar } from './TransactionProgressBar';
@@ -548,61 +551,20 @@ export const ActionsPanel = (): JSX.Element => {
             </Text>
           </Typist>
         )}
-        {!currentBattle &&
-          isSpawned &&
-          position?.x === 0 &&
-          position?.y === 0 && (
-            <Typist
-              avgTypingDelay={10}
-              cursor={{ show: false }}
-              stdTypingDelay={10}
-            >
-              <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                You are currently in the starting tile.{' '}
-                <Text as="span" fontWeight={700}>
-                  Move to a new tile
-                </Text>{' '}
-                to find monsters to battle.
-              </Text>
-            </Typist>
-          )}
-        {!currentBattle &&
-          !isRefreshing &&
-          isSpawned &&
-          (position?.x !== 0 || position?.y !== 0) &&
-          monstersOnTile.length === 0 && (
-            <Typist
-              avgTypingDelay={10}
-              cursor={{ show: false }}
-              stdTypingDelay={10}
-            >
-              <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                Looks like there are no monsters in this tile.{' '}
-                <Text as="span" fontWeight={700}>
-                  Move to a new tile
-                </Text>{' '}
-                to find monsters to battle.
-              </Text>
-            </Typist>
-          )}
-        {!currentBattle &&
-          !isRefreshing &&
-          (position?.x !== 0 || position?.y !== 0) &&
-          monstersOnTile.length > 0 && (
-            <Typist
-              avgTypingDelay={10}
-              cursor={{ show: false }}
-              stdTypingDelay={10}
-            >
-              <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                To initiate a battle,{' '}
-                <Text as="span" fontWeight={700}>
-                  click on a monster
-                </Text>
-                .
-              </Text>
-            </Typist>
-          )}
+        {!currentBattle && isSpawned && position && (
+          <VStack spacing={3} w="100%">
+            <EquippedLoadout />
+            <Divider borderColor="grey300" />
+            <ConsumableQuickUse />
+            <Text color="#8A7E6A" fontStyle="italic" size="xs">
+              {position.x === 0 && position.y === 0
+                ? 'Move to a new tile to find monsters.'
+                : monstersOnTile.length === 0
+                  ? 'No monsters here. Try another tile.'
+                  : 'Click on a monster to battle.'}
+            </Text>
+          </VStack>
+        )}
 
         {opponent &&
           [...attackOutcomes].reverse().map((attack, reverseIndex) => {
@@ -888,6 +850,7 @@ export const ActionsPanel = (): JSX.Element => {
       {selectedConsumable && (
         <ItemConsumeModal
           {...selectedConsumable}
+          isEquipped
           isOpen={isConsumeModalOpen}
           onClose={onCloseConsumeModal}
         />

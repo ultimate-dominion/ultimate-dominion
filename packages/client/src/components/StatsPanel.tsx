@@ -39,6 +39,7 @@ const fadeSlideIn = keyframes`
 import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
 import { LeaderboardIconSvg, MarketplaceIconSvg } from './SVGs';
+import { TileScout } from './TileScout';
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
@@ -418,6 +419,12 @@ export const StatsPanel = (): JSX.Element => {
           )}
         </Box>
       </HStack>
+
+      <Divider borderColor="grey300" />
+
+      <Box pb={4} pt={2} w="100%">
+        <TileScout />
+      </Box>
     </VStack>
   );
 };
