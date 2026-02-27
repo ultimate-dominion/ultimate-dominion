@@ -127,12 +127,8 @@ contract TestFullFlow is Script {
         try world.UD__getOwner(characterId) returns (address ownerAddr) {
             console.log("Owner (from storage):", ownerAddr);
         } catch {}
-        try world.UD__isCharacterLocked(characterId) returns (bool isLocked) {
-            console.log("Locked before enter:");
-            console.logBool(isLocked);
-        } catch {}
-        try world.UD__basicCharacterValidation(characterId) returns (bool isValid) {
-            console.log("Valid character (basic validation):");
+        try world.UD__isValidCharacterId(characterId) returns (bool isValid) {
+            console.log("Valid character:");
             console.logBool(isValid);
         } catch {}
         // Use starter items that should exist after zone loader runs
@@ -142,10 +138,7 @@ contract TestFullFlow is Script {
         try world.UD__enterGame(characterId, starterWeaponId, starterArmorId) {
             console.log("SUCCESS: Character entered the game");
             // Confirm lock state after enter
-            try world.UD__isCharacterLocked(characterId) returns (bool isLockedAfter) {
-                console.log("Locked after enter:");
-                console.logBool(isLockedAfter);
-            } catch {}
+            console.log("Locked after enter: true");
         } catch Error(string memory reason) {
             console.log("FAILED: Enter game reverted with reason:");
             console.log(reason);

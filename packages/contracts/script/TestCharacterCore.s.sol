@@ -15,7 +15,7 @@ import {System} from "@latticexyz/world/src/System.sol";
 
 import {IWorld} from "@world/IWorld.sol";
 import {CharacterCore} from "@systems/character/CharacterCore.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {UltimateDominionConfig, Characters} from "@codegen/index.sol";
 import {
     CHARACTERS_NAMESPACE,
     ERC721_NAME,
@@ -104,7 +104,7 @@ contract TestCharacterCore is Script {
             address owner = world.UD__getOwner(characterId);
             console.log("Character owner:", owner);
             
-            bytes32 name = world.UD__getName(characterId);
+            bytes32 name = Characters.getName(characterId);
             console.log("Character name:", uint256(name));
             
         } catch Error(string memory reason) {

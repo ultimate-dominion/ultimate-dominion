@@ -12,7 +12,9 @@ import {
   createWalletClient,
   getContract,
   type Hex,
+  padHex,
   parseEther,
+  slice,
 } from 'viem';
 
 import { createSystemCalls } from '../mud/createSystemCalls';
@@ -60,6 +62,7 @@ export function createBurner(
         worldAddress: network.worldContract.address,
         delegatorAddress,
         worldFunctionToSystemFunction: async worldFunctionSelector => {
+          // Fast path: read from RECS (populated by sync)
           const encodedWorldFunctionSelector = encodeEntity(
             { string: 'bytes4' },
             { string: worldFunctionSelector },
@@ -70,15 +73,69 @@ export function createBurner(
             encodedWorldFunctionSelector,
           );
 
-          if (!systemFunction)
+          if (systemFunction) {
+            return {
+              systemId: systemFunction.systemId as Hex,
+              systemFunctionSelector:
+                systemFunction.systemFunctionSelector as Hex,
+            };
+          }
+
+          // Fallback: read FunctionSelectors directly from the World contract.
+          // This handles cases where RECS sync hasn't loaded the table yet.
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[callFrom] FunctionSelectors not in RECS for ${worldFunctionSelector}, reading from chain`,
+          );
+
+          const FUNCTION_SELECTORS_TABLE_ID =
+            '0x7462776f726c6400000000000000000046756e6374696f6e53656c6563746f72' as Hex;
+          const FIELD_LAYOUT =
+            '0x0024010008000000000000000000000000000000000000000000000000000000' as Hex;
+
+          const result = await network.publicClient.readContract({
+            address: network.worldContract.address as Hex,
+            abi: [
+              {
+                name: 'getRecord',
+                type: 'function',
+                stateMutability: 'view',
+                inputs: [
+                  { name: 'tableId', type: 'bytes32' },
+                  { name: 'keyTuple', type: 'bytes32[]' },
+                  { name: 'fieldLayout', type: 'bytes32' },
+                ],
+                outputs: [
+                  { name: 'staticData', type: 'bytes' },
+                  { name: 'encodedLengths', type: 'bytes32' },
+                  { name: 'dynamicData', type: 'bytes' },
+                ],
+              },
+            ],
+            functionName: 'getRecord',
+            args: [
+              FUNCTION_SELECTORS_TABLE_ID,
+              [padHex(worldFunctionSelector, { size: 32 })],
+              FIELD_LAYOUT,
+            ],
+          });
+
+          const staticData = result[0] as Hex;
+          const systemId = slice(staticData, 0, 32) as Hex;
+          const systemFunctionSel = slice(staticData, 32, 36) as Hex;
+
+          if (
+            systemId ===
+            '0x0000000000000000000000000000000000000000000000000000000000000000'
+          ) {
             throw new Error(
-              `Possibly store not synced: ${worldFunctionSelector}`,
+              `Function selector ${worldFunctionSelector} not registered on World`,
             );
+          }
 
           return {
-            systemId: systemFunction.systemId as Hex,
-            systemFunctionSelector:
-              systemFunction.systemFunctionSelector as Hex,
+            systemId,
+            systemFunctionSelector: systemFunctionSel as Hex,
           };
         },
       }),
