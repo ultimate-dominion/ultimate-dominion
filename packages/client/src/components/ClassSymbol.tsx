@@ -30,13 +30,13 @@ export const ClassSymbol = ({
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   switch (entityClass) {
-    case StatsClasses.Mage:
+    case StatsClasses.Intelligence:
       return (
         <Tooltip
-          aria-label="Mage"
+          aria-label="Intelligence"
           bg="#14120F"
           hasArrow
-          label="Mage"
+          label="Intelligence"
           shouldWrapChildren
         >
           <MageSvg
@@ -48,13 +48,13 @@ export const ClassSymbol = ({
           />
         </Tooltip>
       );
-    case StatsClasses.Rogue:
+    case StatsClasses.Agility:
       return (
         <Tooltip
-          aria-label="Rogue"
+          aria-label="Agility"
           bg="#14120F"
           hasArrow
-          label="Rogue"
+          label="Agility"
           shouldWrapChildren
         >
           <RogueSvg
@@ -66,13 +66,13 @@ export const ClassSymbol = ({
           />
         </Tooltip>
       );
-    case StatsClasses.Warrior:
+    case StatsClasses.Strength:
       return (
         <Tooltip
-          aria-label="Warrior"
+          aria-label="Strength"
           bg="#14120F"
           hasArrow
-          label="Warrior"
+          label="Strength"
           shouldWrapChildren
         >
           <WarriorSvg

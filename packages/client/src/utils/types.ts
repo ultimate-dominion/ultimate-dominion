@@ -55,9 +55,9 @@ export enum OrderType {
 }
 
 export enum StatsClasses {
-  Warrior,
-  Rogue,
-  Mage,
+  Strength,
+  Agility,
+  Intelligence,
 }
 
 // Implicit Class System enums
@@ -123,9 +123,9 @@ export const RARITY_NAMES: Record<Rarity, string> = {
 };
 
 export const CLASS_COLORS: Record<StatsClasses, string> = {
-  [StatsClasses.Warrior]: '#B85C3A', // warm copper
-  [StatsClasses.Rogue]: '#5A8A3E',   // forest green
-  [StatsClasses.Mage]: '#4A7AB5',    // steel blue
+  [StatsClasses.Strength]: '#B85C3A',     // warm copper
+  [StatsClasses.Agility]: '#5A8A3E',      // forest green
+  [StatsClasses.Intelligence]: '#4A7AB5', // steel blue
 };
 
 export enum SystemToAllow {
