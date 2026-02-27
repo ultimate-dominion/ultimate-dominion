@@ -1,19 +1,22 @@
 import {
   Box,
   Button,
+  Grid,
+  GridItem,
   Heading,
   HStack,
   IconButton,
   Stack,
   Text,
+  Tooltip,
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
 import { useComponentValue } from '@latticexyz/react';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
-import { BiSolidNavigation } from 'react-icons/bi';
 import { FaStoreAlt } from 'react-icons/fa';
+import { GiDeathSkull, GiPerson } from 'react-icons/gi';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
@@ -22,13 +25,35 @@ import { useMUD } from '../contexts/MUDContext';
 import { ChatBox } from './ChatBox';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
-import { CompassArrowSvg } from './SVGs/CompassRoseSvg';
+import { CompassArrowSvg, CompassRoseOrnamentSvg } from './SVGs/CompassRoseSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
 
 const SAFE_ZONE_AREA = {
   topLeft: { x: 0, y: 4 },
   bottomRight: { x: 4, y: 0 },
 };
+
+const MAP_SIZE = 10;
+
+type TileInfo = {
+  monsters: number;
+  players: number;
+} | null;
+
+const COMPASS_DIRECTIONS: {
+  label: string;
+  direction: 'up' | 'down' | 'left' | 'right';
+  rotate: string;
+  dx: number;
+  dy: number;
+  gridRow: number;
+  gridCol: number;
+}[] = [
+  { label: 'N', direction: 'up', rotate: '0deg', dx: 0, dy: 1, gridRow: 1, gridCol: 2 },
+  { label: 'W', direction: 'left', rotate: '90deg', dx: -1, dy: 0, gridRow: 2, gridCol: 1 },
+  { label: 'E', direction: 'right', rotate: '-90deg', dx: 1, dy: 0, gridRow: 2, gridCol: 3 },
+  { label: 'S', direction: 'down', rotate: '180deg', dx: 0, dy: -1, gridRow: 3, gridCol: 2 },
+];
 
 // Wrapper component that handles undefined MUD components
 export const MapPanel = (): JSX.Element => {
@@ -42,10 +67,10 @@ export const MapPanel = (): JSX.Element => {
 };
 
 const MapPanelInner = ({ UltimateDominionConfig }: { UltimateDominionConfig: any }): JSX.Element => {
-  const { allCharacters, isSpawned, isSpawning, onSpawn, position } = useMap();
-  const { allShops } = useMap();
+  const { allCharacters, allMonsters, allShops, isSpawned, isSpawning, onSpawn, position } = useMap();
   const { currentBattle } = useBattle();
   const { isRefreshing, onMove } = useMovement();
+  const { delegatorAddress } = useMUD();
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
@@ -59,9 +84,71 @@ const MapPanelInner = ({ UltimateDominionConfig }: { UltimateDominionConfig: any
   );
   const maxPlayers = configValue?.maxPlayers ?? BigInt(0);
 
+  const adjacentTiles = useMemo(() => {
+    if (!position) return null;
+
+    const result: Record<string, TileInfo> = {};
+
+    for (const dir of COMPASS_DIRECTIONS) {
+      const tx = position.x + dir.dx;
+      const ty = position.y + dir.dy;
+
+      if (tx < 0 || tx >= MAP_SIZE || ty < 0 || ty >= MAP_SIZE) {
+        result[dir.label] = null;
+      } else {
+        const monsters = allMonsters.filter(
+          m => m.position.x === tx && m.position.y === ty && m.currentHp > BigInt(0),
+        ).length;
+
+        const players = allCharacters.filter(
+          c =>
+            c.position.x === tx &&
+            c.position.y === ty &&
+            c.owner.toLowerCase() !== delegatorAddress?.toLowerCase(),
+        ).length;
+
+        result[dir.label] = { monsters, players };
+      }
+    }
+
+    return result;
+  }, [allMonsters, allCharacters, delegatorAddress, position]);
+
   return (
     <Stack alignItems="center" className="data-dense" h="100%">
-      <Box w="100%" h={{ base: '300px', lg: 'calc(50% - 24px)' }}>
+      {/* Compass — above map on mobile, below on desktop */}
+      <Box order={{ base: 0, lg: 2 }} w="100%">
+        {isSpawned ? (
+          <NavigationCompass
+            adjacentTiles={adjacentTiles}
+            isDisabled={!!currentBattle || isRefreshing}
+            onMove={onMove}
+            position={position}
+          />
+        ) : (
+          <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
+            {currentPlayersSpawned >= Number(maxPlayers) && (
+              <Text color="red" fontWeight={500} size="sm">
+                Max players reached
+              </Text>
+            )}
+            <Button
+              isDisabled={
+                !!currentBattle || currentPlayersSpawned >= Number(maxPlayers)
+              }
+              isLoading={isSpawning}
+              loadingText="Spawning..."
+              onClick={onSpawn}
+              size="sm"
+            >
+              Spawn
+            </Button>
+          </VStack>
+        )}
+      </Box>
+
+      {/* Map grid */}
+      <Box order={{ base: 1, lg: 1 }} w="100%" h={{ base: '300px', lg: 'calc(50% - 24px)' }}>
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
@@ -176,23 +263,10 @@ const MapPanelInner = ({ UltimateDominionConfig }: { UltimateDominionConfig: any
             })}
           </Box>
           <HStack
-            justifyContent={isSpawned && position ? 'space-between' : 'end'}
+            justifyContent="end"
             mt={0.5}
             px={{ base: 1, sm: 2 }}
           >
-            {isSpawned && position && (
-              <HStack spacing={1}>
-                <BiSolidNavigation color="#C87A2A" size={isDesktop ? 12 : 10} />
-                <Text
-                  color="#E8DCC8"
-                  fontFamily="mono"
-                  fontWeight={700}
-                  size={{ base: 'xs', sm: 'sm' }}
-                >
-                  {position.x},{position.y}
-                </Text>
-              </HStack>
-            )}
             <Text color="#8A7E6A" fontWeight={500} size={{ base: '2xs', sm: 'xs' }}>
               {currentPlayersSpawned} Player
               {currentPlayersSpawned === 1 ? '' : 's'}
@@ -200,33 +274,9 @@ const MapPanelInner = ({ UltimateDominionConfig }: { UltimateDominionConfig: any
           </HStack>
         </PolygonalCard>
       </Box>
-      {isSpawned ? (
-        <NavigationCompass
-          isDisabled={!!currentBattle || isRefreshing}
-          onMove={onMove}
-        />
-      ) : (
-        <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
-          {currentPlayersSpawned >= Number(maxPlayers) && (
-            <Text color="red" fontWeight={500} size="sm">
-              Max players reached
-            </Text>
-          )}
-          <Button
-            isDisabled={
-              !!currentBattle || currentPlayersSpawned >= Number(maxPlayers)
-            }
-            isLoading={isSpawning}
-            loadingText="Spawning..."
-            onClick={onSpawn}
-            size="sm"
-          >
-            Spawn
-          </Button>
-        </VStack>
-      )}
+
       {isDesktop && isSpawned && (
-        <Box w="100%" flex={1} minH="100px" mt={2}>
+        <Box order={3} w="100%" flex={1} minH="100px" mt={2}>
           <ChatBox inline />
         </Box>
       )}
@@ -234,42 +284,160 @@ const MapPanelInner = ({ UltimateDominionConfig }: { UltimateDominionConfig: any
   );
 };
 
-const ARROW_DIRECTIONS: {
-  label: string;
-  direction: 'up' | 'down' | 'left' | 'right';
-  rotate: string;
-}[] = [
-  { label: 'west', direction: 'left', rotate: '90deg' },
-  { label: 'north', direction: 'up', rotate: '0deg' },
-  { label: 'south', direction: 'down', rotate: '180deg' },
-  { label: 'east', direction: 'right', rotate: '-90deg' },
-];
+const ScoutPips = ({ info }: { info: TileInfo }): JSX.Element | null => {
+  if (!info) return null;
+  if (info.monsters === 0 && info.players === 0) return null;
+
+  return (
+    <HStack spacing={1} mt={0.5}>
+      {info.monsters > 0 && (
+        <HStack spacing={0.5}>
+          <GiDeathSkull size={8} color="#8B4040" />
+          <Text color="#8B4040" fontFamily="mono" fontSize="2xs" fontWeight={700} lineHeight={1}>
+            {info.monsters}
+          </Text>
+        </HStack>
+      )}
+      {info.players > 0 && (
+        <HStack spacing={0.5}>
+          <GiPerson size={8} color="#D4A54A" />
+          <Text color="#D4A54A" fontFamily="mono" fontSize="2xs" fontWeight={700} lineHeight={1}>
+            {info.players}
+          </Text>
+        </HStack>
+      )}
+    </HStack>
+  );
+};
 
 const NavigationCompass = ({
+  adjacentTiles,
   isDisabled,
   onMove,
+  position,
 }: {
+  adjacentTiles: Record<string, TileInfo> | null;
   isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
-}): JSX.Element => (
-  <HStack spacing={1} mt={1}>
-    {ARROW_DIRECTIONS.map(({ label, direction, rotate }) => (
-      <IconButton
-        key={label}
-        aria-label={`Move ${label}`}
-        icon={
-          <Box transform={`rotate(${rotate})`} lineHeight={0}>
-            <CompassArrowSvg boxSize="16px" />
-          </Box>
-        }
-        isDisabled={isDisabled}
-        onClick={() => onMove(direction)}
-        h={7}
-        w={7}
-        minW={0}
-        variant="ghost"
-        size="xs"
-      />
-    ))}
-  </HStack>
-);
+  position: { x: number; y: number } | null;
+}): JSX.Element => {
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const btnSize = isDesktop ? '32px' : '44px';
+  const arrowSize = isDesktop ? '14px' : '18px';
+
+  return (
+    <Box py={{ base: 2, lg: 1 }} w="100%">
+      <Grid
+        gap={0}
+        mx="auto"
+        templateColumns={`1fr ${btnSize} 1fr`}
+        templateRows={`1fr ${btnSize} 1fr`}
+        w={{ base: '160px', lg: '120px' }}
+        h={{ base: '160px', lg: '120px' }}
+        position="relative"
+      >
+        {/* Rose ornament behind everything */}
+        <Box
+          gridColumn="1 / 4"
+          gridRow="1 / 4"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          pointerEvents="none"
+        >
+          <CompassRoseOrnamentSvg
+            boxSize={{ base: '130px', lg: '95px' }}
+            opacity={0.35}
+          />
+        </Box>
+
+        {/* Direction buttons */}
+        {COMPASS_DIRECTIONS.map(({ label, direction, rotate, gridRow, gridCol }) => {
+          const info = adjacentTiles?.[label] ?? null;
+          const isOob = adjacentTiles ? adjacentTiles[label] === null : false;
+
+          return (
+            <GridItem
+              key={label}
+              gridRow={gridRow}
+              gridColumn={gridCol}
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              position="relative"
+              zIndex={1}
+            >
+              <Tooltip
+                hasArrow
+                isDisabled={!info}
+                label={
+                  info
+                    ? `${label}: ${info.monsters} monster${info.monsters !== 1 ? 's' : ''}, ${info.players} player${info.players !== 1 ? 's' : ''}`
+                    : undefined
+                }
+                placement="top"
+              >
+                <IconButton
+                  aria-label={`Move ${label}`}
+                  icon={
+                    <VStack spacing={0}>
+                      <Text
+                        color="#8A7E6A"
+                        fontSize="2xs"
+                        fontWeight={700}
+                        lineHeight={1}
+                        mb={-0.5}
+                      >
+                        {label}
+                      </Text>
+                      <Box transform={`rotate(${rotate})`} lineHeight={0}>
+                        <CompassArrowSvg boxSize={arrowSize} />
+                      </Box>
+                    </VStack>
+                  }
+                  isDisabled={isDisabled || isOob}
+                  onClick={() => onMove(direction)}
+                  h={btnSize}
+                  w={btnSize}
+                  minW={0}
+                  variant="ghost"
+                  size="xs"
+                  opacity={isDisabled ? 0.4 : 1}
+                  _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.15)' }}
+                />
+              </Tooltip>
+              {/* Scout pips below/beside the button */}
+              <Box position="absolute" top={label === 'S' ? undefined : '100%'} bottom={label === 'S' ? '100%' : undefined}>
+                <ScoutPips info={info} />
+              </Box>
+            </GridItem>
+          );
+        })}
+
+        {/* Center — coords */}
+        <GridItem
+          gridRow={2}
+          gridColumn={2}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          zIndex={1}
+        >
+          {position && (
+            <Text
+              color="#E8DCC8"
+              fontFamily="mono"
+              fontSize={{ base: 'xs', lg: '2xs' }}
+              fontWeight={700}
+              lineHeight={1}
+              textAlign="center"
+            >
+              {position.x},{position.y}
+            </Text>
+          )}
+        </GridItem>
+      </Grid>
+    </Box>
+  );
+};

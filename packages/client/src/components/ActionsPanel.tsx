@@ -553,9 +553,13 @@ export const ActionsPanel = (): JSX.Element => {
         )}
         {!currentBattle && isSpawned && position && (
           <VStack spacing={3} w="100%">
-            <EquippedLoadout />
-            <Divider borderColor="grey300" />
-            <ConsumableQuickUse />
+            {isDesktop && (
+              <>
+                <EquippedLoadout />
+                <Divider borderColor="grey300" />
+                <ConsumableQuickUse />
+              </>
+            )}
             <Text color="#8A7E6A" fontStyle="italic" size="xs">
               {position.x === 0 && position.y === 0
                 ? 'Move to a new tile to find monsters.'

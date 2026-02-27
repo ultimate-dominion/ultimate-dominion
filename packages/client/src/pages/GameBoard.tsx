@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Divider,
   Drawer,
   DrawerBody,
   DrawerCloseButton,
@@ -10,6 +11,7 @@ import {
   Grid,
   GridItem,
   Text,
+  useBreakpointValue,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
@@ -21,6 +23,8 @@ import { useAuth } from '../contexts/AuthContext';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
+import { ConsumableQuickUse } from '../components/ConsumableQuickUse';
+import { EquippedLoadout } from '../components/EquippedLoadout';
 import { InfoModal } from '../components/InfoModal';
 import { MapPanel } from '../components/MapPanel';
 import { PolygonalCard } from '../components/PolygonalCard';
@@ -63,8 +67,9 @@ export const GameBoard = (): JSX.Element => {
     network: { worldContract },
   } = useMUD();
   const { character, isMoveEquipped, isRefreshing } = useCharacter();
-  const { inSafetyZone, position } = useMap();
-  const { continueToBattleOutcome, lastestBattleOutcome } = useBattle();
+  const { inSafetyZone, isSpawned, position } = useMap();
+  const { continueToBattleOutcome, currentBattle, lastestBattleOutcome } = useBattle();
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   // Redirect to home if synced, but missing other requirements.
   // IMPORTANT: Wait for each loading phase to complete before making
@@ -208,6 +213,11 @@ export const GameBoard = (): JSX.Element => {
       <GridItem
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
+        display={
+          !isDesktop && !currentBattle && isSpawned && position
+            ? 'none'
+            : undefined
+        }
         rowSpan={{ base: 'auto', lg: 6 }}
         rowStart={{ base: 'auto', lg: 7 }}
       >
@@ -240,6 +250,14 @@ export const GameBoard = (): JSX.Element => {
             <DrawerHeader>Stats</DrawerHeader>
             <DrawerBody className="data-dense" overflowY="auto" pb={6}>
               <StatsPanel />
+              {isSpawned && !currentBattle && (
+                <>
+                  <Divider borderColor="grey300" my={4} />
+                  <EquippedLoadout />
+                  <Divider borderColor="grey300" my={4} />
+                  <ConsumableQuickUse />
+                </>
+              )}
             </DrawerBody>
           </DrawerContent>
         </Drawer>

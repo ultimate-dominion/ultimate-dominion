@@ -7,6 +7,7 @@ import {
   Spinner,
   Text,
   Tooltip,
+  useBreakpointValue,
   VStack,
   keyframes,
 } from '@chakra-ui/react';
@@ -49,6 +50,7 @@ export const StatsPanel = (): JSX.Element => {
   const { character } = useCharacter();
 
 
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
   const { delta: rankDelta, rank: goldRank } = useLeaderboardRank();
 
   const [showDelta, setShowDelta] = useState(false);
@@ -420,11 +422,14 @@ export const StatsPanel = (): JSX.Element => {
         </Box>
       </HStack>
 
-      <Divider borderColor="grey300" />
-
-      <Box pb={4} pt={2} w="100%">
-        <TileScout />
-      </Box>
+      {isDesktop && (
+        <>
+          <Divider borderColor="grey300" />
+          <Box pb={4} pt={2} w="100%">
+            <TileScout />
+          </Box>
+        </>
+      )}
     </VStack>
   );
 };
