@@ -67,8 +67,7 @@ export default async function uploadFile(
       return res.status(500).json({ error: "Error uploading file" });
     }
 
-    const gatewayUrl = `https://violet-magnetic-tick-248.mypinata.cloud/ipfs/${cid}`;
-    return res.status(200).json({ url: gatewayUrl });
+    return res.status(200).json({ cid });
   } catch (error) {
     console.error('Error in uploadFile:', error);
     return res.status(500).json({ error: "Error uploading file" });
