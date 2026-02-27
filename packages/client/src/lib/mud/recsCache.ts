@@ -50,9 +50,10 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-// v6: MUD client upgraded to 2.2.23 — new sync engine, invalidate old caches.
+// v7: Fix worlds.json blockNumber — caches from v6 started sync too late and
+// are missing seed data (items, monsters, zones). Invalidate to force fresh sync.
 function cacheKey(worldAddress: string, chainId: number): string {
-  return `v6-${worldAddress.toLowerCase()}-${chainId}`;
+  return `v7-${worldAddress.toLowerCase()}-${chainId}`;
 }
 
 /**
