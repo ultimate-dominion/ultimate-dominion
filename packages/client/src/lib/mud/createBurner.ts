@@ -83,6 +83,8 @@ export function createBurner(
 
           // Fallback: read FunctionSelectors directly from the World contract.
           // This handles cases where RECS sync hasn't loaded the table yet.
+          // Uses getStaticField (returns bytes32) instead of getRecord
+          // to avoid complex multi-value ABI decoding issues.
           // eslint-disable-next-line no-console
           console.warn(
             `[callFrom] FunctionSelectors not in RECS for ${worldFunctionSelector}, reading from chain`,
@@ -91,38 +93,50 @@ export function createBurner(
           const FUNCTION_SELECTORS_TABLE_ID =
             '0x7462776f726c6400000000000000000046756e6374696f6e53656c6563746f72' as Hex;
           const FIELD_LAYOUT =
-            '0x0024010008000000000000000000000000000000000000000000000000000000' as Hex;
+            '0x0024020020040000000000000000000000000000000000000000000000000000' as Hex;
+          const getStaticFieldAbi = [
+            {
+              name: 'getStaticField',
+              type: 'function',
+              stateMutability: 'view',
+              inputs: [
+                { name: 'tableId', type: 'bytes32' },
+                { name: 'keyTuple', type: 'bytes32[]' },
+                { name: 'fieldIndex', type: 'uint8' },
+                { name: 'fieldLayout', type: 'bytes32' },
+              ],
+              outputs: [{ name: 'data', type: 'bytes32' }],
+            },
+          ] as const;
 
-          const result = await network.publicClient.readContract({
-            address: network.worldContract.address as Hex,
-            abi: [
-              {
-                name: 'getRecord',
-                type: 'function',
-                stateMutability: 'view',
-                inputs: [
-                  { name: 'tableId', type: 'bytes32' },
-                  { name: 'keyTuple', type: 'bytes32[]' },
-                  { name: 'fieldLayout', type: 'bytes32' },
-                ],
-                outputs: [
-                  { name: 'staticData', type: 'bytes' },
-                  { name: 'encodedLengths', type: 'bytes32' },
-                  { name: 'dynamicData', type: 'bytes' },
-                ],
-              },
-            ],
-            functionName: 'getRecord',
-            args: [
-              FUNCTION_SELECTORS_TABLE_ID,
-              [padHex(worldFunctionSelector, { size: 32 })],
-              FIELD_LAYOUT,
-            ],
-          });
+          const keyTuple = [
+            padHex(worldFunctionSelector, { size: 32 }),
+          ] as readonly Hex[];
 
-          const staticData = result[0] as Hex;
-          const systemId = slice(staticData, 0, 32) as Hex;
-          const systemFunctionSel = slice(staticData, 32, 36) as Hex;
+          const [systemId, rawSystemFunctionSel] = await Promise.all([
+            network.publicClient.readContract({
+              address: network.worldContract.address as Hex,
+              abi: getStaticFieldAbi,
+              functionName: 'getStaticField',
+              args: [
+                FUNCTION_SELECTORS_TABLE_ID,
+                keyTuple,
+                0,
+                FIELD_LAYOUT,
+              ],
+            }),
+            network.publicClient.readContract({
+              address: network.worldContract.address as Hex,
+              abi: getStaticFieldAbi,
+              functionName: 'getStaticField',
+              args: [
+                FUNCTION_SELECTORS_TABLE_ID,
+                keyTuple,
+                1,
+                FIELD_LAYOUT,
+              ],
+            }),
+          ]);
 
           if (
             systemId ===
@@ -133,9 +147,16 @@ export function createBurner(
             );
           }
 
+          // systemFunctionSelector is bytes4 stored in high bytes of bytes32
+          const systemFunctionSel = slice(
+            rawSystemFunctionSel,
+            0,
+            4,
+          ) as Hex;
+
           return {
-            systemId,
-            systemFunctionSelector: systemFunctionSel as Hex,
+            systemId: systemId as Hex,
+            systemFunctionSelector: systemFunctionSel,
           };
         },
       }),
