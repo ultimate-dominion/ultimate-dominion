@@ -10,7 +10,6 @@ import { share, Subject } from 'rxjs';
 import {
   type Address,
   createWalletClient,
-  encodeFunctionData,
   getContract,
   type Hex,
   padHex,
@@ -82,12 +81,11 @@ export function createBurner(
             };
           }
 
-          // Fallback: read FunctionSelectors directly from the World via
-          // raw eth_call to bypass any viem readContract decoding issues.
-          const worldAddr = network.worldContract.address as Hex;
+          // Fallback: read FunctionSelectors directly from the World contract.
+          // This handles cases where RECS sync hasn't loaded the table yet.
           // eslint-disable-next-line no-console
           console.warn(
-            `[callFrom] FunctionSelectors not in RECS for ${worldFunctionSelector}, reading from chain (world=${worldAddr})`,
+            `[callFrom] FunctionSelectors not in RECS for ${worldFunctionSelector}, reading from chain`,
           );
 
           const TABLE_ID =
@@ -109,68 +107,42 @@ export function createBurner(
             },
           ] as const;
 
-          const paddedKey = padHex(worldFunctionSelector, { size: 32 });
+          // bytes4 → bytes32: value in high bytes (right-pad with zeros)
+          const paddedKey = padHex(worldFunctionSelector, { size: 32, dir: 'right' });
 
-          // Use viem's encodeFunctionData for correct ABI encoding
-          const field0Data = encodeFunctionData({
-            abi: GSF_ABI,
-            functionName: 'getStaticField',
-            args: [TABLE_ID, [paddedKey], 0, LAYOUT],
-          });
-
-          // eslint-disable-next-line no-console
-          console.info('[callFrom] field0 calldata:', field0Data);
-
-          const field0Result = await network.publicClient.call({
-            to: worldAddr,
-            data: field0Data,
-          });
-
-          // eslint-disable-next-line no-console
-          console.info(
-            '[callFrom] field0 raw response:',
-            field0Result.data,
-          );
-
-          const systemId = (field0Result.data ??
-            '0x0000000000000000000000000000000000000000000000000000000000000000') as Hex;
+          const [systemId, rawSystemFnSel] = await Promise.all([
+            network.publicClient.readContract({
+              address: network.worldContract.address as Hex,
+              abi: GSF_ABI,
+              functionName: 'getStaticField',
+              args: [TABLE_ID, [paddedKey], 0, LAYOUT],
+            }),
+            network.publicClient.readContract({
+              address: network.worldContract.address as Hex,
+              abi: GSF_ABI,
+              functionName: 'getStaticField',
+              args: [TABLE_ID, [paddedKey], 1, LAYOUT],
+            }),
+          ]);
 
           if (
-            !systemId ||
-            systemId === '0x' ||
             systemId ===
-              '0x0000000000000000000000000000000000000000000000000000000000000000'
+            '0x0000000000000000000000000000000000000000000000000000000000000000'
           ) {
             throw new Error(
-              `Function selector ${worldFunctionSelector} not registered on World (raw=${String(field0Result.data)})`,
+              `Function selector ${worldFunctionSelector} not registered on World`,
             );
           }
 
-          const field1Data = encodeFunctionData({
-            abi: GSF_ABI,
-            functionName: 'getStaticField',
-            args: [TABLE_ID, [paddedKey], 1, LAYOUT],
-          });
-
-          const field1Result = await network.publicClient.call({
-            to: worldAddr,
-            data: field1Data,
-          });
-
-          // eslint-disable-next-line no-console
-          console.info(
-            '[callFrom] resolved:',
-            { systemId, rawField1: field1Result.data },
-          );
-
+          // systemFunctionSelector is bytes4 in high bytes of bytes32
           const systemFunctionSel = slice(
-            field1Result.data as Hex,
+            rawSystemFnSel,
             0,
             4,
           ) as Hex;
 
           return {
-            systemId,
+            systemId: systemId as Hex,
             systemFunctionSelector: systemFunctionSel,
           };
         },
