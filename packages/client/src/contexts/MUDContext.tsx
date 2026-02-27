@@ -342,13 +342,29 @@ const MUDProviderInner = ({
     syncProgress,
   ]);
 
-  // Reset embedded setup if wallet disconnects
+  // Reset embedded setup if wallet disconnects OR a different user signs in.
+  // Without this, signing in as User B while User A's session was autoConnected
+  // keeps embeddedSetup (and delegatorAddress) locked to User A's address,
+  // because authMethod stays 'embedded' and embeddedSetupDone.current is true.
   useEffect(() => {
     if (authMethod !== 'embedded' && embeddedSetupDone.current) {
       embeddedSetupDone.current = false;
       setEmbeddedSetup(null);
     }
-  }, [authMethod]);
+    if (
+      authMethod === 'embedded' &&
+      embeddedSetup &&
+      ownerAddress &&
+      embeddedSetup.walletAddress !== ownerAddress
+    ) {
+      console.info('[MUD][EMBEDDED] Wallet address changed, resetting setup', {
+        old: embeddedSetup.walletAddress,
+        new: ownerAddress,
+      });
+      embeddedSetupDone.current = false;
+      setEmbeddedSetup(null);
+    }
+  }, [authMethod, ownerAddress, embeddedSetup]);
 
   // =============================================
   // EXTERNAL PATH: Existing delegation + burner flow (unchanged)

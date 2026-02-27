@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { type Address, type WalletClient } from 'viem';
@@ -72,6 +73,10 @@ export const AuthProvider = ({
   const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
+
+  // Guard: when true, a manual Google sign-in is in progress and autoConnect
+  // results should be discarded to prevent a stale session from overwriting.
+  const manualSignInActive = useRef(false);
 
   // Detect injected wallet (MetaMask etc.)
   // Use localStorage flag to hide MetaMask for testing embedded flow:
@@ -168,6 +173,12 @@ export const AuthProvider = ({
         if (connected) {
           const acct = wallet.getAccount();
           console.info('[Auth] autoConnect succeeded, recovered address:', acct?.address);
+          // If user already clicked "Sign in with Google", discard stale session
+          if (manualSignInActive.current) {
+            console.info('[Auth] autoConnect ignored — manual sign-in in progress');
+            try { await wallet.disconnect(); } catch { /* best-effort */ }
+            return;
+          }
           await initEmbeddedClient(wallet);
         } else {
           console.info('[Auth] autoConnect returned no account — no persisted session');
@@ -191,6 +202,7 @@ export const AuthProvider = ({
 
   const connectWithGoogle = useCallback(async () => {
     setIsConnecting(true);
+    manualSignInActive.current = true;
     try {
       const { inAppWallet } = await import('thirdweb/wallets/in-app');
       const wallet = inAppWallet({
